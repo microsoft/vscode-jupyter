@@ -279,7 +279,7 @@ export class NotebookEditor implements INotebookEditor {
 
     public runAbove(uri: Uri | undefined): void {
         const cellId = this.getSelectedCellId(uri);
-        const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
+        const index = this.document.cells.findIndex((c) => c.document.uri.toString() === cellId);
 
         if (index > 0) {
             // Get all cellIds until `index`.
@@ -289,7 +289,7 @@ export class NotebookEditor implements INotebookEditor {
     }
     public runCellAndBelow(uri: Uri | undefined): void {
         const cellId = this.getSelectedCellId(uri);
-        const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
+        const index = this.document.cells.findIndex((c) => c.document.uri.toString() === cellId);
 
         if (index >= 0) {
             // Get all cellIds starting from `index`.
@@ -307,7 +307,7 @@ export class NotebookEditor implements INotebookEditor {
         const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uriStr);
 
         if (editor && editor.selection) {
-            return editor.selection.uri.toString();
+            return editor.selection.document.uri.toString();
         }
 
         return undefined;
@@ -321,7 +321,7 @@ export class NotebookEditor implements INotebookEditor {
         }
 
         cells.forEach(async (cell) => {
-            if (cell.cellKind === NotebookCellKind.Code) {
+            if (cell.kind === NotebookCellKind.Code) {
                 await kernel.executeCell(cell);
             }
         });

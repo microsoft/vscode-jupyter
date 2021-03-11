@@ -49,9 +49,9 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         }
         // If we have just empty cells, then update the code cells to use the same language as that of the kernel.
         const emptyCodeCells = document.cells.filter(
-            (cell) => cell.cellKind === NotebookCellKind.Code && cell.document.getText().trim().length === 0
+            (cell) => cell.kind === NotebookCellKind.Code && cell.document.getText().trim().length === 0
         );
-        const codeCells = document.cells.filter((cell) => cell.cellKind === NotebookCellKind.Code).length;
+        const codeCells = document.cells.filter((cell) => cell.kind === NotebookCellKind.Code).length;
         // Change language of the cells only if all code cells are empty.
         if (emptyCodeCells.length === 0 || emptyCodeCells.length !== codeCells) {
             return;
@@ -84,12 +84,12 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         const monacoLanguage = translateKernelLanguageToMonaco(language);
         chainWithPendingUpdates(editor.document, (edit) => {
             emptyCodeCells.forEach((cell) => {
-                if (monacoLanguage.toLowerCase() === cell.language) {
+                if (monacoLanguage.toLowerCase() === cell.document.languageId) {
                     return;
                 }
                 edit.replaceNotebookCells(editor.document.uri, cell.index, cell.index + 1, [
                     {
-                        kind: cell.cellKind,
+                        kind: cell.kind,
                         language: monacoLanguage,
                         metadata: cell.metadata,
                         outputs: cell.outputs.map((op) => new NotebookCellOutput(op.outputs)),

@@ -760,7 +760,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Run cells randomly & validate the order of execution', async () => {
         const cells = await insertRandomCells({ count: 15, addMarkdownCells: true });
-        const codeCells = cells.filter((cell) => cell.cell.cellKind === NotebookCellKind.Code);
+        const codeCells = cells.filter((cell) => cell.cell.kind === NotebookCellKind.Code);
 
         // Run cells at random & keep track of the order in which they were run (to validate execution order later).
         const queuedCells: typeof cells = [];
@@ -824,11 +824,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Create some code cells & markdown cells.
         cells.push(...(await insertRandomCells({ count: 10, addMarkdownCells: true })));
 
-        const codeCells = cells.filter((cell) => cell.cell.cellKind === NotebookCellKind.Code);
+        const codeCells = cells.filter((cell) => cell.cell.kind === NotebookCellKind.Code);
         const queuedCells: NotebookCell[] = [];
         for (let index = 0; index < codeCells.length; index++) {
             const cell = codeCells[index].cell;
-            if (cell.cellKind === NotebookCellKind.Code) {
+            if (cell.kind === NotebookCellKind.Code) {
                 queuedCells.push(cell);
                 await runCell(cell);
                 await waitForQueuedForExecution(cell);
@@ -844,9 +844,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const cells = await insertRandomCells({ count: 15, addMarkdownCells: true });
 
         await runAllCellsInActiveNotebook();
-        const queuedCells = cells
-            .filter((item) => item.cell.cellKind === NotebookCellKind.Code)
-            .map((item) => item.cell);
+        const queuedCells = cells.filter((item) => item.cell.kind === NotebookCellKind.Code).map((item) => item.cell);
         await Promise.all(queuedCells.map((cell) => waitForQueuedForExecution(cell)));
 
         // Add a new cell to the document, this should not get executed.
@@ -867,7 +865,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Run entire notebook then add a new cell & run that as well, ensure this new cell is also executed', async () => {
         const cells = await insertRandomCells({ count: 15, addMarkdownCells: true });
-        const codeCells = cells.filter((cell) => cell.cell.cellKind === NotebookCellKind.Code);
+        const codeCells = cells.filter((cell) => cell.cell.kind === NotebookCellKind.Code);
 
         // Run entire notebook & verify all cells are queued for execution.
         await runAllCellsInActiveNotebook();

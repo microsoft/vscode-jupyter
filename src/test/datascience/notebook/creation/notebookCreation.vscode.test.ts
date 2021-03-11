@@ -49,7 +49,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         await commands.executeCommand(Commands.CreateNewNotebook);
         await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
         assert.strictEqual(
-            vscodeNotebook.activeNotebookEditor!.document.cells[0].language.toLowerCase(),
+            vscodeNotebook.activeNotebookEditor!.document.cells[0].document.languageId.toLowerCase(),
             expectedLanguage
         );
     }
@@ -94,13 +94,19 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         await api.createBlankNotebook({ defaultCellLanguage: 'java' });
 
         await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
-        assert.strictEqual(vscodeNotebook.activeNotebookEditor!.document.cells[0].language.toLowerCase(), 'java');
+        assert.strictEqual(
+            vscodeNotebook.activeNotebookEditor!.document.cells[0].document.languageId.toLowerCase(),
+            'java'
+        );
 
         await closeActiveWindows();
 
         await api.createBlankNotebook({ defaultCellLanguage: 'julia' });
 
         await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
-        assert.strictEqual(vscodeNotebook.activeNotebookEditor!.document.cells[0].language.toLowerCase(), 'julia');
+        assert.strictEqual(
+            vscodeNotebook.activeNotebookEditor!.document.cells[0].document.languageId.toLowerCase(),
+            'julia'
+        );
     });
 });

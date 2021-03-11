@@ -857,7 +857,6 @@ module.exports = {
         'src/client/datascience/raw-kernel/rawNotebookProvider.ts',
         'src/client/datascience/raw-kernel/liveshare/guestRawNotebookProvider.ts',
         'src/client/datascience/raw-kernel/rawKernel.ts',
-        'src/client/datascience/raw-kernel/rawSession.ts',
         'src/client/datascience/raw-kernel/rawSocket.ts',
         'src/client/datascience/crossProcessLock.ts',
         'src/client/datascience/debugLocationTrackerFactory.ts',
