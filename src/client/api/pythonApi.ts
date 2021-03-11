@@ -323,13 +323,16 @@ export class InterpreterService implements IInterpreterService {
         let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
         if (!promise) {
             promise = this.apiProvider.getApi().then((api) => api.getActiveInterpreter(resource));
-            this.workspaceCachedActiveInterpreter.set(workspaceId, promise);
-            // If there was a problem in getting the details, remove the cached info.
-            promise.catch(() => {
-                if (this.workspaceCachedActiveInterpreter.get(workspaceId) === promise) {
-                    this.workspaceCachedActiveInterpreter.delete(workspaceId);
-                }
-            });
+
+            if (promise) {
+                this.workspaceCachedActiveInterpreter.set(workspaceId, promise);
+                // If there was a problem in getting the details, remove the cached info.
+                promise.catch(() => {
+                    if (this.workspaceCachedActiveInterpreter.get(workspaceId) === promise) {
+                        this.workspaceCachedActiveInterpreter.delete(workspaceId);
+                    }
+                });
+            }
         }
         return promise;
     }
