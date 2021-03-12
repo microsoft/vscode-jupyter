@@ -24,7 +24,7 @@ const stopWatch = new StopWatch();
 //===============================================
 // loading starts here
 
-import { ProgressLocation, ProgressOptions, window } from 'vscode';
+import { EventEmitter, ProgressLocation, ProgressOptions, window } from 'vscode';
 
 import { buildApi, IExtensionApi } from './api';
 import { IApplicationShell } from './common/application/types';
@@ -36,6 +36,8 @@ import { activateComponents } from './extensionActivation';
 import { initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
+import { noop } from './common/utils/misc';
+import { KernelStateEventArgs } from './datascience/notebookExtensibility';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -58,7 +60,19 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // We want to completely handle the error
         // before notifying VS Code.
         await handleError(ex, durations);
-        throw ex; // re-raise
+        traceError('Failed to active the Jupyter Extension', ex);
+        // Disable this, as we don't want Python extension or any other extensions that depend on this to fall over.
+        // Return a dummy object, to ensure other extension do not fall over.
+        return {
+            createBlankNotebook: () => Promise.resolve(),
+            onKernelStateChange: new EventEmitter<KernelStateEventArgs>().event,
+            ready: Promise.resolve(),
+            registerCellToolbarButton: () => ({ dispose: noop }),
+            registerNewNotebookContent: () => Promise.resolve(),
+            registerPythonApi: noop,
+            registerRemoteServerProvider: noop,
+            showDataViewer: () => Promise.resolve()
+        };
     }
     // Send the "success" telemetry only if activation did not fail.
     // Otherwise Telemetry is send via the error handler.
