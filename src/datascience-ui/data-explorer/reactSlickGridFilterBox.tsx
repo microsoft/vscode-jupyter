@@ -20,16 +20,16 @@ const filterIcon: IIconProps = {
 
 const styles = {
     iconContainer: {
-        opacity: 0.4,
-        ':active': {
-            opacity: 0
-        }
+        opacity: 0.4
     },
     root: {
         '::after': {
             borderRadius: '0px',
             border: '1px solid var(--vscode-focusBorder)'
         }
+    },
+    field: {
+        color: 'var(--vscode-settings-textInputForeground)'
     }
 };
 

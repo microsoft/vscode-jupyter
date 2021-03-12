@@ -8,7 +8,7 @@
     font-size: var(--vscode-font-size);
     height: 26px;
     margin: 0px;
-    border: none;
+    border: 1px solid var(--vscode-settings-textInputBorder);
 }
 
 [class*='ms-Dropdown is-disabled'],
@@ -22,6 +22,15 @@
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
+}
+
+.checkbox-label {
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    font-weight: var(--vscode-font-weight);
+    cursor: pointer;
+    margin: 0;
+    padding-left: 10px;
 }
 
 .slice-summary {
@@ -40,7 +49,8 @@
     padding-left: 5px;
     padding-right: 5px;
     padding-top: 0px;
-    background-color: var(--vscode-input-background);
+    color: var(--vscode-badge-foreground);
+    background-color: var(--vscode-badge-background);
     border-radius: 2px;
 }
 
@@ -54,6 +64,9 @@
 .slice-control-row {
     display: flex;
     flex-direction: row;
+}
+
+.slice-form-container {
     margin-left: 30px;
 }
 
@@ -102,6 +115,44 @@ details[open] > summary::before {
     outline: none;
 }
 
+.checkbox {
+    color: var(--vscode-settings-checkboxForeground);
+    background-color: var(--vscode-settings-checkboxBackground) !important;
+    border: 1px solid transparent;
+    border-color: var(--vscode-settings-checkboxBorder) !important;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    text-align: center;
+    vertical-align:middle;
+    border-radius: 3px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.checkbox:disabled {
+    cursor:not-allowed;
+}
+
+.checkbox.checked:active,
+.checkbox.checked:focus,
+.checkbox:active,
+.checkbox:focus {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
+}
+
+.checkbox.checked::before {
+    content: '\eab2';
+    text-decoration: none;
+    text-rendering: auto;
+    display: inline-block;
+    cursor: pointer;
+    font: normal normal normal 16px/1 codicon;
+    line-height: 16px;
+    color: var(--vscode-settings-checkboxForeground);
+}
+
 /* Overrides for Fluent UI controls */
 [class*='ms-Dropdown-label'] {
     color: var(--vscode-editor-foreground);
@@ -121,7 +172,7 @@ details[open] > summary::before {
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
     background-color: var(--vscode-dropdown-background);
-    border: var(--vscode-dropdown-border);
+    border: 1px solid var(--vscode-dropdown-border) !important;
     border-radius: 0px;
     height: 26px;
     line-height: 26px;
@@ -132,7 +183,7 @@ details[open] > summary::before {
 }
 
 [class*='dropdown']:active {
-    border: 1px solid var(--vscode-dropdown-border),
+    border: 1px solid var(--vscode-focusBorder),
 }
 
 [class*='dropdown']:focus::after {

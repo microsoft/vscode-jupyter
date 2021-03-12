@@ -5,6 +5,7 @@
 
 .react-grid-container {
     border: none;
+    padding-left: 8px;
 }
 
 .react-grid-measure {
@@ -14,8 +15,8 @@
 
 .react-grid-header-cell {
     padding: 0px 4px;
-    background-color: var(--vscode-menu-background);
-    color: var(--vscode-menu-foreground);
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
     text-align: left;
     font-weight: bold;
     border-right: 1px solid transparent;
@@ -36,8 +37,8 @@
 
 /* Some overrides necessary to get the colors we want */
 .slick-headerrow-column {
-    background-color: var(--vscode-menu-background);
-    color: var(--vscode-menu-foreground);
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
     border-right: 1px solid transparent;
 }
 
@@ -46,6 +47,11 @@
     padding-right: 3px;
     padding-bottom: 3px;
     padding-top: 1px;
+}
+
+.slick-header-column {
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
 }
 
 .slick-header-column.ui-state-default,
@@ -82,7 +88,7 @@
     text-align: right;
     display: flex;
     padding: 3px;
-    color: var(--vscode-menu-foreground);
+    color: var(--vscode-sideBar-foreground);
     opacity: 0.4;
 }
 
@@ -94,7 +100,7 @@
     text-align: right;
     display: flex;
     padding: 3px;
-    color: var(--vscode-menu-foreground);
+    color: var(--vscode-sideBar-foreground);
     opacity: 0.4;
 }
 
@@ -107,8 +113,8 @@ input.editor-text {
     width: 100%;
     height: 100%;
     box-sizing: border-box;
-    border: 2px var(--vscode-input-border);
-    padding: 2px;
+    border: 2px var(--vscode-focusBorder);
+    padding-left: 7px;
     margin: 0;
     outline: 0 none;
     border-style: solid;
@@ -123,6 +129,7 @@ input.editor-text {
 
 .slick-cell {
     border: 1px solid var(--vscode-editor-lineHighlightBorder);
+    padding-left: 7px;
 }
 
 .slick-cell.editable {
@@ -144,7 +151,7 @@ input.editor-text {
     cursor: pointer;
     padding-left: 3px;
     padding-top: 3px;
-    color: var(--vscode-menu-foreground);
+    color: var(--vscode-sideBar-foreground);
 }
 
 .header-cell-button {
