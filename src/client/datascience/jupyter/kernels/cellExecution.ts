@@ -348,7 +348,10 @@ export class CellExecution {
     }
     private canExecuteCell() {
         // Raw cells cannot be executed.
-        if (this.isPythonKernelConnection && (this.cell.language === 'raw' || this.cell.language === 'plaintext')) {
+        if (
+            this.isPythonKernelConnection &&
+            (this.cell.document.languageId === 'raw' || this.cell.document.languageId === 'plaintext')
+        ) {
             return false;
         }
 
@@ -372,7 +375,7 @@ export class CellExecution {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const metadata: any = {
             ...(this.cell.metadata?.custom?.metadata || {}), // Send the Cell Metadata
-            ...{ cellId: this.cell.uri.toString() }
+            ...{ cellId: this.cell.document.uri.toString() }
         };
 
         // For Jupyter requests, silent === don't output, while store_history === don't update execution count
@@ -442,7 +445,12 @@ export class CellExecution {
             // Explicit false check as undefined store_history defaults to true if silent is false
             const wasSilent = request.msg.content.silent || request.msg.content.store_history === false;
             loggers.forEach((l) =>
-                l.postExecute(translateCellFromNative(this.cell), wasSilent, this.cell.language, this.cell.notebook.uri)
+                l.postExecute(
+                    translateCellFromNative(this.cell),
+                    wasSilent,
+                    this.cell.document.languageId,
+                    this.cell.notebook.uri
+                )
             );
         }
     }

@@ -4,6 +4,7 @@
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
+import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
@@ -122,7 +123,14 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         if (!e.model) {
             return;
         }
-        e.model?.getCellsWithId().forEach(this.checkCell.bind(this));
+        try {
+            e.model?.getCellsWithId().forEach(this.checkCell.bind(this));
+        } catch (ex) {
+            // Can fail on CI, if the notebook has been closed or the like
+            if (!IS_CI_SERVER) {
+                throw ex;
+            }
+        }
     }
 
     private sendTelemetry(mimeType: string) {

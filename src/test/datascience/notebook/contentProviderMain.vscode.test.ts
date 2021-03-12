@@ -14,7 +14,8 @@ import {
     Uri,
     NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookDocument,
-    NotebookCellMetadata
+    NotebookCellMetadata,
+    CancellationTokenSource
 } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -75,13 +76,11 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                 );
                 when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
 
-                const notebook = await contentProvider.openNotebook(fileUri, {});
+                const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
 
                 assert.isOk(notebook);
                 assert.equal(notebook.metadata?.cellEditable, isNotebookTrusted);
-                assert.equal(notebook.metadata?.cellRunnable, isNotebookTrusted);
                 assert.equal(notebook.metadata?.editable, isNotebookTrusted);
-                assert.equal(notebook.metadata?.runnable, isNotebookTrusted);
 
                 assert.deepEqual(notebook.cells, [
                     {
@@ -97,7 +96,6 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: NotebookCellRunState.Idle,
-                            runnable: true,
                             statusMessage: undefined
                         })
                     },
@@ -112,8 +110,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             },
                             editable: true,
                             executionOrder: undefined,
-                            hasExecutionOrder: false,
-                            runnable: false
+                            hasExecutionOrder: false
                         })
                     }
                 ]);
@@ -152,14 +149,12 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                 );
                 when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
 
-                const notebook = await contentProvider.openNotebook(fileUri, {});
+                const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
 
                 assert.isOk(notebook);
 
                 assert.equal(notebook.metadata?.cellEditable, isNotebookTrusted);
-                assert.equal(notebook.metadata?.cellRunnable, isNotebookTrusted);
                 assert.equal(notebook.metadata?.editable, isNotebookTrusted);
-                assert.equal(notebook.metadata?.runnable, isNotebookTrusted);
 
                 assert.deepEqual(notebook.cells, [
                     {
@@ -175,7 +170,6 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             executionOrder: 10,
                             hasExecutionOrder: true,
                             runState: NotebookCellRunState.Idle,
-                            runnable: true,
                             statusMessage: undefined
                         })
                     },
@@ -190,8 +184,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             },
                             editable: true,
                             executionOrder: undefined,
-                            hasExecutionOrder: false,
-                            runnable: false
+                            hasExecutionOrder: false
                         })
                     }
                 ]);

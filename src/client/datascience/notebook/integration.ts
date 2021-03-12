@@ -72,7 +72,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                                 lastRunDuration: true,
                                 outputCollapsed: true,
                                 runStartTime: true,
-                                runnable: true,
                                 executionOrder: false,
                                 custom: false,
                                 runState: true,

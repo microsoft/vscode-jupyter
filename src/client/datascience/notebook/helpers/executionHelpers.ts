@@ -54,7 +54,7 @@ export async function handleUpdateDisplayDataMessage(
     const document = editor.document;
     // Find any cells that have this same display_id
     for (const cell of document.cells) {
-        if (cell.cellKind !== NotebookCellKind.Code) {
+        if (cell.kind !== NotebookCellKind.Code) {
             continue;
         }
         let updated = false;
@@ -123,7 +123,7 @@ export async function addNewCellAfter(notebookEditor: NotebookEditor, cell: Note
         edit.replaceNotebookCells(notebookEditor.document.uri, cell.index + 1, cell.index + 1, [
             {
                 kind: NotebookCellKind.Code,
-                language: cell.language,
+                language: cell.document.languageId,
                 metadata: cell.metadata.with({ runState: NotebookCellRunState.Success }),
                 outputs: [],
                 source: text

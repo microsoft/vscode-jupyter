@@ -119,8 +119,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         await activeNotebookChanged.assertFired();
     });
     test('Opening a non-notebooks will fire necessary events', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/5071
-        return this.skip();
         const notebookOpened = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
         const activeNotebookChanged = createEventHandler(
             editorProvider,
@@ -144,8 +142,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         assert.isUndefined(activeNotebookChanged.second, 'Active Editor should be undefined');
     });
     test('Opening a non-notebook file and toggling between nb & non-notebook will fire necessary events', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/5071
-        return this.skip();
         const notebookOpened = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
         const activeNotebookChanged = createEventHandler(
             editorProvider,
@@ -193,8 +189,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         assert.isUndefined(activeNotebookChanged.last);
     });
     test('Opening two notebooks and toggling between the two will fire necessary event', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/5071
-        return this.skip();
         const notebookOpened = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
         const activeNotebookChanged = createEventHandler(
             editorProvider,
@@ -424,8 +418,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         );
     });
     test('Active Notebook Editor event gets fired when opening multiple notebooks', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/5071
-        return this.skip();
         const notebookOpened = createEventHandler(editorProvider, 'onDidChangeActiveNotebookEditor', disposables);
         const activeNotebookChanged = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
 
