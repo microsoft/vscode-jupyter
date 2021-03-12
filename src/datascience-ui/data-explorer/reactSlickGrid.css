@@ -15,8 +15,8 @@
 
 .react-grid-header-cell {
     padding: 0px 4px;
-    background-color: var(--vscode-menu-background);
-    color: var(--vscode-menu-foreground);
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
     text-align: left;
     font-weight: bold;
     border-right: 1px solid transparent;
@@ -47,6 +47,11 @@
     padding-right: 3px;
     padding-bottom: 3px;
     padding-top: 1px;
+}
+
+.slick-header-column {
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
 }
 
 .slick-header-column.ui-state-default,
@@ -83,7 +88,7 @@
     text-align: right;
     display: flex;
     padding: 3px;
-    color: var(--vscode-menu-foreground);
+    color: var(--vscode-sideBar-foreground);
     opacity: 0.4;
 }
 
@@ -95,7 +100,7 @@
     text-align: right;
     display: flex;
     padding: 3px;
-    color: var(--vscode-menu-foreground);
+    color: var(--vscode-sideBar-foreground);
     opacity: 0.4;
 }
 
@@ -146,7 +151,7 @@ input.editor-text {
     cursor: pointer;
     padding-left: 3px;
     padding-top: 3px;
-    color: var(--vscode-menu-foreground);
+    color: var(--vscode-sideBar-foreground);
 }
 
 .header-cell-button {

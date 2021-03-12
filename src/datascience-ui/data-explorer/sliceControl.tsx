@@ -1,4 +1,4 @@
-import { Checkbox, Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
+import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
 import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 import { getLocString } from '../react-common/locReactSide';
@@ -12,28 +12,6 @@ import {
 } from './helpers';
 
 import './sliceControl.css';
-
-const checkboxStyles = {
-    checkbox: {
-        color: 'var(--vscode-settings-checkboxForeground)',
-        backgroundColor: 'var(--vscode-settings-checkboxBackground) !important',
-        border: '1px solid var(--vscode-settings-checkboxBorder) !important',
-        borderRadius: '3px',
-        width: '18px',
-        height: '18px'
-    },
-    checkmark: {
-        fontSize: '16px',
-        color: 'var(--vscode-settings-checkboxForeground)',
-    },
-    text: {
-        fontFamily: 'var(--vscode-font-family)',
-        fontWeight: 'var(--vscode-font-weight)',
-        fontSize: 'var(--vscode-font-size)',
-        color: 'var(--vscode-editor-foreground) !important',
-        paddingLeft: 2
-    }
-};
 
 // These styles are passed to the FluentUI dropdown controls
 const styleOverrides = {
@@ -134,14 +112,12 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     </summary>
                     <form onSubmit={this.handleSubmit} className="slice-form">
                         <div className="slice-enablement-checkbox-container">
-                            <Checkbox
-                                styles={checkboxStyles}
-                                onChange={this.toggleEnablement}
-                                disabled={this.props.loadingData}
-                                label={getLocString('DataScience.sliceData', 'Slice Data')}
-                            />
+                            <div className="slice-control-row">
+                                <div role="checkbox" className={`checkbox${this.state.isEnabled ? ' checked' : ''}`} onClick={this.toggleEnablement} />
+                                <span className="checkbox-label" onClick={this.toggleEnablement}>{getLocString('DataScience.sliceData', 'Slice Data')}</span>
+                            </div>
                         </div>
-                        <div className="slice-control-row" style={{ marginTop: '10px' }}>
+                        <div className="slice-control-row slice-form-container" style={{ marginTop: '10px' }}>
                             <div className="slice-control-column">
                                 <input
                                     value={this.state.inputValue}
@@ -208,7 +184,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
             const indexKey = this.state[`selectedIndex${i}`] as number;
 
             dropdowns.push(
-                <div className="slice-control-row">
+                <div className="slice-control-row slice-form-container">
                     <Dropdown
                         responsiveMode={ResponsiveMode.xxxLarge}
                         label={getLocString('DataScience.sliceDropdownAxisLabel', 'Axis')}

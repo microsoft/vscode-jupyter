@@ -21,10 +21,6 @@ const filterIcon: IIconProps = {
 const styles = {
     iconContainer: {
         opacity: 0.4,
-        width: '0px',
-        ':active': {
-            opacity: 0
-        }
     },
     root: {
         '::after': {
@@ -32,9 +28,9 @@ const styles = {
             border: '1px solid var(--vscode-focusBorder)'
         }
     },
-    field: { // TODO also ensure filter icon doesn't show when there's text
+    field: {
         color: 'var(--vscode-settings-textInputForeground)'
-    }
+    },
 };
 
 interface IFilterProps {
