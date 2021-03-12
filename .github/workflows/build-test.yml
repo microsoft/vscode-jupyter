@@ -911,7 +911,7 @@ jobs:
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
-    # This should happen all the time except releaseee
+    # This should happen all the time except release
     if: github.base_ref == 'refs/heads/main'
     needs: [ts_tests, vscodeTests, smoke-tests, tests]
     steps:
