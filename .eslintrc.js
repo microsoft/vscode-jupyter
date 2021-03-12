@@ -444,7 +444,6 @@ module.exports = {
         'src/client/interpreter/display/progressDisplay.ts',
         'src/client/interpreter/display/interpreterSelectionTip.ts',
         'src/client/constants.ts',
-        'src/client/extension.ts',
         'src/client/extensionInit.ts',
         'src/client/sourceMapSupport.ts',
         'src/client/startupTelemetry.ts',
