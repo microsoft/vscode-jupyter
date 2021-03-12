@@ -106,18 +106,18 @@ jobs:
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
 
-      - name: Build VSIX
-        uses: ./.github/actions/build-vsix
-        id: build-vsix
+    #   - name: Build VSIX
+    #     uses: ./.github/actions/build-vsix
+    #     id: build-vsix
 
-      - name: Rename VSIX for release branch
-        if: steps.build-vsix.outputs.path != needs.pick_environment.outputs.vsix_name
-        run: mv ${{ steps.build-vsix.outputs.path }} ${{ needs.pick_environment.outputs.vsix_name }}
+    #   - name: Rename VSIX for release branch
+    #     if: steps.build-vsix.outputs.path != needs.pick_environment.outputs.vsix_name
+    #     run: mv ${{ steps.build-vsix.outputs.path }} ${{ needs.pick_environment.outputs.vsix_name }}
 
-      - uses: actions/upload-artifact@v2
-        with:
-          name: ${{needs.pick_environment.outputs.vsix_name}}
-          path: ${{needs.pick_environment.outputs.vsix_name}}
+    #   - uses: actions/upload-artifact@v2
+    #     with:
+    #       name: ${{needs.pick_environment.outputs.vsix_name}}
+    #       path: ${{needs.pick_environment.outputs.vsix_name}}
 
   lint:
     name: Lint
@@ -402,50 +402,50 @@ jobs:
           python -m pip uninstall jedi --yes
           python -m pip install jedi==0.17.2
 
-      # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
-      - name: Install Python Libs for conda
-        shell: bash -l {0}
-        if: env.conda_python
-        run: |
-          conda activate functional_test_env
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
-          conda env update --file ./build/conda-functional-requirements.yml
-          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          python -m pip uninstall jedi --yes
-          python -m pip install jedi==0.17.2
-          conda install pytorch torchvision torchaudio cpuonly -c pytorch
+    #   # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
+    #   - name: Install Python Libs for conda
+    #     shell: bash -l {0}
+    #     if: env.conda_python
+    #     run: |
+    #       conda activate functional_test_env
+    #       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+    #       python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+    #       python ./pythonFiles/install_debugpy.py
+    #       conda env update --file ./build/conda-functional-requirements.yml
+    #       python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+    #       python -m pip uninstall jedi --yes
+    #       python -m pip install jedi==0.17.2
+    #       conda install pytorch torchvision torchaudio cpuonly -c pytorch
 
-      # Install PyTorch with pip
-      - name: Install PyTorch on Windows and Linux
-        if: matrix.test-suite != 'conda' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
-        run: pip install torch==1.7.1+cpu torchvision==0.8.2+cpu torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+    #   # Install PyTorch with pip
+    #   - name: Install PyTorch on Windows and Linux
+    #     if: matrix.test-suite != 'conda' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
+    #     run: pip install torch==1.7.1+cpu torchvision==0.8.2+cpu torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
 
-      - name: Install PyTorch on Mac
-        if: matrix.test-suite != 'conda' && matrix.os == 'macos-latest'
-        run: pip install torch torchvision torchaudio
+    #   - name: Install PyTorch on Mac
+    #     if: matrix.test-suite != 'conda' && matrix.os == 'macos-latest'
+    #     run: pip install torch torchvision torchaudio
 
-      - name: Install secondary conda environment
-        shell: bash -l {0}
-        if: env.conda_python
-        run: |
-          conda create --name functional_test_env_2
-          conda activate functional_test_env_2
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
-          conda env update --file ./build/conda-functional-requirements.yml
-          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          conda install pytorch torchvision torchaudio cpuonly -c pytorch
+    #   - name: Install secondary conda environment
+    #     shell: bash -l {0}
+    #     if: env.conda_python
+    #     run: |
+    #       conda create --name functional_test_env_2
+    #       conda activate functional_test_env_2
+    #       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+    #       python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+    #       python ./pythonFiles/install_debugpy.py
+    #       conda env update --file ./build/conda-functional-requirements.yml
+    #       python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+    #       conda install pytorch torchvision torchaudio cpuonly -c pytorch
 
-        # This step is slow.
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+    #     # This step is slow.
+    #   - name: Install dependencies (npm ci)
+    #     run: npm ci --prefer-offline
 
-        # This step is slow.
-      - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
+    #     # This step is slow.
+    #   - name: Compile if not cached
+    #     run: npx gulp prePublishNonBundle
 
     #   - name: Run functional tests
     #     shell: bash -l {0}
@@ -653,53 +653,53 @@ jobs:
         if: matrix.test-suite != 'integration' && matrix.test-suite != 'notebookAndWebview'
         run: echo "VSC_JUPYTER_SKIP_WEBVIEW_BUILD=true" >> $GITHUB_ENV
 
-        # This step is slow.
-      - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
-        env:
-          VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
-          CI_JUPYTER_FAST_COMPILATION: 'true'
+    #     # This step is slow.
+    #   - name: Compile if not cached
+    #     run: npx gulp prePublishNonBundle
+    #     env:
+    #       VSC_CI_MATRIX_TEST_SUITE: ${{matrix.test-suite}}
+    #       CI_JUPYTER_FAST_COMPILATION: 'true'
 
-      # Used by tests for non-python kernels.
-      # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
-      - name: Install Dot.net
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{env.DOTNET_VERSION}}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
+    #   # Used by tests for non-python kernels.
+    #   # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
+    #   - name: Install Dot.net
+    #     uses: actions/setup-dotnet@v1
+    #     with:
+    #       dotnet-version: ${{env.DOTNET_VERSION}}
+    #     if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
-      - name: Install .NET Interactive
-        shell: bash -l {0}
-        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
+    #   - name: Install .NET Interactive
+    #     shell: bash -l {0}
+    #     run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+    #     if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
-      - name: Install .NET Kernel
-        shell: bash -l {0}
-        run: dotnet interactive jupyter install
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
+    #   - name: Install .NET Kernel
+    #     shell: bash -l {0}
+    #     run: dotnet interactive jupyter install
+    #     if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
 
-      - name: Install Julia
-        uses: julia-actions/setup-julia@v1
-        with:
-          version: ${{env.JULIA_VERSION}}
+    #   - name: Install Julia
+    #     uses: julia-actions/setup-julia@v1
+    #     with:
+    #       version: ${{env.JULIA_VERSION}}
 
-      - name: Install Julia Kernel
-        run: |
-          julia -e '
-            using Pkg
-            Pkg.add("IJulia")'
+    #   - name: Install Julia Kernel
+    #     run: |
+    #       julia -e '
+    #         using Pkg
+    #         Pkg.add("IJulia")'
 
-      - name: Create Virtual Env for Tests
-        uses: ./.github/actions/create-venv-for-tests
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'notebookAndWebview'
+    #   - name: Create Virtual Env for Tests
+    #     uses: ./.github/actions/create-venv-for-tests
+    #     if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'notebookAndWebview'
 
-      # Set the correct xvfb commands to run vscode tests
-      # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
-      # Note that xvfb github action only runs through xvfb on linux, so only set the commands there
-      # as on windows / mac they would get directly passed to run, not xvfb-run
-      - name: Set xvfb parameters linux
-        if: matrix.os == 'ubuntu-latest'
-        run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
+    #   # Set the correct xvfb commands to run vscode tests
+    #   # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
+    #   # Note that xvfb github action only runs through xvfb on linux, so only set the commands there
+    #   # as on windows / mac they would get directly passed to run, not xvfb-run
+    #   - name: Set xvfb parameters linux
+    #     if: matrix.os == 'ubuntu-latest'
+    #     run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
 
     #   - name: Run tests with VSCode & Jupyter
     #     uses: GabrielBB/xvfb-action@v1.4
@@ -838,29 +838,29 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
-      - name: Download VSIX
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{needs.pick_environment.outputs.vsix_name}}
+    #   - name: Download VSIX
+    #     uses: actions/download-artifact@v2
+    #     with:
+    #       name: ${{needs.pick_environment.outputs.vsix_name}}
 
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+    #   - name: Install dependencies (npm ci)
+    #     run: npm ci --prefer-offline
 
-      - name: pip install system test requirements
-        run: |
-          python -m pip install --upgrade -r build/test-requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-        shell: bash
+    #   - name: pip install system test requirements
+    #     run: |
+    #       python -m pip install --upgrade -r build/test-requirements.txt
+    #       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+    #     shell: bash
 
-      - name: pip install smoke test requirements
-        run: |
-          python -m pip install --upgrade -r build/smoke-test-requirements.txt
-        shell: bash
+    #   - name: pip install smoke test requirements
+    #     run: |
+    #       python -m pip install --upgrade -r build/smoke-test-requirements.txt
+    #     shell: bash
 
-      # Compile the test files.
-      - name: Prepare for smoke tests
-        run: npx tsc -p ./
-        shell: bash
+    #   # Compile the test files.
+    #   - name: Prepare for smoke tests
+    #     run: npx tsc -p ./
+    #     shell: bash
 
     #   - name: Run smoke tests
     #     env:
@@ -912,7 +912,7 @@ jobs:
     name: Coverage reports upload
     runs-on: ubuntu-latest
     # This should happen all the time except release
-    if: github.ref == 'refs/heads/main'
+    if: github.base_ref == 'refs/heads/main'
     needs: [ts_tests, vscodeTests, smoke-tests, tests]
     steps:
       - name: Checkout
