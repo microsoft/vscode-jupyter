@@ -113,8 +113,14 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     <form onSubmit={this.handleSubmit} className="slice-form">
                         <div className="slice-enablement-checkbox-container">
                             <div className="slice-control-row">
-                                <div role="checkbox" className={`checkbox${this.state.isEnabled ? ' checked' : ''}`} onClick={this.toggleEnablement} />
-                                <span className="checkbox-label" onClick={this.toggleEnablement}>{getLocString('DataScience.sliceData', 'Slice Data')}</span>
+                                <div
+                                    role="checkbox"
+                                    className={`checkbox${this.state.isEnabled ? ' checked' : ''}`}
+                                    onClick={this.toggleEnablement}
+                                />
+                                <span className="checkbox-label" onClick={this.toggleEnablement}>
+                                    {getLocString('DataScience.sliceData', 'Slice Data')}
+                                </span>
                             </div>
                         </div>
                         <div className="slice-control-row slice-form-container" style={{ marginTop: '10px' }}>

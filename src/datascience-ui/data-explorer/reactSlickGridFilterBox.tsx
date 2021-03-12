@@ -20,7 +20,7 @@ const filterIcon: IIconProps = {
 
 const styles = {
     iconContainer: {
-        opacity: 0.4,
+        opacity: 0.4
     },
     root: {
         '::after': {
@@ -30,7 +30,7 @@ const styles = {
     },
     field: {
         color: 'var(--vscode-settings-textInputForeground)'
-    },
+    }
 };
 
 interface IFilterProps {
