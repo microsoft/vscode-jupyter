@@ -247,10 +247,10 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
-    public async runSelectionOrLine(activeEditor: TextEditor | undefined, text: string | null = null) {
+    public async runSelectionOrLine(activeEditor: TextEditor | undefined, text: string | undefined = undefined) {
         if (this.document && activeEditor && this.fs.arePathsSame(activeEditor.document.uri, this.document.uri)) {
             let codeToExecute: string | undefined;
-            if (text === null) {
+            if (text === undefined) {
                 // Get just the text of the selection or the current line if none
                 codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
             } else {
