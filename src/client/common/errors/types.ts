@@ -24,11 +24,11 @@ export class WrappedError extends BaseError {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public from(err: any) {
+    public static from(message: string, err: any) {
         if (err instanceof BaseError) {
-            throw err;
+            return err;
         } else {
-            throw this;
+            return new WrappedError(message, err);
         }
     }
 }

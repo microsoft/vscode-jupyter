@@ -157,7 +157,7 @@ export class NotebookStarter implements Disposable {
             if (exitCode !== 0) {
                 throw new Error(localize.DataScience.jupyterServerCrashed().format(exitCode?.toString()));
             } else {
-                throw new WrappedError(localize.DataScience.jupyterNotebookFailure().format(err), err).from(err);
+                throw WrappedError.from(localize.DataScience.jupyterNotebookFailure().format(err), err);
             }
         } finally {
             starter?.dispose();

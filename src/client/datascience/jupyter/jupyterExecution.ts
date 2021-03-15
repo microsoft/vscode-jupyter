@@ -279,20 +279,20 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                                 throw new JupyterSelfCertsError(connection.baseUrl);
                             } else {
-                                throw new WrappedError(
+                                throw WrappedError.from(
                                     localize.DataScience.jupyterNotebookRemoteConnectFailed().format(
                                         connection.baseUrl,
                                         err
                                     ),
                                     err
-                                ).from(err);
+                                );
                             }
                         } else {
                             sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err, true);
-                            throw new WrappedError(
+                            throw WrappedError.from(
                                 localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
                                 err
-                            ).from(err);
+                            );
                         }
                     } else {
                         kernelSpecCancelSource.cancel();
