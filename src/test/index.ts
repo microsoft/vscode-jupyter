@@ -27,7 +27,6 @@ import {
     TEST_TIMEOUT
 } from './constants';
 import { noop } from './core';
-import type { stopJupyterServer } from './datascience/notebook/helper';
 import { initialize } from './initialize';
 import { initializeLogger } from './testLogger';
 
