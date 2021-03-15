@@ -22,6 +22,15 @@ export class WrappedError extends BaseError {
             this.stack = `${new Error('').stack}${EOL}${EOL}${originalException.stack}`;
         }
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public from(err: any) {
+        if (err instanceof BaseError) {
+            throw err;
+        } else {
+            throw this;
+        }
+    }
 }
 
 export function getErrorCategory(error?: Error): ErrorCategory {

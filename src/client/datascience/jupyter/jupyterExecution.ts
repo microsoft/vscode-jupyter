@@ -285,14 +285,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                         err
                                     ),
                                     err
-                                );
+                                ).from(err);
                             }
                         } else {
                             sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err, true);
                             throw new WrappedError(
                                 localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
                                 err
-                            );
+                            ).from(err);
                         }
                     } else {
                         kernelSpecCancelSource.cancel();
