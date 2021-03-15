@@ -137,7 +137,6 @@ module.exports = {
         'src/test/common/socketCallbackHandler.test.ts',
         'src/test/common/installer.test.ts',
         'src/test/common/process/decoder.test.ts',
-        'src/test/common/process/pythonDaemonPool.unit.test.ts',
         'src/test/common/process/processFactory.unit.test.ts',
         'src/test/common/process/pythonToolService.unit.test.ts',
         'src/test/common/process/proc.observable.test.ts',
