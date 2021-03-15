@@ -27,7 +27,7 @@ import {
     TEST_TIMEOUT
 } from './constants';
 import { noop } from './core';
-import { stopJupyterServer } from './datascience/notebook/helper';
+import type { stopJupyterServer } from './datascience/notebook/helper';
 import { initialize } from './initialize';
 import { initializeLogger } from './testLogger';
 
@@ -203,7 +203,12 @@ export async function run(): Promise<void> {
             });
         });
     } finally {
-        stopJupyterServer().catch(noop);
+        try {
+            const helpers = require('./datascience/notebook/helper') as typeof import('./datascience/notebook/helper');
+            helpers.stopJupyterServer().catch(noop);
+        } catch {
+            // Noop.
+        }
         if (nyc) {
             nyc.writeCoverageFile();
             await nyc.report(); // This is async.
