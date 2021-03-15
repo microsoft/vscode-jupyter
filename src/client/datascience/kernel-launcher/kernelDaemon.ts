@@ -29,7 +29,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         super(pythonExecutionService, platformService, pythonPath, proc, connection);
     }
     public async interrupt() {
-        const request = new RequestType0<void, void, void>('interrupt_kernel');
+        const request = new RequestType0<void, void>('interrupt_kernel');
         await this.sendRequestWithoutArgs(request);
     }
     public async kill() {
@@ -38,7 +38,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
             return;
         }
         this.killed = true;
-        const request = new RequestType0<void, void, void>('kill_kernel');
+        const request = new RequestType0<void, void>('kill_kernel');
         await this.sendRequestWithoutArgs(request);
     }
     public async preWarm() {
@@ -47,7 +47,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         }
         this.preWarmed = true;
         this.monitorOutput();
-        const request = new RequestType0<void, void, void>('prewarm_kernel');
+        const request = new RequestType0<void, void>('prewarm_kernel');
 
         await this.sendRequestWithoutArgs(request);
     }
@@ -73,7 +73,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         this.monitorOutput();
 
         if (this.preWarmed) {
-            const request = new RequestType<{ args: string[] }, ExecResponse, void, void>('start_prewarmed_kernel');
+            const request = new RequestType<{ args: string[] }, ExecResponse, void>('start_prewarmed_kernel');
             await this.sendRequest(request, { args: [moduleName].concat(args) });
         } else {
             // No need of the output here, we'll tap into the output coming from daemon `this.outputObservale`.
@@ -102,9 +102,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         }
         this.outputHooked = true;
         // Message from daemon when kernel dies.
-        const KernelDiedNotification = new NotificationType<{ exit_code: string; reason?: string }, void>(
-            'kernel_died'
-        );
+        const KernelDiedNotification = new NotificationType<{ exit_code: string; reason?: string }>('kernel_died');
         let stdErr = '';
         this.connection.onNotification(KernelDiedNotification, (output) => {
             // If we have requested for kernel to be killed, don't raise kernel died error.
