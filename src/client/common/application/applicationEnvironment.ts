@@ -5,7 +5,6 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { parse } from 'semver';
 import * as vscode from 'vscode';
 import { IPlatformService } from '../platform/types';
 import { IExtensionContext, IPathUtils } from '../types';
@@ -43,7 +42,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         }
     }
     public get userCustomKeybindingsFile(): string | undefined {
-        return path.resolve(this.extensionContext.globalStoragePath, '..', '..', 'keybindings.json');
+        return path.resolve(this.extensionContext.globalStorageUri.fsPath, '..', '..', 'keybindings.json');
     }
     public get appName(): string {
         return vscode.env.appName;
@@ -91,10 +90,6 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         return this.appName.indexOf('Insider') > 0 || this.appName.indexOf('Code - OSS Dev') >= 0
             ? 'insiders'
             : 'stable';
-    }
-    public get extensionChannel(): Channel {
-        const version = parse(this.packageJson.version);
-        return !version || version.prerelease.length > 0 ? 'insiders' : 'stable';
     }
     public get uriScheme(): string {
         return vscode.env.uriScheme;

@@ -95,6 +95,7 @@ import {
     IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
+    IsCodeSpace,
     IsWindows,
     IWatchableJupyterSettings,
     Resource,
@@ -173,7 +174,7 @@ import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariab
 import { KernelDependencyService } from '../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from '../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
-import { KernelService } from '../../client/datascience/jupyter/kernels/kernelService';
+import { JupyterKernelService } from '../../client/datascience/jupyter/kernels/jupyterKernelService';
 import { KernelSwitcher } from '../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { KernelVariables } from '../../client/datascience/jupyter/kernelVariables';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
@@ -182,9 +183,13 @@ import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSe
 import { JupyterDebugService } from '../../client/datascience/jupyterDebugService';
 import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
-import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
+import { LocalKernelFinder } from '../../client/datascience/kernel-launcher/localKernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
-import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
+import {
+    ILocalKernelFinder,
+    IKernelLauncher,
+    IRemoteKernelFinder
+} from '../../client/datascience/kernel-launcher/types';
 import { NotebookCellLanguageService } from '../../client/datascience/notebook/defaultCellLanguageService';
 import { NotebookCreationTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 import { NotebookExtensibility } from '../../client/datascience/notebookExtensibility';
@@ -281,7 +286,6 @@ import { MockCommandManager } from './mockCommandManager';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
-import { MockExtensions } from './mockExtensions';
 import { MockFileSystem } from './mockFileSystem';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
@@ -310,6 +314,10 @@ import { KernelEnvironmentVariablesService } from '../../client/datascience/kern
 import { PreferredRemoteKernelIdProvider } from '../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { NotebookWatcher } from '../../client/datascience/variablesView/notebookWatcher';
 import { InterpreterPackages } from '../../client/datascience/telemetry/interpreterPackages';
+import { RemoteKernelFinder } from '../../client/datascience/kernel-launcher/remoteKernelFinder';
+import { Extensions } from '../../client/common/application/extensions';
+import { NotebookCreator } from '../../client/datascience/notebook/creation/notebookCreator';
+import { CreationOptionService } from '../../client/datascience/notebook/creation/creationOptionsService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -375,8 +383,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private configMap = new Map<string, MockWorkspaceConfiguration>();
     private emptyConfig = new MockWorkspaceConfiguration();
     private workspaceFolders: MockWorkspaceFolder[] = [];
-    private kernelServiceMock = mock(KernelService);
-    private kernelFinderMock = mock(KernelFinder);
+    private kernelServiceMock = mock(JupyterKernelService);
+    private kernelFinderMock = mock(LocalKernelFinder);
     private disposed = false;
     private experimentState = new Map<string, boolean>();
     private extensionRootPath: string | undefined;
@@ -508,6 +516,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             TestInteractiveWindowProvider
         );
         this.serviceManager.addSingletonInstance(UseProposedApi, false);
+        this.serviceManager.addSingletonInstance(IsCodeSpace, false);
         this.serviceManager.addSingletonInstance(UseCustomEditorApi, useCustomEditor);
         this.serviceManager.addSingletonInstance(UseVSCodeNotebookEditorApi, false);
         this.serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
@@ -554,7 +563,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
-        this.serviceManager.addSingleton<IExtensions>(IExtensions, MockExtensions);
+        const mockExtension = mock(Extensions);
+        when(mockExtension.all).thenReturn([]);
+        when(mockExtension.getExtension(anything())).thenReturn();
+        when(mockExtension.onDidChange).thenReturn(new EventEmitter<void>().event);
+        this.serviceManager.addSingletonInstance<IExtensions>(IExtensions, instance(mockExtension));
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
         this.serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
         this.serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
@@ -624,7 +637,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.addSingletonInstance<IOutputChannel>(
             IOutputChannel,
-            mock(MockOutputChannel),
+            instance(mock(MockOutputChannel)),
             JUPYTER_OUTPUT_CHANNEL
         );
         this.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
@@ -637,7 +650,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ServerPreload
         );
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
-        mockExtensionContext.setup((m) => m.globalStoragePath).returns(() => os.tmpdir());
+        mockExtensionContext.setup((m) => m.globalStorageUri).returns(() => Uri.file(os.tmpdir()));
         const globalState = new MockMemento();
         globalState.update(trustDirectoryMigrated, true);
         mockExtensionContext.setup((m) => m.globalState).returns(() => globalState);
@@ -649,6 +662,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<JupyterServerSelector>(
             JupyterServerSelector,
             instance(mockServerSelector)
+        );
+
+        this.serviceManager.addSingletonInstance<NotebookCreator>(NotebookCreator, instance(mock(NotebookCreator)));
+        const creationService = mock<CreationOptionService>();
+        when(creationService.registerNewNotebookContent(anything())).thenResolve();
+        when(creationService.registrations).thenReturn([]);
+        this.serviceManager.addSingletonInstance<CreationOptionService>(
+            CreationOptionService,
+            instance(creationService)
         );
 
         this.serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
@@ -825,10 +847,21 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (this.shouldMockJupyter) {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
-            when(this.kernelServiceMock.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
-            when(this.kernelFinderMock.findKernelSpec(anything(), anything())).thenResolve(undefined);
-            this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
-            this.serviceManager.addSingletonInstance<IKernelFinder>(IKernelFinder, instance(this.kernelFinderMock));
+            when(this.kernelFinderMock.findKernel(anything(), anything(), anything())).thenResolve(undefined);
+
+            this.serviceManager.addSingletonInstance<JupyterKernelService>(
+                JupyterKernelService,
+                instance(this.kernelServiceMock)
+            );
+            this.serviceManager.addSingletonInstance<ILocalKernelFinder>(
+                ILocalKernelFinder,
+                instance(this.kernelFinderMock)
+            );
+            const remoteKernelFinderMock = mock(RemoteKernelFinder);
+            this.serviceManager.addSingletonInstance<IRemoteKernelFinder>(
+                IRemoteKernelFinder,
+                instance(remoteKernelFinderMock)
+            );
 
             this.serviceManager.addSingletonInstance<IInterpreterSelector>(
                 IInterpreterSelector,
@@ -857,8 +890,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 IEnvironmentActivationService,
                 EnvironmentActivationService
             );
-            this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
-            this.serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
+            this.serviceManager.addSingleton<JupyterKernelService>(JupyterKernelService, JupyterKernelService);
+            this.serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
+            this.serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
 
@@ -1320,7 +1354,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                         interpreter,
                         allowEnvironmentFetchExceptions: true
                     });
-                const result = pythonProcess.isModuleInstalled('livelossplot'); // Should we check all dependencies?
+                const result = await pythonProcess.isModuleInstalled('livelossplot'); // Should we check all dependencies?
                 traceInfo(`${interpreter.path} has jupyter with livelossplot indicating : ${result}`);
                 return result;
             } else {

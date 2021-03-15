@@ -24,7 +24,7 @@ import {
     IPythonExecutionFactory,
     Output
 } from '../../client/common/process/types';
-import { IInstaller, Product } from '../../client/common/types';
+import { IInstaller, Product, Resource } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
@@ -430,6 +430,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public startNew(
+        _resource: Resource,
         _kernelConnection: KernelConnectionMetadata | undefined,
         _workingDirectory: string,
         cancelToken?: CancellationToken

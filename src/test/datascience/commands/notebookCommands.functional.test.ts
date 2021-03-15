@@ -15,10 +15,9 @@ import { NotebookProvider } from '../../../client/datascience/interactive-common
 import { InteractiveWindowProvider } from '../../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
 import { JupyterSessionManagerFactory } from '../../../client/datascience/jupyter/jupyterSessionManagerFactory';
-import { KernelDependencyService } from '../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { createInterpreterKernelSpec } from '../../../client/datascience/jupyter/kernels/helpers';
 import { KernelSelectionProvider } from '../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
-import { KernelService } from '../../../client/datascience/jupyter/kernels/kernelService';
 import { KernelSwitcher } from '../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import {
     IKernelSpecQuickPickItem,
@@ -26,12 +25,10 @@ import {
     LiveKernelConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../client/datascience/jupyter/kernels/types';
-import { IKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { InterpreterPackages } from '../../../client/datascience/telemetry/interpreterPackages';
 import { IInteractiveWindowProvider, INotebookEditorProvider } from '../../../client/datascience/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Notebook Commands', () => {
@@ -68,7 +65,8 @@ suite('DataScience - Notebook Commands', () => {
             selection: {
                 kernelModel: remoteKernel,
                 interpreter: undefined,
-                kind: 'connectToLiveKernel'
+                kind: 'connectToLiveKernel',
+                id: '0'
             }
         }
     ];
@@ -79,15 +77,17 @@ suite('DataScience - Notebook Commands', () => {
                 kernelSpec: localKernel,
                 kernelModel: undefined,
                 interpreter: undefined,
-                kind: 'startUsingKernelSpec'
+                kind: 'startUsingKernelSpec',
+                id: '1'
             }
         },
         {
             label: 'foobaz',
             selection: {
-                kernelSpec: undefined,
+                kernelSpec: createInterpreterKernelSpec(selectedInterpreter),
                 interpreter: selectedInterpreter,
-                kind: 'startUsingPythonInterpreter'
+                kind: 'startUsingPythonInterpreter',
+                id: '2'
             }
         }
     ];
@@ -101,19 +101,16 @@ suite('DataScience - Notebook Commands', () => {
                 notebookProvider = mock(NotebookProvider);
                 commandManager = mock(CommandManager);
 
-                const kernelDependencyService = mock(KernelDependencyService);
-                const kernelService = mock(KernelService);
                 kernelSelectionProvider = mock(KernelSelectionProvider);
-                when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve(
-                    localSelections
+                when(kernelSelectionProvider.getKernelSelections(anything(), anything(), anything())).thenCall(
+                    (_a, b, _c) => {
+                        if (!b || b.localLaunch) {
+                            return localSelections;
+                        }
+                        return remoteSelections;
+                    }
                 );
-                when(
-                    kernelSelectionProvider.getKernelSelectionsForRemoteSession(anything(), anything(), anything())
-                ).thenResolve(remoteSelections);
                 const appShell = mock(ApplicationShell);
-                const dependencyService = mock(KernelDependencyService);
-                const interpreterService = mock<IInterpreterService>();
-                const kernelFinder = mock<IKernelFinder>();
                 const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
                 const dummySessionEvent = new EventEmitter<Kernel.IKernelConnection>();
                 const preferredKernelIdProvider = mock(PreferredRemoteKernelIdProvider);
@@ -140,23 +137,11 @@ suite('DataScience - Notebook Commands', () => {
                 const kernelSelector = new KernelSelector(
                     instance(kernelSelectionProvider),
                     instance(appShell),
-                    instance(kernelService),
-                    instance(interpreterService),
-                    instance(dependencyService),
-                    instance(kernelFinder),
-                    instance(jupyterSessionManagerFactory),
                     instance(configService),
-                    instance(extensionChecker),
-                    instance(preferredKernelIdProvider),
                     instance(mock(InterpreterPackages))
                 );
 
-                const kernelSwitcher = new KernelSwitcher(
-                    instance(configService),
-                    instance(appShell),
-                    instance(kernelDependencyService),
-                    kernelSelector
-                );
+                const kernelSwitcher = new KernelSwitcher(instance(configService), instance(appShell), kernelSelector);
 
                 notebookCommands = new NotebookCommands(
                     instance(commandManager),
@@ -208,7 +193,7 @@ suite('DataScience - Notebook Commands', () => {
                 });
                 test('Should not switch if no identity', async () => {
                     await commandHandler.bind(notebookCommands)();
-                    verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).never();
+                    verify(kernelSelectionProvider.getKernelSelections(anything(), anything())).never();
                 });
                 test('Should switch kernel using the provided notebook', async () => {
                     const notebook = createNotebookMock();

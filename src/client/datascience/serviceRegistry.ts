@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IPythonExtensionChecker } from '../api/types';
-import { UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
+import { JVSC_EXTENSION_ID, UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { FileSystemPathUtils } from '../common/platform/fs-paths';
 import { IFileSystemPathUtils } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
@@ -54,12 +54,9 @@ import { NotebookProvider } from './interactive-common/notebookProvider';
 import { NotebookServerProvider } from './interactive-common/notebookServerProvider';
 import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker';
 import { ShowPlotListener } from './interactive-common/showPlotListener';
-import { AutoSaveService } from './interactive-ipynb/autoSaveService';
 import { DigestStorage } from './interactive-ipynb/digestStorage';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
-import { NativeEditorOldWebView } from './interactive-ipynb/nativeEditorOldWebView';
-import { NativeEditorProviderOld } from './interactive-ipynb/nativeEditorProviderOld';
 import { NativeEditorRunByLineListener } from './interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
 import { NativeEditorViewTracker } from './interactive-ipynb/nativeEditorViewTracker';
@@ -98,7 +95,7 @@ import { isLocalLaunch } from './jupyter/kernels/helpers';
 import { KernelDependencyService } from './jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from './jupyter/kernels/kernelSelections';
 import { KernelSelector } from './jupyter/kernels/kernelSelector';
-import { KernelService } from './jupyter/kernels/kernelService';
+import { JupyterKernelService } from './jupyter/kernels/jupyterKernelService';
 import { KernelSwitcher } from './jupyter/kernels/kernelSwitcher';
 import { KernelVariables } from './jupyter/kernelVariables';
 import { NotebookStarter } from './jupyter/notebookStarter';
@@ -110,9 +107,9 @@ import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration
 import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from './kernel-launcher/kernelDaemonPreWarmer';
 import { KernelEnvironmentVariablesService } from './kernel-launcher/kernelEnvVarsService';
-import { KernelFinder } from './kernel-launcher/kernelFinder';
+import { LocalKernelFinder } from './kernel-launcher/localKernelFinder';
 import { KernelLauncher } from './kernel-launcher/kernelLauncher';
-import { IKernelFinder, IKernelLauncher } from './kernel-launcher/types';
+import { ILocalKernelFinder, IKernelLauncher, IRemoteKernelFinder } from './kernel-launcher/types';
 import { MultiplexingDebugService } from './multiplexingDebugService';
 import { NotebookEditorCompatibilitySupport } from './notebook/notebookEditorCompatibilitySupport';
 import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
@@ -196,37 +193,45 @@ import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { WebviewExtensibility } from './webviewExtensibility';
+import { RemoteKernelFinder } from './kernel-launcher/remoteKernelFinder';
+import { IApplicationEnvironment } from '../common/application/types';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
 // eslint-disable-next-line
-export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean, inCustomEditorApiExperiment: boolean) {
-    const usingCustomEditor = inCustomEditorApiExperiment && !vscode.env.appName.includes('Insider'); // Don't use app manager in case it's not available yet.
-    const useVSCodeNotebookAPI = inNotebookApiExperiment && !usingCustomEditor;
+export function registerTypes(serviceManager: IServiceManager, inNotebookApiExperiment: boolean) {
+    const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
+    const useVSCodeNotebookAPI = inNotebookApiExperiment;
+    const usingCustomEditor = !useVSCodeNotebookAPI;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
     serviceManager.addSingletonInstance<boolean>(UseVSCodeNotebookEditorApi, useVSCodeNotebookAPI);
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
+    serviceManager.addSingleton<IRawNotebookSupportedService>(IRawNotebookSupportedService, RawNotebookSupportedService);
+
+    const packageJson: { engines: { vscode: string } } | undefined = vscode.extensions.getExtension(JVSC_EXTENSION_ID)?.packageJSON;
+    const isInsiderVersion = packageJson?.engines?.vscode?.toLowerCase()?.endsWith('insider');
+    setSharedProperty('isInsiderExtension', isVSCInsiders && isInsiderVersion ? 'true' : 'false');
 
     // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
     // This is temporary, and once we ship native editor this needs to be removed.
-    setSharedProperty('ds_notebookeditor', useVSCodeNotebookAPI ? 'native' : UseCustomEditorApi ? 'custom' : 'old');
+    setSharedProperty('ds_notebookeditor', useVSCodeNotebookAPI ? 'native' : 'custom');
     const isLocalConnection = isLocalLaunch(serviceManager.get<IConfigurationService>(IConfigurationService));
     setSharedProperty('localOrRemoteConnection', isLocalConnection ? 'local' : 'remote');
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty('isPythonExtensionInstalled', isPythonExtensionInstalled.isPythonExtensionInstalled ? 'true' : 'false');
+    if (isLocalConnection) {
+        const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
+        setSharedProperty('rawKernelSupported', rawService.supported() ? 'true' : 'false');
+    }
 
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
-    serviceManager.addSingleton<INotebookEditorProvider>(OurNotebookProvider, usingCustomEditor ? NativeEditorProvider : NativeEditorProviderOld);
+    serviceManager.addSingleton<INotebookEditorProvider>(OurNotebookProvider, NativeEditorProvider);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProviderWrapper);
     serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookEditorCompatibilitySupport);
     serviceManager.add<NotebookEditorCompatibilitySupport>(NotebookEditorCompatibilitySupport, NotebookEditorCompatibilitySupport);
     if (!useVSCodeNotebookAPI) {
-        serviceManager.add<INotebookEditor>(INotebookEditor, usingCustomEditor ? NativeEditor : NativeEditorOldWebView);
-        // These are never going to be required for new VSC NB.
-        if (!usingCustomEditor) {
-            serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
-        }
+        serviceManager.add<INotebookEditor>(INotebookEditor, NativeEditor);
         serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     }
 
@@ -253,12 +258,12 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<INotebookStorageProvider>(INotebookStorageProvider, NotebookStorageProvider);
     serviceManager.addSingleton<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider, PreferredRemoteKernelIdProvider);
     serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
-    serviceManager.addSingleton<IRawNotebookSupportedService>(IRawNotebookSupportedService, RawNotebookSupportedService);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
     serviceManager.addSingleton<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService, KernelEnvironmentVariablesService);
-    serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
+    serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
+    serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
     serviceManager.addSingleton<CellOutputMimeTypeTracker>(CellOutputMimeTypeTracker, CellOutputMimeTypeTracker, undefined, [IExtensionSingleActivationService, INotebookExecutionLogger]);
     serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
     serviceManager.addSingleton<DataViewerDependencyService>(DataViewerDependencyService, DataViewerDependencyService);
@@ -308,7 +313,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<JupyterServerSelectorCommand>(JupyterServerSelectorCommand, JupyterServerSelectorCommand);
     serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
     serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
-    serviceManager.addSingleton<KernelService>(KernelService, KernelService);
+    serviceManager.addSingleton<JupyterKernelService>(JupyterKernelService, JupyterKernelService);
     serviceManager.addSingleton<KernelSwitcher>(KernelSwitcher, KernelSwitcher);
     serviceManager.addSingleton<NotebookCommands>(NotebookCommands, NotebookCommands);
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
+import * as path from 'path';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -107,11 +108,15 @@ export class DebuggerVariables extends DebugLocationTracker
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
         notebook?: INotebook,
-        sliceExpression?: string
+        sliceExpression?: string,
+        isRefresh?: boolean
     ): Promise<IJupyterVariable> {
         if (!this.active) {
             // No active server just return the unchanged target variable
             return targetVariable;
+        }
+        if (isRefresh) {
+            targetVariable = await this.getFullVariable(targetVariable);
         }
         // Listen to notebook events if we haven't already
         if (notebook) {
@@ -133,12 +138,17 @@ export class DebuggerVariables extends DebugLocationTracker
             (targetVariable as any).frameId
         );
 
+        let fileName = notebook ? path.basename(notebook.identity.path) : '';
+        if (!fileName && this.debugLocation?.fileName) {
+            fileName = path.basename(this.debugLocation.fileName);
+        }
         // Results should be the updated variable.
         return results
             ? {
                   ...targetVariable,
                   ...JSON.parse(results.result),
-                  maximumRowChunkSize: MaximumRowChunkSizeForDebugger
+                  maximumRowChunkSize: MaximumRowChunkSizeForDebugger,
+                  fileName
               }
             : targetVariable;
     }

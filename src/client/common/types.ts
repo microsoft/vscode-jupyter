@@ -20,8 +20,9 @@ import { BannerType } from '../datascience/dataScienceSurveyBanner';
 import { LogLevel } from '../logging/levels';
 import { CommandsWithoutArgs } from './application/commands';
 import { Experiments } from './experiments/groups';
-import { ExtensionChannels } from './insidersBuild/types';
 import { InterpreterUri } from './installer/types';
+export const IsCodeSpace = Symbol('IsCodeSpace');
+export const IsDevMode = Symbol('IsDevMode');
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel {}
 export const IsWindows = Symbol('IS_WINDOWS');
@@ -108,7 +109,6 @@ export interface IRandom {
 }
 
 export interface IJupyterSettings {
-    readonly insidersChannel: ExtensionChannels;
     readonly experiments: IExperiments;
     readonly logging: ILoggingSettings;
     readonly allowUnauthorizedRemoteConnection: boolean;
@@ -318,6 +318,7 @@ export interface IExtensions {
      * @return An extension or `undefined`.
      */
     getExtension<T>(extensionId: string): Extension<T> | undefined;
+    determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }>;
 }
 
 export const IBrowserService = Symbol('IBrowserService');
@@ -404,6 +405,7 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
  */
 export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
+    activate(): Promise<void>;
     inExperiment(experimentName: Experiments): Promise<boolean>;
     getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
     logExperiments(): void;

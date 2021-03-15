@@ -14,204 +14,12 @@ import {
     WorkspaceEditEntryMetadata,
     Command,
     AccessibilityInformation,
-    AuthenticationProviderInformation,
-    AuthenticationSession,
     Position,
     DocumentSelector,
     ThemableDecorationAttachmentRenderOptions,
     ThemeColor
 } from 'vscode';
 
-// Copy nb section from https://github.com/microsoft/vscode/blob/master/src/vs/vscode.proposed.d.ts.
-/**
- * Represents a storage utility for secrets, information that is
- * sensitive.
- */
-export interface SecretStorage {
-    /**
-     * Retrieve a secret that was stored with key. Returns undefined if there
-     * is no password matching that key.
-     * @param key The key the password was stored under.
-     * @returns The stored value or `undefined`.
-     */
-    get(key: string): Thenable<string | undefined>;
-
-    /**
-     * Store a secret under a given key.
-     * @param key The key to store the password under.
-     * @param value The password.
-     */
-    store(key: string, value: string): Thenable<void>;
-
-    /**
-     * Remove a secret from storage.
-     * @param key The key the password was stored under.
-     */
-    delete(key: string): Thenable<void>;
-
-    /**
-     * Fires when a secret is set or deleted.
-     */
-    onDidChange: Event<void>;
-}
-export interface ExtensionContext {
-    secrets: SecretStorage;
-}
-//#region auth provider: https://github.com/microsoft/vscode/issues/88309
-
-/**
- * An [event](#Event) which fires when an [AuthenticationProvider](#AuthenticationProvider) is added or removed.
- */
-export interface AuthenticationProvidersChangeEvent {
-    /**
-     * The ids of the [authenticationProvider](#AuthenticationProvider)s that have been added.
-     */
-    readonly added: ReadonlyArray<AuthenticationProviderInformation>;
-
-    /**
-     * The ids of the [authenticationProvider](#AuthenticationProvider)s that have been removed.
-     */
-    readonly removed: ReadonlyArray<AuthenticationProviderInformation>;
-}
-
-/**
- * An [event](#Event) which fires when an [AuthenticationSession](#AuthenticationSession) is added, removed, or changed.
- */
-export interface AuthenticationProviderAuthenticationSessionsChangeEvent {
-    /**
-     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been added.
-     */
-    readonly added: ReadonlyArray<string>;
-
-    /**
-     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been removed.
-     */
-    readonly removed: ReadonlyArray<string>;
-
-    /**
-     * The ids of the [AuthenticationSession](#AuthenticationSession)s that have been changed.
-     */
-    readonly changed: ReadonlyArray<string>;
-}
-
-/**
- * **WARNING** When writing an AuthenticationProvider, `id` should be treated as part of your extension's
- * API, changing it is a breaking change for all extensions relying on the provider. The id is
- * treated case-sensitively.
- */
-export interface AuthenticationProvider {
-    /**
-     * Used as an identifier for extensions trying to work with a particular
-     * provider: 'microsoft', 'github', etc. id must be unique, registering
-     * another provider with the same id will fail.
-     */
-    readonly id: string;
-
-    /**
-     * The human-readable name of the provider.
-     */
-    readonly label: string;
-
-    /**
-     * Whether it is possible to be signed into multiple accounts at once with this provider
-     */
-    readonly supportsMultipleAccounts: boolean;
-
-    /**
-     * An [event](#Event) which fires when the array of sessions has changed, or data
-     * within a session has changed.
-     */
-    readonly onDidChangeSessions: Event<AuthenticationProviderAuthenticationSessionsChangeEvent>;
-
-    /**
-     * Returns an array of current sessions.
-     */
-    getSessions(): Thenable<ReadonlyArray<AuthenticationSession>>;
-
-    /**
-     * Prompts a user to login.
-     */
-    login(scopes: string[]): Thenable<AuthenticationSession>;
-
-    /**
-     * Removes the session corresponding to session id.
-     * @param sessionId The session id to log out of
-     */
-    logout(sessionId: string): Thenable<void>;
-}
-
-export namespace authentication {
-    /**
-     * Register an authentication provider.
-     *
-     * There can only be one provider per id and an error is being thrown when an id
-     * has already been used by another provider.
-     *
-     * @param provider The authentication provider provider.
-     * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
-     */
-    export function registerAuthenticationProvider(provider: AuthenticationProvider): Disposable;
-
-    /**
-     * @deprecated - getSession should now trigger extension activation.
-     * Fires with the provider id that was registered or unregistered.
-     */
-    export const onDidChangeAuthenticationProviders: Event<AuthenticationProvidersChangeEvent>;
-
-    /**
-     * @deprecated
-     * The ids of the currently registered authentication providers.
-     * @returns An array of the ids of authentication providers that are currently registered.
-     */
-    export function getProviderIds(): Thenable<ReadonlyArray<string>>;
-
-    /**
-     * @deprecated
-     * An array of the ids of authentication providers that are currently registered.
-     */
-    export const providerIds: ReadonlyArray<string>;
-
-    /**
-     * An array of the information of authentication providers that are currently registered.
-     */
-    export const providers: ReadonlyArray<AuthenticationProviderInformation>;
-
-    /**
-     * @deprecated
-     * Logout of a specific session.
-     * @param providerId The id of the provider to use
-     * @param sessionId The session id to remove
-     * provider
-     */
-    export function logout(providerId: string, sessionId: string): Thenable<void>;
-
-    /**
-     * Retrieve a password that was stored with key. Returns undefined if there
-     * is no password matching that key.
-     * @param key The key the password was stored under.
-     */
-    export function getPassword(key: string): Thenable<string | undefined>;
-
-    /**
-     * Store a password under a given key.
-     * @param key The key to store the password under
-     * @param value The password
-     */
-    export function setPassword(key: string, value: string): Thenable<void>;
-
-    /**
-     * Remove a password from storage.
-     * @param key The key the password was stored under.
-     */
-    export function deletePassword(key: string): Thenable<void>;
-
-    /**
-     * Fires when a password is set or deleted.
-     */
-    export const onDidChangePassword: Event<void>;
-}
-
-//#endregion
 //#region debug
 
 /**
@@ -249,77 +57,122 @@ export enum NotebookRunState {
     Idle = 2
 }
 
-// TODO@API
-// make this a class, allow modified using with-pattern
-export interface NotebookCellMetadata {
+export class NotebookCellMetadata {
     /**
      * Controls whether a cell's editor is editable/readonly.
      */
-    editable?: boolean;
-
+    readonly editable?: boolean;
     /**
      * Controls if the cell has a margin to support the breakpoint UI.
      * This metadata is ignored for markdown cell.
      */
-    breakpointMargin?: boolean;
-
+    readonly breakpointMargin?: boolean;
     /**
      * Whether a code cell's editor is collapsed
      */
-    inputCollapsed?: boolean;
-
+    readonly outputCollapsed?: boolean;
     /**
      * Whether a code cell's outputs are collapsed
      */
-    outputCollapsed?: boolean;
-
+    readonly inputCollapsed?: boolean;
     /**
      * Additional attributes of a cell metadata.
      */
-    custom?: { [key: string]: any };
+    readonly custom?: Record<string, any>;
+
+    // todo@API duplicates status bar API
+    readonly statusMessage?: string;
+
+    // run related API, will be removed
+    readonly hasExecutionOrder?: boolean;
+    readonly executionOrder?: number;
+    readonly runState?: NotebookCellRunState;
+    readonly runStartTime?: number;
+    readonly lastRunDuration?: number;
+
+    constructor(
+        editable?: boolean,
+        breakpointMargin?: boolean,
+        hasExecutionOrder?: boolean,
+        executionOrder?: number,
+        runState?: NotebookCellRunState,
+        runStartTime?: number,
+        statusMessage?: string,
+        lastRunDuration?: number,
+        inputCollapsed?: boolean,
+        outputCollapsed?: boolean,
+        custom?: Record<string, any>
+    );
+
+    with(change: {
+        editable?: boolean | null;
+        breakpointMargin?: boolean | null;
+        hasExecutionOrder?: boolean | null;
+        executionOrder?: number | null;
+        runState?: NotebookCellRunState | null;
+        runStartTime?: number | null;
+        statusMessage?: string | null;
+        lastRunDuration?: number | null;
+        inputCollapsed?: boolean | null;
+        outputCollapsed?: boolean | null;
+        custom?: Record<string, any> | null;
+    }): NotebookCellMetadata;
 }
 
 // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
 export interface NotebookCell {
     readonly index: number;
     readonly notebook: NotebookDocument;
-    readonly uri: Uri;
-    readonly cellKind: NotebookCellKind;
+    readonly kind: NotebookCellKind;
     readonly document: TextDocument;
-    readonly language: string;
-    readonly outputs: readonly NotebookCellOutput[];
     readonly metadata: NotebookCellMetadata;
-    /** @deprecated use WorkspaceEdit.replaceCellOutput */
-    // outputs: CellOutput[];
-    // readonly outputs2: NotebookCellOutput[];
-    /** @deprecated use WorkspaceEdit.replaceCellMetadata */
-    // metadata: NotebookCellMetadata;
+    readonly outputs: ReadonlyArray<NotebookCellOutput>;
 }
 
-export interface NotebookDocumentMetadata {
+export class NotebookDocumentMetadata {
     /**
      * Controls if users can add or delete cells
      * Defaults to true
      */
-    editable?: boolean;
-
+    readonly editable: boolean;
     /**
      * Default value for [cell editable metadata](#NotebookCellMetadata.editable).
      * Defaults to true.
      */
-    cellEditable?: boolean;
-    displayOrder?: GlobPattern[];
-
+    readonly cellEditable: boolean;
     /**
      * Additional attributes of the document metadata.
      */
-    custom?: { [key: string]: any };
-
+    readonly custom: { [key: string]: any };
     /**
      * Whether the document is trusted, default to true
      * When false, insecure outputs like HTML, JavaScript, SVG will not be rendered.
      */
-    trusted?: boolean;
+    readonly trusted: boolean;
+
+    // todo@API is this a kernel property?
+    readonly cellHasExecutionOrder: boolean;
+
+    // todo@API remove
+    readonly runState: NotebookRunState;
+
+    constructor(
+        editable?: boolean,
+        cellEditable?: boolean,
+        cellHasExecutionOrder?: boolean,
+        custom?: { [key: string]: any },
+        runState?: NotebookRunState,
+        trusted?: boolean
+    );
+
+    with(change: {
+        editable?: boolean | null;
+        cellEditable?: boolean | null;
+        cellHasExecutionOrder?: boolean | null;
+        custom?: { [key: string]: any } | null;
+        runState?: NotebookRunState | null;
+        trusted?: boolean | null;
+    }): NotebookDocumentMetadata;
 }
 
 export interface NotebookDocumentContentOptions {
@@ -339,23 +192,40 @@ export interface NotebookDocumentContentOptions {
 export interface NotebookDocument {
     readonly uri: Uri;
     readonly version: number;
+
+    // todo@API don't have this...
     readonly fileName: string;
-    readonly viewType: string;
+
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly cells: ReadonlyArray<NotebookCell>;
-    readonly contentOptions: NotebookDocumentContentOptions;
+
     readonly metadata: NotebookDocumentMetadata;
+
+    // todo@API should we really expose this?
+    readonly viewType: string;
+
+    /**
+     * Save the document. The saving will be handled by the corresponding content provider
+     *
+     * @return A promise that will resolve to true when the document
+     * has been saved. If the file was not dirty or the save failed,
+     * will return false.
+     */
+    save(): Thenable<boolean>;
 }
 
 // todo@API maybe have a NotebookCellPosition sibling
-// todo@API should be a class
-export interface NotebookCellRange {
+export class NotebookCellRange {
     readonly start: number;
     /**
      * exclusive
      */
     readonly end: number;
+
+    isEmpty: boolean;
+
+    constructor(start: number, end: number);
 }
 
 export enum NotebookEditorRevealType {
@@ -392,11 +262,13 @@ export interface NotebookEditor {
     // todo@API should not be undefined, rather a default
     readonly selection?: NotebookCell;
 
-    // @rebornix
-    // todo@API should replace selection
-    // never empty!
-    // primary/secondary selections
-    // readonly selections: NotebookCellRange[];
+    /**
+     * todo@API should replace selection
+     * The selections on this notebook editor.
+     *
+     * The primary selection (or focused range) is `selections[0]`. When the document has no cells, the primary selection is empty `{ start: 0, end: 0 }`;
+     */
+    readonly selections: NotebookCellRange[];
 
     /**
      * The current visible ranges in the editor (vertically).
@@ -409,8 +281,7 @@ export interface NotebookEditor {
      * The column in which this editor shows.
      */
     // @jrieken
-    // todo@API maybe never undefined because notebooks always show in the editor area (unlike text editors)
-    // maybe for notebook diff editor
+    // this is not implemented...
     readonly viewColumn?: ViewColumn;
 
     /**
@@ -464,9 +335,7 @@ export interface NotebookCellMetadataChangeEvent {
 
 export interface NotebookEditorSelectionChangeEvent {
     readonly notebookEditor: NotebookEditor;
-    // @rebornix
-    // todo@API show NotebookCellRange[] instead
-    readonly selection?: NotebookCell;
+    readonly selections: ReadonlyArray<NotebookCellRange>;
 }
 
 export interface NotebookEditorVisibleRangesChangeEvent {
@@ -475,18 +344,27 @@ export interface NotebookEditorVisibleRangesChangeEvent {
 }
 
 // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
-export interface NotebookCellData {
-    readonly cellKind: NotebookCellKind;
-    readonly source: string;
-    readonly language: string;
-    // todo@API maybe use a separate data type?
-    readonly outputs: NotebookCellOutput[];
-    readonly metadata: NotebookCellMetadata | undefined;
+export class NotebookCellData {
+    kind: NotebookCellKind;
+    // todo@API better names: value? text?
+    source: string;
+    // todo@API how does language and MD relate?
+    language: string;
+    outputs?: NotebookCellOutput[];
+    metadata?: NotebookCellMetadata;
+    constructor(
+        kind: NotebookCellKind,
+        source: string,
+        language: string,
+        outputs?: NotebookCellOutput[],
+        metadata?: NotebookCellMetadata
+    );
 }
 
-export interface NotebookData {
-    readonly cells: NotebookCellData[];
-    readonly metadata: NotebookDocumentMetadata;
+export class NotebookData {
+    cells: NotebookCellData[];
+    metadata?: NotebookDocumentMetadata;
+    constructor(cells: NotebookCellData[], metadata?: NotebookDocumentMetadata);
 }
 
 /**
@@ -534,11 +412,11 @@ export interface NotebookDocumentShowOptions {
 }
 
 export namespace notebook {
-    export function openNotebookDocument(uri: Uri, viewType?: string): Thenable<NotebookDocument>;
+    export function openNotebookDocument(uri: Uri): Thenable<NotebookDocument>;
+
     export const onDidOpenNotebookDocument: Event<NotebookDocument>;
     export const onDidCloseNotebookDocument: Event<NotebookDocument>;
 
-    // todo@API really needed?
     export const onDidSaveNotebookDocument: Event<NotebookDocument>;
 
     /**
@@ -548,7 +426,7 @@ export namespace notebook {
     export const onDidChangeNotebookDocumentMetadata: Event<NotebookDocumentMetadataChangeEvent>;
     export const onDidChangeNotebookCells: Event<NotebookCellsChangeEvent>;
     export const onDidChangeCellOutputs: Event<NotebookCellOutputsChangeEvent>;
-    export const onDidChangeCellLanguage: Event<NotebookCellLanguageChangeEvent>;
+
     export const onDidChangeCellMetadata: Event<NotebookCellMetadataChangeEvent>;
 }
 
@@ -559,6 +437,8 @@ export namespace window {
     export const onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     export const onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     export const onDidChangeNotebookEditorVisibleRanges: Event<NotebookEditorVisibleRangesChangeEvent>;
+
+    export function showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
     export function showNotebookDocument(
         document: NotebookDocument,
         options?: NotebookDocumentShowOptions
@@ -580,17 +460,22 @@ export class NotebookCellOutputItem {
 
     readonly mime: string;
     readonly value: unknown;
-    readonly metadata?: Record<string, string | number | boolean | unknown>;
+    readonly metadata?: Record<string, any>;
 
-    constructor(mime: string, value: unknown, metadata?: Record<string, string | number | boolean | unknown>);
+    constructor(mime: string, value: unknown, metadata?: Record<string, any>);
 }
 
 // @jrieken
+// todo@API think about readonly...
 //TODO@API add execution count to cell output?
 export class NotebookCellOutput {
     readonly id: string;
     readonly outputs: NotebookCellOutputItem[];
-    constructor(outputs: NotebookCellOutputItem[], id?: string);
+    readonly metadata?: Record<string, any>;
+
+    constructor(outputs: NotebookCellOutputItem[], metadata?: Record<string, any>);
+
+    constructor(outputs: NotebookCellOutputItem[], id: string, metadata?: Record<string, any>);
 }
 
 //#endregion
@@ -695,33 +580,38 @@ interface NotebookDocumentBackupContext {
 
 interface NotebookDocumentOpenContext {
     readonly backupId?: string;
+    readonly untitledDocumentData?: Uint8Array;
 }
 
+// todo@API use openNotebookDOCUMENT to align with openCustomDocument etc?
+// todo@API rename to NotebookDocumentContentProvider
 export interface NotebookContentProvider {
     readonly options?: NotebookDocumentContentOptions;
     readonly onDidChangeNotebookContentOptions?: Event<NotebookDocumentContentOptions>;
+
+    // todo@API remove! against separation of data provider and renderer
+    // eslint-disable-next-line vscode-dts-cancellation
+    resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
+
     /**
      * Content providers should always use [file system providers](#FileSystemProvider) to
      * resolve the raw content for `uri` as the resouce is not necessarily a file on disk.
      */
-    // eslint-disable-next-line vscode-dts-provider-naming
-    openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): NotebookData | Thenable<NotebookData>;
-    // eslint-disable-next-line vscode-dts-provider-naming
-    // eslint-disable-next-line vscode-dts-cancellation
-    resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
-    // eslint-disable-next-line vscode-dts-provider-naming
-    saveNotebook(document: NotebookDocument, cancellation: CancellationToken): Thenable<void>;
-    // eslint-disable-next-line vscode-dts-provider-naming
-    saveNotebookAs(targetResource: Uri, document: NotebookDocument, cancellation: CancellationToken): Thenable<void>;
-    // eslint-disable-next-line vscode-dts-provider-naming
+    openNotebook(
+        uri: Uri,
+        openContext: NotebookDocumentOpenContext,
+        token: CancellationToken
+    ): NotebookData | Thenable<NotebookData>;
+
+    saveNotebook(document: NotebookDocument, token: CancellationToken): Thenable<void>;
+
+    saveNotebookAs(targetResource: Uri, document: NotebookDocument, token: CancellationToken): Thenable<void>;
+
     backupNotebook(
         document: NotebookDocument,
         context: NotebookDocumentBackupContext,
-        cancellation: CancellationToken
+        token: CancellationToken
     ): Thenable<NotebookDocumentBackup>;
-
-    // ???
-    // provideKernels(document: NotebookDocument, token: CancellationToken): ProviderResult<T[]>;
 }
 
 export namespace notebook {
@@ -747,33 +637,6 @@ export namespace notebook {
 
 //#region https://github.com/microsoft/vscode/issues/106744, NotebookKernel
 
-export interface NotebookDocumentMetadata {
-    /**
-     * Controls whether the full notebook can be run at once.
-     * Defaults to true
-     */
-    // todo@API infer from kernel
-    // todo@API remove
-    runnable?: boolean;
-
-    /**
-     * Default value for [cell runnable metadata](#NotebookCellMetadata.runnable).
-     * Defaults to true.
-     */
-    cellRunnable?: boolean;
-
-    /**
-     * Default value for [cell hasExecutionOrder metadata](#NotebookCellMetadata.hasExecutionOrder).
-     * Defaults to true.
-     */
-    cellHasExecutionOrder?: boolean;
-
-    /**
-     * The document's current run state
-     */
-    runState?: NotebookRunState;
-}
-
 // todo@API use the NotebookCellExecution-object as a container to model and enforce
 // the flow of a cell execution
 
@@ -795,63 +658,28 @@ export interface NotebookDocumentMetadata {
 // export const onDidStartNotebookCellExecution: Event<any>;
 // export const onDidStopNotebookCellExecution: Event<any>;
 
-export interface NotebookCellMetadata {
-    /**
-     * Controls if the cell is executable.
-     * This metadata is ignored for markdown cell.
-     */
-    // todo@API infer from kernel
-    runnable?: boolean;
-
-    /**
-     * Whether the [execution order](#NotebookCellMetadata.executionOrder) indicator will be displayed.
-     * Defaults to true.
-     */
-    hasExecutionOrder?: boolean;
-
-    /**
-     * The order in which this cell was executed.
-     */
-    executionOrder?: number;
-
-    /**
-     * A status message to be shown in the cell's status bar
-     */
-    // todo@API duplicates status bar API
-    statusMessage?: string;
-
-    /**
-     * The cell's current run state
-     */
-    runState?: NotebookCellRunState;
-
-    /**
-     * If the cell is running, the time at which the cell started running
-     */
-    runStartTime?: number;
-
-    /**
-     * The total duration of the cell's last run
-     */
-    // todo@API depends on having output
-    lastRunDuration?: number;
-}
-
 export interface NotebookKernel {
+    // todo@API make this mandatory?
     readonly id?: string;
+
     label: string;
     description?: string;
     detail?: string;
     isPreferred?: boolean;
+
+    // todo@API is this maybe an output property?
     preloads?: Uri[];
 
-    // TODO@API control runnable state of cell
     /**
      * languages supported by kernel
      * - first is preferred
      * - `undefined` means all languages available in the editor
      */
     supportedLanguages?: string[];
+
+    // todo@API kernel updating itself
+    // fired when properties like the supported languages etc change
+    // onDidChangeProperties?: Event<void>
 
     // @roblourens
     // todo@API change to `executeCells(document: NotebookDocument, cells: NotebookCellRange[], context:{isWholeNotebooke: boolean}, token: CancelationToken): void;`

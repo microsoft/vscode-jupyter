@@ -1,4 +1,3 @@
-
 .main-panel {
     position: absolute;
     bottom: 0;
@@ -11,3 +10,39 @@
     overflow: hidden;
 }
 
+.breadcrumb-container {
+    display: flex;
+    align-items: flex-start;
+    padding-left: 16px;
+    overflow: auto;
+    white-space: nowrap;
+    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+}
+
+.breadcrumb {
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    color: var(--vscode-breadcrumb-foreground);
+    background-color: var(--vscode-breadcrumb-background);
+    display: flex;
+    flex-direction: row;
+    line-height: var(--vscode-font-size);
+    padding-top: 2px;
+}
+
+.image-button-image {
+    height: var(--vscode-font-size);
+}
+
+.breadcrumb-file-icon {
+    color: #519aba;
+    font-size: 18px;
+    padding-right: 2px;
+}
+
+.breadcrumb-codicon {
+    color: var(--vscode-breadcrumb-foreground);
+}

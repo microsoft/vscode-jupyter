@@ -16,21 +16,17 @@ import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { Telemetry } from '../constants';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
-import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../types';
+import { IKernelDependencyService } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { KernelProcess } from './kernelProcess';
-import { IKernelConnection, IKernelLauncher, IKernelProcess, IpyKernelNotInstalledError } from './types';
-import * as localize from '../../common/utils/localize';
-import { createDeferredFromPromise, Deferred } from '../../common/utils/async';
+import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
 import { CancellationError } from '../../common/cancellation';
 import { sendKernelTelemetryWhenDone } from '../telemetry/telemetry';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
-
 // Launches and returns a kernel process given a resource or python interpreter.
 // If the given interpreter is undefined, it will try to use the selected interpreter.
 // If the selected interpreter doesn't have a kernel, it will find a kernel on disk and use that.
@@ -39,7 +35,6 @@ export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
     private static usedPorts = new Set<number>();
     private static getPorts = promisify(portfinder.getPorts);
-    private dependencyPromises = new Map<string, Deferred<KernelInterpreterDependencyResponse>>();
     private portChain: Promise<number[]> | undefined;
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
@@ -51,7 +46,6 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
     ) {}
 
-    // This function is public so it can be called when a test shuts down
     public static async cleanupStartPort() {
         try {
             // Destroy the file
@@ -103,7 +97,7 @@ export class KernelLauncher implements IKernelLauncher {
         const promise = (async () => {
             // If this is a python interpreter, make sure it has ipykernel
             if (kernelConnectionMetadata.interpreter) {
-                await this.installDependenciesIntoInterpreter(
+                await this.kernelDependencyService.installMissingDependencies(
                     kernelConnectionMetadata.interpreter,
                     cancelToken,
                     disableUI
@@ -191,38 +185,5 @@ export class KernelLauncher implements IKernelLauncher {
             iopub_port: ports[4],
             kernel_name: kernelConnectionMetadata.kernelSpec?.name || 'python'
         };
-    }
-
-    // If we need to install our dependencies now
-    // then install ipykernel into the interpreter or throw error
-    private async installDependenciesIntoInterpreter(
-        interpreter: PythonEnvironment,
-        cancelToken?: CancellationToken,
-        disableUI?: boolean
-    ) {
-        // Cache the install question so when two kernels start at the same time for the same interpreter we don't ask twice
-        let deferred = this.dependencyPromises.get(interpreter.path);
-        if (!deferred) {
-            deferred = createDeferredFromPromise(
-                this.kernelDependencyService.installMissingDependencies(interpreter, cancelToken, disableUI)
-            );
-            this.dependencyPromises.set(interpreter.path, deferred);
-        }
-
-        // Get the result of the question
-        try {
-            const result = await deferred.promise;
-            if (result !== KernelInterpreterDependencyResponse.ok) {
-                throw new IpyKernelNotInstalledError(
-                    localize.DataScience.ipykernelNotInstalled().format(
-                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
-                    ),
-                    result
-                );
-            }
-        } finally {
-            // Don't need to cache anymore
-            this.dependencyPromises.delete(interpreter.path);
-        }
     }
 }

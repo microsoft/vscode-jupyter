@@ -9,6 +9,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -21,7 +22,8 @@ import {
 } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { DataScienceStartupTime, JUPYTER_OUTPUT_CHANNEL } from '../constants';
+import { DataScienceStartupTime } from '../constants';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     IJupyterConnection,
@@ -30,7 +32,6 @@ import {
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../types';
-import { KernelSelector } from './kernels/kernelSelector';
 import { KernelConnectionMetadata } from './kernels/types';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
@@ -52,7 +53,8 @@ type JupyterServerClassType = {
         serviceContainer: IServiceContainer,
         appShell: IApplicationShell,
         fs: IFileSystem,
-        kernelSelector: KernelSelector,
+        localKernelFinder: ILocalKernelFinder,
+        remoteKernelFinder: IRemoteKernelFinder,
         interpreterService: IInterpreterService,
         outputChannel: IOutputChannel,
         progressReporter: ProgressReporter,
@@ -82,8 +84,9 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
-        @inject(KernelSelector) kernelSelector: KernelSelector,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel,
+        @inject(ILocalKernelFinder) localKernelFinder: ILocalKernelFinder,
+        @inject(IRemoteKernelFinder) remoteKernelFinder: IRemoteKernelFinder,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
@@ -105,7 +108,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             serviceContainer,
             appShell,
             fs,
-            kernelSelector,
+            localKernelFinder,
+            remoteKernelFinder,
             interpreterService,
             jupyterOutput,
             progressReporter,

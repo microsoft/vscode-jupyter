@@ -2,12 +2,15 @@
 # We use the github.event_name to determine what started the workflow to determine which
 # situation we are in.
 
-name: Main
+name: Build and Test
 
 on:
   pull_request:
     branches:
       - main
+      - 'release'
+      - 'release/*'
+      - 'release-*'
   check_run:
     types: [rerequested, requested_action]
   push:
@@ -81,7 +84,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.2
+        uses: actions/setup-node@v2.1.5
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -190,7 +193,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.2
+        uses: actions/setup-node@v2.1.5
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -310,7 +313,7 @@ jobs:
         run: python --version
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.2
+        uses: actions/setup-node@v2.1.5
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -527,7 +530,7 @@ jobs:
         run: python -m pip install -U pip
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.2
+        uses: actions/setup-node@v2.1.5
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -629,6 +632,7 @@ jobs:
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m pip uninstall jedi --yes
           python -m pip install jedi==0.17.2
+          beakerx_kernel_java install
           conda install pytorch torchvision torchaudio cpuonly -c pytorch
 
       # Install PyTorch with pip
@@ -728,6 +732,7 @@ jobs:
           VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ contains(matrix.test-suite, 'remote') }}
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ contains(matrix.test-suite, 'nonRawNotebook') }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
+          VSC_JUPYTER_CI_IS_CONDA: ${{ contains(matrix.test-suite, 'conda') }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode
         if: matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
@@ -772,7 +777,7 @@ jobs:
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE: 'true'
           VSC_JUPYTER_REMOTE_NATIVE_TEST: 'false'
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: 'false' 
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: 'false'
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: 'false'
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_webview_vscode
@@ -829,7 +834,7 @@ jobs:
         run: python -m pip install -U pip
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.2
+        uses: actions/setup-node@v2.1.5
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -896,7 +901,7 @@ jobs:
           name: ${{ needs.pick_environment.outputs.vsix_name }}
 
       - name: Azure Login
-        uses: azure/login@v1.1.1
+        uses: azure/login@v1.3.0
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -913,7 +918,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Node
-        uses: actions/setup-node@v2.1.2
+        uses: actions/setup-node@v2.1.5
         with:
           node-version: ${{env.NODE_VERSION}}
 

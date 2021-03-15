@@ -22,7 +22,10 @@ import { InterruptResult } from '../datascience/types';
 import { EventName, PlatformErrors } from './constants';
 import { populateTelemetryWithErrorInfo } from '../common/errors';
 import { ErrorCategory, TelemetryErrorProperties } from '../common/errors/types';
+import { noop } from '../common/utils/misc';
+import { isPromise } from 'rxjs/internal-compatibility';
 
+export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
@@ -52,7 +55,7 @@ export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolea
     return settings.globalValue === false ? true : false;
 }
 
-const sharedProperties: Record<string, any> = {};
+const sharedProperties: Partial<ISharedPropertyMapping> = {};
 /**
  * Set shared properties for all telemetry events.
  */
@@ -63,9 +66,9 @@ export function setSharedProperty<P extends ISharedPropertyMapping, E extends ke
         return;
     }
     if (value === undefined) {
-        delete sharedProperties[propertyName];
+        delete (sharedProperties as any)[propertyName];
     } else {
-        sharedProperties[propertyName] = value;
+        (sharedProperties as any)[propertyName] = value;
     }
 }
 
@@ -74,7 +77,7 @@ export function setSharedProperty<P extends ISharedPropertyMapping, E extends ke
  */
 export function _resetSharedProperties(): void {
     for (const key of Object.keys(sharedProperties)) {
-        delete sharedProperties[key];
+        delete (sharedProperties as any)[key];
     }
 }
 
@@ -98,10 +101,13 @@ export function clearTelemetryReporter() {
     telemetryReporter = undefined;
 }
 
-function stringifyProperties(eventName: string, data: Record<string, any>) {
+function sanitizeProperties(eventName: string, data: Record<string, any>) {
     let customProperties: Record<string, string> = {};
     Object.getOwnPropertyNames(data).forEach((prop) => {
         if (data[prop] === undefined || data[prop] === null) {
+            return;
+        }
+        if (prop === waitBeforeSending) {
             return;
         }
         try {
@@ -119,16 +125,95 @@ function stringifyProperties(eventName: string, data: Record<string, any>) {
     });
     return customProperties;
 }
+
+const queuedTelemetry: {
+    eventName: string;
+    durationMs?: Record<string, number> | number;
+    properties?: Record<string, any>;
+    ex?: Error;
+    sendOriginalEventWithErrors?: boolean;
+    queueEverythingUntilCompleted?: Promise<any>;
+}[] = [];
+
+/**
+ * Send this & subsequent telemetry only after this promise has been resolved.
+ * We have a default timeout of 30s.
+ * @param {P[E]} [properties]
+ * Can optionally contain a property `waitBeforeSending` referencing a promise.
+ * Which must be awaited before sending the telemetry.
+ */
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     durationMs?: Record<string, number> | number,
-    properties?: P[E],
+    properties?: P[E] & { [waitBeforeSending]?: Promise<void> },
     ex?: Error,
     sendOriginalEventWithErrors?: boolean
 ) {
     if (isTestExecution() || !isTelemetrySupported()) {
         return;
     }
+    // If stuff is already queued, then queue the rest.
+    // Queue telemetry for now only in insiders.
+    if (
+        sharedProperties['isInsiderExtension'] === 'true' &&
+        isPromise(properties?.waitBeforeSending || queuedTelemetry.length)
+    ) {
+        queuedTelemetry.push({
+            eventName: eventName as string,
+            durationMs,
+            properties,
+            ex,
+            sendOriginalEventWithErrors,
+            queueEverythingUntilCompleted: properties?.waitBeforeSending
+        });
+        sendNextTelemetryItem();
+    } else {
+        sendTelemetryEventInternal(eventName as any, durationMs, properties, ex, sendOriginalEventWithErrors);
+    }
+}
+
+function sendNextTelemetryItem(): void {
+    if (queuedTelemetry.length === 0) {
+        return;
+    }
+    // Take the first item to be sent.
+    const nextItem = queuedTelemetry[0];
+    let timer: NodeJS.Timeout | undefined | number;
+    function sendThisTelemetryItem() {
+        if (timer) {
+            clearTimeout(timer as any);
+        }
+        // Possible already sent out by another event handler.
+        if (queuedTelemetry.length === 0 || queuedTelemetry[0] !== nextItem) {
+            return;
+        }
+        queuedTelemetry.shift();
+        sendTelemetryEventInternal(
+            nextItem.eventName as any,
+            nextItem.durationMs,
+            nextItem.properties,
+            nextItem.ex,
+            nextItem.sendOriginalEventWithErrors
+        );
+        sendNextTelemetryItem();
+    }
+
+    if (nextItem.queueEverythingUntilCompleted) {
+        timer = setTimeout(() => sendThisTelemetryItem(), 30_000);
+        // Wait for the promise & then send it.
+        nextItem.queueEverythingUntilCompleted.finally(() => sendThisTelemetryItem()).catch(noop);
+    } else {
+        return sendThisTelemetryItem();
+    }
+}
+
+function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E extends keyof P>(
+    eventName: E,
+    durationMs?: Record<string, number> | number,
+    properties?: P[E],
+    ex?: Error,
+    sendOriginalEventWithErrors?: boolean
+) {
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
     let customProperties: Record<string, string> = {};
@@ -148,7 +233,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             // Add shared properties to telemetry props (we may overwrite existing ones).
             Object.assign(customProperties, sharedProperties);
             populateTelemetryWithErrorInfo(customProperties, ex);
-            customProperties = stringifyProperties(eventNameSent, customProperties);
+            customProperties = sanitizeProperties(eventNameSent, customProperties);
             reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
         } else {
             // Include a property failed, to indicate there are errors.
@@ -158,12 +243,12 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             Object.assign(customProperties, sharedProperties);
             Object.assign(customProperties, properties || {});
             populateTelemetryWithErrorInfo(customProperties, ex);
-            customProperties = stringifyProperties(eventNameSent, customProperties);
+            customProperties = sanitizeProperties(eventNameSent, customProperties);
             reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
         }
     } else {
         if (properties) {
-            customProperties = stringifyProperties(eventNameSent, properties);
+            customProperties = sanitizeProperties(eventNameSent, properties);
         }
 
         // Add shared properties to telemetry props (we may overwrite existing ones).
@@ -312,6 +397,11 @@ export interface ISharedPropertyMapping {
      */
     ['ds_notebookeditor']: undefined | 'old' | 'custom' | 'native';
     /**
+     * Whether this is the Insider version of the Jupyter extension or not.
+     */
+    ['isInsiderExtension']: 'true' | 'false';
+
+    /**
      * For every DS telemetry we would like to know whether the this is from AML compute or not.
      * If not in AML compute, then do not send this telemetry.
      */
@@ -375,6 +465,19 @@ export interface IEventNamePropertyMapping {
         hashedName: string;
     };
     [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
+    /**
+     * Telemetry sent for local Python Kernels.
+     * Tracking whether we have managed to launch the kernel that matches the interpreter.
+     * If match=false, then this means we have failed to launch the right kernel.
+     */
+    [Telemetry.PythonKerneExecutableMatches]: {
+        match: 'true' | 'false';
+        kernelConnectionType: 'startUsingKernelSpec' | 'startUsingPythonInterpreter';
+    };
+    /**
+     * Sent when a jupyter session fails to start and we ask the user for a new kernel
+     */
+    [Telemetry.AskUserForNewJupyterKernel]: never | undefined;
     [Telemetry.KernelListingPerf]: never | undefined;
     [Telemetry.NumberOfLocalKernelSpecs]: {
         /**
@@ -454,31 +557,6 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         activatedByWrapper?: boolean;
-    };
-    /**
-     * Telemetry event sent with details when user clicks a button in the following prompt
-     * `Prompt message` :- 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Jupyter extension?'
-     */
-    [EventName.INSIDERS_PROMPT]: {
-        /**
-         * `Yes, weekly` When user selects to use "weekly" as extension channel in insiders prompt
-         * `Yes, daily` When user selects to use "daily" as extension channel in insiders prompt
-         * `No, thanks` When user decides to keep using the same extension channel as before
-         */
-        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
-    };
-    /**
-     * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
-     * `Prompt message` :- 'Please reload Visual Studio Code to use the insiders build of the extension'
-     */
-    [EventName.INSIDERS_RELOAD_PROMPT]: {
-        /**
-         * `Reload` When 'Reload' option is clicked
-         * `undefined` When prompt is closed
-         *
-         * @type {('Reload' | undefined)}
-         */
-        selection: 'Reload' | undefined;
     };
     /**
      * Telemetry event sent with details when a user has requested to opt it or out of an experiment group
@@ -577,6 +655,23 @@ export interface IEventNamePropertyMapping {
     [Telemetry.DebugpySuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
     [Telemetry.OpenNotebookAll]: never | undefined;
+    /**
+     * Telemetry sent with details of the selection of the quick pick for when user creates new notebook.
+     * This only applies with other extensions like .NET registers with us.
+     */
+    [Telemetry.OpenNotebookSelection]: {
+        /**
+         * The id of the extension selected from the dropdown list.
+         * If empty, the user didn't select anything & didn't create a new notebook.
+         */
+        extensionId?: string;
+    };
+    [Telemetry.OpenNotebookSelectionRegistered]: {
+        /**
+         * The id of the extension registering with us to be displayed the dropdown list for notebook creation.
+         */
+        extensionId: string;
+    };
     [Telemetry.OpenedInteractiveWindow]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
@@ -638,6 +733,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
+    [Telemetry.PythonModuleInstal]: {
+        moduleName: string;
+        action: 'displayed' | 'installed' | 'ignored' | 'disabled' | 'failed';
+    };
     /**
      * This telemetry tracks the display of the Picker for Jupyter Remote servers.
      */
@@ -660,6 +759,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartShowDataViewer]: never | undefined;
     [Telemetry.ShowDataViewer]: { rows: number | undefined; columns: number | undefined };
     [Telemetry.FailedShowDataViewer]: never | undefined;
+    /**
+     * Sent when the jupyter.refreshDataViewer command is invoked
+     */
+    [Telemetry.RefreshDataViewer]: never | undefined;
     [Telemetry.CreateNewInteractive]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.StartJupyterProcess]: never | undefined;
@@ -706,6 +809,7 @@ export interface IEventNamePropertyMapping {
          */
         result?: 'notSelected' | 'selected' | 'installationCancelled';
     };
+    [Telemetry.SelectJupyterInterpreterMessageDisplayed]: undefined | never;
     [NativeKeyboardCommandTelemetry.ArrowDown]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowUp]: never | undefined;
     [NativeKeyboardCommandTelemetry.ChangeToCode]: never | undefined;
@@ -844,9 +948,9 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.KernelLauncherPerf]: undefined | never | TelemetryErrorProperties;
     /**
-     * Total time taken to find a kernel on disc.
+     * Total time taken to find a kernel on disc or on a remote machine.
      */
-    [Telemetry.KernelFinderPerf]: undefined | never;
+    [Telemetry.KernelFinderPerf]: never | undefined;
     /**
      * Total time taken to list kernels for VS Code.
      */
@@ -1107,4 +1211,13 @@ export interface IEventNamePropertyMapping {
     // Native variable view events
     [Telemetry.NativeVariableViewLoaded]: never | undefined;
     [Telemetry.NativeVariableViewMadeVisible]: never | undefined;
+    /**
+     * Telemetry sent when a command is executed.
+     */
+    [Telemetry.CommandExecuted]: {
+        /**
+         * Name of the command executed.
+         */
+        command: string;
+    };
 }

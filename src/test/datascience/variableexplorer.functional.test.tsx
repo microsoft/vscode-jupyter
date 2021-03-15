@@ -257,7 +257,7 @@ value = 'hello world'`;
         // Test our display of basic types. We render 8 rows by default so only 8 values per test
         runInteractiveTest(
             'Variable explorer - Types A',
-            async () => {
+            async function () {
                 const basicCode: string = `myList = [1, 2, 3]
 mySet = set([42])
 myDict = {'a': 1}
@@ -269,7 +269,8 @@ myTuple = 1,2,3,4,5,6,7,8,9`;
                 openVariableExplorer(wrapper);
 
                 await addCodeImpartial(wrapper, 'a=1\na');
-                await addCodeImpartial(wrapper, basicCode, true, 1);
+                // Variables are fetched in chunks of 5, we have six total here (including sys) so we need two variable fetches
+                await addCodeImpartial(wrapper, basicCode, true, 2);
 
                 const targetVariables: IJupyterVariable[] = [
                     {
@@ -379,6 +380,7 @@ mySeries = myDataframe[0]
                 openVariableExplorer(wrapper);
 
                 await addCodeImpartial(wrapper, 'a=1\na');
+                // Variables are fetched in chunks of 5, so we need two variable fetches here
                 await addCodeImpartial(wrapper, basicCode, true, 2);
 
                 const targetVariables: IJupyterVariable[] = [

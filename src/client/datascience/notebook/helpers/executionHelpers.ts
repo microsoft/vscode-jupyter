@@ -13,7 +13,8 @@ import {
     NotebookCellKind,
     NotebookCellRunState,
     NotebookCell,
-    NotebookEditor
+    NotebookEditor,
+    NotebookCellMetadata
 } from 'vscode';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import {
@@ -53,7 +54,7 @@ export async function handleUpdateDisplayDataMessage(
     const document = editor.document;
     // Find any cells that have this same display_id
     for (const cell of document.cells) {
-        if (cell.cellKind !== NotebookCellKind.Code) {
+        if (cell.kind !== NotebookCellKind.Code) {
             continue;
         }
         let updated = false;
@@ -95,10 +96,8 @@ export async function updateCellWithErrorStatus(
 ) {
     await chainWithPendingUpdates(notebookEditor.document, (edit) => {
         traceCellMessage(cell, 'Update with error state & output');
-        edit.replaceNotebookCellMetadata(notebookEditor.document.uri, cell.index, {
-            ...cell.metadata,
-            runState: NotebookCellRunState.Error
-        });
+        const metadata = cell.metadata.with({ runState: NotebookCellRunState.Error });
+        edit.replaceNotebookCellMetadata(notebookEditor.document.uri, cell.index, metadata);
         edit.replaceNotebookCellOutput(notebookEditor.document.uri, cell.index, [
             translateErrorOutput(createErrorOutput(ex))
         ]);
@@ -123,9 +122,9 @@ export async function addNewCellAfter(notebookEditor: NotebookEditor, cell: Note
         traceCellMessage(cell, 'Create new cell after current');
         edit.replaceNotebookCells(notebookEditor.document.uri, cell.index + 1, cell.index + 1, [
             {
-                cellKind: NotebookCellKind.Code,
-                language: cell.language,
-                metadata: { ...cell.metadata, runState: NotebookCellRunState.Success },
+                kind: NotebookCellKind.Code,
+                language: cell.document.languageId,
+                metadata: cell.metadata.with({ runState: NotebookCellRunState.Success }),
                 outputs: [],
                 source: text
             }
@@ -144,10 +143,8 @@ export async function updateCellExecutionCount(
     if (cell.metadata.executionOrder !== executionCount && executionCount) {
         await chainWithPendingUpdates(editor.document, (edit) => {
             traceCellMessage(cell, 'Update execution count');
-            edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, {
-                ...cell.metadata,
-                executionOrder: executionCount
-            });
+            const metadata = new NotebookCellMetadata().with(cell.metadata).with({ executionOrder: executionCount });
+            edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
         });
     }
 }
@@ -156,7 +153,7 @@ export async function updateCellExecutionCount(
  * Updates our Cell Model with the cell output.
  * As we execute a cell we get output from jupyter. This code will ensure the cell is updated with the output.
  */
-export async function updateCellOutput(editor: NotebookEditor, cell: NotebookCell, outputs: nbformat.IOutput[]) {
+async function updateCellOutput(editor: NotebookEditor, cell: NotebookCell, outputs: nbformat.IOutput[]) {
     const newOutput = createVSCCellOutputsFromOutputs(outputs);
     // If there was no output and still no output, then nothing to do.
     if (cell.outputs.length === 0 && newOutput.length === 0) {

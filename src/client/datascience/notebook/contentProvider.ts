@@ -14,17 +14,17 @@ import {
     NotebookDocument,
     NotebookDocumentBackup,
     NotebookDocumentBackupContext,
-    NotebookDocumentOpenContext
+    NotebookDocumentOpenContext,
+    NotebookDocumentMetadata,
+    NotebookCellMetadata
 } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
-import { createDeferred, Deferred } from '../../common/utils/async';
 import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
-import { INotebookModel } from '../types';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
@@ -37,7 +37,6 @@ import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilit
 @injectable()
 export class NotebookContentProvider implements VSCNotebookContentProvider {
     public webviews = new Map<string, NotebookCommunication[]>();
-    private readonly nativeNotebookModelsWaitingToGetReloaded = new WeakMap<INotebookModel, Deferred<void>>();
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
         @inject(NotebookEditorCompatibilitySupport)
@@ -62,18 +61,16 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
             return {
                 cells: [
                     {
-                        cellKind: NotebookCellKind.Markdown,
+                        kind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         source: `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
-                        metadata: { editable: false, runnable: false },
+                        metadata: new NotebookCellMetadata().with({ editable: false }),
                         outputs: []
                     }
                 ],
-                metadata: { cellEditable: false, editable: false, runnable: false }
+                metadata: new NotebookDocumentMetadata().with({ cellEditable: false, editable: false })
             };
         }
-        // If the model already exists & it has been trusted.
-        const existingModel = this.notebookStorage.get(uri);
         // If there's no backup id, then skip loading dirty contents.
         const model = await this.notebookStorage.getOrCreateModel({
             file: uri,
@@ -85,39 +82,11 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
             throw new Error('Incorrect NotebookModel, expected VSCodeNotebookModel');
         }
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cellCount });
-        try {
-            return model.getNotebookData();
-        } finally {
-            // Check if we're waiting in `saveNoteBook` method for document to get re-loaded after reverting it.
-            if (existingModel && existingModel instanceof VSCodeNotebookModel) {
-                const deferred = this.nativeNotebookModelsWaitingToGetReloaded.get(existingModel);
-                if (deferred) {
-                    // Notify `saveNotebook` method that we have loaded the document.
-                    deferred.resolve();
-                }
-                // Reset the flag (if user hits revert, then we don't treat it as though we're reloading to handle trust).
-                existingModel.markAsReloadedAfterTrusting();
-            }
-        }
+        return model.getNotebookData();
     }
     @captureTelemetry(Telemetry.Save, undefined, true)
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {
         const model = await this.notebookStorage.getOrCreateModel({ file: document.uri, isNative: true });
-
-        // If we this is a model associated with a native notebook
-        // & it was trusted after the user opened the notebook, then we cannot save it.
-        // We cannot save it until we have reloaded the notebook so that we can display all the output.
-        // Save can get invoked automatically if `autoSave` is enabled.
-        // Solution, wait for document to get loaded, once loaded, we can ignore this save.
-        // If we save here, then document could end up being marked as non-dirty & reverting will not work.
-        // Reverting only works for dirty files.
-        // This code is to ensure we do not run into issues due to auto save (the VSCode tests should catch any issues).
-        if (model instanceof VSCodeNotebookModel && model.trustedAfterOpeningNotebook) {
-            const deferred = createDeferred<void>();
-            this.nativeNotebookModelsWaitingToGetReloaded.set(model, deferred);
-            await deferred.promise;
-            return;
-        }
         if (cancellation.isCancellationRequested) {
             return;
         }

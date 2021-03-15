@@ -1,7 +1,6 @@
 /* eslint-disable max-classes-per-file */
 
 import { inject, injectable, named } from 'inversify';
-import * as os from 'os';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import { IPythonInstaller } from '../../api/types';
 import '../../common/extensions';
@@ -19,6 +18,7 @@ import {
     IInstaller,
     InstallerResponse,
     IOutputChannel,
+    IsCodeSpace,
     ModuleNamePurpose,
     Product
 } from '../types';
@@ -28,9 +28,6 @@ import { ProductNames } from './productNames';
 import { InterpreterUri, IProductPathService } from './types';
 
 export { Product } from '../types';
-
-export const CTagsInsllationScript =
-    os.platform() === 'darwin' ? 'brew install ctags' : 'sudo apt-get install exuberant-ctags';
 
 export abstract class BaseInstaller {
     private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
@@ -141,12 +138,19 @@ export class DataScienceInstaller extends BaseInstaller {
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
-        const item = await this.appShell.showErrorMessage(
-            localize.DataScience.libraryNotInstalled().format(productName),
-            'Yes',
-            'No'
-        );
-        if (item === 'Yes') {
+        sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+            action: 'displayed',
+            moduleName: productName
+        });
+        const item = this.serviceContainer.get<boolean>(IsCodeSpace)
+            ? localize.Common.bannerLabelYes()
+            : await this.appShell.showErrorMessage(
+                  localize.DataScience.libraryNotInstalled().format(productName),
+                  localize.Common.bannerLabelYes(),
+                  localize.Common.bannerLabelNo()
+              );
+
+        if (item === localize.Common.bannerLabelYes()) {
             const stopWatch = new StopWatch();
             try {
                 const response = await this.install(product, resource, cancel);

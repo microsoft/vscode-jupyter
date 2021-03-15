@@ -7,7 +7,6 @@ import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants';
 // Activating extension for Multiroot and Debugger CI tests for Windows takes just over 2 minutes sometimes, so 3 minutes seems like a safe margin
 export const MAX_EXTENSION_ACTIVATION_TIME = 180_000;
 export const TEST_TIMEOUT = 25000;
-//export const TEST_RETRYCOUNT = 3;
 export const TEST_RETRYCOUNT = 0;
 export const IS_SMOKE_TEST = process.env.VSC_JUPYTER_SMOKE_TEST === '1';
 export const IS_PERF_TEST = process.env.VSC_JUPYTER_PERF_TEST === '1';
@@ -15,6 +14,7 @@ export const IS_REMOTE_NATIVE_TEST = (process.env.VSC_JUPYTER_REMOTE_NATIVE_TEST
 export const IS_NON_RAW_NATIVE_TEST = (process.env.VSC_JUPYTER_NON_RAW_NATIVE_TEST || '').toLowerCase() === 'true';
 export const IS_WEBVIEW_BUILD_SKIPPED = (process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD || '').toLowerCase() === 'true';
 export const IS_MULTI_ROOT_TEST = isMultirootTest();
+export const IS_CONDA_TEST = (process.env.VSC_JUPYTER_CI_IS_CONDA || '').toLowerCase() === 'true';
 
 // If running on CI server, then run debugger tests ONLY if the corresponding flag is enabled.
 export const TEST_DEBUGGER = IS_CI_SERVER ? IS_CI_SERVER_TEST_DEBUGGER : true;

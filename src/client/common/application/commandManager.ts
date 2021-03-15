@@ -5,9 +5,13 @@
 
 import { injectable } from 'inversify';
 import { commands, Disposable, TextEditor, TextEditorEdit } from 'vscode';
+import { Telemetry } from '../../datascience/constants';
+import { sendTelemetryEvent } from '../../telemetry';
 import { ICommandNameArgumentTypeMapping } from './commands';
 import { ICommandManager } from './types';
 
+// This contains a list of commands to be ignored when sending telemetry in the command handler.
+const commandsToIgnore = new Set<string>(['setContext']);
 @injectable()
 export class CommandManager implements ICommandManager {
     /**
@@ -26,7 +30,19 @@ export class CommandManager implements ICommandManager {
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
     >(command: E, callback: (...args: U) => any, thisArg?: any): Disposable {
-        return commands.registerCommand(command, callback as any, thisArg);
+        commandsToIgnore.add(command);
+        return commands.registerCommand(
+            command,
+            (...args: U) => {
+                sendTelemetryEvent(Telemetry.CommandExecuted, undefined, { command: command as string });
+                if (thisArg) {
+                    return callback.call(thisArg, ...args);
+                } else {
+                    return callback(...args);
+                }
+            },
+            thisArg
+        );
     }
 
     /**
@@ -48,7 +64,19 @@ export class CommandManager implements ICommandManager {
         callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void,
         thisArg?: any
     ): Disposable {
-        return commands.registerTextEditorCommand(command, callback, thisArg);
+        commandsToIgnore.add(command);
+        return commands.registerTextEditorCommand(
+            command,
+            (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => {
+                sendTelemetryEvent(Telemetry.CommandExecuted, undefined, { command: command as string });
+                if (thisArg) {
+                    return callback.call(thisArg, textEditor, edit, ...args);
+                } else {
+                    return callback(textEditor, edit, ...args);
+                }
+            },
+            thisArg
+        );
     }
 
     /**
@@ -70,6 +98,9 @@ export class CommandManager implements ICommandManager {
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
     >(command: E, ...rest: U): Thenable<T | undefined> {
+        if (!commandsToIgnore.has(command)) {
+            sendTelemetryEvent(Telemetry.CommandExecuted, undefined, { command: command as string });
+        }
         return commands.executeCommand<T>(command, ...rest);
     }
 

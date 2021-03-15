@@ -5,13 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import {
-    NotebookCellOutput,
-    ExtensionMode,
-    NotebookCell,
-    NotebookCellRunState,
-    NotebookEditor as VSCNotebookEditor
-} from 'vscode';
+import { ExtensionMode, NotebookCell, NotebookCellRunState, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceError, traceErrorIf, traceInfoIf, traceWarning } from '../../../common/logger';
@@ -184,10 +178,8 @@ export class CellExecution {
         await clearCellForExecution(this.editor, this.cell);
         if (!this.isEmptyCodeCell) {
             await chainWithPendingUpdates(this.editor.document, (edit) => {
-                edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, {
-                    ...this.cell.metadata,
-                    runStartTime: new Date().getTime()
-                });
+                const metadata = this.cell.metadata.with({ runStartTime: new Date().getTime() });
+                edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
             });
         }
         this.stopWatch.reset();
@@ -247,10 +239,8 @@ export class CellExecution {
         if (!this.isEmptyCodeCell) {
             await chainWithPendingUpdates(this.editor.document, (edit) => {
                 traceCellMessage(this.cell, 'Update run run duration');
-                edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
-                    ...this.cell.metadata,
-                    lastRunDuration: this.stopWatch.elapsedTime
-                });
+                const metadata = this.cell.metadata.with({ lastRunDuration: this.stopWatch.elapsedTime });
+                edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
             });
         }
         await updateCellWithErrorStatus(this.editor, this.cell, error);
@@ -286,11 +276,8 @@ export class CellExecution {
 
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, `Update cell state ${runState} and message '${statusMessage}'`);
-            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
-                ...this.cell.metadata,
-                runState,
-                statusMessage
-            });
+            const metadata = this.cell.metadata.with({ runState, statusMessage });
+            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
         });
 
         this._completed = true;
@@ -302,13 +289,13 @@ export class CellExecution {
         traceCellMessage(this.cell, 'Completed due to cancellation');
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update cell statue as idle and message as empty');
-            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
-                ...this.cell.metadata,
-                runStartTime: undefined,
-                lastRunDuration: undefined,
+            const metadata = this.cell.metadata.with({
+                runStartTime: null,
+                lastRunDuration: null,
                 runState: NotebookCellRunState.Idle,
                 statusMessage: ''
             });
+            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
         });
 
         this._completed = true;
@@ -340,13 +327,13 @@ export class CellExecution {
         }
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update cell state as it was enqueued');
-            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, {
-                ...this.cell.metadata,
+            const metadata = this.cell.metadata.with({
                 statusMessage: '', // We don't want any previous status anymore.
-                runStartTime: undefined, // We don't want any previous counters anymore.
-                lastRunDuration: undefined,
+                runStartTime: null, // We don't want any previous counters anymore.
+                lastRunDuration: null,
                 runState: NotebookCellRunState.Running
             });
+            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
         });
     }
 
@@ -361,7 +348,10 @@ export class CellExecution {
     }
     private canExecuteCell() {
         // Raw cells cannot be executed.
-        if (this.isPythonKernelConnection && (this.cell.language === 'raw' || this.cell.language === 'plaintext')) {
+        if (
+            this.isPythonKernelConnection &&
+            (this.cell.document.languageId === 'raw' || this.cell.document.languageId === 'plaintext')
+        ) {
             return false;
         }
 
@@ -385,7 +375,7 @@ export class CellExecution {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const metadata: any = {
             ...(this.cell.metadata?.custom?.metadata || {}), // Send the Cell Metadata
-            ...{ cellId: this.cell.uri.toString() }
+            ...{ cellId: this.cell.document.uri.toString() }
         };
 
         // For Jupyter requests, silent === don't output, while store_history === don't update execution count
@@ -455,7 +445,12 @@ export class CellExecution {
             // Explicit false check as undefined store_history defaults to true if silent is false
             const wasSilent = request.msg.content.silent || request.msg.content.store_history === false;
             loggers.forEach((l) =>
-                l.postExecute(translateCellFromNative(this.cell), wasSilent, this.cell.language, this.cell.notebook.uri)
+                l.postExecute(
+                    translateCellFromNative(this.cell),
+                    wasSilent,
+                    this.cell.document.languageId,
+                    this.cell.notebook.uri
+                )
             );
         }
     }
@@ -542,11 +537,7 @@ export class CellExecution {
             }
 
             // Append to the data (we would push here but VS code requires a recreation of the array)
-            edit.replaceNotebookCellOutput(
-                this.editor.document.uri,
-                this.cell.index,
-                existingOutput.concat(converted as NotebookCellOutput)
-            );
+            edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, existingOutput.concat(converted));
             return edit;
         });
     }
@@ -639,25 +630,28 @@ export class CellExecution {
         // eslint-disable-next-line complexity
         await chainWithPendingUpdates(this.editor.document, (edit) => {
             traceCellMessage(this.cell, 'Update streamed output');
-            let exitingCellOutput = this.cell.outputs;
+            let exitingCellOutputs = this.cell.outputs;
+            const clearOutput = clearState.value;
             // Clear output if waiting for a clear
             if (clearState.value) {
-                exitingCellOutput = [];
+                exitingCellOutputs = [];
                 clearState.update(false);
             }
 
-            // Ensure we append to previous output, only if the streams as the same.
-            // Possible we have stderr first, then later we get output from stdout.
-            // Basically have one output for stderr & a separate output for stdout.
-            // If we output stderr first, then stdout & then stderr, we should append the new stderr to the previous stderr output.
-            // Might already have a stream message. If so, just add on to it.
-            const existingItemToBeReplaced = exitingCellOutput.find(
-                (item) => item && isStreamOutput(item, msg.content.name)
-            );
-            // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
-            const outputs = existingItemToBeReplaced ? createIOutputFromCellOutputs([existingItemToBeReplaced]) : [];
-            if (existingItemToBeReplaced && outputs.length === 1 && nbformat.isStream(outputs[0])) {
-                let existingOutputText: string = concatMultilineString((outputs[0] as nbformat.IStream).text);
+            // Ensure we append to previous output, only if the streams as the same &
+            // If the last output is the desired stream type.
+            const lastOutput =
+                exitingCellOutputs.length > 0 ? exitingCellOutputs[exitingCellOutputs.length - 1] : undefined;
+            const existingOutputToAppendTo =
+                lastOutput && isStreamOutput(lastOutput, msg.content.name) ? lastOutput : undefined;
+            if (existingOutputToAppendTo) {
+                // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
+                const outputs = existingOutputToAppendTo
+                    ? createIOutputFromCellOutputs([existingOutputToAppendTo])
+                    : [];
+                let existingOutputText: string = outputs.length
+                    ? concatMultilineString((outputs[0] as nbformat.IStream).text)
+                    : '';
                 let newContent = msg.content.text;
                 // Look for the ansi code `<char27>[A`. (this means move up)
                 // Not going to support `[2A` (not for now).
@@ -680,11 +674,20 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(`${existingOutputText}${newContent}`))
                 });
-
-                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [
-                    // Replace the existing output with a new output item (with concatenated strings...)
-                    ...exitingCellOutput.map((item) => (item === existingItemToBeReplaced ? output : item))
-                ]);
+                edit.replaceNotebookCellOutputItems(
+                    this.editor.document.uri,
+                    this.cell.index,
+                    existingOutputToAppendTo.id,
+                    output.outputs
+                );
+            } else if (clearOutput) {
+                // Replace the current outputs with a single new output.
+                const output = cellOutputToVSCCellOutput({
+                    output_type: 'stream',
+                    name: msg.content.name,
+                    text: formatStreamText(concatMultilineString(msg.content.text))
+                });
+                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [output]);
             } else {
                 // Create a new output
                 const output = cellOutputToVSCCellOutput({
@@ -692,11 +695,7 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(msg.content.text))
                 });
-
-                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [
-                    ...exitingCellOutput,
-                    output
-                ]);
+                edit.appendNotebookCellOutput(this.editor.document.uri, this.cell.index, [output]);
             }
             return edit;
         });

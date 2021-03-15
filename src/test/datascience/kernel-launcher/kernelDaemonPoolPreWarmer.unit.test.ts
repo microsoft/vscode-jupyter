@@ -58,7 +58,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
         );
     });
     test('Should not pre-warm daemon pool if ds was never used', async () => {
-        when(rawNotebookSupported.supported()).thenResolve(true);
+        when(rawNotebookSupported.supported()).thenReturn(true);
         when(usageTracker.lastPythonNotebookCreated).thenReturn(undefined);
 
         await prewarmer.activate(undefined);
@@ -74,7 +74,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     });
 
     test('Should not pre-warm daemon pool raw kernel is not supported', async () => {
-        when(rawNotebookSupported.supported()).thenResolve(false);
+        when(rawNotebookSupported.supported()).thenReturn(false);
 
         await prewarmer.activate(undefined);
 
@@ -82,7 +82,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     });
 
     test('Prewarm if supported and the date works', async () => {
-        when(rawNotebookSupported.supported()).thenResolve(true);
+        when(rawNotebookSupported.supported()).thenReturn(true);
         when(usageTracker.lastPythonNotebookCreated).thenReturn(new Date());
 
         await prewarmer.activate(undefined);

@@ -132,6 +132,7 @@ export namespace Commands {
     export const CreateGitHubIssue = 'jupyter.createGitHubIssue';
     export const SubmitGitHubIssue = 'jupyter.submitGitHubIssue';
     export const ShowDataViewer = 'jupyter.showDataViewer';
+    export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
     export const NotebookEditorKeybindSave = 'jupyter.notebookeditor.keybind.save';
@@ -158,6 +159,7 @@ export namespace EditorContexts {
     export const HaveNativeRedoableCells = 'jupyter.havenativeredoablecells';
     export const HaveNative = 'jupyter.havenative';
     export const IsNativeActive = 'jupyter.isnativeactive';
+    export const UsingWebviewNotebook = 'jupyter.usingwebviewnotebook';
     export const IsInteractiveOrNativeActive = 'jupyter.isinteractiveornativeactive';
     export const canRunCellsAboveInNativeNotebook = 'jupyter.notebookeditor.canRunCellsAboveInNativeNotebook';
     export const IsPythonOrNativeActive = 'jupyter.ispythonornativeactive';
@@ -169,6 +171,8 @@ export namespace EditorContexts {
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
+    export const IsDataViewerActive = 'jupyter.dataViewerActive';
+    export const HasNativeNotebookOpen = 'jupyter.hasNativeNotebookOpen';
 }
 
 export namespace RegExpValues {
@@ -299,6 +303,7 @@ export enum Telemetry {
     StartShowDataViewer = 'DATASCIENCE.START_SHOW_DATA_EXPLORER', // Called by the factory when attempting to load the data viewer
     ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER', // Called by the data viewer itself when it is actually loaded
     FailedShowDataViewer = 'DATASCIENCE.FAILED_SHOW_DATA_EXPLORER', // Called by the factory when the data viewer fails to load
+    RefreshDataViewer = 'DATASCIENCE.REFRESH_DATA_VIEWER',
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
     DebugFileInteractive = 'DATASCIENCE.DEBUG_FILE_INTERACTIVE',
     PandasNotInstalled = 'DS_INTERNAL.SHOW_DATA_NO_PANDAS',
@@ -318,6 +323,7 @@ export enum Telemetry {
      * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
      */
     SelectJupyterInterpreter = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER',
+    SelectJupyterInterpreterMessageDisplayed = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER_MESSAGE_DISPLAYED',
     /**
      * User used command to select an intrepreter for the jupyter server.
      */
@@ -354,6 +360,8 @@ export enum Telemetry {
     DebugStop = 'DATASCIENCE.DEBUG_STOP',
     OpenNotebook = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK',
     OpenNotebookAll = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL',
+    OpenNotebookSelection = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_SELECTION',
+    OpenNotebookSelectionRegistered = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_SELECTION_REGISTERED',
     ConvertToPythonFile = 'DATASCIENCE.NATIVE.CONVERT_NOTEBOOK_TO_PYTHON',
     NotebookWorkspaceCount = 'DS_INTERNAL.NATIVE.WORKSPACE_NOTEBOOK_COUNT',
     NotebookRunCount = 'DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT',
@@ -386,6 +394,7 @@ export enum Telemetry {
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
+    PythonModuleInstal = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
@@ -438,7 +447,16 @@ export enum Telemetry {
     NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
     KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
-    ExecuteCell = 'DATASCIENCE.EXECUTE_CELL'
+    ExecuteCell = 'DATASCIENCE.EXECUTE_CELL',
+    PythonKerneExecutableMatches = 'DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES',
+    /**
+     * Sent when a jupyter kernel cannot start for some reason and we're asking the user to pick another.
+     */
+    AskUserForNewJupyterKernel = 'DS_INTERNAL.ASK_USER_FOR_NEW_KERNEL_JUPYTER',
+    /**
+     * Sent when a command we register is executed.
+     */
+    CommandExecuted = 'DS_INTERNAL.COMMAND_EXECUTED'
 }
 
 export enum NativeKeyboardCommandTelemetry {

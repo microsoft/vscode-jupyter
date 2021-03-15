@@ -9,10 +9,13 @@ import { IApplicationShell } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceInfo } from '../../../common/logger';
-import { IInstaller, InstallerResponse, Product } from '../../../common/types';
+import { IInstaller, InstallerResponse, IsCodeSpace, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { Telemetry } from '../../constants';
+import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
 /**
@@ -21,9 +24,11 @@ import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '.
  */
 @injectable()
 export class KernelDependencyService implements IKernelDependencyService {
+    private installPromises = new Map<string, Promise<KernelInterpreterDependencyResponse>>();
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IInstaller) private readonly installer: IInstaller
+        @inject(IInstaller) private readonly installer: IInstaller,
+        @inject(IsCodeSpace) private readonly isCodeSpace: boolean
     ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
@@ -34,12 +39,44 @@ export class KernelDependencyService implements IKernelDependencyService {
         interpreter: PythonEnvironment,
         token?: CancellationToken,
         disableUI?: boolean
-    ): Promise<KernelInterpreterDependencyResponse> {
+    ): Promise<void> {
         traceInfo(`installMissingDependencies ${interpreter.path}`);
         if (await this.areDependenciesInstalled(interpreter, token)) {
-            return KernelInterpreterDependencyResponse.ok;
+            return;
         }
 
+        // Cache the install run
+        let promise = this.installPromises.get(interpreter.path);
+        if (!promise) {
+            promise = this.runInstaller(interpreter, token, disableUI);
+            this.installPromises.set(interpreter.path, promise);
+        }
+
+        // Get the result of the question
+        try {
+            const result = await promise;
+            if (result !== KernelInterpreterDependencyResponse.ok) {
+                throw new IpyKernelNotInstalledError(
+                    DataScience.ipykernelNotInstalled().format(
+                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
+                    ),
+                    result
+                );
+            }
+        } finally {
+            // Don't need to cache anymore
+            this.installPromises.delete(interpreter.path);
+        }
+    }
+    public areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
+        return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
+    }
+
+    private async runInstaller(
+        interpreter: PythonEnvironment,
+        token?: CancellationToken,
+        disableUI?: boolean
+    ): Promise<KernelInterpreterDependencyResponse> {
         const promptCancellationPromise = createPromiseFromCancellation({
             cancelAction: 'resolve',
             defaultValue: undefined,
@@ -54,10 +91,16 @@ export class KernelDependencyService implements IKernelDependencyService {
         if (disableUI) {
             return KernelInterpreterDependencyResponse.cancel;
         }
-        const selection = await Promise.race([
-            this.appShell.showErrorMessage(message, Common.install()),
-            promptCancellationPromise
-        ]);
+        sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+            action: 'displayed',
+            moduleName: ProductNames.get(Product.ipykernel)!
+        });
+        const selection = this.isCodeSpace
+            ? Common.install()
+            : await Promise.race([
+                  this.appShell.showErrorMessage(message, Common.install()),
+                  promptCancellationPromise
+              ]);
         if (installerToken.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }
@@ -80,8 +123,5 @@ export class KernelDependencyService implements IKernelDependencyService {
             }
         }
         return KernelInterpreterDependencyResponse.cancel;
-    }
-    public areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
-        return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
     }
 }

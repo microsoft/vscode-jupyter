@@ -54,9 +54,10 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
-        appEnv = mock<IApplicationEnvironment>();
         sinon.restore();
+        appEnv = mock<IApplicationEnvironment>();
         await memento.update(IntroduceNativeNotebookDisplayed, false);
+        await closeNotebooksAndCleanUpAfterTests();
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {

@@ -36,20 +36,6 @@ import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
 import { ExperimentService } from './experiments/service';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
-import {
-    ExtensionInsidersDailyChannelRule,
-    ExtensionInsidersOffChannelRule,
-    ExtensionInsidersWeeklyChannelRule
-} from './insidersBuild/downloadChannelRules';
-import { ExtensionChannelService } from './insidersBuild/downloadChannelService';
-import { InsidersExtensionPrompt } from './insidersBuild/insidersExtensionPrompt';
-import { InsidersExtensionService } from './insidersBuild/insidersExtensionService';
-import {
-    ExtensionChannel,
-    IExtensionChannelRule,
-    IExtensionChannelService,
-    IInsiderExtensionPrompt
-} from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
 import { BrowserService } from './net/browser';
 import { FileDownloader } from './net/fileDownloader';
@@ -105,11 +91,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
     serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);
     serviceManager.addBinding(IImportTracker, INotebookExecutionLogger);
-    serviceManager.addSingleton<IInsiderExtensionPrompt>(IInsiderExtensionPrompt, InsidersExtensionPrompt);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        InsidersExtensionService
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ReloadVSCodeCommandHandler
@@ -119,21 +100,5 @@ export function registerTypes(serviceManager: IServiceManager) {
         AmlComputeContext
     );
     serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
-    serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersOffChannelRule,
-        ExtensionChannel.off
-    );
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersDailyChannelRule,
-        ExtensionChannel.daily
-    );
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersWeeklyChannelRule,
-        ExtensionChannel.weekly
-    );
     serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
 }

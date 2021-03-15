@@ -115,7 +115,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         @inject(IFileSystem) protected readonly fs: IFileSystem
     ) {
         traceInfo(`id is ${this._id}`);
-
         // Register for the custom editor service.
         customEditorService.registerCustomEditorProvider(NativeEditorProvider.customEditorViewType, this, {
             webviewOptions: {
@@ -166,7 +165,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             delete: () => this.storage.deleteBackup(model, id).ignoreErrors() // This cleans up after save has happened.
         };
     }
-
     public async resolveCustomEditor(document: CustomDocument, panel: WebviewPanel) {
         this.customDocuments.set(document.uri.fsPath, document);
         await this.loadNotebookEditor(document.uri, panel);
@@ -206,13 +204,17 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     }
 
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
-    public async createNew(possibleContents?: string, title?: string): Promise<INotebookEditor> {
+    public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<INotebookEditor> {
         // Create a new URI for the dummy file using our root workspace path
-        const uri = this.getNextNewNotebookUri(title);
+        const uri = this.getNextNewNotebookUri();
 
         // Set these contents into the storage before the file opens. Make sure not
         // load from the memento storage though as this is an entirely brand new file.
-        await this.loadModel({ file: uri, possibleContents, skipLoadingDirtyContents: true });
+        await this.loadModel({
+            file: uri,
+            possibleContents: options?.contents,
+            skipLoadingDirtyContents: true
+        });
 
         return this.open(uri);
     }
@@ -330,7 +332,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
     }
 
-    private getNextNewNotebookUri(title?: string): Uri {
-        return generateNewNotebookUri(this.untitledCounter, this.workspace.rootPath, title);
+    private getNextNewNotebookUri(): Uri {
+        return generateNewNotebookUri(this.untitledCounter, this.workspace.rootPath);
     }
 }

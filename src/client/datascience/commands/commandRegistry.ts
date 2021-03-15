@@ -8,6 +8,7 @@ import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
+import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -22,6 +23,7 @@ import { IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
+import { NotebookCreator } from '../notebook/creation/notebookCreator';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -62,7 +64,9 @@ export class CommandRegistry implements IDisposable {
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables
+        @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
+        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNotebook: boolean,
+        @inject(NotebookCreator) private readonly nativeNotebookCreator: NotebookCreator
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
@@ -452,7 +456,11 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async createNewNotebook(): Promise<void> {
-        await this.notebookEditorProvider.createNew();
+        if (this.useNativeNotebook) {
+            await this.nativeNotebookCreator.createNewNotebook();
+        } else {
+            await this.notebookEditorProvider.createNew();
+        }
     }
 
     private viewJupyterOutput() {
@@ -515,7 +523,7 @@ export class CommandRegistry implements IDisposable {
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }
             } catch (e) {
-                sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, e);
+                sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, undefined, e);
                 traceError(e);
                 void this.appShell.showErrorMessage(e.toString());
             }

@@ -110,7 +110,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     });
     teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Automatically pick java kernel when opening a Java Notebook', async function () {
-        return this.skip(); // Remove this when https://github.com/microsoft/vscode-jupyter/issues/4372 is fixed
         if (!testJavaKernels) {
             return this.skip();
         }
@@ -133,7 +132,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await openNotebook(api.serviceContainer, testCSharpNb.fsPath);
         await waitForKernelToGetAutoSelected('c#');
     });
-    test('New notebook will have a Julia cell if last notebook was a julia nb', async () => {
+    test('New notebook will have a Julia cell if last notebook was a julia nb', async function () {
+        return this.skip();
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await waitForKernelToGetAutoSelected();
         await insertMarkdownCell('# Hello');
@@ -148,15 +148,16 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await waitForCondition(
             async () => languageService.getPreferredLanguage().toLowerCase() === 'julia',
             10_000,
-            'Default cell language is not Julia'
+            `Default cell language is not Julia, it is ${languageService.getPreferredLanguage().toLowerCase()}`
         );
         // Create a blank notebook & confirm we have a julia code cell & julia kernel.
         await editorProvider.createNew();
 
         await waitForCondition(
-            async () => vscodeNotebook.activeNotebookEditor?.document.cells[0].language.toLowerCase() === 'julia',
+            async () =>
+                vscodeNotebook.activeNotebookEditor?.document.cells[0].document.languageId.toLowerCase() === 'julia',
             5_000,
-            'First cell is not julia'
+            `First cell is not julia, it is ${vscodeNotebook.activeNotebookEditor?.document.cells[0].document.languageId.toLowerCase()}`
         );
         await waitForKernelToGetAutoSelected('julia');
 

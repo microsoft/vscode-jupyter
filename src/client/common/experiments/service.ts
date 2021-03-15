@@ -8,7 +8,7 @@ import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { IApplicationEnvironment } from '../application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
 import { JVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import {
     GLOBAL_MEMENTO,
@@ -42,12 +42,16 @@ export class ExperimentService implements IExperimentService {
     private readonly settings: IJupyterSettings;
     private logged?: boolean;
 
+    private get enabled() {
+        return this.settings.experiments.enabled;
+    }
     constructor(
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
-        @inject(IExtensions) private readonly extensions: IExtensions
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService
     ) {
         this.settings = configurationService.getSettings(undefined);
 
@@ -57,15 +61,24 @@ export class ExperimentService implements IExperimentService {
         this._optInto = optInto.filter((exp) => !exp.endsWith('control'));
         this._optOutFrom = optOutFrom.filter((exp) => !exp.endsWith('control'));
 
+        // Custom settings just for native notebook support.
+        const settings = workspaceService.getConfiguration('workbench', undefined);
+        const editorAssociations = settings.get('editorAssociations') as {
+            viewType: string;
+            filenamePattern: string;
+        }[];
+        if (editorAssociations.find((a) => a.viewType && a.viewType.includes('jupyter-notebook'))) {
+            this._optInto.push(`__${ExperimentGroups.NativeNotebook}__`);
+        }
+
         // Don't initialize the experiment service if the extension's experiments setting is disabled.
-        const enabled = this.settings.experiments.enabled;
-        if (!enabled) {
+        if (!this.enabled) {
             return;
         }
 
         let targetPopulation: TargetPopulation;
 
-        if (this.appEnvironment.extensionChannel === 'insiders') {
+        if (this.appEnvironment.channel === 'insiders') {
             targetPopulation = TargetPopulation.Insiders;
         } else {
             targetPopulation = TargetPopulation.Public;
@@ -84,16 +97,13 @@ export class ExperimentService implements IExperimentService {
         this.logExperiments();
     }
 
+    public async activate() {
+        if (this.experimentationService) {
+            await this.experimentationService.initializePromise;
+        }
+    }
     public async inExperiment(experiment: ExperimentGroups): Promise<boolean> {
         if (!this.experimentationService) {
-            return false;
-        }
-
-        // If user is already in Native Notebook experiment, then they cannot be in Custom Editor experiment.
-        if (
-            experiment === ExperimentGroups.CustomEditor &&
-            this.getOptInOptOutStatus(ExperimentGroups.NativeNotebook) === 'optIn'
-        ) {
             return false;
         }
 
@@ -117,6 +127,7 @@ export class ExperimentService implements IExperimentService {
                 return false;
             }
             case 'optIn': {
+                await this.experimentationService.isCachedFlightEnabled(experiment);
                 sendTelemetryEvent(EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT, undefined, {
                     expNameOptedInto: experiment
                 });
@@ -130,7 +141,7 @@ export class ExperimentService implements IExperimentService {
     }
 
     public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
-        if (!this.experimentationService || this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
+        if (!this.experimentationService || this._optOutFrom.includes(experiment)) {
             return;
         }
 
@@ -152,7 +163,6 @@ export class ExperimentService implements IExperimentService {
             this.output.appendLine(Experiments.inGroup().format(exp));
         });
     }
-
     private getOptInOptOutStatus(experiment: ExperimentGroups): 'optOut' | 'optIn' | undefined {
         if (!this.experimentationService) {
             return;
@@ -160,7 +170,7 @@ export class ExperimentService implements IExperimentService {
 
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
-        if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
+        if (this._optOutFrom.includes(experiment)) {
             return 'optOut';
         }
 
@@ -169,7 +179,7 @@ export class ExperimentService implements IExperimentService {
             return this._optInto.includes(`__${experiment}__`) ? 'optIn' : undefined;
         }
 
-        if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
+        if (this._optInto.includes(experiment)) {
             return 'optIn';
         }
 

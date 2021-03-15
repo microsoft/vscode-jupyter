@@ -35,7 +35,7 @@ export async function chainWithPendingUpdates(
         .finally(async () => {
             const edit = new WorkspaceEdit();
             update(edit);
-            return workspace.applyEdit(edit).then(
+            await workspace.applyEdit(edit).then(
                 (result) => deferred.resolve(result),
                 (ex) => deferred.reject(ex)
             );

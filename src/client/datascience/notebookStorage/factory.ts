@@ -26,6 +26,7 @@ export class NotebookModelFactory implements INotebookModelFactory {
             file: Uri;
             cells: ICell[];
             notebookJson?: Partial<nbformat.INotebookContent>;
+            defaultCellLanguage?: string;
             globalMemento: Memento;
             crypto: ICryptoUtils;
             indentAmount?: string;
@@ -44,7 +45,8 @@ export class NotebookModelFactory implements INotebookModelFactory {
                 options.indentAmount,
                 options.pythonNumber,
                 this.vsCodeNotebook,
-                this.cellLanguageService
+                options.defaultCellLanguage ||
+                    this.cellLanguageService.getPreferredLanguage(options.notebookJson?.metadata)
             );
         }
         return new NativeEditorNotebookModel(

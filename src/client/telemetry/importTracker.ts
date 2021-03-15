@@ -8,6 +8,7 @@ import * as path from 'path';
 import { TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
 import { splitMultilineString } from '../../datascience-ui/common';
+import { IS_CI_SERVER } from '../../test/ciConstants';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
@@ -15,6 +16,7 @@ import '../common/extensions';
 import { noop } from '../common/utils/misc';
 import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../datascience/types';
 import { EventName } from './constants';
+import { getTelemetrySafeHashedString } from './helpers';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for
@@ -48,9 +50,6 @@ const testExecution = isTestExecution();
 export class ImportTracker implements IExtensionSingleActivationService, INotebookExecutionLogger {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
     private sentMatches: Set<string> = new Set<string>();
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    private hashFn = require('hash.js').sha256;
-
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
@@ -104,15 +103,22 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
     private getNotebookLines(e: INotebookEditor): (string | undefined)[] {
         let result: (string | undefined)[] = [];
         if (e.model) {
-            e.model
-                .getCellsWithId()
-                .filter((c) => c.data.cell_type === 'code')
-                .forEach((c) => {
-                    const cellArray = this.getCellLines(c.data as nbformat.ICodeCell);
-                    if (result.length < MAX_DOCUMENT_LINES) {
-                        result = [...result, ...cellArray];
-                    }
-                });
+            try {
+                e.model
+                    .getCellsWithId()
+                    .filter((c) => c.data.cell_type === 'code')
+                    .forEach((c) => {
+                        const cellArray = this.getCellLines(c.data as nbformat.ICodeCell);
+                        if (result.length < MAX_DOCUMENT_LINES) {
+                            result = [...result, ...cellArray];
+                        }
+                    });
+            } catch (ex) {
+                // Can fail on CI, if the notebook has been closed or the like
+                if (!IS_CI_SERVER) {
+                    throw ex;
+                }
+            }
         }
         return result;
     }
@@ -194,7 +200,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         this.sentMatches.add(packageName);
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
-        const hash = this.hashFn().update(packageName).digest('hex');
+        const hash = getTelemetrySafeHashedString(packageName);
         sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedName: hash });
     }
 

@@ -1,0 +1,228 @@
+.slice-data {
+    background-color: var(--vscode-settings-textInputBackground);
+    color: var(--vscode-settings-textInputForeground) !important;
+    padding: 0px 4px 0px 6px;
+    /* input does not inherit font from body */
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    height: 26px;
+    margin: 0px;
+    border: 1px solid var(--vscode-settings-textInputBorder);
+}
+
+[class*='ms-Dropdown is-disabled'],
+.submit-slice-button:disabled,
+.disabled,
+.slice-data:disabled {
+    opacity: 0.4;
+}
+
+.slicing-control {
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+}
+
+.checkbox-label {
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    font-weight: var(--vscode-font-weight);
+    cursor: pointer;
+    margin: 0;
+    padding-left: 10px;
+}
+
+.slice-summary {
+    display: flex;
+    flex-direction: row;
+    cursor: pointer;
+}
+
+.slice-summary-detail {
+    padding-bottom: 2px;
+    padding-left: 2px;
+}
+
+.current-slice {
+    margin-left: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 0px;
+    color: var(--vscode-badge-foreground);
+    background-color: var(--vscode-badge-background);
+    border-radius: 2px;
+}
+
+.slice-form {
+    align-self: center;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 4px 14px;
+}
+
+.slice-control-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.slice-form-container {
+    margin-left: 30px;
+}
+
+.slice-control-column {
+    flex-direction: column;
+}
+
+details > summary {
+    list-style-type: none;
+    display: flex;
+}
+
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+details > summary::before {
+    font: normal normal normal 16px/1 codicon;
+    content: '\eab6';
+}
+
+details[open] > summary::before {
+    font: normal normal normal 16px/1 codicon;
+    content: '\eab4';
+}
+
+.submit-slice-button {
+    color: var(--vscode-button-foreground) !important;
+    background-color: var(--vscode-button-background);
+    border: none;
+    margin-left: 10px;
+    padding: 4px 8px;
+    height: 26px;
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    max-width: fit-content;
+    cursor: pointer;
+}
+
+.slice-enablement-checkbox-container {
+    padding-top: 4px;
+}
+
+:focus {
+    outline: none;
+}
+
+.checkbox {
+    color: var(--vscode-settings-checkboxForeground);
+    background-color: var(--vscode-settings-checkboxBackground) !important;
+    border: 1px solid transparent;
+    border-color: var(--vscode-settings-checkboxBorder) !important;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    text-align: center;
+    vertical-align:middle;
+    border-radius: 3px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.checkbox:disabled {
+    cursor:not-allowed;
+}
+
+.checkbox.checked:active,
+.checkbox.checked:focus,
+.checkbox:active,
+.checkbox:focus {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
+}
+
+.checkbox.checked::before {
+    content: '\eab2';
+    text-decoration: none;
+    text-rendering: auto;
+    display: inline-block;
+    cursor: pointer;
+    font: normal normal normal 16px/1 codicon;
+    line-height: 16px;
+    color: var(--vscode-settings-checkboxForeground);
+}
+
+/* Overrides for Fluent UI controls */
+[class*='ms-Dropdown-label'] {
+    color: var(--vscode-editor-foreground);
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+}
+
+/* This needs to match VS Code settings dropdowns */
+.dropdownTitleOverrides .ms-Dropdown-title {
+    /* Usually want to avoid !important but in this case
+       it's necessary to ensure that when the dropdown
+       has focus, the default dropdown :focus color (black)
+       is not applied */
+    color: var(--vscode-dropdown-foreground) !important; 
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    background-color: var(--vscode-dropdown-background);
+    border: 1px solid var(--vscode-dropdown-border) !important;
+    border-radius: 0px;
+    height: 26px;
+    line-height: 26px;
+}
+
+[class*='dropdown'] {
+    border: 1px solid var(--vscode-dropdown-border),
+}
+
+[class*='dropdown']:active {
+    border: 1px solid var(--vscode-focusBorder),
+}
+
+[class*='dropdown']:focus::after {
+    border-radius: 0px;
+    border: 1px solid var(--vscode-focusBorder) !important;
+}
+
+[class*='ms-Dropdown-caretDownWrapper']::after {
+    color: var(--vscode-dropdown-foreground);
+    content: "\eab4";
+    pointer-events: none;
+    font-family: codicon;
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    line-height: 26px;
+    opacity: 0.8;
+}
+
+.slice-data.input-invalid {
+    outline: 1px solid var(--vscode-inputValidation-errorBorder);
+}
+
+.slice-data.input-invalid:focus {
+    outline: 2px solid var(--vscode-inputValidation-errorBorder);
+}
+
+.slice-data:focus {
+    outline: 1px solid var(--vscode-button-background);
+}
+
+.error-message {
+    outline: 1px solid var(--vscode-inputValidation-errorBorder);
+    background-color: var(--vscode-inputValidation-errorBackground);
+    color: var(--vscode-inputValidation-errorForeground);
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    padding: 5px 3px;
+    align-items: center;
+    max-width: fit-content;
+}

@@ -24,7 +24,7 @@ export class DebugLoggingManager implements IDebugLoggingManager {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IExtensionContext) private extensionContext: IExtensionContext
     ) {
-        this.logfilePath = path.join(this.extensionContext.globalStoragePath, 'log.txt');
+        this.logfilePath = path.join(this.extensionContext.globalStorageUri.fsPath, 'log.txt');
     }
 
     public async initialize() {

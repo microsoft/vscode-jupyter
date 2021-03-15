@@ -14,6 +14,7 @@ import {
     IJupyterSessionManager
 } from '../../types';
 import { KernelConnectionMetadata } from '../kernels/types';
+import { Resource } from '../../../common/types';
 
 export class GuestJupyterSessionManager implements IJupyterSessionManager {
     private connInfo: IJupyterConnection | undefined;
@@ -33,12 +34,13 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
         return this.restartSessionUsedEvent.event;
     }
     public startNew(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
         cancelToken?: CancellationToken,
         disableUI?: boolean
     ): Promise<IJupyterSession> {
-        return this.realSessionManager.startNew(kernelConnection, workingDirectory, cancelToken, disableUI);
+        return this.realSessionManager.startNew(resource, kernelConnection, workingDirectory, cancelToken, disableUI);
     }
 
     public async getKernelSpecs(): Promise<IJupyterKernelSpec[]> {

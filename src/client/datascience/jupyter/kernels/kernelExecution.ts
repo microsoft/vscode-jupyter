@@ -32,7 +32,7 @@ import {
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import { isPythonKernelConnection } from './helpers';
-import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
+import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -48,7 +48,6 @@ export class KernelExecution implements IDisposable {
         private readonly kernelProvider: IKernelProvider,
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
-        readonly kernelSelectionUsage: IKernelSelectionUsage,
         appShell: IApplicationShell,
         readonly vscNotebook: IVSCodeNotebook,
         readonly metadata: Readonly<KernelConnectionMetadata>,
@@ -60,6 +59,7 @@ export class KernelExecution implements IDisposable {
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<void> {
+        sendKernelTelemetryEvent(cell.notebook.uri, Telemetry.ExecuteNativeCell);
         const editor = this.vscNotebook.notebookEditors.find((item) => item.document === cell.notebook);
         if (!editor) {
             // No editor, possible it was closed.
@@ -80,6 +80,7 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
     public async executeAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
+        sendKernelTelemetryEvent(document.uri, Telemetry.ExecuteNativeCell);
         const editor = this.vscNotebook.notebookEditors.find((item) => item.document === document);
         if (!editor) {
             // No editor, possible it was closed.
@@ -88,7 +89,7 @@ export class KernelExecution implements IDisposable {
 
         // Only run code cells that are not already running.
         const cellsThatWeCanRun = editor.document.cells
-            .filter((cell) => cell.cellKind === NotebookCellKind.Code)
+            .filter((cell) => cell.kind === NotebookCellKind.Code)
             .filter((cell) => cell.metadata.runState !== NotebookCellRunState.Running);
         if (cellsThatWeCanRun.length === 0) {
             // This is an unlikely scenario (UI doesn't allow this).
@@ -102,10 +103,8 @@ export class KernelExecution implements IDisposable {
             traceInfo('Update notebook execution state as running');
 
             const updateNotebookStatus = chainWithPendingUpdates(editor.document, (edit) => {
-                edit.replaceNotebookMetadata(editor.document.uri, {
-                    ...document.metadata,
-                    runState: NotebookRunState.Running
-                });
+                const metadata = document.metadata.with({ runState: NotebookRunState.Running });
+                edit.replaceNotebookMetadata(editor.document.uri, metadata);
                 return edit;
             });
             cellsThatWeCanRun.forEach((cell) => executionQueue.queueCell(cell));
@@ -115,10 +114,8 @@ export class KernelExecution implements IDisposable {
         } finally {
             traceInfo('Restore notebook state to idle after completion');
             await chainWithPendingUpdates(editor.document, (edit) => {
-                edit.replaceNotebookMetadata(editor.document.uri, {
-                    ...document.metadata,
-                    runState: NotebookRunState.Idle
-                });
+                const metadata = document.metadata.with({ runState: NotebookRunState.Idle });
+                edit.replaceNotebookMetadata(editor.document.uri, metadata);
                 return edit;
             });
         }

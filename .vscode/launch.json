@@ -30,14 +30,14 @@
                 // Enable this to log telemetry to the output during debugging
                 "XVSC_JUPYTER_LOG_TELEMETRY": "1",
                 // Enable this to log IPYWIDGET messages
-                "VSC_JUPYTER_LOG_IPYWIDGETS": "1",
+                "XVSC_JUPYTER_LOG_IPYWIDGETS": "1",
                 // Enable this to log debugger output. Directory must exist ahead of time
                 "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output_Ex"
             },
-			"presentation": {
-				"group": "1_extension",
-				"order": 1
-			}
+            "presentation": {
+                "group": "1_extension",
+                "order": 1
+            }
         },
         {
             "name": "Extension (UI in Browser)",
@@ -61,10 +61,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-			"presentation": {
-				"group": "1_extension",
-				"order": 2
-			}
+            "presentation": {
+                "group": "1_extension",
+                "order": 2
+            }
         },
         {
             "name": "Extension inside container",
@@ -83,10 +83,10 @@
                 "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
-			"presentation": {
-				"group": "1_extension",
-				"order": 3
-			}
+            "presentation": {
+                "group": "1_extension",
+                "order": 3
+            }
         },
         {
             // Note, for the smoke test you want to debug, you may need to copy the file,
@@ -96,11 +96,10 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "${workspaceFolder:vscode-jupyter}/src/testMultiRootWkspc/smokeTests",
+                "${workspaceFolder}/src/testMultiRootWkspc/smokeTests",
                 "--enable-proposed-api",
-                "--extensionDevelopmentPath=${workspaceFolder:vscode-python}",
-                "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",
-                "--extensionTestsPath=${workspaceFolder:vscode-jupyter}/out/test"
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
                 "CI_PYTHON_PATH": "<Python Path>",
@@ -110,19 +109,17 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceFolder:vscode-python}/out/**/*.js",
-                "!${workspaceFolder:vscode-python}/**/node_modules**/*",
-                "${workspaceFolder:vscode-jupyter}/out/**/*.js",
-                "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
             ],
-			"presentation": {
-				"group": "2_tests",
-				"order": 10
-			}
+            "presentation": {
+                "group": "2_tests",
+                "order": 10
+            }
         },
         {
             "name": "Jedi LSP tests",
@@ -148,10 +145,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-			"presentation": {
-				"group": "2_tests",
-				"order": 4
-			}
+            "presentation": {
+                "group": "2_tests",
+                "order": 4
+            }
         },
         {
             "name": "VS Code Tests (Jupyter+Python Extension installed, *.vscode.test.ts)",
@@ -184,10 +181,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-			"presentation": {
-				"group": "2_tests",
-				"order": 5
-			}
+            "presentation": {
+                "group": "2_tests",
+                "order": 5
+            }
         },
         {
             "name": "Native Notebook Tests (Jupyter+Python Extension installed, *.vscode.test.ts)",
@@ -214,17 +211,23 @@
                 "VSC_JUPYTER_REMOTE_NATIVE_TEST": "false", // Change to `true` to run the Native Notebook tests with remote jupyter connections.
                 "VSC_JUPYTER_NON_RAW_NATIVE_TEST": "false", // Change to `true` to run the Native Notebook tests with non-raw kernels (i.e. local jupyter server).
                 "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1",
-                "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML": "1" //Enable to get full coverage repor (in coverage folder).
+                "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML": "1", //Enable to get full coverage repor (in coverage folder).
+                "VSC_JUPYTER_EXPOSE_SVC": "1"
             },
             "stopOnEntry": false,
             "sourceMaps": true,
-            "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"],
-			"presentation": {
-				"group": "2_tests",
-				"order": 6
-			}
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "presentation": {
+                "group": "2_tests",
+                "order": 6
+            }
         },
         {
             "name": "Unit Tests (without VS Code, *.unit.test.ts)",
@@ -250,16 +253,15 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-			"presentation": {
-				"group": "2_tests",
-				"order": 7
+            "presentation": {
+                "group": "2_tests",
+                "order": 7
             },
             "env": {
                 // Remove 'X' prefix to run with coverage
                 "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE": "1",
                 "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML": "1" //Enable to get full coverage repor (in coverage folder).
-            },
-
+            }
         },
         {
             "name": "Functional Tests (without VS Code, *.functional.test.ts)",
@@ -305,10 +307,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-			"presentation": {
-				"group": "2_tests",
-				"order": 8
-			}
+            "presentation": {
+                "group": "2_tests",
+                "order": 8
+            }
         },
         {
             "name": "Functional DS UI Tests (without VS Code, *.ui.functional.test.ts)",
@@ -324,7 +326,7 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite>",
-                "--timeout=300000",
+                "--timeout=300000"
             ],
             "env": {
                 // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
@@ -344,10 +346,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-			"presentation": {
-				"group": "2_tests",
-				"order": 9
-			}
+            "presentation": {
+                "group": "2_tests",
+                "order": 9
+            }
         },
         {
             "type": "node",
@@ -360,10 +362,10 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-			"presentation": {
-				"group": "3_misc",
-				"order": 1
-			}
+            "presentation": {
+                "group": "3_misc",
+                "order": 1
+            }
         },
         {
             "name": "Node: Current File",
@@ -373,10 +375,10 @@
                 "<node_internals>/**"
             ],
             "type": "pwa-node",
-			"presentation": {
-				"group": "3_misc",
-				"order": 2
-			}
+            "presentation": {
+                "group": "3_misc",
+                "order": 2
+            }
         },
         {
             "name": "Python: Current File with iPython",
@@ -386,11 +388,11 @@
             "console": "integratedTerminal",
             "args": [
                 "${file}"
-            ],  // Additional args should be prefixed with a '--' first.
-			"presentation": {
-				"group": "3_misc",
-				"order": 3
-			}
+            ], // Additional args should be prefixed with a '--' first.
+            "presentation": {
+                "group": "3_misc",
+                "order": 3
+            }
         },
         {
             "name": "Python: Current File",
@@ -398,10 +400,10 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-			"presentation": {
-				"group": "3_misc",
-				"order": 2
-			}
+            "presentation": {
+                "group": "3_misc",
+                "order": 2
+            }
         }
     ]
 }

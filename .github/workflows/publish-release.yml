@@ -1,4 +1,4 @@
-name: Publish Extension
+name: Publish Release
 
 on:
   # Allow dispatch so can publish from github actions
@@ -37,12 +37,12 @@ jobs:
           python-version: ${{env.PYTHON_VERSION}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.2
+        uses: actions/setup-node@v2.1.5
         with:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Azure Login
-        uses: azure/login@v1.1.1
+        uses: azure/login@v1.3.0
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 

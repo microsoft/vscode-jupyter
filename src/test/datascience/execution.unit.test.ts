@@ -16,7 +16,6 @@ import { ApplicationShell } from '../../client/common/application/applicationShe
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -45,8 +44,12 @@ import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/j
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { getKernelId } from '../../client/datascience/jupyter/kernels/helpers';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
+import { LocalKernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
+import { LocalKernelFinder } from '../../client/datascience/kernel-launcher/localKernelFinder';
+import { ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
 import {
     IJupyterKernelSpec,
@@ -936,27 +939,6 @@ suite('Jupyter Execution', async () => {
             instance(executionFactory)
         );
         kernelSelector = mock(KernelSelector);
-        const kernelSpec: IJupyterKernelSpec = {
-            argv: [],
-            display_name: 'hello',
-            language: PYTHON_LANGUAGE,
-            name: 'hello',
-            path: '',
-            env: undefined
-        };
-        when(
-            kernelSelector.getPreferredKernelForLocalConnection(
-                anything(),
-                anything(),
-                anything(),
-                anything(),
-                anything()
-            )
-        ).thenResolve({
-            kernelSpec,
-            kind: 'startUsingKernelSpec'
-        });
-
         const dependencyService = mock(JupyterInterpreterDependencyService);
         when(dependencyService.areDependenciesInstalled(anything(), anything())).thenCall(
             async (interpreter: PythonEnvironment) => {
@@ -982,7 +964,6 @@ suite('Jupyter Execution', async () => {
             instance(jupyterInterpreterService),
             instance(interpreterService),
             instance(dependencyService),
-            instance(fileSystem),
             instance(executionFactory),
             instance(mock<IOutputChannel>()),
             instance(mock<IPathUtils>())
@@ -996,8 +977,22 @@ suite('Jupyter Execution', async () => {
             instance(serviceContainer),
             instance(jupyterOutputChannel)
         );
+        const kernelFinder = mock(LocalKernelFinder);
+        const kernelSpec: IJupyterKernelSpec = {
+            name: 'somename',
+            path: 'python',
+            argv: ['python'],
+            display_name: 'somename'
+        };
+        const kernelMetadata: LocalKernelConnectionMetadata = {
+            kind: 'startUsingKernelSpec',
+            kernelSpec,
+            id: getKernelId(kernelSpec)
+        };
+        when(kernelFinder.findKernel(anything(), anything(), anything())).thenResolve(kernelMetadata);
         when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
+        when(serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder)).thenReturn(instance(kernelFinder));
         return {
             executionService: activeService.object,
             jupyterExecutionFactory: new JupyterExecutionFactory(

@@ -5,7 +5,6 @@ import './mainPanel.css';
 
 import { JSONArray } from '@phosphor/coreutils';
 import * as React from 'react';
-import * as uuid from 'uuid/v4';
 
 import {
     CellFetchAllLimit,
@@ -28,6 +27,14 @@ import { StyleInjector } from '../react-common/styleInjector';
 import { cellFormatterFunc } from './cellFormatter';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
+
+import '../react-common/codicon/codicon.css';
+import '../react-common/seti/seti.less';
+import { SliceControl } from './sliceControl';
+import { debounce } from 'lodash';
+
+import { initializeIcons } from '@fluentui/react';
+initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
 
@@ -52,6 +59,9 @@ interface IMainPanelState {
     originalVariableType?: string;
     isSliceDataEnabled: boolean;
     maximumRowChunkSize?: number;
+    variableName?: string;
+    fileName?: string;
+    sliceExpression?: string;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -148,10 +158,50 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     postOffice={this.postOffice}
                 />
                 {progressBar}
+                {this.renderBreadcrumb()}
+                {this.renderSliceControls()}
                 {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
             </div>
         );
     };
+
+    public renderSliceControls = () => {
+        if (
+            this.state.isSliceDataEnabled &&
+            this.state.originalVariableShape &&
+            this.state.originalVariableShape.filter((v) => !!v).length > 1
+        ) {
+            return (
+                <SliceControl
+                    sliceExpression={this.state.sliceExpression}
+                    loadingData={this.state.totalRowCount > this.state.fetchedRowCount}
+                    originalVariableShape={this.state.originalVariableShape}
+                    handleSliceRequest={this.handleSliceRequest}
+                />
+            );
+        }
+    };
+
+    private renderBreadcrumb() {
+        let breadcrumbText = this.state.variableName;
+        if (this.state.originalVariableShape) {
+            breadcrumbText += ' (' + this.state.originalVariableShape?.join(', ') + ')';
+        }
+        if (breadcrumbText) {
+            return (
+                <div className="breadcrumb-container control-container">
+                    <div className="breadcrumb">
+                        <div className="icon-python breadcrumb-file-icon" />
+                        <span>{this.state.fileName}</span>
+                        {this.state.fileName ? (
+                            <div className="codicon codicon-chevron-right breadcrumb-codicon" />
+                        ) : undefined}
+                        <span>{breadcrumbText}</span>
+                    </div>
+                </div>
+            );
+        }
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public handleMessage = (msg: string, payload?: any) => {
@@ -228,16 +278,21 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const variable = payload as IDataFrameInfo & { isSliceDataEnabled: boolean };
             if (variable) {
                 const columns = this.generateColumns(variable);
-                const totalRowCount = variable.rowCount ? variable.rowCount : 0;
+                const totalRowCount = variable.rowCount ?? 0;
                 const initialRows: ISlickRow[] = [];
-                const indexColumn = variable.indexColumn ? variable.indexColumn : 'index';
-                const originalVariableType = this.state.originalVariableType ?? variable.type;
-                const originalVariableShape = this.state.originalVariableShape ?? variable.shape;
-                const isSliceDataEnabled = payload.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
+                const indexColumn = variable.indexColumn ?? 'index';
+                const originalVariableType = variable.type ?? this.state.originalVariableType;
+                const originalVariableShape = variable.shape ?? this.state.originalVariableShape;
+                const variableName = this.state.variableName ?? variable.name;
+                const fileName = this.state.fileName ?? variable.fileName;
+                const isSliceDataEnabled =
+                    variable.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
+                const sliceExpression = variable.sliceExpression;
 
                 // New data coming in, so reset everything and clear our cache of columns
                 this.columnsContainingInfOrNaN.clear();
                 this.resetGridEvent.notify({ columns });
+                this.sentDone = false;
 
                 this.setState({
                     gridColumns: columns,
@@ -249,6 +304,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     originalVariableShape,
                     dataDimensionality: variable.dataDimensionality ?? 2,
                     isSliceDataEnabled,
+                    variableName,
+                    fileName,
+                    sliceExpression,
                     // Maximum number of rows is 100 if evaluating in debugger, undefined otherwise
                     maximumRowChunkSize: variable.maximumRowChunkSize ?? this.state.maximumRowChunkSize
                 });
@@ -317,13 +375,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (newFetched < this.state.totalRowCount) {
             const chunkStart = response.end;
             const chunkEnd = Math.min(chunkStart + this.rowFetchSizeSubsequent, this.state.totalRowCount);
-            this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd });
+            this.sendMessage(DataViewerMessages.GetRowsRequest, {
+                start: chunkStart,
+                end: chunkEnd,
+                sliceExpression: this.state.sliceExpression
+            });
         }
     }
 
     private generateColumns(variable: IDataFrameInfo): Slick.Column<Slick.SlickData>[] {
+        // Generate an index column
+        const indexColumn = {
+            key: this.state.indexColumn,
+            type: ColumnType.Number
+        };
         if (variable.columns) {
-            return variable.columns.map((c: { key: string; type: ColumnType }, i: number) => {
+            const columns = [indexColumn].concat(variable.columns);
+            return columns.map((c: { key: string; type: ColumnType }, i: number) => {
                 return {
                     type: c.type,
                     field: c.key.toString(),
@@ -344,13 +412,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Set of columns to update based on this batch of rows
         const columnsToUpdate = new Set<string>();
         // Make sure we have an index field and all rows have an item
-        const normalizedRows = rows.map((r: any | undefined) => {
+        const normalizedRows = rows.map((r: any | undefined, idx: number) => {
             if (!r) {
                 r = {};
             }
-            if (!r.hasOwnProperty(this.state.indexColumn)) {
-                r[this.state.indexColumn] = uuid();
-            }
+            r[this.state.indexColumn] = this.state.fetchedRowCount + idx;
             for (let [key, value] of Object.entries(r)) {
                 switch (value) {
                     case 'nan':
@@ -410,8 +476,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
+    private debounceSliceRequest = debounce(this.sendMessage, 400);
     private handleSliceRequest = (args: IGetSliceRequest) => {
-        this.sendMessage(DataViewerMessages.GetSliceRequest, args);
+        // Fetching a slice is expensive so debounce requests
+        this.debounceSliceRequest(DataViewerMessages.GetSliceRequest, args);
     };
 
     private updateColumns(newColumns: Slick.Column<Slick.SlickData>[]) {

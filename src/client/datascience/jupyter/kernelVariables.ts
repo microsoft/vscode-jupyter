@@ -5,7 +5,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
-
+import * as path from 'path';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { Experiments } from '../../common/experiments/groups';
@@ -119,10 +119,15 @@ export class KernelVariables implements IJupyterVariables {
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
         notebook: INotebook,
-        sliceExpression?: string
+        sliceExpression?: string,
+        isRefresh?: boolean
     ): Promise<IJupyterVariable> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
+
+        if (isRefresh) {
+            targetVariable = await this.getFullVariable(targetVariable, notebook);
+        }
 
         let expression = targetVariable.name;
         if (sliceExpression) {
@@ -139,10 +144,13 @@ export class KernelVariables implements IJupyterVariables {
             true
         );
 
+        const fileName = path.basename(notebook.identity.path);
+
         // Combine with the original result (the call only returns the new fields)
         return {
             ...targetVariable,
-            ...this.deserializeJupyterResult(results)
+            ...this.deserializeJupyterResult(results),
+            fileName
         };
     }
 
@@ -155,10 +163,6 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<{}> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
-
-        if (targetVariable.rowCount) {
-            end = Math.min(end, targetVariable.rowCount);
-        }
 
         let expression = targetVariable.name;
         if (sliceExpression) {

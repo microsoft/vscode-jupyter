@@ -25,6 +25,7 @@ import { verifyViewVariables } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { sleep } from '../../core';
+import { traceInfo } from '../../../client/common/logger';
 
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
@@ -56,14 +57,18 @@ suite('DataScience - VariableView', () => {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });
     setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
 
         // Create an editor to use for our tests
         await createEmptyPythonNotebook(disposables);
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
         await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
 
     // Cleanup after suite is finished

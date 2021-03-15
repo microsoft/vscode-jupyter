@@ -1195,7 +1195,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             .then(noop, noop);
     }
 
-    private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook> {
+    private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook | undefined> {
         let notebook: INotebook | undefined;
         while (!notebook) {
             try {
@@ -1218,7 +1218,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     // Ask the user for a new local kernel
                     const newKernel = await this.selector.askForLocalKernel(
                         this.owningResource,
-                        serverConnection.type,
+                        serverConnection,
                         e.kernelConnectionMetadata
                     );
                     if (newKernel && kernelConnectionMetadataHasKernelSpec(newKernel) && newKernel.kernelSpec) {
@@ -1230,6 +1230,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                                 this.owningResource
                             )
                             .then(noop, noop);
+                    } else {
+                        break;
                     }
                 } else {
                     throw e;

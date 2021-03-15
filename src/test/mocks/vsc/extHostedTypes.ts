@@ -16,6 +16,53 @@ import { vscUri } from './uri';
 import { generateUuid } from './uuid';
 
 export namespace vscMockExtHostedTypes {
+    export class NotebookCellMetadata {
+        constructor(
+            public readonly editable?: boolean,
+            public readonly breakpointMargin?: boolean,
+            public readonly runnable?: boolean,
+            public readonly hasExecutionOrder?: boolean,
+            public readonly executionOrder?: number,
+            public readonly runState?: NotebookCellRunState,
+            public readonly runStartTime?: number,
+            public readonly statusMessage?: string,
+            public readonly lastRunDuration?: number,
+            public readonly inputCollapsed?: boolean,
+            public readonly outputCollapsed?: boolean,
+            public readonly custom?: Record<string, any>
+        ) {}
+
+        // todo@API write a proper signature
+        with(change: {
+            editable?: boolean | null;
+            breakpointMargin?: boolean | null;
+            runnable?: boolean | null;
+            hasExecutionOrder?: boolean | null;
+            executionOrder?: number | null;
+            runState?: NotebookCellRunState | null;
+            runStartTime?: number | null;
+            statusMessage?: string | null;
+            lastRunDuration?: number | null;
+            inputCollapsed?: boolean | null;
+            outputCollapsed?: boolean | null;
+            custom?: Record<string, any> | null;
+        }): NotebookCellMetadata {
+            return new NotebookCellMetadata(
+                change.editable || this.editable,
+                change.breakpointMargin || this.breakpointMargin,
+                change.runnable || this.runnable,
+                change.hasExecutionOrder || this.hasExecutionOrder,
+                change.executionOrder || this.executionOrder,
+                change.runState || this.runState,
+                change.runStartTime || this.runStartTime,
+                change.statusMessage || this.statusMessage,
+                change.lastRunDuration || this.lastRunDuration,
+                change.inputCollapsed || this.inputCollapsed,
+                change.outputCollapsed || this.outputCollapsed,
+                change.custom || this.custom
+            );
+        }
+    }
     export enum NotebookCellKind {
         Markdown = 1,
         Code = 2

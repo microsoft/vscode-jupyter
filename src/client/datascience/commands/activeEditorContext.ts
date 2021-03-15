@@ -14,7 +14,7 @@ import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
 import { EditorContexts } from '../constants';
-import { isPythonNotebook } from '../notebook/helpers/helpers';
+import { isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers';
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
@@ -42,6 +42,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private isPythonFileActive: boolean = false;
     private isPythonNotebook: ContextKey;
     private isVSCodeNotebookActive: ContextKey;
+    private usingWebViewNotebook: ContextKey;
+    private hasNativeNotebookOpen: ContextKey;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -85,6 +87,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.isNotebookTrusted = new ContextKey(EditorContexts.IsNotebookTrusted, this.commandManager);
         this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook, this.commandManager);
         this.isVSCodeNotebookActive = new ContextKey(EditorContexts.IsVSCodeNotebookActive, this.commandManager);
+        this.usingWebViewNotebook = new ContextKey(EditorContexts.UsingWebviewNotebook, this.commandManager);
+        this.hasNativeNotebookOpen = new ContextKey(EditorContexts.HasNativeNotebookOpen, this.commandManager);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -109,6 +113,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
         }
         this.vscNotebook.onDidChangeNotebookEditorSelection(this.updateNativeNotebookContext, this, this.disposables);
+
+        this.usingWebViewNotebook.set(!this.inNativeNotebookExperiment).ignoreErrors();
     }
 
     private updateNativeNotebookCellContext() {
@@ -142,11 +148,16 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateMergedContexts();
     }
     private updateNativeNotebookContext() {
+        this.hasNativeNotebookOpen.set(this.vscNotebook.notebookDocuments.some(isJupyterNotebook)).ignoreErrors();
+
         if (!this.vscNotebook.activeNotebookEditor) {
             return;
         }
 
-        if (this.vscNotebook.activeNotebookEditor) {
+        if (
+            this.vscNotebook.activeNotebookEditor &&
+            isJupyterNotebook(this.vscNotebook.activeNotebookEditor.document)
+        ) {
             if (
                 this.vscNotebook.activeNotebookEditor.selection &&
                 this.vscNotebook.activeNotebookEditor.selection.index > 0

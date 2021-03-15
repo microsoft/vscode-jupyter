@@ -4,9 +4,8 @@
 }
 
 .react-grid-container {
-    border-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-style: solid;
-    border-width: 1px;
+    border: none;
+    padding-left: 8px;
 }
 
 .react-grid-measure {
@@ -14,51 +13,58 @@
     bottom: 5px;
 }
 
-.react-grid-filter-button {
-    background: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin:8px 4px;
-    margin-right: 18px;
-}
-
 .react-grid-header-cell {
     padding: 0px 4px;
-    background-color: var(--vscode-debugToolBar-background);
-    color: var(--vscode-editor-foreground);
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
     text-align: left;
     font-weight: bold;
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-right: 1px solid transparent;
 }
 
 .react-grid-cell {
-    padding: 0px 4px;
+    padding: 4px;
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
-    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-right-style: solid;
+    border-right: 1px solid transparent;
     box-sizing: border-box;
 }
 
 .react-grid-cell.active {
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
+    background-color: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
 }
 
 /* Some overrides necessary to get the colors we want */
 .slick-headerrow-column {
-    background-color: var(--vscode-debugToolBar-background);
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-right-style: solid;
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
+    border-right: 1px solid transparent;
+}
+
+.slick-headerrow-column.ui-state-default {
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-bottom: 3px;
+    padding-top: 1px;
+}
+
+.slick-header-column {
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
 }
 
 .slick-header-column.ui-state-default,
 .slick-group-header-column.ui-state-default {
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-right: 1px solid transparent;
+    display: flex;
+}
+
+.slick-column-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .slick-sort-indicator {
@@ -66,41 +72,54 @@
     width: 0px;
     margin-right: 12px;
     margin-top: 1px;
+    flex: 0 0 auto;
+    cursor: pointer;
 }
 
 .react-grid-header-cell:hover {
-    background-color: var(--vscode-editor-inactiveSelectionBackground);
+    background-color: var(--override-selection-background, var(--vscode-list-hoverBackground));
 }
 
 .react-grid-header-cell > .slick-sort-indicator-asc::before {
     background: none;
-    content: '▲';
+    font: normal normal normal 10px/1 codicon;
+    content: '\eaa1'; /* VS Code arrow-up codicon */
     align-items: center;
+    text-align: right;
+    display: flex;
+    padding: 3px;
+    color: var(--vscode-sideBar-foreground);
+    opacity: 0.4;
 }
 
 .react-grid-header-cell > .slick-sort-indicator-desc::before {
     background: none;
-    content: '▼';
+    font: normal normal normal 10px/1 codicon;
+    content: '\ea9a'; /* VS Code arrow-down codicon */
     align-items: center;
+    text-align: right;
+    display: flex;
+    padding: 3px;
+    color: var(--vscode-sideBar-foreground);
+    opacity: 0.4;
 }
 
 .slick-row:hover > .react-grid-cell {
-    background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
+    background-color: var(--override-selection-background, var(--vscode-list-hoverBackground));
 }
 
 /* Slick.Editors.Text */
 input.editor-text {
     width: 100%;
     height: 100%;
-    border: 0 none;
+    box-sizing: border-box;
+    border: 2px var(--vscode-focusBorder);
+    padding-left: 7px;
     margin: 0;
     outline: 0 none;
-    padding: 0;
-    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-right-style: solid;
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
+    border-style: solid;
+    background-color: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
     text-align: left;
     /* input does not inherit font from body */
     font-family: var(--vscode-editor-font-family);
@@ -108,16 +127,33 @@ input.editor-text {
     font-size: var(--vscode-editor-font-size);
 }
 
+.slick-cell {
+    border: 1px solid var(--vscode-editor-lineHighlightBorder);
+    padding-left: 7px;
+}
+
 .slick-cell.editable {
     border-color: none;
     border-style: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
 }
 
-input.slice-data {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-    border-style: solid;
-    border-radius: 1pt;
-    border-color: var(--vscode-editor-inactiveSelectionBackground);
-    outline: 0 none;
+.control-container {
+    padding: 6px;
+    display: flex;
+    justify-content: start;
+    flex-direction: row;
+}
+
+.codicon-button {
+    cursor: pointer;
+    padding-left: 3px;
+    padding-top: 3px;
+    color: var(--vscode-sideBar-foreground);
+}
+
+.header-cell-button {
+    position: absolute;
 }

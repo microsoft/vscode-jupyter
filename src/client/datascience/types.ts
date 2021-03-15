@@ -144,7 +144,7 @@ export interface INotebookServer extends IAsyncDisposable {
 // Provides a service to determine if raw notebook is supported or not
 export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
 export interface IRawNotebookSupportedService {
-    supported(): Promise<boolean>;
+    supported(): boolean;
 }
 
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
@@ -359,13 +359,17 @@ export interface IJupyterSession extends IAsyncDisposable {
     ): void;
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
     requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
+    shutdown(): Promise<void>;
 }
 
 export type ISessionWithSocket = Session.ISession & {
+    // The resource associated with this session.
+    resource: Resource;
     // Whether this is a remote session that we attached to.
     isRemoteSession?: boolean;
     // Socket information used for hooking messages to the kernel
     kernelSocketInformation?: KernelSocketInformation;
+    kernelConnectionMetadata?: KernelConnectionMetadata;
 };
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
@@ -379,6 +383,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
     readonly onRestartSessionCreated: Event<Kernel.IKernelConnection>;
     readonly onRestartSessionUsed: Event<Kernel.IKernelConnection>;
     startNew(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
         cancelToken?: CancellationToken,
@@ -427,7 +432,7 @@ export interface IJupyterKernelSpec {
      * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
+    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment>; originalSpecFile?: string };
     readonly argv: string[];
     /**
      * Optionally where this kernel spec json is located on the local FS.
@@ -575,7 +580,7 @@ export interface INotebookEditorProvider {
     readonly onDidCloseNotebookEditor: Event<INotebookEditor>;
     open(file: Uri): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
-    createNew(contents?: string, title?: string): Promise<INotebookEditor>;
+    createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<INotebookEditor>;
 }
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
@@ -888,6 +893,7 @@ export interface IJupyterVariable {
     rowCount?: number;
     indexColumn?: string;
     maximumRowChunkSize?: number;
+    fileName?: string;
 }
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
@@ -912,7 +918,8 @@ export interface IJupyterVariables {
     getDataFrameInfo(
         targetVariable: IJupyterVariable,
         notebook?: INotebook,
-        sliceExpression?: string
+        sliceExpression?: string,
+        isRefresh?: boolean
     ): Promise<IJupyterVariable>;
     getDataFrameRows(
         targetVariable: IJupyterVariable,
@@ -1157,6 +1164,7 @@ export interface IModelLoadOptions {
     file: Uri;
     possibleContents?: string;
     backupId?: string;
+    defaultCellLanguage?: string;
     skipLoadingDirtyContents?: boolean;
 }
 
@@ -1337,7 +1345,7 @@ export interface IKernelDependencyService {
         interpreter: PythonEnvironment,
         token?: CancellationToken,
         disableUI?: boolean
-    ): Promise<KernelInterpreterDependencyResponse>;
+    ): Promise<void>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }
 
