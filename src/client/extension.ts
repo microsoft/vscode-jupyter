@@ -24,7 +24,7 @@ const stopWatch = new StopWatch();
 //===============================================
 // loading starts here
 
-import { EventEmitter, ProgressLocation, ProgressOptions, window } from 'vscode';
+import { ProgressLocation, ProgressOptions, window } from 'vscode';
 
 import { buildApi, IExtensionApi } from './api';
 import { IApplicationShell } from './common/application/types';
@@ -37,7 +37,6 @@ import { initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { noop } from './common/utils/misc';
-import { KernelStateEventArgs } from './datascience/notebookExtensibility';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -51,11 +50,18 @@ let activatedServiceContainer: IServiceContainer | undefined;
 // public functions
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
-    let api: IExtensionApi;
-    let ready: Promise<void>;
-    let serviceContainer: IServiceContainer;
     try {
+        let api: IExtensionApi;
+        let ready: Promise<void>;
+        let serviceContainer: IServiceContainer;
         [api, ready, serviceContainer] = await activateUnsafe(context, stopWatch, durations);
+        // Send the "success" telemetry only if activation did not fail.
+        // Otherwise Telemetry is send via the error handler.
+        sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
+            // Run in the background.
+            .ignoreErrors();
+        await ready;
+        return api;
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
@@ -65,7 +71,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // Return a dummy object, to ensure other extension do not fall over.
         return {
             createBlankNotebook: () => Promise.resolve(),
-            onKernelStateChange: new EventEmitter<KernelStateEventArgs>().event,
+            onKernelStateChange: () => ({ dispose: noop }),
             ready: Promise.resolve(),
             registerCellToolbarButton: () => ({ dispose: noop }),
             registerNewNotebookContent: () => Promise.resolve(),
@@ -74,13 +80,6 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             showDataViewer: () => Promise.resolve()
         };
     }
-    // Send the "success" telemetry only if activation did not fail.
-    // Otherwise Telemetry is send via the error handler.
-    sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
-        // Run in the background.
-        .ignoreErrors();
-    await ready;
-    return api;
 }
 
 export function deactivate(): Thenable<void> {
@@ -128,7 +127,7 @@ async function activateUnsafe(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function displayProgress(promise: Promise<any>) {
     const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
-    window.withProgress(progressOptions, () => promise);
+    window.withProgress(progressOptions, () => promise).then(noop, noop);
 }
 
 /////////////////////////////
