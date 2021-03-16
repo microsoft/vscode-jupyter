@@ -99,6 +99,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunFromLine]: [Uri, number, number];
     [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ImportNotebookFile]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.ImportAsDataFrame]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.OpenNotebook]: [undefined | Uri, undefined | string, undefined | CommandSource];
     [DSCommands.OpenNotebookInPreviewEditor]: [undefined | Uri];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];

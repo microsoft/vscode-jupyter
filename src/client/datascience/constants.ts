@@ -63,6 +63,7 @@ export namespace Commands {
     export const CreateNewInteractive = 'jupyter.createnewinteractive';
     export const ImportNotebook = 'jupyter.importnotebook';
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
+    export const ImportAsDataFrame= 'jupyter.importFileAsDataFrame';
     export const OpenNotebook = 'jupyter.opennotebook';
     export const OpenNotebookInPreviewEditor = 'jupyter.opennotebookInPreviewEditor';
     export const SelectJupyterURI = 'jupyter.selectjupyteruri';

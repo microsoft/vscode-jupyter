@@ -56,6 +56,7 @@ import {
     IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
+    INotebook,
     INotebookExporter,
     INotebookProvider,
     IStatusProvider,
@@ -134,7 +135,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         selector: KernelSelector,
         private readonly extensionChecker: IPythonExtensionChecker,
         serverStorage: IJupyterServerUriStorage,
-        private readonly exportDialog: IExportDialog
+        private readonly exportDialog: IExportDialog,
+        notebook?: INotebook
     ) {
         super(
             listeners,
@@ -171,7 +173,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             notebookProvider,
             useCustomEditorApi,
             selector,
-            serverStorage
+            serverStorage,
+            notebook
         );
 
         // Send a telemetry event to indicate window is opening

@@ -27,6 +27,7 @@ export namespace DataViewerMessages {
     export const GetRowsResponse = 'get_rows_response';
     export const CompletedData = 'complete';
     export const GetSliceRequest = 'get_slice_request';
+    export const SubmitCommand = 'submit_command';
 }
 
 export interface IGetRowsRequest {
@@ -56,6 +57,7 @@ export type IDataViewerMapping = {
     [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     [DataViewerMessages.CompletedData]: never | undefined;
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
+    [DataViewerMessages.SubmitCommand]: { command: string, args: any };
 };
 
 export interface IDataFrameInfo {
@@ -99,7 +101,7 @@ export interface IDataViewerFactory {
 
 export const IDataViewer = Symbol('IDataViewer');
 export interface IDataViewer extends IDisposable {
-    readonly active: boolean;
+    readonly visible: boolean;
     readonly onDidDisposeDataViewer: Event<IDataViewer>;
     readonly onDidChangeDataViewerViewState: Event<void>;
     showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;

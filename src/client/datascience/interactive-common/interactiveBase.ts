@@ -176,7 +176,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         private readonly notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private selector: KernelSelector,
-        private serverStorage: IJupyterServerUriStorage
+        private serverStorage: IJupyterServerUriStorage,
+        notebook?: INotebook
     ) {
         super(
             configuration,
@@ -191,6 +192,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             viewColumn,
             useCustomEditorApi
         );
+        this._notebook = notebook;
 
         // Create our unique id. We use this to skip messages we send to other interactive windows
         this._id = uuid();
@@ -902,12 +904,15 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     protected async createNotebookIfProviderConnectionExists(): Promise<void> {
-        // Check to see if we are already connected to our provider
-        const providerConnection = await this.notebookProvider.connect({
-            getOnly: true,
-            resource: this.owningResource,
-            metadata: this.notebookMetadata
-        });
+        let providerConnection = this._notebook?.connection;
+        if (!providerConnection) {
+            // Check to see if we are already connected to our provider
+            providerConnection = await this.notebookProvider.connect({
+                getOnly: true,
+                resource: this.owningResource,
+                metadata: this.notebookMetadata
+            });
+        }
 
         if (providerConnection) {
             try {

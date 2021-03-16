@@ -6,6 +6,7 @@
 .react-grid-container {
     border: none;
     padding-left: 8px;
+    width: 60%;
 }
 
 .react-grid-measure {

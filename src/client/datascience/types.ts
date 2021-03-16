@@ -486,7 +486,7 @@ export interface IInteractiveWindowProvider {
      * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
      * @param owner file that started this interactive window
      */
-    getOrCreate(owner: Resource): Promise<IInteractiveWindow>;
+    getOrCreate(owner: Resource, notebook?: INotebook): Promise<IInteractiveWindow>;
     /**
      * Synchronizes with the other peers in a live share connection to make sure it has the same window open
      * @param window window on this side
@@ -898,6 +898,7 @@ export interface IJupyterVariable {
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
 export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
+    notebook: INotebook | undefined;
     setDependencies(variable: IJupyterVariable, notebook?: INotebook): void;
 }
 

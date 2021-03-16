@@ -6,7 +6,7 @@
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
-    height: 26px;
+    height: 24px;
     margin: 0px;
     border: 1px solid var(--vscode-settings-textInputBorder);
 }

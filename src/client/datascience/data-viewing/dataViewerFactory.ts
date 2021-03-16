@@ -68,23 +68,26 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
 
     private async updateViewStateContext() {
         // A data viewer's view state has changed. Look through our known viewers to see if any are active
-        let hasActiveViewer = false;
+        let hasVisibleViewer = false;
         this.knownViewers.forEach((viewer) => {
-            if (viewer.active) {
-                hasActiveViewer = true;
+            if (viewer.visible) {
+                hasVisibleViewer = true;
             }
         });
-        await this.viewContext.set(hasActiveViewer);
+        await this.viewContext.set(hasVisibleViewer);
     }
 
     // Refresh command is mapped to a keybinding. Refresh
     // is expensive. Ensure we debounce refresh requests
     // in case the user is mashing the refresh shortcut.
     private refreshDataViewer = debounce(() => {
-        // Find the data viewer which is currently active
+        // Refresh any visible data viewers. Use visible
+        // instead of active because this allows the user
+        // to see the data viewer update without explicitly
+        // setting focus to the data viewer (which would be
+        // less convenient)
         for (const viewer of this.knownViewers) {
-            if (viewer.active) {
-                // There should only be one of these
+            if (viewer.visible) {
                 void viewer.refreshData();
             }
         }

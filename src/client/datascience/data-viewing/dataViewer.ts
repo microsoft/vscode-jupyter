@@ -5,6 +5,7 @@ import '../../common/extensions';
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
+import * as uuid from 'uuid/v4';
 import { EventEmitter, Memento, ViewColumn } from 'vscode';
 
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
@@ -24,7 +25,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
-import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import { ICodeCssGenerator, IInteractiveWindowProvider, IJupyterVariableDataProvider, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
@@ -49,8 +50,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
     private currentSliceExpression: string | undefined;
 
-    public get active() {
-        return !!this.webPanel?.isActive();
+    public get visible() {
+        return !!this.webPanel?.isVisible();
     }
 
     public get onDidDisposeDataViewer() {
@@ -73,7 +74,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IExperimentService) private experimentService: IExperimentService,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
     ) {
         super(
             configuration,
@@ -184,6 +186,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.getSlice(payload as IGetSliceRequest).ignoreErrors();
                 break;
 
+            case DataViewerMessages.SubmitCommand:
+                this.handleCommand(payload).ignoreErrors();
+                break;
+
             default:
                 break;
         }
@@ -285,6 +291,33 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private sendElapsedTimeTelemetry() {
         if (this.rowsTimer && this.pendingRowsCount === 0) {
             sendTelemetryEvent(Telemetry.ShowDataViewer, this.rowsTimer.elapsedTime);
+        }
+    }
+
+    private async handleCommand(payload: { command: string, args: any }) {
+        const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
+        let result;
+        switch (payload.command) {
+            case 'open_interactive_window':
+                await this.interactiveWindowProvider.getOrCreate(notebook?.resource, notebook);
+                break;
+            case 'export_to_csv':
+                result = await notebook?.execute('df.to_csv("./cleaned.csv", index=False)', '', 0, uuid());
+                break;
+            case 'rename':
+                result = await notebook?.execute(`df = df.rename(columns={ "${payload.args.old}": "${payload.args.new}" })`, '', 0, uuid());
+                this.refreshData();
+                break;
+            case 'drop':
+                const labels = payload.args.targets as string[];
+                result = await notebook?.execute(`df = df.drop(columns=${'['+  labels.map((label) => `"${label}"`).join(',')  +']'})`, '', 0, uuid());
+                this.refreshData();
+                break;
+            case 'fillna':
+                const { newValue } = payload.args;
+                result = await notebook?.execute(`df = df.fillna(${newValue})`, '', 0, uuid());
+                this.refreshData();
+                break;
         }
     }
 }

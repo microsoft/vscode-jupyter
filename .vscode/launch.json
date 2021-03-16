@@ -275,19 +275,19 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                // "--grep", "<suite>",
+                "--grep", "Data viewer slice data",
                 "--timeout=300000",
                 "--exit"
             ],
             "env": {
                 // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
-                "XVSC_JUPYTER_DS_UI_BROWSER": "1",
+                "VSC_JUPYTER_DS_UI_BROWSER": "1",
                 // Remove `X` prefix to test with real python (for DS functional tests).
-                "XVSC_FORCE_REAL_JUPYTER": "1",
+                "VSC_FORCE_REAL_JUPYTER": "1",
                 // Remove 'X' to turn on all logging in the debug output
                 "XVSC_JUPYTER_FORCE_LOGGING": "1",
                 // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
-                "XCI_PYTHON_PATH": "<Python Path>",
+                "CI_PYTHON_PATH": "C:\\Users\\huer\\AppData\\Local\\Programs\\Python\\Python38\\python.exe",
                 // Remove 'X' and initialize with second Python interpreter to be used for fucntional tests.
                 // Some tests require multiple python interpreters (do not rely on discovery for functional tests, be explicit).
                 "XCI_PYTHON_PATH2": "<Python Path>",

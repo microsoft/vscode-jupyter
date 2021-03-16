@@ -55,6 +55,7 @@
         "onCommand:jupyter.createnewinteractive",
         "onCommand:jupyter.importnotebook",
         "onCommand:jupyter.importnotebookfile",
+        "onCommand:jupyter.importFileAsDataFrame",
         "onCommand:jupyter.opennotebook",
         "onCommand:jupyter.opennotebookInPreviewEditor",
         "onCommand:jupyter.selectjupyteruri",
@@ -721,6 +722,11 @@
                 "category": "Jupyter"
             },
             {
+                "command": "jupyter.importFileAsDataFrame",
+                "title": "Import File as DataFrame",
+                "category": "Jupyter"
+            },
+            {
                 "command": "jupyter.clearSavedJupyterUris",
                 "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
                 "category": "Jupyter"
@@ -870,6 +876,11 @@
                 {
                     "when": "resourceLangId == jupyter",
                     "command": "jupyter.importnotebookfile",
+                    "group": "Jupyter"
+                },
+                {
+                    "when": "resourceLangId == datafile",
+                    "command": "jupyter.importFileAsDataFrame",
                     "group": "Jupyter"
                 }
             ],
@@ -1746,6 +1757,16 @@
             }
         },
         "languages": [
+            {
+                "id": "datafile",
+                "extensions": [
+                    ".csv",
+                    ".parquet",
+                    ".sql",
+                    ".feather",
+                    ".xlsx"
+                ]
+            },
             {
                 "id": "jupyter",
                 "aliases": [

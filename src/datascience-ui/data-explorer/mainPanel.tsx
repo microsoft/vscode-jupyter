@@ -268,6 +268,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableShape={this.state.originalVariableShape}
                 isSliceDataEnabled={this.state.isSliceDataEnabled}
                 handleSliceRequest={this.handleSliceRequest}
+                submitCommand={this.submitCommand}
             />
         );
     }
@@ -487,5 +488,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // State updates do not trigger a rerender on the SlickGrid,
         // so we need to tell it to update itself with an event
         this.gridColumnUpdateEvent.notify(newColumns);
+    }
+
+    private submitCommand = (arg: { command: string, args: any }) => {
+        this.sendMessage(DataViewerMessages.SubmitCommand, arg);
     }
 }

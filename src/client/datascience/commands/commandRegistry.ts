@@ -4,6 +4,8 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
+import * as uuid from 'uuid';
+import * as path from 'path';
 import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
@@ -31,7 +33,8 @@ import {
     IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
-    INotebookEditorProvider
+    INotebookEditorProvider,
+    INotebookProvider
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { ExportCommands } from './exportCommands';
@@ -55,6 +58,7 @@ export class CommandRegistry implements IDisposable {
         private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IDebugService) private debugService: IDebugService,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
@@ -64,6 +68,7 @@ export class CommandRegistry implements IDisposable {
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private kernelVariableProvider: IJupyterVariables,
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNotebook: boolean,
         @inject(NotebookCreator) private readonly nativeNotebookCreator: NotebookCreator
@@ -117,6 +122,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.EnableDebugLogging, this.enableDebugLogging);
         this.registerCommand(Commands.ResetLoggingLevel, this.resetLoggingLevel);
         this.registerCommand(Commands.ShowDataViewer, this.onVariablePanelShowDataViewerRequest);
+        this.registerCommand(Commands.ImportAsDataFrame, this.importFileAsDataFrame);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
@@ -504,6 +510,40 @@ export class CommandRegistry implements IDisposable {
         // It's the given way to focus a single view so using that here, note that it needs to match the view ID
         return this.commandManager.executeCommand('jupyterViewVariables.focus');
     }
+    private async importFileAsDataFrame(file?: Uri) {
+        if (file && file.fsPath && file.fsPath.length > 0) {
+            // Create kernel
+            const notebook = await this.notebookProvider.getOrCreateNotebook({
+                identity: file,
+                resource: file,
+                disableUI: true
+            });
+            const code = getImportCodeForFileType(file.fsPath);
+
+            // Do a notebook.execute with the import code
+            const results = await notebook?.execute(
+                code,
+                file.fsPath,
+                0,
+                uuid(),
+                undefined,
+                true);
+
+            // Open data viewer for this variable
+            const jupyterVariable = await this.kernelVariableProvider.getFullVariable({ name: 'df', value: '', supportsDataExplorer: true, type: 'DataFrame', size: 0, shape: '', count: 0, truncated: true }, notebook);
+            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
+                jupyterVariable
+            );
+            jupyterVariableDataProvider.setDependencies(jupyterVariable, notebook);
+            const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
+            const columnSize = dataFrameInfo?.columns?.length;
+            if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
+                const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
+                await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
+                sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
+            }
+        }
+    }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
         if (this.debugService.activeDebugSession) {
@@ -529,4 +569,27 @@ export class CommandRegistry implements IDisposable {
             }
         }
     }
+}
+
+function getImportCodeForFileType(filepath: string) {
+    const fileExtension = path.extname(filepath);
+    let code = 'import pandas as pd\n';
+    switch (fileExtension) {
+        case '.csv':
+            code += `df = pd.read_csv(r"${filepath}")`;
+            break;
+        case '.xlsx': // TODO dependency check for openpyxl
+            code += `df = pd.read_excel(r"${filepath}")`;
+            break;
+        case '.parquet':
+            code += `df = pd.read_parquet(r"${filepath}")`;
+            break;
+        case '.sql': // TODO UI for remote data sources
+            code += `df = pd.read_sql(r"${filepath}")`;
+            break;
+        case '.feather': // TODO UI for remote data sources
+            code += `df = pd.read_feather(r"${filepath}")`;
+            break;
+    }
+    return code;
 }

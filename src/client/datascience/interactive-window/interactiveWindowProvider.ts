@@ -50,6 +50,7 @@ import {
     IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
+    INotebook,
     INotebookExporter,
     INotebookProvider,
     IStatusProvider,
@@ -117,7 +118,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.id = uuid();
     }
 
-    public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
+    public async getOrCreate(resource: Resource, notebook?: INotebook): Promise<IInteractiveWindow> {
         // Ask for a configuration change if appropriate
         const mode = await this.getInteractiveMode(resource);
 
@@ -125,7 +126,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         let result = this.get(resource, mode) as InteractiveWindow;
         if (!result) {
             // No match. Create a new item.
-            result = this.create(resource, mode);
+            result = this.create(resource, mode, notebook);
 
             // Wait for monaco ready (it's not really useable until it has a language)
             const readyPromise = createDeferred();
@@ -162,7 +163,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         }
     }
 
-    protected create(resource: Resource, mode: InteractiveWindowMode): InteractiveWindow {
+    protected create(resource: Resource, mode: InteractiveWindowMode, notebook?: INotebook): InteractiveWindow {
         const title =
             mode === 'multiple' || (mode === 'perFile' && !resource)
                 ? localize.DataScience.interactiveWindowTitleFormat().format(`#${this._windows.length + 1}`)
@@ -202,7 +203,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<KernelSelector>(KernelSelector),
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
             this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
-            this.serviceContainer.get<IExportDialog>(IExportDialog)
+            this.serviceContainer.get<IExportDialog>(IExportDialog),
+            notebook
         );
         this._windows.push(result);
 

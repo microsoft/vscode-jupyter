@@ -39,6 +39,7 @@ import 'slickgrid/slick.grid.css';
 import './reactSlickGrid.css';
 import { generateDisplayValue } from './cellFormatter';
 import { getLocString } from '../react-common/locReactSide';
+import { ControlPanel } from './controlPanel';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
@@ -70,6 +71,7 @@ export interface ISlickGridProps {
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
     handleSliceRequest(args: IGetSliceRequest): void;
+    submitCommand(args: { command: string, args: any }): void;
 }
 
 interface ISlickGridState {
@@ -308,7 +310,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return (
             <div className="outer-container">
-                <div className="react-grid-container" style={style} ref={this.containerRef}></div>
+                <div style={{ flexDirection: 'row', display: 'flex' }}>
+                    <div className="react-grid-container" style={style} ref={this.containerRef}></div>
+                    <ControlPanel data={this.dataView.getItems()} headers={this.state.grid?.getColumns().map((c) => c.name).filter((c) => c !== undefined) as string[]} submitCommand={this.props.submitCommand} />
+                </div>
                 <div className="react-grid-measure" ref={this.measureRef} />
             </div>
         );
