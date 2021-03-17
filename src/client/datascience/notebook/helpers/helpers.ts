@@ -555,7 +555,7 @@ function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
 
 export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: nbformat.StreamType): boolean {
     const hasStdErrStream = output.outputs.some((item) => item.mime === CellOutputMimeTypes.stdErrStream);
-    const hasStdOutStream = output.outputs.some((item) => item.mime === CellOutputMimeTypes.stdErrStream);
+    const hasStdOutStream = output.outputs.some((item) => item.mime === CellOutputMimeTypes.stdOutStream);
     if (!hasStdErrStream && !hasStdOutStream) {
         return false;
     }
