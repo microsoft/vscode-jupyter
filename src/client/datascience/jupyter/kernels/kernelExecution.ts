@@ -4,6 +4,7 @@
 'use strict';
 
 import {
+    notebook,
     NotebookCell,
     NotebookCellKind,
     NotebookCellRunState,
@@ -178,9 +179,9 @@ export class KernelExecution implements IDisposable {
         );
 
         // If the editor is closed (user or on CI), then just stop handling the UI updates.
-        editor.onDidDispose(
-            async () => {
-                if (!newCellExecutionQueue.failed || !newCellExecutionQueue.isEmpty) {
+        notebook.onDidCloseNotebookDocument(
+            async (e) => {
+                if ((e === editor.document && !newCellExecutionQueue.failed) || !newCellExecutionQueue.isEmpty) {
                     await newCellExecutionQueue.cancel(true);
                 }
             },
