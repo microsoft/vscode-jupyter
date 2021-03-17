@@ -443,14 +443,14 @@ cellOutputMappers.set('stream', translateStreamOutput as any);
 cellOutputMappers.set('update_display_data', translateDisplayDataOutput as any);
 export function cellOutputToVSCCellOutput(output: nbformat.IOutput): NotebookCellOutput {
     /**
-     * Stream, `application/x.notebook.stream`
+     * Stream, `application/x.notebook.stdout, application/x.notebook.stderr`
      * Error, `application/x.notebook.error-traceback`
      * Rich, { mime: value }
      *
      * outputs: [
             new vscode.NotebookCellOutput([
-                new vscode.NotebookCellOutputItem('application/x.notebook.stream', 2),
-                new vscode.NotebookCellOutputItem('application/x.notebook.stream', 3),
+                new vscode.NotebookCellOutputItem('application/x.notebook.stdout', 2),
+                new vscode.NotebookCellOutputItem('application/x.notebook.stdout', 3),
             ]),
             new vscode.NotebookCellOutput([
                 new vscode.NotebookCellOutputItem('text/markdown', '## header 2'),
@@ -492,10 +492,6 @@ function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
         case 'update_display_data': {
             metadata.executionCount = output.execution_count;
             metadata.metadata = output.metadata ? cloneDeep(output.metadata) : {};
-            break;
-        }
-        case 'stream': {
-            metadata.streamName = (output.name as unknown) as nbformat.StreamType;
             break;
         }
         default:
@@ -548,7 +544,7 @@ function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
     return new NotebookCellOutput(
         [
             new NotebookCellOutputItem(
-                CellOutputMimeTypes.textStream,
+                output.name === 'stderr' ? CellOutputMimeTypes.stdErrStream : CellOutputMimeTypes.stdOutStream,
                 concatMultilineString(output.text),
                 getOutputMetadata(output)
             )
@@ -557,9 +553,17 @@ function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
     );
 }
 
-export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: string): boolean {
-    const metadata = output.metadata as CellOutputMetadata | undefined;
-    return metadata?.outputType === 'stream' && metadata.streamName === expectedStreamName;
+export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: nbformat.StreamType): boolean {
+    const hasStdErrStream = output.outputs.some((item) => item.mime === CellOutputMimeTypes.stdErrStream);
+    const hasStdOutStream = output.outputs.some((item) => item.mime === CellOutputMimeTypes.stdErrStream);
+    if (!hasStdErrStream && !hasStdOutStream) {
+        return false;
+    }
+    if (expectedStreamName === 'stderr') {
+        return hasStdErrStream;
+    } else {
+        return hasStdOutStream;
+    }
 }
 
 type JupyterOutput =
@@ -609,10 +613,6 @@ export type CellOutputMetadata = {
      * Original cell output type
      */
     outputType: nbformat.OutputType | string;
-    /**
-     * Name of the stream (for text output).
-     */
-    streamName?: nbformat.StreamType;
     executionCount?: nbformat.IExecuteResult['ExecutionCount'];
 };
 
@@ -641,15 +641,22 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
         }
         case 'stream': {
             const outputs = output.outputs
-                .filter((opit) => opit.mime === CellOutputMimeTypes.textStream)
+                .filter(
+                    (opit) =>
+                        opit.mime === CellOutputMimeTypes.stdErrStream || opit.mime === CellOutputMimeTypes.stdOutStream
+                )
                 .map((opit) => opit.value as string | string[])
                 .reduceRight<string[]>(
                     (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
                     []
                 );
+            // We'll only have one mime type in the output.
+            const name = output.outputs.find((item) => item.mime === CellOutputMimeTypes.stdErrStream)
+                ? 'stderr'
+                : 'stdout';
             result = {
                 output_type: 'stream',
-                name: customMetadata?.streamName || 'stdout',
+                name,
                 text: splitMultilineString(outputs.join(''))
             };
             break;
@@ -750,7 +757,8 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
     return (
         (output.outputs.find(
             (opit) =>
-                opit.mime === CellOutputMimeTypes.textStream ||
+                opit.mime === CellOutputMimeTypes.stdErrStream ||
+                opit.mime === CellOutputMimeTypes.stdOutStream ||
                 opit.mime === 'text/plain' ||
                 opit.mime === 'text/markdown'
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

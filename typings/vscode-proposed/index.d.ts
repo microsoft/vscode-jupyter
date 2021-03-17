@@ -223,7 +223,7 @@ export class NotebookCellRange {
      */
     readonly end: number;
 
-    isEmpty: boolean;
+    readonly isEmpty: boolean;
 
     constructor(start: number, end: number);
 }
@@ -257,7 +257,7 @@ export interface NotebookEditor {
     readonly document: NotebookDocument;
 
     /**
-     * The primary selected cell on this notebook editor.
+     * @deprecated
      */
     // todo@API should not be undefined, rather a default
     readonly selection?: NotebookCell;
@@ -285,7 +285,7 @@ export interface NotebookEditor {
     readonly viewColumn?: ViewColumn;
 
     /**
-     * Fired when the panel is disposed.
+     * @deprecated
      */
     // @rebornix REMOVE/REplace NotebookCommunication
     // todo@API fishy? notebooks are public objects, there should be a "global" events for this
@@ -363,7 +363,7 @@ export class NotebookCellData {
 
 export class NotebookData {
     cells: NotebookCellData[];
-    metadata?: NotebookDocumentMetadata;
+    metadata: NotebookDocumentMetadata;
     constructor(cells: NotebookCellData[], metadata?: NotebookDocumentMetadata);
 }
 
@@ -451,6 +451,8 @@ export namespace window {
 
 // code specific mime types
 // application/x.notebook.error-traceback
+// application/x.notebook.stdout
+// application/x.notebook.stderr
 // application/x.notebook.stream
 export class NotebookCellOutputItem {
     // todo@API
@@ -590,6 +592,9 @@ export interface NotebookContentProvider {
     readonly onDidChangeNotebookContentOptions?: Event<NotebookDocumentContentOptions>;
 
     // todo@API remove! against separation of data provider and renderer
+    /**
+     * @deprecated
+     */
     // eslint-disable-next-line vscode-dts-cancellation
     resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
 
