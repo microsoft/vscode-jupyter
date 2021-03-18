@@ -49,6 +49,10 @@ import {
 @injectable()
 export class PythonApiProvider implements IPythonApiProvider {
     private readonly api = createDeferred<PythonApi>();
+    private readonly didActivePython = new EventEmitter<void>();
+    public get onDidActivePythonExtension() {
+        return this.didActivePython.event;
+    }
 
     private initialized?: boolean;
 
@@ -80,6 +84,7 @@ export class PythonApiProvider implements IPythonApiProvider {
         } else {
             if (!pythonExtension.isActive) {
                 await pythonExtension.activate();
+                this.didActivePython.fire();
             }
             pythonExtension.exports.jupyter.registerHooks();
         }
@@ -105,6 +110,9 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
     public get isPythonExtensionInstalled() {
         return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
+    }
+    public get isPythonExtensionActive() {
+        return this.extensions.getExtension(this.pythonExtensionId)?.isActive === true;
     }
 
     public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
@@ -292,24 +300,17 @@ export class InterpreterService implements IInterpreterService {
     ) {}
 
     public get onDidChangeInterpreter(): Event<void> {
-        if (this.extensionChecker.isPythonExtensionInstalled && !this.eventHandlerAdded) {
-            this.apiProvider
-                .getApi()
-                .then((api) => {
-                    if (!this.eventHandlerAdded) {
-                        this.eventHandlerAdded = true;
-                        api.onDidChangeInterpreter(
-                            () => {
-                                // Clear our cache of active interpreters.
-                                this.workspaceCachedActiveInterpreter.clear();
-                                this.didChangeInterpreter.fire();
-                            },
-                            this,
-                            this.disposables
-                        );
-                    }
-                })
-                .catch(noop);
+        if (this.extensionChecker.isPythonExtensionInstalled) {
+            if (this.extensionChecker.isPythonExtensionActive && this.eventHandlerAdded) {
+                this.hookupOnDidChangeInterpreterEvent();
+            }
+            if (!this.extensionChecker.isPythonExtensionActive) {
+                this.apiProvider.onDidActivePythonExtension(
+                    this.hookupOnDidChangeInterpreterEvent,
+                    this,
+                    this.disposables
+                );
+            }
         }
         return this.didChangeInterpreter.event;
     }
@@ -344,5 +345,16 @@ export class InterpreterService implements IInterpreterService {
             // If the python extension cannot get the details here, don't fail. Just don't use them.
             return undefined;
         }
+    }
+    private hookupOnDidChangeInterpreterEvent() {
+        this.apiProvider
+            .getApi()
+            .then((api) => {
+                if (!this.eventHandlerAdded) {
+                    this.eventHandlerAdded = true;
+                    api.onDidChangeInterpreter(() => this.didChangeInterpreter.fire(), this, this.disposables);
+                }
+            })
+            .catch(noop);
     }
 }
