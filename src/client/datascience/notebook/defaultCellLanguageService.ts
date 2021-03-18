@@ -7,6 +7,7 @@ import type { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceWarning } from '../../common/logger';
@@ -27,6 +28,7 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
     constructor(
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {}
     /**
@@ -38,7 +40,11 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
             metadata?.language_info?.name ||
             (metadata?.kernelspec as IJupyterKernelSpec | undefined)?.language ||
             this.lastSavedNotebookCellLanguage;
-        return translateKernelLanguageToMonaco(jupyterLanguage || PYTHON_LANGUAGE);
+
+        // Default to python language only if the Python extension is installed.
+        const defaultLanguage = this.pythonExtensionChecker.isPythonExtensionInstalled ? PYTHON_LANGUAGE : 'plaintext';
+        // Note, what ever language is returned here, when the user selects a kernel, the cells (of blank documents) get updated based on that kernel selection.
+        return translateKernelLanguageToMonaco(jupyterLanguage || defaultLanguage);
     }
     public async activate() {
         this.vscNotebook.onDidSaveNotebookDocument(this.onDidSaveNotebookDocument, this, this.disposables);
