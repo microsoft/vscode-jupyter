@@ -113,6 +113,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
         }
         this.vscNotebook.onDidChangeNotebookEditorSelection(this.updateNativeNotebookContext, this, this.disposables);
+        this.vscNotebook.onDidCloseNotebookDocument(this.updateNativeNotebookContext, this, this.disposables);
 
         this.usingWebViewNotebook.set(!this.inNativeNotebookExperiment).ignoreErrors();
     }
