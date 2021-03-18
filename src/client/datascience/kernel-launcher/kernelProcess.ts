@@ -343,7 +343,15 @@ export class KernelProcess implements IKernelProcess {
                 this.processExecutionFactory.create(this.resource),
                 this.kernelEnvVarsService.getEnvironmentVariables(this.resource, this.launchKernelSpec)
             ]);
-            exeObs = executionService.execObservable(executable, this.launchKernelSpec.argv.slice(1), {
+
+            // Add quotations to arguments if they have a blank space in them
+            const args = this.launchKernelSpec.argv.slice(1).map((a) => {
+                if (a.includes(' ')) {
+                    return `"${a}"`;
+                }
+                return a;
+            });
+            exeObs = executionService.execObservable(executable, args, {
                 env,
                 cwd: workingDirectory
             });
