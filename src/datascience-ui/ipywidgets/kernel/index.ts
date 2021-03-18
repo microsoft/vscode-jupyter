@@ -11,6 +11,26 @@ import { SharedMessages } from '../../../client/datascience/messages';
 import { PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
+
+// Copy of vscode-notebook-renderer old types as of 1.48
+// Keep these so we can support both the old interface and the new interface
+// Interface change here: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/51675/files
+interface OldNotebookCellOutputMetadata {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    custom?: { [key: string]: any };
+}
+interface OldNotebookOutput {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: { [mimeType: string]: any };
+    metadata?: OldNotebookCellOutputMetadata;
+}
+interface OldNotebookOutputEventParams {
+    element: HTMLElement;
+    outputId: string;
+    output: OldNotebookOutput;
+    mimeType: string;
+}
+
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
     private readonly scriptManager: ScriptManager;
@@ -206,42 +226,41 @@ function initialize() {
 function convertVSCodeOutputToExecutResultOrDisplayData(
     request: NotebookOutputEventParams
 ): nbformat.IExecuteResult | nbformat.IDisplayData {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const metadata: Record<string, any> = {};
-    // Send metadata only for the mimeType we are interested in.
-    const customMetadata = request.output.metadata?.custom;
-    if (customMetadata) {
-        // Support for Old API
-        if (customMetadata[request.mimeType]) {
-            metadata[request.mimeType] = customMetadata[request.mimeType];
-        }
-        if (customMetadata.needs_background) {
-            metadata.needs_background = customMetadata.needs_background;
-        }
-        if (customMetadata.unconfined) {
-            metadata.unconfined = customMetadata.unconfined;
-        }
+    if ('mime' in request) {
+        // New API
+        return {
+            data: {
+                [request.mime]: request.value
+            },
+            metadata: request.metadata || {},
+            execution_count: null,
+            output_type: request.metadata?.outputType || 'execute_result'
+        };
     } else {
-        // New API.
+        // Old API
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const outputMetadata = request.output.metadata as Record<string, any> | undefined;
-        if (outputMetadata && outputMetadata[request.mimeType] && outputMetadata[request.mimeType].metadata) {
+        const metadata: Record<string, any> = {};
+
+        const oldRequest = (request as unknown) as OldNotebookOutputEventParams;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const outputMetadata = oldRequest.output.metadata as Record<string, any> | undefined;
+        if (outputMetadata && outputMetadata[oldRequest.mimeType] && outputMetadata[oldRequest.mimeType].metadata) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            Object.assign(metadata, outputMetadata[request.mimeType].metadata);
-            if (request.mimeType in outputMetadata[request.mimeType].metadata) {
-                Object.assign(metadata, outputMetadata[request.mimeType].metadata[request.mimeType]);
+            Object.assign(metadata, outputMetadata[oldRequest.mimeType].metadata);
+            if (oldRequest.mimeType in outputMetadata[oldRequest.mimeType].metadata) {
+                Object.assign(metadata, outputMetadata[oldRequest.mimeType].metadata[oldRequest.mimeType]);
             }
         }
-    }
 
-    return {
-        data: {
-            [request.mimeType]: request.output.data[request.mimeType]
-        },
-        metadata,
-        execution_count: null,
-        output_type: request.output.metadata?.custom?.vscode?.outputType || 'execute_result'
-    };
+        return {
+            data: {
+                [oldRequest.mimeType]: oldRequest.output.data[oldRequest.mimeType]
+            },
+            metadata,
+            execution_count: null,
+            output_type: oldRequest.output.metadata?.custom?.vscode?.outputType || 'execute_result'
+        };
+    }
 }
 
 // Create our window exports
