@@ -344,7 +344,9 @@ export class KernelProcess implements IKernelProcess {
                 this.kernelEnvVarsService.getEnvironmentVariables(this.resource, this.launchKernelSpec)
             ]);
 
-            // Add quotations to arguments if they have a blank space in them
+            // Add quotations to arguments if they have a blank space in them.
+            // This will mainly quote paths so that they can run, other arguments shouldn't be quoted or it may cause errors.
+            // The first argument is sliced because it is the executable command.
             const args = this.launchKernelSpec.argv.slice(1).map((a) => {
                 if (a.includes(' ')) {
                     return `"${a}"`;
