@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IPythonExtensionChecker } from '../../api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { InterpreterUri } from '../../common/installer/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
+import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { isResource, noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -32,13 +33,21 @@ const interestedPackages = new Set(
 export class InterpreterPackages {
     private static interpreterInformation = new Map<string, Deferred<Map<string, string>>>();
     private static pendingInterpreterInformation = new Map<string, Promise<void>>();
+    private pendingInterpreterBeforeActivation = new Set<InterpreterUri>();
     private static instance?: InterpreterPackages;
     constructor(
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory
+        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         InterpreterPackages.instance = this;
+        this.apiProvider.onDidActivePythonExtension(
+            () => this.pendingInterpreterBeforeActivation.forEach((item) => this.trackPackages(item)),
+            this,
+            this.disposables
+        );
     }
     public static getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>> {
         let deferred = InterpreterPackages.interpreterInformation.get(interpreter.path);
@@ -56,7 +65,8 @@ export class InterpreterPackages {
         this.trackPackagesInternal(interpreterUri, ignoreCache).catch(noop);
     }
     public async trackPackagesInternal(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
-        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
+        if (!this.pythonExtensionChecker.isPythonExtensionActive) {
+            this.pendingInterpreterBeforeActivation.add(interpreterUri);
             return;
         }
         let interpreter: PythonEnvironment;

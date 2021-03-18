@@ -221,7 +221,7 @@ export class NativeEditorStorage implements INotebookStorage {
             return (notebookData.metadata.language_info.codemirror_mode as any).version;
         }
         // Use the active interpreter if allowed
-        if (this.extensionChecker.isPythonExtensionInstalled) {
+        if (this.extensionChecker.isPythonExtensionActive) {
             const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
             return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
         }

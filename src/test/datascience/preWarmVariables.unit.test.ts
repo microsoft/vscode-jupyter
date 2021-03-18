@@ -7,6 +7,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { PythonExtensionChecker } from '../../client/api/pythonApi';
+import { IPythonApiProvider } from '../../client/api/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { PreWarmActivatedJupyterEnvironmentVariables } from '../../client/datascience/preWarmVariables';
@@ -34,6 +35,8 @@ suite('DataScience - PreWarm Env Vars', () => {
         jupyterInterpreter = mock(JupyterInterpreterService);
         when(jupyterInterpreter.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
         extensionChecker = mock(PythonExtensionChecker);
+        const apiProvider = mock<IPythonApiProvider>();
+        when(apiProvider.onDidActivePythonExtension).thenReturn(new EventEmitter<void>().event);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         zmqSupported = mock<IRawNotebookSupportedService>();
         when(zmqSupported.supported()).thenReturn(false);
@@ -42,6 +45,7 @@ suite('DataScience - PreWarm Env Vars', () => {
             instance(jupyterInterpreter),
             [],
             instance(extensionChecker),
+            instance(apiProvider),
             instance(zmqSupported)
         );
     });

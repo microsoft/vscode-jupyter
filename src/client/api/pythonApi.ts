@@ -55,11 +55,15 @@ export class PythonApiProvider implements IPythonApiProvider {
     }
 
     private initialized?: boolean;
+    private hooksRegistered?: boolean;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
-    ) {}
+    ) {
+        this.extensions.onDidChange(this.registerHooks, this, this.disposables);
+    }
 
     public getApi(): Promise<PythonApi> {
         this.init().catch(noop);
@@ -82,12 +86,23 @@ export class PythonApiProvider implements IPythonApiProvider {
         if (!pythonExtension) {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         } else {
-            if (!pythonExtension.isActive) {
-                await pythonExtension.activate();
-                this.didActivePython.fire();
-            }
-            pythonExtension.exports.jupyter.registerHooks();
+            await this.registerHooks();
         }
+    }
+    private async registerHooks() {
+        if (this.hooksRegistered) {
+            return;
+        }
+        this.hooksRegistered = true;
+        const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
+        if (!pythonExtension) {
+            return;
+        }
+        if (!pythonExtension.isActive) {
+            await pythonExtension.activate();
+            this.didActivePython.fire();
+        }
+        pythonExtension.exports.jupyter.registerHooks();
     }
 }
 

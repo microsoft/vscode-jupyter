@@ -33,6 +33,7 @@ import {
 import { IJupyterKernelSpec } from '../types';
 import { ILocalKernelFinder } from './types';
 import { tryGetRealPath } from '../common';
+import { isPythonNotebook } from '../notebook/helpers/helpers';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -90,12 +91,13 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         try {
             // Get list of all of the specs
             const kernels = await this.listKernels(resource, cancelToken);
+            const isPythonNb = isPythonNotebook(option);
 
             // Always include the interpreter in the search if we can
             const interpreter =
                 option && isInterpreter(option)
                     ? option
-                    : resource && this.extensionChecker.isPythonExtensionInstalled
+                    : resource && isPythonNb && this.extensionChecker.isPythonExtensionInstalled
                     ? await this.interpreterService.getActiveInterpreter(resource)
                     : undefined;
 
