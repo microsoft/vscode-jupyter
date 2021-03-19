@@ -498,8 +498,12 @@ jobs:
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
         # notebookAndWebview: Tests with VS Code (possible Notebooks), WebViews, Python extension & real Jupyter
         test-suite: [integration, notebook]
+        # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
+        # Basically with exclude, you can exclude any of the combinations from the result matrix.
+        # & with include, you can include additional items to the result matrix.
         exclude:
           - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
+            # With this, we're saying from the result matrix, remove the combination that has python 3.8, remote, integration on ubuntu.
             pythonVersion: '3.8'
             jupyter: remote
             test-suite: integration
