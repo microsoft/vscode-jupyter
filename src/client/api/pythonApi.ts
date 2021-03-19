@@ -62,7 +62,18 @@ export class PythonApiProvider implements IPythonApiProvider {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
     ) {
-        this.extensions.onDidChange(this.registerHooks, this, this.disposables);
+        const previouslyInstalled = this.extensionChecker.isPythonExtensionInstalled;
+        if (!previouslyInstalled) {
+            this.extensions.onDidChange(
+                async () => {
+                    if (this.extensionChecker.isPythonExtensionInstalled) {
+                        await this.registerHooks();
+                    }
+                },
+                this,
+                this.disposables
+            );
+        }
     }
 
     public getApi(): Promise<PythonApi> {
@@ -93,11 +104,11 @@ export class PythonApiProvider implements IPythonApiProvider {
         if (this.hooksRegistered) {
             return;
         }
-        this.hooksRegistered = true;
         const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
         if (!pythonExtension) {
             return;
         }
+        this.hooksRegistered = true;
         if (!pythonExtension.isActive) {
             await pythonExtension.activate();
             this.didActivePython.fire();
