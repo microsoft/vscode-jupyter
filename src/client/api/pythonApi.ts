@@ -327,7 +327,7 @@ export class InterpreterService implements IInterpreterService {
 
     public get onDidChangeInterpreter(): Event<void> {
         if (this.extensionChecker.isPythonExtensionInstalled) {
-            if (this.extensionChecker.isPythonExtensionActive && this.eventHandlerAdded) {
+            if (this.extensionChecker.isPythonExtensionActive && !this.eventHandlerAdded) {
                 this.hookupOnDidChangeInterpreterEvent();
             }
             if (!this.extensionChecker.isPythonExtensionActive) {
