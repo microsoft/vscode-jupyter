@@ -226,7 +226,6 @@ module.exports = {
         'src/test/datascience/extensionapi/exampleextension/ms-toolsai-test/src/serverPicker.ts',
         'src/test/datascience/common.unit.test.ts',
         'src/test/datascience/testexecutionLogger.ts',
-        'src/test/datascience/interactiveWindow.functional.test.tsx',
         'src/test/datascience/mockQuickPick.ts',
         'src/test/datascience/mockLanguageServer.ts',
         'src/test/datascience/debugger.functional.test.tsx',
