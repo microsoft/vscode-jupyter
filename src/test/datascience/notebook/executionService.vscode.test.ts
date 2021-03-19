@@ -14,8 +14,7 @@ import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
+import { IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     assertHasTextOutputInVSCode,
@@ -58,7 +57,6 @@ const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykern
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let api: IExtensionTestApi;
-    let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     const templateNbPath = path.join(
@@ -89,7 +87,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -127,20 +124,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForExecutionCompletedSuccessfully(cell);
         const output = getTextOutputValue(cell.outputs[0]);
         assert.equal(output, '\tho\n\tho\n\tho\n', 'Cell with leading whitespace has incorrect output');
-    });
-    test('Executed events are triggered', async () => {
-        await insertCodeCell('print("Hello World")');
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-
-        const executed = createEventHandler(editorProvider.activeEditor!, 'executed', disposables);
-        const codeExecuted = createEventHandler(editorProvider.activeEditor!, 'executed', disposables);
-        await runCell(cell);
-
-        // Wait till execution count changes and status is success.
-        await waitForExecutionCompletedSuccessfully(cell);
-
-        await executed.assertFired(1_000);
-        await codeExecuted.assertFired(1_000);
     });
     test('Empty cells will not have an execution order nor have a status of success', async () => {
         await insertCodeCell('');
@@ -923,7 +906,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForExecutionCompletedWithErrors(cell2);
         assert.equal(cell1.previousResult?.executionOrder, 5);
         assert.equal(cell2.previousResult?.executionOrder, 6);
-        assert.equal(cell3.previousResult?.executionOrder, 4, 'Cell 3 should not have run again');
+        assert.isUndefined(cell3.previousResult?.executionOrder, 'Cell 3 should not have run again, but execution cleared like Jupyter');
     });
 
     // Check the set next input statements correctly insert or update cells
