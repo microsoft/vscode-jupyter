@@ -27,5 +27,6 @@ export interface INotebookKernelResolver {
 
 export enum CellOutputMimeTypes {
     error = 'application/x.notebook.error-traceback',
-    textStream = 'application/x.notebook.stream'
+    stderr = 'application/x.notebook.stderr',
+    stdout = 'application/x.notebook.stdout'
 }

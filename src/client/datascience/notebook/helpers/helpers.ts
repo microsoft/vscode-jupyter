@@ -548,7 +548,7 @@ function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
     return new NotebookCellOutput(
         [
             new NotebookCellOutputItem(
-                CellOutputMimeTypes.textStream,
+                output.name === 'stderr' ? CellOutputMimeTypes.stderr : CellOutputMimeTypes.stdout,
                 concatMultilineString(output.text),
                 getOutputMetadata(output)
             )
@@ -640,13 +640,15 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
             break;
         }
         case 'stream': {
+            // IANHU: For stdout and stderr in same cell are they two different outputs? From nbformat I believe so.
             const outputs = output.outputs
-                .filter((opit) => opit.mime === CellOutputMimeTypes.textStream)
+                .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
                 .map((opit) => opit.value as string | string[])
                 .reduceRight<string[]>(
                     (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
                     []
                 );
+
             result = {
                 output_type: 'stream',
                 name: customMetadata?.streamName || 'stdout',
@@ -750,7 +752,8 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
     return (
         (output.outputs.find(
             (opit) =>
-                opit.mime === CellOutputMimeTypes.textStream ||
+                opit.mime === CellOutputMimeTypes.stdout ||
+                opit.mime === CellOutputMimeTypes.stderr ||
                 opit.mime === 'text/plain' ||
                 opit.mime === 'text/markdown'
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

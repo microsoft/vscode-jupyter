@@ -556,7 +556,8 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
 }
 function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExactMatch = true) {
     if (
-        output.mime !== CellOutputMimeTypes.textStream &&
+        output.mime !== CellOutputMimeTypes.stdout &&
+        output.mime !== CellOutputMimeTypes.stderr &&
         output.mime !== 'text/plain' &&
         output.mime !== 'text/markdown'
     ) {
