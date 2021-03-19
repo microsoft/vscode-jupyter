@@ -906,7 +906,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForExecutionCompletedWithErrors(cell2);
         assert.equal(cell1.previousResult?.executionOrder, 5);
         assert.equal(cell2.previousResult?.executionOrder, 6);
-        assert.isUndefined(cell3.previousResult?.executionOrder, 'Cell 3 should not have run again, but execution cleared like Jupyter');
+        assert.isUndefined(
+            cell3.previousResult?.executionOrder,
+            'Cell 3 should not have run again, but execution cleared like Jupyter'
+        );
     });
 
     // Check the set next input statements correctly insert or update cells

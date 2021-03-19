@@ -976,7 +976,7 @@ for i in range(100):
             const { window } = await getOrCreateInteractiveWindow(ioc);
             const executed = createDeferred();
             // We have to wait until the execute goes through before we reset.
-            if (window.onExecutedCode){
+            if (window.onExecutedCode) {
                 window.onExecutedCode(() => executed.resolve());
             }
             const added = window.addCode('import time\r\ntime.sleep(1000)', Uri.file('foo'), 0);
