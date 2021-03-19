@@ -419,11 +419,11 @@ jobs:
 
       # Install PyTorch with pip
       - name: Install PyTorch on Windows and Linux
-        if: matrix.test-suite != 'conda' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
         run: pip install torch==1.7.1+cpu torchvision==0.8.2+cpu torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
 
       - name: Install PyTorch on Mac
-        if: matrix.test-suite != 'conda' && matrix.os == 'macos-latest'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os == 'macos-latest'
         run: pip install torch torchvision torchaudio
 
       - name: Install secondary conda environment
@@ -491,43 +491,82 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
-        python: [3.8] # Use flaky tests to run against more versions of Python.
+        pythonVersion: [3.8]
+        python: [nonConda, conda]
+        jupyter: [raw, local, remote]
         # integration: Tests with VS Code, Python extension & real Jupyter
         # notebook: Notebook Tests with VS Code, Python extension & real Jupyter
-        test-suite: [integration, notebook, remoteNotebook, nonRawNotebook, notebookWithoutPythonExt, conda, notebookAndWebview]
+        # notebookAndWebview: Tests with VS Code (possible Notebooks), WebViews, Python extension & real Jupyter
+        test-suite: [integration, notebook]
+        # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
+        # Basically with exclude, you can exclude any of the combinations from the result matrix.
+        # & with include, you can include additional items to the result matrix.
+        exclude:
+          - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
+            # With this, we're saying from the result matrix, remove the combination that has python 3.8, remote, integration on ubuntu.
+            pythonVersion: '3.8'
+            jupyter: remote
+            test-suite: integration
+          - os: ubuntu-latest # We don't care how users start Remote Jupyter as long as it works.
+            pythonVersion: '3.8'
+            python: conda
+            jupyter: remote
+            test-suite: notebook
+        include:
+          - os: ubuntu-latest
+            pythonVersion: '3.8'
+            python: nonConda
+            jupyter: raw
+            test-suite: notebookAndWebview # Test webview only with raw & non-conda.
+          - os: ubuntu-latest
+            jupyter: raw
+            python: noPython
+            test-suite: notebook # Non-Python kernel tests without Python extension only when using Raw & notebook tests
+        #   - test-suite: integration
+        #     jupyter: raw
+        #     pythonVersion: '3.8'
+        #     python: nonConda
+        #     os: windows-latest
+        #   - test-suite: notebook
+        #     pythonVersion: '3.8'
+        #     python: nonConda
+        #     jupyter: raw
+        #     os: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Use Python ${{matrix.python}}
+      - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v2
+        if: matrix.python != 'conda' && matrix.python != 'noPython'
         with:
-          python-version: ${{matrix.python}}
+          python-version: ${{matrix.pythonVersion}}
 
-      - name: Use Conda Python ${{matrix.python}}
+      - name: Use Conda Python ${{matrix.pythonVersion}}
         uses: conda-incubator/setup-miniconda@v2
-        if: matrix.test-suite == 'conda'
+        if: matrix.python == 'conda'
         with:
           auto-update-conda: true
           activate-environment: functional_test_env
-          python-version: ${{matrix.python}}
+          python-version: ${{matrix.pythonVersion}}
 
       - name: Set CI Path
         uses: ./.github/actions/set-python
         id: set-python
-        if: matrix.test-suite != 'conda'
+        if: matrix.python != 'conda' && matrix.python != 'noPython'
         with:
-          PYTHON_VERSION: ${{matrix.python}}
+          PYTHON_VERSION: ${{matrix.pythonVersion}}
 
       - name: Set CI Path for Conda
         uses: ./.github/actions/set-python-conda
         id: set-python-conda
-        if: matrix.test-suite == 'conda'
+        if: matrix.python == 'conda'
         with:
-          PYTHON_VERSION: ${{matrix.python}}
+          PYTHON_VERSION: ${{matrix.pythonVersion}}
 
       - name: Upgrade pip
         run: python -m pip install -U pip
+        if: matrix.python != 'conda' && matrix.python != 'noPython'
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.1.5
@@ -540,7 +579,7 @@ jobs:
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
         uses: actions/cache@v2.1.4
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -549,7 +588,7 @@ jobs:
 
       - name: Cache pip on mac
         uses: actions/cache@v2.1.4
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           path: ~/Library/Caches/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -558,7 +597,7 @@ jobs:
 
       - name: Cache pip on windows
         uses: actions/cache@v2.1.4
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
         with:
           path: ~\AppData\Local\pip\Cache
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
@@ -599,12 +638,13 @@ jobs:
       # For faster/better builds of sdists.
       - run: python -m pip install wheel
         shell: bash
+        if: matrix.python != 'conda' && matrix.python != 'noPython'
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
       - name: Install Python Libs
-        if: matrix.test-suite != 'conda'
+        if: matrix.python != 'conda' && matrix.python != 'noPython'
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -622,7 +662,7 @@ jobs:
       # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
       - name: Install Python Libs for conda
         shell: bash -l {0}
-        if: matrix.test-suite == 'conda'
+        if: matrix.python == 'conda'
         run: |
           conda activate functional_test_env
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
@@ -637,11 +677,11 @@ jobs:
 
       # Install PyTorch with pip
       - name: Install PyTorch on Windows and Linux
-        if: matrix.test-suite != 'conda' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
         run: pip install torch==1.7.1+cpu torchvision==0.8.2+cpu torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
 
       - name: Install PyTorch on Mac
-        if: matrix.test-suite != 'conda' && matrix.os == 'macos-latest'
+        if: matrix.python == 'conda' && matrix.os == 'macos-latest'
         run: pip install torch torchvision torchaudio
 
         # This step is slow.
@@ -662,36 +702,37 @@ jobs:
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
-      - name: Install Dot.net
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{env.DOTNET_VERSION}}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
-
-      - name: Install .NET Interactive
-        shell: bash -l {0}
-        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
-
-      - name: Install .NET Kernel
-        shell: bash -l {0}
-        run: dotnet interactive jupyter install
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
-
       - name: Install Julia
         uses: julia-actions/setup-julia@v1
         with:
           version: ${{env.JULIA_VERSION}}
 
       - name: Install Julia Kernel
+        shell: bash
         run: |
           julia -e '
             using Pkg
             Pkg.add("IJulia")'
 
+      - name: Install Dot.net
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{env.DOTNET_VERSION}}
+        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
+
+      - name: Install .NET Interactive
+        shell: bash -l {0}
+        run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
+        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
+
+      - name: Install .NET Kernel
+        shell: bash -l {0}
+        run: dotnet interactive jupyter install
+        if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
+
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'notebookAndWebview'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyter != 'remote'
 
       # Set the correct xvfb commands to run vscode tests
       # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
@@ -710,7 +751,7 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
         id: test_vscode
-        if: matrix.test-suite == 'integration'
+        if: matrix.test-suite == 'integration' && matrix.python != 'noPython'
 
       - name: Publish VSCode Test Report
         uses: scacap/action-surefire-report@v1
@@ -729,20 +770,20 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ contains(matrix.test-suite, 'remote') }}
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ contains(matrix.test-suite, 'nonRawNotebook') }}
-          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ contains(matrix.test-suite, 'conda') }}
-          VSC_JUPYTER_CI_IS_CONDA: ${{ contains(matrix.test-suite, 'conda') }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode
-        if: matrix.test-suite == 'notebook' || matrix.test-suite == 'nonRawNotebook' || matrix.test-suite == 'remoteNotebook' || matrix.test-suite == 'conda'
+        if: matrix.test-suite == 'notebook' && matrix.python != 'noPython'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook Test Report ${{matrix.test-suite}} ${{matrix.os}}
+          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
         if: steps.test_notebook_vscode.outcome == 'failure' && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
@@ -755,14 +796,14 @@ jobs:
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebookWithoutPythonExt_vscode
-        if: matrix.test-suite == 'notebookWithoutPythonExt'
+        if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook without Python Test Report
+          check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
         if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
 
         # Run native notebook tests that also require webviews
@@ -781,14 +822,14 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: 'false'
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_webview_vscode
-        if: matrix.test-suite == 'notebookAndWebview'
+        if: matrix.test-suite == 'notebookAndWebview' && matrix.python != 'noPython'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook Test Report ${{matrix.test-suite}} ${{matrix.os}}
+          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
         if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
 
 
