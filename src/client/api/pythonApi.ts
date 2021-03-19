@@ -13,7 +13,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
 import {
@@ -287,7 +287,8 @@ export class InterpreterService implements IInterpreterService {
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
 
     public get onDidChangeInterpreter(): Event<void> {
@@ -297,7 +298,15 @@ export class InterpreterService implements IInterpreterService {
                 .then((api) => {
                     if (!this.eventHandlerAdded) {
                         this.eventHandlerAdded = true;
-                        api.onDidChangeInterpreter(() => this.didChangeInterpreter.fire(), this, this.disposables);
+                        api.onDidChangeInterpreter(
+                            () => {
+                                // Clear our cache of active interpreters.
+                                this.workspaceCachedActiveInterpreter.clear();
+                                this.didChangeInterpreter.fire();
+                            },
+                            this,
+                            this.disposables
+                        );
                     }
                 })
                 .catch(noop);
@@ -308,9 +317,24 @@ export class InterpreterService implements IInterpreterService {
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         return this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
     }
-
+    private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
-        return this.apiProvider.getApi().then((api) => api.getActiveInterpreter(resource));
+        const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
+        let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
+        if (!promise) {
+            promise = this.apiProvider.getApi().then((api) => api.getActiveInterpreter(resource));
+
+            if (promise) {
+                this.workspaceCachedActiveInterpreter.set(workspaceId, promise);
+                // If there was a problem in getting the details, remove the cached info.
+                promise.catch(() => {
+                    if (this.workspaceCachedActiveInterpreter.get(workspaceId) === promise) {
+                        this.workspaceCachedActiveInterpreter.delete(workspaceId);
+                    }
+                });
+            }
+        }
+        return promise;
     }
 
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
