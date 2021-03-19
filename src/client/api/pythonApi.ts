@@ -373,6 +373,9 @@ export class InterpreterService implements IInterpreterService {
         }
     }
     private hookupOnDidChangeInterpreterEvent() {
+        if (this.eventHandlerAdded) {
+            return;
+        }
         this.apiProvider
             .getApi()
             .then((api) => {
