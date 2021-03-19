@@ -38,6 +38,7 @@ suite('DataScience - PreWarm Env Vars', () => {
         const apiProvider = mock<IPythonApiProvider>();
         when(apiProvider.onDidActivePythonExtension).thenReturn(new EventEmitter<void>().event);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        when(extensionChecker.isPythonExtensionActive).thenReturn(true);
         zmqSupported = mock<IRawNotebookSupportedService>();
         when(zmqSupported.supported()).thenReturn(false);
         activationService = new PreWarmActivatedJupyterEnvironmentVariables(

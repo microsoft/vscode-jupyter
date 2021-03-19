@@ -53,6 +53,7 @@ suite('DataScience - Activation', () => {
         const rawNotebook = mock<IRawNotebookSupportedService>();
         when(rawNotebook.supported()).thenReturn(false);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        when(extensionChecker.isPythonExtensionActive).thenReturn(true);
         activator = new Activation(
             instance(notebookEditorProvider),
             instance(jupyterInterpreterService),
