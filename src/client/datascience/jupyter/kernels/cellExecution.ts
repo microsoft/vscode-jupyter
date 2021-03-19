@@ -10,7 +10,7 @@ import { ExtensionMode, NotebookCell, NotebookCellRunState, workspace } from 'vs
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { IApplicationShell } from '../../../common/application/types';
 import { disposeAllDisposables } from '../../../common/helpers';
-import { traceError, traceErrorIf, traceInfoIf, traceWarning } from '../../../common/logger';
+import { traceError, traceErrorIf, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
 import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -142,6 +142,11 @@ export class CellExecution {
                 // No point keeping it alive, just chewing resources.
                 if (e === this.cell.document) {
                     this.request?.dispose(); // NOSONAR
+                }
+                if (this.started && !this._completed) {
+                    this.completedDueToCancellation().catch((ex) =>
+                        traceInfo('Failures when cancelling due to cell removal', ex)
+                    );
                 }
             },
             this,
