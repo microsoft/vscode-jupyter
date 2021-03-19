@@ -640,7 +640,6 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
             break;
         }
         case 'stream': {
-            // IANHU: For stdout and stderr in same cell are they two different outputs? From nbformat I believe so.
             const outputs = output.outputs
                 .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
                 .map((opit) => opit.value as string | string[])
