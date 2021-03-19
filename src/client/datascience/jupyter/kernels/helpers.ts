@@ -339,8 +339,9 @@ export function findPreferredKernel(
 
     // If still not found, look for a match based on notebook metadata and interpreter
     if (index < 0) {
+        const hasLanguageInfo = notebookMetadata?.language_info?.name ? true : false;
         const nbMetadataLanguage =
-            !notebookMetadata || isPythonNotebook(notebookMetadata)
+            !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
                 ? PYTHON_LANGUAGE
                 : (
                       (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
