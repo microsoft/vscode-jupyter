@@ -56,7 +56,7 @@ export class MigrateJupyterInterpreterStateService implements IExtensionSingleAc
     // Migrate the interpreter path selected for Jupyter server from the Python extension's globalState memento
     public async activate() {
         this.activateBackground().catch(noop);
-        this.api.onDidActivePythonExtension(this.activateBackground, this, this.disposables);
+        this.api.onDidActivatePythonExtension(this.activateBackground, this, this.disposables);
     }
     public async activateBackground() {
         // Migrate in the background.

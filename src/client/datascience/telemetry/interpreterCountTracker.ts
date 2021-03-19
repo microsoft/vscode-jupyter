@@ -25,7 +25,7 @@ export class InterpreterCountTracker implements IExtensionSingleActivationServic
         if (this.pythonExtensionChecker.isPythonExtensionActive) {
             this.trackInterpreters();
         } else {
-            this.pythonApi.onDidActivePythonExtension(this.trackInterpreters, this, this.disposables);
+            this.pythonApi.onDidActivatePythonExtension(this.trackInterpreters, this, this.disposables);
         }
     }
     private trackInterpreters() {

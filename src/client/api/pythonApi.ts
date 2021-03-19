@@ -49,9 +49,9 @@ import {
 @injectable()
 export class PythonApiProvider implements IPythonApiProvider {
     private readonly api = createDeferred<PythonApi>();
-    private readonly didActivePython = new EventEmitter<void>();
-    public get onDidActivePythonExtension() {
-        return this.didActivePython.event;
+    private readonly didActivatePython = new EventEmitter<void>();
+    public get onDidActivatePythonExtension() {
+        return this.didActivatePython.event;
     }
 
     private initialized?: boolean;
@@ -111,7 +111,7 @@ export class PythonApiProvider implements IPythonApiProvider {
         this.hooksRegistered = true;
         if (!pythonExtension.isActive) {
             await pythonExtension.activate();
-            this.didActivePython.fire();
+            this.didActivatePython.fire();
         }
         pythonExtension.exports.jupyter.registerHooks();
     }
@@ -331,7 +331,7 @@ export class InterpreterService implements IInterpreterService {
                 this.hookupOnDidChangeInterpreterEvent();
             }
             if (!this.extensionChecker.isPythonExtensionActive) {
-                this.apiProvider.onDidActivePythonExtension(
+                this.apiProvider.onDidActivatePythonExtension(
                     this.hookupOnDidChangeInterpreterEvent,
                     this,
                     this.disposables

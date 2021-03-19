@@ -19,7 +19,7 @@ export interface ILanguageServer extends Disposable {
 
 export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
-    onDidActivePythonExtension: Event<void>;
+    onDidActivatePythonExtension: Event<void>;
     getApi(): Promise<PythonApi>;
     setApi(api: PythonApi): void;
 }

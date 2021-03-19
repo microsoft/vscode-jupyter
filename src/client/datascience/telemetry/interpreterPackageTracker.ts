@@ -37,7 +37,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         this.installer.onInstalled(this.onDidInstallPackage, this, this.disposables);
         this.extensions.onDidChange(this.trackUponActivation, this, this.disposables);
         this.trackUponActivation().catch(noop);
-        this.apiProvider.onDidActivePythonExtension(this.trackUponActivation, this, this.disposables);
+        this.apiProvider.onDidActivatePythonExtension(this.trackUponActivation, this, this.disposables);
     }
     private async onDidChangeActiveNotebookKernel({ kernel }: { kernel: VSCNotebookKernel | undefined }) {
         if (!kernel || !isJupyterKernel(kernel) || !kernel.selection.interpreter) {

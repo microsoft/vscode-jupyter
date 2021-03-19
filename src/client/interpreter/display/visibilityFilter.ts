@@ -34,7 +34,7 @@ export class InterpreterStatusBarVisibility
         if (this.extensionChecker.isPythonExtensionActive) {
             this.registerStatusFilter();
         } else {
-            this.pythonApi.onDidActivePythonExtension(this.registerStatusFilter, this, this.disposables);
+            this.pythonApi.onDidActivatePythonExtension(this.registerStatusFilter, this, this.disposables);
         }
     }
     public get changed(): Event<void> {

@@ -33,7 +33,7 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
             );
             this.preWarmInterpreterVariables().ignoreErrors();
         }
-        this.apiProvider.onDidActivePythonExtension(this.preWarmInterpreterVariables, this, this.disposables);
+        this.apiProvider.onDidActivatePythonExtension(this.preWarmInterpreterVariables, this, this.disposables);
     }
 
     private async preWarmInterpreterVariables() {

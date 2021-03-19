@@ -43,7 +43,7 @@ export class InterpreterPackages {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         InterpreterPackages.instance = this;
-        this.apiProvider.onDidActivePythonExtension(
+        this.apiProvider.onDidActivatePythonExtension(
             () => this.pendingInterpreterBeforeActivation.forEach((item) => this.trackPackages(item)),
             this,
             this.disposables
