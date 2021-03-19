@@ -95,7 +95,8 @@ export class Kernel implements IKernel {
             vscNotebook,
             kernelConnectionMetadata,
             context,
-            interruptTimeout
+            interruptTimeout,
+            disposables
         );
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;

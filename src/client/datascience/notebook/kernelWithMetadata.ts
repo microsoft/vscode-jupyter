@@ -42,7 +42,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly commandManager: ICommandManager
     ) {}
     public executeCell(doc: NotebookDocument, cell: NotebookCell) {
-        traceInfo(`Execute Cell ${cell.index} ${cell.document.uri.toString()} in kernelWithMetadata.ts`);
+        traceInfo(`Execute Cell ${cell.index} ${cell.notebook.uri.toString()} in kernelWithMetadata.ts`);
         const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);

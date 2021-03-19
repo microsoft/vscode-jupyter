@@ -14,6 +14,7 @@ import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { Commands } from '../../../client/datascience/constants';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+import { traceCellMessage } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
@@ -173,7 +174,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
 
         await waitForCondition(
             async () => {
-                traceInfo(`Step 8 Cell Status = ${cell.metadata.runState}`);
+                traceCellMessage(cell, 'Step 8 Cell Status');
                 return assertVSCCellIsNotRunning(cell);
             },
             15_000,

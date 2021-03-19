@@ -9,6 +9,7 @@ import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { INotebook } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
+import { KernelConnectionMetadata } from './types';
 
 /**
  * A queue responsible for execution of cells.
@@ -35,19 +36,19 @@ export class CellExecutionQueue {
     constructor(
         private readonly notebookPromise: Promise<INotebook>,
         private readonly executionFactory: CellExecutionFactory,
-        private readonly isPythonKernelConnection: boolean
+        readonly metadata: Readonly<KernelConnectionMetadata>
     ) {}
     /**
      * Queue the cell for execution & start processing it immediately.
      */
-    public queueCell(cell: NotebookCell) {
-        sendKernelTelemetryEvent(cell.document.uri, Telemetry.ExecuteCell);
+    public queueCell(cell: NotebookCell): void {
+        sendKernelTelemetryEvent(cell.notebook.uri, Telemetry.ExecuteCell);
         const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
         if (existingCellExecution) {
             traceCellMessage(cell, 'Use existing cell execution');
-            return existingCellExecution;
+            return;
         }
-        const cellExecution = this.executionFactory.create(cell, this.isPythonKernelConnection);
+        const cellExecution = this.executionFactory.create(cell, this.metadata);
         this.queueOfCellsToExecute.push(cellExecution);
 
         traceCellMessage(cell, 'User queued cell for execution');
