@@ -14,7 +14,7 @@ import {
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
-import { IDisposable, IExtensionContext } from '../../../common/types';
+import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, waitForPromise } from '../../../common/utils/async';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { captureTelemetry } from '../../../telemetry';
@@ -31,7 +31,6 @@ import {
 } from '../../types';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
-import { isPythonKernelConnection } from './helpers';
 import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
 
 /**
@@ -52,9 +51,10 @@ export class KernelExecution implements IDisposable {
         readonly vscNotebook: IVSCodeNotebook,
         readonly metadata: Readonly<KernelConnectionMetadata>,
         context: IExtensionContext,
-        private readonly interruptTimeout: number
+        private readonly interruptTimeout: number,
+        disposables: IDisposableRegistry
     ) {
-        this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook, context);
+        this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, context, disposables);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
@@ -174,7 +174,7 @@ export class KernelExecution implements IDisposable {
         const newCellExecutionQueue = new CellExecutionQueue(
             wrappedNotebookPromise,
             this.executionFactory,
-            isPythonKernelConnection(this.metadata)
+            this.metadata
         );
 
         // If the editor is closed (user or on CI), then just stop handling the UI updates.

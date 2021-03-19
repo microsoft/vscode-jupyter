@@ -4,13 +4,15 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import type { Kernel } from '@jupyterlab/services';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import { ExtensionMode, NotebookCell, NotebookCellRunState, NotebookEditor as VSCNotebookEditor } from 'vscode';
+import { ExtensionMode, NotebookCell, NotebookCellRunState, workspace } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
-import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
+import { IApplicationShell } from '../../../common/application/types';
+import { disposeAllDisposables } from '../../../common/helpers';
 import { traceError, traceErrorIf, traceInfoIf, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
-import { IDisposable, IExtensionContext } from '../../../common/types';
+import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
@@ -28,11 +30,11 @@ import {
 import {
     cellOutputToVSCCellOutput,
     clearCellForExecution,
-    createIOutputFromCellOutputs,
     getCellStatusMessageBasedOnFirstCellErrorOutput,
     hasErrorOutput,
     isStreamOutput,
     traceCellMessage,
+    translateCellDisplayOutput,
     updateCellExecutionTimes
 } from '../../notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
@@ -45,6 +47,8 @@ import {
     INotebookExecutionLogger
 } from '../../types';
 import { translateCellFromNative } from '../../utils';
+import { isPythonKernelConnection } from './helpers';
+import { KernelConnectionMetadata } from './types';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -58,20 +62,20 @@ export class CellExecutionFactory {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         private readonly appShell: IApplicationShell,
-        private readonly vscNotebook: IVSCodeNotebook,
-        private readonly context: IExtensionContext
+        private readonly context: IExtensionContext,
+        private readonly disposables: IDisposableRegistry
     ) {}
 
-    public create(cell: NotebookCell, isPythonKernelConnection: boolean) {
+    public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         return CellExecution.fromCell(
-            this.vscNotebook.notebookEditors.find((e) => e.document === cell.notebook)!,
             cell,
             this.errorHandler,
             this.editorProvider,
             this.appShell,
-            isPythonKernelConnection,
-            this.context
+            metadata,
+            this.context,
+            this.disposables
         );
     }
 }
@@ -107,13 +111,14 @@ export class CellExecution {
     private disposables: IDisposable[] = [];
     private cancelHandled = false;
     private requestHandlerChain = Promise.resolve();
+    private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private constructor(
-        public readonly editor: VSCNotebookEditor,
         public readonly cell: NotebookCell,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         private readonly applicationService: IApplicationShell,
-        private readonly isPythonKernelConnection: boolean,
+        private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
+        disposables: IDisposableRegistry,
         extensionContext: IExtensionContext
     ) {
         // These are only used in the tests.
@@ -131,26 +136,29 @@ export class CellExecution {
         }
 
         this.initPromise = this.enqueue();
+        workspace.onDidCloseTextDocument(
+            (e) => {
+                // If the cell is deleted, then dispose the request object.
+                // No point keeping it alive, just chewing resources.
+                if (e === this.cell.document) {
+                    this.request?.dispose(); // NOSONAR
+                }
+            },
+            this,
+            disposables
+        );
     }
 
     public static fromCell(
-        editor: VSCNotebookEditor,
         cell: NotebookCell,
         errorHandler: IDataScienceErrorHandler,
         editorProvider: INotebookEditorProvider,
         appService: IApplicationShell,
-        isPythonKernelConnection: boolean,
-        context: IExtensionContext
+        metadata: Readonly<KernelConnectionMetadata>,
+        context: IExtensionContext,
+        disposables: IDisposableRegistry
     ) {
-        return new CellExecution(
-            editor,
-            cell,
-            errorHandler,
-            editorProvider,
-            appService,
-            isPythonKernelConnection,
-            context
-        );
+        return new CellExecution(cell, errorHandler, editorProvider, appService, metadata, disposables, context);
     }
     public async start(notebook: INotebook) {
         if (this.cancelHandled) {
@@ -175,9 +183,9 @@ export class CellExecution {
 
         await this.initPromise;
         // Ensure we clear the cell state and trigger a change.
-        await clearCellForExecution(this.editor, this.cell);
+        await clearCellForExecution(this.cell);
         if (!this.isEmptyCodeCell) {
-            await chainWithPendingUpdates(this.editor.document, (edit) => {
+            await chainWithPendingUpdates(this.cell.notebook, (edit) => {
                 const metadata = this.cell.metadata.with({ runStartTime: new Date().getTime() });
                 edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
             });
@@ -226,7 +234,7 @@ export class CellExecution {
      */
     private dispose() {
         traceCellMessage(this.cell, 'Execution disposed');
-        this.disposables.forEach((d) => d.dispose());
+        disposeAllDisposables(this.disposables);
         const deferred = CellExecution.cellsCompletedForTesting.get(this.cell);
         if (deferred) {
             deferred.resolve();
@@ -237,13 +245,14 @@ export class CellExecution {
         traceCellMessage(this.cell, 'Completed with errors');
         this.sendPerceivedCellExecute();
         if (!this.isEmptyCodeCell) {
-            await chainWithPendingUpdates(this.editor.document, (edit) => {
+            await chainWithPendingUpdates(this.cell.notebook, (edit) => {
                 traceCellMessage(this.cell, 'Update run run duration');
                 const metadata = this.cell.metadata.with({ lastRunDuration: this.stopWatch.elapsedTime });
-                edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
+                edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
             });
         }
-        await updateCellWithErrorStatus(this.editor, this.cell, error);
+        await updateCellWithErrorStatus(this.cell, error);
+
         this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
 
         this._completed = true;
@@ -262,7 +271,7 @@ export class CellExecution {
         let runState = this.isEmptyCodeCell ? NotebookCellRunState.Idle : NotebookCellRunState.Success;
 
         if (!this.isEmptyCodeCell) {
-            await updateCellExecutionTimes(this.editor, this.cell, {
+            await updateCellExecutionTimes(this.cell, {
                 startTime: this.cell.metadata.runStartTime,
                 lastRunDuration: this.stopWatch.elapsedTime
             });
@@ -274,10 +283,10 @@ export class CellExecution {
             statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
         }
 
-        await chainWithPendingUpdates(this.editor.document, (edit) => {
+        await chainWithPendingUpdates(this.cell.notebook, (edit) => {
             traceCellMessage(this.cell, `Update cell state ${runState} and message '${statusMessage}'`);
             const metadata = this.cell.metadata.with({ runState, statusMessage });
-            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
+            edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
         });
 
         this._completed = true;
@@ -286,8 +295,7 @@ export class CellExecution {
     }
 
     private async completedDueToCancellation() {
-        traceCellMessage(this.cell, 'Completed due to cancellation');
-        await chainWithPendingUpdates(this.editor.document, (edit) => {
+        await chainWithPendingUpdates(this.cell.notebook, (edit) => {
             traceCellMessage(this.cell, 'Update cell statue as idle and message as empty');
             const metadata = this.cell.metadata.with({
                 runStartTime: null,
@@ -295,7 +303,7 @@ export class CellExecution {
                 runState: NotebookCellRunState.Idle,
                 statusMessage: ''
             });
-            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
+            edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
         });
 
         this._completed = true;
@@ -325,7 +333,7 @@ export class CellExecution {
         if (!this.canExecuteCell()) {
             return;
         }
-        await chainWithPendingUpdates(this.editor.document, (edit) => {
+        await chainWithPendingUpdates(this.cell.notebook, (edit) => {
             traceCellMessage(this.cell, 'Update cell state as it was enqueued');
             const metadata = this.cell.metadata.with({
                 statusMessage: '', // We don't want any previous status anymore.
@@ -333,7 +341,7 @@ export class CellExecution {
                 lastRunDuration: null,
                 runState: NotebookCellRunState.Running
             });
-            edit.replaceNotebookCellMetadata(this.editor.document.uri, this.cell.index, metadata);
+            edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
         });
     }
 
@@ -349,13 +357,13 @@ export class CellExecution {
     private canExecuteCell() {
         // Raw cells cannot be executed.
         if (
-            this.isPythonKernelConnection &&
+            isPythonKernelConnection(this.kernelConnection) &&
             (this.cell.document.languageId === 'raw' || this.cell.document.languageId === 'plaintext')
         ) {
             return false;
         }
 
-        return true;
+        return !this.cell.document.isClosed;
     }
 
     private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
@@ -366,7 +374,7 @@ export class CellExecution {
 
     private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         // Skip if no code to execute
-        if (code.trim().length === 0) {
+        if (code.trim().length === 0 || this.cell.document.isClosed) {
             traceCellMessage(this.cell, 'Empty cell execution');
             return this.completedSuccessfully();
         }
@@ -380,7 +388,7 @@ export class CellExecution {
 
         // For Jupyter requests, silent === don't output, while store_history === don't update execution count
         // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
-        const request = session.requestExecute(
+        const request = (this.request = session.requestExecute(
             {
                 code,
                 silent: false,
@@ -390,7 +398,7 @@ export class CellExecution {
             },
             false,
             metadata
-        );
+        ));
 
         // Listen to messages and update our cell execution state appropriately
 
@@ -405,13 +413,23 @@ export class CellExecution {
 
         // Listen to messages & chain each (to process them in the order we get them).
         request.onIOPub = (msg) =>
-            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
-                this.handleIOPub(clearState, loggers, msg).catch(noop)
-            ));
+            (this.requestHandlerChain = this.requestHandlerChain.then(() => {
+                // Cell has been deleted or the like.
+                if (this.cell.document.isClosed) {
+                    request.dispose();
+                    return Promise.resolve();
+                }
+                return this.handleIOPub(clearState, loggers, msg).catch(noop);
+            }));
         request.onReply = (msg) =>
-            (this.requestHandlerChain = this.requestHandlerChain.then(() =>
-                this.handleReply(clearState, msg).catch(noop)
-            ));
+            (this.requestHandlerChain = this.requestHandlerChain.then(() => {
+                // Cell has been deleted or the like.
+                if (this.cell.document.isClosed) {
+                    request.dispose();
+                    return Promise.resolve();
+                }
+                return this.handleReply(clearState, msg).catch(noop);
+            }));
         request.onStdin = this.handleInputRequest.bind(this, session);
 
         // WARNING: Do not dispose `request`.
@@ -491,7 +509,7 @@ export class CellExecution {
                 await this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = UpdateDisplayMessage');
-                await handleUpdateDisplayDataMessage(msg, this.editor);
+                await handleUpdateDisplayDataMessage(msg, this.cell.notebook);
             } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = CleanOutput');
                 await this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
@@ -511,7 +529,7 @@ export class CellExecution {
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, `Exec Count = ${msg.content.execution_count}`);
-                await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
+                await updateCellExecutionCount(this.cell, msg.content.execution_count);
             }
         } catch (err) {
             traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, err);
@@ -526,7 +544,7 @@ export class CellExecution {
     ) {
         const converted = cellOutputToVSCCellOutput(output);
 
-        await chainWithPendingUpdates(this.editor.document, (edit) => {
+        await chainWithPendingUpdates(this.cell.notebook, (edit) => {
             traceCellMessage(this.cell, 'Update output');
             let existingOutput = [...this.cell.outputs];
 
@@ -537,7 +555,7 @@ export class CellExecution {
             }
 
             // Append to the data (we would push here but VS code requires a recreation of the array)
-            edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, existingOutput.concat(converted));
+            edit.replaceNotebookCellOutput(this.cell.notebook.uri, this.cell.index, existingOutput.concat(converted));
             return edit;
         });
     }
@@ -613,13 +631,13 @@ export class CellExecution {
             return updateCellCode(this.cell, payload.text);
         } else {
             // Add a new cell after the current with text
-            return addNewCellAfter(this.editor, this.cell, payload.text);
+            return addNewCellAfter(this.cell, payload.text);
         }
     }
 
     private async handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
         if (msg.content.execution_count) {
-            await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
+            await updateCellExecutionCount(this.cell, msg.content.execution_count);
         }
     }
 
@@ -628,12 +646,12 @@ export class CellExecution {
     }
     private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
         // eslint-disable-next-line complexity
-        await chainWithPendingUpdates(this.editor.document, (edit) => {
+        await chainWithPendingUpdates(this.cell.notebook, (edit) => {
             traceCellMessage(this.cell, 'Update streamed output');
             let exitingCellOutputs = this.cell.outputs;
             const clearOutput = clearState.value;
             // Clear output if waiting for a clear
-            if (clearState.value) {
+            if (clearOutput) {
                 exitingCellOutputs = [];
                 clearState.update(false);
             }
@@ -646,9 +664,7 @@ export class CellExecution {
                 lastOutput && isStreamOutput(lastOutput, msg.content.name) ? lastOutput : undefined;
             if (existingOutputToAppendTo) {
                 // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
-                const outputs = existingOutputToAppendTo
-                    ? createIOutputFromCellOutputs([existingOutputToAppendTo])
-                    : [];
+                const outputs = existingOutputToAppendTo ? [translateCellDisplayOutput(existingOutputToAppendTo)] : [];
                 let existingOutputText: string = outputs.length
                     ? concatMultilineString((outputs[0] as nbformat.IStream).text)
                     : '';
@@ -675,7 +691,7 @@ export class CellExecution {
                     text: formatStreamText(concatMultilineString(`${existingOutputText}${newContent}`))
                 });
                 edit.replaceNotebookCellOutputItems(
-                    this.editor.document.uri,
+                    this.cell.notebook.uri,
                     this.cell.index,
                     existingOutputToAppendTo.id,
                     output.outputs
@@ -687,7 +703,7 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(msg.content.text))
                 });
-                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, [output]);
+                edit.replaceNotebookCellOutput(this.cell.notebook.uri, this.cell.index, [output]);
             } else {
                 // Create a new output
                 const output = cellOutputToVSCCellOutput({
@@ -695,9 +711,8 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(msg.content.text))
                 });
-                edit.appendNotebookCellOutput(this.editor.document.uri, this.cell.index, [output]);
+                edit.appendNotebookCellOutput(this.cell.notebook.uri, this.cell.index, [output]);
             }
-            return edit;
         });
     }
 
@@ -719,9 +734,9 @@ export class CellExecution {
             clearState.update(true);
         } else {
             // Clear all outputs and start over again.
-            await chainWithPendingUpdates(this.editor.document, (edit) => {
+            await chainWithPendingUpdates(this.cell.notebook, (edit) => {
                 traceCellMessage(this.cell, 'Handle clear output message & clear output');
-                edit.replaceNotebookCellOutput(this.editor.document.uri, this.cell.index, []);
+                edit.replaceNotebookCellOutput(this.cell.notebook.uri, this.cell.index, []);
                 return edit;
             });
         }
@@ -747,7 +762,7 @@ export class CellExecution {
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
-                await updateCellExecutionCount(this.editor, this.cell, msg.content.execution_count);
+                await updateCellExecutionCount(this.cell, msg.content.execution_count);
             }
         }
     }
