@@ -6,7 +6,6 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
-import { IPythonExtensionChecker } from '../../api/types';
 import { traceError } from '../../common/logger';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { IFileSystem } from '../../common/platform/types';
@@ -18,7 +17,6 @@ import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { INotebookModelFactory } from '../notebookStorage/types';
 import {
     CellState,
-    IJupyterExecution,
     IModelLoadOptions,
     INotebookModel,
     INotebookStorage,
@@ -57,15 +55,13 @@ export class NativeEditorStorage implements INotebookStorage {
     private backupRequested: { model: INotebookModel; cancellation: CancellationToken } | undefined;
 
     constructor(
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(ICryptoUtils) private crypto: ICryptoUtils,
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
         @inject(ITrustService) private trustService: ITrustService,
-        @inject(INotebookModelFactory) private readonly factory: INotebookModelFactory,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(INotebookModelFactory) private readonly factory: INotebookModelFactory
     ) {}
     private static isUntitledFile(file: Uri) {
         return isUntitledFile(file);
@@ -208,7 +204,7 @@ export class NativeEditorStorage implements INotebookStorage {
             traceError(`Error writing storage for ${filePath}: `, exc);
         }
     }
-    private async extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): Promise<number> {
+    private extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): number {
         if (
             notebookData &&
             notebookData.metadata &&
@@ -219,11 +215,6 @@ export class NativeEditorStorage implements INotebookStorage {
         ) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (notebookData.metadata.language_info.codemirror_mode as any).version;
-        }
-        // Use the active interpreter if allowed
-        if (this.extensionChecker.isPythonExtensionActive) {
-            const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-            return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
         }
 
         return 3;
@@ -368,7 +359,7 @@ export class NativeEditorStorage implements INotebookStorage {
                 remapped.splice(0, 0, this.createEmptyCell(uuid()));
             }
         }
-        const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
+        const pythonNumber = json ? this.extractPythonMainVersion(json) : 3;
 
         const model = this.factory.createModel(
             {
