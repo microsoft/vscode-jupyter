@@ -6,7 +6,16 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
-import { ExtensionMode, notebook, NotebookCell, NotebookCellExecutionTask, NotebookCellKind, NotebookCellPreviousExecutionResult, NotebookDocument, workspace } from 'vscode';
+import {
+    ExtensionMode,
+    notebook,
+    NotebookCell,
+    NotebookCellExecutionTask,
+    NotebookCellKind,
+    NotebookCellPreviousExecutionResult,
+    NotebookDocument,
+    workspace
+} from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { IApplicationShell } from '../../../common/application/types';
@@ -26,7 +35,6 @@ import {
 } from '../../notebook/helpers/executionHelpers';
 import {
     cellOutputToVSCCellOutput,
-    clearCellStatus,
     getCellStatusMessageBasedOnFirstCellErrorOutput,
     hasErrorOutput,
     isStreamOutput,
@@ -53,7 +61,7 @@ export class CellExecutionFactory {
         private readonly appShell: IApplicationShell,
         private readonly context: IExtensionContext,
         private readonly disposables: IDisposableRegistry
-    ) { }
+    ) {}
 
     public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -82,7 +90,10 @@ export class CellExecution {
      * At any given point in time, we can only have one cell actively running.
      * This will keep track of that task.
      */
-    private static activeNotebookCellExecutionTask = new WeakMap<NotebookDocument, NotebookCellExecutionTask | undefined>();
+    private static activeNotebookCellExecutionTask = new WeakMap<
+        NotebookDocument,
+        NotebookCellExecutionTask | undefined
+    >();
 
     private static sentExecuteCellTelemetry?: boolean;
 
@@ -183,13 +194,10 @@ export class CellExecution {
         }
         this.started = true;
 
-        await this.initPromise;
-        // Ensure we clear the cell state and trigger a change.
-        await clearCellStatus(this.cell);
         this.startTime = new Date().getTime();
         CellExecution.activeNotebookCellExecutionTask.set(this.cell.notebook, this.task);
         this.task?.start({ startTime: this.startTime });
-        await this.task?.clearOutput();
+        await Promise.all([this.initPromise, this.task?.clearOutput()]);
         this.stopWatch.reset();
 
         // Begin the request that will modify our cell.
@@ -248,11 +256,9 @@ export class CellExecution {
             await this.task?.appendOutput([translateErrorOutput(createErrorOutput(error))]);
         });
 
-        this.endCellTask(false);
-
-        this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
-
+        this.endCellTask('failed');
         this._completed = true;
+        this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
         traceCellMessage(this.cell, 'Completed with errors, & resolving');
         this._result.resolve(NotebookCellRunState.Error);
     }
@@ -267,15 +273,13 @@ export class CellExecution {
         // If it did, then we'd get an interrupt error in the output.
         let runState = this.isEmptyCodeCell ? NotebookCellRunState.Idle : NotebookCellRunState.Success;
 
-        let success = true;
+        let success: 'success' | 'failed' = 'success';
         // If there are any errors in the cell, then change status to error.
         if (hasErrorOutput(this.cell.outputs)) {
-            success = false;
+            success = 'failed';
             runState = NotebookCellRunState.Error;
             statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
         }
-
-        this.endCellTask(success);
 
         await chainWithPendingUpdates(this.cell.notebook, (edit) => {
             traceCellMessage(this.cell, `Update cell state ${runState} and message '${statusMessage}'`);
@@ -283,16 +287,20 @@ export class CellExecution {
             edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
         });
 
+        this.endCellTask(success);
         this._completed = true;
         traceCellMessage(this.cell, 'Completed successfully & resolving');
         this._result.resolve(runState);
     }
-    private endCellTask(success: boolean) {
+    private endCellTask(success: 'success' | 'failed' | 'cancelled') {
         if (this.isEmptyCodeCell) {
             this.task?.end({});
-        } else {
+        } else if (success === 'success' || success === 'failed') {
             this.lastRunDuration = this.stopWatch.elapsedTime;
-            this.task?.end({ duration: this.lastRunDuration, success });
+            this.task?.end({ duration: this.lastRunDuration, success: success === 'success' });
+        } else {
+            // Cell was cancelled.
+            this.task?.end({});
         }
         if (CellExecution.activeNotebookCellExecutionTask.get(this.cell.notebook) === this.task) {
             CellExecution.activeNotebookCellExecutionTask.set(this.cell.notebook, undefined);
@@ -349,8 +357,6 @@ export class CellExecution {
 
     private async completedDueToCancellation() {
         traceCellMessage(this.cell, 'Completed due to cancellation');
-        this.task?.end({});
-        this.task = undefined;
         if (!this.cell.document.isClosed) {
             await chainWithPendingUpdates(this.cell.notebook, (edit) => {
                 traceCellMessage(this.cell, 'Update cell statue as idle and message as empty');
@@ -358,6 +364,7 @@ export class CellExecution {
                 edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
             });
         }
+        this.endCellTask('cancelled');
         this._completed = true;
         traceCellMessage(this.cell, 'Cell cancelled & resolving');
         this._result.resolve(NotebookCellRunState.Idle);
@@ -749,10 +756,10 @@ export class CellExecution {
             // The way we update output of other cells is to use an existing task or a temporary task.
             // When using temporary tasks, we end up updating the UI with no execution order and spinning icons.
             // Doing this causes UI updates, removing the awaits will enure there's no time for ui updates.
+            // I.e. create cell task, perform update, and end cell task (no awaits in between).
             if (promise) {
                 await promise;
             }
-
         });
     }
 
@@ -859,6 +866,7 @@ export class CellExecution {
                 // The way we update output of other cells is to use an existing task or a temporary task.
                 // When using temporary tasks, we end up updating the UI with no execution order and spinning icons.
                 // Doing this causes UI updates, removing the awaits will enure there's no time for ui updates.
+                // I.e. create cell task, perform update, and end cell task (no awaits in between).
                 await promise;
             }
         }

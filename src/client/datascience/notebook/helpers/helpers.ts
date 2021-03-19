@@ -37,7 +37,6 @@ import { KernelMessage } from '@jupyterlab/services';
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
-import { chainWithPendingUpdates } from './notebookUpdater';
 import { IDisposable, Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { CellOutputMimeTypes } from '../types';
@@ -358,15 +357,6 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
         const indexOfMimeTypeA = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(outputItemA.mime, mime));
         const indexOfMimeTypeB = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(outputItemB.mime, mime));
         return indexOfMimeTypeA - indexOfMimeTypeB;
-    });
-}
-export async function clearCellStatus(cell: NotebookCell) {
-    await chainWithPendingUpdates(cell.notebook, (edit) => {
-        if (cell.document.isClosed) {
-            return;
-        }
-        const metadata = cell.metadata.with({ statusMessage: undefined });
-        edit.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, metadata);
     });
 }
 
