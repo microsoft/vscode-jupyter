@@ -74,6 +74,7 @@ export class PythonApiProvider implements IPythonApiProvider {
                 this.disposables
             );
         }
+        this.disposables.push(this.didActivatePython);
     }
 
     public getApi(): Promise<PythonApi> {
