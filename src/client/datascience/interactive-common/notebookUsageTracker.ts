@@ -6,6 +6,7 @@ import { EventEmitter, notebook, NotebookCellExecutionStateChangeEvent } from 'v
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookEditor, INotebookEditorProvider } from '../types';
@@ -31,7 +32,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
         // on this though.
         const findFilesPromise = this.workspace.findFiles('**/*.ipynb');
         if (findFilesPromise && findFilesPromise.then) {
-            findFilesPromise.then((r) => (this.notebookCount += r.length));
+            findFilesPromise.then((r) => (this.notebookCount += r.length), noop);
         }
         this.editorProvider.onDidOpenNotebookEditor(this.onEditorOpened, this, this.disposables);
         notebook.onDidChangeCellExecutionState(this.onDidChangeCellExecutionState, this, this.disposables);
