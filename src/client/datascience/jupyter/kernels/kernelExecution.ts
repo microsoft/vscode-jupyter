@@ -178,15 +178,18 @@ export class KernelExecution implements IDisposable {
         );
 
         // If the editor is closed (user or on CI), then just stop handling the UI updates.
-        editor.onDidDispose(
-            async () => {
+        this.vscNotebook.onDidCloseNotebookDocument(async (document: NotebookDocument) => {
+            // Find the notebook editor associated with this closing document
+            const closingEditor = this.vscNotebook.notebookEditors.find((item) => item.document === document);
+
+            // If it's the editor that we match, cancel cell execution queue
+            if (editor === closingEditor) {
                 if (!newCellExecutionQueue.failed || !newCellExecutionQueue.isEmpty) {
                     await newCellExecutionQueue.cancel(true);
                 }
-            },
-            this,
-            this.disposables
-        );
+            }
+            this, this.disposables;
+        });
 
         this.documentExecutions.set(editor.document, newCellExecutionQueue);
         return newCellExecutionQueue;
