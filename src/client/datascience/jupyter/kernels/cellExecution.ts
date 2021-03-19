@@ -5,7 +5,6 @@
 
 import * as fastDeepEqual from 'fast-deep-equal';
 import { nbformat } from '@jupyterlab/coreutils';
-import type { Kernel } from '@jupyterlab/services';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
 import { ExtensionMode, notebook, NotebookCell, NotebookCellExecutionTask, NotebookCellKind, NotebookCellPreviousExecutionResult, NotebookDocument, workspace } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';

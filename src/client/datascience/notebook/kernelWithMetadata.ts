@@ -3,7 +3,15 @@
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { join } from 'path';
-import { Uri, NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel, NotebookCellRange, NotebookCellKind } from 'vscode';
+import {
+    Uri,
+    NotebookCell,
+    NotebookDocument,
+    NotebookKernel as VSCNotebookKernel,
+    NotebookCellRange,
+    NotebookCellKind,
+    notebook
+} from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
@@ -40,7 +48,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly context: IExtensionContext,
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         private readonly commandManager: ICommandManager
-    ) { }
+    ) {}
     public interrupt(document: NotebookDocument, ranges: NotebookCellRange[]) {
         document.cells
             .filter((cell) => ranges.some((range) => range.start >= cell.index && range.end < cell.index))
@@ -55,8 +63,10 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
      * resolved, the cell will be put back into the Idle state.
      */
     public async executeCellsRequest(document: NotebookDocument, ranges: NotebookCellRange[]): Promise<void> {
-        const cells = document.cells.filter((cell) =>
-            cell.kind === NotebookCellKind.Code && ranges.some((range) => range.start <= cell.index && cell.index < range.end)
+        const cells = document.cells.filter(
+            (cell) =>
+                cell.kind === NotebookCellKind.Code &&
+                ranges.some((range) => range.start <= cell.index && cell.index < range.end)
         );
 
         await cells.map((cell) => this.executeCell(document, cell));
