@@ -10,7 +10,6 @@ import {
     EventEmitter,
     Memento,
     NotebookCellKind,
-    NotebookCellRunState,
     Uri,
     NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookDocument,
@@ -93,11 +92,12 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                                 metadata: {}
                             },
                             editable: true,
-                            executionOrder: 10,
                             hasExecutionOrder: true,
-                            runState: NotebookCellRunState.Idle,
                             statusMessage: undefined
-                        })
+                        }),
+                        previousResult: {
+                            executionOrder: 10
+                        }
                     },
                     {
                         kind: NotebookCellKind.Markdown,
@@ -109,9 +109,11 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                                 metadata: {}
                             },
                             editable: true,
-                            executionOrder: undefined,
                             hasExecutionOrder: false
-                        })
+                        }),
+                        previousResult: {
+                            executionOrder: undefined
+                        }
                     }
                 ]);
             });
@@ -167,11 +169,12 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                                 metadata: {}
                             },
                             editable: true,
-                            executionOrder: 10,
                             hasExecutionOrder: true,
-                            runState: NotebookCellRunState.Idle,
                             statusMessage: undefined
-                        })
+                        }),
+                        previousResult: {
+                            executionOrder: 10
+                        }
                     },
                     {
                         kind: NotebookCellKind.Markdown,
@@ -183,9 +186,11 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                                 metadata: {}
                             },
                             editable: true,
-                            executionOrder: undefined,
                             hasExecutionOrder: false
-                        })
+                        }),
+                        previousResult: {
+                            executionOrder: undefined
+                        }
                     }
                 ]);
             });

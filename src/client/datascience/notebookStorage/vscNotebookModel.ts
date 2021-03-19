@@ -7,12 +7,12 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
-    cellRunStateToCellState,
     createJupyterCellFromVSCNotebookCell,
     getNotebookMetadata,
     notebookModelToVSCNotebookData
 } from '../notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
+import { CellState } from '../types';
 import { BaseNotebookModel, getDefaultNotebookContentForNativeNotebooks } from './baseModel';
 
 // https://github.com/microsoft/vscode-python/issues/13155
@@ -102,7 +102,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
                 return {
                     id: cell.document.uri.toString(),
                     data: createJupyterCellFromVSCNotebookCell(cell),
-                    state: cellRunStateToCellState(cell.metadata.runState)
+                    state: CellState.init
                 };
             });
     }

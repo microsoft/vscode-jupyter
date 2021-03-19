@@ -45,16 +45,10 @@ export enum NotebookCellKind {
     Code = 2
 }
 
-export enum NotebookCellRunState {
-    Running = 1,
-    Idle = 2,
-    Success = 3,
-    Error = 4
-}
-
-export enum NotebookRunState {
-    Running = 1,
-    Idle = 2
+export interface NotebookCellPreviousExecutionResult {
+    executionOrder?: number;
+    success?: boolean;
+    duration?: number;
 }
 
 export class NotebookCellMetadata {
@@ -85,32 +79,20 @@ export class NotebookCellMetadata {
 
     // run related API, will be removed
     readonly hasExecutionOrder?: boolean;
-    readonly executionOrder?: number;
-    readonly runState?: NotebookCellRunState;
-    readonly runStartTime?: number;
-    readonly lastRunDuration?: number;
-
     constructor(
         editable?: boolean,
         breakpointMargin?: boolean,
         hasExecutionOrder?: boolean,
-        executionOrder?: number,
-        runState?: NotebookCellRunState,
-        runStartTime?: number,
         statusMessage?: string,
         lastRunDuration?: number,
         inputCollapsed?: boolean,
         outputCollapsed?: boolean,
         custom?: Record<string, any>
     );
-
     with(change: {
         editable?: boolean | null;
         breakpointMargin?: boolean | null;
         hasExecutionOrder?: boolean | null;
-        executionOrder?: number | null;
-        runState?: NotebookCellRunState | null;
-        runStartTime?: number | null;
         statusMessage?: string | null;
         lastRunDuration?: number | null;
         inputCollapsed?: boolean | null;
@@ -127,6 +109,7 @@ export interface NotebookCell {
     readonly document: TextDocument;
     readonly metadata: NotebookCellMetadata;
     readonly outputs: ReadonlyArray<NotebookCellOutput>;
+    readonly previousResult: NotebookCellPreviousExecutionResult | undefined;
 }
 
 export class NotebookDocumentMetadata {
@@ -153,15 +136,11 @@ export class NotebookDocumentMetadata {
     // todo@API is this a kernel property?
     readonly cellHasExecutionOrder: boolean;
 
-    // todo@API remove
-    readonly runState: NotebookRunState;
-
     constructor(
         editable?: boolean,
         cellEditable?: boolean,
         cellHasExecutionOrder?: boolean,
         custom?: { [key: string]: any },
-        runState?: NotebookRunState,
         trusted?: boolean
     );
 
@@ -170,7 +149,6 @@ export class NotebookDocumentMetadata {
         cellEditable?: boolean | null;
         cellHasExecutionOrder?: boolean | null;
         custom?: { [key: string]: any } | null;
-        runState?: NotebookRunState | null;
         trusted?: boolean | null;
     }): NotebookDocumentMetadata;
 }
@@ -223,7 +201,7 @@ export class NotebookCellRange {
      */
     readonly end: number;
 
-    isEmpty: boolean;
+    readonly isEmpty: boolean;
 
     constructor(start: number, end: number);
 }
@@ -257,7 +235,7 @@ export interface NotebookEditor {
     readonly document: NotebookDocument;
 
     /**
-     * The primary selected cell on this notebook editor.
+     * @deprecated
      */
     // todo@API should not be undefined, rather a default
     readonly selection?: NotebookCell;
@@ -285,7 +263,7 @@ export interface NotebookEditor {
     readonly viewColumn?: ViewColumn;
 
     /**
-     * Fired when the panel is disposed.
+     * @deprecated
      */
     // @rebornix REMOVE/REplace NotebookCommunication
     // todo@API fishy? notebooks are public objects, there should be a "global" events for this
@@ -343,6 +321,12 @@ export interface NotebookEditorVisibleRangesChangeEvent {
     readonly visibleRanges: ReadonlyArray<NotebookCellRange>;
 }
 
+export interface NotebookCellExecutionStateChangeEvent {
+    readonly document: NotebookDocument;
+    readonly cell: NotebookCell;
+    readonly executionState: NotebookCellExecutionState;
+}
+
 // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
 export class NotebookCellData {
     kind: NotebookCellKind;
@@ -352,18 +336,20 @@ export class NotebookCellData {
     language: string;
     outputs?: NotebookCellOutput[];
     metadata?: NotebookCellMetadata;
+    previousResult?: NotebookCellPreviousExecutionResult;
     constructor(
         kind: NotebookCellKind,
         source: string,
         language: string,
         outputs?: NotebookCellOutput[],
-        metadata?: NotebookCellMetadata
+        metadata?: NotebookCellMetadata,
+        previousResult?: NotebookCellPreviousExecutionResult
     );
 }
 
 export class NotebookData {
     cells: NotebookCellData[];
-    metadata?: NotebookDocumentMetadata;
+    metadata: NotebookDocumentMetadata;
     constructor(cells: NotebookCellData[], metadata?: NotebookDocumentMetadata);
 }
 
@@ -451,6 +437,8 @@ export namespace window {
 
 // code specific mime types
 // application/x.notebook.error-traceback
+// application/x.notebook.stdout
+// application/x.notebook.stderr
 // application/x.notebook.stream
 export class NotebookCellOutputItem {
     // todo@API
@@ -590,6 +578,9 @@ export interface NotebookContentProvider {
     readonly onDidChangeNotebookContentOptions?: Event<NotebookDocumentContentOptions>;
 
     // todo@API remove! against separation of data provider and renderer
+    /**
+     * @deprecated
+     */
     // eslint-disable-next-line vscode-dts-cancellation
     resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
 
@@ -637,27 +628,6 @@ export namespace notebook {
 
 //#region https://github.com/microsoft/vscode/issues/106744, NotebookKernel
 
-// todo@API use the NotebookCellExecution-object as a container to model and enforce
-// the flow of a cell execution
-
-// kernel -> execute_info
-// ext -> createNotebookCellExecution(cell)
-// kernel -> done
-// exec.dispose();
-
-// export interface NotebookCellExecution {
-// 	dispose(): void;
-// 	clearOutput(): void;
-// 	appendOutput(out: NotebookCellOutput): void;
-// 	replaceOutput(out: NotebookCellOutput): void;
-//  appendOutputItems(output:string, items: NotebookCellOutputItem[]):void;
-//  replaceOutputItems(output:string, items: NotebookCellOutputItem[]):void;
-// }
-
-// export function createNotebookCellExecution(cell: NotebookCell, startTime?: number): NotebookCellExecution;
-// export const onDidStartNotebookCellExecution: Event<any>;
-// export const onDidStopNotebookCellExecution: Event<any>;
-
 export interface NotebookKernel {
     // todo@API make this mandatory?
     readonly id?: string;
@@ -681,14 +651,67 @@ export interface NotebookKernel {
     // fired when properties like the supported languages etc change
     // onDidChangeProperties?: Event<void>
 
-    // @roblourens
-    // todo@API change to `executeCells(document: NotebookDocument, cells: NotebookCellRange[], context:{isWholeNotebooke: boolean}, token: CancelationToken): void;`
-    // todo@API interrupt vs cancellation, https://github.com/microsoft/vscode/issues/106741
-    // interrupt?():void;
-    executeCell(document: NotebookDocument, cell: NotebookCell): void;
-    cancelCellExecution(document: NotebookDocument, cell: NotebookCell): void;
-    executeAllCells(document: NotebookDocument): void;
-    cancelAllCellsExecution(document: NotebookDocument): void;
+    // todo@API how can Jupyter ensure that the document-level cancel button shows whenever any cell is running?
+    // Maybe this behavior is automatic for any kernel that implements interrupt
+    interrupt?(document: NotebookDocument, ranges: NotebookCellRange[]): void;
+
+    /**
+     * Called when the user triggers execution of a cell by clicking the run button for a cell, multiple cells,
+     * or full notebook. The cell will be put into the Pending state when this method is called. If
+     * createNotebookCellExecutionTask has not been called by the time the promise returned by this method is
+     * resolved, the cell will be put back into the Idle state.
+     */
+    executeCellsRequest(document: NotebookDocument, ranges: NotebookCellRange[]): Thenable<void>;
+}
+
+export interface NotebookCellExecuteStartContext {
+    // Maybe needs to be not an absolute time due to clock issues
+    startTime?: number;
+}
+
+/**
+ * A NotebookCellExecutionTask is how the kernel modifies a notebook cell as it is executing. When
+ * [`createNotebookCellExecutionTask`](#notebook.createNotebookCellExecutionTask) is called, the cell
+ * enters the Pending state. When `start()` is called on the execution task, it enters the Executing state. When
+ * `resolve()` is called, it enters the Idle state. While in the Executing state, cell outputs can be
+ * modified with the methods on the run task.
+ */
+export interface NotebookCellExecutionTask {
+    readonly document: NotebookDocument;
+    readonly cell: NotebookCell;
+
+    start(context?: NotebookCellExecuteStartContext): void;
+    executionOrder: number | undefined;
+    end(result: NotebookCellPreviousExecutionResult): void;
+    readonly token: CancellationToken;
+
+    clearOutput(cellIndex?: number): Thenable<void>;
+    appendOutput(out: NotebookCellOutput[], cellIndex?: number): Thenable<void>;
+    replaceOutput(out: NotebookCellOutput[], cellIndex?: number): Thenable<void>;
+    appendOutputItems(items: NotebookCellOutputItem[], outputId: string): Thenable<void>;
+    replaceOutputItems(items: NotebookCellOutputItem[], outputId: string): Thenable<void>;
+}
+
+export enum NotebookCellExecutionState {
+    Idle = 1,
+    Pending = 2,
+    Executing = 3
+}
+
+export namespace notebook {
+    /**
+     * Creates a [`NotebookCellExecutionTask`](#NotebookCellExecutionTask). Should only be called by a kernel. Returns undefined unless requested by the active kernel.
+     * @param uri The [uri](#Uri) of the notebook document.
+     * @param index The index of the cell.
+     * @param kernelId The id of the kernel requesting this run task. If this kernel is not the current active kernel, `undefined` is returned.
+     */
+    export function createNotebookCellExecutionTask(
+        uri: Uri,
+        index: number,
+        kernelId: string
+    ): NotebookCellExecutionTask | undefined;
+
+    export const onDidChangeCellExecutionState: Event<NotebookCellExecutionStateChangeEvent>;
 }
 
 export type NotebookFilenamePattern = GlobPattern | { include: GlobPattern; exclude: GlobPattern };

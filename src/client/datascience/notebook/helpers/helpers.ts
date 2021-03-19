@@ -15,7 +15,9 @@ import {
     NotebookKernel as VSCNotebookKernel,
     NotebookCellKind,
     NotebookDocumentMetadata,
-    NotebookCellRunState
+    NotebookCellExecutionState,
+    notebook,
+    NotebookCellExecutionStateChangeEvent
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { IVSCodeNotebook } from '../../../common/application/types';
@@ -25,7 +27,7 @@ import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../commo
 import { isUntitledFile } from '../../../common/utils/misc';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
+import { KernelConnectionMetadata, NotebookCellRunState } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { CellState, IJupyterKernelSpec } from '../../types';
 import { JupyterNotebookView } from '../constants';
@@ -36,9 +38,10 @@ import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
 import { chainWithPendingUpdates } from './notebookUpdater';
-import { Resource } from '../../../common/types';
+import { IDisposable, Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { CellOutputMimeTypes } from '../types';
+import { disposeAllDisposables } from '../../../common/helpers';
 
 /**
  * Whether this is a Notebook we created/manage/use.
@@ -252,7 +255,7 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
     const code = cell.document.getText();
     return {
         cell_type: 'code',
-        execution_count: cell.metadata.executionOrder ?? null,
+        execution_count: cell.previousResult?.executionOrder ?? null,
         source: splitMultilineString(code),
         outputs: cell.outputs.map(translateCellDisplayOutput),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
@@ -262,7 +265,6 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        executionOrder: undefined,
         hasExecutionOrder: false,
         custom: getNotebookCellMetadata(cell)
     });
@@ -289,7 +291,6 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
 function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        executionOrder: undefined,
         hasExecutionOrder: false,
         custom: getNotebookCellMetadata(cell)
     });
@@ -305,7 +306,6 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
-    const runState = NotebookCellRunState.Idle;
     const hasErrors = outputs.some((output) => output.outputs.some((opit) => opit.mime === CellOutputMimeTypes.error));
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
     let statusMessage: string | undefined;
@@ -317,16 +317,19 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
 
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        executionOrder: typeof cell.execution_count === 'number' ? cell.execution_count : undefined,
         hasExecutionOrder: true,
-        runState,
         statusMessage,
         custom: getNotebookCellMetadata(cell)
     });
 
     const source = concatMultilineString(cell.source);
 
-    return new NotebookCellData(NotebookCellKind.Code, source, cellLanguage, outputs, notebookCellMetadata);
+    const cellData = new NotebookCellData(NotebookCellKind.Code, source, cellLanguage, outputs, notebookCellMetadata);
+    if (hasExecutionCount) {
+        cellData.previousResult = cellData.previousResult || {};
+        cellData.previousResult.executionOrder = cell.execution_count as number;
+    }
+    return cellData;
 }
 const orderOfMimeTypes = [
     'application/vnd.*',
@@ -357,44 +360,42 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
         return indexOfMimeTypeA - indexOfMimeTypeB;
     });
 }
-
-export async function clearCellForExecution(cell: NotebookCell) {
+export async function clearCellStatus(cell: NotebookCell) {
     await chainWithPendingUpdates(cell.notebook, (edit) => {
-        const metadata = cell.metadata.with({
-            statusMessage: undefined,
-            executionOrder: null,
-            lastRunDuration: null,
-            runStartTime: null
-        });
+        if (cell.document.isClosed) {
+            return;
+        }
+        const metadata = cell.metadata.with({ statusMessage: undefined });
         edit.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, metadata);
-        edit.replaceNotebookCellOutput(cell.notebook.uri, cell.index, []);
     });
-    await updateCellExecutionTimes(cell);
+}
+
+/**
+ * This class is used to track state of cells, used in logging & tests.
+ */
+export class NotebookCellStateTracker implements IDisposable {
+    private readonly disposables: IDisposable[] = [];
+    private static cellStates = new WeakMap<NotebookCell, NotebookCellExecutionState>();
+    constructor() {
+        notebook.onDidChangeCellExecutionState(this.onDidChangeCellExecutionState, this, this.disposables);
+    }
+    dispose() {
+        disposeAllDisposables(this.disposables);
+    }
+    public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
+        return NotebookCellStateTracker.cellStates.get(cell);
+    }
+    private onDidChangeCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
+        NotebookCellStateTracker.cellStates.set(e.cell, e.executionState);
+    }
 }
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
-        `Cell Index:${cell.index}, state:${cell.metadata.runState}, exec: ${cell.metadata.executionOrder}. ${message}`
+        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
+            cell.previousResult?.executionOrder
+        }. ${message}`
     );
-}
-
-/**
- * Store execution start and end times.
- * Stored as ISO for portability.
- */
-export async function updateCellExecutionTimes(
-    cell: NotebookCell,
-    times?: { startTime?: number; lastRunDuration?: number }
-) {
-    if (!times || !times.lastRunDuration || !times.startTime) {
-        return;
-    }
-    const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
-    await chainWithPendingUpdates(cell.notebook, (edit) => {
-        traceCellMessage(cell, 'Update run duration');
-        const metadata = cell.metadata.with({ lastRunDuration });
-        edit.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, metadata);
-    });
 }
 
 export function createVSCNotebookCellDataFromCell(

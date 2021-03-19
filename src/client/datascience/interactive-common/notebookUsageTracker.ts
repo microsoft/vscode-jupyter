@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter } from 'vscode';
+import { EventEmitter, notebook, NotebookCellExecutionStateChangeEvent } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
@@ -17,7 +17,7 @@ import { INotebookEditor, INotebookEditorProvider } from '../types';
 export class NotebookUsageTracker implements IExtensionSingleActivationService {
     protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
     protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
-    private readonly executedEditors = new Set<INotebookEditor>();
+    private readonly executedNotebooksIndexedByUri = new Set<string>();
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
     constructor(
@@ -34,14 +34,17 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
             findFilesPromise.then((r) => (this.notebookCount += r.length));
         }
         this.editorProvider.onDidOpenNotebookEditor(this.onEditorOpened, this, this.disposables);
+        notebook.onDidChangeCellExecutionState(this.onDidChangeCellExecutionState, this, this.disposables);
     }
     public dispose() {
         // Send a bunch of telemetry
         if (this.openedNotebookCount) {
             sendTelemetryEvent(Telemetry.NotebookOpenCount, undefined, { count: this.openedNotebookCount });
         }
-        if (this.executedEditors.size) {
-            sendTelemetryEvent(Telemetry.NotebookRunCount, undefined, { count: this.executedEditors.size });
+        if (this.executedNotebooksIndexedByUri.size) {
+            sendTelemetryEvent(Telemetry.NotebookRunCount, undefined, {
+                count: this.executedNotebooksIndexedByUri.size
+            });
         }
         if (this.notebookCount) {
             sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, undefined, { count: this.notebookCount });
@@ -52,8 +55,11 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
         if (editor.model?.isUntitled) {
             this.notebookCount += 1;
         }
-        if (!this.executedEditors.has(editor)) {
-            editor.executed((e) => this.executedEditors.add(e), this, this.disposables);
+        if (!this.executedNotebooksIndexedByUri.has(editor.file.fsPath) && editor.executed) {
+            editor.executed((e) => this.executedNotebooksIndexedByUri.add(e.file.fsPath), this, this.disposables);
         }
+    }
+    private onDidChangeCellExecutionState(e: NotebookCellExecutionStateChangeEvent): void {
+        this.executedNotebooksIndexedByUri.add(e.cell.notebook.uri.fsPath);
     }
 }

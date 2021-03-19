@@ -3,7 +3,7 @@
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { join } from 'path';
-import { Uri, NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel, notebook } from 'vscode';
+import { Uri, NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel, NotebookCellRange, NotebookCellKind } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
@@ -40,29 +40,35 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly context: IExtensionContext,
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         private readonly commandManager: ICommandManager
-    ) {}
-    public executeCell(doc: NotebookDocument, cell: NotebookCell) {
+    ) { }
+    public interrupt(document: NotebookDocument, ranges: NotebookCellRange[]) {
+        document.cells
+            .filter((cell) => ranges.some((range) => range.start >= cell.index && range.end < cell.index))
+            .forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
+        this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
+    }
+
+    /**
+     * Called when the user triggers execution of a cell by clicking the run button for a cell, multiple cells,
+     * or full notebook. The cell will be put into the Pending state when this method is called. If
+     * createNotebookCellExecutionTask has not been called by the time the promise returned by this method is
+     * resolved, the cell will be put back into the Idle state.
+     */
+    public async executeCellsRequest(document: NotebookDocument, ranges: NotebookCellRange[]): Promise<void> {
+        const cells = document.cells.filter((cell) =>
+            cell.kind === NotebookCellKind.Code && ranges.some((range) => range.start <= cell.index && cell.index < range.end)
+        );
+
+        await cells.map((cell) => this.executeCell(document, cell));
+    }
+
+    private executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${cell.notebook.uri.toString()} in kernelWithMetadata.ts`);
         const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.selection });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
             return kernel.executeCell(cell);
         }
-    }
-    public executeAllCells(document: NotebookDocument) {
-        const kernel = this.kernelProvider.getOrCreate(document.uri, { metadata: this.selection });
-        if (kernel) {
-            this.updateKernelInfoInNotebookWhenAvailable(kernel, document);
-            return kernel.executeAllCells(document);
-        }
-    }
-    public cancelCellExecution(_: NotebookDocument, cell: NotebookCell) {
-        traceCellMessage(cell, 'Cell cancellation requested');
-        this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
-    }
-    public cancelAllCellsExecution(document: NotebookDocument) {
-        traceInfo(`Document cancellation requested ${document.uri}`);
-        this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
     }
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
         if (this.notebookKernels.get(doc) === kernel) {

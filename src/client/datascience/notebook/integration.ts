@@ -15,7 +15,7 @@ import { traceError } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
-import { isJupyterNotebook } from './helpers/helpers';
+import { isJupyterNotebook, NotebookCellStateTracker } from './helpers/helpers';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { INotebookContentProvider, INotebookKernelProvider } from './types';
@@ -44,6 +44,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         // Once the API is final, we won't need to modify the package.json.
         if (this.useNativeNb) {
             this.registerCompletionItemProvider();
+            this.disposables.push(new NotebookCellStateTracker());
             await this.enableNotebooks();
         } else {
             // Enable command to open in preview notebook (only for insiders).
@@ -69,12 +70,8 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                                 editable: true,
                                 hasExecutionOrder: true,
                                 inputCollapsed: true,
-                                lastRunDuration: true,
                                 outputCollapsed: true,
-                                runStartTime: true,
-                                executionOrder: false,
                                 custom: false,
-                                runState: true,
                                 statusMessage: true
                             }
                         }

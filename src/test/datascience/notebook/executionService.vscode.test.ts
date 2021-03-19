@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
-import { commands, NotebookCell, NotebookCellKind, NotebookCellRunState, Uri } from 'vscode';
+import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, Uri } from 'vscode';
 import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
@@ -48,6 +48,7 @@ import {
     CellOutputMetadata,
     getTextOutputValue,
     hasErrorOutput,
+    NotebookCellStateTracker,
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
 
@@ -151,8 +152,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Wait till execution count changes and status is success for second cell.
         await waitForExecutionCompletedSuccessfully(cells[1]);
 
-        // Verify empty cell has cell status of idle
-        assert.equal(cells[0].metadata.runState, NotebookCellRunState.Idle);
+        assert.isUndefined(cells[0].previousResult?.executionOrder);
     });
     test('Clear output in empty cells', async () => {
         await closeNotebooks();
@@ -162,16 +162,16 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // Confirm we have execution order and output.
         const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
-        assert.equal(cells[0].metadata.executionOrder, 1);
+        assert.equal(cells[0].previousResult?.executionOrder, 1);
         assertHasTextOutputInVSCode(cells[0], 'Hello World');
 
         await runAllCellsInActiveNotebook();
         await waitForEmptyCellExecutionCompleted(cells[0]);
 
         // Clear the cell and run the empty cell again & the status should change the idle & output cleared.
-        assert.equal(cells[0].metadata.runState, NotebookCellRunState.Idle);
+        assert.equal(NotebookCellStateTracker.getCellState(cells[0]), NotebookCellExecutionState.Idle);
         assert.equal(cells[0].outputs.length, 0, 'Cell output is not empty');
-        assert.isUndefined(cells[0].metadata.executionOrder, 'Cell execution order should be undefined');
+        assert.isUndefined(cells[0].previousResult?.executionOrder, 'Cell execution order should be undefined');
     });
     test('Verify Cell output, execution count and status', async () => {
         await insertCodeCell('print("Hello World")');
@@ -184,7 +184,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assertHasTextOutputInVSCode(cell, 'Hello World', 0);
 
         // Verify execution count.
-        assert.ok(cell.metadata.executionOrder, 'Execution count should be > 0');
+        assert.ok(cell.previousResult?.executionOrder, 'Execution count should be > 0');
     });
     test('Verify multiple cells get executed', async () => {
         await insertCodeCell('print("Foo Bar")');
@@ -202,8 +202,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assertHasTextOutputInVSCode(cells[1], 'Hello World');
 
         // Verify execution count.
-        assert.ok(cells[0].metadata.executionOrder, 'Execution count should be > 0');
-        assert.equal(cells[1].metadata.executionOrder! - 1, cells[0].metadata.executionOrder!);
+        assert.ok(cells[0].previousResult?.executionOrder, 'Execution count should be > 0');
+        assert.equal(cells[1].previousResult?.executionOrder! - 1, cells[0].previousResult?.executionOrder!);
     });
     test('Verify metadata for successfully executed cell', async () => {
         await insertCodeCell('print("Foo Bar")');
@@ -214,10 +214,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
 
-        expect(cell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
-        expect(cell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
-        expect(cell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
-        assert.equal(cell.metadata.runState, NotebookCellRunState.Success, 'Incorrect State');
+        expect(cell.previousResult?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
+        assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Idle, 'Incorrect State');
+        assert.isFalse(hasErrorOutput(cell.outputs), 'Incorrect State');
         assert.equal(cell.metadata.statusMessage, '', 'Incorrect Status message');
     });
     test('Verify output & metadata for executed cell with errors', async () => {
@@ -235,10 +234,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(errorOutput.ename, 'NameError', 'Incorrect ename'); // As status contains ename, we don't want this displayed again.
         assert.equal(errorOutput.evalue, "name 'abcd' is not defined", 'Incorrect evalue'); // As status contains ename, we don't want this displayed again.
         assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
-        expect(cell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
-        expect(cell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
-        expect(cell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
-        assert.equal(cell.metadata.runState, NotebookCellRunState.Error, 'Incorrect State');
+        expect(cell.previousResult?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
+        assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Idle, 'Incorrect State');
+        assert.ok(hasErrorOutput(cell.outputs), 'Incorrect State');
         assert.include(cell.metadata.statusMessage!, 'NameError', 'Must contain error message');
         assert.include(cell.metadata.statusMessage!, 'abcd', 'Must contain error message');
     });
@@ -255,9 +253,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForExecutionCompletedSuccessfully(updateCell);
 
         assert.lengthOf(displayCell.outputs, 1, 'Incorrect output');
-        expect(displayCell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
-        expect(displayCell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
-        expect(displayCell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
+        expect(displayCell.previousResult?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         assertHasTextOutputInVSCode(displayCell, 'foo', 0, true);
     });
     test('Clearing output while executing will ensure output is cleared', async () => {
@@ -854,10 +850,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assertExecutionOrderOfCells(queuedCells);
 
         // This is a brand new cell created by the user, all metadata will be undefined.
-        assert.isUndefined(newCell.cell.metadata.runState);
-        assert.isUndefined(newCell.cell.metadata.executionOrder);
-        assert.isUndefined(newCell.cell.metadata.runStartTime);
-        assert.isUndefined(newCell.cell.metadata.lastRunDuration);
+        assert.isUndefined(newCell.cell.previousResult?.executionOrder);
         assert.equal(newCell.cell.outputs.length, 0);
     });
     test('Run entire notebook then add a new cell & run that as well, ensure this new cell is also executed', async () => {
@@ -907,7 +900,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await runCell(cell2);
         // Give it time to run & fail, this time execution order is greater than previously
         await waitForCondition(
-            async () => cell2.metadata.executionOrder === 3,
+            async () => cell2.previousResult?.executionOrder === 3,
             5_000,
             'Cell did not fail again with a new execution order'
         );
@@ -916,21 +909,21 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Run cell 3 & it should run to completion.
         await runCell(cell3);
         await waitForExecutionCompletedSuccessfully(cell3);
-        const lastExecutionOrderOfCell3 = cell3.metadata.executionOrder!;
+        const lastExecutionOrderOfCell3 = cell3.previousResult?.executionOrder!;
         assert.equal(lastExecutionOrderOfCell3, 4);
 
         // Run all cells again
         await runAllCellsInActiveNotebook();
         await waitForCondition(
-            async () => cell2.metadata.executionOrder === 6,
+            async () => cell2.previousResult?.executionOrder === 6,
             5_000,
             'Cell did not fail again with a new execution order (3rd time)'
         );
         await waitForExecutionCompletedSuccessfully(cell1);
         await waitForExecutionCompletedWithErrors(cell2);
-        assert.equal(cell1.metadata.executionOrder, 5);
-        assert.equal(cell2.metadata.executionOrder, 6);
-        assert.equal(cell3.metadata.executionOrder, 4, 'Cell 3 should not have run again');
+        assert.equal(cell1.previousResult?.executionOrder, 5);
+        assert.equal(cell2.previousResult?.executionOrder, 6);
+        assert.equal(cell3.previousResult?.executionOrder, 4, 'Cell 3 should not have run again');
     });
 
     // Check the set next input statements correctly insert or update cells
@@ -976,12 +969,12 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         let firstCellExecutionOrder: number;
         cells.forEach((cell, index) => {
             if (index === 0) {
-                firstCellExecutionOrder = cell.metadata.executionOrder!;
+                firstCellExecutionOrder = cell.previousResult?.executionOrder!;
                 return;
             }
             // This next cell must have an execution order +1 from previous cell in the queue.
             assert.equal(
-                cell.metadata.executionOrder,
+                cell.previousResult?.executionOrder,
                 firstCellExecutionOrder + index,
                 `Execution order of cell ${cell.index} is not one more than previous cell`
             );

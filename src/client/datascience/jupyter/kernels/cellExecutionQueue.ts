@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookCell, NotebookCellRunState } from 'vscode';
+import { NotebookCell } from 'vscode';
 import { traceError, traceInfo } from '../../../common/logger';
 import { noop } from '../../../common/utils/misc';
 import { Telemetry } from '../../constants';
@@ -9,7 +9,7 @@ import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { traceCellMessage } from '../../notebook/helpers/helpers';
 import { INotebook } from '../../types';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
-import { KernelConnectionMetadata } from './types';
+import { KernelConnectionMetadata, NotebookCellRunState } from './types';
 
 /**
  * A queue responsible for execution of cells.
