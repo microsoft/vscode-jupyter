@@ -58,9 +58,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     hasExecutionOrder: false,
                     custom: { metadata: {} }
                 }),
-                previousResult: {
-                    executionOrder: undefined
-                }
+                previousResult: undefined
             }
         ]);
     });
