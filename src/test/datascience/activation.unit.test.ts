@@ -17,7 +17,12 @@ import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeE
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
-import { INotebookCreationTracker, INotebookEditor, INotebookEditorProvider, IRawNotebookSupportedService } from '../../client/datascience/types';
+import {
+    INotebookCreationTracker,
+    INotebookEditor,
+    INotebookEditorProvider,
+    IRawNotebookSupportedService
+} from '../../client/datascience/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { FakeClock } from '../common';
 import { createPythonInterpreter } from '../utils/interpreters';
