@@ -494,10 +494,6 @@ function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
             metadata.metadata = output.metadata ? cloneDeep(output.metadata) : {};
             break;
         }
-        case 'stream': {
-            metadata.streamName = (output.name as unknown) as nbformat.StreamType;
-            break;
-        }
         default:
             break;
     }
@@ -559,7 +555,14 @@ function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
 
 export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: string): boolean {
     const metadata = output.metadata as CellOutputMetadata | undefined;
-    return metadata?.outputType === 'stream' && metadata.streamName === expectedStreamName;
+    return metadata?.outputType === 'stream' && getOutputStreamType(output) === expectedStreamName;
+}
+
+// Output stream can only have stderr or stdout so just check the first output. Undefined if no outputs
+export function getOutputStreamType(output: NotebookCellOutput): string | undefined {
+    if (output.outputs.length > 0) {
+        return output.outputs[0].mime === CellOutputMimeTypes.stderr ? 'stderr' : 'stdout';
+    }
 }
 
 type JupyterOutput =
@@ -609,10 +612,6 @@ export type CellOutputMetadata = {
      * Original cell output type
      */
     outputType: nbformat.OutputType | string;
-    /**
-     * Name of the stream (for text output).
-     */
-    streamName?: nbformat.StreamType;
     executionCount?: nbformat.IExecuteResult['ExecutionCount'];
 };
 
@@ -648,9 +647,11 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
                     []
                 );
 
+            const streamType = getOutputStreamType(output) || 'stdout';
+
             result = {
                 output_type: 'stream',
-                name: customMetadata?.streamName || 'stdout',
+                name: streamType,
                 text: splitMultilineString(outputs.join(''))
             };
             break;
