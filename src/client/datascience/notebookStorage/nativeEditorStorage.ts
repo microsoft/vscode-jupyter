@@ -15,13 +15,7 @@ import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Identifiers, Telemetry } from '../constants';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { INotebookModelFactory } from '../notebookStorage/types';
-import {
-    CellState,
-    IModelLoadOptions,
-    INotebookModel,
-    INotebookStorage,
-    ITrustService
-} from '../types';
+import { CellState, IModelLoadOptions, INotebookModel, INotebookStorage, ITrustService } from '../types';
 import { NativeEditorNotebookModel } from './notebookModel';
 import { VSCodeNotebookModel } from './vscNotebookModel';
 
