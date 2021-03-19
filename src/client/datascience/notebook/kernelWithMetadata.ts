@@ -3,7 +3,7 @@
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { join } from 'path';
-import { Uri, NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode';
+import { Uri, NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel, notebook } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
@@ -16,6 +16,7 @@ import { KernelSocketInformation } from '../types';
 import { traceCellMessage, trackKernelInfoInNotebookMetadata } from './helpers/helpers';
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
+    private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     get preloads(): Uri[] {
         return [
             Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
@@ -64,9 +65,22 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
     }
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
+        if (this.notebookKernels.get(doc) === kernel) {
+            return;
+        }
+        this.notebookKernels.set(doc, kernel);
         let kernelSocket: KernelSocketInformation | undefined;
         const handlerDisposables: IDisposable[] = [];
-
+        // If the notebook is closed, dispose everything.
+        notebook.onDidCloseNotebookDocument(
+            (e) => {
+                if (e === doc) {
+                    disposeAllDisposables(handlerDisposables);
+                }
+            },
+            this,
+            handlerDisposables
+        );
         const saveKernelInfo = () => {
             const kernelId = kernelSocket?.options.id;
             if (!kernelId) {
@@ -74,8 +88,6 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
             }
             traceInfo(`Updating preferred kernel for remote notebook ${kernelId}`);
             this.preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(doc.uri, kernelId).catch(noop);
-
-            disposeAllDisposables(handlerDisposables);
         };
 
         const kernelDisposedDisposable = kernel.onDisposed(() => disposeAllDisposables(handlerDisposables));
@@ -92,8 +104,14 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
                 return;
             }
             trackKernelInfoInNotebookMetadata(doc, kernel.info);
-            if (kernel.info.status === 'ok' && this.selection.kind === 'startUsingKernelSpec') {
-                saveKernelInfo();
+            if (this.selection.kind === 'startUsingKernelSpec') {
+                if (kernel.info.status === 'ok') {
+                    saveKernelInfo();
+                } else {
+                    disposeAllDisposables(handlerDisposables);
+                }
+            } else {
+                disposeAllDisposables(handlerDisposables);
             }
         });
 

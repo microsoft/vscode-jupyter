@@ -83,15 +83,12 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         return this.document ? this.document.cells.length : this.notebookJson.cells?.length ?? 0;
     }
     public getNotebookData() {
-        if (!this.preferredLanguage) {
-            throw new Error('Preferred Language not initialized');
-        }
         return notebookModelToVSCNotebookData(
             this.isTrusted,
             this.notebookContentWithoutCells,
             this.file,
             this.notebookJson.cells || [],
-            this.preferredLanguage,
+            this.preferredLanguage || 'plaintext',
             this.originalJson
         );
     }
