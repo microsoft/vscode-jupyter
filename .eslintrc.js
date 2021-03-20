@@ -455,7 +455,6 @@ module.exports = {
         'src/client/terminals/serviceRegistry.ts',
         'src/client/terminals/activation.ts',
         'src/client/terminals/types.ts',
-        'src/client/terminals/codeExecution/helper.ts',
         'src/client/terminals/codeExecution/djangoShellCodeExecution.ts',
         'src/client/terminals/codeExecution/repl.ts',
         'src/client/terminals/codeExecution/terminalCodeExecution.ts',
