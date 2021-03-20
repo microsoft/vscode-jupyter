@@ -80,15 +80,15 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     public async getFileToExecute(): Promise<Uri | undefined> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
-            this.applicationShell.showErrorMessage('No open file to run in terminal');
+            void this.applicationShell.showErrorMessage('No open file to run in terminal');
             return;
         }
         if (activeEditor.document.isUntitled) {
-            this.applicationShell.showErrorMessage('The active file needs to be saved before it can be run');
+            void this.applicationShell.showErrorMessage('The active file needs to be saved before it can be run');
             return;
         }
         if (activeEditor.document.languageId !== PYTHON_LANGUAGE) {
-            this.applicationShell.showErrorMessage('The active file is not a Python source file');
+            void this.applicationShell.showErrorMessage('The active file is not a Python source file');
             return;
         }
         if (activeEditor.document.isDirty) {
