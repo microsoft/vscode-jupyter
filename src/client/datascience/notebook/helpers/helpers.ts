@@ -10,13 +10,12 @@ import {
     NotebookCell,
     NotebookCellData,
     NotebookCellMetadata,
-    NotebookCellRunState,
     NotebookData,
     NotebookDocument,
-    NotebookEditor,
     NotebookKernel as VSCNotebookKernel,
     NotebookCellKind,
-    NotebookDocumentMetadata
+    NotebookDocumentMetadata,
+    NotebookCellRunState
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { IVSCodeNotebook } from '../../../common/application/types';
@@ -107,11 +106,8 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
     if (metadata?.language_info?.name && metadata.language_info.name !== PYTHON_LANGUAGE) {
         return false;
     }
-    if (kernelSpec?.language && kernelSpec.language !== PYTHON_LANGUAGE) {
-        return false;
-    }
-    // All other notebooks are python notebooks.
-    return true;
+    // Valid notebooks will have a language information in the metadata.
+    return kernelSpec?.language === PYTHON_LANGUAGE;
 }
 /**
  * No need to update the notebook metadata just yet.
@@ -258,7 +254,7 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
         cell_type: 'code',
         execution_count: cell.metadata.executionOrder ?? null,
         source: splitMultilineString(code),
-        outputs: createIOutputFromCellOutputs(cell.outputs),
+        outputs: cell.outputs.map(translateCellDisplayOutput),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
     };
 }
@@ -362,22 +358,18 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
     });
 }
 
-export function createIOutputFromCellOutputs(cellOutputs: readonly NotebookCellOutput[]): nbformat.IOutput[] {
-    return cellOutputs.map(translateCellDisplayOutput);
-}
-
-export async function clearCellForExecution(editor: NotebookEditor, cell: NotebookCell) {
-    await chainWithPendingUpdates(editor.document, (edit) => {
+export async function clearCellForExecution(cell: NotebookCell) {
+    await chainWithPendingUpdates(cell.notebook, (edit) => {
         const metadata = cell.metadata.with({
             statusMessage: undefined,
             executionOrder: null,
             lastRunDuration: null,
             runStartTime: null
         });
-        edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
-        edit.replaceNotebookCellOutput(editor.document.uri, cell.index, []);
+        edit.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, metadata);
+        edit.replaceNotebookCellOutput(cell.notebook.uri, cell.index, []);
     });
-    await updateCellExecutionTimes(editor, cell);
+    await updateCellExecutionTimes(cell);
 }
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
@@ -391,7 +383,6 @@ export function traceCellMessage(cell: NotebookCell, message: string) {
  * Stored as ISO for portability.
  */
 export async function updateCellExecutionTimes(
-    editor: NotebookEditor,
     cell: NotebookCell,
     times?: { startTime?: number; lastRunDuration?: number }
 ) {
@@ -399,10 +390,10 @@ export async function updateCellExecutionTimes(
         return;
     }
     const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
-    await chainWithPendingUpdates(editor.document, (edit) => {
+    await chainWithPendingUpdates(cell.notebook, (edit) => {
         traceCellMessage(cell, 'Update run duration');
         const metadata = cell.metadata.with({ lastRunDuration });
-        edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
+        edit.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, metadata);
     });
 }
 
@@ -628,7 +619,7 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
     };
 }
 
-function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
+export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
     const customMetadata = output.metadata as CellOutputMetadata | undefined;
     let result: JupyterOutput;
     // Possible some other extension added some output (do best effort to translate & save in ipynb).

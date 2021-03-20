@@ -4,9 +4,9 @@
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { inject, injectable } from 'inversify';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { IPythonExtensionChecker } from '../../api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { noop } from '../../common/utils/misc';
-import { IDisposableRegistry, IExtensions } from '../../common/types';
+import { IDisposableRegistry } from '../../common/types';
 
 @injectable()
 export class InterpreterCountTracker implements IExtensionSingleActivationService {
@@ -16,23 +16,23 @@ export class InterpreterCountTracker implements IExtensionSingleActivationServic
         return InterpreterCountTracker.interpreterCount;
     }
     constructor(
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IPythonApiProvider) private pythonApi: IPythonApiProvider,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
     public async activate() {
-        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
-            this.extensions.onDidChange(this.trackInterpreters, this, this.disposables);
-            return;
+        if (this.pythonExtensionChecker.isPythonExtensionActive) {
+            this.trackInterpreters();
+        } else {
+            this.pythonApi.onDidActivatePythonExtension(this.trackInterpreters, this, this.disposables);
         }
-        this.trackInterpreters();
     }
     private trackInterpreters() {
         if (this.interpretersTracked) {
             return;
         }
-        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
+        if (!this.pythonExtensionChecker.isPythonExtensionActive) {
             return;
         }
         this.interpretersTracked = true;

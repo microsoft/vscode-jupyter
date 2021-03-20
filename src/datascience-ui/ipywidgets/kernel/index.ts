@@ -11,6 +11,7 @@ import { SharedMessages } from '../../../client/datascience/messages';
 import { PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
+
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
     private readonly scriptManager: ScriptManager;
@@ -206,41 +207,14 @@ function initialize() {
 function convertVSCodeOutputToExecutResultOrDisplayData(
     request: NotebookOutputEventParams
 ): nbformat.IExecuteResult | nbformat.IDisplayData {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const metadata: Record<string, any> = {};
-    // Send metadata only for the mimeType we are interested in.
-    const customMetadata = request.output.metadata?.custom;
-    if (customMetadata) {
-        // Support for Old API
-        if (customMetadata[request.mimeType]) {
-            metadata[request.mimeType] = customMetadata[request.mimeType];
-        }
-        if (customMetadata.needs_background) {
-            metadata.needs_background = customMetadata.needs_background;
-        }
-        if (customMetadata.unconfined) {
-            metadata.unconfined = customMetadata.unconfined;
-        }
-    } else {
-        // New API.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const outputMetadata = request.output.metadata as Record<string, any> | undefined;
-        if (outputMetadata && outputMetadata[request.mimeType] && outputMetadata[request.mimeType].metadata) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            Object.assign(metadata, outputMetadata[request.mimeType].metadata);
-            if (request.mimeType in outputMetadata[request.mimeType].metadata) {
-                Object.assign(metadata, outputMetadata[request.mimeType].metadata[request.mimeType]);
-            }
-        }
-    }
-
+    // New API
     return {
         data: {
-            [request.mimeType]: request.output.data[request.mimeType]
+            [request.mime]: request.value
         },
-        metadata,
+        metadata: request.metadata || {},
         execution_count: null,
-        output_type: request.output.metadata?.custom?.vscode?.outputType || 'execute_result'
+        output_type: request.metadata?.outputType || 'execute_result'
     };
 }
 

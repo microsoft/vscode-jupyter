@@ -36,6 +36,7 @@ import { activateComponents } from './extensionActivation';
 import { initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
+import { noop } from './common/utils/misc';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -49,24 +50,36 @@ let activatedServiceContainer: IServiceContainer | undefined;
 // public functions
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
-    let api: IExtensionApi;
-    let ready: Promise<void>;
-    let serviceContainer: IServiceContainer;
     try {
+        let api: IExtensionApi;
+        let ready: Promise<void>;
+        let serviceContainer: IServiceContainer;
         [api, ready, serviceContainer] = await activateUnsafe(context, stopWatch, durations);
+        // Send the "success" telemetry only if activation did not fail.
+        // Otherwise Telemetry is send via the error handler.
+        sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
+            // Run in the background.
+            .ignoreErrors();
+        await ready;
+        return api;
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
         await handleError(ex, durations);
-        throw ex; // re-raise
+        traceError('Failed to active the Jupyter Extension', ex);
+        // Disable this, as we don't want Python extension or any other extensions that depend on this to fall over.
+        // Return a dummy object, to ensure other extension do not fall over.
+        return {
+            createBlankNotebook: () => Promise.resolve(),
+            onKernelStateChange: () => ({ dispose: noop }),
+            ready: Promise.resolve(),
+            registerCellToolbarButton: () => ({ dispose: noop }),
+            registerNewNotebookContent: () => Promise.resolve(),
+            registerPythonApi: noop,
+            registerRemoteServerProvider: noop,
+            showDataViewer: () => Promise.resolve()
+        };
     }
-    // Send the "success" telemetry only if activation did not fail.
-    // Otherwise Telemetry is send via the error handler.
-    sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
-        // Run in the background.
-        .ignoreErrors();
-    await ready;
-    return api;
 }
 
 export function deactivate(): Thenable<void> {
@@ -114,7 +127,7 @@ async function activateUnsafe(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function displayProgress(promise: Promise<any>) {
     const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
-    window.withProgress(progressOptions, () => promise);
+    window.withProgress(progressOptions, () => promise).then(noop, noop);
 }
 
 /////////////////////////////

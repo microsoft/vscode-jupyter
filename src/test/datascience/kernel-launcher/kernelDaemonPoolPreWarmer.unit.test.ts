@@ -39,6 +39,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
         when(experimentService.inExperiment(anything())).thenResolve(true);
         extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        when(extensionChecker.isPythonExtensionActive).thenReturn(true);
 
         // Set up our config settings
         settings = mock(JupyterSettings);

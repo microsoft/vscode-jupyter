@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookKernel as VSCNotebookKernel } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IPythonInstaller, IPythonExtensionChecker } from '../../api/types';
+import { IPythonInstaller, IPythonExtensionChecker, IPythonApiProvider } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { InterpreterUri } from '../../common/installer/types';
 import { IExtensions, IDisposableRegistry, Product, IConfigurationService } from '../../common/types';
@@ -25,6 +25,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {}
     public async activate(): Promise<void> {
@@ -36,6 +37,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         this.installer.onInstalled(this.onDidInstallPackage, this, this.disposables);
         this.extensions.onDidChange(this.trackUponActivation, this, this.disposables);
         this.trackUponActivation().catch(noop);
+        this.apiProvider.onDidActivatePythonExtension(this.trackUponActivation, this, this.disposables);
     }
     private async onDidChangeActiveNotebookKernel({ kernel }: { kernel: VSCNotebookKernel | undefined }) {
         if (!kernel || !isJupyterKernel(kernel) || !kernel.selection.interpreter) {
@@ -47,14 +49,14 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         if (this.activeInterpreterTrackedUponActivation) {
             return;
         }
-        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
+        if (!this.pythonExtensionChecker.isPythonExtensionActive) {
             return;
         }
         this.activeInterpreterTrackedUponActivation = true;
         await this.trackPackagesOfActiveInterpreter();
     }
     private async trackPackagesOfActiveInterpreter() {
-        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
+        if (!this.pythonExtensionChecker.isPythonExtensionActive) {
             return;
         }
         // Get details of active interpreter.
@@ -65,7 +67,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         await this.packages.trackPackages(activeInterpreter);
     }
     private async onDidInstallPackage(args: { product: Product; resource?: InterpreterUri }) {
-        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
+        if (!this.pythonExtensionChecker.isPythonExtensionActive) {
             return;
         }
         if (isResource(args.resource)) {
