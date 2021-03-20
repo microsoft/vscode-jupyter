@@ -43,7 +43,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
             const [args, parse] = internalScripts.normalizeSelection();
             const observable = processService.execObservable(interpreter?.path || 'python', args, {
-                throwOnStdErr: true,
+                throwOnStdErr: true
             });
             const normalizeOutput = createDeferred<string>();
 
@@ -57,7 +57,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 },
                 complete: () => {
                     normalizeOutput.resolve(normalized);
-                },
+                }
             });
 
             // The normalization script expects a serialized JSON object, with the selection under the "code" key.
@@ -155,7 +155,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
         const fullTextRange = new Range(
             new Position(selection.start.line, 0),
-            new Position(selection.end.line, textEditor.document.lineAt(selection.end.line).text.length),
+            new Position(selection.end.line, textEditor.document.lineAt(selection.end.line).text.length)
         );
         const fullText = textEditor.document.getText(fullTextRange);
 
@@ -183,7 +183,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         const fullStartLineText = textEditor.document.lineAt(selection.start.line).text;
         const selectionFirstLineRange = new Range(
             selection.start,
-            new Position(selection.start.line, fullStartLineText.length),
+            new Position(selection.start.line, fullStartLineText.length)
         );
         const selectionFirstLineText = textEditor.document.getText(selectionFirstLineRange);
 
