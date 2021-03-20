@@ -723,7 +723,6 @@ module.exports = {
         'src/client/common/process/processFactory.ts',
         'src/client/common/process/serviceRegistry.ts',
         'src/client/common/process/pythonToolService.ts',
-        'src/client/common/process/internal/python.ts',
         'src/client/common/process/internal/scripts/testing_tools.ts',
         'src/client/common/process/internal/scripts/vscode_datascience_helpers.ts',
         'src/client/common/process/pythonDaemonPool.ts',
