@@ -79,6 +79,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['notebook.execute']: [];
     ['notebook.cell.execute']: [];
     ['notebook.cell.insertCodeCellBelow']: [];
+    ['notebook.cell.executeAndInsertBelow']: [];
+    ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.undo']: [];
     ['notebook.redo']: [];
     ['vscode.open']: [Uri];

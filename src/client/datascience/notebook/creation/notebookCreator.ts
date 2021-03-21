@@ -8,7 +8,7 @@ import { JVSC_EXTENSION_DisplayName, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '
 import { DataScience } from '../../../common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry, VSCodeNotebookProvider } from '../../constants';
-import { INotebookEditorProvider } from '../../types';
+import { INotebookEditor, INotebookEditorProvider } from '../../types';
 import { CreationOptionService } from './creationOptionsService';
 
 @injectable()
@@ -19,10 +19,9 @@ export class NotebookCreator {
         @inject(CreationOptionService) private readonly creationOptionsService: CreationOptionService
     ) {}
 
-    public async createNewNotebook() {
+    public async createNewNotebook(): Promise<INotebookEditor | undefined> {
         if (this.creationOptionsService.registrations.length === 0) {
-            await this.editorProvider.createNew();
-            return;
+            return await this.editorProvider.createNew();
         }
 
         const items: (QuickPickItem & {
@@ -52,7 +51,7 @@ export class NotebookCreator {
         });
         sendTelemetryEvent(Telemetry.OpenNotebookSelection, undefined, { extensionId: item?.extensionId });
         if (item) {
-            await this.editorProvider.createNew({ defaultCellLanguage: item.defaultCellLanguage });
+            return await this.editorProvider.createNew({ defaultCellLanguage: item.defaultCellLanguage });
         }
     }
 }

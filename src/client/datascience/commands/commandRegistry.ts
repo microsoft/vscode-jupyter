@@ -6,7 +6,7 @@
 import { inject, injectable, multiInject, named, optional } from 'inversify';
 import * as uuid from 'uuid';
 import * as path from 'path';
-import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
+import { CodeLens, ConfigurationTarget, env, NotebookCell, Range, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
@@ -33,6 +33,7 @@ import {
     IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
+    INotebookEditor,
     INotebookEditorProvider,
     INotebookProvider
 } from '../types';
@@ -40,6 +41,7 @@ import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { ExportCommands } from './exportCommands';
 import { NotebookCommands } from './notebookCommands';
 import { JupyterServerSelectorCommand } from './serverSelector';
+import { updateCellCode } from '../notebook/helpers/executionHelpers';
 
 @injectable()
 export class CommandRegistry implements IDisposable {
@@ -461,11 +463,11 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async createNewNotebook(): Promise<void> {
+    private async createNewNotebook(): Promise<INotebookEditor | undefined> {
         if (this.useNativeNotebook) {
-            await this.nativeNotebookCreator.createNewNotebook();
+            return await this.nativeNotebookCreator.createNewNotebook();
         } else {
-            await this.notebookEditorProvider.createNew();
+            return await this.notebookEditorProvider.createNew();
         }
     }
 
@@ -512,36 +514,32 @@ export class CommandRegistry implements IDisposable {
     }
     private async importFileAsDataFrame(file?: Uri) {
         if (file && file.fsPath && file.fsPath.length > 0) {
-            // Create kernel
-            const notebook = await this.notebookProvider.getOrCreateNotebook({
-                identity: file,
-                resource: file,
-                disableUI: true
-            });
-            const code = getImportCodeForFileType(file.fsPath);
-
-            // Do a notebook.execute with the import code
-            const results = await notebook?.execute(
-                code,
-                file.fsPath,
-                0,
-                uuid(),
-                undefined,
-                true);
-
-            // Open data viewer for this variable
-            const jupyterVariable = await this.kernelVariableProvider.getFullVariable({ name: 'df', value: '', supportsDataExplorer: true, type: 'DataFrame', size: 0, shape: '', count: 0, truncated: true }, notebook);
-            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
-                jupyterVariable
-            );
-            jupyterVariableDataProvider.setDependencies(jupyterVariable, notebook);
-            const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
-            const columnSize = dataFrameInfo?.columns?.length;
-            if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
-                const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
-                await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
-                sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
+            // Create notebook
+            const notebookEditor = await this.createNewNotebook();
+            if (!notebookEditor) {
+                return;
             }
+            // Add code cell to import dataframe
+            const blankCell = (notebookEditor as any).document.cells[0] as NotebookCell;
+            const code = getImportCodeForFileType(file.fsPath);
+            await updateCellCode(blankCell, code);
+            // Run the cells
+            this.commandManager.executeCommand('notebook.cell.executeAndInsertBelow').then(async () => {
+                await this.commandManager.executeCommand('jupyter.openVariableView');
+                // Open data viewer for this variable
+                const jupyterVariable = await this.kernelVariableProvider.getFullVariable({ name: 'df', value: '', supportsDataExplorer: true, type: 'DataFrame', size: 0, shape: '', count: 0, truncated: true }, notebookEditor.notebook);
+                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
+                    jupyterVariable
+                );
+                jupyterVariableDataProvider.setDependencies(jupyterVariable, notebookEditor.notebook);
+                const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
+                const columnSize = dataFrameInfo?.columns?.length;
+                if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
+                    const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
+                    await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
+                    sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
+                }
+            })
         }
     }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {

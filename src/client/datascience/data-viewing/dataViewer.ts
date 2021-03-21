@@ -6,9 +6,9 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { EventEmitter, Memento, ViewColumn } from 'vscode';
+import { EventEmitter, Memento, NotebookCell, ViewColumn } from 'vscode';
 
-import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import {
@@ -25,7 +25,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
-import { ICodeCssGenerator, IInteractiveWindowProvider, IJupyterVariableDataProvider, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import { ICodeCssGenerator, IInteractiveWindowProvider, IJupyterVariableDataProvider, INotebookEditorProvider, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
@@ -39,6 +39,7 @@ import {
 } from './types';
 import { Experiments } from '../../common/experiments/groups';
 import { isValidSliceExpression, preselectedSliceExpression } from '../../../datascience-ui/data-explorer/helpers';
+import { addNewCellAfter, updateCellCode } from '../notebook/helpers/executionHelpers';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
@@ -75,7 +76,9 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(ICommandManager) private commandManager: ICommandManager,
+        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
     ) {
         super(
             configuration,
@@ -297,6 +300,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private async handleCommand(payload: { command: string, args: any }) {
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
         let result;
+        let code = ''
+        const matchingNotebookEditor = this.notebookEditorProvider.editors.find((editor) => editor.notebook?.identity.fsPath === notebook?.identity.fsPath);
         switch (payload.command) {
             case 'open_interactive_window':
                 await this.interactiveWindowProvider.getOrCreate(notebook?.resource, notebook);
@@ -305,19 +310,27 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 result = await notebook?.execute('df.to_csv("./cleaned.csv", index=False)', '', 0, uuid());
                 break;
             case 'rename':
-                result = await notebook?.execute(`df = df.rename(columns={ "${payload.args.old}": "${payload.args.new}" })`, '', 0, uuid());
-                this.refreshData();
+                code = `df = df.rename(columns={ "${payload.args.old}": "${payload.args.new}" })`;
                 break;
             case 'drop':
                 const labels = payload.args.targets as string[];
-                result = await notebook?.execute(`df = df.drop(columns=${'['+  labels.map((label) => `"${label}"`).join(',')  +']'})`, '', 0, uuid());
-                this.refreshData();
+                code = `df = df.drop(columns=${'['+  labels.map((label) => `"${label}"`).join(',')  +']'})`;
                 break;
             case 'fillna':
                 const { newValue } = payload.args;
-                result = await notebook?.execute(`df = df.fillna(${newValue})`, '', 0, uuid());
-                this.refreshData();
-                break;
+                code = `df = df.fillna(${newValue})`;
+        }
+        if (code && matchingNotebookEditor) {
+            const cells = (matchingNotebookEditor as any).document.cells;
+            const lastCell = cells[cells.length - 1] as NotebookCell;
+            await updateCellCode(lastCell, code);
+            await addNewCellAfter(lastCell, '');
+            matchingNotebookEditor.onExecutedCode(async (c) => {
+                if (c === code) {
+                    await this.refreshData();
+                }
+            });
+            await this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow');
         }
     }
 }
