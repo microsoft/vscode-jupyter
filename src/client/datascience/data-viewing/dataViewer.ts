@@ -322,6 +322,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             case 'pyplot.hist':
                 code = `import matplotlib.pyplot as plt\nplt.hist(df["${payload.args.target}"])`;
                 break;
+            case 'normalize':
+                const { start, end, target } = payload.args; 
+                code = `from sklearn.preprocessing import MinMaxScaler\nscaler = MinMaxScaler(feature_range=(${start}, ${end}))\ndf["${target}"] = scaler.fit_transform(df["${target}"].values.reshape(-1, 1))`;
+                break;
             case 'fillna':
                 const { newValue } = payload.args;
                 code = `df = df.fillna(${newValue})`;
@@ -332,9 +336,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             await updateCellCode(lastCell, code);
             await addNewCellAfter(lastCell, '');
             matchingNotebookEditor.onExecutedCode(async (c) => {
-                if (c === code) {
-                    await this.refreshData();
-                }
+                await this.refreshData();
             });
             await this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow');
         }
