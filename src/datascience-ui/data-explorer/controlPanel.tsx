@@ -78,12 +78,13 @@ interface IControlPanelState {
     columnsToDrop: number[]; // Indices
     fillNaReplacement: string | undefined;
     fillNaTargets: number[];
+    dropNaTarget: number;
 }
 
 export class ControlPanel extends React.Component<IControlPanelProps, IControlPanelState> {
 	constructor(props: IControlPanelProps) {
 		super(props);
-        this.state = { columnRenameTargetKey: 1, newColumnName: '', columnsToDrop: [], fillNaReplacement: '', fillNaTargets: [] };
+        this.state = { columnRenameTargetKey: 1, newColumnName: '', columnsToDrop: [], fillNaReplacement: '', fillNaTargets: [], dropNaTarget: 0 };
 	}
 
 	render() {
@@ -140,7 +141,7 @@ export class ControlPanel extends React.Component<IControlPanelProps, IControlPa
 						<Dropdown
 							responsiveMode={ResponsiveMode.xxxLarge}
 							label={'Column(s) to drop:'}
-							style={{ marginRight: '10px', width: '200px' }}
+							style={{ marginRight: '10px', width: '150px' }}
 							styles={dropdownStyles}
                             multiSelect
 							options={this.generateColumnRenameOptions()}
@@ -185,7 +186,7 @@ export class ControlPanel extends React.Component<IControlPanelProps, IControlPa
 				<details className="slicing-control" style={{ borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)', paddingTop: '4px', paddingBottom: '4px'}}>
                     <summary className="slice-summary">
                         <span className="slice-summary-detail">
-                            {'FILL MISSING VALUES'}
+                            {'HANDLE MISSING VALUES'}
                         </span>
                     </summary>
                         <div className="slice-control-row slice-form-container" style={{ paddingBottom: '5px' }}>
@@ -199,9 +200,9 @@ export class ControlPanel extends React.Component<IControlPanelProps, IControlPa
 							className="dropdownTitleOverrides" 
 							onChange={this.updateFillNaTargets}
 						/> */}
-                        <div style={{ /* paddingLeft: '10px', */ display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px' }} >
+                        {/* <div style={{ display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px' }} >
 							<span>
-								{'New value:'}
+								{'Replace null with:'}
 							</span>
 							<input
 								value={this.state.fillNaReplacement ?? '0'}
@@ -210,8 +211,62 @@ export class ControlPanel extends React.Component<IControlPanelProps, IControlPa
                                 style={{ width: '100px', marginTop: '4px', marginBottom: '4px' }}
 								autoComplete="on"
 							/>
+						</div> */}
+                        {/* <button onClick={() => this.props.submitCommand({ command: 'fillna', args: { newValue: this.state.fillNaReplacement, targets: this.state.fillNaTargets.map((v) => this.props.headers[v as number]).filter((v) => !!v) } })} style={{ width: '70px', backgroundColor: 'var(--vscode-button-background)', color: 'var(--vscode-button-foreground)', margin: '4px', padding: '4px',border: 'none', cursor: 'pointer', height: '26px', marginTop: '27px', marginLeft: '20px'  }}>Replace</button> */}
+                        <div style={{ /* paddingLeft: '10px', */ display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px' }} >
+                            <Dropdown
+                                responsiveMode={ResponsiveMode.xxxLarge}
+                                label={'Drop:'}
+                                style={{ marginRight: '10px' }}
+                                styles={dropdownStyles}
+                                options={this.generateDropNaOptions()}
+                                className="dropdownTitleOverrides"
+                                onChange={this.updateDropNaTarget}
+                            />
 						</div>
-                        <button onClick={() => this.props.submitCommand({ command: 'fillna', args: { newValue: this.state.fillNaReplacement, targets: this.state.fillNaTargets.map((v) => this.props.headers[v as number]).filter((v) => !!v) } })} style={{ backgroundColor: 'var(--vscode-button-background)', color: 'var(--vscode-button-foreground)', margin: '4px', padding: '4px',border: 'none', cursor: 'pointer', height: '26px', marginTop: '27px', marginLeft: '20px'  }}>Replace</button>
+                        <button onClick={() => this.props.submitCommand({ command: 'dropna', args: { target: this.state.dropNaTarget }})} style={{ width: '50px', backgroundColor: 'var(--vscode-button-background)', color: 'var(--vscode-button-foreground)', margin: '0px', padding: '4px',border: 'none', cursor: 'pointer', height: '26px', marginTop: '32px'  }}>Drop</button>
+                    </div>
+                </details>
+				<details className="slicing-control" style={{ borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)', paddingTop: '4px', paddingBottom: '4px'}}>
+                    <summary className="slice-summary">
+                        <span className="slice-summary-detail">
+                            {'PLOT HISTOGRAM'}
+                        </span>
+                    </summary>
+						{/* <Dropdown
+							responsiveMode={ResponsiveMode.xxxLarge}
+							label={'Columns to fill:'}
+							style={{ marginRight: '10px' }}
+							styles={dropdownStyles}
+                            multiSelect
+							options={this.generateColumnRenameOptions()}
+							className="dropdownTitleOverrides" 
+							onChange={this.updateFillNaTargets}
+						/> */}
+                        {/* <div style={{ display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px' }} >
+							<span>
+								{'Replace null with:'}
+							</span>
+							<input
+								value={this.state.fillNaReplacement ?? '0'}
+								onChange={this.handleFillNaReplacement}
+								className={'slice-data'}
+                                style={{ width: '100px', marginTop: '4px', marginBottom: '4px' }}
+								autoComplete="on"
+							/>
+						</div> */}
+                        {/* <button onClick={() => this.props.submitCommand({ command: 'fillna', args: { newValue: this.state.fillNaReplacement, targets: this.state.fillNaTargets.map((v) => this.props.headers[v as number]).filter((v) => !!v) } })} style={{ width: '70px', backgroundColor: 'var(--vscode-button-background)', color: 'var(--vscode-button-foreground)', margin: '4px', padding: '4px',border: 'none', cursor: 'pointer', height: '26px', marginTop: '27px', marginLeft: '20px'  }}>Replace</button> */}
+                        <div className="slice-control-row slice-form-container" style={{ paddingBottom: '5px' }}>
+						<Dropdown
+							responsiveMode={ResponsiveMode.xxxLarge}
+							label={'Target column:'}
+							style={{ marginRight: '10px', width: '150px' }}
+							styles={dropdownStyles}
+							options={this.generateColumnRenameOptions()}
+							className="dropdownTitleOverrides"
+							onChange={this.updateRenameTarget}
+						/>
+                        <button onClick={() => this.props.submitCommand({ command: 'pyplot.hist', args: { target: this.generateColumnRenameOptions()[this.state.columnRenameTargetKey!].text } })} style={{ backgroundColor: 'var(--vscode-button-background)', color: 'var(--vscode-button-foreground)', margin: '4px', padding: '4px',border: 'none', cursor: 'pointer', height: '26px', marginTop: '27px', marginLeft: '0px'  }}>Plot</button>
                     </div>
                 </details>
 				{/* <details className="slicing-control" style={{ borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)', paddingTop: '4px', paddingBottom: '4px'}}>
@@ -295,4 +350,14 @@ export class ControlPanel extends React.Component<IControlPanelProps, IControlPa
         console.log('column rename options', result);
 		return result;
 	}
+
+    private generateDropNaOptions() {
+        return [{ key: 0, text: 'Rows' }, { key: 1, text: 'Columns' }]
+    }
+
+    private updateDropNaTarget = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
+        if (item) {
+            this.setState({ dropNaTarget: item.key as number });
+        }
+    }
 }

@@ -316,6 +316,12 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 const labels = payload.args.targets as string[];
                 code = `df = df.drop(columns=${'['+  labels.map((label) => `"${label}"`).join(',')  +']'})`;
                 break;
+            case 'dropna':
+                code = `df = df.dropna(axis=${payload.args.target})`;
+                break;
+            case 'pyplot.hist':
+                code = `import matplotlib.pyplot as plt\nplt.hist(df["${payload.args.target}"])`;
+                break;
             case 'fillna':
                 const { newValue } = payload.args;
                 code = `df = df.fillna(${newValue})`;
