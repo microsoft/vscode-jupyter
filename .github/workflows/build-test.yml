@@ -1066,9 +1066,8 @@ jobs:
         with:
           name: ${{needs.pick_environment.outputs.vsix_name}}
 
-    #   - name: Publish
-    #     run: vsce publish --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
-
+      - name: Publish
+        run: vsce publish --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
 
       - name: Extract Extension
         if: needs.pick_environment.outputs.release_channel == 'stable'
