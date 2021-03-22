@@ -359,7 +359,7 @@ export class CellExecution {
         traceCellMessage(this.cell, 'Completed due to cancellation');
         if (!this.cell.document.isClosed) {
             await chainWithPendingUpdates(this.cell.notebook, (edit) => {
-                traceCellMessage(this.cell, 'Update cell statue as idle and message as empty');
+                traceCellMessage(this.cell, 'Update cell status as idle and message as empty');
                 const metadata = this.cell.metadata.with({ statusMessage: '' });
                 edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
             });
@@ -853,10 +853,20 @@ export class CellExecution {
                 if (outputToBeUpdated.outputs.length === 0 && newOutput.outputs.length === 0) {
                     return;
                 }
-                // Compare outputs (at the end of the day everything is serializable).
+                // Compare each output item (at the end of the day everything is serializable).
                 // Hence this is a safe comparison.
-                if (cell.outputs.length === newOutput.outputs.length && fastDeepEqual(cell.outputs, newOutput)) {
-                    return;
+                if (outputToBeUpdated.outputs.length === newOutput.outputs.length) {
+                    let allAllOutputItemsSame = true;
+                    for (let index = 0; index < cell.outputs.length; index++) {
+                        if (!fastDeepEqual(outputToBeUpdated.outputs[index], newOutput.outputs[index])) {
+                            allAllOutputItemsSame = false;
+                            break;
+                        }
+                    }
+                    if (allAllOutputItemsSame) {
+                        // If everything is still the same, then there's nothing to update.
+                        return;
+                    }
                 }
                 // Possible execution of cell has completed (the task would have been disposed).
                 // This message could have come from a background thread.
