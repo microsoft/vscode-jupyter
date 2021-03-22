@@ -586,13 +586,15 @@ export class CellExecution {
             // This message could have come from a background thread.
             // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
             const task = this.task || this.createTemporaryTask();
-            const promise = await task?.appendOutput([converted]);
+            const promise = task?.appendOutput([converted]);
             this.endTemporaryTask();
             // await on the promise at the end, we want to minimize UI flickers.
             // The way we update output of other cells is to use an existing task or a temporary task.
             // When using temporary tasks, we end up updating the UI with no execution order and spinning icons.
             // Doing this causes UI updates, removing the awaits will enure there's no time for ui updates.
-            await promise;
+            if (promise) {
+                await promise;
+            }
         });
     }
 
@@ -867,7 +869,9 @@ export class CellExecution {
                 // When using temporary tasks, we end up updating the UI with no execution order and spinning icons.
                 // Doing this causes UI updates, removing the awaits will enure there's no time for ui updates.
                 // I.e. create cell task, perform update, and end cell task (no awaits in between).
-                await promise;
+                if (promise) {
+                    await promise;
+                }
             }
         }
     }
