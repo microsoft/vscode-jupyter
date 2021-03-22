@@ -653,29 +653,25 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         const expectedOutput = [
             {
                 metadata: {
-                    outputType: 'stream',
-                    streamName: 'stdout'
+                    outputType: 'stream'
                 },
                 text: '12'
             },
             {
                 metadata: {
-                    outputType: 'stream',
-                    streamName: 'stderr'
+                    outputType: 'stream'
                 },
                 text: 'ab'
             },
             {
                 metadata: {
-                    outputType: 'stream',
-                    streamName: 'stdout'
+                    outputType: 'stream'
                 },
                 text: '3'
             },
             {
                 metadata: {
-                    outputType: 'stream',
-                    streamName: 'stderr'
+                    outputType: 'stream'
                 },
                 text: 'c'
             }

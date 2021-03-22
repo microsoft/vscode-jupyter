@@ -112,25 +112,21 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 [
                     new NotebookCellOutput(
                         [
-                            new NotebookCellOutputItem(CellOutputMimeTypes.textStream, 'Error', {
-                                streamName: 'stderr',
+                            new NotebookCellOutputItem(CellOutputMimeTypes.stderr, 'Error', {
                                 outputType: 'stream'
                             })
                         ],
                         {
-                            streamName: 'stderr',
                             outputType: 'stream'
                         }
                     ),
                     new NotebookCellOutput(
                         [
-                            new NotebookCellOutputItem(CellOutputMimeTypes.textStream, 'NoError', {
-                                streamName: 'stdout',
+                            new NotebookCellOutputItem(CellOutputMimeTypes.stdout, 'NoError', {
                                 outputType: 'stream'
                             })
                         ],
                         {
-                            streamName: 'stdout',
                             outputType: 'stream'
                         }
                     )
@@ -150,16 +146,14 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     new NotebookCellOutput(
                         [
                             new NotebookCellOutputItem(
-                                CellOutputMimeTypes.textStream,
+                                CellOutputMimeTypes.stderr,
                                 '\u001b[K\u001b[33m✅ \u001b[0m Loading\n',
                                 {
-                                    streamName: 'stderr',
                                     outputType: 'stream'
                                 }
                             )
                         ],
                         {
-                            streamName: 'stderr',
                             outputType: 'stream'
                         }
                     )
@@ -178,13 +172,11 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 [
                     new NotebookCellOutput(
                         [
-                            new NotebookCellOutputItem(CellOutputMimeTypes.textStream, '1 is < 2', {
-                                streamName: 'stderr',
+                            new NotebookCellOutputItem(CellOutputMimeTypes.stderr, '1 is < 2', {
                                 outputType: 'stream'
                             })
                         ],
                         {
-                            streamName: 'stderr',
                             outputType: 'stream'
                         }
                     )
@@ -204,16 +196,14 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     new NotebookCellOutput(
                         [
                             new NotebookCellOutputItem(
-                                CellOutputMimeTypes.textStream,
+                                CellOutputMimeTypes.stderr,
                                 '1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n',
                                 {
-                                    streamName: 'stderr',
                                     outputType: 'stream'
                                 }
                             )
                         ],
                         {
-                            streamName: 'stderr',
                             outputType: 'stream'
                         }
                     )
