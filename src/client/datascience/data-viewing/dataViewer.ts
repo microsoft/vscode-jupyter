@@ -8,7 +8,12 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { EventEmitter, Memento, NotebookCell, ViewColumn } from 'vscode';
 
-import { IApplicationShell, ICommandManager, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IWebviewPanelProvider,
+    IWorkspaceService
+} from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import {
@@ -25,7 +30,14 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
-import { ICodeCssGenerator, IInteractiveWindowProvider, IJupyterVariableDataProvider, INotebookEditorProvider, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import {
+    ICodeCssGenerator,
+    IInteractiveWindowProvider,
+    IJupyterVariableDataProvider,
+    INotebookEditorProvider,
+    IThemeFinder,
+    WebViewViewChangeEventArgs
+} from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
@@ -297,11 +309,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         }
     }
 
-    private async handleCommand(payload: { command: string, args: any }) {
+    private async handleCommand(payload: { command: string; args: any }) {
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
         let result;
-        let code = ''
-        const matchingNotebookEditor = this.notebookEditorProvider.editors.find((editor) => editor.notebook?.identity.fsPath === notebook?.identity.fsPath);
+        let code = '';
+        const matchingNotebookEditor = this.notebookEditorProvider.editors.find(
+            (editor) => editor.notebook?.identity.fsPath === notebook?.identity.fsPath
+        );
         switch (payload.command) {
             case 'open_interactive_window':
                 await this.interactiveWindowProvider.getOrCreate(notebook?.resource, notebook);
@@ -314,7 +328,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 break;
             case 'drop':
                 const labels = payload.args.targets as string[];
-                code = `df = df.drop(columns=${'['+  labels.map((label) => `"${label}"`).join(',')  +']'})`;
+                code = `df = df.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(',') + ']'})`;
                 break;
             case 'dropna':
                 code = `df = df.dropna(axis=${payload.args.target})`;
@@ -323,7 +337,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 code = `import matplotlib.pyplot as plt\nplt.hist(df["${payload.args.target}"])`;
                 break;
             case 'normalize':
-                const { start, end, target } = payload.args; 
+                const { start, end, target } = payload.args;
                 code = `from sklearn.preprocessing import MinMaxScaler\nscaler = MinMaxScaler(feature_range=(${start}, ${end}))\ndf["${target}"] = scaler.fit_transform(df["${target}"].values.reshape(-1, 1))`;
                 break;
             case 'fillna':
@@ -335,7 +349,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             const lastCell = cells[cells.length - 1] as NotebookCell;
             await updateCellCode(lastCell, code);
             await addNewCellAfter(lastCell, '');
-            matchingNotebookEditor.onExecutedCode(async (c) => {
+            matchingNotebookEditor.onExecutedCode(async () => {
                 await this.refreshData();
             });
             await this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow');

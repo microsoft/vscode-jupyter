@@ -71,7 +71,7 @@ export interface ISlickGridProps {
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
     handleSliceRequest(args: IGetSliceRequest): void;
-    submitCommand(args: { command: string, args: any }): void;
+    submitCommand(args: { command: string; args: any }): void;
 }
 
 interface ISlickGridState {
@@ -312,7 +312,16 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             <div className="outer-container">
                 <div style={{ flexDirection: 'row', display: 'flex' }}>
                     <div className="react-grid-container" style={style} ref={this.containerRef}></div>
-                    <ControlPanel data={this.dataView.getItems()} headers={this.state.grid?.getColumns().map((c) => c.name).filter((c) => c !== undefined) as string[]} submitCommand={this.props.submitCommand} />
+                    <ControlPanel
+                        data={this.dataView.getItems()}
+                        headers={
+                            this.state.grid
+                                ?.getColumns()
+                                .map((c) => c.name)
+                                .filter((c) => c !== undefined) as string[]
+                        }
+                        submitCommand={this.props.submitCommand}
+                    />
                 </div>
                 <div className="react-grid-measure" ref={this.measureRef} />
             </div>

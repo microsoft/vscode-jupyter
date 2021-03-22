@@ -1,43 +1,11 @@
-import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
+import { DropColumnsSection } from './controls/DropColumnSection';
+import { DropMissingValuesSection } from './controls/DropMissingValuesSection';
+import { NormalizeDataSection } from './controls/NormalizeDataSection';
+import { PlotHistogramSection } from './controls/PlotHistogramSection';
+import { RenameColumnsSection } from './controls/RenameColumnsSection';
+import { Toolbar } from './controls/toolbar';
 import { ISlickRow } from './reactSlickGrid';
-
-// These styles are passed to the FluentUI dropdown controls
-const styleOverrides = {
-    color: 'var(--vscode-dropdown-foreground) !important',
-    backgroundColor: 'var(--vscode-dropdown-background) !important',
-    fontFamily: 'var(--vscode-font-family)',
-    fontWeight: 'var(--vscode-font-weight)',
-    fontSize: 'var(--vscode-font-size)',
-    opacity: 1,
-    border: 'var(--vscode-dropdown-border)',
-    ':focus': {
-        color: 'var(--vscode-dropdown-foreground)'
-    },
-    ':active': {
-        color: 'var(--vscode-dropdown-foreground)'
-    },
-    ':hover': {
-        color: 'var(--vscode-dropdown-foreground)',
-        backgroundColor: 'var(--vscode-dropdown-background)'
-    }
-};
-const dropdownStyles = {
-    root: {
-        color: 'var(--vscode-dropdown-foreground) !important'
-    },
-    dropdownItems: {
-        ...styleOverrides,
-        selectors: {
-            '@media(min-width: 300px)': {
-                maxHeight: 100
-            }
-        }
-    },
-    caretDown: {
-        visibility: 'hidden' // Override the FluentUI caret and use ::after selector on the caretDownWrapper in order to match VS Code. See sliceContro.css
-    }
-};
 
 import './sliceControl.css';
 
@@ -47,37 +15,14 @@ interface IControlPanelProps {
     submitCommand(data: { command: string; args: any }): void;
 }
 
-interface IControlPanelState {
-    columnRenameTargetKey: number | undefined;
-    newColumnName: string | undefined;
-    columnsToDrop: number[]; // Indices
-    fillNaReplacement: string | undefined;
-    fillNaTargets: number[];
-    dropNaTarget: number;
-    normalizeTargetKey: number;
-    normalizeRangeStart: number;
-    normalizeRangeEnd: number;
-    histogramColumnKey: number;
-}
-
-export class ControlPanel extends React.Component<IControlPanelProps, IControlPanelState> {
+export class ControlPanel extends React.Component<IControlPanelProps> {
     constructor(props: IControlPanelProps) {
         super(props);
-        this.state = {
-            normalizeTargetKey: 0,
-            normalizeRangeStart: -1,
-            normalizeRangeEnd: 1,
-            columnRenameTargetKey: 1,
-            newColumnName: '',
-            columnsToDrop: [],
-            fillNaReplacement: '',
-            fillNaTargets: [],
-            dropNaTarget: 0,
-            histogramColumnKey: 0
-        };
     }
 
     render() {
+        const columnDropdownOptions = this.generateColumnDropdownOptions();
+
         return (
             <div
                 style={{
@@ -89,29 +34,7 @@ export class ControlPanel extends React.Component<IControlPanelProps, IControlPa
                     backgroundColor: 'var(--vscode-sideBar-background)'
                 }}
             >
-                <div
-                    style={{
-                        borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                        paddingTop: '4px',
-                        paddingBottom: '4px',
-                        paddingLeft: '5px'
-                    }}
-                >
-                    <div
-                        className="codicon codicon-export codicon-button"
-                        onClick={() => this.props.submitCommand({ command: 'export_to_csv', args: null })}
-                        title="Export to CSV"
-                    />
-                    <div className="codicon codicon-go-to-file codicon-button" title="Open in Python Script" />
-                    <div className="codicon codicon-notebook codicon-button" title="Open in Notebook" />
-                    <div
-                        className="codicon codicon-window codicon-button"
-                        onClick={() =>
-                            this.props.submitCommand({ command: 'open_interactive_window', args: undefined })
-                        }
-                        title="Open in Interactive Window"
-                    />
-                </div>
+                <Toolbar submitCommand={this.props.submitCommand} />
                 {/* <details className="slicing-control" style={{ borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)', paddingTop: '4px', paddingBottom: '4px'}}>
 					<summary className="slice-summary">
                         <span className="slice-summary-detail">
@@ -147,324 +70,32 @@ export class ControlPanel extends React.Component<IControlPanelProps, IControlPa
                         autoComplete="on"
                     />
                 </details> */}
-                <details
-                    className="slicing-control"
-                    style={{
-                        borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                        paddingTop: '4px',
-                        paddingBottom: '4px'
-                    }}
-                >
-                    <summary className="slice-summary">
-                        <span className="slice-summary-detail">{'DROP COLUMNS'}</span>
-                    </summary>
-                    <div className="slice-control-row slice-form-container" style={{ paddingBottom: '5px' }}>
-                        <Dropdown
-                            responsiveMode={ResponsiveMode.xxxLarge}
-                            label={'Column(s) to drop:'}
-                            style={{ marginRight: '10px', width: '150px' }}
-                            styles={dropdownStyles}
-                            multiSelect
-                            options={this.generateColumnRenameOptions()}
-                            className="dropdownTitleOverrides"
-                            onChange={this.updateDropTarget}
-                        />
-                        <button
-                            onClick={() =>
-                                this.props.submitCommand({
-                                    command: 'drop',
-                                    args: {
-                                        targets: this.state.columnsToDrop
-                                            .map((v) => this.props.headers[v as number])
-                                            .filter((v) => !!v)
-                                    }
-                                })
-                            }
-                            style={{
-                                backgroundColor: 'var(--vscode-button-background)',
-                                color: 'var(--vscode-button-foreground)',
-                                margin: '4px',
-                                padding: '4px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                height: '26px',
-                                marginTop: '27px',
-                                marginLeft: '0px'
-                            }}
-                        >
-                            Drop
-                        </button>
-                    </div>
-                </details>
-                <details
-                    className="slicing-control"
-                    style={{
-                        borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                        paddingTop: '4px',
-                        paddingBottom: '4px'
-                    }}
-                >
-                    <summary className="slice-summary">
-                        <span className="slice-summary-detail">{'NORMALIZE DATA'}</span>
-                    </summary>
-                    <div className="slice-control-row slice-form-container" style={{ paddingBottom: '5px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px' }}>
-                            <Dropdown
-                                responsiveMode={ResponsiveMode.xxxLarge}
-                                label={'Column to normalize:'}
-                                style={{ marginRight: '10px', width: '150px' }}
-                                styles={dropdownStyles}
-                                options={this.generateColumnRenameOptions()}
-                                className="dropdownTitleOverrides"
-                                onChange={this.updateNormalizeColumnTarget}
-                            />
-                            <span>{'New start range:'}</span>
-                            <input
-                                value={this.state.normalizeRangeStart}
-                                onChange={this.handleNormalizeStartChange}
-                                className={'slice-data'}
-                                style={{ width: '100px', marginTop: '4px', marginBottom: '4px' }}
-                                autoComplete="on"
-                            />
-                            <span>{'New end range:'}</span>
-                            <input
-                                value={this.state.normalizeRangeEnd}
-                                onChange={this.handleNormalizeEndChange}
-                                className={'slice-data'}
-                                style={{ width: '100px', marginTop: '4px', marginBottom: '4px' }}
-                                autoComplete="on"
-                            />
-                            <button
-                                onClick={() =>
-                                    this.props.submitCommand({
-                                        command: 'normalize',
-                                        args: {
-                                            start: this.state.normalizeRangeStart,
-                                            end: this.state.normalizeRangeEnd,
-                                            target: this.generateColumnRenameOptions()[this.state.normalizeTargetKey]
-                                                .text
-                                        }
-                                    })
-                                }
-                                style={{
-                                    backgroundColor: 'var(--vscode-button-background)',
-                                    color: 'var(--vscode-button-foreground)',
-                                    margin: '4px',
-                                    padding: '4px',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    height: '26px',
-                                    marginLeft: '0px'
-                                }}
-                            >
-                                Normalize
-                            </button>
-                        </div>
-                    </div>
-                </details>
-                <details
-                    className="slicing-control"
-                    style={{
-                        borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                        paddingTop: '4px',
-                        paddingBottom: '4px'
-                    }}
-                >
-                    <summary className="slice-summary">
-                        <span className="slice-summary-detail">{'RENAME COLUMNS'}</span>
-                    </summary>
-                    <div className="slice-control-row slice-form-container" style={{ paddingBottom: '5px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px' }}>
-                            <Dropdown
-                                responsiveMode={ResponsiveMode.xxxLarge}
-                                label={'Rename column:'}
-                                style={{ marginRight: '10px', width: '100px' }}
-                                styles={dropdownStyles}
-                                selectedKey={this.state.columnRenameTargetKey}
-                                options={this.generateColumnRenameOptions()}
-                                className="dropdownTitleOverrides"
-                                onChange={this.updateRenameTarget}
-                            />
-                            <span>{'To:'}</span>
-                            <input
-                                value={this.state.newColumnName}
-                                onChange={this.handleChange}
-                                className={'slice-data'}
-                                style={{ width: '100px', marginTop: '4px', marginBottom: '4px' }}
-                                autoComplete="on"
-                            />
-                            <button
-                                onClick={() => {
-                                    if (this.state.newColumnName)
-                                        this.props.submitCommand({
-                                            command: 'rename',
-                                            args: {
-                                                old: this.props.headers[this.state.columnRenameTargetKey!],
-                                                new: this.state.newColumnName
-                                            }
-                                        });
-                                }}
-                                style={{
-                                    backgroundColor: 'var(--vscode-button-background)',
-                                    color: 'var(--vscode-button-foreground)',
-                                    margin: '4px',
-                                    padding: '4px',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    height: '26px'
-                                }}
-                            >
-                                Submit
-                            </button>
-                        </div>
-                    </div>
-                </details>
-                <details
-                    className="slicing-control"
-                    style={{
-                        borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                        paddingTop: '4px',
-                        paddingBottom: '4px'
-                    }}
-                >
-                    <summary className="slice-summary">
-                        <span className="slice-summary-detail">{'HANDLE MISSING VALUES'}</span>
-                    </summary>
-                    <div className="slice-control-row slice-form-container" style={{ paddingBottom: '5px' }}>
-                        {/* <Dropdown
-							responsiveMode={ResponsiveMode.xxxLarge}
-							label={'Columns to fill:'}
-							style={{ marginRight: '10px' }}
-							styles={dropdownStyles}
-                            multiSelect
-							options={this.generateColumnRenameOptions()}
-							className="dropdownTitleOverrides" 
-							onChange={this.updateFillNaTargets}
-						/> */}
-                        {/* <div style={{ display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px' }} >
-							<span>
-								{'Replace null with:'}
-							</span>
-							<input
-								value={this.state.fillNaReplacement ?? '0'}
-								onChange={this.handleFillNaReplacement}
-								className={'slice-data'}
-                                style={{ width: '100px', marginTop: '4px', marginBottom: '4px' }}
-								autoComplete="on"
-							/>
-						</div> */}
-                        {/* <button onClick={() => this.props.submitCommand({ command: 'fillna', args: { newValue: this.state.fillNaReplacement, targets: this.state.fillNaTargets.map((v) => this.props.headers[v as number]).filter((v) => !!v) } })} style={{ width: '70px', backgroundColor: 'var(--vscode-button-background)', color: 'var(--vscode-button-foreground)', margin: '4px', padding: '4px',border: 'none', cursor: 'pointer', height: '26px', marginTop: '27px', marginLeft: '20px'  }}>Replace</button> */}
-                        <div
-                            style={{
-                                /* paddingLeft: '10px', */ display: 'flex',
-                                flexDirection: 'column',
-                                width: '100px',
-                                paddingTop: '6px'
-                            }}
-                        >
-                            <Dropdown
-                                responsiveMode={ResponsiveMode.xxxLarge}
-                                label={'Drop:'}
-                                style={{ marginRight: '10px' }}
-                                styles={dropdownStyles}
-                                options={this.generateDropNaOptions()}
-                                className="dropdownTitleOverrides"
-                                onChange={this.updateDropNaTarget}
-                            />
-                        </div>
-                        <button
-                            onClick={() =>
-                                this.props.submitCommand({
-                                    command: 'dropna',
-                                    args: { target: this.state.dropNaTarget }
-                                })
-                            }
-                            style={{
-                                width: '50px',
-                                backgroundColor: 'var(--vscode-button-background)',
-                                color: 'var(--vscode-button-foreground)',
-                                margin: '0px',
-                                padding: '4px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                height: '26px',
-                                marginTop: '32px'
-                            }}
-                        >
-                            Drop
-                        </button>
-                    </div>
-                </details>
-                <details
-                    className="slicing-control"
-                    style={{
-                        borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                        paddingTop: '4px',
-                        paddingBottom: '4px'
-                    }}
-                >
-                    <summary className="slice-summary">
-                        <span className="slice-summary-detail">{'PLOT HISTOGRAM'}</span>
-                    </summary>
-                    {/* <Dropdown
-							responsiveMode={ResponsiveMode.xxxLarge}
-							label={'Columns to fill:'}
-							style={{ marginRight: '10px' }}
-							styles={dropdownStyles}
-                            multiSelect
-							options={this.generateColumnRenameOptions()}
-							className="dropdownTitleOverrides" 
-							onChange={this.updateFillNaTargets}
-						/> */}
-                    {/* <div style={{ display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px' }} >
-							<span>
-								{'Replace null with:'}
-							</span>
-							<input
-								value={this.state.fillNaReplacement ?? '0'}
-								onChange={this.handleFillNaReplacement}
-								className={'slice-data'}
-                                style={{ width: '100px', marginTop: '4px', marginBottom: '4px' }}
-								autoComplete="on"
-							/>
-						</div> */}
-                    {/* <button onClick={() => this.props.submitCommand({ command: 'fillna', args: { newValue: this.state.fillNaReplacement, targets: this.state.fillNaTargets.map((v) => this.props.headers[v as number]).filter((v) => !!v) } })} style={{ width: '70px', backgroundColor: 'var(--vscode-button-background)', color: 'var(--vscode-button-foreground)', margin: '4px', padding: '4px',border: 'none', cursor: 'pointer', height: '26px', marginTop: '27px', marginLeft: '20px'  }}>Replace</button> */}
-                    <div className="slice-control-row slice-form-container" style={{ paddingBottom: '5px' }}>
-                        <Dropdown
-                            responsiveMode={ResponsiveMode.xxxLarge}
-                            label={'Target column:'}
-                            style={{ marginRight: '10px', width: '150px' }}
-                            styles={dropdownStyles}
-                            options={this.generateColumnRenameOptions()}
-                            className="dropdownTitleOverrides"
-                            onChange={this.updateHistogramTarget}
-                        />
-                        <button
-                            onClick={() =>
-                                this.props.submitCommand({
-                                    command: 'pyplot.hist',
-                                    args: {
-                                        target: this.generateColumnRenameOptions()[this.state.histogramColumnKey!]
-                                            .text
-                                    }
-                                })
-                            }
-                            style={{
-                                backgroundColor: 'var(--vscode-button-background)',
-                                color: 'var(--vscode-button-foreground)',
-                                margin: '4px',
-                                padding: '4px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                height: '26px',
-                                marginTop: '27px',
-                                marginLeft: '0px'
-                            }}
-                        >
-                            Plot
-                        </button>
-                    </div>
-                </details>
+                <DropColumnsSection
+                    submitCommand={this.props.submitCommand}
+                    options={columnDropdownOptions}
+                    headers={this.props.headers}
+                />
+                <NormalizeDataSection
+                    submitCommand={this.props.submitCommand}
+                    options={columnDropdownOptions}
+                    headers={this.props.headers}
+                />
+                <RenameColumnsSection
+                    submitCommand={this.props.submitCommand}
+                    options={columnDropdownOptions}
+                    headers={this.props.headers}
+                />
+                <DropMissingValuesSection
+                    submitCommand={this.props.submitCommand}
+                    options={columnDropdownOptions}
+                    headers={this.props.headers}
+                />
+                <PlotHistogramSection
+                    submitCommand={this.props.submitCommand}
+                    options={columnDropdownOptions}
+                    headers={this.props.headers}
+                />
+
                 {/* <details className="slicing-control" style={{ borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)', paddingTop: '4px', paddingBottom: '4px'}}>
                     <summary className="slice-summary">
                         <span className="slice-summary-detail">
@@ -511,50 +142,8 @@ export class ControlPanel extends React.Component<IControlPanelProps, IControlPa
             </div>
         );
     }
-    private updateDropTarget = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
-        if (item) {
-            this.setState({
-                columnsToDrop: item.selected
-                    ? [...this.state.columnsToDrop, item.key as number]
-                    : this.state.columnsToDrop.filter((key) => key !== item.key)
-            });
-        }
-    };
 
-    private updateFillNaTargets = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
-        if (item) {
-            this.setState({
-                fillNaTargets: item.selected
-                    ? [...this.state.fillNaTargets, item.key as number]
-                    : this.state.fillNaTargets.filter((key) => key !== item.key)
-            });
-        }
-    };
-    private updateRenameTarget = (_data: React.FormEvent, option: IDropdownOption | undefined) => {
-        this.setState({ columnRenameTargetKey: option?.key as number });
-    };
-    private updateHistogramTarget = (_data: React.FormEvent, option: IDropdownOption | undefined) => {
-        this.setState({ histogramColumnKey: option?.key as number });
-    };
-    private updateNormalizeColumnTarget = (_data: React.FormEvent, option: IDropdownOption | undefined) => {
-        this.setState({ normalizeTargetKey: option?.key as number });
-    };
-    private handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({ newColumnName: event.currentTarget.value });
-    };
-    private handleNormalizeStartChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({ normalizeRangeStart: parseInt(event.currentTarget.value) });
-    };
-
-    private handleNormalizeEndChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({ normalizeRangeEnd: parseInt(event.currentTarget.value) });
-    };
-
-    private handleFillNaReplacement = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({ fillNaReplacement: event.currentTarget.value });
-    };
-
-    private generateColumnRenameOptions() {
+    private generateColumnDropdownOptions() {
         const result = [];
         if (this.props.headers && this.props.headers.length) {
             const range = this.props.headers.length;
@@ -565,20 +154,6 @@ export class ControlPanel extends React.Component<IControlPanelProps, IControlPa
                 }
             }
         }
-        console.log('column rename options', result);
         return result;
     }
-
-    private generateDropNaOptions() {
-        return [
-            { key: 0, text: 'Rows' },
-            { key: 1, text: 'Columns' }
-        ];
-    }
-
-    private updateDropNaTarget = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
-        if (item) {
-            this.setState({ dropNaTarget: item.key as number });
-        }
-    };
 }

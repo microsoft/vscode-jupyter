@@ -57,7 +57,7 @@ export type IDataViewerMapping = {
     [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     [DataViewerMessages.CompletedData]: never | undefined;
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
-    [DataViewerMessages.SubmitCommand]: { command: string, args: any };
+    [DataViewerMessages.SubmitCommand]: { command: string; args: any };
 };
 
 export interface IDataFrameInfo {

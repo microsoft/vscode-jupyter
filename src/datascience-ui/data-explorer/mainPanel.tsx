@@ -490,7 +490,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.gridColumnUpdateEvent.notify(newColumns);
     }
 
-    private submitCommand = (arg: { command: string, args: any }) => {
+    private submitCommand = (arg: { command: string; args: any }) => {
         this.sendMessage(DataViewerMessages.SubmitCommand, arg);
-    }
+    };
 }

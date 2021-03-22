@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import * as uuid from 'uuid';
 import * as path from 'path';
 import { CodeLens, ConfigurationTarget, env, NotebookCell, Range, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -70,7 +69,9 @@ export class CommandRegistry implements IDisposable {
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private kernelVariableProvider: IJupyterVariables,
+        @inject(IJupyterVariables)
+        @named(Identifiers.KERNEL_VARIABLES)
+        private kernelVariableProvider: IJupyterVariables,
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNotebook: boolean,
         @inject(NotebookCreator) private readonly nativeNotebookCreator: NotebookCreator
@@ -527,7 +528,19 @@ export class CommandRegistry implements IDisposable {
             this.commandManager.executeCommand('notebook.cell.executeAndInsertBelow').then(async () => {
                 await this.commandManager.executeCommand('jupyter.openVariableView');
                 // Open data viewer for this variable
-                const jupyterVariable = await this.kernelVariableProvider.getFullVariable({ name: 'df', value: '', supportsDataExplorer: true, type: 'DataFrame', size: 0, shape: '', count: 0, truncated: true }, notebookEditor.notebook);
+                const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
+                    {
+                        name: 'df',
+                        value: '',
+                        supportsDataExplorer: true,
+                        type: 'DataFrame',
+                        size: 0,
+                        shape: '',
+                        count: 0,
+                        truncated: true
+                    },
+                    notebookEditor.notebook
+                );
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     jupyterVariable
                 );
@@ -539,7 +552,7 @@ export class CommandRegistry implements IDisposable {
                     await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }
-            })
+            });
         }
     }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
