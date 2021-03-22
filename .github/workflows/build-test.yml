@@ -253,7 +253,7 @@ jobs:
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
-        if: always()
+        if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
@@ -472,7 +472,7 @@ jobs:
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
-        if: always()
+        if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
@@ -836,7 +836,7 @@ jobs:
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
-        if: always()
+        if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
@@ -952,7 +952,7 @@ jobs:
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
-    if: always()
+    if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
     needs: [ts_tests, vscodeTests, smoke-tests, tests]
     steps:
       - name: Checkout
