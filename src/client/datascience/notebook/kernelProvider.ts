@@ -50,6 +50,8 @@ import { traceInfo, traceInfoIf } from '../../common/logger';
 
 @injectable()
 export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
+    // Keep a mapping of Document Uri => NotebookCommunication for widget tests
+    public webviews = new Map<string, NotebookCommunication[]>();
     public get onDidChangeKernels(): Event<NotebookDocument | undefined> {
         return this._onDidChangeKernels.event;
     }
@@ -75,6 +77,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         this.isLocalLaunch = isLocalLaunch(this.configuration);
         this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
         this.extensions.onDidChange(this.onDidChangeExtensions, this, disposables);
+        this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebook.bind(this));
     }
 
     public async resolveKernel?(
@@ -83,6 +86,14 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         webview: NotebookCommunication,
         token: CancellationToken
     ): Promise<void> {
+        // Add webviews to our document mapping. Used for testing
+        let list = this.webviews.get(document.uri.toString());
+        if (!list) {
+            list = [];
+            this.webviews.set(document.uri.toString(), list);
+        }
+        list.push(webview);
+
         return this.kernelResolver.resolveKernel(kernel, document, webview, token);
     }
     @captureTelemetry(Telemetry.KernelProviderPerf)
@@ -278,5 +289,10 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
             await newKernel.start({ disableUI: true, document }).catch(noop);
         }
+    }
+
+    // On notebook document close delete our webview mapping
+    private onDidCloseNotebook(e: NotebookDocument) {
+        this.webviews.delete(e.uri.toString());
     }
 }
