@@ -247,7 +247,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
-    public async runSelectionOrLine(activeEditor: TextEditor | undefined, text: string | undefined = undefined) {
+    public async runSelectionOrLine(activeEditor: TextEditor | undefined, text?: string) {
         if (this.document && activeEditor && this.fs.arePathsSame(activeEditor.document.uri, this.document.uri)) {
             let codeToExecute: string | undefined;
             if (text === undefined) {
