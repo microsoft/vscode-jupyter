@@ -247,6 +247,8 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
 
         // Interrupt the kernel & wait for 2 to cancel & 3 to get de-queued.
         commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
+        commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
+        commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
 
         await Promise.all([
             waitForExecutionCompletedWithErrors(cell2),
