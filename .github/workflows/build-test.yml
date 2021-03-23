@@ -69,11 +69,10 @@ jobs:
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
-          echo "release_channel=insider" >> $GITHUB_ENV
 
       - name: insiders channel
         # Scheduled builds will publish Insider builds.
-        if: github.event_name == 'schedule' && github.ref == 'refs/heads/mains'
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
         run: |
           echo "release_channel=insider" >> $GITHUB_ENV
 
@@ -1061,6 +1060,8 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
+      - run: npm i -g vsce
+
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
@@ -1080,7 +1081,6 @@ jobs:
         id: version
         run: |
           echo ::set-output name=version::$(node -p -e "require('./package.json').version")
-        #   echo ::set-output name=version::$(node -p -e "require('./tmp/extension/package.json').version")
         shell: bash
 
       - name: Generate Changelog
