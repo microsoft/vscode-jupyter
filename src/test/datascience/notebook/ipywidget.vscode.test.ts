@@ -15,7 +15,6 @@ import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
-    //canRunNotebookTests,
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
