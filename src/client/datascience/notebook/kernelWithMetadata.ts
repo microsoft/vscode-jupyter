@@ -49,11 +49,11 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         private readonly commandManager: ICommandManager
     ) {}
-    public interrupt(document: NotebookDocument, ranges: NotebookCellRange[]) {
-        document.cells
-            .filter((cell) => ranges.some((range) => range.start >= cell.index && range.end < cell.index))
-            .forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
-        this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
+    public interrupt(document: NotebookDocument) {
+        document.cells.forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
+        this.commandManager
+            .executeCommand(Commands.NotebookEditorInterruptKernel)
+            .then(noop, (ex) => console.error(ex));
     }
 
     /**

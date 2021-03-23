@@ -83,10 +83,10 @@ export class NotebookWatcher implements INotebookWatcher {
         // We are not interested in silent executions
         if (this.isNonSilentExecution(kernelStateEvent)) {
             // First, update our execution counts, regardless of if this is the active document
-            if (kernelStateEvent.cell?.previousResult?.executionOrder !== undefined) {
+            if (kernelStateEvent.cell?.latestExecutionSummary?.executionOrder !== undefined) {
                 this.updateExecutionCount(
                     kernelStateEvent.resource,
-                    kernelStateEvent.cell.previousResult?.executionOrder
+                    kernelStateEvent.cell.latestExecutionSummary?.executionOrder
                 );
             }
 
@@ -94,10 +94,10 @@ export class NotebookWatcher implements INotebookWatcher {
             if (
                 //this.isActiveNotebookExecution(kernelStateEvent) &&
                 this.isActiveNotebookEvent(kernelStateEvent) &&
-                kernelStateEvent.cell?.previousResult?.executionOrder !== undefined
+                kernelStateEvent.cell?.latestExecutionSummary?.executionOrder !== undefined
             ) {
                 this._onDidExecuteActiveNotebook.fire({
-                    executionCount: kernelStateEvent.cell.previousResult?.executionOrder
+                    executionCount: kernelStateEvent.cell.latestExecutionSummary?.executionOrder
                 });
             }
         }
@@ -138,7 +138,7 @@ export class NotebookWatcher implements INotebookWatcher {
         if (
             kernelStateEvent.state === KernelState.executed &&
             kernelStateEvent.cell &&
-            kernelStateEvent.cell.previousResult?.executionOrder &&
+            kernelStateEvent.cell.latestExecutionSummary?.executionOrder &&
             !kernelStateEvent.silent
         ) {
             return true;
