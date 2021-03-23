@@ -473,7 +473,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             const placeholder = '99999999999';
             const maxFieldWidth = measureText(placeholder, fontString);
             columns.forEach((c) => {
-                if (c.id !== '0') {
+                if (c.field !== this.props.idProperty) {
                     c.width = maxFieldWidth;
                 } else {
                     c.width = maxFieldWidth / 2;
@@ -573,7 +573,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
-        if (args.column.id === '0') {
+        if (args.column.field === this.props.idProperty) {
             const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
             ReactDOM.render(
                 <div

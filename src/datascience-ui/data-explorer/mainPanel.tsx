@@ -37,6 +37,7 @@ import { initializeIcons } from '@fluentui/react';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
+const RowNumberColumnName = 'No.';
 
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {
@@ -257,7 +258,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             <ReactSlickGrid
                 ref={this.grid}
                 columns={this.state.gridColumns}
-                idProperty={this.state.indexColumn}
+                idProperty={RowNumberColumnName}
                 rowsAdded={this.gridAddEvent}
                 resetGridEvent={this.resetGridEvent}
                 columnsUpdated={this.gridColumnUpdateEvent}
@@ -368,7 +369,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             gridRows: newActual
         });
 
-        // Tell our grid about the new ros
+        // Tell our grid about the new rows
         this.updateRows(normalized);
 
         // Get the next chunk
@@ -384,13 +385,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private generateColumns(variable: IDataFrameInfo): Slick.Column<Slick.SlickData>[] {
-        // Generate an index column
-        const indexColumn = {
-            key: this.state.indexColumn,
-            type: ColumnType.Number
-        };
         if (variable.columns) {
-            const columns = [indexColumn].concat(variable.columns);
+            // Generate a column for row numbers
+            const rowNumberColumn = {
+                key: RowNumberColumnName,
+                type: ColumnType.Number
+            };
+            const columns = [rowNumberColumn].concat(variable.columns);
             return columns.map((c: { key: string; type: ColumnType }, i: number) => {
                 return {
                     type: c.type,
@@ -416,7 +417,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (!r) {
                 r = {};
             }
-            r[this.state.indexColumn] = this.state.fetchedRowCount + idx;
+            r[RowNumberColumnName] = this.state.fetchedRowCount + idx;
             for (let [key, value] of Object.entries(r)) {
                 switch (value) {
                     case 'nan':
