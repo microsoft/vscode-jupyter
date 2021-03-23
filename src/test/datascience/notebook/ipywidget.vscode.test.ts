@@ -7,11 +7,10 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { Uri, NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
+import { Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
-import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
-import { INotebookContentProvider, INotebookKernelProvider } from '../../../client/datascience/notebook/types';
+import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
@@ -59,7 +58,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         testWidgetNb = Uri.file(await createTemporaryNotebook(widgetsNB, disposables));
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('IANHU Can run a widget notebook', async function () {
+    test('Can run a widget notebook', async function () {
         await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
@@ -76,7 +75,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
 
         assert.ok(flag.completed, 'Widget did not load successfully during execution');
     });
-    test('IANHU Can run a widget notebook twice', async function () {
+    test('Can run a widget notebook twice', async function () {
         await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
         await waitForKernelToGetAutoSelected();
         let cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
@@ -90,6 +89,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         await closeNotebooks();
 
         await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
+        await waitForKernelToGetAutoSelected();
         cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
 
         // This flag will be resolved when the widget loads
@@ -104,7 +104,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
 
         assert.ok(flag.completed, 'Widget did not load successfully on second execution');
     });
-    test('IANHU Can run widget cells that need requireJS', async function () {
+    test('Can run widget cells that need requireJS', async function () {
         await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
         await waitForKernelToGetAutoSelected();
         // 6th cell has code that needs requireJS
@@ -113,21 +113,6 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();
         flagForWebviewLoad(flag, testWidgetNb);
-        //const contentProvider = api.serviceContainer.get<VSCNotebookContentProvider>(
-        //INotebookContentProvider
-        //) as NotebookContentProvider;
-
-        //// Content provider should have a public member that maps webviews. Listen to messages on this webview
-        //const webviews = contentProvider.webviews.get(cell.document.uri.toString());
-        //assert.equal(webviews?.length, 1, 'No webviews found in content provider');
-        //let loaded = false;
-        //if (webviews) {
-        //webviews[0].onDidReceiveMessage((e) => {
-        //if (e.type === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
-        //loaded = true;
-        //}
-        //});
-        //}
 
         // Execute cell. It should load and render the widget
         await runCell(cell);
@@ -138,6 +123,8 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         assert.ok(flag.completed, 'Widget did not load successfully during execution');
     });
 
+    // Resolve a deferred when we see the target uri has an associated webview and the webview
+    // loaded a widget successfully
     function flagForWebviewLoad(flag: Deferred<boolean>, targetUri: Uri) {
         const notebookKernelProvider = api.serviceContainer.get<INotebookKernelProvider>(
             INotebookKernelProvider
@@ -145,11 +132,10 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
 
         // Content provider should have a public member that maps webviews. Listen to messages on this webview
         const webviews = notebookKernelProvider.webviews.get(targetUri.toString());
-        assert.equal(webviews?.length, 1, 'No webviews found in content provider');
+        assert.equal(webviews?.length, 1, 'No webviews found in kernel provider');
         if (webviews) {
             webviews[0].onDidReceiveMessage((e) => {
                 if (e.type === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
-                    //flag = true;
                     flag.resolve(true);
                 }
             });
