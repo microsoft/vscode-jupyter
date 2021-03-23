@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, NotebookDocument, UIKind } from 'vscode';
+import { Event, EventEmitter, UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../common/constants';
