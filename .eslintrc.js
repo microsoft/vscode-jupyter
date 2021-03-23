@@ -253,7 +253,6 @@ module.exports = {
         'src/test/datascience/editor-integration/helpers.ts',
         'src/test/datascience/editor-integration/cellhashprovider.unit.test.ts',
         'src/test/datascience/editor-integration/codelensprovider.unit.test.ts',
-        'src/test/datascience/editor-integration/codewatcher.unit.test.ts',
         'src/test/datascience/jupyterPasswordConnect.unit.test.ts',
         'src/test/datascience/testHelpers.tsx',
         'src/test/datascience/mockLanguageClient.ts',
