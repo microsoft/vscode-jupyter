@@ -188,6 +188,7 @@ export class NotebookEditor implements INotebookEditor {
             }).then(noop, noop);
         }
     }
+    private interruptPromise = new WeakMap<IKernel, Promise<void>>();
     public async interruptKernel(): Promise<void> {
         if (this.restartingKernel) {
             trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
@@ -199,27 +200,38 @@ export class NotebookEditor implements INotebookEditor {
             return;
         }
         const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
-
-        try {
-            const result = await kernel.interrupt(this.document);
-            if (result === InterruptResult.TimedOut) {
-                const message = DataScience.restartKernelAfterInterruptMessage();
-                const yes = DataScience.restartKernelMessageYes();
-                const no = DataScience.restartKernelMessageNo();
-                const v = await this.applicationShell.showInformationMessage(message, yes, no);
-                if (v === yes) {
-                    this.restartingKernel = false;
-                    this.kernelInterruptedDontAskToRestart = true;
-                    await this.restartKernel();
-                }
-            }
-        } catch (err) {
-            traceError('Failed to interrupt kernel', err);
-            void this.applicationShell.showErrorMessage(err);
-        } finally {
-            this.kernelInterruptedDontAskToRestart = false;
-            status.dispose();
+        let promise = this.interruptPromise.get(kernel);
+        if (promise) {
+            await promise;
+            return;
         }
+        const interrupt = async () => {
+            try {
+                const result = await kernel.interrupt(this.document);
+                if (result === InterruptResult.TimedOut) {
+                    const message = DataScience.restartKernelAfterInterruptMessage();
+                    const yes = DataScience.restartKernelMessageYes();
+                    const no = DataScience.restartKernelMessageNo();
+                    const v = await this.applicationShell.showInformationMessage(message, yes, no);
+                    if (v === yes) {
+                        this.restartingKernel = false;
+                        this.kernelInterruptedDontAskToRestart = true;
+                        await this.restartKernel();
+                    }
+                }
+            } catch (err) {
+                traceError('Failed to interrupt kernel', err);
+                void this.applicationShell.showErrorMessage(err);
+            } finally {
+                this.kernelInterruptedDontAskToRestart = false;
+                status.dispose();
+            }
+        };
+
+        // Cache the promise, else we get multiple popups if the user hits interrupt multiple times & it timesout.
+        promise = interrupt();
+        this.interruptPromise.set(kernel, promise);
+        await promise;
     }
 
     public async restartKernel(): Promise<void> {
