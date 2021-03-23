@@ -7,7 +7,7 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { Uri } from 'vscode';
+import { NotebookDocument, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { INotebookKernelProvider } from '../../../client/datascience/notebook/types';
@@ -68,7 +68,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();
-        flagForWebviewLoad(flag, testWidgetNb);
+        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.document!);
 
         // Execute cell. It should load and render the widget
         await runCell(cell);
@@ -97,7 +97,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();
-        flagForWebviewLoad(flag, testWidgetNb);
+        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.document!);
 
         // Execute cell. It should load and render the widget
         await runCell(cell);
@@ -115,7 +115,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();
-        flagForWebviewLoad(flag, testWidgetNb);
+        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.document!);
 
         // Execute cell. It should load and render the widget
         await runCell(cell);
@@ -128,13 +128,13 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
 
     // Resolve a deferred when we see the target uri has an associated webview and the webview
     // loaded a widget successfully
-    function flagForWebviewLoad(flag: Deferred<boolean>, targetUri: Uri) {
+    function flagForWebviewLoad(flag: Deferred<boolean>, targetDoc: NotebookDocument) {
         const notebookKernelProvider = api.serviceContainer.get<INotebookKernelProvider>(
             INotebookKernelProvider
         ) as VSCodeKernelPickerProvider;
 
         // Content provider should have a public member that maps webviews. Listen to messages on this webview
-        const webviews = notebookKernelProvider.webviews.get(targetUri.toString());
+        const webviews = notebookKernelProvider.webviews.get(targetDoc);
         assert.equal(webviews?.length, 1, 'No webviews found in kernel provider');
         if (webviews) {
             webviews[0].onDidReceiveMessage((e) => {
