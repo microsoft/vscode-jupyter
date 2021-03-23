@@ -19,8 +19,9 @@ on:
       - 'release'
       - 'release/*'
       - 'release-*'
+  schedule:
+    - cron: "0 9 * * *" # 9am UTC (2am PDT, after VS Code Insider builds which is 11pm PDT)
   workflow_dispatch:
-
 env:
   NODE_VERSION: 12.14.1
   PYTHON_VERSION: 3.8
@@ -47,6 +48,7 @@ jobs:
     outputs:
       vsix_name: ${{ env.vsix_name }}
       test_matrix_os: ${{ env.test_matrix_os }}
+      release_channel: ${{ env.release_channel }}
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: dump_event
@@ -61,24 +63,37 @@ jobs:
           echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
 
       - name: insiders
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/main'
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
+          echo "release_channel=insider" >> $GITHUB_ENV
+
+      - name: insiders channel
+        # Scheduled builds will publish Insider builds.
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/mains'
+        run: |
+          echo "release_channel=insider" >> $GITHUB_ENV
 
       - name: release
-        if: github.event_name == 'push' && github.ref != 'refs/heads/main'
+        if: github.event_name == 'push' && contains(github.ref, 'refs/heads/release')
         run: |
           echo "vsix_name=ms-toolsai-jupyter-release.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
+
+      - name: release channel
+        # All pushes to release can push to marketplace place with the words `release` `publish` in commit.
+        if: github.event_name == 'push' && contains(github.ref, 'refs/heads/release') && contains(github.event.head_commit.message, 'release') && contains(github.event.head_commit.message, 'publish')
+        run: |
+          echo "release_channel=stable" >> $GITHUB_ENV
 
   build-vsix:
     needs: pick_environment
     name: Build VSIX
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-jupyter'
+    # if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -930,7 +945,7 @@ jobs:
     name: Upload VSIX to Azure Blob Storage
     runs-on: ubuntu-latest
     # This should happen in the release and insiders branch
-    if: github.repository == 'microsoft/vscode-jupyter' && github.event_name == 'push' && (github.ref == 'refs/heads/main' || contains(github.ref, 'refs/heads/release'))
+    if: github.repository == 'microsoft/vscode-jupyter' && (github.event_name == 'push' || github.event_name == 'schedule') && (github.ref == 'refs/heads/main' || contains(github.ref, 'refs/heads/release'))
     needs: [build-vsix, pick_environment, lint, ts_tests, vscodeTests, smoke-tests]
     env:
       BLOB_CONTAINER_NAME: extension-builds-jupyter
@@ -1016,3 +1031,79 @@ jobs:
       # Alternative method for uploading
       # - name: Upload coverage to codecov
       #  run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    # This should happen in the release and insiders branch
+    if: github.repository == 'microsoft/vscode-jupyter' && (needs.pick_environment.outputs.release_channel == 'insider' || needs.pick_environment.outputs.release_channel == 'stable')
+    needs: [pick_environment, build-vsix, lint, ts_tests, smoke-tests]
+    environment:
+      name: ${{needs.pick_environment.outputs.release_channel}}
+    steps:
+      - name: dump_event
+        run: |
+          echo "Event_name is ${{ github.event_name }}"
+          echo "Ref is ${{ github.ref }}"
+          echo "Release Channel (Environment) is is ${{needs.pick_environment.outputs.release_channel}}"
+          echo "VSIX Name is ${{ needs.pick_environment.outputs.vsix_name }}"
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Python ${{env.PYTHON_VERSION}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.5
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Download VSIX
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{needs.pick_environment.outputs.vsix_name}}
+
+      - name: Publish
+        run: vsce publish --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
+
+      - name: Extract Extension
+        if: needs.pick_environment.outputs.release_channel == 'stable'
+        shell: bash
+        run: |
+          python -c "import zipfile;zip=zipfile.ZipFile('${{needs.pick_environment.outputs.vsix_name}}', 'r');zip.extractall('tmp')"
+
+      - name: Get Version
+        if: needs.pick_environment.outputs.release_channel == 'stable'
+        id: version
+        run: |
+          echo ::set-output name=version::$(node -p -e "require('./package.json').version")
+        #   echo ::set-output name=version::$(node -p -e "require('./tmp/extension/package.json').version")
+        shell: bash
+
+      - name: Generate Changelog
+        if: needs.pick_environment.outputs.release_channel == 'stable'
+        # Just extract change log, anything between `\n## 20` (for each release we have a section with year and month..)
+        run: |
+          echo ::set-output name=changelog::$(node -p -e "let fs = require('fs');let changelog = fs.readFileSync('./CHANGELOG.md').toString();changelog = changelog.split('\n## 20')[1].split('\n').filter((_, index) => index > 0).join('\n');fs.writeFileSync('./RELEASE_CHANGELOG.md', changelog)")
+        shell: bash
+
+      - name: Print version
+        run: |
+          echo ${{steps.version.outputs.version}}
+        shell: bash
+
+      - name: Create GH Release
+        id: create_release
+        if: needs.pick_environment.outputs.release_channel == 'stable'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{steps.version.outputs.version}}
+          release_name: Release ${{steps.version.outputs.version}}
+          body_path: RELEASE_CHANGELOG.md
+          draft: true
+          prerelease: false
