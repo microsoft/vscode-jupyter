@@ -22,6 +22,7 @@ import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { MillisecondsInADay } from '../constants';
 import { InteractiveWindowMessages, IReExecuteCells } from './interactive-common/interactiveWindowTypes';
+import { isJupyterNotebook } from './notebook/helpers/helpers';
 import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
 import { IInteractiveWindowListener, INotebookEditorProvider, INotebookExtensibility } from './types';
 
@@ -169,7 +170,15 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     public async activate() {
-        this.vscodeNotebook.onDidOpenNotebookDocument(this.openedNotebook, this, this.disposables);
+        this.vscodeNotebook.onDidOpenNotebookDocument(
+            (e) => {
+                if (isJupyterNotebook(e)) {
+                    this.openedNotebook().catch(noop);
+                }
+            },
+            this,
+            this.disposables
+        );
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
     }
 

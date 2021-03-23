@@ -11,6 +11,7 @@ import { noop } from '../../common/utils/misc';
 import { Commands, Settings } from '../constants';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { IJupyterServerUriStorage } from '../types';
+import { isJupyterNotebook } from './helpers/helpers';
 
 @injectable()
 export class RemoteSwitcher implements IExtensionSingleActivationService {
@@ -46,7 +47,7 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         await this.serverSelector.selectJupyterURI(true, 'nativeNotebookToolbar');
     }
     private async updateStatusBar() {
-        if (!this.notebook.activeNotebookEditor) {
+        if (!this.notebook.activeNotebookEditor || !isJupyterNotebook(this.notebook.activeNotebookEditor.document)) {
             this.statusBarItem.hide();
             return;
         }
