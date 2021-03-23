@@ -902,7 +902,6 @@ module.exports = {
         'src/client/datascience/interactive-ipynb/nativeEditorProviderOld.ts',
         'src/client/datascience/interactive-ipynb/autoSaveService.ts',
         'src/client/datascience/editor-integration/codeLensFactory.ts',
-        'src/client/datascience/editor-integration/codewatcher.ts',
         'src/client/datascience/editor-integration/decorator.ts',
         'src/client/datascience/editor-integration/codelensprovider.ts',
         'src/client/datascience/editor-integration/cellhashprovider.ts',
