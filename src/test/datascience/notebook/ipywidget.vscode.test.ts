@@ -15,6 +15,7 @@ import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
+    canRunNotebookTests,
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
@@ -44,6 +45,9 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     let vscodeNotebook: IVSCodeNotebook;
     let testWidgetNb: Uri;
     suiteSetup(async function () {
+        if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || !(await canRunNotebookTests())) {
+            return this.skip();
+        }
         api = await initialize();
 
         await trustAllNotebooks();
