@@ -45,7 +45,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     let vscodeNotebook: IVSCodeNotebook;
     let testWidgetNb: Uri;
     suiteSetup(async function () {
-        if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || !(await canRunNotebookTests())) {
+        if (!process.env.VSC_JUPYTER_RUN_NB_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
         api = await initialize();
