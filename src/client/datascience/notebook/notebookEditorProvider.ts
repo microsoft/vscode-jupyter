@@ -200,7 +200,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             this._onDidChangeActiveNotebookEditor.fire(undefined);
             return;
         }
-        if (isJupyterNotebook(editor.document)) {
+        if (!isJupyterNotebook(editor.document)) {
             this._onDidChangeActiveNotebookEditor.fire(undefined);
             return;
         }
