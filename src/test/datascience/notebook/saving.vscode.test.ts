@@ -99,13 +99,19 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             assertHasTextOutputInVSCode(cell1, '1', 0);
             assertVSCCellHasErrorOutput(cell2);
 
-            expect(cell1.previousResult?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
-            expect(cell2.previousResult?.executionOrder).to.be.greaterThan(
-                cell1.previousResult?.executionOrder!,
+            expect(cell1.latestExecutionSummary?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
+            expect(cell2.latestExecutionSummary?.executionOrder).to.be.greaterThan(
+                cell1.latestExecutionSummary?.executionOrder!,
                 'Execution count > cell 1'
             );
-            assert.isUndefined(cell3.previousResult?.executionOrder, 'Execution count must be undefined for cell 3');
-            assert.isUndefined(cell4.previousResult?.executionOrder, 'Execution count must be undefined for cell 4');
+            assert.isUndefined(
+                cell3.latestExecutionSummary?.executionOrder,
+                'Execution count must be undefined for cell 3'
+            );
+            assert.isUndefined(
+                cell4.latestExecutionSummary?.executionOrder,
+                'Execution count must be undefined for cell 4'
+            );
 
             assert.isEmpty(cell1.metadata.statusMessage || '', 'Cell 1 status should be empty'); // No errors.
             assert.isNotEmpty(cell2.metadata.statusMessage, 'Cell 1 status should be empty'); // Errors.

@@ -17,7 +17,8 @@ import {
     NotebookDocumentMetadata,
     NotebookCellExecutionState,
     notebook,
-    NotebookCellExecutionStateChangeEvent
+    NotebookCellExecutionStateChangeEvent,
+    NotebookCellExecutionSummary
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { IVSCodeNotebook } from '../../../common/application/types';
@@ -254,7 +255,7 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
     const code = cell.document.getText();
     return {
         cell_type: 'code',
-        execution_count: cell.previousResult?.executionOrder ?? null,
+        execution_count: cell.latestExecutionSummary?.executionOrder ?? null,
         source: splitMultilineString(code),
         outputs: cell.outputs.map(translateCellDisplayOutput),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
@@ -323,12 +324,18 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
 
     const source = concatMultilineString(cell.source);
 
-    const cellData = new NotebookCellData(NotebookCellKind.Code, source, cellLanguage, outputs, notebookCellMetadata);
+    const executionSummary: NotebookCellExecutionSummary = {};
     if (hasExecutionCount) {
-        cellData.previousResult = cellData.previousResult || {};
-        cellData.previousResult.executionOrder = cell.execution_count as number;
+        executionSummary.executionOrder = cell.execution_count as number;
     }
-    return cellData;
+    return new NotebookCellData(
+        NotebookCellKind.Code,
+        source,
+        cellLanguage,
+        outputs,
+        notebookCellMetadata,
+        executionSummary
+    );
 }
 const orderOfMimeTypes = [
     'application/vnd.*',
@@ -383,7 +390,7 @@ export class NotebookCellStateTracker implements IDisposable {
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
         `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
-            cell.previousResult?.executionOrder
+            cell.latestExecutionSummary?.executionOrder
         }. ${message}`
     );
 }

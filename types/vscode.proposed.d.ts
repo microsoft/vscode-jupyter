@@ -30,12 +30,6 @@ declare module 'vscode' {
         Code = 2
     }
 
-    export interface NotebookCellPreviousExecutionResult {
-        executionOrder?: number;
-        success?: boolean;
-        duration?: number;
-    }
-
     export class NotebookCellMetadata {
         /**
          * Controls whether a cell's editor is editable/readonly.
@@ -64,6 +58,7 @@ declare module 'vscode' {
 
         // run related API, will be removed
         readonly hasExecutionOrder?: boolean;
+
         constructor(
             editable?: boolean,
             breakpointMargin?: boolean,
@@ -74,6 +69,7 @@ declare module 'vscode' {
             outputCollapsed?: boolean,
             custom?: Record<string, any>
         );
+
         with(change: {
             editable?: boolean | null;
             breakpointMargin?: boolean | null;
@@ -86,6 +82,12 @@ declare module 'vscode' {
         }): NotebookCellMetadata;
     }
 
+    export interface NotebookCellExecutionSummary {
+        executionOrder?: number;
+        success?: boolean;
+        duration?: number;
+    }
+
     // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
     export interface NotebookCell {
         readonly index: number;
@@ -94,7 +96,7 @@ declare module 'vscode' {
         readonly document: TextDocument;
         readonly metadata: NotebookCellMetadata;
         readonly outputs: ReadonlyArray<NotebookCellOutput>;
-        readonly previousResult: NotebookCellPreviousExecutionResult | undefined;
+        readonly latestExecutionSummary: NotebookCellExecutionSummary | undefined;
     }
 
     export class NotebookDocumentMetadata {
@@ -321,14 +323,14 @@ declare module 'vscode' {
         language: string;
         outputs?: NotebookCellOutput[];
         metadata?: NotebookCellMetadata;
-        previousResult?: NotebookCellPreviousExecutionResult;
+        latestExecutionSummary?: NotebookCellExecutionSummary;
         constructor(
             kind: NotebookCellKind,
             source: string,
             language: string,
             outputs?: NotebookCellOutput[],
             metadata?: NotebookCellMetadata,
-            previousResult?: NotebookCellPreviousExecutionResult
+            latestExecutionSummary?: NotebookCellExecutionSummary
         );
     }
 
@@ -528,6 +530,25 @@ declare module 'vscode' {
 
     //#endregion
 
+    //#region https://github.com/microsoft/vscode/issues/106744, NotebookSerializer
+
+    export interface NotebookSerializer {
+        dataToNotebook(data: Uint8Array): NotebookData | Thenable<NotebookData>;
+        notebookToData(data: NotebookData): Uint8Array | Thenable<Uint8Array>;
+    }
+
+    export namespace notebook {
+        // TODO@api use NotebookDocumentFilter instead of just notebookType:string?
+        // TODO@API options duplicates the more powerful variant on NotebookContentProvider
+        export function registerNotebookSerializer(
+            notebookType: string,
+            provider: NotebookSerializer,
+            options?: NotebookDocumentContentOptions
+        ): Disposable;
+    }
+
+    //#endregion
+
     //#region https://github.com/microsoft/vscode/issues/106744, NotebookContentProvider
 
     interface NotebookDocumentBackup {
@@ -636,9 +657,10 @@ declare module 'vscode' {
         // fired when properties like the supported languages etc change
         // onDidChangeProperties?: Event<void>
 
-        // todo@API how can Jupyter ensure that the document-level cancel button shows whenever any cell is running?
-        // Maybe this behavior is automatic for any kernel that implements interrupt
-        interrupt?(document: NotebookDocument, ranges: NotebookCellRange[]): void;
+        /**
+         * A kernel can optionally implement this which will be called when any "cancel" button is clicked in the document.
+         */
+        interrupt?(document: NotebookDocument): void;
 
         /**
          * Called when the user triggers execution of a cell by clicking the run button for a cell, multiple cells,
@@ -650,16 +672,38 @@ declare module 'vscode' {
     }
 
     export interface NotebookCellExecuteStartContext {
-        // Maybe needs to be not an absolute time due to clock issues
+        // TODO@roblou are we concerned about clock issues with this absolute time?
+        /**
+         * The time that execution began, in milliseconds in the Unix epoch. Used to drive the clock
+         * that shows for how long a cell has been running. If not given, the clock won't be shown.
+         */
         startTime?: number;
+    }
+
+    export interface NotebookCellExecuteEndContext {
+        /**
+         * If true, a green check is shown on the cell status bar.
+         * If false, a red X is shown.
+         */
+        success?: boolean;
+
+        /**
+         * The total execution time in milliseconds.
+         */
+        duration?: number;
     }
 
     /**
      * A NotebookCellExecutionTask is how the kernel modifies a notebook cell as it is executing. When
      * [`createNotebookCellExecutionTask`](#notebook.createNotebookCellExecutionTask) is called, the cell
      * enters the Pending state. When `start()` is called on the execution task, it enters the Executing state. When
-     * `resolve()` is called, it enters the Idle state. While in the Executing state, cell outputs can be
+     * `end()` is called, it enters the Idle state. While in the Executing state, cell outputs can be
      * modified with the methods on the run task.
+     *
+     * All outputs methods operate on this NotebookCellExecutionTask's cell by default. They optionally take
+     * a cellIndex parameter that allows them to modify the outputs of other cells. `appendOutputItems` and
+     * `replaceOutputItems` operate on the output with the given ID, which can be an output on any cell. They
+     * all resolve once the output edit has been applied.
      */
     export interface NotebookCellExecutionTask {
         readonly document: NotebookDocument;
@@ -667,7 +711,7 @@ declare module 'vscode' {
 
         start(context?: NotebookCellExecuteStartContext): void;
         executionOrder: number | undefined;
-        end(result: NotebookCellPreviousExecutionResult): void;
+        end(result?: NotebookCellExecuteEndContext): void;
         readonly token: CancellationToken;
 
         clearOutput(cellIndex?: number): Thenable<void>;

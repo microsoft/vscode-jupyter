@@ -95,7 +95,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             hasExecutionOrder: true,
                             statusMessage: undefined
                         }),
-                        previousResult: {
+                        latestExecutionSummary: {
                             executionOrder: 10
                         }
                     },
@@ -111,7 +111,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             editable: true,
                             hasExecutionOrder: false
                         }),
-                        previousResult: undefined
+                        latestExecutionSummary: undefined
                     }
                 ]);
             });
@@ -170,7 +170,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             hasExecutionOrder: true,
                             statusMessage: undefined
                         }),
-                        previousResult: {
+                        latestExecutionSummary: {
                             executionOrder: 10
                         }
                     },
@@ -186,7 +186,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             editable: true,
                             hasExecutionOrder: false
                         }),
-                        previousResult: undefined
+                        latestExecutionSummary: undefined
                     }
                 ]);
             });

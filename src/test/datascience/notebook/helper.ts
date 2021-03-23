@@ -472,14 +472,14 @@ export async function prewarmNotebooks() {
 
 function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
     return (
-        (cell.previousResult?.executionOrder ?? 0) > 0 &&
+        (cell.latestExecutionSummary?.executionOrder ?? 0) > 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
         !hasErrorOutput(cell.outputs)
     );
 }
 function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
     return (
-        (cell.previousResult?.executionOrder ?? 0) === 0 &&
+        (cell.latestExecutionSummary?.executionOrder ?? 0) === 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle
     );
 }
@@ -559,7 +559,7 @@ export async function waitForExecutionCompletedWithErrors(cell: NotebookCell, ti
 }
 function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     return (
-        (cell.previousResult?.executionOrder ?? 0) > 0 &&
+        (cell.latestExecutionSummary?.executionOrder ?? 0) > 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
         hasErrorOutput(cell.outputs)
     );

@@ -12,7 +12,7 @@ import {
     NotebookCell,
     NotebookCellExecutionTask,
     NotebookCellKind,
-    NotebookCellPreviousExecutionResult,
+    NotebookCellExecutionSummary,
     NotebookDocument,
     workspace
 } from 'vscode';
@@ -108,7 +108,7 @@ export class CellExecution {
     private readonly initPromise?: Promise<void>;
     private task?: NotebookCellExecutionTask;
     private temporaryTask?: NotebookCellExecutionTask;
-    private previousResultsToRestore?: NotebookCellPreviousExecutionResult;
+    private previousResultsToRestore?: NotebookCellExecutionSummary;
     private lastRunDuration?: number;
     private cancelHandled = false;
     private requestHandlerChain = Promise.resolve();
@@ -326,14 +326,14 @@ export class CellExecution {
         }
 
         // Create a temporary task.
-        this.previousResultsToRestore = { ...(this.cell.previousResult || {}) };
+        this.previousResultsToRestore = { ...(this.cell.latestExecutionSummary || {}) };
         this.temporaryTask = notebook.createNotebookCellExecutionTask(
             this.cell.notebook.uri,
             this.cell.index,
             this.kernelConnection.id
         );
         this.temporaryTask?.start({});
-        if (this.previousResultsToRestore.executionOrder && this.task) {
+        if (this.previousResultsToRestore?.executionOrder && this.task) {
             this.task.executionOrder = this.previousResultsToRestore.executionOrder;
         }
         return this.temporaryTask;
@@ -342,11 +342,13 @@ export class CellExecution {
         if (this.previousResultsToRestore?.executionOrder && this.task) {
             this.task.executionOrder = this.previousResultsToRestore.executionOrder;
         }
-        if (this.previousResultsToRestore) {
-            this.temporaryTask?.end({
+        if (this.previousResultsToRestore && this.temporaryTask) {
+            if (this.previousResultsToRestore.executionOrder) {
+                this.temporaryTask.executionOrder = this.previousResultsToRestore.executionOrder;
+            }
+            this.temporaryTask.end({
                 duration: this.previousResultsToRestore.duration,
-                success: this.previousResultsToRestore.success,
-                executionOrder: this.previousResultsToRestore.executionOrder
+                success: this.previousResultsToRestore.success
             });
         } else {
             this.temporaryTask?.end({});
