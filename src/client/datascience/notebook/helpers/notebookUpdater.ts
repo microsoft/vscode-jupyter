@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { NotebookDocument, NotebookEditor, workspace, WorkspaceEdit, window } from 'vscode';
-import { createDeferred } from '../../../common/utils/async';
+import { createDeferred, isPromise } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 
 /**
@@ -23,7 +23,7 @@ const pendingCellUpdates = new WeakMap<NotebookDocument, Promise<unknown>>();
 
 export async function chainWithPendingUpdates(
     document: NotebookDocument,
-    update: (edit: WorkspaceEdit) => void
+    update: (edit: WorkspaceEdit) => void | Promise<void>
 ): Promise<boolean> {
     const notebook = document;
     const pendingUpdates = pendingCellUpdates.has(notebook) ? pendingCellUpdates.get(notebook)! : Promise.resolve();
@@ -34,7 +34,10 @@ export async function chainWithPendingUpdates(
         // Even if previous update fails, we should not fail this current update.
         .finally(async () => {
             const edit = new WorkspaceEdit();
-            update(edit);
+            const result = update(edit);
+            if (isPromise(result)) {
+                await result;
+            }
             await workspace.applyEdit(edit).then(
                 (result) => deferred.resolve(result),
                 (ex) => deferred.reject(ex)

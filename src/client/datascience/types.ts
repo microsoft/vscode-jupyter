@@ -18,7 +18,6 @@ import {
     HoverProvider,
     LanguageConfiguration,
     NotebookCell,
-    NotebookCellRunState,
     QuickPickItem,
     Range,
     TextDocument,
@@ -40,7 +39,7 @@ import { NotebookModelChange } from './interactive-common/interactiveWindowTypes
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
-import { KernelConnectionMetadata } from './jupyter/kernels/types';
+import { KernelConnectionMetadata, NotebookCellRunState } from './jupyter/kernels/types';
 import { KernelStateEventArgs } from './notebookExtensibility';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -522,7 +521,7 @@ export interface ILocalResourceUriConverter {
 }
 
 export interface IInteractiveBase extends Disposable {
-    onExecutedCode: Event<string>;
+    onExecutedCode?: Event<string>;
     notebook?: INotebook;
     startProgress(): void;
     stopProgress(): void;
@@ -593,7 +592,7 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     readonly type: 'old' | 'custom' | 'native';
     readonly onDidChangeViewState: Event<void>;
     readonly closed: Event<INotebookEditor>;
-    readonly executed: Event<INotebookEditor>;
+    readonly executed?: Event<INotebookEditor>;
     readonly modified: Event<INotebookEditor>;
     readonly saved: Event<INotebookEditor>;
     /**
@@ -608,7 +607,6 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     readonly visible: boolean;
     readonly active: boolean;
     readonly model: INotebookModel;
-    onExecutedCode: Event<string>;
     notebook?: INotebook;
     show(): Promise<void>;
     runAllCells(): void;

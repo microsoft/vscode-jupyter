@@ -3,12 +3,13 @@
 
 'use strict';
 
-import { Disposable, Event, NotebookCell, NotebookCellRunState, Uri } from 'vscode';
+import { Disposable, Event, NotebookCell, Uri } from 'vscode';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { VSCodeNotebookProvider } from './datascience/constants';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
+import { NotebookCellRunState } from './datascience/jupyter/kernels/types';
 import { CreationOptionService } from './datascience/notebook/creation/creationOptionsService';
 import { KernelStateEventArgs } from './datascience/notebookExtensibility';
 import {
@@ -32,7 +33,13 @@ export interface IExtensionApi {
      * @memberof IExtensionApi
      */
     ready: Promise<void>;
+    /**
+     * Do not use this to monitor execution state of cells of Native Notebooks (use VS Code API).
+     */
     readonly onKernelStateChange: Event<KernelStateEventArgs>;
+    /**
+     * Do not use this to register Cell Toolbar icons for Native Notebook.
+     */
     registerCellToolbarButton(
         callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
         codicon: string,

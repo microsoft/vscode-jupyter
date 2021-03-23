@@ -7,7 +7,7 @@
 import { assert, expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { NotebookCell, NotebookCellRunState, Uri } from 'vscode';
+import { NotebookCell, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
@@ -90,60 +90,27 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             'Cells did not finish executing'
         );
 
-        function verifyCelMetadata(reOpened = false) {
+        function verifyCelMetadata() {
             assert.lengthOf(cell1.outputs, 1, 'Incorrect output for cell 1');
             assert.lengthOf(cell2.outputs, 1, 'Incorrect output for cell 2');
             assert.lengthOf(cell3.outputs, 0, 'Incorrect output for cell 3'); // stream and interrupt error.
             assert.lengthOf(cell4.outputs, 0, 'Incorrect output for cell 4');
 
-            assert.equal(
-                cell1.metadata.runState,
-                reOpened ? NotebookCellRunState.Idle : NotebookCellRunState.Success,
-                'Incorrect state in cell 1'
-            );
-            assert.equal(
-                cell2.metadata.runState,
-                reOpened ? NotebookCellRunState.Idle : NotebookCellRunState.Error,
-                'Incorrect state in cell 2'
-            );
-            assert.equal(
-                cell3.metadata.runState || NotebookCellRunState.Idle,
-                NotebookCellRunState.Idle,
-                'Incorrect state in cell 3'
-            );
-            assert.equal(
-                cell4.metadata.runState || NotebookCellRunState.Idle,
-                NotebookCellRunState.Idle,
-                'Incorrect state in cell 4'
-            );
-
             assertHasTextOutputInVSCode(cell1, '1', 0);
             assertVSCCellHasErrorOutput(cell2);
 
-            expect(cell1.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
-            expect(cell2.metadata.executionOrder).to.be.greaterThan(
-                cell1.metadata.executionOrder!,
+            expect(cell1.previousResult?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
+            expect(cell2.previousResult?.executionOrder).to.be.greaterThan(
+                cell1.previousResult?.executionOrder!,
                 'Execution count > cell 1'
             );
-            assert.isUndefined(cell3.metadata.executionOrder, 'Execution count must be undefined for cell 3');
-            assert.isUndefined(cell4.metadata.executionOrder, 'Execution count must be undefined for cell 4');
+            assert.isUndefined(cell3.previousResult?.executionOrder, 'Execution count must be undefined for cell 3');
+            assert.isUndefined(cell4.previousResult?.executionOrder, 'Execution count must be undefined for cell 4');
 
             assert.isEmpty(cell1.metadata.statusMessage || '', 'Cell 1 status should be empty'); // No errors.
             assert.isNotEmpty(cell2.metadata.statusMessage, 'Cell 1 status should be empty'); // Errors.
             assert.isEmpty(cell3.metadata.statusMessage || '', 'Cell 3 status should be empty'); // Not executed.
             assert.isEmpty(cell4.metadata.statusMessage || '', 'Cell 4 status should be empty'); // Not executed.
-
-            // Persisting these require us to save custom metadata in ipynb. Not sure users would like this. We'll have more changes in ipynb files.
-            // eslint-disable-next-line
-            // TODO: Discuss whether we need to persist these.
-            // assert.isOk(cell1.metadata.runStartTime, 'Start time should be > 0');
-            // assert.isOk(cell1.metadata.lastRunDuration, 'Duration should be > 0');
-            // assert.isOk(cell2.metadata.runStartTime, 'Start time should be > 0');
-            // assert.isOk(cell2.metadata.lastRunDuration, 'Duration should be > 0');
-            assert.isUndefined(cell3.metadata.runStartTime, 'Cell 3 did should not have run');
-            assert.isUndefined(cell3.metadata.lastRunDuration, 'Cell 3 did should not have run');
-            assert.isUndefined(cell4.metadata.runStartTime, 'Cell 4 did should not have run');
-            assert.isUndefined(cell4.metadata.lastRunDuration, 'Cell 4 did should not have run');
         }
 
         verifyCelMetadata();
@@ -155,6 +122,6 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         // Reopen the notebook & validate the metadata.
         await openNotebook(api.serviceContainer, testEmptyIPynb.fsPath);
         initializeCells();
-        verifyCelMetadata(true);
+        verifyCelMetadata();
     });
 });

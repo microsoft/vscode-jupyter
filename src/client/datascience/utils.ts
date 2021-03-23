@@ -3,15 +3,15 @@
 'use strict';
 
 import * as path from 'path';
-import { NotebookCellKind, NotebookCell, NotebookCellRunState, Uri, NotebookCellMetadata } from 'vscode';
+import { NotebookCellKind, NotebookCell, Uri, NotebookCellMetadata } from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 
-import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { IConfigurationService } from '../common/types';
 import { CellState, ICell } from './types';
+import { NotebookCellRunState } from './jupyter/kernels/types';
 
 export async function calculateWorkingDirectory(
     configService: IConfigurationService,
@@ -62,9 +62,7 @@ export function translateCellToNative(
         return {
             index: 0,
             metadata: new NotebookCellMetadata().with({
-                executionOrder: cell.data.execution_count as number,
-                hasExecutionOrder: true,
-                runState: translateCellStateToNative(cell.state)
+                hasExecutionOrder: true
             }),
             outputs: [],
             kind: NotebookCellKind.Code,
@@ -76,42 +74,6 @@ export function translateCellToNative(
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any
         };
-    }
-}
-
-export function translateCellFromNative(cell: NotebookCell): ICell {
-    const data: nbformat.ICodeCell = {
-        cell_type: 'code',
-        metadata: {},
-        outputs: [],
-        execution_count: cell.metadata.executionOrder ? cell.metadata.executionOrder : 0,
-        source: cell.document.getText().splitLines()
-    };
-    return {
-        id: cell.document.uri.fragment,
-        file: cell.document.uri.fsPath,
-        line: 0,
-        state: translateCellStateFromNative(
-            cell.metadata.runState ? cell.metadata.runState : NotebookCellRunState.Idle
-        ),
-        data: data
-    };
-}
-
-export function translateCellStateToNative(state: CellState): NotebookCellRunState {
-    switch (state) {
-        case CellState.editing:
-            return NotebookCellRunState.Idle;
-        case CellState.error:
-            return NotebookCellRunState.Error;
-        case CellState.executing:
-            return NotebookCellRunState.Running;
-        case CellState.finished:
-            return NotebookCellRunState.Success;
-        case CellState.init:
-            return NotebookCellRunState.Idle;
-        default:
-            return NotebookCellRunState.Idle;
     }
 }
 

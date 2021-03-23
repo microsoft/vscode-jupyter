@@ -6,14 +6,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert, use } from 'chai';
 import chaiExclude from 'chai-exclude';
-import {
-    NotebookCellOutput,
-    NotebookCellOutputItem,
-    Uri,
-    NotebookCellRunState,
-    NotebookCellKind,
-    NotebookCellMetadata
-} from 'vscode';
+import { NotebookCellOutput, NotebookCellOutputItem, Uri, NotebookCellKind, NotebookCellMetadata } from 'vscode';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
 import { CellOutputMimeTypes } from '../../../client/datascience/notebook/types';
@@ -47,12 +40,13 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 source: 'print(1)',
                 metadata: new NotebookCellMetadata().with({
                     editable: true,
-                    executionOrder: 10,
                     hasExecutionOrder: true,
-                    runState: NotebookCellRunState.Idle,
                     statusMessage: undefined,
                     custom: { metadata: {} }
-                })
+                }),
+                previousResult: {
+                    executionOrder: 10
+                }
             },
             {
                 kind: NotebookCellKind.Markdown,
@@ -61,10 +55,10 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 source: '# HEAD',
                 metadata: new NotebookCellMetadata().with({
                     editable: true,
-                    executionOrder: undefined,
                     hasExecutionOrder: false,
                     custom: { metadata: {} }
-                })
+                }),
+                previousResult: undefined
             }
         ]);
     });

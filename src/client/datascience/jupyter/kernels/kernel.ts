@@ -9,7 +9,7 @@ import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, Event, EventEmitter, NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
+import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
@@ -82,7 +82,6 @@ export class Kernel implements IKernel {
         private readonly editorProvider: INotebookEditorProvider,
         kernelProvider: IKernelProvider,
         appShell: IApplicationShell,
-        vscNotebook: IVSCodeNotebook,
         private readonly fs: IFileSystem,
         context: IExtensionContext,
         private readonly serverStorage: IJupyterServerUriStorage
@@ -90,9 +89,7 @@ export class Kernel implements IKernel {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
             errorHandler,
-            editorProvider,
             appShell,
-            vscNotebook,
             kernelConnectionMetadata,
             context,
             interruptTimeout,
