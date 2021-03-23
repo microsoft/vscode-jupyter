@@ -43,6 +43,8 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
         @inject(IVSCodeNotebook) readonly notebookProvider: IVSCodeNotebook
     ) {}
     public async resolveNotebook(_document: NotebookDocument, _webview: NotebookCommunication): Promise<void> {
+        // This function is due for deprecation. Associated code has been moved to
+        // NotebookKernelProvider will remove when removed from the API fully
         return Promise.resolve();
     }
     public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
