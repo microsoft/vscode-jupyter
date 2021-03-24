@@ -67,7 +67,7 @@ export function isJupyterKernel(kernel?: VSCNotebookKernel): kernel is VSCodeNot
 
 const kernelInformationForNotebooks = new WeakMap<
     NotebookDocument,
-    { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: KernelMessage.IInfoReplyMsg['content'] }
+    { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']> }
 >();
 
 export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeNotebook, fs: IFileSystem) {
@@ -134,6 +134,31 @@ export function trackKernelInNotebookMetadata(
 ) {
     const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
     data.metadata = kernelConnection;
+    let language: string | undefined;
+    switch (kernelConnection?.kind) {
+        case 'connectToLiveKernel':
+            language = kernelConnection.kernelModel.language;
+            break;
+        case 'startUsingKernelSpec':
+            language = kernelConnection.kernelSpec.language;
+            break;
+        case 'startUsingPythonInterpreter':
+            language = PYTHON_LANGUAGE;
+            break;
+        default:
+            break;
+    }
+    if (language) {
+        data.kernelInfo = {
+            language_info: {
+                name: language,
+                version: ''
+            }
+        };
+    } else {
+        data.kernelInfo = undefined;
+    }
+
     kernelInformationForNotebooks.set(document, data);
 }
 /**
