@@ -114,6 +114,7 @@ function TestNativeEditorProviderMixin<T extends ClassType<NativeEditorProvider>
 
 @injectable()
 export class TestNativeEditorProvider extends TestNativeEditorProviderMixin(NativeEditorProvider) {
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -141,6 +142,7 @@ export class TestNativeEditorProvider extends TestNativeEditorProviderMixin(Nati
 
 @injectable()
 export class TestNativeEditorProviderOld extends TestNativeEditorProviderMixin(NativeEditorProviderOld) {
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
