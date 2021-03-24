@@ -87,8 +87,8 @@ suite('Smoke Tests', () => {
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }
-        // Ignore exceptions (as native editor closes the document as soon as its opened);
-        await openFile(file).catch(noop);
+        
+        await vscode.commands.executeCommand('jupyter.opennotebook', vscode.Uri.file(file));
 
         // Wait for 15 seconds for notebook to launch.
         // Unfortunately there's no way to know for sure it has completely loaded.
