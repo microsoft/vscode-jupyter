@@ -12,7 +12,7 @@ import * as vscode from 'vscode';
 import { ISystemPseudoRandomNumberGenerator } from '../../client/datascience/types';
 import { IExtensionTestApi, openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
-import { noop, sleep } from '../core';
+import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
