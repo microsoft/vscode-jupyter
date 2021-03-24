@@ -27,12 +27,14 @@ import { StyleInjector } from '../react-common/styleInjector';
 import { cellFormatterFunc } from './cellFormatter';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
-import { Image, ImageName } from '../react-common/image';
 
 import '../react-common/codicon/codicon.css';
 import '../react-common/seti/seti.less';
 import { SliceControl } from './sliceControl';
 import { debounce } from 'lodash';
+
+import { initializeIcons } from '@fluentui/react';
+initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
 
@@ -192,12 +194,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         <div className="icon-python breadcrumb-file-icon" />
                         <span>{this.state.fileName}</span>
                         {this.state.fileName ? (
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                codicon="chevron-right"
-                                image={ImageName.Cancel}
-                            />
+                            <div className="codicon codicon-chevron-right breadcrumb-codicon" />
                         ) : undefined}
                         <span>{breadcrumbText}</span>
                     </div>

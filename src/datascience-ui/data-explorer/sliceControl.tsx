@@ -1,4 +1,4 @@
-import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
+import { Checkbox, Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
 import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
 import { getLocString } from '../react-common/locReactSide';
@@ -13,6 +13,21 @@ import {
 
 import './sliceControl.css';
 
+const checkboxStyles = {
+    checkbox: {
+        color: 'var(--vscode-checkbox-foreground)',
+        backgroundColor: 'var(--vscode-checkbox-background) !important',
+        border: 'var(--vscode-checkbox-border)'
+    },
+    text: {
+        fontFamily: 'var(--vscode-font-family)',
+        fontWeight: 'var(--vscode-font-weight)',
+        fontSize: 'var(--vscode-font-size)',
+        color: 'var(--vscode-editor-foreground) !important',
+        paddingLeft: 2
+    }
+};
+
 // These styles are passed to the FluentUI dropdown controls
 const styleOverrides = {
     color: 'var(--vscode-dropdown-foreground)',
@@ -20,6 +35,7 @@ const styleOverrides = {
     fontFamily: 'var(--vscode-font-family)',
     fontWeight: 'var(--vscode-font-weight)',
     fontSize: 'var(--vscode-font-size)',
+    border: 'var(--vscode-dropdown-border)',
     ':focus': {
         color: 'var(--vscode-dropdown-foreground)'
     },
@@ -42,6 +58,9 @@ const dropdownStyles = {
                 maxHeight: 100
             }
         }
+    },
+    caretDown: {
+        visibility: 'hidden' // Override the FluentUI caret and use ::after selector on the caretDownWrapper in order to match VS Code. See sliceContro.css
     },
     callout: styleOverrides,
     dropdownItem: styleOverrides,
@@ -108,16 +127,12 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     </summary>
                     <form onSubmit={this.handleSubmit} className="slice-form">
                         <div className="slice-enablement-checkbox-container">
-                            <input
-                                type="checkbox"
-                                id="slice-enablement-checkbox"
-                                className="slice-enablement-checkbox"
+                            <Checkbox
+                                styles={checkboxStyles}
                                 onChange={this.toggleEnablement}
                                 disabled={this.props.loadingData}
+                                label={getLocString('DataScience.sliceData', 'Slice Data')}
                             />
-                            <label htmlFor="slice-enablement-checkbox">
-                                {getLocString('DataScience.sliceData', 'Slice Data')}
-                            </label>
                         </div>
                         <div className="slice-control-row" style={{ marginTop: '10px' }}>
                             <div className="slice-control-column">

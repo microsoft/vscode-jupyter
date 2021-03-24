@@ -91,14 +91,14 @@ def _VSCODE_convertTensorToDataFrame(tensor, start=None, end=None):
 def _VSCODE_convertToDataFrame(df, start=None, end=None):
     vartype = type(df)
     if isinstance(df, list):
-        df = _VSCODE_pd.DataFrame(df)
+        df = _VSCODE_pd.DataFrame(df).iloc[start:end]
     elif isinstance(df, _VSCODE_pd.Series):
-        df = _VSCODE_pd.Series.to_frame(df)
+        df = _VSCODE_pd.Series.to_frame(df).iloc[start:end]
     elif isinstance(df, dict):
         df = _VSCODE_pd.Series(df)
-        df = _VSCODE_pd.Series.to_frame(df)
+        df = _VSCODE_pd.Series.to_frame(df).iloc[start:end]
     elif hasattr(df, "toPandas"):
-        df = df.toPandas()
+        df = df.toPandas().iloc[start:end]
     elif (
         hasattr(vartype, "__name__") and vartype.__name__ in _VSCODE_allowedTensorTypes
     ):
@@ -109,7 +109,7 @@ def _VSCODE_convertToDataFrame(df, start=None, end=None):
         """Disabling bandit warning for try, except, pass. We want to swallow all exceptions here to not crash on
         variable fetching"""
         try:
-            temp = _VSCODE_pd.DataFrame(df)
+            temp = _VSCODE_pd.DataFrame(df).iloc[start:end]
             df = temp
         except:  # nosec
             pass

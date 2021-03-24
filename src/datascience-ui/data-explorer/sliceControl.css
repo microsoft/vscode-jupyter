@@ -1,12 +1,12 @@
 .slice-data {
-    background-color: var(--vscode-input-background);
-    color: var(--vscode-input-foreground);
-    padding: 0px 4px;
+    background-color: var(--vscode-settings-textInputBackground);
+    color: var(--vscode-settings-textInputForeground) !important;
+    padding: 0px 4px 0px 6px;
     /* input does not inherit font from body */
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
-    height: 30px;
+    height: 26px;
     margin: 0px;
     border: none;
 }
@@ -27,10 +27,12 @@
 .slice-summary {
     display: flex;
     flex-direction: row;
+    cursor: pointer;
 }
 
 .slice-summary-detail {
     padding-bottom: 2px;
+    padding-left: 2px;
 }
 
 .current-slice {
@@ -39,13 +41,14 @@
     padding-right: 5px;
     padding-top: 0px;
     background-color: var(--vscode-input-background);
+    border-radius: 2px;
 }
 
 .slice-form {
     align-self: center;
     flex-direction: column;
     justify-content: space-between;
-    padding: 4px;
+    padding: 4px 14px;
 }
 
 .slice-control-row {
@@ -78,26 +81,21 @@ details[open] > summary::before {
 }
 
 .submit-slice-button {
-    color: var(--vscode-button-foreground);
+    color: var(--vscode-button-foreground) !important;
     background-color: var(--vscode-button-background);
     border: none;
     margin-left: 10px;
     padding: 4px 8px;
-    height: 30px;
+    height: 26px;
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
     max-width: fit-content;
-}
-
-.slice-enablement-checkbox {
-    margin-right: 6px;
-    width: 20px;
+    cursor: pointer;
 }
 
 .slice-enablement-checkbox-container {
     padding-top: 4px;
-    padding-bottom: 4px;
 }
 
 :focus {
@@ -105,13 +103,6 @@ details[open] > summary::before {
 }
 
 /* Overrides for Fluent UI controls */
-[class*='text'] {
-    color: var(--vscode-editor-foreground);
-    font-family: var(--vscode-font-family);
-    font-weight: var(--vscode-font-weight);
-    font-size: var(--vscode-font-size);
-}
-
 [class*='ms-Dropdown-label'] {
     color: var(--vscode-editor-foreground);
     font-family: var(--vscode-font-family);
@@ -119,6 +110,7 @@ details[open] > summary::before {
     font-size: var(--vscode-font-size);
 }
 
+/* This needs to match VS Code settings dropdowns */
 .dropdownTitleOverrides .ms-Dropdown-title {
     /* Usually want to avoid !important but in this case
        it's necessary to ensure that when the dropdown
@@ -130,6 +122,34 @@ details[open] > summary::before {
     font-size: var(--vscode-font-size);
     background-color: var(--vscode-dropdown-background);
     border: var(--vscode-dropdown-border);
+    border-radius: 0px;
+    height: 26px;
+    line-height: 26px;
+}
+
+[class*='dropdown'] {
+    border: 1px solid var(--vscode-dropdown-border),
+}
+
+[class*='dropdown']:active {
+    border: 1px solid var(--vscode-dropdown-border),
+}
+
+[class*='dropdown']:focus::after {
+    border-radius: 0px;
+    border: 1px solid var(--vscode-focusBorder) !important;
+}
+
+[class*='ms-Dropdown-caretDownWrapper']::after {
+    color: var(--vscode-dropdown-foreground);
+    content: "\eab4";
+    pointer-events: none;
+    font-family: codicon;
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    line-height: 26px;
+    opacity: 0.8;
 }
 
 .slice-data.input-invalid {
@@ -141,13 +161,13 @@ details[open] > summary::before {
 }
 
 .slice-data:focus {
-    outline: 1px solid var(--vscode-button-background)
+    outline: 1px solid var(--vscode-button-background);
 }
 
 .error-message {
     outline: 1px solid var(--vscode-inputValidation-errorBorder);
     background-color: var(--vscode-inputValidation-errorBackground);
-    color: var(--vscode-settings-textInputForeground);
+    color: var(--vscode-inputValidation-errorForeground);
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
