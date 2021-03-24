@@ -1,5 +1,17 @@
 # Changelog
 
+## 2021.3.1 (24 March 2021)
+
+### Fixes
+
+1. Fix duplicate rows being fetched into data viewer for large data.
+   ([#5200](https://github.com/Microsoft/vscode-jupyter/issues/5200))
+
+### Code Health
+
+1. Add tests for data viewer slice data functionality.
+   ([#5066](https://github.com/Microsoft/vscode-jupyter/issues/5066))
+
 ## 2021.3.0 (3 March 2021)
 
 ### Enhancements
