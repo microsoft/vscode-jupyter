@@ -24,7 +24,6 @@ import { InteractiveWindowMessages } from '../../../client/datascience/interacti
 import { verifyViewVariables } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
-import { sleep } from '../../core';
 import { traceInfo } from '../../../client/common/logger';
 
 suite('DataScience - VariableView', () => {
@@ -75,7 +74,7 @@ suite('DataScience - VariableView', () => {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test showing the basic variable view with a value or two
-    test('IANHU Can show VariableView (webview-test)', async function () {
+    test('Can show VariableView (webview-test)', async function () {
         //return this.skip();
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
@@ -112,7 +111,7 @@ suite('DataScience - VariableView', () => {
         verifyViewVariables(expectedVariables, htmlResult);
     });
 
-    test('Variable view document switching (webview-test)', async function () {
+    test('IANHU Variable view document switching (webview-test)', async function () {
         this.timeout(60_000);
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
