@@ -284,7 +284,19 @@ suite('DataScience DataViewer tests', () => {
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        verifyRows(wrapper.wrapper, [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]);
+    });
+
+    runMountedTest('Transposed Data Frame', async (wrapper) => {
+        await injectCode(
+            'import pandas as pd\r\ndata = [["tom", 10], ["nick", 15], ["juli", 14]]\r\ndf = pd.DataFrame(data, columns=["Name", "Age"])\r\ndf = df.transpose()'
+        );
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('df', 'DataFrame');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        verifyRows(wrapper.wrapper, [0, 'Name', 'tom', 'nick', 'juli', 1, 'Age', '10', '15', '14']);
     });
 
     runMountedTest('List', async (wrapper) => {
@@ -304,7 +316,7 @@ suite('DataScience DataViewer tests', () => {
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        verifyRows(wrapper.wrapper, [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]);
     });
 
     runMountedTest('np.array', async (wrapper) => {
