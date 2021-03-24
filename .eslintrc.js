@@ -881,7 +881,6 @@ module.exports = {
         'src/client/datascience/interactive-ipynb/nativeEditorViewTracker.ts',
         'src/client/datascience/interactive-ipynb/nativeEditorOldWebView.ts',
         'src/client/datascience/interactive-ipynb/nativeEditorSynchronizer.ts',
-        'src/client/datascience/interactive-ipynb/nativeEditorProviderOld.ts',
         'src/client/datascience/interactive-ipynb/autoSaveService.ts',
         'src/client/datascience/editor-integration/codeLensFactory.ts',
         'src/client/datascience/editor-integration/codewatcher.ts',
