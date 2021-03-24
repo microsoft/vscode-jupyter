@@ -520,7 +520,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.dataView.setItems([]);
         const styledColumns = this.styleColumns(data.columns);
         this.setColumns(styledColumns);
-        this.autoResizeColumns();
     };
 
     private updateColumns = (_e: Slick.EventData, newColumns: Slick.Column<Slick.SlickData>[]) => {
@@ -535,6 +534,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         // The solution is to force the header row to become visible just before sending our slice request.
         this.state.grid?.setHeaderRowVisibility(true);
         this.state.grid?.setColumns(newColumns);
+        this.autoResizeColumns();
     };
 
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {

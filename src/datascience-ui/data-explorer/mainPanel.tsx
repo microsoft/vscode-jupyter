@@ -32,12 +32,13 @@ import '../react-common/codicon/codicon.css';
 import '../react-common/seti/seti.less';
 import { SliceControl } from './sliceControl';
 import { debounce } from 'lodash';
+import * as uuid from 'uuid/v4';
 
 import { initializeIcons } from '@fluentui/react';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
-const RowNumberColumnName = 'No.';
+const RowNumberColumnName = uuid(); // Unique key for our column containing row numbers
 
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {
