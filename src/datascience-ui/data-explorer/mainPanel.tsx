@@ -392,16 +392,20 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 type: ColumnType.Number
             };
             const columns = [rowNumberColumn].concat(variable.columns);
-            return columns.map((c: { key: string; type: ColumnType }, i: number) => {
-                return {
-                    type: c.type,
-                    field: c.key.toString(),
-                    id: `${i}`,
-                    name: c.key.toString(),
-                    sortable: true,
-                    formatter: cellFormatterFunc
-                };
-            });
+            return columns.reduce((accum: Slick.Column<Slick.SlickData>[], c: { key: string; type: ColumnType }, i: number) => {
+                // Only show index column for pandas DataFrame and Series
+                if ((variable?.type === 'DataFrame' || variable?.type === 'Series' || c.key !== this.state.indexColumn)) {
+                    accum.push({
+                        type: c.type,
+                        field: c.key.toString(),
+                        id: `${i}`,
+                        name: c.key.toString(),
+                        sortable: true,
+                        formatter: cellFormatterFunc
+                    } as Slick.Column<Slick.SlickData>);
+                }
+                return accum;
+            }, []);
         }
         return [];
     }
