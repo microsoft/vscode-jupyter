@@ -39,7 +39,7 @@ export function getInterpreterInfoStoredInMetadata(
 export function updateNotebookMetadata(
     metadata?: nbformat.INotebookMetadata,
     kernelConnection?: KernelConnectionMetadata,
-    kernelInfo?: KernelMessage.IInfoReplyMsg['content']
+    kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
     let changed = false;
     let kernelId: string | undefined;
