@@ -1604,12 +1604,6 @@
                     "description": "When opening ipynb files, automatically preview the contents in the Interactive window.",
                     "scope": "resource"
                 },
-                "jupyter.useNotebookEditor": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Automatically open .ipynb files in the Notebook Editor.",
-                    "scope": "resource"
-                },
                 "jupyter.allowUnauthorizedRemoteConnection": {
                     "type": "boolean",
                     "default": false,
