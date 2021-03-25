@@ -907,7 +907,6 @@ module.exports = {
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore.ts',
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterSelector.ts',
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts',
-        'src/client/datascience/jupyter/jupyterRequest.ts',
         'src/client/datascience/jupyter/commandLineSelector.ts',
         'src/client/datascience/jupyter/jupyterDebugger.ts',
         'src/client/datascience/jupyter/liveshare/roleBasedFactory.ts',
