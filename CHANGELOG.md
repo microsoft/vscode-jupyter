@@ -46,6 +46,10 @@
    ([#5217](https://github.com/Microsoft/vscode-jupyter/issues/5217))
 1. Fix data viewer display of non-numeric index columns in DataFrames.
    ([#5253](https://github.com/Microsoft/vscode-jupyter/issues/5253))
+1. Display messages notifying user to enable support for CDNs when rendering IPyWidgets.
+   ([#5074](https://github.com/Microsoft/vscode-jupyter/issues/5074))
+1. When reopening a newly created Notebook with a Julia kernel, the cells should be detected as `Julia`.
+   ([#5148](https://github.com/Microsoft/vscode-jupyter/issues/5148))
 
 ### Code Health
 
@@ -55,6 +59,8 @@
    ([#5016](https://github.com/Microsoft/vscode-jupyter/issues/5016))
 1. Add tests for data viewer slice data functionality.
    ([#5066](https://github.com/Microsoft/vscode-jupyter/issues/5066))
+1. Remove setting `jupyter.useNotebookEditor`.
+   ([#5130](https://github.com/Microsoft/vscode-jupyter/issues/5130))
 
 ### Thanks
 
