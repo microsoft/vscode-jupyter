@@ -36,7 +36,7 @@ export class KernelLauncher implements IKernelLauncher {
     private static _usedPorts = new Set<number>();
     private static getPorts = promisify(portfinder.getPorts);
     private portChain: Promise<number[]> | undefined;
-    public static get usePorts(): number[] {
+    public static get usedPorts(): number[] {
         return Array.from(KernelLauncher._usedPorts);
     }
     constructor(

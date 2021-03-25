@@ -28,7 +28,7 @@ export class PortAttributesProviders implements PortAttributesProvider, IExtensi
     ): PortAttributes[] {
         try {
             return ports
-                .filter((port) => KernelLauncher.usePorts.includes(port))
+                .filter((port) => KernelLauncher.usedPorts.includes(port))
                 .map((port) => ({
                     autoForwardAction: PortAutoForwardAction.Ignore,
                     port
