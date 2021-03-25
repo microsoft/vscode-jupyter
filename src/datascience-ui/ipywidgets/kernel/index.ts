@@ -56,7 +56,7 @@ class WidgetManagerComponent {
             timedout: data.timedout,
             error: data.error
         });
-        renderErrorInLastOutputThatHasNotRendered(data.error);
+        console.error(`Failed to to Widget load class ${data.moduleName}${data.className}`, data);
     }
 
     private handleUnsupportedWidgetVersion(data: { moduleName: 'qgrid'; moduleVersion: string }) {
@@ -112,15 +112,6 @@ export function disposeOutput(e: { outputId: string } | undefined) {
         stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter(
             (item) => !(e.outputId in item)
         );
-    }
-}
-function renderErrorInLastOutputThatHasNotRendered(message: string) {
-    const possiblyEmptyOutputElement = [...stackOfWidgetsRenderStatusByOutputId]
-        .reverse()
-        .find((item) => !item.success);
-    if (possiblyEmptyOutputElement) {
-        //
-        console.log(message);
     }
 }
 function renderIPyWidget(
