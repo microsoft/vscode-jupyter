@@ -54,6 +54,8 @@
    ([#1215](https://github.com/Microsoft/vscode-jupyter/issues/1215))
 1. Refactor how Kernels are searched and selected.
    ([#4995](https://github.com/microsoft/vscode-jupyter/pull/4995))
+1. Fix run selection/line to work from the active editor
+   ([#5287](https://github.com/Microsoft/vscode-jupyter/issues/5287))
 
 ### Code Health
 
