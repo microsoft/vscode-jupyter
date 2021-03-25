@@ -94,7 +94,7 @@ export class CommonMessageCoordinator {
         if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
             this.sendLoadSucceededTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
-            this.sendLoadFailureTelemetry(payload);
+            this.handleWidgetLoadFailure(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported) {
             this.sendUnsupportedWidgetVersionFailureTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
@@ -128,7 +128,7 @@ export class CommonMessageCoordinator {
         }
     }
 
-    private sendLoadFailureTelemetry(payload: ILoadIPyWidgetClassFailureAction) {
+    private handleWidgetLoadFailure(payload: ILoadIPyWidgetClassFailureAction) {
         try {
             let errorMessage: string = payload.error.toString();
             if (!payload.isOnline) {
