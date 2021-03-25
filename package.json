@@ -1356,7 +1356,7 @@
                             "CustomEditor"
                         ]
                     },
-                    "description": "List of experiment to opt into. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-jupyter/wiki/Experiments for more details.",
+                    "markdownDescription": "List of experiment to opt into. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
                     "scope": "application"
                 },
                 "jupyter.experiments.optOutFrom": {
@@ -1368,7 +1368,7 @@
                             "CustomEditor"
                         ]
                     },
-                    "description": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-jupyter/wiki/Experiments for more details.",
+                    "markdownDescription": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
                     "scope": "application"
                 },
                 "jupyter.enableKeyboardShortcuts": {
