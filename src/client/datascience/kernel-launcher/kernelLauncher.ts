@@ -15,7 +15,7 @@ import { isTestExecution } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
-import { Resource } from '../../common/types';
+import { IDisposableRegistry, Resource } from '../../common/types';
 import { Telemetry } from '../constants';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelDependencyService } from '../types';
@@ -33,9 +33,12 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
-    private static usedPorts = new Set<number>();
+    private static _usedPorts = new Set<number>();
     private static getPorts = promisify(portfinder.getPorts);
     private portChain: Promise<number[]> | undefined;
+    public static get usePorts(): number[] {
+        return Array.from(KernelLauncher._usedPorts);
+    }
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
@@ -43,7 +46,8 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(KernelEnvironmentVariablesService)
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
-        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
+        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
 
     public static async cleanupStartPort() {
@@ -131,6 +135,18 @@ export class KernelLauncher implements IKernelLauncher {
         );
         await kernelProcess.launch(workingDirectory, timeout, cancelToken);
 
+        kernelProcess.exited(
+            () => {
+                KernelLauncher._usedPorts.delete(connection.control_port);
+                KernelLauncher._usedPorts.delete(connection.hb_port);
+                KernelLauncher._usedPorts.delete(connection.iopub_port);
+                KernelLauncher._usedPorts.delete(connection.shell_port);
+                KernelLauncher._usedPorts.delete(connection.stdin_port);
+            },
+            this,
+            this.disposables
+        );
+
         // Double check for cancel
         if (cancelToken?.isCancellationRequested) {
             await kernelProcess.dispose();
@@ -150,11 +166,11 @@ export class KernelLauncher implements IKernelLauncher {
     static async findNextFreePort(port: number): Promise<number[]> {
         // Then get the next set starting at that point
         const ports = await KernelLauncher.getPorts(5, { host: '127.0.0.1', port });
-        if (ports.some((item) => KernelLauncher.usedPorts.has(item))) {
-            const maxPort = Math.max(...KernelLauncher.usedPorts, ...ports);
+        if (ports.some((item) => KernelLauncher._usedPorts.has(item))) {
+            const maxPort = Math.max(...KernelLauncher._usedPorts, ...ports);
             return KernelLauncher.findNextFreePort(maxPort);
         }
-        ports.forEach((item) => KernelLauncher.usedPorts.add(item));
+        ports.forEach((item) => KernelLauncher._usedPorts.add(item));
         return ports;
     }
 
