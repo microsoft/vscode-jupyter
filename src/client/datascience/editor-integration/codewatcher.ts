@@ -22,7 +22,6 @@ import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposable, IJupyterSettings, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { isUri } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
@@ -248,10 +247,10 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
-    public async runSelectionOrLine(activeEditor: TextEditor | undefined, text?: string | Uri) {
+    public async runSelectionOrLine(activeEditor: TextEditor | undefined, text?: string) {
         if (this.document && activeEditor && this.fs.arePathsSame(activeEditor.document.uri, this.document.uri)) {
             let codeToExecute: string | undefined;
-            if (text === undefined || isUri(text)) {
+            if (text === undefined) {
                 // Get just the text of the selection or the current line if none
                 codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
             } else {
