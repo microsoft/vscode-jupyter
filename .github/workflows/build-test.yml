@@ -20,7 +20,7 @@ on:
       - 'release/*'
       - 'release-*'
   schedule:
-    - cron: "0 9 * * *" # 9am UTC (2am PDT, after VS Code Insider builds which is 11pm PDT)
+    - cron: "0 9 * * 1-5" # 9am UTC, Monday-Friday (2am PDT, after VS Code Insider builds which is 11pm PDT)
   workflow_dispatch:
 env:
   NODE_VERSION: 12.14.1
