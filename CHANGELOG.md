@@ -50,6 +50,10 @@
    ([#5074](https://github.com/Microsoft/vscode-jupyter/issues/5074))
 1. When reopening a newly created Notebook with a Julia kernel, the cells should be detected as `Julia`.
    ([#5148](https://github.com/Microsoft/vscode-jupyter/issues/5148))
+1. Support switching kernels in Native Notebooks when connecting to Jupyter.
+   ([#1215](https://github.com/Microsoft/vscode-jupyter/issues/1215))
+1. Refactor how Kernels are searched and selected.
+   ([#4995](https://github.com/microsoft/vscode-jupyter/pull/4995))
 
 ### Code Health
 
