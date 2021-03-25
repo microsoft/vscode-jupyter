@@ -27,7 +27,5 @@
     "jupyter.disableJupyterAutoStart": true,
     "jupyter.logging.level": "debug",
     "python.logging.level": "debug",
-    "jupyter.alwaysTrustNotebooks": true, // In UI tests we don't want prompts for `Do you want to trust thie nb...`
-    "jupyter.useNotebookEditor": false
-
+    "jupyter.alwaysTrustNotebooks": true // In UI tests we don't want prompts for `Do you want to trust thie nb...`
 }
