@@ -306,7 +306,7 @@ export class CommandRegistry implements IDisposable {
         if (activeCodeWatcher) {
             return activeCodeWatcher.runSelectionOrLine(
                 this.documentManager.activeTextEditor,
-                // If this is a URI, the runSelectionOrLine is not expected that, so act like nothing was sent.
+                // If this is a URI, the runSelectionOrLine is not expecting a URI, so act like nothing was sent.
                 isUri(textOrUri) ? undefined : textOrUri
             );
         } else {
