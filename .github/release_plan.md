@@ -26,6 +26,7 @@
     -   [ ] Bump the version number to the next monthly ("YYYY.MM.0") release in the `main` branch
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
+    -   [ ] Merge the changes from release (Changelog, delete news, ThirdPartyNotices) into `main` branch
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
 -   [ ] GDPR bookkeeping (@greazer) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
