@@ -359,7 +359,6 @@ module.exports = {
         'src/datascience-ui/interactive-common/redux/reducers/transfer.ts',
         'src/datascience-ui/interactive-common/redux/reducers/kernel.ts',
         'src/datascience-ui/interactive-common/redux/postOffice.ts',
-        'src/datascience-ui/interactive-common/transforms.tsx',
         'src/datascience-ui/interactive-common/contentPanel.tsx',
         'src/datascience-ui/interactive-common/inputHistory.ts',
         'src/datascience-ui/history-react/index.tsx',
