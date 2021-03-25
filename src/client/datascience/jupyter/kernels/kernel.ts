@@ -125,6 +125,7 @@ export class Kernel implements IKernel {
         return this.kernelExecution.interrupt(document, this._notebookPromise);
     }
     public async dispose(): Promise<void> {
+        traceInfo(`Dispose kernel ${this.uri.toString()}`);
         this.restarting = undefined;
         this._notebookPromise = undefined;
         if (this.notebook) {
@@ -263,6 +264,7 @@ export class Kernel implements IKernel {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
             this.notebook.onDisposed(() => {
+                traceInfo(`Kernel got disposed as a result of notebook.onDisposed ${this.uri.toString()}`);
                 this._notebookPromise = undefined;
                 this._onDisposed.fire();
             });
