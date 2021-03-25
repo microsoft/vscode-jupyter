@@ -310,7 +310,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         closeDocumentBeforeOpeningNotebook: boolean
     ) => {
         // See if this is an ipynb file
-        if (this.isNotebook(document) && this.configuration.getSettings(document.uri).useNotebookEditor) {
+        if (this.isNotebook(document)) {
             if (await this.isDocumentOpenedInVSCodeNotebook(document)) {
                 return;
             }
