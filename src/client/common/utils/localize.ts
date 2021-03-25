@@ -862,9 +862,14 @@ export namespace DataScience {
         'DataScience.useCDNForWidgets',
         'Widgets require us to download supporting files from a 3rd party website. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.'
     );
+    export const enableCDNForWidgetsSettingHtml = localize(
+        'DataScience.enableCDNForWidgetsSettingHtml',
+        "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:jupyter.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1})."
+    );
+
     export const enableCDNForWidgetsSetting = localize(
         'DataScience.enableCDNForWidgetsSetting',
-        "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:jupyter.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1})."
+        'Widgets require us to download supporting files from a 3rd party website. Click [here](command:jupyter.enableLoadingWidgetScriptsFromThirdPartySource) to enable this or click [here](https://aka.ms/PVSCIPyWidgets) for more information. (Error loading {0}:{1}).'
     );
 
     export const unhandledMessage = localize(
