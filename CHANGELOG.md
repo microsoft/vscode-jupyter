@@ -46,6 +46,9 @@
    ([#5217](https://github.com/Microsoft/vscode-jupyter/issues/5217))
 1. Fix data viewer display of non-numeric index columns in DataFrames.
    ([#5253](https://github.com/Microsoft/vscode-jupyter/issues/5253))
+1. Fix run selection/line to work from the active editor
+   ([#5287](https://github.com/Microsoft/vscode-jupyter/issues/5287))
+
 
 ### Code Health
 
