@@ -25,6 +25,7 @@ import {
     IPersistentStateFactory
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -48,6 +49,7 @@ export class CommonMessageCoordinator {
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
     private ipyWidgetScriptSource?: IPyWidgetScriptSource;
+    private appSell: IApplicationShell;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter: EventEmitter<{ message: string; payload: any }>;
     private disposables: IDisposableRegistry;
@@ -68,6 +70,7 @@ export class CommonMessageCoordinator {
             }>();
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.appSell = this.serviceContainer.get<IApplicationShell>(IApplicationShell, IApplicationShell);
     }
 
     public static async create(
@@ -91,7 +94,7 @@ export class CommonMessageCoordinator {
         if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
             this.sendLoadSucceededTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
-            this.sendLoadFailureTelemetry(payload);
+            this.handleWidgetLoadFailure(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported) {
             this.sendUnsupportedWidgetVersionFailureTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
@@ -125,8 +128,24 @@ export class CommonMessageCoordinator {
         }
     }
 
-    private sendLoadFailureTelemetry(payload: ILoadIPyWidgetClassFailureAction) {
+    private handleWidgetLoadFailure(payload: ILoadIPyWidgetClassFailureAction) {
         try {
+            let errorMessage: string = payload.error.toString();
+            if (!payload.isOnline) {
+                errorMessage = localize.DataScience.loadClassFailedWithNoInternet().format(
+                    payload.moduleName,
+                    payload.moduleVersion
+                );
+            } else if (!payload.cdnsUsed) {
+                errorMessage = localize.DataScience.enableCDNForWidgetsSetting().format(
+                    payload.moduleName,
+                    payload.moduleVersion
+                );
+            }
+            traceError(`Widget load failure ${errorMessage}`, payload);
+
+            this.appSell.showErrorMessage(errorMessage).then(noop, noop);
+
             sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
                 isOnline: payload.isOnline,
                 moduleHash: getTelemetrySafeHashedString(payload.moduleName),
