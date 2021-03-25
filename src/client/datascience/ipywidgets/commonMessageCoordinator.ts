@@ -49,7 +49,7 @@ export class CommonMessageCoordinator {
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
     private ipyWidgetScriptSource?: IPyWidgetScriptSource;
-    private appSell: IApplicationShell;
+    private appShell: IApplicationShell;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter: EventEmitter<{ message: string; payload: any }>;
     private disposables: IDisposableRegistry;
@@ -70,7 +70,7 @@ export class CommonMessageCoordinator {
             }>();
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.appSell = this.serviceContainer.get<IApplicationShell>(IApplicationShell, IApplicationShell);
+        this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell, IApplicationShell);
     }
 
     public static async create(
@@ -144,7 +144,7 @@ export class CommonMessageCoordinator {
             }
             traceError(`Widget load failure ${errorMessage}`, payload);
 
-            this.appSell.showErrorMessage(errorMessage).then(noop, noop);
+            this.appShell.showErrorMessage(errorMessage).then(noop, noop);
 
             sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
                 isOnline: payload.isOnline,
