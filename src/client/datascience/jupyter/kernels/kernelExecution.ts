@@ -3,35 +3,19 @@
 
 'use strict';
 
-import {
-    NotebookCell,
-    NotebookCellKind,
-    NotebookCellRunState,
-    NotebookDocument,
-    NotebookEditor,
-    NotebookRunState
-} from 'vscode';
+import { notebook, NotebookCell, NotebookCellKind, NotebookDocument } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
+import { IApplicationShell } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
-import { IDisposable, IExtensionContext } from '../../../common/types';
+import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, waitForPromise } from '../../../common/utils/async';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { traceCellMessage } from '../../notebook/helpers/helpers';
-import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
-import {
-    IDataScienceErrorHandler,
-    IJupyterSession,
-    INotebook,
-    INotebookEditorProvider,
-    InterruptResult
-} from '../../types';
+import { IDataScienceErrorHandler, IJupyterSession, INotebook, InterruptResult } from '../../types';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
-import { isPythonKernelConnection } from './helpers';
 import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
 
 /**
@@ -47,32 +31,19 @@ export class KernelExecution implements IDisposable {
     constructor(
         private readonly kernelProvider: IKernelProvider,
         errorHandler: IDataScienceErrorHandler,
-        editorProvider: INotebookEditorProvider,
         appShell: IApplicationShell,
-        readonly vscNotebook: IVSCodeNotebook,
         readonly metadata: Readonly<KernelConnectionMetadata>,
         context: IExtensionContext,
-        private readonly interruptTimeout: number
+        private readonly interruptTimeout: number,
+        disposables: IDisposableRegistry
     ) {
-        this.executionFactory = new CellExecutionFactory(errorHandler, editorProvider, appShell, vscNotebook, context);
+        this.executionFactory = new CellExecutionFactory(errorHandler, appShell, context, disposables);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<void> {
         sendKernelTelemetryEvent(cell.notebook.uri, Telemetry.ExecuteNativeCell);
-        const editor = this.vscNotebook.notebookEditors.find((item) => item.document === cell.notebook);
-        if (!editor) {
-            // No editor, possible it was closed.
-            return;
-        }
-        if (cell.metadata.runState === NotebookCellRunState.Running) {
-            // This is an unlikely scenario (UI doesn't allow this).
-            // Seen something similar in CI tests when we manually run whole document using the commands.
-            traceCellMessage(cell, 'Cell is already running, somehow executeCell called again');
-            return;
-        }
-
-        const executionQueue = this.getOrCreateCellExecutionQueue(editor, notebookPromise);
+        const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, notebookPromise);
         executionQueue.queueCell(cell);
         await executionQueue.waitForCompletion([cell]);
     }
@@ -81,43 +52,23 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
     public async executeAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
         sendKernelTelemetryEvent(document.uri, Telemetry.ExecuteNativeCell);
-        const editor = this.vscNotebook.notebookEditors.find((item) => item.document === document);
-        if (!editor) {
-            // No editor, possible it was closed.
-            return;
-        }
-
         // Only run code cells that are not already running.
-        const cellsThatWeCanRun = editor.document.cells
-            .filter((cell) => cell.kind === NotebookCellKind.Code)
-            .filter((cell) => cell.metadata.runState !== NotebookCellRunState.Running);
+        const cellsThatWeCanRun = document.cells.filter((cell) => cell.kind === NotebookCellKind.Code);
         if (cellsThatWeCanRun.length === 0) {
             // This is an unlikely scenario (UI doesn't allow this).
             // Seen this in CI tests when we manually run whole document using the commands.
             return;
         }
 
-        const executionQueue = this.getOrCreateCellExecutionQueue(editor, notebookPromise);
+        const executionQueue = this.getOrCreateCellExecutionQueue(document, notebookPromise);
 
         try {
             traceInfo('Update notebook execution state as running');
 
-            const updateNotebookStatus = chainWithPendingUpdates(editor.document, (edit) => {
-                const metadata = document.metadata.with({ runState: NotebookRunState.Running });
-                edit.replaceNotebookMetadata(editor.document.uri, metadata);
-                return edit;
-            });
             cellsThatWeCanRun.forEach((cell) => executionQueue.queueCell(cell));
-            const runAllCells = executionQueue.waitForCompletion(cellsThatWeCanRun);
-
-            await Promise.all([updateNotebookStatus, runAllCells]);
+            await executionQueue.waitForCompletion(cellsThatWeCanRun);
         } finally {
             traceInfo('Restore notebook state to idle after completion');
-            await chainWithPendingUpdates(editor.document, (edit) => {
-                const metadata = document.metadata.with({ runState: NotebookRunState.Idle });
-                edit.replaceNotebookMetadata(editor.document.uri, metadata);
-                return edit;
-            });
         }
     }
     /**
@@ -159,36 +110,38 @@ export class KernelExecution implements IDisposable {
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
-    private getOrCreateCellExecutionQueue(editor: NotebookEditor, notebookPromise: Promise<INotebook>) {
-        const existingExecutionQueue = this.documentExecutions.get(editor.document);
+    private getOrCreateCellExecutionQueue(document: NotebookDocument, notebookPromise: Promise<INotebook>) {
+        const existingExecutionQueue = this.documentExecutions.get(document);
         // Re-use the existing Queue if it can be used.
         if (existingExecutionQueue && !existingExecutionQueue.isEmpty && !existingExecutionQueue.failed) {
             return existingExecutionQueue;
         }
 
         // We need to add the handler to kernel immediately (before we resolve the notebook, else its possible user hits restart or the like and we miss that event).
-        const wrappedNotebookPromise = this.getKernel(editor.document)
-            .then((kernel) => this.addKernelRestartHandler(kernel, editor.document))
+        const wrappedNotebookPromise = this.getKernel(document)
+            .then((kernel) => this.addKernelRestartHandler(kernel, document))
             .then(() => notebookPromise);
 
         const newCellExecutionQueue = new CellExecutionQueue(
             wrappedNotebookPromise,
             this.executionFactory,
-            isPythonKernelConnection(this.metadata)
+            this.metadata
         );
 
-        // If the editor is closed (user or on CI), then just stop handling the UI updates.
-        editor.onDidDispose(
-            async () => {
-                if (!newCellExecutionQueue.failed || !newCellExecutionQueue.isEmpty) {
-                    await newCellExecutionQueue.cancel(true);
+        // If the document is closed (user or on CI), then just stop handling the UI updates & cancel cell execution queue.
+        notebook.onDidCloseNotebookDocument(
+            async (e: NotebookDocument) => {
+                if (e === document) {
+                    if (!newCellExecutionQueue.failed || !newCellExecutionQueue.isEmpty) {
+                        await newCellExecutionQueue.cancel(true);
+                    }
                 }
             },
             this,
             this.disposables
         );
 
-        this.documentExecutions.set(editor.document, newCellExecutionQueue);
+        this.documentExecutions.set(document, newCellExecutionQueue);
         return newCellExecutionQueue;
     }
     @captureTelemetry(Telemetry.Interrupt)

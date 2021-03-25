@@ -79,7 +79,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public remoteDebuggerPort: number = 0;
     public colorizeInputBox: boolean = false;
     public addGotoCodeLenses: boolean = false;
-    public useNotebookEditor: boolean = false;
     public runMagicCommands: string = '';
     public runStartupCommands: string | string[] = [];
     public debugJustMyCode: boolean = false;

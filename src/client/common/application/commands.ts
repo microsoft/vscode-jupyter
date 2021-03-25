@@ -32,7 +32,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['jupyterViewVariables.focus']: [];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
-    [DSCommands.ExecSelectionInInteractiveWindow]: [];
     [DSCommands.CreateNewInteractive]: [];
     [DSCommands.UndoCells]: [];
     [DSCommands.RedoCells]: [];
@@ -102,6 +101,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.OpenNotebook]: [undefined | Uri, undefined | string, undefined | CommandSource];
     [DSCommands.OpenNotebookInPreviewEditor]: [undefined | Uri];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.ExecSelectionInInteractiveWindow]: [string | undefined];
     [DSCommands.RunFileInInteractiveWindows]: [Uri];
     [DSCommands.DebugFileInInteractiveWindows]: [Uri];
     [DSCommands.DebugCell]: [Uri, number, number, number, number];
