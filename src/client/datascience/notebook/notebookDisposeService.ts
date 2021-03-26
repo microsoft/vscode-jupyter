@@ -4,8 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument } from 'vscode';
-import { notebook } from '../../../../types/vscode-proposed';
+import { notebook, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
