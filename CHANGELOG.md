@@ -58,6 +58,10 @@
    ([#5287](https://github.com/Microsoft/vscode-jupyter/issues/5287))
 1. Update variable view to use the new API for native cell execution notification.
    ([#5316](https://github.com/Microsoft/vscode-jupyter/issues/5316))
+1. Ensure Git diff viewer does not get replaced by Notebook Editor.
+   ([#633](https://github.com/Microsoft/vscode-jupyter/issues/633))
+   (thanks [Matt Bierner](https://github.com/mjbvz))
+
 
 ### Code Health
 
@@ -69,6 +73,8 @@
    ([#5066](https://github.com/Microsoft/vscode-jupyter/issues/5066))
 1. Remove setting `jupyter.useNotebookEditor`.
    ([#5130](https://github.com/Microsoft/vscode-jupyter/issues/5130))
+1. Enable `debug` logging by default.
+   ([#5238](https://github.com/Microsoft/vscode-jupyter/issues/5238))
 
 ### Thanks
 
