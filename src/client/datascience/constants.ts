@@ -457,7 +457,7 @@ export enum Telemetry {
      * Sent when a command we register is executed.
      */
     CommandExecuted = 'DS_INTERNAL.COMMAND_EXECUTED',
-    UpdateCustomEditorAssociation = 'DS_INTERNAL.UPDATE_CUSTOM_EDITOR_ASSOCIATION',
+    UpdateCustomEditorAssociation = 'DS_INTERNAL.UPDATE_CUSTOM_EDITOR_ASSOCIATION'
 }
 
 export enum NativeKeyboardCommandTelemetry {
