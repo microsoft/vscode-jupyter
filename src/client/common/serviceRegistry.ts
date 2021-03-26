@@ -106,4 +106,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
     serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        CustomEditorService
+    );
 }
