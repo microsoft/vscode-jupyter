@@ -114,7 +114,7 @@ import { MillisecondsInADay } from '../../client/constants';
 
             bannerService = createBannerService();
         });
-        function createBannerService() {
+        function createBannerService(isCodeSpace = false) {
             return new DataScienceSurveyBanner(
                 instance(appShell),
                 instance(persistentStateFactory),
@@ -122,6 +122,7 @@ import { MillisecondsInADay } from '../../client/constants';
                 instance(editorProvider),
                 instance(appEnv),
                 instance(vscodeNotebook),
+                isCodeSpace,
                 instance(notebookExtensibility),
                 [],
                 UseVSCodeNotebookEditorApi
@@ -137,6 +138,19 @@ import { MillisecondsInADay } from '../../client/constants';
             await bannerService.showBanner(survey);
 
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
+        });
+        test(type + ' - Confirm prompt is not displayed in codespaces', async () => {
+            bannerService = createBannerService();
+
+            when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve();
+            await showBannerState.updateValue({ data: true });
+            await executionCountState.updateValue(100);
+
+            await bannerService.showBanner(survey);
+            await bannerService.showBanner(survey);
+            await bannerService.showBanner(survey);
+
+            verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
         });
         test(type + ' - Confirm prompt is displayed 3 months later', async () => {
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
