@@ -3,23 +3,23 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
+import { IExtensionSingleActivationService } from '../../activation/types';
+import { Telemetry } from '../../datascience/constants';
+import { sendTelemetryEvent } from '../../telemetry';
 
 import { UseCustomEditorApi } from '../constants';
-import { traceError } from '../logger';
 import { InvalidCustomEditor } from './invalidCustomEditor';
 import { CustomEditorProvider, ICommandManager, ICustomEditorService, IWorkspaceService } from './types';
 
 export const ViewType = 'jupyter.notebook.ipynb';
 
 @injectable()
-export class CustomEditorService implements ICustomEditorService {
+export class CustomEditorService implements ICustomEditorService, IExtensionSingleActivationService {
     constructor(
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(UseCustomEditorApi) private readonly useCustomEditorApi: boolean,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {
-        this.enableCustomEditors().catch((e) => traceError(`Error setting up custom editors: `, e));
-    }
+    ) {}
 
     public registerCustomEditorProvider(
         viewType: string,
@@ -44,35 +44,43 @@ export class CustomEditorService implements ICustomEditorService {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async enableCustomEditors() {
-        // This code is temporary.
-        const settings = this.workspace.getConfiguration('workbench', undefined);
-        const editorAssociations = settings.get('editorAssociations') as {
-            viewType: string;
-            filenamePattern: string;
-        }[];
+    public async activate() {
+        let updateType: 'added' | 'removed' | undefined;
+        try {
+            // This code is temporary.
+            const settings = this.workspace.getConfiguration('workbench', undefined);
+            const editorAssociations = settings.get('editorAssociations') as {
+                viewType: string;
+                filenamePattern: string;
+            }[];
 
-        // Update the settings.
-        if (
-            this.useCustomEditorApi &&
-            (editorAssociations.length === 0 || !editorAssociations.find((item) => item.viewType === ViewType))
-        ) {
-            editorAssociations.push({
-                viewType: ViewType,
-                filenamePattern: '*.ipynb'
-            });
-            await settings.update('editorAssociations', editorAssociations, vscode.ConfigurationTarget.Global);
-        }
+            // Update the settings.
+            if (
+                this.useCustomEditorApi &&
+                (editorAssociations.length === 0 || !editorAssociations.find((item) => item.viewType === ViewType))
+            ) {
+                editorAssociations.push({
+                    viewType: ViewType,
+                    filenamePattern: '*.ipynb'
+                });
+                updateType = 'added';
+                await settings.update('editorAssociations', editorAssociations, vscode.ConfigurationTarget.Global);
+                sendTelemetryEvent(Telemetry.UpdateCustomEditorAssociation, undefined, { type: 'added' });
+            }
 
-        // Revert the settings.
-        if (
-            !this.useCustomEditorApi &&
-            Array.isArray(editorAssociations) &&
-            editorAssociations.find((item) => item.viewType === ViewType)
-        ) {
-            const updatedSettings = editorAssociations.filter((item) => item.viewType !== ViewType);
-            await settings.update('editorAssociations', updatedSettings, vscode.ConfigurationTarget.Global);
+            // Revert the settings.
+            if (
+                !this.useCustomEditorApi &&
+                Array.isArray(editorAssociations) &&
+                editorAssociations.find((item) => item.viewType === ViewType)
+            ) {
+                const updatedSettings = editorAssociations.filter((item) => item.viewType !== ViewType);
+                updateType = 'removed';
+                await settings.update('editorAssociations', updatedSettings, vscode.ConfigurationTarget.Global);
+                sendTelemetryEvent(Telemetry.UpdateCustomEditorAssociation, undefined, { type: 'removed' });
+            }
+        } catch (ex) {
+            sendTelemetryEvent(Telemetry.UpdateCustomEditorAssociation, undefined, { type: updateType! }, ex, true);
         }
     }
 }
