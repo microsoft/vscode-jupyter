@@ -47,6 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       vsix_name: ${{ env.vsix_name }}
+      ts_test_matrix_os: ${{ env.ts_test_matrix_os }}
       test_matrix_os: ${{ env.test_matrix_os }}
       release_channel: ${{ env.release_channel }}
     if: github.repository == 'microsoft/vscode-jupyter'
@@ -60,6 +61,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
+          echo "ts_test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
 
       - name: insiders
@@ -68,6 +70,7 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         run: |
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
+          echo "ts_test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
       - name: insiders channel
@@ -80,6 +83,7 @@ jobs:
         if: github.event_name == 'push' && contains(github.ref, 'refs/heads/release')
         run: |
           echo "vsix_name=ms-toolsai-jupyter-release.vsix" >> $GITHUB_ENV
+          echo "ts_test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
 
       - name: release channel
@@ -200,7 +204,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
+        os: ${{fromJson(needs.pick_environment.outputs.ts_test_matrix_os)}}
         test-suite: [ts-unit]
     steps:
       - name: Checkout
