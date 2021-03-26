@@ -56,6 +56,8 @@
    ([#4995](https://github.com/microsoft/vscode-jupyter/pull/4995))
 1. Fix run selection/line to work from the active editor
    ([#5287](https://github.com/Microsoft/vscode-jupyter/issues/5287))
+1. Update variable view to use the new API for native cell execution notification.
+   ([#5316](https://github.com/Microsoft/vscode-jupyter/issues/5316))
 
 ### Code Health
 
