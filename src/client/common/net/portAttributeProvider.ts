@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { workspace } from 'vscode';
 import { CancellationToken, PortAttributes, PortAttributesProvider, PortAutoForwardAction } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
+import { NotebookStarter } from '../../datascience/jupyter/notebookStarter';
 import { KernelLauncher } from '../../datascience/kernel-launcher/kernelLauncher';
 import { traceError } from '../logger';
 import { IDisposableRegistry } from '../types';
@@ -28,7 +29,7 @@ export class PortAttributesProviders implements PortAttributesProvider, IExtensi
     ): PortAttributes[] {
         try {
             return ports
-                .filter((port) => KernelLauncher.usedPorts.includes(port))
+                .filter((port) => KernelLauncher.usedPorts.includes(port) || NotebookStarter.usedPorts.includes(port))
                 .map((port) => ({
                     autoForwardAction: PortAutoForwardAction.Ignore,
                     port
