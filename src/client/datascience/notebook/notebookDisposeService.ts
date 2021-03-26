@@ -31,6 +31,7 @@ export class NotebookDisposeService implements IExtensionSingleActivationService
         this.vscNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
     }
     private onDidCloseNotebookDocument(document: NotebookDocument) {
+        traceInfo(`Notebook Closed ${document.uri.toString()}`);
         const kernel = this.kernelProvider.get(document.uri);
         if (kernel) {
             traceInfo(
