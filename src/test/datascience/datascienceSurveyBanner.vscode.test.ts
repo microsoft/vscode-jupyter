@@ -140,7 +140,7 @@ import { MillisecondsInADay } from '../../client/constants';
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
         });
         test(type + ' - Confirm prompt is not displayed in codespaces', async () => {
-            bannerService = createBannerService();
+            bannerService = createBannerService(true);
 
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve();
             await showBannerState.updateValue({ data: true });
