@@ -27,6 +27,7 @@ export namespace DataViewerMessages {
     export const GetRowsResponse = 'get_rows_response';
     export const CompletedData = 'complete';
     export const GetSliceRequest = 'get_slice_request';
+    export const RefreshDataViewer = 'refresh_data_viewer';
 }
 
 export interface IGetRowsRequest {
@@ -56,6 +57,7 @@ export type IDataViewerMapping = {
     [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     [DataViewerMessages.CompletedData]: never | undefined;
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
+    [DataViewerMessages.RefreshDataViewer]: never | undefined;
 };
 
 export interface IDataFrameInfo {

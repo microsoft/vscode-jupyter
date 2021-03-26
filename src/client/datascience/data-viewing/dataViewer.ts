@@ -188,6 +188,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.getSlice(payload as IGetSliceRequest).ignoreErrors();
                 break;
 
+            case DataViewerMessages.RefreshDataViewer:
+                this.refreshData().ignoreErrors();
+                void sendTelemetryEvent(Telemetry.RefreshDataViewer);
+                break;
+
             default:
                 break;
         }
