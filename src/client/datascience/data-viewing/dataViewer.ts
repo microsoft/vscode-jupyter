@@ -104,7 +104,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             // Then show our web panel. Eventually we need to consume the data
             await super.show(true);
 
-            const dataFrameInfo = await this.prepDataFrameInfo();
+            let dataFrameInfo = await this.prepDataFrameInfo();
+            if (dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
+                const slice = preselectedSliceExpression(dataFrameInfo.shape);
+                dataFrameInfo = await this.getDataFrameInfo(slice);
+            }
 
             const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
 

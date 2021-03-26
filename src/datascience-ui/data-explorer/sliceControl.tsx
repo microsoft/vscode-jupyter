@@ -14,30 +14,8 @@ import {
 import './sliceControl.css';
 
 // These styles are passed to the FluentUI dropdown controls
-const styleOverrides = {
-    color: 'var(--vscode-dropdown-foreground)',
-    backgroundColor: 'var(--vscode-dropdown-background)',
-    fontFamily: 'var(--vscode-font-family)',
-    fontWeight: 'var(--vscode-font-weight)',
-    fontSize: 'var(--vscode-font-size)',
-    border: 'var(--vscode-dropdown-border)',
-    ':focus': {
-        color: 'var(--vscode-dropdown-foreground)'
-    },
-    ':active': {
-        color: 'var(--vscode-dropdown-foreground)'
-    },
-    ':hover': {
-        color: 'var(--vscode-dropdown-foreground)',
-        backgroundColor: 'var(--vscode-dropdown-background)'
-    }
-};
 const dropdownStyles = {
-    root: {
-        color: 'var(--vscode-dropdown-foreground)'
-    },
     dropdownItems: {
-        ...styleOverrides,
         selectors: {
             '@media(min-width: 300px)': {
                 maxHeight: 100
@@ -45,33 +23,7 @@ const dropdownStyles = {
         }
     },
     caretDown: {
-        visibility: 'hidden' // Override the FluentUI caret and use ::after selector on the caretDownWrapper in order to match VS Code. See sliceContro.css
-    },
-    callout: styleOverrides,
-    dropdownItem: styleOverrides,
-    dropdownItemSelected: {
-        color: 'var(--vscode-dropdown-foreground)',
-        fontFamily: 'var(--vscode-font-family)',
-        fontWeight: 'var(--vscode-font-weight)',
-        fontSize: 'var(--vscode-font-size)',
-        backgroundColor: 'var(--vscode-dropdown-background)',
-        opacity: '0.3'
-    },
-    dropdownItemDisabled: {
-        color: 'var(--vscode-dropdown-foreground)',
-        fontFamily: 'var(--vscode-font-family)',
-        fontWeight: 'var(--vscode-font-weight)',
-        fontSize: 'var(--vscode-font-size)',
-        backgroundColor: 'var(--vscode-dropdown-background)',
-        opacity: '0.3'
-    },
-    dropdownItemSelectedAndDisabled: {
-        color: 'var(--vscode-dropdown-foreground)',
-        fontFamily: 'var(--vscode-font-family)',
-        fontWeight: 'var(--vscode-font-weight)',
-        fontSize: 'var(--vscode-font-size)',
-        backgroundColor: 'var(--vscode-dropdown-background)',
-        opacity: '0.3'
+        visibility: 'hidden' // Override the FluentUI caret and use ::after selector on the caretDownWrapper in order to match VS Code. See sliceControl.css
     }
 };
 
@@ -93,8 +45,8 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     constructor(props: ISliceControlProps) {
         super(props);
         const initialSlice = preselectedSliceExpression(this.props.originalVariableShape);
-        this.state = { isEnabled: false, inputValue: initialSlice, errorMessage: '' };
-
+        this.state = { isEnabled: true, inputValue: initialSlice, errorMessage: '' };
+        this.applyInputBoxToDropdowns();
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
@@ -103,7 +55,10 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         const isDisabled = !this.state.isEnabled || this.props.loadingData;
         return (
             <div className="control-container">
-                <details className="slicing-control">
+                <details
+                    className="slicing-control"
+                    {...(this.props.originalVariableShape.length > 2 ? { open: true } : {})}
+                >
                     <summary className="slice-summary">
                         <span className="slice-summary-detail">
                             {getLocString('DataScience.sliceSummaryTitle', 'SLICING')}
@@ -130,6 +85,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                                     onChange={this.handleChange}
                                     className={this.state.errorMessage ? 'slice-data input-invalid' : 'slice-data'}
                                     autoComplete="on"
+                                    placeholder={preselectedSliceExpression(this.props.originalVariableShape)}
                                     disabled={isDisabled}
                                 />
                                 {this.state.errorMessage ? (
