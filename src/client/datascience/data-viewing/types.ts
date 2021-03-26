@@ -28,6 +28,7 @@ export namespace DataViewerMessages {
     export const CompletedData = 'complete';
     export const GetSliceRequest = 'get_slice_request';
     export const RefreshDataViewer = 'refresh_data_viewer';
+    export const SliceEnablementStateChanged = 'slice_enablement_state_changed';
 }
 
 export interface IGetRowsRequest {
@@ -58,6 +59,7 @@ export type IDataViewerMapping = {
     [DataViewerMessages.CompletedData]: never | undefined;
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
     [DataViewerMessages.RefreshDataViewer]: never | undefined;
+    [DataViewerMessages.SliceEnablementStateChanged]: { newState: boolean };
 };
 
 export interface IDataFrameInfo {

@@ -179,6 +179,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     loadingData={this.state.totalRowCount > this.state.fetchedRowCount}
                     originalVariableShape={this.state.originalVariableShape}
                     handleSliceRequest={this.handleSliceRequest}
+                    onCheckboxToggled={this.handleCheckboxToggle}
                 />
             );
         }
@@ -504,6 +505,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private handleRefreshRequest = () => {
         this.debounceRequest(DataViewerMessages.RefreshDataViewer);
     };
+
+    private handleCheckboxToggle = (newState: boolean) => {
+        this.sendMessage(DataViewerMessages.SliceEnablementStateChanged, { newState });
+    }
 
     private updateColumns(newColumns: Slick.Column<Slick.SlickData>[]) {
         this.setState({ gridColumns: newColumns });

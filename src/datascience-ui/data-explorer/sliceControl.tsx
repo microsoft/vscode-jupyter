@@ -31,6 +31,7 @@ interface ISliceControlProps {
     loadingData: boolean;
     originalVariableShape: number[];
     sliceExpression: string | undefined;
+    onCheckboxToggled(newState: boolean): void;
     handleSliceRequest(slice: IGetSliceRequest): void;
 }
 
@@ -207,6 +208,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                 this.props.handleSliceRequest({ slice: undefined });
             }
         }
+        this.props.onCheckboxToggled(willBeEnabled);
         this.applyInputBoxToDropdowns();
         this.setState(newState);
     };

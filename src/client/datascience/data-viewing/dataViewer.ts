@@ -38,6 +38,7 @@ import {
 } from './types';
 import { Experiments } from '../../common/experiments/groups';
 import { isValidSliceExpression, preselectedSliceExpression } from '../../../datascience-ui/data-explorer/helpers';
+import { CheckboxState } from '../../telemetry/constants';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
@@ -192,6 +193,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             case DataViewerMessages.RefreshDataViewer:
                 this.refreshData().ignoreErrors();
                 void sendTelemetryEvent(Telemetry.RefreshDataViewer);
+                break;
+
+            case DataViewerMessages.SliceEnablementStateChanged:
+                void sendTelemetryEvent(Telemetry.DataViewerSliceEnablementStateChanged, undefined, { newState: payload.newState ? CheckboxState.Checked : CheckboxState.Unchecked });
                 break;
 
             default:

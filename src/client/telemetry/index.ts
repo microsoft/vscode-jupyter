@@ -19,7 +19,7 @@ import {
 import { ResourceSpecificTelemetryProperties } from '../datascience/telemetry/types';
 import { ExportFormat } from '../datascience/export/types';
 import { InterruptResult } from '../datascience/types';
-import { EventName, PlatformErrors } from './constants';
+import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
 import { populateTelemetryWithErrorInfo } from '../common/errors';
 import { ErrorCategory, TelemetryErrorProperties } from '../common/errors/types';
 import { noop } from '../common/utils/misc';
@@ -1220,4 +1220,43 @@ export interface IEventNamePropertyMapping {
          */
         command: string;
     };
+    /**
+     * Telemetry event sent whenever the user toggles the checkbox
+     * controlling whether a slice is currently being applied to an
+     * n-dimensional variable.
+     */
+    [Telemetry.DataViewerSliceEnablementStateChanged]: {
+        /**
+         * This property is either 'checked' when the result of toggling
+         * the checkbox is for slicing to be enabled, or 'unchecked'
+         * when the result of toggling the checkbox is for slicing
+         * to be disabled.
+         */
+        newState: CheckboxState;
+    };
+    /**
+     * Telemetry event sent when a slice is first applied in a
+     * data viewer instance to a sliceable Python variable.
+     */
+    [Telemetry.DataViewerDimensionality]: {
+        /**
+         * This property represents the number of dimensions
+         * on the target variable being sliced. This should
+         * always be 2 at minimum.
+         */
+        numberOfDimensions: number;
+    };
+    /**
+     * Telemetry event sent whenever the user applies a valid slice
+     * to a sliceable Python variable in the data viewer.
+     */
+    [Telemetry.DataViewerSliceOperation]: {
+        /**
+         * This property indicates whether the slice operation
+         * was performed using the dropdown or the textbox in
+         * the slice control panel. `source` is either `dropdown`
+         * or `textbox`.
+         */
+        source: SliceOperationSource
+    }
 }
