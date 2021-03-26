@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
+import { notebook } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
@@ -28,10 +29,23 @@ export class NotebookDisposeService implements IExtensionSingleActivationService
             return;
         }
 
+        notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument2, this, this.disposables);
         this.vscNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
     }
     private onDidCloseNotebookDocument(document: NotebookDocument) {
         traceInfo(`Notebook Closed ${document.uri.toString()}`);
+        const kernel = this.kernelProvider.get(document.uri);
+        if (kernel) {
+            traceInfo(
+                `Kernel got disposed as a result of closing the notebook ${document.uri.toString()}`,
+                kernel.uri.toString()
+            );
+            kernel.dispose().catch(noop);
+        }
+        this.notebookProvider.disposeAssociatedNotebook({ identity: document.uri });
+    }
+    private onDidCloseNotebookDocument2(document: NotebookDocument) {
+        traceInfo(`Notebook Closed2 ${document.uri.toString()}`);
         const kernel = this.kernelProvider.get(document.uri);
         if (kernel) {
             traceInfo(
