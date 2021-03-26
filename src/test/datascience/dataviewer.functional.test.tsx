@@ -744,7 +744,7 @@ foo = torch.tensor(arr)`;
             const dv = await createJupyterVariableDataViewer('foo', 'Tensor', '(3, 5, 1, 2)');
             assert.ok(dv, 'DataViewer not created');
             await gotAllRows;
-            
+
             // Slice should already be applied
             verifyReadonlyIndicator(wrapper.wrapper, '[0, 0, :, :]');
             verifyRows(wrapper.wrapper, [0, 0, 1]);

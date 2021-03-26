@@ -45,7 +45,11 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
     constructor(props: ISliceControlProps) {
         super(props);
         const initialSlice = preselectedSliceExpression(this.props.originalVariableShape);
-        this.state = { isEnabled: this.props.originalVariableShape.length > 2, inputValue: initialSlice, errorMessage: '' };
+        this.state = {
+            isEnabled: this.props.originalVariableShape.length > 2,
+            inputValue: initialSlice,
+            errorMessage: ''
+        };
         this.applyInputBoxToDropdowns();
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
