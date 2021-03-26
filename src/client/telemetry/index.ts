@@ -1220,4 +1220,14 @@ export interface IEventNamePropertyMapping {
          */
         command: string;
     };
+    /**
+     * Telemetry sent when we update custom editor associations.
+     */
+    [Telemetry.UpdateCustomEditorAssociation]: {
+        /**
+         * 'added' means we enabled custom editor for user and ensured ipynb opens with custom editor.
+         * 'removed' means we custom editor is not enabled for the user and ensured ipynb doesn't open with custom editor.
+         */
+        type: 'added' | 'removed';
+    } & Partial<TelemetryErrorProperties>;
 }

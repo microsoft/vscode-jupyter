@@ -1433,11 +1433,6 @@ export interface ISwitchKernelOptions {
     currentKernelDisplayName: string | undefined;
 }
 
-export const IDebugLoggingManager = Symbol('IDebugLoggingManager');
-export interface IDebugLoggingManager {
-    initialize(): Promise<void>;
-}
-
 // Wraps the VS Code WebviewViewProvider. VSC Prefix as we also have our own IWebviewViewProvider
 export interface IVSCWebviewViewProvider extends WebviewViewProvider {
     readonly viewType: 'jupyterViewVariables';
