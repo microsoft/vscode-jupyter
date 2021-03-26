@@ -47,7 +47,6 @@ export class CustomEditorService implements ICustomEditorService, IExtensionSing
     public async activate() {
         let updateType: 'added' | 'removed' | undefined;
         try {
-            // This code is temporary.
             const settings = this.workspace.getConfiguration('workbench', undefined);
             const editorAssociations = settings.get('editorAssociations') as {
                 viewType: string;
