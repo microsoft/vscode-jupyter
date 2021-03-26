@@ -105,12 +105,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             await super.show(true);
 
             let dataFrameInfo = await this.prepDataFrameInfo();
-            if (dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
+            const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
+
+            // If higher dimensional data, preselect a slice to show
+            if (isSliceDataEnabled && dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
                 const slice = preselectedSliceExpression(dataFrameInfo.shape);
                 dataFrameInfo = await this.getDataFrameInfo(slice);
             }
-
-            const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
 
             // Send a message with our data
             this.postMessage(DataViewerMessages.InitializeData, {

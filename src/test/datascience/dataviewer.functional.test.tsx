@@ -437,20 +437,12 @@ suite('DataScience DataViewer tests', () => {
         // Should be able to successfully create data viewer for 3D data
         await injectCode('import torch\r\nfoo = torch.LongTensor([[[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]]])');
         const gotAllRows = getCompletedPromise(wrapper);
-        const dv = await createJupyterVariableDataViewer('foo', 'Tensor');
+        const dv = await createJupyterVariableDataViewer('foo', 'Tensor', '(1, 2, 6)');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper.wrapper, [0, '[1, 2, 3, 4, 5, 6]', '[7, 8, 9, 10, 11, 12]']);
-        wrapper.wrapper.update();
-
-        // Put cell into edit mode and verify that input value is updated to be the non-truncated, stringified value
-        editCell(wrapper.wrapper, 0, 1);
-        verifyInputIncludes(wrapper.wrapper, 'value="[1, 2, 3, 4, 5, 6]"');
-
-        // Data should still be there after exiting edit mode
-        cancelEdits(wrapper.wrapper);
-        verifyRows(wrapper.wrapper, [0, '[1, 2, 3, 4, 5, 6]', '[7, 8, 9, 10, 11, 12]']);
+        // By default show sliced
+        verifyRows(wrapper.wrapper, [0, 1, 2, 3, 4, 5, 6, 1, 7, 8, 9, 10, 11, 12]);
     });
 
     runMountedTest('4D numpy ndarrays', async (wrapper) => {
@@ -461,37 +453,14 @@ suite('DataScience DataViewer tests', () => {
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper.wrapper, [
-            0,
-            `[[0, 1, 2, 3],
- [4, 5, 6, 7],
- [8, 9, 10, 11]]`,
-            `[[12, 13, 14, 15],
- [16, 17, 18, 19],
- [20, 21, 22, 23]]`
-        ]);
-
-        // Put cell into edit mode and verify that input value is updated to be the non-truncated, stringified value
-        editCell(wrapper.wrapper, 0, 1);
-        verifyInputIncludes(wrapper.wrapper, `value="[[0, 1, 2, 3],\n [4, 5, 6, 7],\n [8, 9, 10, 11]]"`);
-
-        // Data should still be there after exiting edit mode
-        cancelEdits(wrapper.wrapper);
-        verifyRows(wrapper.wrapper, [
-            0,
-            `[[0, 1, 2, 3],
- [4, 5, 6, 7],
- [8, 9, 10, 11]]`,
-            `[[12, 13, 14, 15],
- [16, 17, 18, 19],
- [20, 21, 22, 23]]`
-        ]);
+        // If in experiment, by default show sliced
+        verifyRows(wrapper.wrapper, [0, 1, 2, 3, 1, 4, 5, 6, 7, 2, 8, 9, 10, 11]);
     });
 
     runMountedTest('Ragged 1D numpy array', async (wrapper) => {
         await injectCode("import numpy as np\r\nfoo = np.array(['hello', 42, ['hi', 'hey']])");
         const gotAllRows = getCompletedPromise(wrapper);
-        const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
+        const dv = await createJupyterVariableDataViewer('foo', 'ndarray', '(3, )');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
         verifyRows(wrapper.wrapper, [0, 'hello', 1, 42, 2, "['hi', 'hey']"]);
@@ -500,7 +469,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('Ragged 2D numpy array', async (wrapper) => {
         await injectCode("import numpy as np\r\nfoo = np.array([[1, 2, 3, float('inf')], [4, np.nan, 5]])");
         const gotAllRows = getCompletedPromise(wrapper);
-        const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
+        const dv = await createJupyterVariableDataViewer('foo', 'ndarray', '(2, )');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
         verifyRows(wrapper.wrapper, [0, '[1, 2, 3, inf]', 1, '[4, nan, 5]']);
@@ -510,7 +479,7 @@ suite('DataScience DataViewer tests', () => {
         // Should be able to successfully create data viewer for ragged 3D numpy arrays
         await injectCode('import numpy as np\r\nfoo = np.array([[[1, 2, 3], [4, 5]], [[6, 7, 8, 9]]])');
         const gotAllRows = getCompletedPromise(wrapper);
-        const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
+        const dv = await createJupyterVariableDataViewer('foo', 'ndarray', '(2, )');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
         verifyRows(wrapper.wrapper, [0, `[[1, 2, 3], [4, 5]]`, 1, '[[6, 7, 8, 9]]']);
@@ -706,24 +675,8 @@ foo = torch.tensor(arr)`;
             const dv = await createJupyterVariableDataViewer('foo', 'Tensor', '(2, 4, 3)');
             assert.ok(dv, 'DataViewer not created');
             await gotAllRows;
-            verifyRows(wrapper.wrapper, [
-                0,
-                '[0, 1, 2]',
-                '[3, 4, 5]',
-                '[6, 7, 8]',
-                '[9, 10, 11]',
-                1,
-                '[12, 13, 14]',
-                '[15, 16, 17]',
-                '[18, 19, 20]',
-                '[21, 22, 23]'
-            ]);
-            verifyControlsDisabled(wrapper.wrapper, 2, '');
 
-            // Toggle on slicing. Slice should immediately be applied
-            const enableSlicing = getCompletedPromise(wrapper);
-            toggleCheckbox(wrapper.wrapper);
-            await enableSlicing;
+            // Slice should already be applied
             verifyReadonlyIndicator(wrapper.wrapper, '[0, :, :]');
             verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5, 2, 6, 7, 8, 3, 9, 10, 11]);
 
@@ -791,32 +744,8 @@ foo = torch.tensor(arr)`;
             const dv = await createJupyterVariableDataViewer('foo', 'Tensor', '(3, 5, 1, 2)');
             assert.ok(dv, 'DataViewer not created');
             await gotAllRows;
-            verifyRows(wrapper.wrapper, [
-                0,
-                '[[0, 1]]',
-                `[[2, 3]]`,
-                '[[4, 5]]',
-                '[[6, 7]]',
-                '[[8, 9]]',
-                1,
-                '[[10, 11]]',
-                '[[12, 13]]',
-                '[[14, 15]]',
-                '[[16, 17]]',
-                '[[18, 19]]',
-                2,
-                '[[20, 21]]',
-                '[[22, 23]]',
-                '[[24, 25]]',
-                '[[26, 27]]',
-                '[[28, 29]]'
-            ]);
-            verifyControlsDisabled(wrapper.wrapper, 4, '');
-
-            // Toggle on slicing. Slice should immediately be applied
-            const enableSlicing = getCompletedPromise(wrapper);
-            toggleCheckbox(wrapper.wrapper);
-            await enableSlicing;
+            
+            // Slice should already be applied
             verifyReadonlyIndicator(wrapper.wrapper, '[0, 0, :, :]');
             verifyRows(wrapper.wrapper, [0, 0, 1]);
 
