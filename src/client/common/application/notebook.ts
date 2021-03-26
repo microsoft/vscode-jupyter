@@ -19,7 +19,6 @@ import {
     window
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
-import { traceError } from '../logger';
 import { IDisposableRegistry } from '../types';
 import { IApplicationEnvironment, IVSCodeNotebook, NotebookCellChangedEvent } from './types';
 
@@ -71,7 +70,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.onDidSaveNotebookDocument = notebook.onDidSaveNotebookDocument;
             this.onDidChangeNotebookDocument = this._onDidChangeNotebookDocument.event;
         } else {
-            traceError('Not using Notebooks');
             this.onDidChangeActiveNotebookKernel = this.createDisposableEventEmitter<{
                 document: NotebookDocument;
                 kernel: NotebookKernel | undefined;
