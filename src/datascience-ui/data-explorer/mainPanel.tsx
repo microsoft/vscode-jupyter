@@ -259,7 +259,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     };
 
     private renderGrid() {
-        const filterRowsText = getLocString('DataScience.filterRowsButton', 'Filter Rows');
         const filterRowsTooltip = getLocString('DataScience.filterRowsTooltip', 'Click to filter');
         return (
             <ReactSlickGrid
@@ -269,13 +268,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 rowsAdded={this.gridAddEvent}
                 resetGridEvent={this.resetGridEvent}
                 columnsUpdated={this.gridColumnUpdateEvent}
-                filterRowsText={filterRowsText}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
                 dataDimensionality={this.state.dataDimensionality}
                 originalVariableShape={this.state.originalVariableShape}
                 isSliceDataEnabled={this.state.isSliceDataEnabled}
                 handleSliceRequest={this.handleSliceRequest}
+                handleRefreshRequest={this.handleRefreshRequest}
             />
         );
     }

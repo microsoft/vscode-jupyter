@@ -472,7 +472,8 @@ export enum Telemetry {
      * Telemetry event sent whenever the user applies a valid slice
      * to a sliceable Python variable in the data viewer.
      */
-    DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION'
+    DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
+    UpdateCustomEditorAssociation = 'DS_INTERNAL.UPDATE_CUSTOM_EDITOR_ASSOCIATION'
 }
 
 export enum NativeKeyboardCommandTelemetry {

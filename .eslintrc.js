@@ -693,7 +693,6 @@ module.exports = {
         'src/client/common/startPage/startPage.ts',
         'src/client/common/startPage/types.ts',
         'src/client/common/startPage/startPageMessageListener.ts',
-        'src/client/common/application/customEditorService.ts',
         'src/client/common/application/applicationShell.ts',
         'src/client/common/application/languageService.ts',
         'src/client/common/application/',
