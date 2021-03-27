@@ -508,7 +508,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleCheckboxToggle = (newState: boolean) => {
         this.sendMessage(DataViewerMessages.SliceEnablementStateChanged, { newState });
-    }
+    };
 
     private updateColumns(newColumns: Slick.Column<Slick.SlickData>[]) {
         this.setState({ gridColumns: newColumns });

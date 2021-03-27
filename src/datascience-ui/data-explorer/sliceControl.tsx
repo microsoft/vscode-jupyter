@@ -1,6 +1,7 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
 import { IGetSliceRequest } from '../../client/datascience/data-viewing/types';
+import { SliceOperationSource } from '../../client/telemetry/constants';
 import { getLocString } from '../react-common/locReactSide';
 import { measureText } from '../react-common/textMeasure';
 import {
@@ -200,12 +201,12 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         if (willBeEnabled) {
             // Enabling slicing
             if (this.state.inputValue !== this.props.sliceExpression && this.state.inputValue !== fullSlice) {
-                this.props.handleSliceRequest({ slice: this.state.inputValue });
+                this.props.handleSliceRequest({ slice: this.state.inputValue, source: SliceOperationSource.Checkbox });
             }
         } else {
             // Disabling slicing
             if (this.state.inputValue !== fullSlice) {
-                this.props.handleSliceRequest({ slice: undefined });
+                this.props.handleSliceRequest({ slice: undefined, source: SliceOperationSource.Checkbox });
             }
         }
         this.props.onCheckboxToggled(willBeEnabled);
@@ -228,7 +229,8 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
             // Update axis and index dropdown selections
             this.applyInputBoxToDropdowns();
             this.props.handleSliceRequest({
-                slice: this.state.inputValue
+                slice: this.state.inputValue,
+                source: SliceOperationSource.TextBox
             });
         }
     };
@@ -304,7 +306,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                 newSliceExpression !== fullSlice
             ) {
                 this.setState({ inputValue: newSliceExpression });
-                this.props.handleSliceRequest({ slice: newSliceExpression });
+                this.props.handleSliceRequest({ slice: newSliceExpression, source: SliceOperationSource.Dropdown });
             }
         });
     };

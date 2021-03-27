@@ -49,6 +49,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private pendingRowsCount: number = 0;
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
     private currentSliceExpression: string | undefined;
+    private sentDataViewerSliceDimensionalityTelemetry = false;
 
     public get active() {
         return !!this.webPanel?.isActive();
@@ -110,6 +111,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
             // If higher dimensional data, preselect a slice to show
             if (isSliceDataEnabled && dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
+                this.maybeSendSliceDataDimensionalityTelemetry(dataFrameInfo.shape.length);
                 const slice = preselectedSliceExpression(dataFrameInfo.shape);
                 dataFrameInfo = await this.getDataFrameInfo(slice);
             }
@@ -196,7 +198,9 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 break;
 
             case DataViewerMessages.SliceEnablementStateChanged:
-                void sendTelemetryEvent(Telemetry.DataViewerSliceEnablementStateChanged, undefined, { newState: payload.newState ? CheckboxState.Checked : CheckboxState.Unchecked });
+                void sendTelemetryEvent(Telemetry.DataViewerSliceEnablementStateChanged, undefined, {
+                    newState: payload.newState ? CheckboxState.Checked : CheckboxState.Unchecked
+                });
                 break;
 
             default:
@@ -252,6 +256,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
                 const payload = await this.getDataFrameInfo(request.slice);
+                if (payload.originalVariableShape?.length) {
+                    this.maybeSendSliceDataDimensionalityTelemetry(payload.originalVariableShape.length);
+                }
+                sendTelemetryEvent(Telemetry.DataViewerSliceOperation, undefined, { source: request.source });
                 return this.postMessage(DataViewerMessages.InitializeData, { ...payload, isSliceDataEnabled: true });
             }
         });
@@ -300,6 +308,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private sendElapsedTimeTelemetry() {
         if (this.rowsTimer && this.pendingRowsCount === 0) {
             sendTelemetryEvent(Telemetry.ShowDataViewer, this.rowsTimer.elapsedTime);
+        }
+    }
+
+    private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {
+        if (!this.sentDataViewerSliceDimensionalityTelemetry) {
+            sendTelemetryEvent(Telemetry.DataViewerDimensionality, undefined, { numberOfDimensions });
+            this.sentDataViewerSliceDimensionalityTelemetry = true;
         }
     }
 }

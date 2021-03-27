@@ -1253,10 +1253,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.DataViewerSliceOperation]: {
         /**
          * This property indicates whether the slice operation
-         * was performed using the dropdown or the textbox in
-         * the slice control panel. `source` is either `dropdown`
-         * or `textbox`.
+         * was triggered using the dropdown or the textbox in
+         * the slice control panel. `source` is one of `dropdown`,
+         * `textbox`, or `checkbox`.
          */
-        source: SliceOperationSource
-    }
+        source: SliceOperationSource;
+    };
 }

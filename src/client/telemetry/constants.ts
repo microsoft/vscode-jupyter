@@ -30,5 +30,6 @@ export enum CheckboxState {
 
 export enum SliceOperationSource {
     Dropdown = 'dropdown',
-    TextBox = 'textbox'
+    TextBox = 'textbox',
+    Checkbox = 'checkbox'
 }
