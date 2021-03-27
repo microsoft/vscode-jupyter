@@ -201,11 +201,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         ) : undefined}
                         <span>{breadcrumbText}</span>
                     </div>
-                    <div
-                        className="codicon codicon-refresh codicon-button"
-                        title={getLocString('DataScience.refreshDataViewer', 'Refresh Data Viewer')}
-                        onClick={this.handleRefreshRequest}
-                    />
                 </div>
             );
         }

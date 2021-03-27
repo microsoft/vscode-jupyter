@@ -256,8 +256,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
                 const payload = await this.getDataFrameInfo(request.slice);
-                if (payload.originalVariableShape?.length) {
-                    this.maybeSendSliceDataDimensionalityTelemetry(payload.originalVariableShape.length);
+                if (payload.shape?.length) {
+                    this.maybeSendSliceDataDimensionalityTelemetry(payload.shape.length);
                 }
                 sendTelemetryEvent(Telemetry.DataViewerSliceOperation, undefined, { source: request.source });
                 return this.postMessage(DataViewerMessages.InitializeData, { ...payload, isSliceDataEnabled: true });
