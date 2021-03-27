@@ -104,9 +104,14 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             // Then show our web panel. Eventually we need to consume the data
             await super.show(true);
 
-            const dataFrameInfo = await this.prepDataFrameInfo();
-
+            let dataFrameInfo = await this.prepDataFrameInfo();
             const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
+
+            // If higher dimensional data, preselect a slice to show
+            if (isSliceDataEnabled && dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
+                const slice = preselectedSliceExpression(dataFrameInfo.shape);
+                dataFrameInfo = await this.getDataFrameInfo(slice);
+            }
 
             // Send a message with our data
             this.postMessage(DataViewerMessages.InitializeData, {
@@ -182,6 +187,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
             case DataViewerMessages.GetSliceRequest:
                 this.getSlice(payload as IGetSliceRequest).ignoreErrors();
+                break;
+
+            case DataViewerMessages.RefreshDataViewer:
+                this.refreshData().ignoreErrors();
+                void sendTelemetryEvent(Telemetry.RefreshDataViewer);
                 break;
 
             default:
