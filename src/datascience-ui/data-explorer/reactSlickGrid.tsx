@@ -63,13 +63,13 @@ export interface ISlickGridProps {
     rowsAdded: Slick.Event<ISlickGridAdd>;
     resetGridEvent: Slick.Event<ISlickGridSlice>;
     columnsUpdated: Slick.Event<Slick.Column<Slick.SlickData>[]>;
-    filterRowsText: string;
     filterRowsTooltip: string;
     forceHeight?: number;
     dataDimensionality: number;
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
     handleSliceRequest(args: IGetSliceRequest): void;
+    handleRefreshRequest(): void;
 }
 
 interface ISlickGridState {
@@ -476,7 +476,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 if (c.field !== this.props.idProperty) {
                     c.width = maxFieldWidth;
                 } else {
-                    c.width = maxFieldWidth / 2;
+                    c.width = (maxFieldWidth / 5) * 4;
                     c.name = '';
                     c.header = {
                         buttons: [
@@ -486,6 +486,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                                 tooltip: this.state.showingFilters
                                     ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
                                     : getLocString('DataScience.dataViewerShowFilters', 'Show filters')
+                            },
+                            {
+                                cssClass: 'codicon codicon-refresh codicon-button header-cell-button refresh-button',
+                                handler: this.props.handleRefreshRequest,
+                                tooltip: getLocString('DataScience.refreshDataViewer', 'Refresh data viewer')
                             }
                         ]
                     };
