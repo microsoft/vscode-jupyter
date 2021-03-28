@@ -1238,7 +1238,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when a slice is first applied in a
      * data viewer instance to a sliceable Python variable.
      */
-    [Telemetry.DataViewerDimensionality]: {
+    [Telemetry.DataViewerDataDimensionality]: {
         /**
          * This property represents the number of dimensions
          * on the target variable being sliced. This should

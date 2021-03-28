@@ -313,7 +313,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
     private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {
         if (!this.sentDataViewerSliceDimensionalityTelemetry) {
-            sendTelemetryEvent(Telemetry.DataViewerDimensionality, undefined, { numberOfDimensions });
+            sendTelemetryEvent(Telemetry.DataViewerDataDimensionality, undefined, { numberOfDimensions });
             this.sentDataViewerSliceDimensionalityTelemetry = true;
         }
     }

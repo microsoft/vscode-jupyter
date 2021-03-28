@@ -467,7 +467,7 @@ export enum Telemetry {
      * Telemetry event sent when a slice is first applied in a
      * data viewer instance to a sliceable Python variable.
      */
-    DataViewerDimensionality = 'DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY',
+    DataViewerDataDimensionality = 'DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY',
     /**
      * Telemetry event sent whenever the user applies a valid slice
      * to a sliceable Python variable in the data viewer.
