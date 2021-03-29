@@ -64,6 +64,11 @@ export function translateCellToNative(
             metadata: new NotebookCellMetadata().with({
                 hasExecutionOrder: true
             }),
+            latestExecutionSummary: {
+                executionOrder: cell.data.execution_count as number,
+                success: true,
+                duration: 0
+            },
             outputs: [],
             kind: NotebookCellKind.Code,
             code: concatMultilineString(cell.data.source),
