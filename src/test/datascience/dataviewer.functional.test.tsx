@@ -7,12 +7,13 @@ import '../../client/common/extensions';
 import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import { mount, ReactWrapper } from 'enzyme';
+import * as sinon from 'sinon';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
 import * as uuid from 'uuid/v4';
 import { Disposable } from 'vscode';
-
-import { Identifiers } from '../../client/datascience/constants';
+const telemetry = require('../../client/telemetry/index');
+import { Identifiers, Telemetry } from '../../client/datascience/constants';
 import {
     DataViewerMessages,
     IDataViewer,
@@ -34,6 +35,7 @@ import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { IMountedWebView } from './mountedWebView';
 import { SliceControl } from '../../datascience-ui/data-explorer/sliceControl';
 import { Dropdown } from '@fluentui/react';
+import { CheckboxState, SliceOperationSource } from '../../client/telemetry/constants';
 
 interface ISliceControlTestInterface {
     toggleEnablement: () => void;
@@ -48,6 +50,8 @@ suite('DataScience DataViewer tests', () => {
     let ioc: DataScienceIocContainer;
     let notebook: INotebook | undefined;
     const snapshot = takeSnapshot();
+    let sandbox = sinon.createSandbox();
+    let sendTelemetryStub: sinon.SinonStub;
 
     suiteSetup(function () {
         // DataViewer tests require jupyter to run. Othewrise can't
@@ -68,6 +72,7 @@ suite('DataScience DataViewer tests', () => {
     setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        sendTelemetryStub = sandbox.stub(telemetry, 'sendTelemetryEvent');
         return ioc.activate();
     });
 
@@ -100,6 +105,7 @@ suite('DataScience DataViewer tests', () => {
         }
         await ioc.dispose();
         delete (global as any).ascquireVsCodeApi;
+        sandbox.restore();
     });
 
     function createJupyterVariable(variable: string, type: string, shape: string): IJupyterVariable {
@@ -554,6 +560,26 @@ suite('DataScience DataViewer tests', () => {
             wrapper.wrapper.find('.slice-data').simulate('change');
         }
 
+        function verifySliceEnablementStateChangeTelemetry(newState: CheckboxState) {
+            assert.ok(
+                sendTelemetryStub.calledWithExactly(Telemetry.DataViewerSliceEnablementStateChanged, undefined, {
+                    newState
+                })
+            );
+        }
+
+        function verifyDataDimensionalityTelemetry(numberOfDimensions: number) {
+            assert.ok(
+                sendTelemetryStub.calledWithExactly(Telemetry.DataViewerDataDimensionality, undefined, {
+                    numberOfDimensions
+                })
+            );
+        }
+
+        function verifySliceOperationTelemetry(source: SliceOperationSource) {
+            assert.ok(sendTelemetryStub.calledWithExactly(Telemetry.DataViewerSliceOperation, undefined, { source }));
+        }
+
         async function applySliceAndVerifyReadonlyIndicator(wrapper: IMountedWebView, slice: string) {
             // Apply a slice to input box
             const gotSlice = getCompletedPromise(wrapper);
@@ -593,11 +619,13 @@ suite('DataScience DataViewer tests', () => {
 
             // By default show sliced
             verifyRows(wrapper.wrapper, [0, 1, 2, 3, 4, 5, 6, 1, 7, 8, 9, 10, 11, 12]);
+            verifyDataDimensionalityTelemetry(3);
 
             // Uncheck slicing to restore to flattened view
             const disableSlicing = getCompletedPromise(wrapper);
             toggleCheckbox(wrapper.wrapper);
             await disableSlicing;
+            verifySliceEnablementStateChangeTelemetry(CheckboxState.Unchecked);
             verifyRows(wrapper.wrapper, [0, '[1, 2, 3, 4, 5, 6]', '[7, 8, 9, 10, 11, 12]']);
             wrapper.wrapper.update();
 
@@ -620,11 +648,13 @@ suite('DataScience DataViewer tests', () => {
 
             // By default show sliced
             verifyRows(wrapper.wrapper, [0, 0, 1, 2, 3, 1, 4, 5, 6, 7, 2, 8, 9, 10, 11]);
+            verifyDataDimensionalityTelemetry(4);
 
             // Uncheck slicing to restore to flattened view
             const disableSlicing = getCompletedPromise(wrapper);
             toggleCheckbox(wrapper.wrapper);
             await disableSlicing;
+            verifySliceEnablementStateChangeTelemetry(CheckboxState.Unchecked);
             verifyRows(wrapper.wrapper, [
                 0,
                 `[[0, 1, 2, 3],
@@ -666,12 +696,20 @@ foo = torch.tensor(arr)`;
             await gotAllRows;
             verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5]);
             verifyControlsDisabled(wrapper.wrapper, 2, '');
+            assert.throws(
+                () => verifyDataDimensionalityTelemetry(2),
+                'Unexpectedly sent data dimensionality telemetry when no slice performed'
+            );
 
             // Apply a slice via input box and verify that dropdowns update
             toggleCheckbox(wrapper.wrapper);
             await applySliceAndVerifyReadonlyIndicator(wrapper, '[1, :]');
             verifyRows(wrapper.wrapper, [0, 3, 1, 4, 2, 5]);
             verifyDropdowns(wrapper.wrapper, [0, 1]); // Axis 0, index 1
+            verifySliceEnablementStateChangeTelemetry(CheckboxState.Checked);
+            verifyDataDimensionalityTelemetry(2);
+            verifySliceOperationTelemetry(SliceOperationSource.TextBox);
+            sendTelemetryStub.resetHistory();
 
             // Change the dropdowns and verify that the slice expression updates
             await changeDropdown(wrapper, 'Axis', 0, 1);
@@ -682,23 +720,34 @@ foo = torch.tensor(arr)`;
                 (wrapper.wrapper.find('.slice-data').getDOMNode() as HTMLInputElement).value === '[:, 1]',
                 'Input box did not update to match slice'
             );
+            assert.throws(
+                () => verifyDataDimensionalityTelemetry(2),
+                'Unexpectedly sent data dimensionality telemetry more than once'
+            );
+            verifySliceOperationTelemetry(SliceOperationSource.Dropdown);
+            sendTelemetryStub.resetHistory();
 
             // Apply a slice with no corresponding dropdown
             await applySliceAndVerifyReadonlyIndicator(wrapper, '[:, :2]');
             verifyRows(wrapper.wrapper, [0, 0, 1, 1, 3, 4]);
             verifyDropdowns(wrapper.wrapper, ['', '']); // Dropdowns should be unset
+            verifySliceOperationTelemetry(SliceOperationSource.TextBox);
+            sendTelemetryStub.resetHistory();
 
             // Uncheck slice checkbox and verify original contents are restored
             const disableSlicing = getCompletedPromise(wrapper);
             toggleCheckbox(wrapper.wrapper);
             await disableSlicing;
+            verifySliceEnablementStateChangeTelemetry(CheckboxState.Unchecked);
             verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5]);
             verifyControlsDisabled(wrapper.wrapper, 2, '');
+            sendTelemetryStub.resetHistory();
 
             // Recheck slice checkbox and verify slice expression is restored
             const reenableSlicing = getCompletedPromise(wrapper);
             toggleCheckbox(wrapper.wrapper);
             await reenableSlicing;
+            verifySliceEnablementStateChangeTelemetry(CheckboxState.Checked);
             verifyRows(wrapper.wrapper, [0, 0, 1, 1, 3, 4]);
 
             // Enter an invalid slice expression and verify error message is rendered
@@ -724,6 +773,8 @@ foo = torch.tensor(arr)`;
             // Slice should already be applied
             verifyReadonlyIndicator(wrapper.wrapper, '[0, :, :]');
             verifyRows(wrapper.wrapper, [0, 0, 1, 2, 1, 3, 4, 5, 2, 6, 7, 8, 3, 9, 10, 11]);
+            verifyDataDimensionalityTelemetry(3);
+            sendTelemetryStub.resetHistory();
 
             // Change the dropdowns and verify that the slice expression updates
             await changeDropdown(wrapper, 'Axis', 0, 1);
@@ -734,16 +785,26 @@ foo = torch.tensor(arr)`;
                 (wrapper.wrapper.find('.slice-data').getDOMNode() as HTMLInputElement).value === '[:, 0, :]',
                 'Input box did not update to match slice'
             );
+            assert.throws(
+                () => verifyDataDimensionalityTelemetry(3),
+                'Unexpectedly sent data dimensionality telemetry more than once'
+            );
+            verifySliceOperationTelemetry(SliceOperationSource.Dropdown);
+            sendTelemetryStub.resetHistory();
 
             // Apply a slice via input box and verify that dropdowns update
             await applySliceAndVerifyReadonlyIndicator(wrapper, '[:, :, 2]');
             verifyRows(wrapper.wrapper, [0, 2, 5, 8, 11, 1, 14, 17, 20, 23]);
             verifyDropdowns(wrapper.wrapper, [2, 2]); // Axis 2, index 2
+            verifySliceOperationTelemetry(SliceOperationSource.TextBox);
+            sendTelemetryStub.resetHistory();
 
             // Apply a slice with no corresponding dropdown
             await applySliceAndVerifyReadonlyIndicator(wrapper, '[:, :1, :]');
             verifyRows(wrapper.wrapper, [0, '[0, 1, 2]', 1, '[12, 13, 14]']);
             verifyDropdowns(wrapper.wrapper, ['', '']); // Dropdowns should be unset
+            verifySliceOperationTelemetry(SliceOperationSource.TextBox);
+            sendTelemetryStub.resetHistory();
 
             // Uncheck slice checkbox and verify original contents are restored
             const disableSlicing = getCompletedPromise(wrapper);
@@ -762,6 +823,8 @@ foo = torch.tensor(arr)`;
                 '[21, 22, 23]'
             ]);
             verifyControlsDisabled(wrapper.wrapper, 2, '');
+            verifySliceEnablementStateChangeTelemetry(CheckboxState.Unchecked);
+            sendTelemetryStub.resetHistory();
 
             // Recheck slice checkbox and verify slice expression is restored
             const reenableSlicing = getCompletedPromise(wrapper);
@@ -769,6 +832,8 @@ foo = torch.tensor(arr)`;
             await reenableSlicing;
             verifyRows(wrapper.wrapper, [0, '[0, 1, 2]', 1, '[12, 13, 14]']);
             verifyReadonlyIndicator(wrapper.wrapper, '[:, :1, :]');
+            verifySliceEnablementStateChangeTelemetry(CheckboxState.Checked);
+            sendTelemetryStub.resetHistory();
 
             // Enter an invalid slice expression and verify error message is rendered
             editInputValue(wrapper, '[:]');
@@ -793,6 +858,8 @@ foo = torch.tensor(arr)`;
             // Slice should already be applied
             verifyReadonlyIndicator(wrapper.wrapper, '[0, 0, :, :]');
             verifyRows(wrapper.wrapper, [0, 0, 1]);
+            verifyDataDimensionalityTelemetry(4);
+            sendTelemetryStub.resetHistory();
 
             // Change the dropdowns and verify that the slice expression updates
             await changeDropdown(wrapper, 'Index', 1, 2);
@@ -803,16 +870,22 @@ foo = torch.tensor(arr)`;
                 (wrapper.wrapper.find('.slice-data').getDOMNode() as HTMLInputElement).value === '[0, 2, :, :]',
                 'Input box did not update to match slice'
             );
+            verifySliceOperationTelemetry(SliceOperationSource.Dropdown);
+            sendTelemetryStub.resetHistory();
 
             // Apply a slice via input box and verify that dropdowns update
             await applySliceAndVerifyReadonlyIndicator(wrapper, '[:, 4, :, 1]');
             verifyRows(wrapper.wrapper, [0, 9, 1, 19, 2, 29]);
             verifyDropdowns(wrapper.wrapper, [1, 4, 3, 1]); // Axis 1 index 4, axis 3 index 1
+            verifySliceOperationTelemetry(SliceOperationSource.TextBox);
+            sendTelemetryStub.resetHistory();
 
             // Apply a slice with no corresponding dropdown
             await applySliceAndVerifyReadonlyIndicator(wrapper, '[1, 2, 0, :]');
             verifyRows(wrapper.wrapper, [0, 14, 1, 15]);
             verifyDropdowns(wrapper.wrapper, ['', '', '', '']); // Dropdowns should be unset
+            verifySliceOperationTelemetry(SliceOperationSource.TextBox);
+            sendTelemetryStub.resetHistory();
 
             // Uncheck slice checkbox and verify original contents are restored
             const disableSlicing = getCompletedPromise(wrapper);
@@ -839,6 +912,8 @@ foo = torch.tensor(arr)`;
                 '[[28, 29]]'
             ]);
             verifyControlsDisabled(wrapper.wrapper, 4, '');
+            verifySliceEnablementStateChangeTelemetry(CheckboxState.Unchecked);
+            sendTelemetryStub.resetHistory();
 
             // Recheck slice checkbox and verify slice expression is restored
             const reenableSlicing = getCompletedPromise(wrapper);
@@ -846,6 +921,8 @@ foo = torch.tensor(arr)`;
             await reenableSlicing;
             verifyRows(wrapper.wrapper, [0, 14, 1, 15]);
             verifyDropdowns(wrapper.wrapper, ['', '', '', '']); // Dropdowns should be unset
+            verifySliceEnablementStateChangeTelemetry(CheckboxState.Checked);
+            sendTelemetryStub.resetHistory();
 
             // Enter an invalid slice expression and verify error message is rendered
             editInputValue(wrapper, '[:]');
