@@ -112,4 +112,5 @@ export interface IDataViewer extends IDisposable {
     readonly onDidChangeDataViewerViewState: Event<void>;
     showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
     refreshData(): Promise<void>;
+    updateWithNewVariable(newVariableName: string): Promise<void>;
 }

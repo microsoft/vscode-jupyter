@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import '../../common/extensions';
-
+import { window } from 'vscode';
 import { inject, injectable } from 'inversify';
 
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
@@ -29,6 +29,9 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
         this.viewContext = new ContextKey(EditorContexts.IsDataViewerActive, this.commandManager);
         this.disposables.push(
             this.commandManager.registerCommand(Commands.RefreshDataViewer, this.refreshDataViewer, this)
+        );
+        this.disposables.push(
+            this.commandManager.registerCommand(Commands.UpdateOrCreateDataViewer, this.updateOrCreateDataViewer, this)
         );
     }
 
@@ -92,4 +95,30 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
             }
         }
     }, 1000);
+
+    private updateOrCreateDataViewer() {
+        // Get the active text editor selection
+        const editor = window.activeTextEditor;
+        if (!editor) return;
+        const document = editor.document;
+        if (!document) return;
+        const position = editor.selection;
+        if (!position) return;
+        // See if a variable exists
+        // Look for an active data viewer
+        if (this.knownViewers.size === 0) {
+            // Create a new data viewer
+        } else {
+            // Reuse an existing data viewer
+            const range = document.getWordRangeAtPosition(position.anchor);
+            if (range) {
+                const word = document.getText(range);
+                for (const viewer of this.knownViewers) {
+                    viewer.updateWithNewVariable(word);
+                }
+            }
+        }
+        // Set its dependencies
+        // Overwrite
+    }
 }

@@ -86,6 +86,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
     ['undo']: [];
+    [DSCommands.UpdateOrCreateDataViewer]: [];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];

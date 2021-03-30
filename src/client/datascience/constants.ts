@@ -46,6 +46,7 @@ export const KnownNotebookLanguages: string[] = [
 ];
 
 export namespace Commands {
+    export const UpdateOrCreateDataViewer = 'jupyter.openDataFrameInDataViewer';
     export const RunAllCells = 'jupyter.runallcells';
     export const RunAllCellsAbove = 'jupyter.runallcellsabove';
     export const RunCellAndAllBelow = 'jupyter.runcellandallbelow';

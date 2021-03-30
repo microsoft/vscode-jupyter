@@ -6,7 +6,7 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { EventEmitter, Memento, NotebookCell, ViewColumn } from 'vscode';
+import { Disposable, EventEmitter, Memento, notebook as vscNotebook, NotebookCell, NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, ViewColumn } from 'vscode';
 
 import {
     IApplicationShell,
@@ -28,12 +28,14 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
-import { HelpLinks, Telemetry } from '../constants';
+import { HelpLinks, Identifiers, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
 import {
     ICodeCssGenerator,
     IInteractiveWindowProvider,
     IJupyterVariableDataProvider,
+    IJupyterVariableDataProviderFactory,
+    IJupyterVariables,
     INotebookEditorProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
@@ -64,6 +66,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
     private currentSliceExpression: string | undefined;
     private sentDataViewerSliceDimensionalityTelemetry = false;
+    private variableCounter = 0;
+    private existingDisposable: Disposable | undefined;
 
     public get visible() {
         return !!this.webPanel?.isVisible();
@@ -92,6 +96,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(ICommandManager) private commandManager: ICommandManager,
+        @inject(IJupyterVariables)
+        @named(Identifiers.KERNEL_VARIABLES)
+        private kernelVariableProvider: IJupyterVariables,
+        @inject(IJupyterVariableDataProviderFactory) private dataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
     ) {
         super(
@@ -143,6 +151,41 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
     private dataViewerDisposed() {
         this._onDidDisposeDataViewer.fire(this as IDataViewer);
+    }
+
+    public async updateWithNewVariable(newVariableName: string) {
+        const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
+
+        // Generate a variable
+        const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
+            {
+                name: newVariableName,
+                value: '',
+                supportsDataExplorer: true,
+                type: 'DataFrame',
+                size: 0,
+                shape: '',
+                count: 0,
+                truncated: true
+            },
+            notebook
+        );
+        const jupyterVariableDataProvider = await this.dataProviderFactory.create(
+            jupyterVariable
+        );
+        // Set dependencies for jupyterVariableDataProvider
+        jupyterVariableDataProvider.setDependencies(jupyterVariable, notebook);
+        // Get variable info
+        this.dataFrameInfoPromise = jupyterVariableDataProvider.getDataFrameInfo();
+        this.dataProvider = jupyterVariableDataProvider;
+        const dataFrameInfo = await this.dataFrameInfoPromise;
+        const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
+        super.setTitle(`Data Viewer - ${newVariableName}`);
+
+        this.postMessage(DataViewerMessages.InitializeData, {
+            ...dataFrameInfo,
+            isSliceDataEnabled
+        }).ignoreErrors();
     }
 
     public async refreshData() {
@@ -336,46 +379,63 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
         let result;
         let code = '';
+        const currentVariableName = (await this.dataFrameInfoPromise)!.name;
+        let newVariableName = '';
         const matchingNotebookEditor = this.notebookEditorProvider.editors.find(
             (editor) => editor.notebook?.identity.fsPath === notebook?.identity.fsPath
         );
+        let refreshRequired = true;
         switch (payload.command) {
             case 'open_interactive_window':
                 await this.interactiveWindowProvider.getOrCreate(notebook?.resource, notebook);
                 break;
             case 'export_to_csv':
-                result = await notebook?.execute('df.to_csv("./cleaned.csv", index=False)', '', 0, uuid());
+                result = await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
                 break;
             case 'rename':
-                code = `df = df.rename(columns={ "${payload.args.old}": "${payload.args.new}" })`;
+                this.variableCounter += 1;
+                newVariableName = `df${this.variableCounter}`;
+                code = `${newVariableName} = ${currentVariableName}.rename(columns={ "${payload.args.old}": "${payload.args.new}" })`;
                 break;
             case 'drop':
+                this.variableCounter += 1;
+                newVariableName = `df${this.variableCounter}`;
                 const labels = payload.args.targets as string[];
-                code = `df = df.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(',') + ']'})`;
+                code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(',') + ']'})`;
                 break;
             case 'dropna':
-                code = `df = df.dropna(axis=${payload.args.target})`;
+                this.variableCounter += 1;
+                newVariableName = `df${this.variableCounter}`;
+                code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})`;
                 break;
             case 'pyplot.hist':
-                code = `import matplotlib.pyplot as plt\nplt.hist(df["${payload.args.target}"])`;
+                refreshRequired = false;
+                code = `import matplotlib.pyplot as plt\nplt.hist(${currentVariableName}["${payload.args.target}"])`;
                 break;
             case 'normalize':
                 const { start, end, target } = payload.args;
-                code = `from sklearn.preprocessing import MinMaxScaler\nscaler = MinMaxScaler(feature_range=(${start}, ${end}))\ndf["${target}"] = scaler.fit_transform(df["${target}"].values.reshape(-1, 1))`;
+                code = `from sklearn.preprocessing import MinMaxScaler\nscaler = MinMaxScaler(feature_range=(${start}, ${end}))\n${currentVariableName}["${target}"] = scaler.fit_transform(${currentVariableName}["${target}"].values.reshape(-1, 1))`;
                 break;
             case 'fillna':
                 const { newValue } = payload.args;
-                code = `df = df.fillna(${newValue})`;
+                this.variableCounter += 1;
+                newVariableName = `df${this.variableCounter}`;
+                code = `${newVariableName} = ${currentVariableName}.fillna(${newValue})`;
         }
-        if (code && matchingNotebookEditor) {
+        if (code && matchingNotebookEditor !== undefined) {
             const cells = (matchingNotebookEditor as any).document.cells;
             const lastCell = cells[cells.length - 1] as NotebookCell;
             await updateCellCode(lastCell, code);
             await addNewCellAfter(lastCell, '');
-            matchingNotebookEditor.onExecutedCode(async () => {
-                await this.refreshData();
+            if (this.existingDisposable) {
+                this.existingDisposable.dispose();
+            }
+            this.existingDisposable = vscNotebook.onDidChangeCellExecutionState(async (e: NotebookCellExecutionStateChangeEvent) => {
+                if (e.executionState === NotebookCellExecutionState.Idle) {
+                    await this.updateWithNewVariable(newVariableName);
+                }
             });
-            await this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow');
+            await this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow'); // TODO ensure correct cell is selected
         }
     }
     private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {

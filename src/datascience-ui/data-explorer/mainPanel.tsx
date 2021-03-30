@@ -286,7 +286,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const indexColumn = variable.indexColumn ?? 'index';
                 const originalVariableType = variable.type ?? this.state.originalVariableType;
                 const originalVariableShape = variable.shape ?? this.state.originalVariableShape;
-                const variableName = this.state.variableName ?? variable.name;
+                const variableName = variable.name ?? this.state.variableName;
                 const fileName = this.state.fileName ?? variable.fileName;
                 const isSliceDataEnabled =
                     variable.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
@@ -391,7 +391,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Generate a column for row numbers
             const rowNumberColumn = {
                 key: RowNumberColumnName,
-                type: ColumnType.Number
+                type: ColumnType.Number,
             };
             const columns = [rowNumberColumn].concat(variable.columns);
             return columns.reduce(
@@ -406,7 +406,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                             type: c.type,
                             field: c.key.toString(),
                             id: `${i}`,
-                            name: c.key.toString(),
+                            name: c.key === RowNumberColumnName ? '' : c.key.toString(),
                             sortable: true,
                             formatter: cellFormatterFunc
                         } as Slick.Column<Slick.SlickData>);

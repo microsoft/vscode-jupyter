@@ -270,6 +270,11 @@
         ],
         "commands": [
             {
+                "title": "Open DataFrame in Data Viewer",
+                "command": "jupyter.openDataFrameInDataViewer",
+                "category": "Jupyter"
+            },
+            {
                 "command": "jupyter.viewOutput",
                 "title": "%jupyter.command.jupyter.viewOutput.title%",
                 "category": "Jupyter"
@@ -748,6 +753,13 @@
             }
         ],
         "menus": {
+            "notebook/cell/title": [
+                {
+                    "command": "jupyter.openDataFrameInDataViewer",
+                    "group": "navigation",
+                    "when": "true"
+                }
+            ],
             "editor/context": [
                 {
                     "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused",
