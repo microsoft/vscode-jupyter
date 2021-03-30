@@ -457,6 +457,22 @@ export enum Telemetry {
      * Sent when a command we register is executed.
      */
     CommandExecuted = 'DS_INTERNAL.COMMAND_EXECUTED',
+    /**
+     * Telemetry event sent whenever the user toggles the checkbox
+     * controlling whether a slice is currently being applied to an
+     * n-dimensional variable.
+     */
+    DataViewerSliceEnablementStateChanged = 'DATASCIENCE.DATA_VIEWER_SLICE_ENABLEMENT_STATE_CHANGED',
+    /**
+     * Telemetry event sent when a slice is first applied in a
+     * data viewer instance to a sliceable Python variable.
+     */
+    DataViewerDataDimensionality = 'DATASCIENCE.DATA_VIEWER_DATA_DIMENSIONALITY',
+    /**
+     * Telemetry event sent whenever the user applies a valid slice
+     * to a sliceable Python variable in the data viewer.
+     */
+    DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
     UpdateCustomEditorAssociation = 'DS_INTERNAL.UPDATE_CUSTOM_EDITOR_ASSOCIATION'
 }
 
