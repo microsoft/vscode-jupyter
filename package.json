@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.55.0-insider"
+        "vscode": "^1.55.0"
     },
     "keywords": [
         "jupyter",
@@ -738,9 +738,7 @@
             {
                 "command": "jupyter.refreshDataViewer",
                 "title": "%DataScience.refreshDataViewer%",
-                "category": "Jupyter",
-                "enablement": "jupyter.dataViewerActive",
-                "icon": "$(refresh)"
+                "category": "Jupyter"
             }
         ],
         "menus": {
@@ -826,11 +824,6 @@
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "group": "navigation@2",
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.refreshDataViewer",
-                    "when": "jupyter.dataViewerActive",
-                    "group": "navigation@0"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
@@ -1337,7 +1330,7 @@
                 },
                 "jupyter.logging.level": {
                     "type": "string",
-                    "default": "error",
+                    "default": "debug",
                     "enum": [
                         "off",
                         "error",

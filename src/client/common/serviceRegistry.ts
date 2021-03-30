@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IExtensionSingleActivationService } from '../activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient } from '../common/types';
 import { AmlComputeContext } from './amlContext';
 import { LiveShareApi } from '../datascience/liveshare/liveshare';
@@ -58,6 +58,7 @@ import {
     IsWindows
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
+import { PortAttributesProviders } from './net/portAttributeProvider';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
@@ -99,6 +100,14 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         AmlComputeContext
     );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PortAttributesProviders
+    );
     serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
     serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        CustomEditorService
+    );
 }

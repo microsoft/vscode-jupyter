@@ -16,6 +16,7 @@ import {
     IJupyterExtensionBanner,
     IPersistentState,
     IPersistentStateFactory,
+    IsCodeSpace,
     ISurveyBanner
 } from '../common/types';
 import * as localize from '../common/utils/localize';
@@ -159,6 +160,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
+        @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(UseVSCodeNotebookEditorApi) private useVSCodeNotebookEditorApi: boolean
@@ -208,7 +210,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     private shouldShowBanner(type: BannerType) {
-        if (!this.isEnabled(type) || this.disabledInCurrentSession) {
+        if (this.isCodeSpace || !this.isEnabled(type) || this.disabledInCurrentSession) {
             return false;
         }
 
