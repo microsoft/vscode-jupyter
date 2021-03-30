@@ -104,24 +104,31 @@ async function activateUnsafe(
     startupDurations: Record<string, number>
 ): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
     const activationDeferred = createDeferred<void>();
-    displayProgress(activationDeferred.promise);
-    startupDurations.startActivateTime = startupStopWatch.elapsedTime;
+    try {
+        displayProgress(activationDeferred.promise);
+        startupDurations.startActivateTime = startupStopWatch.elapsedTime;
 
-    //===============================================
-    // activation starts here
+        //===============================================
+        // activation starts here
 
-    const [serviceManager, serviceContainer] = initializeGlobals(context);
-    activatedServiceContainer = serviceContainer;
-    const { activationPromise } = await activateComponents(context, serviceManager, serviceContainer);
+        const [serviceManager, serviceContainer] = initializeGlobals(context);
+        activatedServiceContainer = serviceContainer;
+        const { activationPromise } = await activateComponents(context, serviceManager, serviceContainer);
 
-    //===============================================
-    // activation ends here
+        //===============================================
+        // activation ends here
 
-    startupDurations.endActivateTime = startupStopWatch.elapsedTime;
-    activationDeferred.resolve();
+        startupDurations.endActivateTime = startupStopWatch.elapsedTime;
+        activationDeferred.resolve();
 
-    const api = buildApi(activationPromise, serviceManager, serviceContainer);
-    return [api, activationPromise, serviceContainer];
+        const api = buildApi(activationPromise, serviceManager, serviceContainer);
+        return [api, activationPromise, serviceContainer];
+    } finally {
+        // Make sure that we clear our status message
+        if (!activationDeferred.completed) {
+            activationDeferred.reject();
+        }
+    }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -137,6 +144,8 @@ async function handleError(ex: Error, startupDurations: Record<string, number>) 
     notifyUser(
         "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
     );
+    // Possible logger hasn't initialized either.
+    console.error('extension activation failed', ex);
     traceError('extension activation failed', ex);
     await sendErrorTelemetry(ex, startupDurations, activatedServiceContainer);
 }

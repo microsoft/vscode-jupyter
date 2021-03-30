@@ -15,7 +15,10 @@ import {
     NotebookKernel as VSCNotebookKernel,
     NotebookCellKind,
     NotebookDocumentMetadata,
-    NotebookCellRunState
+    NotebookCellExecutionState,
+    notebook,
+    NotebookCellExecutionStateChangeEvent,
+    NotebookCellExecutionSummary
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { IVSCodeNotebook } from '../../../common/application/types';
@@ -25,7 +28,7 @@ import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../commo
 import { isUntitledFile } from '../../../common/utils/misc';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
+import { KernelConnectionMetadata, NotebookCellRunState } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { CellState, IJupyterKernelSpec } from '../../types';
 import { JupyterNotebookView } from '../constants';
@@ -35,10 +38,10 @@ import { KernelMessage } from '@jupyterlab/services';
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
-import { chainWithPendingUpdates } from './notebookUpdater';
-import { Resource } from '../../../common/types';
+import { IDisposable, Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { CellOutputMimeTypes } from '../types';
+import { disposeAllDisposables } from '../../../common/helpers';
 
 /**
  * Whether this is a Notebook we created/manage/use.
@@ -64,7 +67,7 @@ export function isJupyterKernel(kernel?: VSCNotebookKernel): kernel is VSCodeNot
 
 const kernelInformationForNotebooks = new WeakMap<
     NotebookDocument,
-    { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: KernelMessage.IInfoReplyMsg['content'] }
+    { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']> }
 >();
 
 export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeNotebook, fs: IFileSystem) {
@@ -131,6 +134,31 @@ export function trackKernelInNotebookMetadata(
 ) {
     const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
     data.metadata = kernelConnection;
+    let language: string | undefined;
+    switch (kernelConnection?.kind) {
+        case 'connectToLiveKernel':
+            language = kernelConnection.kernelModel.language;
+            break;
+        case 'startUsingKernelSpec':
+            language = kernelConnection.kernelSpec.language;
+            break;
+        case 'startUsingPythonInterpreter':
+            language = PYTHON_LANGUAGE;
+            break;
+        default:
+            break;
+    }
+    if (language) {
+        data.kernelInfo = {
+            language_info: {
+                name: language,
+                version: ''
+            }
+        };
+    } else {
+        data.kernelInfo = undefined;
+    }
+
     kernelInformationForNotebooks.set(document, data);
 }
 /**
@@ -252,7 +280,7 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
     const code = cell.document.getText();
     return {
         cell_type: 'code',
-        execution_count: cell.metadata.executionOrder ?? null,
+        execution_count: cell.latestExecutionSummary?.executionOrder ?? null,
         source: splitMultilineString(code),
         outputs: cell.outputs.map(translateCellDisplayOutput),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
@@ -262,7 +290,6 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        executionOrder: undefined,
         hasExecutionOrder: false,
         custom: getNotebookCellMetadata(cell)
     });
@@ -289,7 +316,6 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
 function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        executionOrder: undefined,
         hasExecutionOrder: false,
         custom: getNotebookCellMetadata(cell)
     });
@@ -305,7 +331,6 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
-    const runState = NotebookCellRunState.Idle;
     const hasErrors = outputs.some((output) => output.outputs.some((opit) => opit.mime === CellOutputMimeTypes.error));
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
     let statusMessage: string | undefined;
@@ -317,16 +342,25 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
 
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        executionOrder: typeof cell.execution_count === 'number' ? cell.execution_count : undefined,
         hasExecutionOrder: true,
-        runState,
         statusMessage,
         custom: getNotebookCellMetadata(cell)
     });
 
     const source = concatMultilineString(cell.source);
 
-    return new NotebookCellData(NotebookCellKind.Code, source, cellLanguage, outputs, notebookCellMetadata);
+    const executionSummary: NotebookCellExecutionSummary = {};
+    if (hasExecutionCount) {
+        executionSummary.executionOrder = cell.execution_count as number;
+    }
+    return new NotebookCellData(
+        NotebookCellKind.Code,
+        source,
+        cellLanguage,
+        outputs,
+        notebookCellMetadata,
+        executionSummary
+    );
 }
 const orderOfMimeTypes = [
     'application/vnd.*',
@@ -358,43 +392,32 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
     });
 }
 
-export async function clearCellForExecution(cell: NotebookCell) {
-    await chainWithPendingUpdates(cell.notebook, (edit) => {
-        const metadata = cell.metadata.with({
-            statusMessage: undefined,
-            executionOrder: null,
-            lastRunDuration: null,
-            runStartTime: null
-        });
-        edit.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, metadata);
-        edit.replaceNotebookCellOutput(cell.notebook.uri, cell.index, []);
-    });
-    await updateCellExecutionTimes(cell);
+/**
+ * This class is used to track state of cells, used in logging & tests.
+ */
+export class NotebookCellStateTracker implements IDisposable {
+    private readonly disposables: IDisposable[] = [];
+    private static cellStates = new WeakMap<NotebookCell, NotebookCellExecutionState>();
+    constructor() {
+        notebook.onDidChangeCellExecutionState(this.onDidChangeCellExecutionState, this, this.disposables);
+    }
+    dispose() {
+        disposeAllDisposables(this.disposables);
+    }
+    public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
+        return NotebookCellStateTracker.cellStates.get(cell);
+    }
+    private onDidChangeCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
+        NotebookCellStateTracker.cellStates.set(e.cell, e.executionState);
+    }
 }
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
-        `Cell Index:${cell.index}, state:${cell.metadata.runState}, exec: ${cell.metadata.executionOrder}. ${message}`
+        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
+            cell.latestExecutionSummary?.executionOrder
+        }. ${message}`
     );
-}
-
-/**
- * Store execution start and end times.
- * Stored as ISO for portability.
- */
-export async function updateCellExecutionTimes(
-    cell: NotebookCell,
-    times?: { startTime?: number; lastRunDuration?: number }
-) {
-    if (!times || !times.lastRunDuration || !times.startTime) {
-        return;
-    }
-    const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
-    await chainWithPendingUpdates(cell.notebook, (edit) => {
-        traceCellMessage(cell, 'Update run duration');
-        const metadata = cell.metadata.with({ lastRunDuration });
-        edit.replaceNotebookCellMetadata(cell.notebook.uri, cell.index, metadata);
-    });
 }
 
 export function createVSCNotebookCellDataFromCell(
@@ -485,10 +508,6 @@ function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
             metadata.metadata = output.metadata ? cloneDeep(output.metadata) : {};
             break;
         }
-        case 'stream': {
-            metadata.streamName = (output.name as unknown) as nbformat.StreamType;
-            break;
-        }
         default:
             break;
     }
@@ -539,7 +558,7 @@ function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
     return new NotebookCellOutput(
         [
             new NotebookCellOutputItem(
-                CellOutputMimeTypes.textStream,
+                output.name === 'stderr' ? CellOutputMimeTypes.stderr : CellOutputMimeTypes.stdout,
                 concatMultilineString(output.text),
                 getOutputMetadata(output)
             )
@@ -550,7 +569,14 @@ function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
 
 export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: string): boolean {
     const metadata = output.metadata as CellOutputMetadata | undefined;
-    return metadata?.outputType === 'stream' && metadata.streamName === expectedStreamName;
+    return metadata?.outputType === 'stream' && getOutputStreamType(output) === expectedStreamName;
+}
+
+// Output stream can only have stderr or stdout so just check the first output. Undefined if no outputs
+export function getOutputStreamType(output: NotebookCellOutput): string | undefined {
+    if (output.outputs.length > 0) {
+        return output.outputs[0].mime === CellOutputMimeTypes.stderr ? 'stderr' : 'stdout';
+    }
 }
 
 type JupyterOutput =
@@ -600,10 +626,6 @@ export type CellOutputMetadata = {
      * Original cell output type
      */
     outputType: nbformat.OutputType | string;
-    /**
-     * Name of the stream (for text output).
-     */
-    streamName?: nbformat.StreamType;
     executionCount?: nbformat.IExecuteResult['ExecutionCount'];
 };
 
@@ -632,15 +654,18 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
         }
         case 'stream': {
             const outputs = output.outputs
-                .filter((opit) => opit.mime === CellOutputMimeTypes.textStream)
+                .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
                 .map((opit) => opit.value as string | string[])
                 .reduceRight<string[]>(
                     (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
                     []
                 );
+
+            const streamType = getOutputStreamType(output) || 'stdout';
+
             result = {
                 output_type: 'stream',
-                name: customMetadata?.streamName || 'stdout',
+                name: streamType,
                 text: splitMultilineString(outputs.join(''))
             };
             break;
@@ -741,7 +766,8 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
     return (
         (output.outputs.find(
             (opit) =>
-                opit.mime === CellOutputMimeTypes.textStream ||
+                opit.mime === CellOutputMimeTypes.stdout ||
+                opit.mime === CellOutputMimeTypes.stderr ||
                 opit.mime === 'text/plain' ||
                 opit.mime === 'text/markdown'
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

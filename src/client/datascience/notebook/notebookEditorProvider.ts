@@ -200,6 +200,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             this._onDidChangeActiveNotebookEditor.fire(undefined);
             return;
         }
+        if (!isJupyterNotebook(editor.document)) {
+            this._onDidChangeActiveNotebookEditor.fire(undefined);
+            return;
+        }
         if (this.trackedVSCodeNotebookEditors.has(editor)) {
             const ourEditor = this.editors.find((item) => item.file.toString() === editor.document.uri.toString());
             this._onDidChangeActiveNotebookEditor.fire(ourEditor);

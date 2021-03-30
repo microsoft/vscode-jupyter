@@ -11,7 +11,7 @@ import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyte
 import { IKernelConnection, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
-import { PYTHON_PATH, sleep, waitForCondition } from '../common';
+import { createEventHandler, PYTHON_PATH, sleep, waitForCondition } from '../common';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 
 // Chai as promised is not part of this file
@@ -19,6 +19,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { traceInfo } from '../../client/common/logger';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { initialize } from '../initialize';
+import { PortAttributesProviders } from '../../client/common/net/portAttributeProvider';
+import { IDisposable } from '../../client/common/types';
+import { disposeAllDisposables } from '../../client/common/helpers';
+import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
 use(chaiAsPromised);
 
 const test_Timeout = 30_000;
@@ -35,6 +39,7 @@ suite('DataScience - Kernel Launcher', () => {
         resources: {},
         path: ''
     };
+    const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
         if (IS_REMOTE_NATIVE_TEST) {
@@ -49,6 +54,7 @@ suite('DataScience - Kernel Launcher', () => {
     });
     teardown(function () {
         traceInfo(`End Test Complete ${this.currentTest?.title}`);
+        disposeAllDisposables(disposables);
     });
 
     test('Launch from kernelspec', async function () {
@@ -114,9 +120,63 @@ suite('DataScience - Kernel Launcher', () => {
         assert.ok(output, 'no stream output');
         assert.equal(output.content.text, '1\n', 'Wrong content found on message');
 
+        await kernel.dispose();
+    }).timeout(test_Timeout);
+    test('Ensure ports are not forwarded to end user', async function () {
+        const spec: IJupyterKernelSpec = {
+            name: 'foo',
+            language: 'python',
+            path: 'python',
+            display_name: 'foo',
+            argv: [PYTHON_PATH, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            env: {
+                TEST_VAR: '1'
+            }
+        };
+
+        const kernel = await kernelLauncher.launch(
+            { kernelSpec: spec, kind: 'startUsingKernelSpec', id: '1' },
+            30_000,
+            undefined,
+            process.cwd()
+        );
+
+        // Confirm the ports used by this kernel are ignored.
+        const kernelPorts = [
+            kernel.connection.control_port,
+            kernel.connection.hb_port,
+            kernel.connection.iopub_port,
+            kernel.connection.shell_port,
+            kernel.connection.stdin_port
+        ];
+        const portAttributeProvider = new PortAttributesProviders(disposables);
+        let portsAttributes = portAttributeProvider.providePortAttributes(
+            kernelPorts,
+            undefined,
+            undefined,
+            new CancellationTokenSource().token
+        );
+        // The current kernels ports are hidden.
+        assert.equal(
+            portsAttributes.filter((item) => item.autoForwardAction === PortAutoForwardAction.Ignore).length,
+            5,
+            'All 5 ports should be hidden'
+        );
+
+        const kernelDiedEvent = createEventHandler(kernel, 'exited', disposables);
         // Upon disposing, we should get an exit event within 100ms or less.
         // If this happens, then we know a process existed.
         await kernel.dispose();
+        await kernelDiedEvent.assertFiredAtLeast(1, 1_000);
+
+        portsAttributes = portAttributeProvider.providePortAttributes(
+            kernelPorts,
+            undefined,
+            undefined,
+            new CancellationTokenSource().token
+        );
+        // The current kernels ports are no longer hidden.
+        assert.equal(portsAttributes.length, 0, 'Ports should no longer be hidden');
     }).timeout(test_Timeout);
 
     test('Bind with ZMQ', async function () {

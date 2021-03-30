@@ -5,6 +5,7 @@
 import { IDisposable } from '../../common/types';
 import { SharedMessages } from '../messages';
 import { Event } from 'vscode';
+import { SliceOperationSource } from '../../telemetry/constants';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -28,6 +29,8 @@ export namespace DataViewerMessages {
     export const CompletedData = 'complete';
     export const GetSliceRequest = 'get_slice_request';
     export const SubmitCommand = 'submit_command';
+    export const RefreshDataViewer = 'refresh_data_viewer';
+    export const SliceEnablementStateChanged = 'slice_enablement_state_changed';
 }
 
 export interface IGetRowsRequest {
@@ -44,6 +47,7 @@ export interface IGetRowsResponse {
 
 export interface IGetSliceRequest {
     slice: string | undefined;
+    source: SliceOperationSource;
 }
 
 // Map all messages to specific payloads
@@ -58,6 +62,8 @@ export type IDataViewerMapping = {
     [DataViewerMessages.CompletedData]: never | undefined;
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
     [DataViewerMessages.SubmitCommand]: { command: string; args: any };
+    [DataViewerMessages.RefreshDataViewer]: never | undefined;
+    [DataViewerMessages.SliceEnablementStateChanged]: { newState: boolean };
 };
 
 export interface IDataFrameInfo {

@@ -9,7 +9,7 @@ import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, Event, EventEmitter, NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
+import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
@@ -82,7 +82,6 @@ export class Kernel implements IKernel {
         private readonly editorProvider: INotebookEditorProvider,
         kernelProvider: IKernelProvider,
         appShell: IApplicationShell,
-        vscNotebook: IVSCodeNotebook,
         private readonly fs: IFileSystem,
         context: IExtensionContext,
         private readonly serverStorage: IJupyterServerUriStorage
@@ -90,9 +89,7 @@ export class Kernel implements IKernel {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
             errorHandler,
-            editorProvider,
             appShell,
-            vscNotebook,
             kernelConnectionMetadata,
             context,
             interruptTimeout,
@@ -128,6 +125,7 @@ export class Kernel implements IKernel {
         return this.kernelExecution.interrupt(document, this._notebookPromise);
     }
     public async dispose(): Promise<void> {
+        traceInfo(`Dispose kernel ${this.uri.toString()}`);
         this.restarting = undefined;
         this._notebookPromise = undefined;
         if (this.notebook) {
@@ -266,6 +264,7 @@ export class Kernel implements IKernel {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
             this.notebook.onDisposed(() => {
+                traceInfo(`Kernel got disposed as a result of notebook.onDisposed ${this.uri.toString()}`);
                 this._notebookPromise = undefined;
                 this._onDisposed.fire();
             });

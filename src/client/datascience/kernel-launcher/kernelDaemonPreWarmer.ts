@@ -13,7 +13,7 @@ import { IConfigurationService, IDisposableRegistry, Resource } from '../../comm
 import { swallowExceptions } from '../../common/utils/decorators';
 import { isUntitledFile } from '../../common/utils/misc';
 import { isPythonKernelConnection } from '../jupyter/kernels/helpers';
-import { getNotebookMetadata, isJupyterKernel, isPythonNotebook } from '../notebook/helpers/helpers';
+import { getNotebookMetadata, isJupyterKernel, isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers';
 import {
     IInteractiveWindowProvider,
     INotebookCreationTracker,
@@ -88,7 +88,7 @@ export class KernelDaemonPreWarmer {
     // Handle opening of native documents
     private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
         // It could be anything, lets not make any assumptions.
-        if (isUntitledFile(doc.uri)) {
+        if (isUntitledFile(doc.uri) || !isJupyterNotebook(doc)) {
             return;
         }
         const kernel = this.vscodeNotebook.notebookEditors.find((item) => item.document === doc)?.kernel;

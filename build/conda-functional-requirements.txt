@@ -9,3 +9,4 @@ beakerx_kernel_java
 py4j
 bqplot
 K3D
+ipyleaflet

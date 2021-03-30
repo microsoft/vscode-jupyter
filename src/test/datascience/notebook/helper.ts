@@ -11,7 +11,6 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { instance, mock, when } from 'ts-mockito';
 import {
-    NotebookCellRunState,
     WorkspaceEdit,
     commands,
     Memento,
@@ -25,7 +24,8 @@ import {
     NotebookCellMetadata,
     NotebookCellOutputItem,
     CancellationTokenSource,
-    NotebookCellRange
+    NotebookCellRange,
+    NotebookCellExecutionState
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -46,7 +46,8 @@ import { JupyterServerSelector } from '../../../client/datascience/jupyter/serve
 import {
     getTextOutputValue,
     hasErrorOutput,
-    isJupyterKernel
+    isJupyterKernel,
+    NotebookCellStateTracker
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
@@ -470,10 +471,17 @@ export async function prewarmNotebooks() {
 }
 
 function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
-    return (cell.metadata.executionOrder ?? 0) > 0 && cell.metadata.runState === NotebookCellRunState.Success;
+    return (
+        (cell.latestExecutionSummary?.executionOrder ?? 0) > 0 &&
+        NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
+        !hasErrorOutput(cell.outputs)
+    );
 }
 function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
-    return (cell.metadata.executionOrder ?? 0) === 0 && cell.metadata.runState === NotebookCellRunState.Idle;
+    return (
+        (cell.latestExecutionSummary?.executionOrder ?? 0) === 0 &&
+        NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle
+    );
 }
 /**
  *  Wait for VSC to perform some last minute clean up of cells.
@@ -496,7 +504,7 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
     await waitForCondition(
         async () => assertHasExecutionCompletedSuccessfully(cell),
         timeout,
-        `Cell ${cell.index + 1} did not complete successfully, State = ${cell.metadata.runState}`
+        `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);
 }
@@ -507,9 +515,7 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
     await waitForCondition(
         async () => {
             const result =
-                cell.metadata.runState === NotebookCellRunState.Running &&
-                cell.metadata.runStartTime &&
-                !cell.metadata.lastRunDuration &&
+                NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing &&
                 !cell.metadata.statusMessage
                     ? true
                     : false;
@@ -525,9 +531,7 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
 export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () =>
-            cell.metadata.runState === NotebookCellRunState.Running &&
-            !cell.metadata.runStartTime &&
-            !cell.metadata.lastRunDuration &&
+            NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending &&
             !cell.metadata.statusMessage
                 ? true
                 : false,
@@ -539,7 +543,9 @@ export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, tim
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
-        `Cell ${cell.index + 1} did not complete (this is an empty cell), State = ${cell.metadata.runState}`
+        `Cell ${
+            cell.index + 1
+        } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);
 }
@@ -547,16 +553,21 @@ export async function waitForExecutionCompletedWithErrors(cell: NotebookCell, ti
     await waitForCondition(
         async () => assertHasExecutionCompletedWithErrors(cell),
         timeout,
-        `Cell ${cell.index + 1} did not fail as expected, State = ${cell.metadata.runState}`
+        `Cell ${cell.index + 1} did not fail as expected, State =  ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);
 }
 function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
-    return (cell.metadata.executionOrder ?? 0) > 0 && cell.metadata.runState === NotebookCellRunState.Error;
+    return (
+        (cell.latestExecutionSummary?.executionOrder ?? 0) > 0 &&
+        NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
+        hasErrorOutput(cell.outputs)
+    );
 }
 function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExactMatch = true) {
     if (
-        output.mime !== CellOutputMimeTypes.textStream &&
+        output.mime !== CellOutputMimeTypes.stdout &&
+        output.mime !== CellOutputMimeTypes.stderr &&
         output.mime !== 'text/plain' &&
         output.mime !== 'text/markdown'
     ) {
@@ -602,18 +613,18 @@ export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string,
     return true;
 }
 export function assertVSCCellIsRunning(cell: NotebookCell) {
-    assert.equal(cell.metadata.runState, NotebookCellRunState.Running);
+    assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Executing);
     return true;
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {
-    assert.notEqual(cell.metadata.runState, NotebookCellRunState.Running);
+    assert.notEqual(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Executing);
     return true;
 }
 export function assertVSCCellStateIsUndefinedOrIdle(cell: NotebookCell) {
-    if (cell.metadata.runState === undefined) {
+    if (NotebookCellStateTracker.getCellState(cell) === undefined) {
         return true;
     }
-    assert.equal(cell.metadata.runState, NotebookCellRunState.Idle);
+    assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Idle);
     return true;
 }
 export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
@@ -676,7 +687,9 @@ export async function runCell(cell: NotebookCell) {
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.kernel) {
         throw new Error('No notebook or kernel');
     }
-    vscodeNotebook.activeNotebookEditor.kernel.executeCell(cell.notebook, cell);
+    void vscodeNotebook.activeNotebookEditor.kernel.executeCellsRequest(cell.notebook, [
+        new NotebookCellRange(cell.index, cell.index + 1)
+    ]);
 }
 export async function runAllCellsInActiveNotebook() {
     const api = await initialize();
@@ -689,7 +702,10 @@ export async function runAllCellsInActiveNotebook() {
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.kernel) {
         throw new Error('No notebook or kernel');
     }
-    vscodeNotebook.activeNotebookEditor.kernel.executeAllCells(vscodeNotebook.activeNotebookEditor.document);
+    const document = vscodeNotebook.activeNotebookEditor.document;
+    void vscodeNotebook.activeNotebookEditor.kernel.executeCellsRequest(document, [
+        new NotebookCellRange(0, document.cells.length)
+    ]);
 }
 
 /**

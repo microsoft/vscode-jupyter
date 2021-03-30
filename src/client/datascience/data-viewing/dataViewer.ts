@@ -52,6 +52,7 @@ import {
 import { Experiments } from '../../common/experiments/groups';
 import { isValidSliceExpression, preselectedSliceExpression } from '../../../datascience-ui/data-explorer/helpers';
 import { addNewCellAfter, updateCellCode } from '../notebook/helpers/executionHelpers';
+import { CheckboxState } from '../../telemetry/constants';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
@@ -62,6 +63,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private pendingRowsCount: number = 0;
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
     private currentSliceExpression: string | undefined;
+    private sentDataViewerSliceDimensionalityTelemetry = false;
 
     public get visible() {
         return !!this.webPanel?.isVisible();
@@ -121,9 +123,15 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             // Then show our web panel. Eventually we need to consume the data
             await super.show(true);
 
-            const dataFrameInfo = await this.prepDataFrameInfo();
-
+            let dataFrameInfo = await this.prepDataFrameInfo();
             const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
+
+            // If higher dimensional data, preselect a slice to show
+            if (isSliceDataEnabled && dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
+                this.maybeSendSliceDataDimensionalityTelemetry(dataFrameInfo.shape.length);
+                const slice = preselectedSliceExpression(dataFrameInfo.shape);
+                dataFrameInfo = await this.getDataFrameInfo(slice);
+            }
 
             // Send a message with our data
             this.postMessage(DataViewerMessages.InitializeData, {
@@ -205,6 +213,17 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.handleCommand(payload).ignoreErrors();
                 break;
 
+            case DataViewerMessages.RefreshDataViewer:
+                this.refreshData().ignoreErrors();
+                void sendTelemetryEvent(Telemetry.RefreshDataViewer);
+                break;
+
+            case DataViewerMessages.SliceEnablementStateChanged:
+                void sendTelemetryEvent(Telemetry.DataViewerSliceEnablementStateChanged, undefined, {
+                    newState: payload.newState ? CheckboxState.Checked : CheckboxState.Unchecked
+                });
+                break;
+
             default:
                 break;
         }
@@ -258,6 +277,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
                 const payload = await this.getDataFrameInfo(request.slice);
+                if (payload.shape?.length) {
+                    this.maybeSendSliceDataDimensionalityTelemetry(payload.shape.length);
+                }
+                sendTelemetryEvent(Telemetry.DataViewerSliceOperation, undefined, { source: request.source });
                 return this.postMessage(DataViewerMessages.InitializeData, { ...payload, isSliceDataEnabled: true });
             }
         });
@@ -353,6 +376,12 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 await this.refreshData();
             });
             await this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow');
+        }
+    }
+    private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {
+        if (!this.sentDataViewerSliceDimensionalityTelemetry) {
+            sendTelemetryEvent(Telemetry.DataViewerDataDimensionality, undefined, { numberOfDimensions });
+            this.sentDataViewerSliceDimensionalityTelemetry = true;
         }
     }
 }

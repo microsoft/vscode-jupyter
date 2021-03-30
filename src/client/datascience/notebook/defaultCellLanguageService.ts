@@ -16,7 +16,7 @@ import { swallowExceptions } from '../../common/utils/decorators';
 import { translateKernelLanguageToMonaco } from '../common';
 import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import { IJupyterKernelSpec } from '../types';
-import { getNotebookMetadata } from './helpers/helpers';
+import { getNotebookMetadata, isJupyterNotebook } from './helpers/helpers';
 
 export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';
 /**
@@ -54,6 +54,9 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
     }
     @swallowExceptions('Saving last saved cell language')
     private async onDidSaveNotebookDocument(doc: NotebookDocument) {
+        if (!isJupyterNotebook(doc)) {
+            return;
+        }
         const language = this.getLanguageOfFirstCodeCell(doc);
         if (language && language !== this.lastSavedNotebookCellLanguage) {
             await this.globalMemento.update(LastSavedNotebookCellLanguage, language);
