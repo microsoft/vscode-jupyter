@@ -113,11 +113,20 @@ export class LanguageServerWrapper implements Disposable {
     }
 
     public async resolveCompletionItem(item: CompletionItem, token: CancellationToken) {
+        let data;
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data = (item as any).data;
+        } catch {
+            data = {};
+        }
+        const convertedItem = this.code2ProtocolConverter.asCompletionItem(item);
         const result = await this.connection.sendRequest(
             vscodeLanguageClient.CompletionResolveRequest.type,
-            this.code2ProtocolConverter.asCompletionItem(item),
+            {...convertedItem, data},
             token
         );
+
         if (result) {
             return this.protocol2CodeConverter.asCompletionItem(result);
         }
