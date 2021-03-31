@@ -864,7 +864,6 @@ module.exports = {
         'src/client/datascience/interactive-common/intellisense/wordHelper.ts',
         'src/client/datascience/interactive-common/intellisense/intellisenseDocument.ts',
         'src/client/datascience/interactive-common/intellisense/intellisenseLine.ts',
-        'src/client/datascience/interactive-common/intellisense/conversion.ts',
         'src/client/datascience/jupyterUriProviderWrapper.ts',
         'src/client/datascience/cellMatcher.ts',
         'src/client/datascience/notebookStorage/notebookModel.ts',
