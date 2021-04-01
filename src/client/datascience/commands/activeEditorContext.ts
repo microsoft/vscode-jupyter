@@ -36,7 +36,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private pythonOrInteractiveOrNativeContext: ContextKey;
     private canRestartNotebookKernelContext: ContextKey;
     private canInterruptNotebookKernelContext: ContextKey;
-    private canRunCellsAboveInNativeNotebook: ContextKey;
     private hasNativeNotebookCells: ContextKey;
     private isNotebookTrusted: ContextKey;
     private isPythonFileActive: boolean = false;
@@ -68,10 +67,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.interactiveContext = new ContextKey(EditorContexts.IsInteractiveActive, this.commandManager);
         this.interactiveOrNativeContext = new ContextKey(
             EditorContexts.IsInteractiveOrNativeActive,
-            this.commandManager
-        );
-        this.canRunCellsAboveInNativeNotebook = new ContextKey(
-            EditorContexts.canRunCellsAboveInNativeNotebook,
             this.commandManager
         );
         this.pythonOrNativeContext = new ContextKey(EditorContexts.IsPythonOrNativeActive, this.commandManager);
@@ -150,25 +145,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     private updateNativeNotebookContext() {
         this.hasNativeNotebookOpen.set(this.vscNotebook.notebookDocuments.some(isJupyterNotebook)).ignoreErrors();
-
-        if (!this.vscNotebook.activeNotebookEditor) {
-            return;
-        }
-
-        if (
-            this.vscNotebook.activeNotebookEditor &&
-            isJupyterNotebook(this.vscNotebook.activeNotebookEditor.document)
-        ) {
-            if (
-                this.vscNotebook.activeNotebookEditor.selection &&
-                this.vscNotebook.activeNotebookEditor.selection.index > 0
-            ) {
-                this.canRunCellsAboveInNativeNotebook.set(true).ignoreErrors();
-            } else {
-                // If a cell isn't selected or if first cell is selected, then we cannot have run above.
-                this.canRunCellsAboveInNativeNotebook.set(false).ignoreErrors();
-            }
-        }
     }
     private updateContextOfActiveNotebookKernel(activeEditor?: INotebookEditor) {
         if (activeEditor) {
