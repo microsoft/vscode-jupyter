@@ -287,20 +287,14 @@
                 "command": "jupyter.notebookeditor.runallcellsabove",
                 "title": "%DataScience.runAbove%",
                 "category": "Notebook",
-                "icon": {
-                    "light": "resources/light/runabove.svg",
-                    "dark": "resources/dark/runabove-inverse.svg"
-                },
-                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted && jupyter.notebookeditor.canRunCellsAboveInNativeNotebook"
+                "icon": "$(run-above)",
+                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
             },
             {
                 "command": "jupyter.notebookeditor.runcellandallbelow",
                 "title": "%DataScience.runBelow%",
                 "category": "Notebook",
-                "icon": {
-                    "light": "resources/light/runbelow.svg",
-                    "dark": "resources/dark/runbelow-inverse.svg"
-                },
+                "icon": "$(run-below)",
                 "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
             },
             {
@@ -796,18 +790,6 @@
             ],
             "editor/title": [
                 {
-                    "command": "jupyter.notebookeditor.runallcellsabove",
-                    "title": "%DataScience.runAbove%",
-                    "group": "overflow@1",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.runcellandallbelow",
-                    "title": "%DataScience.runBelow%",
-                    "group": "overflow@2",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                },
-                {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "group": "navigation@1",
@@ -844,6 +826,20 @@
                     "when": "notebookViewType == 'jupyter-notebook'"
                 }
             ],
+            "notebook/cell/title": [
+                {
+                    "command": "jupyter.notebookeditor.runallcellsabove",
+                    "title": "%DataScience.runAbove%",
+                    "group": "inline/cell@2",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.runcellandallbelow",
+                    "title": "%DataScience.runBelow%",
+                    "group": "inline/cell@2",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                }
+            ],
             "explorer/context": [
                 {
                     "when": "resourceLangId == python && !notebookEditorFocused",
@@ -867,6 +863,16 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.notebookeditor.runallcellsabove",
+                    "title": "%DataScience.runAbove%",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.notebookeditor.runcellandallbelow",
+                    "title": "%DataScience.runBelow%",
+                    "when": "false"
+                },
                 {
                     "command": "jupyter.exportAsPythonScript",
                     "title": "%jupyter.command.jupyter.exportAsPythonScript.title%",
