@@ -123,7 +123,7 @@ export class LanguageServerWrapper implements Disposable {
         const convertedItem = this.code2ProtocolConverter.asCompletionItem(item);
         const result = await this.connection.sendRequest(
             vscodeLanguageClient.CompletionResolveRequest.type,
-            {...convertedItem, data},
+            { ...convertedItem, data },
             token
         );
 
