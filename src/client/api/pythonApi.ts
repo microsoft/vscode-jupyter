@@ -223,7 +223,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
 @injectable()
 export class LanguageServerProvider implements ILanguageServerProvider {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined> {
         return this.apiProvider.getApi().then((api) => api?.getLanguageServer(resource));
@@ -232,7 +232,7 @@ export class LanguageServerProvider implements ILanguageServerProvider {
 
 @injectable()
 export class WindowsStoreInterpreter implements IWindowsStoreInterpreter {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
         return this.apiProvider.getApi().then((api) => (api ? api.isWindowsStoreInterpreter(pythonPath) : false));
@@ -241,7 +241,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter {
 
 @injectable()
 export class PythonDebuggerPathProvider implements IPythonDebuggerPathProvider {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public getDebuggerPath(): Promise<string | undefined> {
         return this.apiProvider.getApi().then((api) => api?.getDebuggerPath());
@@ -264,7 +264,7 @@ export class PythonInstaller implements IPythonInstaller {
     public get onInstalled(): Event<{ product: Product; resource?: InterpreterUri }> {
         return this._onInstalled.event;
     }
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public async install(
         product: Product,
@@ -309,7 +309,7 @@ export class PythonInstaller implements IPythonInstaller {
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public async getActivatedEnvironmentVariables(
         resource: Resource,
@@ -324,7 +324,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public async getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
         return this.apiProvider.getApi().then((api) => (api ? api.getSuggestions(resource) : []));
@@ -340,7 +340,7 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) { }
+    ) {}
 
     public get onDidChangeInterpreter(): Event<void> {
         if (this.extensionChecker.isPythonExtensionInstalled) {
