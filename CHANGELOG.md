@@ -1,5 +1,99 @@
 # Changelog
 
+## 2021.4.0 (1 April 2021)
+
+### Enhancements
+
+1. Be able to provide string argument to jupyter.execSelectionInteractive for extensibility.
+   (thanks [Andrew Craig](https://github.com/andycraig/))
+   ([#1689](https://github.com/Microsoft/vscode-jupyter/issues/1689))
+
+### Fixes
+
+1. Jupyter variables tab will always be named 'Jupyter Variables'.
+   ([#4458](https://github.com/Microsoft/vscode-jupyter/issues/4458))
+1. Variable view will stay as long as you have a notebook open (not necessarily active).
+   ([#4562](https://github.com/Microsoft/vscode-jupyter/issues/4562))
+1. Add quotations to arguments with blank spaces when executing kernel processes.
+   ([#4647](https://github.com/Microsoft/vscode-jupyter/issues/4647))
+1. Do not prompt to install Python extension when creating a blank notebook.
+   ([#4965](https://github.com/Microsoft/vscode-jupyter/issues/4965))
+1. Cache the active workspace Python Interpreter.
+   ([#5004](https://github.com/Microsoft/vscode-jupyter/issues/5004))
+1. Don't prewarm variables for global jupyter interpreter if ZMQ is supported.
+   ([#5009](https://github.com/Microsoft/vscode-jupyter/issues/5009))
+1. When closing the Interactive Window, shutdown sessions started by Interactive Window.
+   ([#5030](https://github.com/Microsoft/vscode-jupyter/issues/5030))
+1. Stop wrapping new errors if we threw the original error.
+   ([#5089](https://github.com/Microsoft/vscode-jupyter/issues/5089))
+1. Ignore errors when getting the environment variables for a Python environment.
+   ([#5093](https://github.com/Microsoft/vscode-jupyter/issues/5093))
+1. Revert viewsContainter name to Jupyter and view name to Variables to avoid un-named viewsContainer.
+   ([#5102](https://github.com/Microsoft/vscode-jupyter/issues/5102))
+1. Ensure extensions depending on Jupyter do not fail to load if Jupyter extension fails to load.
+   ([#5145](https://github.com/Microsoft/vscode-jupyter/issues/5145))
+1. Don't display the data science banner for non-Jupyter notebooks.
+   ([#5181](https://github.com/Microsoft/vscode-jupyter/issues/5181))
+1. Don't use NotebookEditor.onDidDispose and support new err / out specific stream mime types.
+   ([#5191](https://github.com/Microsoft/vscode-jupyter/issues/5191))
+1. Prevent unnecessary activation of the Python extension.
+   ([#5193](https://github.com/Microsoft/vscode-jupyter/issues/5193))
+1. Update widget kernel for new NotebookOutputEventParams.
+   ([#5195](https://github.com/Microsoft/vscode-jupyter/issues/5195))
+1. Updates to code used to run Python in an isolated manner.
+   ([#5212](https://github.com/Microsoft/vscode-jupyter/issues/5212))
+1. Changes to proposed API for using resolveKernel instead of resolveNotebook. Since this change goes along with widget tests also renable and fix those tests.
+   ([#5217](https://github.com/Microsoft/vscode-jupyter/issues/5217))
+1. Fix data viewer display of non-numeric index columns in DataFrames.
+   ([#5253](https://github.com/Microsoft/vscode-jupyter/issues/5253))
+1. Display messages notifying user to enable support for CDNs when rendering IPyWidgets.
+   ([#5074](https://github.com/Microsoft/vscode-jupyter/issues/5074))
+1. When reopening a newly created Notebook with a Julia kernel, the cells should be detected as `Julia`.
+   ([#5148](https://github.com/Microsoft/vscode-jupyter/issues/5148))
+1. Support switching kernels in Native Notebooks when connecting to Jupyter.
+   ([#1215](https://github.com/Microsoft/vscode-jupyter/issues/1215))
+1. Refactor how Kernels are searched and selected.
+   ([#4995](https://github.com/microsoft/vscode-jupyter/pull/4995))
+1. Update variable view to use the new API for native cell execution notification.
+   ([#5316](https://github.com/Microsoft/vscode-jupyter/issues/5316))
+1. Ensure users in CodeSpaces do not get prompted to forward Kernel Ports.
+   ([#5283](https://github.com/Microsoft/vscode-jupyter/issues/5283))
+1. Disable surveys in CodeSpaces.
+   ([#5295](https://github.com/Microsoft/vscode-jupyter/issues/5295))
+1. Ensure Git diff viewer does not get replaced by Notebook Editor.
+   ([#633](https://github.com/Microsoft/vscode-jupyter/issues/633))
+   (thanks [Matt Bierner](https://github.com/mjbvz))
+
+### Code Health
+
+1. Ability to queue telemetry until all of the data required is available.
+   ([#4956](https://github.com/Microsoft/vscode-jupyter/issues/4956))
+1. Fix variables test. We had a new import of sys, which was causing the variable fetching to have to do one extra fetch, pushing it over the limit to require a second chunk fetch.
+   ([#5016](https://github.com/Microsoft/vscode-jupyter/issues/5016))
+1. Add tests for data viewer slice data functionality.
+   ([#5066](https://github.com/Microsoft/vscode-jupyter/issues/5066))
+1. Remove setting `jupyter.useNotebookEditor`.
+   ([#5130](https://github.com/Microsoft/vscode-jupyter/issues/5130))
+1. Enable `debug` logging by default.
+   ([#5238](https://github.com/Microsoft/vscode-jupyter/issues/5238))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+
+
 ## 2021.3.0 (3 March 2021)
 
 ### Enhancements
@@ -46,6 +140,22 @@
    ([#4959](https://github.com/Microsoft/vscode-jupyter/issues/4959))
 1. Add telemetry to check if we have started the right local Python kernel.
    ([#4999](https://github.com/Microsoft/vscode-jupyter/issues/4999))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
 
 
 ## 2021.2.1 (28 February 2021)

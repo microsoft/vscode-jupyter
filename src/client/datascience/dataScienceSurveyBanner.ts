@@ -16,12 +16,14 @@ import {
     IJupyterExtensionBanner,
     IPersistentState,
     IPersistentStateFactory,
+    IsCodeSpace,
     ISurveyBanner
 } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { MillisecondsInADay } from '../constants';
 import { InteractiveWindowMessages, IReExecuteCells } from './interactive-common/interactiveWindowTypes';
+import { isJupyterNotebook } from './notebook/helpers/helpers';
 import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
 import { IInteractiveWindowListener, INotebookEditorProvider, INotebookExtensibility } from './types';
 
@@ -158,6 +160,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
+        @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(UseVSCodeNotebookEditorApi) private useVSCodeNotebookEditorApi: boolean
@@ -169,7 +172,15 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     public async activate() {
-        this.vscodeNotebook.onDidOpenNotebookDocument(this.openedNotebook, this, this.disposables);
+        this.vscodeNotebook.onDidOpenNotebookDocument(
+            (e) => {
+                if (isJupyterNotebook(e)) {
+                    this.openedNotebook().catch(noop);
+                }
+            },
+            this,
+            this.disposables
+        );
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
     }
 
@@ -199,7 +210,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     private shouldShowBanner(type: BannerType) {
-        if (!this.isEnabled(type) || this.disabledInCurrentSession) {
+        if (this.isCodeSpace || !this.isEnabled(type) || this.disabledInCurrentSession) {
             return false;
         }
 

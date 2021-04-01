@@ -13,7 +13,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
 import {
@@ -49,13 +49,33 @@ import {
 @injectable()
 export class PythonApiProvider implements IPythonApiProvider {
     private readonly api = createDeferred<PythonApi>();
+    private readonly didActivatePython = new EventEmitter<void>();
+    public get onDidActivatePythonExtension() {
+        return this.didActivatePython.event;
+    }
 
     private initialized?: boolean;
+    private hooksRegistered?: boolean;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
-    ) {}
+    ) {
+        const previouslyInstalled = this.extensionChecker.isPythonExtensionInstalled;
+        if (!previouslyInstalled) {
+            this.extensions.onDidChange(
+                async () => {
+                    if (this.extensionChecker.isPythonExtensionInstalled) {
+                        await this.registerHooks();
+                    }
+                },
+                this,
+                this.disposables
+            );
+        }
+        this.disposables.push(this.didActivatePython);
+    }
 
     public async getApi(): Promise<PythonApi | undefined> {
         if (await this.init().catch(noop)) {
@@ -85,12 +105,24 @@ export class PythonApiProvider implements IPythonApiProvider {
             this.initialized = false;
             return false;
         } else {
-            if (!pythonExtension.isActive) {
-                await pythonExtension.activate();
-            }
-            pythonExtension.exports.jupyter.registerHooks();
+            await this.registerHooks();
             return true;
         }
+    }
+    private async registerHooks() {
+        if (this.hooksRegistered) {
+            return;
+        }
+        const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
+        if (!pythonExtension) {
+            return;
+        }
+        this.hooksRegistered = true;
+        if (!pythonExtension.isActive) {
+            await pythonExtension.activate();
+            this.didActivatePython.fire();
+        }
+        pythonExtension.exports.jupyter.registerHooks();
     }
 }
 
@@ -113,6 +145,9 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
     public get isPythonExtensionInstalled() {
         return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
+    }
+    public get isPythonExtensionActive() {
+        return this.extensions.getExtension(this.pythonExtensionId)?.isActive === true;
     }
 
     public async showPythonExtensionInstallRequiredPrompt(): Promise<InstallerResponse> {
@@ -188,7 +223,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
 @injectable()
 export class LanguageServerProvider implements ILanguageServerProvider {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
 
     public getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined> {
         return this.apiProvider.getApi().then((api) => api?.getLanguageServer(resource));
@@ -197,7 +232,7 @@ export class LanguageServerProvider implements ILanguageServerProvider {
 
 @injectable()
 export class WindowsStoreInterpreter implements IWindowsStoreInterpreter {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
 
     public isWindowsStoreInterpreter(pythonPath: string): Promise<boolean> {
         return this.apiProvider.getApi().then((api) => (api ? api.isWindowsStoreInterpreter(pythonPath) : false));
@@ -206,7 +241,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter {
 
 @injectable()
 export class PythonDebuggerPathProvider implements IPythonDebuggerPathProvider {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
 
     public getDebuggerPath(): Promise<string | undefined> {
         return this.apiProvider.getApi().then((api) => api?.getDebuggerPath());
@@ -229,7 +264,7 @@ export class PythonInstaller implements IPythonInstaller {
     public get onInstalled(): Event<{ product: Product; resource?: InterpreterUri }> {
         return this._onInstalled.event;
     }
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
 
     public async install(
         product: Product,
@@ -274,7 +309,7 @@ export class PythonInstaller implements IPythonInstaller {
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
 
     public async getActivatedEnvironmentVariables(
         resource: Resource,
@@ -289,7 +324,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) { }
 
     public async getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
         return this.apiProvider.getApi().then((api) => (api ? api.getSuggestions(resource) : []));
@@ -303,20 +338,22 @@ export class InterpreterService implements IInterpreterService {
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+    ) { }
 
     public get onDidChangeInterpreter(): Event<void> {
-        if (this.extensionChecker.isPythonExtensionInstalled && !this.eventHandlerAdded) {
-            this.apiProvider
-                .getApi()
-                .then((api) => {
-                    if (!this.eventHandlerAdded) {
-                        this.eventHandlerAdded = true;
-                        api?.onDidChangeInterpreter(() => this.didChangeInterpreter.fire(), this, this.disposables);
-                    }
-                })
-                .catch(noop);
+        if (this.extensionChecker.isPythonExtensionInstalled) {
+            if (this.extensionChecker.isPythonExtensionActive && !this.eventHandlerAdded) {
+                this.hookupOnDidChangeInterpreterEvent();
+            }
+            if (!this.extensionChecker.isPythonExtensionActive) {
+                this.apiProvider.onDidActivatePythonExtension(
+                    this.hookupOnDidChangeInterpreterEvent,
+                    this,
+                    this.disposables
+                );
+            }
         }
         return this.didChangeInterpreter.event;
     }
@@ -324,9 +361,24 @@ export class InterpreterService implements IInterpreterService {
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         return this.apiProvider.getApi().then((api) => (api ? api.getInterpreters(resource) : []));
     }
-
+    private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
-        return this.apiProvider.getApi().then((api) => api?.getActiveInterpreter(resource));
+        const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
+        let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
+        if (!promise) {
+            promise = this.apiProvider.getApi().then((api) => api?.getActiveInterpreter(resource));
+
+            if (promise) {
+                this.workspaceCachedActiveInterpreter.set(workspaceId, promise);
+                // If there was a problem in getting the details, remove the cached info.
+                promise.catch(() => {
+                    if (this.workspaceCachedActiveInterpreter.get(workspaceId) === promise) {
+                        this.workspaceCachedActiveInterpreter.delete(workspaceId);
+                    }
+                });
+            }
+        }
+        return promise;
     }
 
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
@@ -336,5 +388,19 @@ export class InterpreterService implements IInterpreterService {
             // If the python extension cannot get the details here, don't fail. Just don't use them.
             return undefined;
         }
+    }
+    private hookupOnDidChangeInterpreterEvent() {
+        if (this.eventHandlerAdded) {
+            return;
+        }
+        this.apiProvider
+            .getApi()
+            .then((api) => {
+                if (!this.eventHandlerAdded) {
+                    this.eventHandlerAdded = true;
+                    api?.onDidChangeInterpreter(() => this.didChangeInterpreter.fire(), this, this.disposables);
+                }
+            })
+            .catch(noop);
     }
 }

@@ -15,7 +15,7 @@ export function createAuthorizingRequest(getAuthHeader: () => any) {
             const authorizationHeader = getAuthHeader();
             const keys = Object.keys(authorizationHeader);
             keys.forEach((k) => origHeaders.append(k, authorizationHeader[k].toString()));
-            origHeaders.append('Content-Type', 'application/json');
+            origHeaders.set('Content-Type', 'application/json');
 
             // Rewrite the 'append' method for the headers to disallow 'authorization' after this point
             const origAppend = origHeaders.append.bind(origHeaders);

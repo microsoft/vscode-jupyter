@@ -33,7 +33,7 @@ import { registerTypes as variableRegisterTypes } from './common/variables/servi
 import { JUPYTER_OUTPUT_CHANNEL } from './datascience/constants';
 import { getJupyterOutputChannel } from './datascience/devTools/jupyterOutputChannel';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
-import { IDataScience, IDebugLoggingManager } from './datascience/types';
+import { IDataScience } from './datascience/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { addOutputChannelLogging, setLoggingLevel } from './logging';
 import { registerLoggerTypes } from './logging/serviceRegistry';
@@ -84,8 +84,6 @@ async function activateLegacy(
 
     // Initialize logging to file if necessary as early as possible
     registerLoggerTypes(serviceManager);
-    const debugLoggingManager = serviceManager.get<IDebugLoggingManager>(IDebugLoggingManager);
-    await debugLoggingManager.initialize();
 
     // Core registrations (non-feature specific).
     registerApiTypes(serviceManager);

@@ -13,6 +13,12 @@ import type { IJupyterKernel, IJupyterKernelSpec, InterruptResult, KernelSocketI
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
+export enum NotebookCellRunState {
+    Running = 1,
+    Idle = 2,
+    Success = 3,
+    Error = 4
+}
 /**
  * Connection metadata for Live Kernels.
  * With this we are able connect to an existing kernel (instead of starting a new session).

@@ -12,7 +12,7 @@ import { ServerStatus } from '../../../datascience-ui/interactive-common/mainSta
 import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import '../../common/extensions';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../common/logger';
 
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
@@ -53,6 +53,7 @@ import {
 } from './kernels/helpers';
 import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
+import { IS_CI_SERVER } from '../../../test/ciConstants';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -295,6 +296,7 @@ export class JupyterNotebookBase implements INotebook {
         try {
             // When we start our notebook initial, change to our workspace or user specified root directory
             await this.updateWorkingDirectoryAndPath();
+            traceInfoIf(IS_CI_SERVER, `Initial setup after for updateWorkingDirectoryAndPath ...`);
             let isDefinitelyNotAPythonKernel = false;
             if (
                 this._executionInfo.kernelConnectionMetadata?.kind === 'startUsingKernelSpec' &&
@@ -316,6 +318,7 @@ export class JupyterNotebookBase implements INotebook {
             const settings = this.configService.getSettings(this.resource);
             if (settings && settings.themeMatplotlibPlots) {
                 // We're theming matplotlibs, so we have to setup our default state.
+                traceInfoIf(IS_CI_SERVER, `Initialize config for plots for ${this.identity.toString()}`);
                 if (!isDefinitelyNotAPythonKernel) {
                     await this.initializeMatplotlib(cancelToken);
                 }
@@ -326,11 +329,12 @@ export class JupyterNotebookBase implements INotebook {
                     !isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
                         ? CodeSnippets.ConfigSvg
                         : CodeSnippets.ConfigPng;
-                traceInfo(`Initialize config for plots for ${this.identity.toString()}`);
+                traceInfoIf(IS_CI_SERVER, `Initialize config for plots for ${this.identity.toString()}`);
                 if (!isDefinitelyNotAPythonKernel) {
                     await this.executeSilently(configInit, cancelToken);
                 }
             }
+            traceInfoIf(IS_CI_SERVER, `Initial setup for ${this.identity.toString()} half way ...`);
             if (
                 !isDefinitelyNotAPythonKernel &&
                 this._executionInfo.connectionInfo.localLaunch &&
@@ -352,14 +356,15 @@ export class JupyterNotebookBase implements INotebook {
 
             if (setting) {
                 // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
+                traceInfoIf(IS_CI_SERVER, 'Begin Run startup code for notebook');
                 const cleanedUp = setting.replace(/\\n/g, '\n');
                 const cells = await this.executeSilently(cleanedUp, cancelToken);
-                traceInfo(`Run startup code for notebook: ${cleanedUp} - results: ${cells.length}`);
+                traceInfoIf(IS_CI_SERVER, `Run startup code for notebook: ${cleanedUp} - results: ${cells.length}`);
             }
 
             traceInfo(`Initial setup complete for ${this.identity.toString()}`);
         } catch (e) {
-            traceWarning(e);
+            traceWarning('Failed initialize', e);
         }
     }
 
@@ -948,6 +953,7 @@ export class JupyterNotebookBase implements INotebook {
     };
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
+        traceInfo('UpdateWorkingDirectoryAndPath');
         if (this._executionInfo && this._executionInfo.connectionInfo.localLaunch && !this._workingDirectory) {
             // See what our working dir is supposed to be
             const suggested = this._executionInfo.workingDir;
@@ -977,6 +983,7 @@ export class JupyterNotebookBase implements INotebook {
             isPythonKernelConnection(this._executionInfo.kernelConnectionMetadata) &&
             (await this.fs.localDirectoryExists(directory))
         ) {
+            traceInfo('changeDirectoryIfPossible');
             await this.executeSilently(CodeSnippets.UpdateCWDAndPath.format(directory));
         }
     };

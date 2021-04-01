@@ -63,13 +63,13 @@ export interface ISlickGridProps {
     rowsAdded: Slick.Event<ISlickGridAdd>;
     resetGridEvent: Slick.Event<ISlickGridSlice>;
     columnsUpdated: Slick.Event<Slick.Column<Slick.SlickData>[]>;
-    filterRowsText: string;
     filterRowsTooltip: string;
     forceHeight?: number;
     dataDimensionality: number;
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
     handleSliceRequest(args: IGetSliceRequest): void;
+    handleRefreshRequest(): void;
 }
 
 interface ISlickGridState {
@@ -473,10 +473,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             const placeholder = '99999999999';
             const maxFieldWidth = measureText(placeholder, fontString);
             columns.forEach((c) => {
-                if (c.id !== '0') {
+                if (c.field !== this.props.idProperty) {
                     c.width = maxFieldWidth;
                 } else {
-                    c.width = maxFieldWidth / 2;
+                    c.width = (maxFieldWidth / 5) * 4;
                     c.name = '';
                     c.header = {
                         buttons: [
@@ -486,6 +486,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                                 tooltip: this.state.showingFilters
                                     ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
                                     : getLocString('DataScience.dataViewerShowFilters', 'Show filters')
+                            },
+                            {
+                                cssClass: 'codicon codicon-refresh codicon-button header-cell-button refresh-button',
+                                handler: this.props.handleRefreshRequest,
+                                tooltip: getLocString('DataScience.refreshDataViewer', 'Refresh data viewer')
                             }
                         ]
                     };
@@ -520,7 +525,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.dataView.setItems([]);
         const styledColumns = this.styleColumns(data.columns);
         this.setColumns(styledColumns);
-        this.autoResizeColumns();
     };
 
     private updateColumns = (_e: Slick.EventData, newColumns: Slick.Column<Slick.SlickData>[]) => {
@@ -535,6 +539,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         // The solution is to force the header row to become visible just before sending our slice request.
         this.state.grid?.setHeaderRowVisibility(true);
         this.state.grid?.setColumns(newColumns);
+        this.autoResizeColumns();
     };
 
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
@@ -573,7 +578,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
-        if (args.column.id === '0') {
+        if (args.column.field === this.props.idProperty) {
             const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
             ReactDOM.render(
                 <div

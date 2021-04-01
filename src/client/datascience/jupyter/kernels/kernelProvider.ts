@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
+import { IApplicationShell } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -37,7 +37,6 @@ export class KernelProvider implements IKernelProvider {
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage
@@ -74,7 +73,6 @@ export class KernelProvider implements IKernelProvider {
             this.editorProvider,
             this,
             this.appShell,
-            this.vscNotebook,
             this.fs,
             this.context,
             this.serverStorage

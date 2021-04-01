@@ -22,3 +22,14 @@ export enum PlatformErrors {
     FailedToParseVersion = 'FailedToParseVersion',
     FailedToDetermineOS = 'FailedToDetermineOS'
 }
+
+export enum CheckboxState {
+    Checked = 'checked',
+    Unchecked = 'unchecked'
+}
+
+export enum SliceOperationSource {
+    Dropdown = 'dropdown',
+    TextBox = 'textbox',
+    Checkbox = 'checkbox'
+}

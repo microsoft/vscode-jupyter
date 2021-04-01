@@ -47,10 +47,6 @@ export class NotebookEditor implements INotebookEditor {
     public get modified(): Event<INotebookEditor> {
         return this._modified.event;
     }
-
-    public get executed(): Event<INotebookEditor> {
-        return this._executed.event;
-    }
     public get saved(): Event<INotebookEditor> {
         return this._saved.event;
     }
@@ -69,18 +65,13 @@ export class NotebookEditor implements INotebookEditor {
     public get active(): boolean {
         return this.vscodeNotebook.activeNotebookEditor?.document.uri.toString() === this.model.file.toString();
     }
-    public get onExecutedCode(): Event<string> {
-        return this.executedCode.event;
-    }
     public readonly type = 'native';
     public notebook?: INotebook | undefined;
 
     private changedViewState = new EventEmitter<void>();
     private _closed = new EventEmitter<INotebookEditor>();
     private _saved = new EventEmitter<INotebookEditor>();
-    private _executed = new EventEmitter<INotebookEditor>();
     private _modified = new EventEmitter<INotebookEditor>();
-    private executedCode = new EventEmitter<string>();
     private restartingKernel?: boolean;
     private kernelInterruptedDontAskToRestart: boolean = false;
     constructor(
@@ -196,10 +187,6 @@ export class NotebookEditor implements INotebookEditor {
                 });
             }).then(noop, noop);
         }
-    }
-    public notifyExecution(cell: NotebookCell) {
-        this._executed.fire(this);
-        this.executedCode.fire(cell.document.getText());
     }
     public async interruptKernel(): Promise<void> {
         if (this.restartingKernel) {
