@@ -722,10 +722,7 @@
             {
                 "command": "jupyter.openVariableView",
                 "title": "%jupyter.command.jupyter.openVariableView.title%",
-                "icon": {
-                    "light": "resources/light/variable_explorer.svg",
-                    "dark": "resources/dark/variable_explorer.svg"
-                },
+                "icon": "$(variable-group)",
                 "category": "Jupyter",
                 "enablement": "notebookViewType == jupyter-notebook && !jupyter.variableViewVisible"
             },
