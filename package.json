@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.5.0",
+    "version": "2021.6.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.55.0-insider"
+        "vscode": "1.56.0-insider"
     },
     "keywords": [
         "jupyter",
