@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.4.0 (1 April 2021)
+## 2021.4.0 (31 March 2021)
 
 ### Enhancements
 
@@ -54,6 +54,8 @@
    ([#1215](https://github.com/Microsoft/vscode-jupyter/issues/1215))
 1. Refactor how Kernels are searched and selected.
    ([#4995](https://github.com/microsoft/vscode-jupyter/pull/4995))
+1. Fix run selection/line to work from the active editor
+   ([#5287](https://github.com/Microsoft/vscode-jupyter/issues/5287))
 1. Update variable view to use the new API for native cell execution notification.
    ([#5316](https://github.com/Microsoft/vscode-jupyter/issues/5316))
 1. Ensure users in CodeSpaces do not get prompted to forward Kernel Ports.
