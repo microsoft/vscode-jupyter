@@ -14,7 +14,7 @@ import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
+import { isUri, noop } from '../../common/utils/misc';
 import { LogLevel } from '../../logging/levels';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -81,9 +81,9 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.RunCell, this.runCell);
         this.registerCommand(Commands.RunCurrentCell, this.runCurrentCell);
         this.registerCommand(Commands.RunCurrentCellAdvance, this.runCurrentCellAndAdvance);
-        this.registerCommand(Commands.ExecSelectionInInteractiveWindow, (text: string | undefined) =>
-            this.runSelectionOrLine(text)
-        );
+        this.registerCommand(Commands.ExecSelectionInInteractiveWindow, (textOrUri: string | undefined | Uri) => {
+            void this.runSelectionOrLine(textOrUri);
+        });
         this.registerCommand(Commands.RunAllCellsAbove, this.runAllCellsAbove);
         this.registerCommand(Commands.RunCellAndAllBelow, this.runCellAndAllBelow);
         this.registerCommand(Commands.InsertCellBelowPosition, this.insertCellBelowPosition);
@@ -301,10 +301,14 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async runSelectionOrLine(text: string | undefined): Promise<void> {
+    private async runSelectionOrLine(textOrUri: string | undefined | Uri): Promise<void> {
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
-            return activeCodeWatcher.runSelectionOrLine(this.documentManager.activeTextEditor, text);
+            return activeCodeWatcher.runSelectionOrLine(
+                this.documentManager.activeTextEditor,
+                // If this is a URI, the runSelectionOrLine is not expecting a URI, so act like nothing was sent.
+                isUri(textOrUri) ? undefined : textOrUri
+            );
         } else {
             return;
         }

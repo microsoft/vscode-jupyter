@@ -6,9 +6,7 @@ import { ConfigurationService } from '../common/configuration/service';
 import { FileSystem } from '../common/platform/fileSystem';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
-import { IDebugLoggingManager } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
-import { DebugLoggingManager } from './debugLoggingManager';
 
 export function registerLoggerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -16,5 +14,4 @@ export function registerLoggerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
-    serviceManager.addSingleton<IDebugLoggingManager>(IDebugLoggingManager, DebugLoggingManager);
 }

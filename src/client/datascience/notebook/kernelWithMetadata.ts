@@ -68,7 +68,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
                 cell.kind === NotebookCellKind.Code &&
                 ranges.some((range) => range.start <= cell.index && cell.index < range.end)
         );
-
+        traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
         await cells.map((cell) => this.executeCell(document, cell));
     }
 

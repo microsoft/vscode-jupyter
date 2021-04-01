@@ -20,7 +20,7 @@ on:
       - 'release/*'
       - 'release-*'
   schedule:
-    - cron: "0 9 * * *" # 9am UTC (2am PDT, after VS Code Insider builds which is 11pm PDT)
+    - cron: "0 9 * * 1-5" # 9am UTC, Monday-Friday (2am PDT, after VS Code Insider builds which is 11pm PDT)
   workflow_dispatch:
 env:
   NODE_VERSION: 12.14.1
@@ -70,11 +70,11 @@ jobs:
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-      - name: insiders channel
-        # Scheduled builds will publish Insider builds.
-        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
-        run: |
-          echo "release_channel=insider" >> $GITHUB_ENV
+    #   - name: insiders channel
+    #     # Scheduled builds will publish Insider builds.
+    #     if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+    #     run: |
+    #       echo "release_channel=insider" >> $GITHUB_ENV
 
       - name: release
         if: github.event_name == 'push' && contains(github.ref, 'refs/heads/release')

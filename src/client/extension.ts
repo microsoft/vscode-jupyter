@@ -144,6 +144,8 @@ async function handleError(ex: Error, startupDurations: Record<string, number>) 
     notifyUser(
         "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
     );
+    // Possible logger hasn't initialized either.
+    console.error('extension activation failed', ex);
     traceError('extension activation failed', ex);
     await sendErrorTelemetry(ex, startupDurations, activatedServiceContainer);
 }
