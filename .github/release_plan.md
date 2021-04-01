@@ -87,6 +87,7 @@
 -   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+label%3A%22info+needed%22+-label%3A%22data+science%22+sort%3Aupdated-asc) and close any that have no activity for over a month (🤖)
 -   [ ] GDPR bookkeeping (🤖)
 -   [ ] When a new engine update is released for VS Code insiders update the engine version in main and turn insiders builds back on. With the engine updated it will not be shipped to stable customers.
+-   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
 
 ## Prep for the _next_ release
 
