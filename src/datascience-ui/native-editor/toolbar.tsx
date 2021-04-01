@@ -238,6 +238,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             <Image
                                 baseTheme={this.props.baseTheme}
                                 class="image-button-image"
+                                codicon="variable-group"
                                 image={ImageName.VariableExplorer}
                             />
                         </ImageButton>

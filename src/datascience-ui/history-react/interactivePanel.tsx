@@ -163,6 +163,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                             <Image
                                 baseTheme={this.props.baseTheme}
                                 class="image-button-image"
+                                codicon="variable-group"
                                 image={ImageName.VariableExplorer}
                             />
                         </ImageButton>
