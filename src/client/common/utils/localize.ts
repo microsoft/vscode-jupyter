@@ -868,7 +868,12 @@ export namespace DataScience {
 
     export const enableCDNForWidgetsSetting = localize(
         'DataScience.enableCDNForWidgetsSetting',
-        'Widgets require us to download supporting files from a 3rd party website. Click [here](command:jupyter.enableLoadingWidgetScriptsFromThirdPartySource) to enable this or click [here](https://aka.ms/PVSCIPyWidgets) for more information. (Error loading {0}:{1}).'
+        'Widgets require us to download supporting files from a 3rd party website. (Error loading {0}:{1}).'
+    );
+
+    export const enableCDNForWidgetsButton = localize(
+        'DataScience.enableCDNForWidgetsButton',
+        'Enable Downloads'
     );
 
     export const unhandledMessage = localize(
