@@ -40,7 +40,6 @@ export enum ImageName {
     OpenPlot,
     RunAll,
     Delete,
-    VariableExplorer,
     ExportToPython,
     ClearAllOutput,
     JupyterServerConnected,
@@ -231,5 +230,19 @@ export class Image extends React.Component<IImageProps> {
         const image = images.hasOwnProperty(key) ? images[key] : images.Cancel; // Default is cancel.
         const source = this.props.baseTheme.includes('dark') ? image.dark : image.light;
         return <InlineSVG className={this.props.class} src={source} title={this.props.title} />;
+    }
+}
+
+interface ICodiconProps {
+    codicon: string;
+}
+
+export class Codicon extends React.Component<ICodiconProps> {
+    public render() {
+        const pre = 'codicon codicon-';
+        const styles: React.CSSProperties = {
+            color: 'var(--vscode-editor-foreground)'
+        };
+        return <div style={styles} className={pre + this.props.codicon}></div>;
     }
 }
