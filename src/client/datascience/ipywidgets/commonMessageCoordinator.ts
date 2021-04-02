@@ -146,7 +146,7 @@ export class CommonMessageCoordinator {
                     payload.moduleName,
                     payload.moduleVersion
                 );
-                this.appShell.showErrorMessage(errorMessage, ...[moreInfo, enableDownloads]).then((selection) => {
+                this.appShell.showErrorMessage(errorMessage, ...[enableDownloads, moreInfo]).then((selection) => {
                     switch (selection) {
                         case moreInfo:
                             this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
