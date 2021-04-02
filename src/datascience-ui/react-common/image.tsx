@@ -179,10 +179,6 @@ const images: { [key: string]: { light: string; dark: string } } = {
         light: require('./images/Delete/delete_light.svg'),
         dark: require('./images/Delete/delete_dark.svg')
     },
-    VariableExplorer: {
-        light: require('./images/VariableExplorer/variable_explorer_light.svg'),
-        dark: require('./images/VariableExplorer/variable_explorer_dark.svg')
-    },
     ExportToPython: {
         light: require('./images/ExportToPython/export_to_python_light.svg'),
         dark: require('./images/ExportToPython/export_to_python_dark.svg')
