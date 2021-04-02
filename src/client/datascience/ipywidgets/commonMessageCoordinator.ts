@@ -157,7 +157,7 @@ export class CommonMessageCoordinator {
                         default:
                             break;
                     }
-                })
+                }, noop);
             }
             traceError(`Widget load failure ${errorMessage}`, payload);
 
