@@ -735,52 +735,52 @@
         "menus": {
             "editor/context": [
                 {
-                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused",
+                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && !config.jupyter.disableCandyCursh",
                     "command": "jupyter.runallcells",
                     "group": "Jupyter2"
                 },
                 {
-                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused",
+                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && !config.jupyter.disableCandyCursh",
                     "command": "jupyter.runcurrentcell",
                     "group": "Jupyter2"
                 },
                 {
-                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused",
+                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && !config.jupyter.disableCandyCursh",
                     "command": "jupyter.runcurrentcelladvance",
                     "group": "Jupyter2"
                 },
                 {
                     "command": "jupyter.runFileInteractive",
                     "group": "Jupyter2",
-                    "when": "editorFocus && editorLangId == python && !notebookEditorFocused"
+                    "when": "editorFocus && editorLangId == python && !notebookEditorFocused && !config.jupyter.disableCandyCursh"
                 },
                 {
                     "command": "jupyter.runfromline",
                     "group": "Jupyter2",
-                    "when": "editorFocus && editorLangId == python && !notebookEditorFocused"
+                    "when": "editorFocus && editorLangId == python && !notebookEditorFocused && !config.jupyter.disableCandyCursh"
                 },
                 {
                     "command": "jupyter.runtoline",
                     "group": "Jupyter2",
-                    "when": "editorFocus && editorLangId == python && !notebookEditorFocused"
+                    "when": "editorFocus && editorLangId == python && !notebookEditorFocused && !config.jupyter.disableCandyCursh"
                 },
                 {
                     "command": "jupyter.execSelectionInteractive",
                     "group": "Jupyter2",
-                    "when": "editorFocus && editorLangId == python && !notebookEditorFocused"
+                    "when": "editorFocus && editorLangId == python && !notebookEditorFocused && !config.jupyter.disableCandyCursh"
                 },
                 {
-                    "when": "editorFocus && editorLangId == python && resourceLangId == jupyter && !notebookEditorFocused",
+                    "when": "editorFocus && editorLangId == python && resourceLangId == jupyter && !notebookEditorFocused && !config.jupyter.disableCandyCursh",
                     "command": "jupyter.importnotebook",
                     "group": "Jupyter3@1"
                 },
                 {
-                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused",
+                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && !config.jupyter.disableCandyCursh",
                     "command": "jupyter.exportfileasnotebook",
                     "group": "Jupyter3@2"
                 },
                 {
-                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused",
+                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && !config.jupyter.disableCandyCursh",
                     "command": "jupyter.exportfileandoutputasnotebook",
                     "group": "Jupyter3@3"
                 }
@@ -839,22 +839,22 @@
             ],
             "explorer/context": [
                 {
-                    "when": "resourceLangId == python && !notebookEditorFocused",
+                    "when": "resourceLangId == python && !notebookEditorFocused && !config.jupyter.disableCandyCursh",
                     "command": "jupyter.runFileInteractive",
                     "group": "Jupyter2"
                 },
                 {
-                    "when": "resourceLangId == jupyter",
+                    "when": "resourceLangId == jupyter && !config.jupyter.disableCandyCursh",
                     "command": "jupyter.opennotebook",
                     "group": "Jupyter"
                 },
                 {
-                    "when": "resourceLangId == jupyter && jupyter.vscode.channel == 'insiders' && jupyter.opennotebookInPreviewEditor.enabled",
+                    "when": "resourceLangId == jupyter && jupyter.vscode.channel == 'insiders' && jupyter.opennotebookInPreviewEditor.enabled && !config.jupyter.disableCandyCursh",
                     "command": "jupyter.opennotebookInPreviewEditor",
                     "group": "Jupyter"
                 },
                 {
-                    "when": "resourceLangId == jupyter",
+                    "when": "resourceLangId == jupyter && !config.jupyter.disableCandyCursh",
                     "command": "jupyter.importnotebookfile",
                     "group": "Jupyter"
                 }
@@ -1732,6 +1732,11 @@
                     "default": false,
                     "markdownDescription": "Enabling this setting will automatically trust any opened notebook and therefore display markdown and render code cells. You will no longer be prompted to trust individual notebooks and harmful code could automatically run. \n\n[Learn more.](https://aka.ms/trusted-notebooks)",
                     "scope": "machine"
+                },
+                "jupyter.disableCandyCursh": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Setting to true will disable menus"
                 }
             }
         },
