@@ -48,6 +48,8 @@ suite('DataScience - DataViewer', () => {
         const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
         when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
 
+        when(dataProvider.getDataFrameInfo(anything(), anything())).thenResolve({});
+
         dataViewer = new DataViewer(
             instance(webPanelProvider),
             instance(configService),
