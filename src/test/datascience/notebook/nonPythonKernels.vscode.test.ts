@@ -211,23 +211,4 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
             }
         }
     });
-    test('Can run a Java notebook', async function () {
-        // Disabled, as activation of conda environments doesn't work on CI in Python extension.
-        // As a result we cannot get env variables of conda environments.
-        // This test requires PATH be set to conda environment that owns the jupyter kernel.
-        return this.skip();
-        if (!testJavaKernels) {
-            return this.skip();
-        }
-        this.timeout(30_000); // In case starting Java kernel is slow on CI (we know julia is slow).
-        await openNotebook(api.serviceContainer, testJavaNb.fsPath);
-        await waitForKernelToGetAutoSelected('java');
-        await runAllCellsInActiveNotebook();
-
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-        // Wait till execution count changes and status is success.
-        await waitForExecutionCompletedSuccessfully(cell);
-
-        assertHasTextOutputInVSCode(cell, 'Hello', 0, false);
-    });
 });

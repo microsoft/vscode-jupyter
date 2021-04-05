@@ -170,6 +170,17 @@ def _VSCODE_getDataFrameInfo(df):
 
     columnTypes = _VSCODE_builtins.list(df.dtypes)
 
+    # Compute the index column. It may have been renamed
+    try:
+        indexColumn = df.index.name if df.index.name else "index"
+    except AttributeError:
+        indexColumn = "index"
+
+    # Make sure the index column exists
+    if indexColumn not in columnNames:
+        columnNames.insert(0, indexColumn)
+        columnTypes.insert(0, "int64")
+
     # Then loop and generate our output json
     columns = []
     for n in _VSCODE_builtins.range(0, _VSCODE_builtins.len(columnNames)):
@@ -184,6 +195,7 @@ def _VSCODE_getDataFrameInfo(df):
     # Save this in our target
     target = {}
     target["columns"] = columns
+    target["indexColumn"] = indexColumn
     target["rowCount"] = rowCount
 
     # return our json object as a string

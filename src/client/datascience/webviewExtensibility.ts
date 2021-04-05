@@ -1,7 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
 import * as uuid from 'uuid/v4';
-import { Disposable, NotebookCell, NotebookCellRunState, Uri } from 'vscode';
+import { Disposable, NotebookCell, Uri } from 'vscode';
+import { NotebookCellRunState } from './jupyter/kernels/types';
 import { IInteractiveWindowProvider, INotebookEditorProvider, IWebviewExtensibility } from './types';
 import { translateCellStateFromNative } from './utils';
 

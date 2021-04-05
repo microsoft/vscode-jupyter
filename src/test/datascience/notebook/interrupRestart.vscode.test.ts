@@ -14,6 +14,7 @@ import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { Commands } from '../../../client/datascience/constants';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+import { traceCellMessage } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
@@ -173,7 +174,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
 
         await waitForCondition(
             async () => {
-                traceInfo(`Step 8 Cell Status = ${cell.metadata.runState}`);
+                traceCellMessage(cell, 'Step 8 Cell Status');
                 return assertVSCCellIsNotRunning(cell);
             },
             15_000,
@@ -204,7 +205,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // Stop execution of the cell (if possible) in kernel.
         commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
         // Stop the cell (cleaner way to tear down this test, else VS Code can hang due to the fact that we delete/close notebooks & rest of the code is trying to access it).
-        vscEditor.kernel!.cancelAllCellsExecution(vscEditor.document);
+        await vscEditor.kernel!.interrupt!(vscEditor.document);
     });
     test('Interrupt and running cells again should only run the necessary cells', async function () {
         // Interrupts on windows doesn't work well, not as well as on Unix.
@@ -252,14 +253,18 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             waitForCondition(async () => assertVSCCellIsNotRunning(cell3), 15_000, 'Cell 3 did not get dequeued')
         ]);
 
-        const cell1ExecutionCount = cell1.metadata.executionOrder!;
+        const cell1ExecutionCount = cell1.latestExecutionSummary?.executionOrder!;
         await runCell(cell2);
 
         // Confirm 2 is in progress & 3 is queued.
         await waitForExecutionInProgress(cell2);
         assertVSCCellIsNotRunning(cell1);
         assertVSCCellIsNotRunning(cell3);
-        assert.equal(cell1.metadata.executionOrder, cell1ExecutionCount, 'Execution order of cell 1 changed');
+        assert.equal(
+            cell1.latestExecutionSummary?.executionOrder,
+            cell1ExecutionCount,
+            'Execution order of cell 1 changed'
+        );
 
         // Interrupt the kernel & wait for 2.
         commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
@@ -275,7 +280,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             waitForQueuedForExecution(cell3)
         ]);
         assert.isAbove(
-            cell1.metadata.executionOrder || 0,
+            cell1.latestExecutionSummary?.executionOrder || 0,
             cell1ExecutionCount,
             'Execution order of cell 1 should be greater than previous execution count'
         );

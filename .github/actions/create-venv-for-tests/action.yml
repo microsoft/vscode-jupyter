@@ -32,6 +32,5 @@ runs:
         python -m ipykernel install --user --name .venvnokernel --display-name .venvnokernel
         python -m pip uninstall jedi --yes
         python -m pip install jedi==0.17.2
-        python -m pip uninstall ipykernel --yes
       working-directory: src/test/datascience
       shell: bash

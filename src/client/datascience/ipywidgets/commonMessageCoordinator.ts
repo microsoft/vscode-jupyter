@@ -12,7 +12,7 @@ import {
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -25,11 +25,12 @@ import {
     IPersistentStateFactory
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { Telemetry } from '../constants';
+import { Commands, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
@@ -48,6 +49,8 @@ export class CommonMessageCoordinator {
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
     private ipyWidgetScriptSource?: IPyWidgetScriptSource;
+    private appShell: IApplicationShell;
+    private commandManager: ICommandManager;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter: EventEmitter<{ message: string; payload: any }>;
     private disposables: IDisposableRegistry;
@@ -68,6 +71,8 @@ export class CommonMessageCoordinator {
             }>();
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell, IApplicationShell);
+        this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
     }
 
     public static async create(
@@ -91,7 +96,7 @@ export class CommonMessageCoordinator {
         if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
             this.sendLoadSucceededTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
-            this.sendLoadFailureTelemetry(payload);
+            this.handleWidgetLoadFailure(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported) {
             this.sendUnsupportedWidgetVersionFailureTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
@@ -125,8 +130,37 @@ export class CommonMessageCoordinator {
         }
     }
 
-    private sendLoadFailureTelemetry(payload: ILoadIPyWidgetClassFailureAction) {
+    private handleWidgetLoadFailure(payload: ILoadIPyWidgetClassFailureAction) {
         try {
+            let errorMessage: string = payload.error.toString();
+            if (!payload.isOnline) {
+                errorMessage = localize.DataScience.loadClassFailedWithNoInternet().format(
+                    payload.moduleName,
+                    payload.moduleVersion
+                );
+                this.appShell.showErrorMessage(errorMessage).then(noop, noop);
+            } else if (!payload.cdnsUsed) {
+                const moreInfo = localize.Common.moreInfo();
+                const enableDownloads = localize.DataScience.enableCDNForWidgetsButton();
+                errorMessage = localize.DataScience.enableCDNForWidgetsSetting().format(
+                    payload.moduleName,
+                    payload.moduleVersion
+                );
+                this.appShell.showErrorMessage(errorMessage, ...[enableDownloads, moreInfo]).then((selection) => {
+                    switch (selection) {
+                        case moreInfo:
+                            this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
+                            break;
+                        case enableDownloads:
+                            void this.commandManager.executeCommand(Commands.EnableLoadingWidgetsFrom3rdPartySource);
+                            break;
+                        default:
+                            break;
+                    }
+                }, noop);
+            }
+            traceError(`Widget load failure ${errorMessage}`, payload);
+
             sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
                 isOnline: payload.isOnline,
                 moduleHash: getTelemetrySafeHashedString(payload.moduleName),

@@ -5,7 +5,7 @@
 
  @font-face {
 	font-family: "codicon";
-	src: url("./codicon.ttf?d8db032c436945ad93e5e6e06a007865") format("truetype");
+	src: url("./codicon.ttf?1a39a904162d1a2f1c0d9a2089753bda") format("truetype");
 }
 
 .codicon[class*='codicon-'] {
@@ -453,3 +453,10 @@
 .codicon-type-hierarchy-sub:before { content: "\ebba" }
 .codicon-type-hierarchy-super:before { content: "\ebbb" }
 .codicon-git-pull-request-create:before { content: "\ebbc" }
+.codicon-run-above:before { content: "\ebbd" }
+.codicon-run-below:before { content: "\ebbe" }
+.codicon-notebook-template:before { content: "\ebbf" }
+.codicon-debug-rerun:before { content: "\ebc0" }
+.codicon-workspace-trusted:before { content: "\ebc1" }
+.codicon-workspace-untrusted:before { content: "\ebc2" }
+.codicon-workspace-unknown:before { content: "\ebc3" }

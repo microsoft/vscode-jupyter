@@ -157,3 +157,7 @@ input.editor-text {
 .header-cell-button {
     position: absolute;
 }
+
+.refresh-button {
+    padding-left: 28px;
+}

@@ -36,23 +36,16 @@ import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilit
  */
 @injectable()
 export class NotebookContentProvider implements VSCNotebookContentProvider {
-    public webviews = new Map<string, NotebookCommunication[]>();
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport,
         @inject(IVSCodeNotebook) readonly notebookProvider: IVSCodeNotebook
-    ) {
-        notebookProvider.onDidCloseNotebookDocument(this.onDidCloseNotebook.bind(this));
-    }
-    public async resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Promise<void> {
-        // Add webviews to list. Used for testing
-        let list = this.webviews.get(document.uri.toString());
-        if (!list) {
-            list = [];
-            this.webviews.set(document.uri.toString(), list);
-        }
-        list.push(webview);
+    ) {}
+    public async resolveNotebook(_document: NotebookDocument, _webview: NotebookCommunication): Promise<void> {
+        // This function is due for deprecation. Associated code has been moved to
+        // NotebookKernelProvider will remove when removed from the API fully
+        return Promise.resolve();
     }
     public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
         if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {
@@ -115,9 +108,5 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
             id,
             delete: () => this.notebookStorage.deleteBackup(model, id).ignoreErrors()
         };
-    }
-
-    private onDidCloseNotebook(e: NotebookDocument) {
-        this.webviews.delete(e.uri.toString());
     }
 }

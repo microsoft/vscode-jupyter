@@ -11,6 +11,7 @@ import { noop } from '../../common/utils/misc';
 import { Commands, Settings } from '../constants';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { IJupyterServerUriStorage } from '../types';
+import { isJupyterKernel, isJupyterNotebook } from './helpers/helpers';
 
 @injectable()
 export class RemoteSwitcher implements IExtensionSingleActivationService {
@@ -39,6 +40,7 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         this.notebook.onDidChangeActiveNotebookEditor(this.updateStatusBar.bind(this), this.disposables);
         this.documentManager.onDidChangeActiveTextEditor(this.updateStatusBar.bind(this), this.disposables);
         this.serverUriStorage.onDidChangeUri(this.updateStatusBar.bind(this), this.disposables);
+        this.notebook.onDidChangeActiveNotebookKernel(this.updateStatusBar.bind(this), this.disposables);
         this.disposables.push(this.statusBarItem);
         this.updateStatusBar().catch(noop);
     }
@@ -46,7 +48,11 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         await this.serverSelector.selectJupyterURI(true, 'nativeNotebookToolbar');
     }
     private async updateStatusBar() {
-        if (!this.notebook.activeNotebookEditor) {
+        if (
+            !this.notebook.activeNotebookEditor ||
+            !isJupyterNotebook(this.notebook.activeNotebookEditor.document) ||
+            !isJupyterKernel(this.notebook.activeNotebookEditor.kernel)
+        ) {
             this.statusBarItem.hide();
             return;
         }

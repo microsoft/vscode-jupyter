@@ -47,10 +47,6 @@ export class NotebookEditor implements INotebookEditor {
     public get modified(): Event<INotebookEditor> {
         return this._modified.event;
     }
-
-    public get executed(): Event<INotebookEditor> {
-        return this._executed.event;
-    }
     public get saved(): Event<INotebookEditor> {
         return this._saved.event;
     }
@@ -69,18 +65,13 @@ export class NotebookEditor implements INotebookEditor {
     public get active(): boolean {
         return this.vscodeNotebook.activeNotebookEditor?.document.uri.toString() === this.model.file.toString();
     }
-    public get onExecutedCode(): Event<string> {
-        return this.executedCode.event;
-    }
     public readonly type = 'native';
     public notebook?: INotebook | undefined;
 
     private changedViewState = new EventEmitter<void>();
     private _closed = new EventEmitter<INotebookEditor>();
     private _saved = new EventEmitter<INotebookEditor>();
-    private _executed = new EventEmitter<INotebookEditor>();
     private _modified = new EventEmitter<INotebookEditor>();
-    private executedCode = new EventEmitter<string>();
     private restartingKernel?: boolean;
     private kernelInterruptedDontAskToRestart: boolean = false;
     constructor(
@@ -197,10 +188,6 @@ export class NotebookEditor implements INotebookEditor {
             }).then(noop, noop);
         }
     }
-    public notifyExecution(cell: NotebookCell) {
-        this._executed.fire(this);
-        this.executedCode.fire(cell.document.getText());
-    }
     public async interruptKernel(): Promise<void> {
         if (this.restartingKernel) {
             trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
@@ -277,23 +264,17 @@ export class NotebookEditor implements INotebookEditor {
         this._closed.fire(this);
     }
 
-    public runAbove(uri: Uri | undefined): void {
-        const cellId = this.getSelectedCellId(uri);
-        const index = this.document.cells.findIndex((c) => c.document.uri.toString() === cellId);
-
-        if (index > 0) {
+    public runAbove(cell: NotebookCell | undefined): void {
+        if (cell && cell.index > 0) {
             // Get all cellIds until `index`.
-            const cells = this.document.cells.slice(0, index).map((cell) => cell);
+            const cells = this.document.cells.slice(0, cell.index);
             this.runCellRange(cells);
         }
     }
-    public runCellAndBelow(uri: Uri | undefined): void {
-        const cellId = this.getSelectedCellId(uri);
-        const index = this.document.cells.findIndex((c) => c.document.uri.toString() === cellId);
-
-        if (index >= 0) {
+    public runCellAndBelow(cell: NotebookCell | undefined): void {
+        if (cell && cell.index >= 0) {
             // Get all cellIds starting from `index`.
-            const cells = this.document.cells.slice(index).map((cell) => cell);
+            const cells = this.document.cells.slice(cell.index);
             this.runCellRange(cells);
         }
     }
@@ -301,16 +282,6 @@ export class NotebookEditor implements INotebookEditor {
         if (this.document === e) {
             this._closed.fire(this);
         }
-    }
-    private getSelectedCellId(uri: Uri | undefined): string | undefined {
-        const uriStr = uri ? uri.toString() : this.document.uri.toString();
-        const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uriStr);
-
-        if (editor && editor.selection) {
-            return editor.selection.document.uri.toString();
-        }
-
-        return undefined;
     }
 
     private runCellRange(cells: NotebookCell[]) {

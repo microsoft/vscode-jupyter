@@ -6,7 +6,7 @@ import { Event, EventEmitter } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IInterpreterStatusbarVisibilityFilter, IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
-import { IDisposableRegistry, IExtensions } from '../../common/types';
+import { IDisposableRegistry } from '../../common/types';
 import { isJupyterNotebook } from '../../datascience/notebook/helpers/helpers';
 
 @injectable()
@@ -17,10 +17,9 @@ export class InterpreterStatusBarVisibility
 
     constructor(
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
-        @inject(IPythonApiProvider) private pythonApi: IPythonApiProvider,
-        @inject(IExtensions) readonly extensions: IExtensions
+        @inject(IPythonApiProvider) private pythonApi: IPythonApiProvider
     ) {
         vscNotebook.onDidChangeActiveNotebookEditor(
             () => {
@@ -29,21 +28,13 @@ export class InterpreterStatusBarVisibility
             this,
             disposables
         );
-        extensions.onDidChange(this.extensionsChanged, this, disposables);
     }
     public async activate(): Promise<void> {
         // Tell the python extension about our filter
-        if (this.extensionChecker.isPythonExtensionInstalled) {
-            this._registered = true;
-            this.pythonApi
-                .getApi()
-                .then((a) => {
-                    // Python API may not have the register function yet.
-                    if (a.registerInterpreterStatusFilter) {
-                        a.registerInterpreterStatusFilter(this);
-                    }
-                })
-                .ignoreErrors();
+        if (this.extensionChecker.isPythonExtensionActive) {
+            this.registerStatusFilter();
+        } else {
+            this.pythonApi.onDidActivatePythonExtension(this.registerStatusFilter, this, this.disposables);
         }
     }
     public get changed(): Event<void> {
@@ -55,10 +46,19 @@ export class InterpreterStatusBarVisibility
             ? true
             : false;
     }
-    private extensionsChanged() {
-        // See if the python extension was suddenly registered
-        if (this.extensionChecker.isPythonExtensionInstalled && this._registered) {
-            this.activate().ignoreErrors();
+    private registerStatusFilter() {
+        if (this._registered) {
+            return;
         }
+        this._registered = true;
+        this.pythonApi
+            .getApi()
+            .then((a) => {
+                // Python API may not have the register function yet.
+                if (a.registerInterpreterStatusFilter) {
+                    a.registerInterpreterStatusFilter(this);
+                }
+            })
+            .ignoreErrors();
     }
 }

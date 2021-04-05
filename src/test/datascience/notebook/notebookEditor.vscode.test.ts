@@ -4,11 +4,12 @@
 'use strict';
 
 import { assert } from 'chai';
-import { NotebookCellRunState } from 'vscode';
+import { NotebookCellExecutionState } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
+import { hasErrorOutput, NotebookCellStateTracker } from '../../../client/datascience/notebook/helpers/helpers';
 import { IExtensionTestApi } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';
 import {
@@ -70,7 +71,7 @@ suite('Notebook Editor tests', function () {
         // run command
         await commandManager.executeCommand(
             Commands.NativeNotebookRunAllCellsAbove,
-            vscodeNotebook.activeNotebookEditor?.document.uri!
+            vscodeNotebook.activeNotebookEditor?.document.cells[1]!
         );
 
         const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
@@ -78,10 +79,11 @@ suite('Notebook Editor tests', function () {
         const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
 
         // The first cell should have a runState of Success
-        assert.strictEqual(firstCell?.metadata.runState, NotebookCellRunState.Success);
+        assert.strictEqual(NotebookCellStateTracker.getCellState(firstCell), NotebookCellExecutionState.Idle);
+        assert.isFalse(hasErrorOutput(firstCell.outputs));
 
         // The third cell should have an undefined runState
-        assert.strictEqual(thirdCell?.metadata.runState, undefined);
+        assert.strictEqual(NotebookCellStateTracker.getCellState(thirdCell), undefined);
     });
 
     test('Run cells below', async function () {
@@ -97,7 +99,7 @@ suite('Notebook Editor tests', function () {
         // run command
         await commandManager.executeCommand(
             Commands.NativeNotebookRunCellAndAllBelow,
-            vscodeNotebook.activeNotebookEditor?.document.uri!
+            vscodeNotebook.activeNotebookEditor?.document.cells[1]!
         );
 
         const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
@@ -105,9 +107,10 @@ suite('Notebook Editor tests', function () {
         await waitForExecutionCompletedSuccessfully(thirdCell);
 
         // The first cell should have an undefined runState
-        assert.strictEqual(firstCell?.metadata.runState, undefined);
+        assert.strictEqual(NotebookCellStateTracker.getCellState(firstCell), undefined);
 
         // The third cell should have a runState of Success
-        assert.strictEqual(thirdCell?.metadata.runState, NotebookCellRunState.Success);
+        assert.strictEqual(NotebookCellStateTracker.getCellState(thirdCell), NotebookCellExecutionState.Idle);
+        assert.isFalse(hasErrorOutput(thirdCell.outputs));
     });
 });

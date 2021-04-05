@@ -368,7 +368,7 @@ export namespace DataScience {
     );
     export const kernelTimeout = localize(
         'DataScience.kernelTimeout',
-        'Timed out waiting to get a heartbeat from kernel process. \n{0} \nView Jupyter [log](command:{1}) for further details.'
+        'Timed out waiting to get a heartbeat from kernel process. \nView Jupyter [log](command:{0}) for further details.'
     );
     export const kernelDied = localize(
         'DataScience.kernelDied',
@@ -576,7 +576,6 @@ export namespace DataScience {
     export const tooManyColumnsYes = localize('DataScience.tooManyColumnsYes', 'Yes');
     export const tooManyColumnsNo = localize('DataScience.tooManyColumnsNo', 'No');
     export const tooManyColumnsDontAskAgain = localize('DataScience.tooManyColumnsDontAskAgain', "Don't Ask Again");
-    export const filterRowsButton = localize('DataScience.filterRowsButton', 'Filter Rows');
     export const filterRowsTooltip = localize(
         'DataScience.filterRowsTooltip',
         'Allows filtering multiple rows. Use =, >, or < signs to filter numeric values.'
@@ -862,10 +861,17 @@ export namespace DataScience {
         'DataScience.useCDNForWidgets',
         'Widgets require us to download supporting files from a 3rd party website. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.'
     );
-    export const enableCDNForWidgetsSetting = localize(
-        'DataScience.enableCDNForWidgetsSetting',
+    export const enableCDNForWidgetsSettingHtml = localize(
+        'DataScience.enableCDNForWidgetsSettingHtml',
         "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:jupyter.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1})."
     );
+
+    export const enableCDNForWidgetsSetting = localize(
+        'DataScience.enableCDNForWidgetsSetting',
+        'Widgets require us to download supporting files from a 3rd party website. (Error loading {0}:{1}).'
+    );
+
+    export const enableCDNForWidgetsButton = localize('DataScience.enableCDNForWidgetsButton', 'Enable Downloads');
 
     export const unhandledMessage = localize(
         'DataScience.unhandledMessage',

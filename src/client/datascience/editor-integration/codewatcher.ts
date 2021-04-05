@@ -22,6 +22,7 @@ import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposable, IJupyterSettings, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { isUri } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
@@ -247,10 +248,15 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
-    public async runSelectionOrLine(activeEditor: TextEditor | undefined) {
+    public async runSelectionOrLine(activeEditor: TextEditor | undefined, text?: string | Uri) {
         if (this.document && activeEditor && this.fs.arePathsSame(activeEditor.document.uri, this.document.uri)) {
-            // Get just the text of the selection or the current line if none
-            const codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
+            let codeToExecute: string | undefined;
+            if (text === undefined || isUri(text)) {
+                // Get just the text of the selection or the current line if none
+                codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
+            } else {
+                codeToExecute = text;
+            }
             if (!codeToExecute) {
                 return;
             }
@@ -353,7 +359,7 @@ export class CodeWatcher implements ICodeWatcher {
         const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
 
         if (editor) {
-            editor.edit((editBuilder) => {
+            void editor.edit((editBuilder) => {
                 let lastCell = true;
 
                 for (let i = editor.selection.end.line + 1; i < editor.document.lineCount; i += 1) {
@@ -444,7 +450,7 @@ export class CodeWatcher implements ICodeWatcher {
             new Position(startLineNumber, startCharacterNumber),
             new Position(endLineNumber, endCharacterNumber)
         );
-        editor.edit((editBuilder) => {
+        void editor.edit((editBuilder) => {
             editBuilder.replace(cellExtendedRange, '');
             this.codeLensUpdatedEvent.fire();
         });
@@ -740,7 +746,7 @@ export class CodeWatcher implements ICodeWatcher {
                 ? `${cellMarker} [markdown]${definitionExtra}` // code -> markdown
                 : `${cellMarker}${definitionExtra}`; // markdown -> code
 
-        editor.edit(async (editBuilder) => {
+        void editor.edit(async (editBuilder) => {
             editBuilder.replace(definitionLine.range, newDefinitionText);
             cell.cell_type = toCellType;
             if (cell.range.start.line < cell.range.end.line) {
@@ -753,9 +759,9 @@ export class CodeWatcher implements ICodeWatcher {
                 // ensure all lines in markdown cell have a comment.
                 // these are not included in the test because it's unclear
                 // how TypeMoq works with them.
-                commands.executeCommand('editor.action.removeCommentLine');
+                void commands.executeCommand('editor.action.removeCommentLine');
                 if (toCellType === 'markdown') {
-                    commands.executeCommand('editor.action.addCommentLine');
+                    void commands.executeCommand('editor.action.addCommentLine');
                 }
             }
         });
@@ -940,7 +946,7 @@ export class CodeWatcher implements ICodeWatcher {
         const cellStartPosition = new Position(line, 0);
         const newCursorPosition = new Position(line + 1, 0);
 
-        editor.edit((editBuilder) => {
+        void editor.edit((editBuilder) => {
             editBuilder.insert(cellStartPosition, newCell);
             this.codeLensUpdatedEvent.fire();
         });

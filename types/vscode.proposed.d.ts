@@ -30,18 +30,6 @@ declare module 'vscode' {
         Code = 2
     }
 
-    export enum NotebookCellRunState {
-        Running = 1,
-        Idle = 2,
-        Success = 3,
-        Error = 4
-    }
-
-    export enum NotebookRunState {
-        Running = 1,
-        Idle = 2
-    }
-
     export class NotebookCellMetadata {
         /**
          * Controls whether a cell's editor is editable/readonly.
@@ -70,18 +58,11 @@ declare module 'vscode' {
 
         // run related API, will be removed
         readonly hasExecutionOrder?: boolean;
-        readonly executionOrder?: number;
-        readonly runState?: NotebookCellRunState;
-        readonly runStartTime?: number;
-        readonly lastRunDuration?: number;
 
         constructor(
             editable?: boolean,
             breakpointMargin?: boolean,
             hasExecutionOrder?: boolean,
-            executionOrder?: number,
-            runState?: NotebookCellRunState,
-            runStartTime?: number,
             statusMessage?: string,
             lastRunDuration?: number,
             inputCollapsed?: boolean,
@@ -93,15 +74,18 @@ declare module 'vscode' {
             editable?: boolean | null;
             breakpointMargin?: boolean | null;
             hasExecutionOrder?: boolean | null;
-            executionOrder?: number | null;
-            runState?: NotebookCellRunState | null;
-            runStartTime?: number | null;
             statusMessage?: string | null;
             lastRunDuration?: number | null;
             inputCollapsed?: boolean | null;
             outputCollapsed?: boolean | null;
             custom?: Record<string, any> | null;
         }): NotebookCellMetadata;
+    }
+
+    export interface NotebookCellExecutionSummary {
+        executionOrder?: number;
+        success?: boolean;
+        duration?: number;
     }
 
     // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
@@ -112,6 +96,7 @@ declare module 'vscode' {
         readonly document: TextDocument;
         readonly metadata: NotebookCellMetadata;
         readonly outputs: ReadonlyArray<NotebookCellOutput>;
+        readonly latestExecutionSummary: NotebookCellExecutionSummary | undefined;
     }
 
     export class NotebookDocumentMetadata {
@@ -138,15 +123,11 @@ declare module 'vscode' {
         // todo@API is this a kernel property?
         readonly cellHasExecutionOrder: boolean;
 
-        // todo@API remove
-        readonly runState: NotebookRunState;
-
         constructor(
             editable?: boolean,
             cellEditable?: boolean,
             cellHasExecutionOrder?: boolean,
             custom?: { [key: string]: any },
-            runState?: NotebookRunState,
             trusted?: boolean
         );
 
@@ -155,7 +136,6 @@ declare module 'vscode' {
             cellEditable?: boolean | null;
             cellHasExecutionOrder?: boolean | null;
             custom?: { [key: string]: any } | null;
-            runState?: NotebookRunState | null;
             trusted?: boolean | null;
         }): NotebookDocumentMetadata;
     }
@@ -208,7 +188,7 @@ declare module 'vscode' {
          */
         readonly end: number;
 
-        isEmpty: boolean;
+        readonly isEmpty: boolean;
 
         constructor(start: number, end: number);
     }
@@ -242,7 +222,7 @@ declare module 'vscode' {
         readonly document: NotebookDocument;
 
         /**
-         * The primary selected cell on this notebook editor.
+         * @deprecated
          */
         // todo@API should not be undefined, rather a default
         readonly selection?: NotebookCell;
@@ -270,7 +250,7 @@ declare module 'vscode' {
         readonly viewColumn?: ViewColumn;
 
         /**
-         * Fired when the panel is disposed.
+         * @deprecated
          */
         // @rebornix REMOVE/REplace NotebookCommunication
         // todo@API fishy? notebooks are public objects, there should be a "global" events for this
@@ -328,6 +308,12 @@ declare module 'vscode' {
         readonly visibleRanges: ReadonlyArray<NotebookCellRange>;
     }
 
+    export interface NotebookCellExecutionStateChangeEvent {
+        readonly document: NotebookDocument;
+        readonly cell: NotebookCell;
+        readonly executionState: NotebookCellExecutionState;
+    }
+
     // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
     export class NotebookCellData {
         kind: NotebookCellKind;
@@ -337,18 +323,20 @@ declare module 'vscode' {
         language: string;
         outputs?: NotebookCellOutput[];
         metadata?: NotebookCellMetadata;
+        latestExecutionSummary?: NotebookCellExecutionSummary;
         constructor(
             kind: NotebookCellKind,
             source: string,
             language: string,
             outputs?: NotebookCellOutput[],
-            metadata?: NotebookCellMetadata
+            metadata?: NotebookCellMetadata,
+            latestExecutionSummary?: NotebookCellExecutionSummary
         );
     }
 
     export class NotebookData {
         cells: NotebookCellData[];
-        metadata?: NotebookDocumentMetadata;
+        metadata: NotebookDocumentMetadata;
         constructor(cells: NotebookCellData[], metadata?: NotebookDocumentMetadata);
     }
 
@@ -436,6 +424,8 @@ declare module 'vscode' {
 
     // code specific mime types
     // application/x.notebook.error-traceback
+    // application/x.notebook.stdout
+    // application/x.notebook.stderr
     // application/x.notebook.stream
     export class NotebookCellOutputItem {
         // todo@API
@@ -540,6 +530,25 @@ declare module 'vscode' {
 
     //#endregion
 
+    //#region https://github.com/microsoft/vscode/issues/106744, NotebookSerializer
+
+    export interface NotebookSerializer {
+        dataToNotebook(data: Uint8Array): NotebookData | Thenable<NotebookData>;
+        notebookToData(data: NotebookData): Uint8Array | Thenable<Uint8Array>;
+    }
+
+    export namespace notebook {
+        // TODO@api use NotebookDocumentFilter instead of just notebookType:string?
+        // TODO@API options duplicates the more powerful variant on NotebookContentProvider
+        export function registerNotebookSerializer(
+            notebookType: string,
+            provider: NotebookSerializer,
+            options?: NotebookDocumentContentOptions
+        ): Disposable;
+    }
+
+    //#endregion
+
     //#region https://github.com/microsoft/vscode/issues/106744, NotebookContentProvider
 
     interface NotebookDocumentBackup {
@@ -575,6 +584,9 @@ declare module 'vscode' {
         readonly onDidChangeNotebookContentOptions?: Event<NotebookDocumentContentOptions>;
 
         // todo@API remove! against separation of data provider and renderer
+        /**
+         * @deprecated
+         */
         // eslint-disable-next-line vscode-dts-cancellation
         resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
 
@@ -622,27 +634,6 @@ declare module 'vscode' {
 
     //#region https://github.com/microsoft/vscode/issues/106744, NotebookKernel
 
-    // todo@API use the NotebookCellExecution-object as a container to model and enforce
-    // the flow of a cell execution
-
-    // kernel -> execute_info
-    // ext -> createNotebookCellExecution(cell)
-    // kernel -> done
-    // exec.dispose();
-
-    // export interface NotebookCellExecution {
-    // 	dispose(): void;
-    // 	clearOutput(): void;
-    // 	appendOutput(out: NotebookCellOutput): void;
-    // 	replaceOutput(out: NotebookCellOutput): void;
-    //  appendOutputItems(output:string, items: NotebookCellOutputItem[]):void;
-    //  replaceOutputItems(output:string, items: NotebookCellOutputItem[]):void;
-    // }
-
-    // export function createNotebookCellExecution(cell: NotebookCell, startTime?: number): NotebookCellExecution;
-    // export const onDidStartNotebookCellExecution: Event<any>;
-    // export const onDidStopNotebookCellExecution: Event<any>;
-
     export interface NotebookKernel {
         // todo@API make this mandatory?
         readonly id?: string;
@@ -666,14 +657,90 @@ declare module 'vscode' {
         // fired when properties like the supported languages etc change
         // onDidChangeProperties?: Event<void>
 
-        // @roblourens
-        // todo@API change to `executeCells(document: NotebookDocument, cells: NotebookCellRange[], context:{isWholeNotebooke: boolean}, token: CancelationToken): void;`
-        // todo@API interrupt vs cancellation, https://github.com/microsoft/vscode/issues/106741
-        // interrupt?():void;
-        executeCell(document: NotebookDocument, cell: NotebookCell): void;
-        cancelCellExecution(document: NotebookDocument, cell: NotebookCell): void;
-        executeAllCells(document: NotebookDocument): void;
-        cancelAllCellsExecution(document: NotebookDocument): void;
+        /**
+         * A kernel can optionally implement this which will be called when any "cancel" button is clicked in the document.
+         */
+        interrupt?(document: NotebookDocument): void;
+
+        /**
+         * Called when the user triggers execution of a cell by clicking the run button for a cell, multiple cells,
+         * or full notebook. The cell will be put into the Pending state when this method is called. If
+         * createNotebookCellExecutionTask has not been called by the time the promise returned by this method is
+         * resolved, the cell will be put back into the Idle state.
+         */
+        executeCellsRequest(document: NotebookDocument, ranges: NotebookCellRange[]): Thenable<void>;
+    }
+
+    export interface NotebookCellExecuteStartContext {
+        // TODO@roblou are we concerned about clock issues with this absolute time?
+        /**
+         * The time that execution began, in milliseconds in the Unix epoch. Used to drive the clock
+         * that shows for how long a cell has been running. If not given, the clock won't be shown.
+         */
+        startTime?: number;
+    }
+
+    export interface NotebookCellExecuteEndContext {
+        /**
+         * If true, a green check is shown on the cell status bar.
+         * If false, a red X is shown.
+         */
+        success?: boolean;
+
+        /**
+         * The total execution time in milliseconds.
+         */
+        duration?: number;
+    }
+
+    /**
+     * A NotebookCellExecutionTask is how the kernel modifies a notebook cell as it is executing. When
+     * [`createNotebookCellExecutionTask`](#notebook.createNotebookCellExecutionTask) is called, the cell
+     * enters the Pending state. When `start()` is called on the execution task, it enters the Executing state. When
+     * `end()` is called, it enters the Idle state. While in the Executing state, cell outputs can be
+     * modified with the methods on the run task.
+     *
+     * All outputs methods operate on this NotebookCellExecutionTask's cell by default. They optionally take
+     * a cellIndex parameter that allows them to modify the outputs of other cells. `appendOutputItems` and
+     * `replaceOutputItems` operate on the output with the given ID, which can be an output on any cell. They
+     * all resolve once the output edit has been applied.
+     */
+    export interface NotebookCellExecutionTask {
+        readonly document: NotebookDocument;
+        readonly cell: NotebookCell;
+
+        start(context?: NotebookCellExecuteStartContext): void;
+        executionOrder: number | undefined;
+        end(result?: NotebookCellExecuteEndContext): void;
+        readonly token: CancellationToken;
+
+        clearOutput(cellIndex?: number): Thenable<void>;
+        appendOutput(out: NotebookCellOutput[], cellIndex?: number): Thenable<void>;
+        replaceOutput(out: NotebookCellOutput[], cellIndex?: number): Thenable<void>;
+        appendOutputItems(items: NotebookCellOutputItem[], outputId: string): Thenable<void>;
+        replaceOutputItems(items: NotebookCellOutputItem[], outputId: string): Thenable<void>;
+    }
+
+    export enum NotebookCellExecutionState {
+        Idle = 1,
+        Pending = 2,
+        Executing = 3
+    }
+
+    export namespace notebook {
+        /**
+         * Creates a [`NotebookCellExecutionTask`](#NotebookCellExecutionTask). Should only be called by a kernel. Returns undefined unless requested by the active kernel.
+         * @param uri The [uri](#Uri) of the notebook document.
+         * @param index The index of the cell.
+         * @param kernelId The id of the kernel requesting this run task. If this kernel is not the current active kernel, `undefined` is returned.
+         */
+        export function createNotebookCellExecutionTask(
+            uri: Uri,
+            index: number,
+            kernelId: string
+        ): NotebookCellExecutionTask | undefined;
+
+        export const onDidChangeCellExecutionState: Event<NotebookCellExecutionStateChangeEvent>;
     }
 
     export type NotebookFilenamePattern = GlobPattern | { include: GlobPattern; exclude: GlobPattern };
@@ -833,5 +900,51 @@ declare module 'vscode' {
         contains(uri: Uri): boolean;
     }
 
+    //#endregion
+    //#region https://github.com/microsoft/vscode/issues/115616 @alexr00
+    export enum PortAutoForwardAction {
+        Notify = 1,
+        OpenBrowser = 2,
+        OpenPreview = 3,
+        Silent = 4,
+        Ignore = 5
+    }
+
+    export interface PortAttributes {
+        port: number;
+        autoForwardAction: PortAutoForwardAction;
+    }
+
+    export interface PortAttributesProvider {
+        /**
+         * Provides attributes for the given ports. For ports that your extension doesn't know about, simply don't include
+         * them in the returned array. For example, if `providePortAttributes` is called with ports [3000, 4000] but your
+         * extension doesn't know anything about those ports you can return an empty array.
+         */
+        providePortAttributes(
+            ports: number[],
+            pid: number | undefined,
+            commandLine: string | undefined,
+            token: CancellationToken
+        ): ProviderResult<PortAttributes[]>;
+    }
+
+    export namespace workspace {
+        /**
+         * If your extension listens on ports, consider registering a PortAttributesProvider to provide information
+         * about the ports. For example, a debug extension may know about debug ports in it's debuggee. By providing
+         * this information with a PortAttributesProvider the extension can tell VS Code that these ports should be
+         * ignored, since they don't need to be user facing.
+         *
+         * @param portSelector If registerPortAttributesProvider is called after you start your process then you may already
+         * know the range of ports or the pid of your process.
+         * The `portRange` is start inclusive and end exclusive.
+         * @param provider The PortAttributesProvider
+         */
+        export function registerPortAttributesProvider(
+            portSelector: { pid?: number; portRange?: [number, number] },
+            provider: PortAttributesProvider
+        ): Disposable;
+    }
     //#endregion
 }

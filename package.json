@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.4.0",
+    "version": "2021.6.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.55.0-insider"
+        "vscode": "1.56.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -287,20 +287,14 @@
                 "command": "jupyter.notebookeditor.runallcellsabove",
                 "title": "%DataScience.runAbove%",
                 "category": "Notebook",
-                "icon": {
-                    "light": "resources/light/runabove.svg",
-                    "dark": "resources/dark/runabove-inverse.svg"
-                },
-                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted && jupyter.notebookeditor.canRunCellsAboveInNativeNotebook"
+                "icon": "$(run-above)",
+                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
             },
             {
                 "command": "jupyter.notebookeditor.runcellandallbelow",
                 "title": "%DataScience.runBelow%",
                 "category": "Notebook",
-                "icon": {
-                    "light": "resources/light/runbelow.svg",
-                    "dark": "resources/dark/runbelow-inverse.svg"
-                },
+                "icon": "$(run-below)",
                 "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
             },
             {
@@ -728,19 +722,14 @@
             {
                 "command": "jupyter.openVariableView",
                 "title": "%jupyter.command.jupyter.openVariableView.title%",
-                "icon": {
-                    "light": "resources/light/variable_explorer.svg",
-                    "dark": "resources/dark/variable_explorer.svg"
-                },
+                "icon": "$(variable-group)",
                 "category": "Jupyter",
                 "enablement": "notebookViewType == jupyter-notebook && !jupyter.variableViewVisible"
             },
             {
                 "command": "jupyter.refreshDataViewer",
                 "title": "%DataScience.refreshDataViewer%",
-                "category": "Jupyter",
-                "enablement": "jupyter.dataViewerActive",
-                "icon": "$(refresh)"
+                "category": "Jupyter"
             }
         ],
         "menus": {
@@ -798,18 +787,6 @@
             ],
             "editor/title": [
                 {
-                    "command": "jupyter.notebookeditor.runallcellsabove",
-                    "title": "%DataScience.runAbove%",
-                    "group": "overflow@1",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.runcellandallbelow",
-                    "title": "%DataScience.runBelow%",
-                    "group": "overflow@2",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                },
-                {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "group": "navigation@1",
@@ -828,11 +805,6 @@
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 },
                 {
-                    "command": "jupyter.refreshDataViewer",
-                    "when": "jupyter.dataViewerActive",
-                    "group": "navigation@0"
-                },
-                {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation@3",
@@ -849,6 +821,20 @@
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "group": "overflow@1000",
                     "when": "notebookViewType == 'jupyter-notebook'"
+                }
+            ],
+            "notebook/cell/title": [
+                {
+                    "command": "jupyter.notebookeditor.runallcellsabove",
+                    "title": "%DataScience.runAbove%",
+                    "group": "inline/cell@2",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.runcellandallbelow",
+                    "title": "%DataScience.runBelow%",
+                    "group": "inline/cell@2",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 }
             ],
             "explorer/context": [
@@ -874,6 +860,16 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.notebookeditor.runallcellsabove",
+                    "title": "%DataScience.runAbove%",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.notebookeditor.runcellandallbelow",
+                    "title": "%DataScience.runBelow%",
+                    "when": "false"
+                },
                 {
                     "command": "jupyter.exportAsPythonScript",
                     "title": "%jupyter.command.jupyter.exportAsPythonScript.title%",
@@ -1337,7 +1333,7 @@
                 },
                 "jupyter.logging.level": {
                     "type": "string",
-                    "default": "error",
+                    "default": "debug",
                     "enum": [
                         "off",
                         "error",
@@ -1345,7 +1341,7 @@
                         "info",
                         "debug"
                     ],
-                    "description": "The logging level the extension logs at, defaults to 'error'",
+                    "description": "The logging level the extension logs at.",
                     "scope": "machine"
                 },
                 "jupyter.experiments.optInto": {
@@ -1356,7 +1352,7 @@
                             "CustomEditor"
                         ]
                     },
-                    "description": "List of experiment to opt into. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-jupyter/wiki/Experiments for more details.",
+                    "markdownDescription": "List of experiment to opt into. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
                     "scope": "application"
                 },
                 "jupyter.experiments.optOutFrom": {
@@ -1368,7 +1364,7 @@
                             "CustomEditor"
                         ]
                     },
-                    "description": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-jupyter/wiki/Experiments for more details.",
+                    "markdownDescription": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
                     "scope": "application"
                 },
                 "jupyter.enableKeyboardShortcuts": {
@@ -1540,7 +1536,7 @@
                 "jupyter.codeRegularExpression": {
                     "type": "string",
                     "default": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
-                    "description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell. \nDefaults to '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])' if left blank",
+                    "description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell.",
                     "scope": "resource"
                 },
                 "jupyter.defaultCellMarker": {
@@ -1552,7 +1548,7 @@
                 "jupyter.markdownRegularExpression": {
                     "type": "string",
                     "default": "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
-                    "description": "Regular expression used to identify markdown cells. All comments after this expression are considered part of the markdown. \nDefaults to '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)' if left blank",
+                    "description": "Regular expression used to identify markdown cells. All comments after this expression are considered part of the markdown.",
                     "scope": "resource"
                 },
                 "jupyter.allowLiveShare": {
@@ -1604,12 +1600,6 @@
                     "description": "When opening ipynb files, automatically preview the contents in the Interactive window.",
                     "scope": "resource"
                 },
-                "jupyter.useNotebookEditor": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Automatically open .ipynb files in the Notebook Editor.",
-                    "scope": "resource"
-                },
                 "jupyter.allowUnauthorizedRemoteConnection": {
                     "type": "boolean",
                     "default": false,
@@ -1625,7 +1615,7 @@
                 "jupyter.codeLenses": {
                     "type": "string",
                     "default": "jupyter.runcell,  jupyter.runallcellsabove, jupyter.debugcell",
-                    "description": "Set of commands to put as code lens above a cell. Defaults to 'jupyter.runcell,  jupyter.runallcellsabove, jupyter.debugcell'",
+                    "description": "Set of commands to put as code lens above a cell.",
                     "scope": "resource"
                 },
                 "jupyter.debugCodeLenses": {
@@ -2042,7 +2032,7 @@
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
         "@types/vscode": "^1.53.0",
-        "@types/vscode-notebook-renderer": "^1.48.0",
+        "@types/vscode-notebook-renderer": "^1.55.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",

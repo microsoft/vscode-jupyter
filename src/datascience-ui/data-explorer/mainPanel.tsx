@@ -32,11 +32,13 @@ import '../react-common/codicon/codicon.css';
 import '../react-common/seti/seti.less';
 import { SliceControl } from './sliceControl';
 import { debounce } from 'lodash';
+import * as uuid from 'uuid/v4';
 
 import { initializeIcons } from '@fluentui/react';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
+const RowNumberColumnName = uuid(); // Unique key for our column containing row numbers
 
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {
@@ -177,6 +179,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     loadingData={this.state.totalRowCount > this.state.fetchedRowCount}
                     originalVariableShape={this.state.originalVariableShape}
                     handleSliceRequest={this.handleSliceRequest}
+                    onCheckboxToggled={this.handleCheckboxToggle}
                 />
             );
         }
@@ -251,23 +254,22 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     };
 
     private renderGrid() {
-        const filterRowsText = getLocString('DataScience.filterRowsButton', 'Filter Rows');
         const filterRowsTooltip = getLocString('DataScience.filterRowsTooltip', 'Click to filter');
         return (
             <ReactSlickGrid
                 ref={this.grid}
                 columns={this.state.gridColumns}
-                idProperty={this.state.indexColumn}
+                idProperty={RowNumberColumnName}
                 rowsAdded={this.gridAddEvent}
                 resetGridEvent={this.resetGridEvent}
                 columnsUpdated={this.gridColumnUpdateEvent}
-                filterRowsText={filterRowsText}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
                 dataDimensionality={this.state.dataDimensionality}
                 originalVariableShape={this.state.originalVariableShape}
                 isSliceDataEnabled={this.state.isSliceDataEnabled}
                 handleSliceRequest={this.handleSliceRequest}
+                handleRefreshRequest={this.handleRefreshRequest}
             />
         );
     }
@@ -368,7 +370,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             gridRows: newActual
         });
 
-        // Tell our grid about the new ros
+        // Tell our grid about the new rows
         this.updateRows(normalized);
 
         // Get the next chunk
@@ -384,23 +386,34 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private generateColumns(variable: IDataFrameInfo): Slick.Column<Slick.SlickData>[] {
-        // Generate an index column
-        const indexColumn = {
-            key: this.state.indexColumn,
-            type: ColumnType.Number
-        };
         if (variable.columns) {
-            const columns = [indexColumn].concat(variable.columns);
-            return columns.map((c: { key: string; type: ColumnType }, i: number) => {
-                return {
-                    type: c.type,
-                    field: c.key.toString(),
-                    id: `${i}`,
-                    name: c.key.toString(),
-                    sortable: true,
-                    formatter: cellFormatterFunc
-                };
-            });
+            // Generate a column for row numbers
+            const rowNumberColumn = {
+                key: RowNumberColumnName,
+                type: ColumnType.Number
+            };
+            const columns = [rowNumberColumn].concat(variable.columns);
+            return columns.reduce(
+                (accum: Slick.Column<Slick.SlickData>[], c: { key: string; type: ColumnType }, i: number) => {
+                    // Only show index column for pandas DataFrame and Series
+                    if (
+                        variable?.type === 'DataFrame' ||
+                        variable?.type === 'Series' ||
+                        c.key !== this.state.indexColumn
+                    ) {
+                        accum.push({
+                            type: c.type,
+                            field: c.key.toString(),
+                            id: `${i}`,
+                            name: c.key.toString(),
+                            sortable: true,
+                            formatter: cellFormatterFunc
+                        } as Slick.Column<Slick.SlickData>);
+                    }
+                    return accum;
+                },
+                []
+            );
         }
         return [];
     }
@@ -416,7 +429,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (!r) {
                 r = {};
             }
-            r[this.state.indexColumn] = this.state.fetchedRowCount + idx;
+            r[RowNumberColumnName] = this.state.fetchedRowCount + idx;
             for (let [key, value] of Object.entries(r)) {
                 switch (value) {
                     case 'nan':
@@ -476,10 +489,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private debounceSliceRequest = debounce(this.sendMessage, 400);
+    private debounceRequest = debounce(this.sendMessage, 400);
+
     private handleSliceRequest = (args: IGetSliceRequest) => {
         // Fetching a slice is expensive so debounce requests
-        this.debounceSliceRequest(DataViewerMessages.GetSliceRequest, args);
+        this.debounceRequest(DataViewerMessages.GetSliceRequest, args);
+    };
+
+    private handleRefreshRequest = () => {
+        this.debounceRequest(DataViewerMessages.RefreshDataViewer);
+    };
+
+    private handleCheckboxToggle = (newState: boolean) => {
+        this.sendMessage(DataViewerMessages.SliceEnablementStateChanged, { newState });
     };
 
     private updateColumns(newColumns: Slick.Column<Slick.SlickData>[]) {

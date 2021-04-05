@@ -7,12 +7,12 @@ import { IVSCodeNotebook } from '../../common/application/types';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
-    cellRunStateToCellState,
     createJupyterCellFromVSCNotebookCell,
     getNotebookMetadata,
     notebookModelToVSCNotebookData
 } from '../notebook/helpers/helpers';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
+import { CellState } from '../types';
 import { BaseNotebookModel, getDefaultNotebookContentForNativeNotebooks } from './baseModel';
 
 // https://github.com/microsoft/vscode-python/issues/13155
@@ -83,15 +83,12 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         return this.document ? this.document.cells.length : this.notebookJson.cells?.length ?? 0;
     }
     public getNotebookData() {
-        if (!this.preferredLanguage) {
-            throw new Error('Preferred Language not initialized');
-        }
         return notebookModelToVSCNotebookData(
             this.isTrusted,
             this.notebookContentWithoutCells,
             this.file,
             this.notebookJson.cells || [],
-            this.preferredLanguage,
+            this.preferredLanguage || 'plaintext',
             this.originalJson
         );
     }
@@ -105,7 +102,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
                 return {
                     id: cell.document.uri.toString(),
                     data: createJupyterCellFromVSCNotebookCell(cell),
-                    state: cellRunStateToCellState(cell.metadata.runState)
+                    state: CellState.init
                 };
             });
     }

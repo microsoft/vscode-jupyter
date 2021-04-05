@@ -28,9 +28,10 @@ import { DataScience } from '../../../common/utils/localize';
 import { Settings, Telemetry } from '../../constants';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { traceInfo } from '../../../common/logger';
+import { traceInfo, traceInfoIf } from '../../../common/logger';
 import { getInterpreterHash } from '../../../pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../../../telemetry/helpers';
+import { IS_CI_SERVER } from '../../../../test/ciConstants';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -339,8 +340,9 @@ export function findPreferredKernel(
 
     // If still not found, look for a match based on notebook metadata and interpreter
     if (index < 0) {
+        const hasLanguageInfo = notebookMetadata?.language_info?.name ? true : false;
         const nbMetadataLanguage =
-            !notebookMetadata || isPythonNotebook(notebookMetadata)
+            !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
                 ? PYTHON_LANGUAGE
                 : (
                       (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
@@ -450,6 +452,7 @@ export async function sendTelemetryForPythonKernelExecutable(
         return;
     }
     try {
+        traceInfoIf(IS_CI_SERVER, 'Begin sendTelemetryForPythonKernelExecutable');
         const cells = await notebook.execute('import sys\nprint(sys.executable)', file, 0, uuid(), undefined, true);
         if (cells.length === 0 || !Array.isArray(cells[0].data.outputs) || cells[0].data.outputs.length === 0) {
             return;
@@ -468,4 +471,5 @@ export async function sendTelemetryForPythonKernelExecutable(
     } catch (ex) {
         // Noop.
     }
+    traceInfoIf(IS_CI_SERVER, 'End sendTelemetryForPythonKernelExecutable');
 }

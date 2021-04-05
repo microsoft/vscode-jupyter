@@ -536,6 +536,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IExperimentService>(IExperimentService, instance(experimentService));
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenCall(this.isPythonExtensionInstalled.bind(this));
+        when(extensionChecker.isPythonExtensionActive).thenCall(this.isPythonExtensionInstalled.bind(this));
         when(extensionChecker.showPythonExtensionInstallRequiredPrompt()).thenCall(
             this.installPythonExtension.bind(this)
         );
@@ -1175,7 +1176,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private isPythonExtensionInstalled() {
         return this.pythonExtensionState;
     }
-
     private installPythonExtension() {
         this.attemptedPythonExtension = true;
     }

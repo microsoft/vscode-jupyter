@@ -245,10 +245,11 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
-            path: backingFile?.path || '.',
-            kernelName: getNameOfKernelConnection(kernelConnection) || '',
+            path: backingFile?.path || `${uuid()}.ipynb`, // Name has to be unique
+            kernelName: getNameOfKernelConnection(kernelConnection) || '', // TODO: This can't be empty. See https://github.com/microsoft/vscode-jupyter/issues/5290
             name: uuid(), // This is crucial to distinguish this session from any other.
-            serverSettings: serverSettings
+            serverSettings: serverSettings,
+            type: 'notebook'
         };
 
         traceInfo(`Starting a new session for kernel id = ${kernelConnection?.id}, name = ${options.kernelName}`);
