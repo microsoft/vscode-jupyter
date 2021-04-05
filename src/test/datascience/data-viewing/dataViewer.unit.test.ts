@@ -11,7 +11,6 @@ import { WebviewPanelProvider } from '../../../client/common/application/webview
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { ExperimentService } from '../../../client/common/experiments/service';
 import { IConfigurationService } from '../../../client/common/types';
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataViewer } from '../../../client/datascience/data-viewing/dataViewer';
@@ -30,7 +29,6 @@ suite('DataScience - DataViewer', () => {
     let workspaceService: IWorkspaceService;
     let applicationShell: IApplicationShell;
     let dataProvider: IDataViewerDataProvider;
-    let experimentService: ExperimentService;
     const title: string = 'Data Viewer - Title';
 
     setup(async () => {
@@ -41,7 +39,6 @@ suite('DataScience - DataViewer', () => {
         workspaceService = mock(WorkspaceService);
         applicationShell = mock(ApplicationShell);
         dataProvider = mock(JupyterVariableDataProvider);
-        experimentService = mock(ExperimentService);
         const settings = mock(JupyterSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 
@@ -59,7 +56,6 @@ suite('DataScience - DataViewer', () => {
             instance(workspaceService),
             instance(applicationShell),
             false,
-            instance(experimentService),
             new MockMemento()
         );
     });
