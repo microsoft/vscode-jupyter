@@ -1945,6 +1945,7 @@
         "stack-trace": "0.0.10",
         "string-argv": "^0.3.1",
         "strip-ansi": "^5.2.0",
+        "styled-components": "^5.2.3",
         "svg-inline-react": "^3.1.0",
         "svg-to-pdfkit": "^0.1.8",
         "tcp-port-used": "^1.0.1",
