@@ -883,7 +883,6 @@ module.exports = {
         'src/client/datascience/editor-integration/codelensprovider.ts',
         'src/client/datascience/editor-integration/cellhashprovider.ts',
         'src/client/datascience/commands/commandLineSelector.ts',
-        'src/client/datascience/commands/exportCommands.ts',
         'src/client/datascience/cellFactory.ts',
         'src/client/datascience/notebook/notebookEditorCompatibilitySupport.ts',
         'src/client/datascience/notebook/constants.ts',

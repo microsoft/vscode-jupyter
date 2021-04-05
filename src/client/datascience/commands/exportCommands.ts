@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import { QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
@@ -16,6 +17,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { ExportManager } from '../export/exportManager';
 import { ExportFormat, IExportManager } from '../export/types';
+import { isPythonNotebook } from '../notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../types';
 
 interface IExportQuickPickItem extends QuickPickItem {
@@ -123,8 +125,9 @@ export class ExportCommands implements IDisposable {
         interpreter?: PythonEnvironment
     ): IExportQuickPickItem[] {
         const items: IExportQuickPickItem[] = [];
+        const notebook = JSON.parse(contents) as nbformat.INotebookContent;
 
-        if (interpreter) {
+        if (interpreter || (notebook.metadata && isPythonNotebook(notebook.metadata))) {
             items.push({
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
@@ -132,7 +135,12 @@ export class ExportCommands implements IDisposable {
                     sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                         format: ExportFormat.python
                     });
-                    this.commandManager.executeCommand(Commands.ExportAsPythonScript, contents, source, interpreter);
+                    void this.commandManager.executeCommand(
+                        Commands.ExportAsPythonScript,
+                        contents,
+                        source,
+                        interpreter
+                    );
                 }
             });
         }
@@ -146,7 +154,7 @@ export class ExportCommands implements IDisposable {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                             format: ExportFormat.html
                         });
-                        this.commandManager.executeCommand(
+                        void this.commandManager.executeCommand(
                             Commands.ExportToHTML,
                             contents,
                             source,
@@ -162,7 +170,7 @@ export class ExportCommands implements IDisposable {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                             format: ExportFormat.pdf
                         });
-                        this.commandManager.executeCommand(
+                        void this.commandManager.executeCommand(
                             Commands.ExportToPDF,
                             contents,
                             source,
