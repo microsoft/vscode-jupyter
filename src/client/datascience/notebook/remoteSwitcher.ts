@@ -48,7 +48,11 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         await this.serverSelector.selectJupyterURI(true, 'nativeNotebookToolbar');
     }
     private async updateStatusBar() {
-        if (!this.notebook.activeNotebookEditor || !isJupyterNotebook(this.notebook.activeNotebookEditor.document) || !isJupyterKernel(this.notebook.activeNotebookEditor.kernel)) {
+        if (
+            !this.notebook.activeNotebookEditor ||
+            !isJupyterNotebook(this.notebook.activeNotebookEditor.document) ||
+            !isJupyterKernel(this.notebook.activeNotebookEditor.kernel)
+        ) {
             this.statusBarItem.hide();
             return;
         }
