@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import { QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
@@ -17,7 +16,6 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { ExportManager } from '../export/exportManager';
 import { ExportFormat, IExportManager } from '../export/types';
-import { isPythonNotebook } from '../notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../types';
 
 interface IExportQuickPickItem extends QuickPickItem {
@@ -125,9 +123,8 @@ export class ExportCommands implements IDisposable {
         interpreter?: PythonEnvironment
     ): IExportQuickPickItem[] {
         const items: IExportQuickPickItem[] = [];
-        const notebook = JSON.parse(contents) as nbformat.INotebookContent;
 
-        if (notebook.metadata && isPythonNotebook(notebook.metadata)) {
+        if (interpreter) {
             items.push({
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
