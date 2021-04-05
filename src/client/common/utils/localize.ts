@@ -368,7 +368,7 @@ export namespace DataScience {
     );
     export const kernelTimeout = localize(
         'DataScience.kernelTimeout',
-        'Timed out waiting to get a heartbeat from kernel process. \n{0} \nView Jupyter [log](command:{1}) for further details.'
+        'Timed out waiting to get a heartbeat from kernel process. \nView Jupyter [log](command:{0}) for further details.'
     );
     export const kernelDied = localize(
         'DataScience.kernelDied',
@@ -868,8 +868,10 @@ export namespace DataScience {
 
     export const enableCDNForWidgetsSetting = localize(
         'DataScience.enableCDNForWidgetsSetting',
-        'Widgets require us to download supporting files from a 3rd party website. Click [here](command:jupyter.enableLoadingWidgetScriptsFromThirdPartySource) to enable this or click [here](https://aka.ms/PVSCIPyWidgets) for more information. (Error loading {0}:{1}).'
+        'Widgets require us to download supporting files from a 3rd party website. (Error loading {0}:{1}).'
     );
+
+    export const enableCDNForWidgetsButton = localize('DataScience.enableCDNForWidgetsButton', 'Enable Downloads');
 
     export const unhandledMessage = localize(
         'DataScience.unhandledMessage',

@@ -161,7 +161,6 @@ export namespace EditorContexts {
     export const IsNativeActive = 'jupyter.isnativeactive';
     export const UsingWebviewNotebook = 'jupyter.usingwebviewnotebook';
     export const IsInteractiveOrNativeActive = 'jupyter.isinteractiveornativeactive';
-    export const canRunCellsAboveInNativeNotebook = 'jupyter.notebookeditor.canRunCellsAboveInNativeNotebook';
     export const IsPythonOrNativeActive = 'jupyter.ispythonornativeactive';
     export const IsPythonOrInteractiveActive = 'jupyter.ispythonorinteractiveeactive';
     export const IsPythonOrInteractiveOrNativeActive = 'jupyter.ispythonorinteractiveornativeeactive';

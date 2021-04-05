@@ -16,7 +16,7 @@ import {
     ServerStatus
 } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
-import { Image, ImageName } from '../react-common/image';
+import { Codicon, Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import './nativeEditor.less';
@@ -235,11 +235,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             className="native-button"
                             tooltip={variableExplorerTooltip}
                         >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.VariableExplorer}
-                            />
+                            <Codicon codicon="variable-group" />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}

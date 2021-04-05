@@ -305,7 +305,6 @@ module.exports = {
         'src/datascience-ui/native-editor/index.tsx',
         'src/datascience-ui/native-editor/nativeCell.tsx',
         'src/datascience-ui/native-editor/addCellLine.tsx',
-        'src/datascience-ui/native-editor/toolbar.tsx',
         'src/datascience-ui/native-editor/redux/mapping.ts',
         'src/datascience-ui/native-editor/redux/actions.ts',
         'src/datascience-ui/native-editor/redux/reducers/movement.ts',
