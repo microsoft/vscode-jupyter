@@ -10,13 +10,7 @@ import { EventEmitter, Memento, ViewColumn } from 'vscode';
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
-import {
-    GLOBAL_MEMENTO,
-    IConfigurationService,
-    IDisposable,
-    IMemento,
-    Resource
-} from '../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposable, IMemento, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
