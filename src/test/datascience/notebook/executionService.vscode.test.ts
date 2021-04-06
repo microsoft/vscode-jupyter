@@ -621,7 +621,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             throw new Error('No active document');
         }
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
-        const cells = vscodeNotebook.activeNotebookEditor!.document.cells;
+        const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
         traceInfo('1. Start execution for test of Stderr & stdout outputs');
         await runAllCellsInActiveNotebook();
         traceInfo('2. Start execution for test of Stderr & stdout outputs');
@@ -674,7 +674,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertCodeCell('print("after fail")', { index: 1 });
 
         process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
-        const cells = vscodeNotebook.activeNotebookEditor!.document.cells;
+        const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
         await runAllCellsInActiveNotebook();
 
         await waitForExecutionCompletedWithErrors(cells[0]);
@@ -982,7 +982,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     async function insertRandomCells(options?: { count: number; addMarkdownCells: boolean }) {
         const cellInfo: { runToCompletion: Function; cell: NotebookCell }[] = [];
         const numberOfCellsToAdd = options?.count ?? 10;
-        const startIndex = vscodeNotebook.activeNotebookEditor!.document.cells.length;
+        const startIndex = vscodeNotebook.activeNotebookEditor!.document.cellCount;
         const endIndex = startIndex + numberOfCellsToAdd;
         // Insert the necessary amount of cells
         for (let index = startIndex; index < endIndex; index++) {
