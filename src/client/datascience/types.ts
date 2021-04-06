@@ -18,6 +18,7 @@ import {
     HoverProvider,
     LanguageConfiguration,
     NotebookCell,
+    NotebookDocument,
     QuickPickItem,
     Range,
     TextDocument,
@@ -590,6 +591,7 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
      * Once VSC Notebook is stable, this property can be removed.
      */
     readonly type: 'old' | 'custom' | 'native';
+    readonly document: NotebookDocument | undefined;
     readonly onDidChangeViewState: Event<void>;
     readonly closed: Event<INotebookEditor>;
     readonly executed?: Event<INotebookEditor>;

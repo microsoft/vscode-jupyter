@@ -5,7 +5,7 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { NotebookCell, Uri } from 'vscode';
+import { NotebookCell, NotebookDocument, Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -34,7 +34,9 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, () => this.interruptKernel())
+            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, (document: NotebookDocument) =>
+                this.interruptKernel(document)
+            )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel())
@@ -97,10 +99,11 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         }
     }
 
-    private interruptKernel() {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.interruptKernel().ignoreErrors();
+    private interruptKernel(document: NotebookDocument | undefined) {
+        const target =
+            this.provider.editors.find((editor) => editor.document === document) ?? this.provider.activeEditor;
+        if (target) {
+            target.interruptKernel().ignoreErrors();
         }
     }
 

@@ -52,7 +52,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     public interrupt(document: NotebookDocument) {
         document.cells.forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         this.commandManager
-            .executeCommand(Commands.NotebookEditorInterruptKernel)
+            .executeCommand(Commands.NotebookEditorInterruptKernel, document)
             .then(noop, (ex) => console.error(ex));
     }
 
