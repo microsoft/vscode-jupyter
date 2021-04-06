@@ -141,7 +141,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         // Wait till output is empty for both cells
         await waitForCondition(
-            async () => !nbEditor.document.cells.some((cell) => cell.outputs.length > 0),
+            async () => !nbEditor.document.getCells().some((cell) => cell.outputs.length > 0),
             5_000,
             'Cell output not cleared'
         );

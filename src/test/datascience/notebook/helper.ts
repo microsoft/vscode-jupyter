@@ -108,7 +108,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
             }
         ])
     );
-    return activeEditor.document.cells[startNumber]!;
+    return activeEditor.document.cellAt(startNumber)!;
 }
 export async function insertCodeCell(source: string, options?: { language?: string; index?: number }) {
     const { vscodeNotebook } = await getServices();
@@ -131,7 +131,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     ]);
     await workspace.applyEdit(edit);
 
-    return activeEditor.document.cells[startNumber]!;
+    return activeEditor.document.cellAt(startNumber)!;
 }
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
@@ -460,7 +460,7 @@ export async function prewarmNotebooks() {
         await editorProvider.createNew();
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
-        const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
+        const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
         await runAllCellsInActiveNotebook();
         // Wait for Jupyter to start.
         await waitForExecutionCompletedSuccessfully(cell, 60_000);

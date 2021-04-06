@@ -71,7 +71,7 @@ suite('Notebook Editor tests', function () {
         // run command
         await commandManager.executeCommand(
             Commands.NativeNotebookRunAllCellsAbove,
-            vscodeNotebook.activeNotebookEditor?.document.cells[1]!
+            vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!
         );
 
         const firstCell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
@@ -99,7 +99,7 @@ suite('Notebook Editor tests', function () {
         // run command
         await commandManager.executeCommand(
             Commands.NativeNotebookRunCellAndAllBelow,
-            vscodeNotebook.activeNotebookEditor?.document.cells[1]!
+            vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!
         );
 
         const firstCell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;

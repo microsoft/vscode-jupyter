@@ -85,7 +85,7 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
         assert.equal(document.metadata.editable, trusted);
         assert.equal(document.metadata.trusted, trusted);
 
-        document.cells.forEach((cell) => {
+        document.getCells().forEach((cell) => {
             assert.equal(cell.metadata.editable, true);
             if (cell.kind === NotebookCellKind.Code) {
                 if (hasOutput) {
