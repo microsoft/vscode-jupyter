@@ -128,7 +128,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     test('Empty cells will not have an execution order nor have a status of success', async () => {
         await insertCodeCell('');
         await insertCodeCell('print("Hello World")');
-        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
 
         await runAllCellsInActiveNotebook();
 
@@ -144,7 +144,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForKernelToGetAutoSelected();
 
         // Confirm we have execution order and output.
-        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
         assert.equal(cells[0].latestExecutionSummary?.executionOrder, 1);
         assertHasTextOutputInVSCode(cells[0], 'Hello World');
 
@@ -172,7 +172,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     test('Verify multiple cells get executed', async () => {
         await insertCodeCell('print("Foo Bar")');
         await insertCodeCell('print("Hello World")');
-        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
 
         await runAllCellsInActiveNotebook();
 
@@ -230,8 +230,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertCodeCell('from IPython.display import Markdown\n');
         await insertCodeCell('dh = display(display_id=True)\n');
         await insertCodeCell('dh.update(Markdown("foo"))\n');
-        const displayCell = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
-        const updateCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
+        const displayCell = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        const updateCell = vscodeNotebook.activeNotebookEditor?.document.getCells()![2]!;
 
         await runAllCellsInActiveNotebook();
 
@@ -376,7 +376,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                                             a="<a href=f>"
                                             print(a)`);
         await insertCodeCell('raise Exception("<whatever>")');
-        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
 
         await runAllCellsInActiveNotebook();
 
@@ -399,7 +399,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     test('Verify display updates', async () => {
         await insertCodeCell('from IPython.display import Markdown', { index: 0 });
         await insertCodeCell('dh = display(Markdown("foo"), display_id=True)', { index: 1 });
-        let cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        let cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
 
         await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(cells[1]);
@@ -418,7 +418,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             { index: 2 }
         );
         await runAllCellsInActiveNotebook();
-        cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
         await waitForExecutionCompletedSuccessfully(cells[2]);
 
         assert.equal(cells[0].outputs.length, 0, 'Incorrect number of output');
@@ -450,7 +450,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         `,
             { index: 0 }
         );
-        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
 
         await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(cells[0]);
@@ -504,7 +504,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             { index: 0 }
         );
         await insertCodeCell('print("HELLO")', { index: 1 });
-        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
 
         await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(cells[1]);
@@ -566,7 +566,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             `,
             { index: 1 }
         );
-        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
 
         await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(cells[0]);
@@ -682,7 +682,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Second cell output should be empty
         assert.equal(cells[1].outputs.length, 0, 'Second cell is not empty on run all');
 
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
         await runCell(cell);
 
         // Wait till execution count changes and status is success.
@@ -932,7 +932,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             IPython.get_ipython().set_next_input("print('REPLACE')", replace=True)`,
             { index: 1 }
         );
-        const cells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
 
         await runAllCellsInActiveNotebook();
 
@@ -940,7 +940,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForExecutionCompletedSuccessfully(cells[0]);
         await waitForExecutionCompletedSuccessfully(cells[1]);
 
-        const cellsPostExecute = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cellsPostExecute = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
 
         // Check our output, one cell should have been inserted, and one been replaced
         expect(cellsPostExecute.length).to.equal(3);

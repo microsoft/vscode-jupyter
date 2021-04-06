@@ -111,7 +111,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Cell 2 = `print(a)`
         await runAllCellsInActiveNotebook();
 
-        let cell2 = nbEditor.document.cells![1]!;
+        let cell2 = nbEditor.document.getCells()![1]!;
         await waitForExecutionCompletedSuccessfully(cell2);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
 
@@ -147,7 +147,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         );
 
         // Execute second cell
-        cell2 = nbEditor.document.cells![1]!;
+        cell2 = nbEditor.document.getCells()![1]!;
         await runCell(cell2);
         await waitForExecutionCompletedSuccessfully(cell2);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);

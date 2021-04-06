@@ -174,7 +174,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await runAllCellsInActiveNotebook();
 
         const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
 
         // If it was successfully selected, then we know a Python kernel was correctly selected & managed to run the code.
         await Promise.all([waitForExecutionCompletedSuccessfully(cell1), waitForExecutionCompletedSuccessfully(cell2)]);

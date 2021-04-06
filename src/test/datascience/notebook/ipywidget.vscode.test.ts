@@ -119,7 +119,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
         await waitForKernelToGetAutoSelected();
         // 6th cell has code that needs requireJS
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![6]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![6]!;
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();

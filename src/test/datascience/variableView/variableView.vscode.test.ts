@@ -94,7 +94,7 @@ suite('DataScience - VariableView', () => {
 
         // Send a second cell
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
         await runCell(cell2);
 
         // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
