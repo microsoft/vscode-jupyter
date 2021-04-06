@@ -175,7 +175,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         this.timeout(60_000); // Can be slow to start Julia kernel on CI.
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await insertCodeCell('123456', { language: 'julia', index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await runCell(cell);
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell, 60_000);
@@ -194,7 +194,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await waitForKernelToGetAutoSelected('c#');
         await runAllCellsInActiveNotebook();
 
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
 

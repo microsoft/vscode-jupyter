@@ -141,7 +141,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Run all cells
         await runAllCellsInActiveNotebook();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
@@ -156,7 +156,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Run all cells
         await runAllCellsInActiveNotebook();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
@@ -173,7 +173,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('print("Hello World")', { index: 1 });
         await runAllCellsInActiveNotebook();
 
-        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
 
         // If it was successfully selected, then we know a Python kernel was correctly selected & managed to run the code.
@@ -189,7 +189,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Run all cells
         await runAllCellsInActiveNotebook();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
@@ -216,7 +216,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Run all cells
         await runAllCellsInActiveNotebook();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed is not venvkernel
@@ -246,7 +246,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Run all cells
         await runAllCellsInActiveNotebook();
 
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed is not venvNoReg

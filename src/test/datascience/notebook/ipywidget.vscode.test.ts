@@ -70,7 +70,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     test('Can run a widget notebook (webview-test)', async function () {
         await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
         await waitForKernelToGetAutoSelected();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();
@@ -87,7 +87,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     test('Can run a widget notebook twice (webview-test)', async function () {
         await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
         await waitForKernelToGetAutoSelected();
-        let cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        let cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         // Execute cell. It should load and render the widget
         await runCell(cell);
 
@@ -99,7 +99,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
 
         await openNotebook(api.serviceContainer, testWidgetNb.fsPath);
         await waitForKernelToGetAutoSelected();
-        cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();

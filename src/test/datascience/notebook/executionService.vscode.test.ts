@@ -108,7 +108,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell using VSCode Kernel', async () => {
         await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await runCell(cell);
 
@@ -117,7 +117,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Leading whitespace not suppressed', async () => {
         await insertCodeCell('print("\tho")\nprint("\tho")\nprint("\tho")\n', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await runCell(cell);
 
@@ -160,7 +160,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertCodeCell('print("Hello World")');
         await runAllCellsInActiveNotebook();
 
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
         // Verify output.
@@ -193,7 +193,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Verify metadata for successfully executed cell', async () => {
         await insertCodeCell('print("Foo Bar")');
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await runAllCellsInActiveNotebook();
 
@@ -207,7 +207,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Verify output & metadata for executed cell with errors', async () => {
         await insertCodeCell('print(abcd)');
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await runAllCellsInActiveNotebook();
 
@@ -260,7 +260,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     print("End")`,
             { index: 0 }
         );
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await runAllCellsInActiveNotebook();
 
@@ -311,7 +311,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                 display('bar')`,
             { index: 0 }
         );
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await runAllCellsInActiveNotebook();
 
@@ -350,7 +350,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     print("End")`,
             { index: 0 }
         );
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await runAllCellsInActiveNotebook();
         await waitForCondition(

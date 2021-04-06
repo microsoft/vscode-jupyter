@@ -77,7 +77,7 @@ suite('DataScience - VariableView', () => {
     test('Can show VariableView (webview-test)', async function () {
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 

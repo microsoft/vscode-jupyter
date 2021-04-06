@@ -74,7 +74,7 @@ suite('Notebook Editor tests', function () {
             vscodeNotebook.activeNotebookEditor?.document.cells[1]!
         );
 
-        const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const firstCell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(firstCell);
         const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
 
@@ -102,7 +102,7 @@ suite('Notebook Editor tests', function () {
             vscodeNotebook.activeNotebookEditor?.document.cells[1]!
         );
 
-        const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const firstCell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
         await waitForExecutionCompletedSuccessfully(thirdCell);
 

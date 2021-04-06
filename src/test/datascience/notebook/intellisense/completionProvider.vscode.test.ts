@@ -62,7 +62,7 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell and get completions for variable', async () => {
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await runCell(cell);
 

@@ -94,7 +94,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await insertCodeCell('print("123412341234")', { index: 0 });
         await runAllCellsInActiveNotebook();
 
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Wait for MRU to get updated & encrypted storage to get updated.
