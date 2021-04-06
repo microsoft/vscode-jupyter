@@ -93,10 +93,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this._onDidChangeViewState.event;
     }
 
-    public get document() {
-        return undefined;
-    }
-
     public get visible(): boolean {
         return this.viewState.visible;
     }
