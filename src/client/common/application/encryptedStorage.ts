@@ -34,8 +34,14 @@ export class EncryptedStorage implements IEncryptedStorage {
         if (IS_REMOTE_NATIVE_TEST && this.extensionContext.extensionMode !== ExtensionMode.Production) {
             return this.testingState.get(`${service}#${key}`);
         }
-        // eslint-disable-next-line
-        const val = await this.extensionContext.secrets.get(`${service}.${key}`);
-        return val;
+        try {
+            // eslint-disable-next-line
+            const val = await this.extensionContext.secrets.get(`${service}.${key}`);
+            return val;
+        } catch (e) {
+            // If we get an error trying to get a secret, it might be corrupted. So we delete it.
+            await this.extensionContext.secrets.delete(`${service}.${key}`);
+            return;
+        }
     }
 }
