@@ -101,7 +101,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
 
     private interruptKernel(document: NotebookDocument | undefined) {
         const target =
-            this.provider.activeEditor?.file.toString === document?.uri.toString()
+            this.provider.activeEditor?.file.toString() === document?.uri.toString()
                 ? this.provider.activeEditor
                 : this.provider.editors.find((editor) => editor.file.toString() === document?.uri.toString());
         if (target) {
