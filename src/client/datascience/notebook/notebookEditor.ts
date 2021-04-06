@@ -10,6 +10,7 @@ import {
     NotebookCell,
     NotebookCellKind,
     NotebookCellMetadata,
+    NotebookCellRange,
     NotebookDocument,
     ProgressLocation,
     Uri,
@@ -130,7 +131,7 @@ export class NotebookEditor implements INotebookEditor {
         };
     }
     public hasCell(): Promise<boolean> {
-        return Promise.resolve(this.document.cells.length > 0);
+        return Promise.resolve(this.document.cellCount > 0);
     }
     public undoCells(): void {
         this.commandManager.executeCommand('notebook.undo').then(noop, noop);
@@ -146,7 +147,7 @@ export class NotebookEditor implements INotebookEditor {
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) =>
-                edit.replaceNotebookCells(editor.document.uri, 0, this.document.cells.length, [
+                edit.replaceNotebookCells(editor.document.uri, 0, this.document.cellCount, [
                     {
                         kind: NotebookCellKind.Code,
                         language: defaultLanguage,
@@ -166,7 +167,7 @@ export class NotebookEditor implements INotebookEditor {
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
-                notebook.cells.forEach((cell, index) => {
+                notebook.getCells().forEach((cell, index) => {
                     const metadata = cell.metadata.with({ inputCollapsed: false, outputCollapsed: false });
                     edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
@@ -181,7 +182,7 @@ export class NotebookEditor implements INotebookEditor {
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
-                notebook.cells.forEach((cell, index) => {
+                notebook.getCells().forEach((cell, index) => {
                     const metadata = cell.metadata.with({ inputCollapsed: true, outputCollapsed: true });
                     edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
@@ -267,15 +268,16 @@ export class NotebookEditor implements INotebookEditor {
     public runAbove(cell: NotebookCell | undefined): void {
         if (cell && cell.index > 0) {
             // Get all cellIds until `index`.
-            const cells = this.document.cells.slice(0, cell.index);
-            this.runCellRange(cells);
+            //const cells = this.document.cells.slice(0, cell.index);
+            const cells = this.document.getCells(new NotebookCellRange(0, cell.index));
+            this.runCellRange([...cells]);
         }
     }
     public runCellAndBelow(cell: NotebookCell | undefined): void {
         if (cell && cell.index >= 0) {
             // Get all cellIds starting from `index`.
-            const cells = this.document.cells.slice(cell.index);
-            this.runCellRange(cells);
+            const cells = this.document.getCells(new NotebookCellRange(cell.index, this.document.cellCount));
+            this.runCellRange([...cells]);
         }
     }
     private onClosedDocument(e?: NotebookDocument) {

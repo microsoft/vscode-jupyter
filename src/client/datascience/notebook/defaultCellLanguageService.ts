@@ -69,7 +69,7 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
             // Give preference to the language information in the metadata.
             const language = getLanguageInNotebookMetadata(getNotebookMetadata(doc));
             // Fall back to the language of the first code cell in the notebook.
-            return language || doc.cells.find((cell) => cell.kind === NotebookCellKind.Code)?.document.languageId;
+            return language || doc.getCells().find((cell) => cell.kind === NotebookCellKind.Code)?.document.languageId;
         } catch (ex) {
             traceWarning('Failed to determine language of first cell', ex);
         }

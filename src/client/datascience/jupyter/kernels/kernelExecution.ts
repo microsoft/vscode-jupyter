@@ -53,7 +53,7 @@ export class KernelExecution implements IDisposable {
     public async executeAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
         sendKernelTelemetryEvent(document.uri, Telemetry.ExecuteNativeCell);
         // Only run code cells that are not already running.
-        const cellsThatWeCanRun = document.cells.filter((cell) => cell.kind === NotebookCellKind.Code);
+        const cellsThatWeCanRun = document.getCells().filter((cell) => cell.kind === NotebookCellKind.Code);
         if (cellsThatWeCanRun.length === 0) {
             // This is an unlikely scenario (UI doesn't allow this).
             // Seen this in CI tests when we manually run whole document using the commands.

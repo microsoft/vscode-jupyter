@@ -828,6 +828,6 @@ export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: readon
 
 export function findAssociatedNotebookDocument(cellUri: Uri, vscodeNotebook: IVSCodeNotebook, fs: IFileSystem) {
     return vscodeNotebook.notebookDocuments.find((item) =>
-        item.cells.some((cell) => fs.arePathsSame(cell.document.uri, cellUri))
+        item.getCells().some((cell) => fs.arePathsSame(cell.document.uri, cellUri))
     );
 }
