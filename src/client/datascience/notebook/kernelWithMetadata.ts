@@ -50,7 +50,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly commandManager: ICommandManager
     ) {}
     public interrupt(document: NotebookDocument) {
-        document.cells.forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
+        document.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         this.commandManager
             .executeCommand(Commands.NotebookEditorInterruptKernel)
             .then(noop, (ex) => console.error(ex));
@@ -63,11 +63,13 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
      * resolved, the cell will be put back into the Idle state.
      */
     public async executeCellsRequest(document: NotebookDocument, ranges: NotebookCellRange[]): Promise<void> {
-        const cells = document.cells.filter(
-            (cell) =>
-                cell.kind === NotebookCellKind.Code &&
-                ranges.some((range) => range.start <= cell.index && cell.index < range.end)
-        );
+        const cells = document
+            .getCells()
+            .filter(
+                (cell) =>
+                    cell.kind === NotebookCellKind.Code &&
+                    ranges.some((range) => range.start <= cell.index && cell.index < range.end)
+            );
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
         await cells.map((cell) => this.executeCell(document, cell));
     }

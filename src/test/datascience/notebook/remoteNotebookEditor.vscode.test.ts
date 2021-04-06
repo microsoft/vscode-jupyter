@@ -94,7 +94,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await insertCodeCell('print("123412341234")', { index: 0 });
         await runAllCellsInActiveNotebook();
 
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Wait for MRU to get updated & encrypted storage to get updated.
@@ -111,7 +111,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Cell 2 = `print(a)`
         await runAllCellsInActiveNotebook();
 
-        let cell2 = nbEditor.document.cells![1]!;
+        let cell2 = nbEditor.document.getCells()![1]!;
         await waitForExecutionCompletedSuccessfully(cell2);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
 
@@ -141,13 +141,13 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         // Wait till output is empty for both cells
         await waitForCondition(
-            async () => !nbEditor.document.cells.some((cell) => cell.outputs.length > 0),
+            async () => !nbEditor.document.getCells().some((cell) => cell.outputs.length > 0),
             5_000,
             'Cell output not cleared'
         );
 
         // Execute second cell
-        cell2 = nbEditor.document.cells![1]!;
+        cell2 = nbEditor.document.getCells()![1]!;
         await runCell(cell2);
         await waitForExecutionCompletedSuccessfully(cell2);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);

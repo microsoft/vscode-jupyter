@@ -97,7 +97,7 @@ export class KernelDaemonPreWarmer {
         if (
             isPythonKernel ||
             notebookMetadata ||
-            doc.cells.some((cell: NotebookCell) => {
+            doc.getCells().some((cell: NotebookCell) => {
                 return cell.document.languageId === PYTHON_LANGUAGE;
             })
         ) {

@@ -119,7 +119,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
 
         // Separate for debugging.
-        const hasNativeCells = (this.vscNotebook.activeNotebookEditor?.document.cells.length || 0) > 0;
+        const hasNativeCells = (this.vscNotebook.activeNotebookEditor?.document.cellCount || 0) > 0;
         this.hasNativeNotebookCells.set(hasNativeCells).ignoreErrors();
     }
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {
