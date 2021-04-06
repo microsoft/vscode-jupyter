@@ -43,7 +43,7 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests());
     test('Verify order of outputs in existing ipynb file', async () => {
         await openNotebook(api.serviceContainer, templateIPynb);
-        const cells = window.activeNotebookEditor?.document?.getCells();
+        const cells = window.activeNotebookEditor?.document?.getCells()!;
 
         const expectedOutputItemMimeTypes = [
             [['text/html', 'text/plain']],
