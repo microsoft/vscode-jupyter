@@ -34,8 +34,9 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, (document: NotebookDocument) =>
-                this.interruptKernel(document)
+            commandManager.registerCommand(
+                Commands.NotebookEditorInterruptKernel,
+                (document: NotebookDocument | undefined) => this.interruptKernel(document)
             )
         );
         this.disposableRegistry.push(
@@ -100,6 +101,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     }
 
     private interruptKernel(document: NotebookDocument | undefined) {
+        // `document` may be undefined if this command is invoked from the command palette.
         const target =
             this.provider.activeEditor?.file.toString() === document?.uri.toString()
                 ? this.provider.activeEditor
