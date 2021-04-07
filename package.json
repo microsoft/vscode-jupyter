@@ -827,13 +827,13 @@
                 {
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
-                    "group": "inline/cell@2",
+                    "group": "inline/cell@0",
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
-                    "group": "inline/cell@2",
+                    "group": "inline/cell@0",
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 }
             ],
