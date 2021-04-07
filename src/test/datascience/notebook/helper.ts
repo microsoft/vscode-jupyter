@@ -94,7 +94,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
     if (!activeEditor) {
         throw new Error('No active editor');
     }
-    const startNumber = options?.index ?? activeEditor.document.cells.length;
+    const startNumber = options?.index ?? activeEditor.document.cellCount;
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
         edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
             {
@@ -108,7 +108,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
             }
         ])
     );
-    return activeEditor.document.cells[startNumber]!;
+    return activeEditor.document.cellAt(startNumber)!;
 }
 export async function insertCodeCell(source: string, options?: { language?: string; index?: number }) {
     const { vscodeNotebook } = await getServices();
@@ -116,7 +116,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     if (!activeEditor) {
         throw new Error('No active editor');
     }
-    const startNumber = options?.index ?? activeEditor.document.cells.length;
+    const startNumber = options?.index ?? activeEditor.document.cellCount;
     const edit = new WorkspaceEdit();
     edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
         {
@@ -131,12 +131,12 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     ]);
     await workspace.applyEdit(edit);
 
-    return activeEditor.document.cells[startNumber]!;
+    return activeEditor.document.cellAt(startNumber)!;
 }
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
-    if (!activeEditor || activeEditor.document.cells.length === 0) {
+    if (!activeEditor || activeEditor.document.cellCount === 0) {
         return;
     }
     if (!activeEditor) {
@@ -150,11 +150,11 @@ export async function deleteCell(index: number = 0) {
 export async function deleteAllCellsAndWait() {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
-    if (!activeEditor || activeEditor.document.cells.length === 0) {
+    if (!activeEditor || activeEditor.document.cellCount === 0) {
         return;
     }
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, 0, activeEditor.document.cells.length, [])
+        edit.replaceNotebookCells(activeEditor.document.uri, 0, activeEditor.document.cellCount, [])
     );
 }
 
@@ -460,7 +460,7 @@ export async function prewarmNotebooks() {
         await editorProvider.createNew();
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
-        const cell = vscodeNotebook.activeNotebookEditor!.document.cells[0]!;
+        const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
         await runAllCellsInActiveNotebook();
         // Wait for Jupyter to start.
         await waitForExecutionCompletedSuccessfully(cell, 60_000);
@@ -704,7 +704,7 @@ export async function runAllCellsInActiveNotebook() {
     }
     const document = vscodeNotebook.activeNotebookEditor.document;
     void vscodeNotebook.activeNotebookEditor.kernel.executeCellsRequest(document, [
-        new NotebookCellRange(0, document.cells.length)
+        new NotebookCellRange(0, document.cellCount)
     ]);
 }
 

@@ -167,7 +167,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 // If this is a native notebook, then wait for cell to get executed completely (else VSC can hang).
                 // This is because extension will attempt to update cells, while tests may have deleted/closed notebooks.
                 if (editorProvider.activeEditor?.type === 'native') {
-                    const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+                    const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
                     await waitForExecutionCompletedSuccessfully(cell);
                 }
             } finally {
@@ -191,7 +191,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         await openNotebook(api.serviceContainer, nbFile);
         await waitForKernelToGetAutoSelected();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         assert.equal(cell.outputs.length, 0);
 
         // The prompt should be displayed when we run a cell.

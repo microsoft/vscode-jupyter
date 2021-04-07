@@ -74,10 +74,10 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         let cell4: NotebookCell;
 
         function initializeCells() {
-            cell1 = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-            cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
-            cell3 = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
-            cell4 = vscodeNotebook.activeNotebookEditor?.document.cells![3]!;
+            cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+            cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+            cell3 = vscodeNotebook.activeNotebookEditor?.document.getCells()![2]!;
+            cell4 = vscodeNotebook.activeNotebookEditor?.document.getCells()![3]!;
         }
         initializeCells();
         await runAllCellsInActiveNotebook();

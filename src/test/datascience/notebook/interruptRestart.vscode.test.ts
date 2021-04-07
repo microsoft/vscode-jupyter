@@ -98,7 +98,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
 
     test('Interrupting kernel (Cancelling token) will cancel cell execution', async () => {
         await insertCodeCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', { index: 0 });
-        const cell = vscEditor.document.cells[0];
+        const cell = vscEditor.document.cellAt(0);
         const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const showInformationMessage = sinon.stub(appShell, 'showInformationMessage');
         showInformationMessage.resolves(); // Ignore message to restart kernel.
@@ -133,7 +133,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     test('Restarting kernel will cancel cell execution & we can re-run a cell', async function () {
         traceInfo('Step 1');
         await insertCodeCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', { index: 0 });
-        const cell = vscEditor.document.cells[0];
+        const cell = vscEditor.document.cellAt(0);
         // Ensure we click `Yes` when prompted to restart the kernel.
         const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const showInformationMessage = sinon
@@ -230,7 +230,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await insertCodeCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.2)', { index: 1 });
         await insertCodeCell('3', { index: 2 });
 
-        const [cell1, cell2, cell3] = vscEditor.document.cells;
+        const [cell1, cell2, cell3] = vscEditor.document.getCells();
         const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const showInformationMessage = sinon.stub(appShell, 'showInformationMessage');
         showInformationMessage.resolves(); // Ignore message to restart kernel.

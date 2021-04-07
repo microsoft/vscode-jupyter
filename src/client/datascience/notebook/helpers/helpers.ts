@@ -109,6 +109,11 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
     if (metadata?.language_info?.name && metadata.language_info.name !== PYTHON_LANGUAGE) {
         return false;
     }
+
+    if (kernelSpec?.name.includes(PYTHON_LANGUAGE)) {
+        return true;
+    }
+
     // Valid notebooks will have a language information in the metadata.
     return kernelSpec?.language === PYTHON_LANGUAGE;
 }
@@ -823,6 +828,6 @@ export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: readon
 
 export function findAssociatedNotebookDocument(cellUri: Uri, vscodeNotebook: IVSCodeNotebook, fs: IFileSystem) {
     return vscodeNotebook.notebookDocuments.find((item) =>
-        item.cells.some((cell) => fs.arePathsSame(cell.document.uri, cellUri))
+        item.getCells().some((cell) => fs.arePathsSame(cell.document.uri, cellUri))
     );
 }

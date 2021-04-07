@@ -80,7 +80,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         this.ensureNotebookJson();
     }
     public getCellCount() {
-        return this.document ? this.document.cells.length : this.notebookJson.cells?.length ?? 0;
+        return this.document ? this.document.cellCount : this.notebookJson.cells?.length ?? 0;
     }
     public getNotebookData() {
         return notebookModelToVSCNotebookData(
@@ -96,7 +96,8 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         if (!this.document) {
             return [];
         }
-        return this.document.cells
+        return this.document
+            .getCells()
             .filter((cell) => !cell.document.isClosed)
             .map((cell) => {
                 return {
@@ -135,7 +136,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     }
     protected getJupyterCells() {
         return this.document
-            ? this.document.cells.map(createJupyterCellFromVSCNotebookCell.bind(undefined))
+            ? this.document.getCells().map(createJupyterCellFromVSCNotebookCell.bind(undefined))
             : this.notebookJson.cells || [];
     }
     protected getDefaultNotebookContent() {
