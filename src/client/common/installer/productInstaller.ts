@@ -150,6 +150,18 @@ export class DataScienceInstaller extends BaseInstaller {
                   localize.Common.bannerLabelNo()
               );
 
+        const action =
+            item === localize.Common.bannerLabelYes()
+                ? 'install'
+                : item === localize.Common.bannerLabelNo()
+                ? 'donotinstall'
+                : 'dismissed';
+
+        sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+            action,
+            moduleName: productName
+        });
+
         if (item === localize.Common.bannerLabelYes()) {
             const stopWatch = new StopWatch();
             try {

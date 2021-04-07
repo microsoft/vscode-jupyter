@@ -1,6 +1,13 @@
 # Changelog
 
-## 2021.4.0 (31 March 2021)
+## 2021.5.1 (07 April 2021)
+
+### Code Health
+
+1. Check the responses of prompts for installation of missing packages such as `IPyKernel`.
+   ([#5432](https://github.com/Microsoft/vscode-jupyter/issues/5432))
+
+## 2021.5.0 (31 March 2021)
 
 ### Enhancements
 
