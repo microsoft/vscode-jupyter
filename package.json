@@ -1674,7 +1674,7 @@
                 },
                 "jupyter.variableQueries": {
                     "type": "array",
-                    "description": "Language to query mapping for returning the list of active variables in a Jupyter kernel. Used by the Variable Explorer in both the Interactive Window and Notebooks. Example: \n'[\n{\n   \"language\": \"python\",\n   \"query\": \"%who_ls\",\n  \"parseExpr\": \"'(\\\\w+)'\"\n}\n]'",
+                    "markdownDescription": "Language to query mapping for returning the list of active variables in a Jupyter kernel. Used by the Variable Explorer in both the Interactive Window and Notebooks. Example:\n```\n[\n  {\n    \"language\": \"python\",\n    \"query\": \"%who_ls\",\n    \"parseExpr\": \"'(\\\\w+)'\"\n  }\n]\n```",
                     "scope": "machine",
                     "examples": [
                         [
