@@ -887,9 +887,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
     // the same protection to not be called twice
     // eslint-disable-next-line @typescript-eslint/member-ordering
-    protected async ensureNotebook(serverConnection: INotebookProviderConnection): Promise<void> {
+    protected async ensureNotebook(serverConnection: INotebookProviderConnection, disableUI: boolean): Promise<void> {
         if (!this.notebookPromise) {
-            this.notebookPromise = this.ensureNotebookImpl(serverConnection);
+            this.notebookPromise = this.ensureNotebookImpl(serverConnection, disableUI);
         }
         try {
             await this.notebookPromise;
@@ -911,7 +911,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
         if (providerConnection) {
             try {
-                await this.ensureNotebook(providerConnection);
+                await this.ensureNotebook(providerConnection, true);
             } catch (e) {
                 this.errorHandler.handleError(e).ignoreErrors();
             }
@@ -1000,7 +1000,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 metadata: this.notebookMetadata
             });
             if (serverConnection) {
-                await this.ensureNotebook(serverConnection);
+                await this.ensureNotebook(serverConnection, false);
             }
         } catch (exc) {
             traceError(`Exception attempting to start notebook: `, exc);
@@ -1195,7 +1195,10 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             .then(noop, noop);
     }
 
-    private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook | undefined> {
+    private async createNotebook(
+        serverConnection: INotebookProviderConnection,
+        disableUI: boolean
+    ): Promise<INotebook | undefined> {
         let notebook: INotebook | undefined;
         while (!notebook) {
             try {
@@ -1203,7 +1206,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     identity: this.notebookIdentity.resource,
                     resource: this.owningResource,
                     metadata: this.notebookMetadata,
-                    kernelConnection: this.kernelConnection
+                    kernelConnection: this.kernelConnection,
+                    disableUI
                 });
                 if (notebook) {
                     const executionActivation = { ...this.notebookIdentity, owningResource: this.owningResource };
@@ -1265,7 +1269,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         notebook.registerIOPubListener(this.handleKernelMessage.bind(this));
     }
 
-    private async ensureNotebookImpl(serverConnection: INotebookProviderConnection): Promise<void> {
+    private async ensureNotebookImpl(serverConnection: INotebookProviderConnection, disableUI: boolean): Promise<void> {
         // Create a new notebook if we need to.
         if (!this._notebook) {
             // While waiting make the notebook look busy
@@ -1276,7 +1280,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 language: PYTHON_LANGUAGE
             }).ignoreErrors();
 
-            this._notebook = await this.createNotebook(serverConnection);
+            this._notebook = await this.createNotebook(serverConnection, disableUI);
 
             // If that works notify the UI and listen to status changes.
             if (this._notebook && this._notebook.identity) {
