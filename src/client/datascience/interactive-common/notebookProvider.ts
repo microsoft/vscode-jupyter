@@ -175,9 +175,9 @@ export class NotebookProvider implements INotebookProvider {
         this._potentialKernelChanged.fire({ identity, kernelConnection: kernel });
     }
 
-    private fireConnectionMade() {
+    private fireConnectionMade(disableUI: boolean) {
         // Disable the UI to avoid errors before the user runs a cell
-        this._connectionMade.fire(true);
+        this._connectionMade.fire(disableUI);
     }
 
     // Cache the promise that will return a notebook

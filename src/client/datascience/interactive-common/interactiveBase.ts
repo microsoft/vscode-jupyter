@@ -902,12 +902,13 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     }
 
-    protected async createNotebookIfProviderConnectionExists(disableUI: boolean): Promise<void> {
+    protected async createNotebookIfProviderConnectionExists(disableUI?: boolean): Promise<void> {
         // Check to see if we are already connected to our provider
         const providerConnection = await this.notebookProvider.connect({
             getOnly: true,
             resource: this.owningResource,
-            metadata: this.notebookMetadata
+            metadata: this.notebookMetadata,
+            disableUI
         });
 
         if (providerConnection) {
