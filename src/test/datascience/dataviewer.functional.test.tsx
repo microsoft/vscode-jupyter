@@ -976,7 +976,9 @@ foo = torch.tensor([[[0, 1, 2], [3, 4, 5]]])`;
             // Make sure data viewer is well-behaved when working with very large data
             const numCols = 50;
             const numRows = 6000;
-            await injectCode(`import numpy as np\r\nfoo = np.arange(${numRows} * ${numCols}).reshape(${numRows}, ${numCols})`);
+            await injectCode(
+                `import numpy as np\r\nfoo = np.arange(${numRows} * ${numCols}).reshape(${numRows}, ${numCols})`
+            );
             const gotAllRows = getCompletedPromise(wrapper);
             const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
             assert.ok(dv, 'DataViewer not created');
@@ -986,7 +988,7 @@ foo = torch.tensor([[[0, 1, 2], [3, 4, 5]]])`;
             const expectedCells: number[] = [];
             for (let i = 5999; i >= 0; i++) {
                 expectedCells.push(i);
-                expectedCells.push(...range(i*numCols, i*numCols + numCols));
+                expectedCells.push(...range(i * numCols, i * numCols + numCols));
             }
             sortRows(wrapper.wrapper, '3', false);
             verifyRows(wrapper.wrapper, expectedCells);
