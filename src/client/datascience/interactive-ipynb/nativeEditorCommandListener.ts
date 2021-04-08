@@ -5,7 +5,7 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { NotebookCell, Uri } from 'vscode';
+import { NotebookCell, NotebookDocument, Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -34,7 +34,10 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, () => this.interruptKernel())
+            commandManager.registerCommand(
+                Commands.NotebookEditorInterruptKernel,
+                (document: NotebookDocument | undefined) => this.interruptKernel(document)
+            )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel())
@@ -97,10 +100,14 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         }
     }
 
-    private interruptKernel() {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.interruptKernel().ignoreErrors();
+    private interruptKernel(document: NotebookDocument | undefined) {
+        // `document` may be undefined if this command is invoked from the command palette.
+        const target =
+            this.provider.activeEditor?.file.toString() === document?.uri.toString()
+                ? this.provider.activeEditor
+                : this.provider.editors.find((editor) => editor.file.toString() === document?.uri.toString());
+        if (target) {
+            target.interruptKernel().ignoreErrors();
         }
     }
 
