@@ -176,7 +176,6 @@ export class NotebookProvider implements INotebookProvider {
     }
 
     private fireConnectionMade(disableUI: boolean) {
-        // Disable the UI to avoid errors before the user runs a cell
         this._connectionMade.fire(disableUI);
     }
 
