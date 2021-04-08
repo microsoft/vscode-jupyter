@@ -29,7 +29,7 @@ export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
     private readonly _onSessionStatusChanged = new EventEmitter<{ status: ServerStatus; notebook: INotebook }>();
-    private _connectionMade = new EventEmitter<void>();
+    private _connectionMade = new EventEmitter<boolean>();
     private _potentialKernelChanged = new EventEmitter<{ identity: Uri; kernelConnection: KernelConnectionMetadata }>();
     private _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
@@ -83,7 +83,7 @@ export class NotebookProvider implements INotebookProvider {
         if (await this.rawNotebookProvider.supported()) {
             return this.rawNotebookProvider.connect({
                 ...options,
-                onConnectionMade: this.fireConnectionMade.bind(this)
+                onConnectionMade: this.fireConnectionMade.bind(this, options.disableUI!)
             });
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
@@ -91,7 +91,7 @@ export class NotebookProvider implements INotebookProvider {
         ) {
             return this.jupyterNotebookProvider.connect({
                 ...options,
-                onConnectionMade: this.fireConnectionMade.bind(this)
+                onConnectionMade: this.fireConnectionMade.bind(this, options.disableUI!)
             });
         } else if (!options.getOnly) {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
@@ -175,8 +175,8 @@ export class NotebookProvider implements INotebookProvider {
         this._potentialKernelChanged.fire({ identity, kernelConnection: kernel });
     }
 
-    private fireConnectionMade() {
-        this._connectionMade.fire();
+    private fireConnectionMade(disableUI: boolean) {
+        this._connectionMade.fire(disableUI);
     }
 
     // Cache the promise that will return a notebook
