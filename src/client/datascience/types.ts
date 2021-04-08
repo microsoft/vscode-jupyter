@@ -250,7 +250,7 @@ export type ConnectNotebookProviderOptions = {
     token?: CancellationToken;
     resource: Resource;
     metadata?: nbformat.INotebookMetadata;
-    onConnectionMade?(disableUI: boolean | undefined): void; // Optional callback for when the first connection is made
+    onConnectionMade?(): void; // Optional callback for when the first connection is made
 };
 
 export interface INotebookServerOptions {

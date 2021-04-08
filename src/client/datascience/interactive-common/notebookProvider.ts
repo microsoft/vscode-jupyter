@@ -83,7 +83,7 @@ export class NotebookProvider implements INotebookProvider {
         if (await this.rawNotebookProvider.supported()) {
             return this.rawNotebookProvider.connect({
                 ...options,
-                onConnectionMade: this.fireConnectionMade.bind(this)
+                onConnectionMade: this.fireConnectionMade.bind(this, options.disableUI!)
             });
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
@@ -91,7 +91,7 @@ export class NotebookProvider implements INotebookProvider {
         ) {
             return this.jupyterNotebookProvider.connect({
                 ...options,
-                onConnectionMade: this.fireConnectionMade.bind(this)
+                onConnectionMade: this.fireConnectionMade.bind(this, options.disableUI!)
             });
         } else if (!options.getOnly) {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
