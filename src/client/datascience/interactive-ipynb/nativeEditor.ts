@@ -448,7 +448,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     protected async createNotebookIfProviderConnectionExists() {
         if (this._model.isTrusted) {
-            await super.createNotebookIfProviderConnectionExists();
+            // Disable the UI to avoid errors before the user runs a cell
+            await super.createNotebookIfProviderConnectionExists(true);
         }
     }
 

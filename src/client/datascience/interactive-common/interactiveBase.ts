@@ -229,8 +229,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
 
         // If we have already auto started our server then we can go ahead and try to create a notebook on construction
+        // Disable the UI to avoid errors before the user runs a cell
         setTimeout(() => {
-            this.createNotebookIfProviderConnectionExists().ignoreErrors();
+            this.createNotebookIfProviderConnectionExists(true).ignoreErrors();
         }, 0);
     }
 
@@ -887,7 +888,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
     // the same protection to not be called twice
     // eslint-disable-next-line @typescript-eslint/member-ordering
-    protected async ensureNotebook(serverConnection: INotebookProviderConnection, disableUI: boolean): Promise<void> {
+    protected async ensureNotebook(serverConnection: INotebookProviderConnection, disableUI = false): Promise<void> {
         if (!this.notebookPromise) {
             this.notebookPromise = this.ensureNotebookImpl(serverConnection, disableUI);
         }
@@ -901,7 +902,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     }
 
-    protected async createNotebookIfProviderConnectionExists(): Promise<void> {
+    protected async createNotebookIfProviderConnectionExists(disableUI: boolean): Promise<void> {
         // Check to see if we are already connected to our provider
         const providerConnection = await this.notebookProvider.connect({
             getOnly: true,
@@ -911,7 +912,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
         if (providerConnection) {
             try {
-                await this.ensureNotebook(providerConnection, true);
+                await this.ensureNotebook(providerConnection, disableUI);
             } catch (e) {
                 this.errorHandler.handleError(e).ignoreErrors();
             }
@@ -1000,7 +1001,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 metadata: this.notebookMetadata
             });
             if (serverConnection) {
-                await this.ensureNotebook(serverConnection, false);
+                await this.ensureNotebook(serverConnection);
             }
         } catch (exc) {
             traceError(`Exception attempting to start notebook: `, exc);

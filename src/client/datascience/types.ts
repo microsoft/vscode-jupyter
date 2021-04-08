@@ -1220,7 +1220,7 @@ export interface INotebookProvider {
     /**
      * Fired just the first time that this provider connects
      */
-    onConnectionMade: Event<void>;
+    onConnectionMade: Event<boolean>;
     /**
      * Fired when a kernel would have been changed if a notebook had existed.
      */
