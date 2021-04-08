@@ -847,7 +847,6 @@ module.exports = {
         'src/client/datascience/liveshare/liveshareProxy.ts',
         'src/client/datascience/liveshare/postOffice.ts',
         'src/client/datascience/messages.ts',
-        'src/client/datascience/raw-kernel/rawNotebookProvider.ts',
         'src/client/datascience/raw-kernel/liveshare/guestRawNotebookProvider.ts',
         'src/client/datascience/raw-kernel/rawKernel.ts',
         'src/client/datascience/raw-kernel/rawSocket.ts',
