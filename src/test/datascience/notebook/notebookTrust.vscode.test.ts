@@ -389,6 +389,8 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
                 const model = storageProvider.get(ipynbFile)!;
                 assert.isTrue(model.isTrusted);
                 await waitForCondition(async () => assertDocumentTrust(true, withOutput), 10_000, 'Not trusted');
+                // Try to run a cell
+                await runAllCellsInActiveNotebook();
                 // Verify cells executed
                 assert.ok(numberOfExecutedCells(document!) > 0, 'Cells not executed for trusted document');
             });
