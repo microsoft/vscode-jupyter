@@ -40,15 +40,15 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         this.disposables.push(this.commandManager.registerCommand(Commands.NotebookTrusted, () => noop(), this));
     }
     @swallowExceptions('Trusting notebook')
-    private async onTrustNotebook(uri?: Uri) {
+    private async onTrustNotebook(uri?: Uri): Promise<boolean> {
         uri = uri ?? this.editorProvider.activeEditor?.file;
         if (!uri) {
-            return;
+            return true;
         }
 
         const model = await this.storageProvider.getOrCreateModel({ file: uri });
         if (model.isTrusted) {
-            return;
+            return true;
         }
         traceInfo('Display prompt to trust notebook');
         const selection = await this.applicationShell.showErrorMessage(
@@ -77,6 +77,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
             default:
                 break;
         }
+        return selection === DataScience.trustNotebook();
     }
     private async trustNotebook(model: INotebookModel) {
         // Update model trust
