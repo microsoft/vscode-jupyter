@@ -703,7 +703,7 @@ export async function runAllCellsInActiveNotebook() {
         throw new Error('No notebook or kernel');
     }
     const document = vscodeNotebook.activeNotebookEditor.document;
-    void vscodeNotebook.activeNotebookEditor.kernel.executeCellsRequest(document, [
+    await vscodeNotebook.activeNotebookEditor.kernel.executeCellsRequest(document, [
         new NotebookCellRange(0, document.cellCount)
     ]);
 }

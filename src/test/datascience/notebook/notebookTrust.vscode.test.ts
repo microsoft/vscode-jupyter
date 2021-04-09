@@ -14,7 +14,10 @@ import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
-import { deleteKernelMetadataForTests } from '../../../client/datascience/notebook/helpers/helpers';
+import {
+    deleteKernelMetadataForTests,
+    NotebookCellStateTracker
+} from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
@@ -31,6 +34,7 @@ import {
     insertCodeCell,
     runAllCellsInActiveNotebook,
     saveActiveNotebook,
+    waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from './helper';
 
@@ -97,11 +101,13 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
         return true;
     }
 
-    function numberOfExecutedCells(document: NotebookDocument) {
+    function noCellsExecuted(document: NotebookDocument) {
         const cells = document.getCells();
-        return cells.filter((cell) => {
-            return cell.latestExecutionSummary?.duration !== undefined;
-        }).length;
+        return (
+            cells.filter((cell) => {
+                return NotebookCellStateTracker.getCellState(cell) === undefined;
+            }).length === cells.length
+        );
     }
 
     [true, false].forEach((withOutput) => {
@@ -364,7 +370,7 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
                 // Verify trust prompt comes up
                 assert.ok(doNotTrustPrompt.calledOnce, 'Trust prompt was not shown');
                 // No cells should have been executed
-                assert.ok(numberOfExecutedCells(document!) === 0, 'Cells were executed for untrusted notebook');
+                assert.ok(noCellsExecuted(document!), 'Cells were executed for untrusted notebook');
                 sandbox.restore();
 
                 // Set up trust prompt stub to select 'Trust notebook'
@@ -389,10 +395,10 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
                 const model = storageProvider.get(ipynbFile)!;
                 assert.isTrue(model.isTrusted);
                 await waitForCondition(async () => assertDocumentTrust(true, withOutput), 10_000, 'Not trusted');
-                // Try to run a cell
-                await runAllCellsInActiveNotebook();
                 // Verify cells executed
-                assert.ok(numberOfExecutedCells(document!) > 0, 'Cells not executed for trusted document');
+                const firstCell = document?.cellAt(0);
+                assert.ok(firstCell !== undefined, '1st cell unexpectedly missing from notebook');
+                await waitForExecutionCompletedSuccessfully(firstCell!);
             });
         });
     });
