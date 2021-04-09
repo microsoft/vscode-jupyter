@@ -13,6 +13,8 @@
    ([#5419](https://github.com/Microsoft/vscode-jupyter/issues/5419))
 1. Enable correct plot background for Native Notebooks.
    ([#5353](https://github.com/Microsoft/vscode-jupyter/issues/5353))
+1. Stop asking users to install ipykernel on autostart, only do it when a cell is ran.
+   ([#5368](https://github.com/microsoft/vscode-jupyter/issues/5368))
 
 ## 2021.5.0 (31 March 2021)
 
