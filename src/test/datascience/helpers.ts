@@ -15,7 +15,7 @@ import {
 } from '../../client/datascience/interactive-ipynb/nativeEditorOldWebView';
 import { INotebookEditorProvider } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import { CommandSource } from '../../client/testing/common/constants';
+// import { CommandSource } from '../../client/testing/common/constants';
 import { waitForCondition } from '../common';
 import { trustNotebook } from './notebook/helper';
 
@@ -94,7 +94,8 @@ export async function openNotebook(
     }
     traceInfo(`Opening notebook ${ipynbFile}`);
     const cmd = serviceContainer.get<ICommandManager>(ICommandManager);
-    await cmd.executeCommand(Commands.OpenNotebook, Uri.file(ipynbFile), undefined, CommandSource.commandPalette);
+    //await cmd.executeCommand(Commands.OpenNotebook, Uri.file(ipynbFile), undefined, CommandSource.commandPalette);
+    await cmd.executeCommand(Commands.OpenNotebookInPreviewEditor, Uri.file(ipynbFile));
     const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     traceInfo('Wait for notebook to be the active editor');
     await waitForCondition(
