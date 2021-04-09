@@ -382,10 +382,14 @@ export class InterpreterService implements IInterpreterService {
             .then((api) => {
                 if (!this.eventHandlerAdded) {
                     this.eventHandlerAdded = true;
-                    api.onDidChangeInterpreter(() => { 
-                        this.didChangeInterpreter.fire();
-                        this.workspaceCachedActiveInterpreter.clear();
-                    }, this, this.disposables);
+                    api.onDidChangeInterpreter(
+                        () => {
+                            this.didChangeInterpreter.fire();
+                            this.workspaceCachedActiveInterpreter.clear();
+                        },
+                        this,
+                        this.disposables
+                    );
                 }
             })
             .catch(noop);
