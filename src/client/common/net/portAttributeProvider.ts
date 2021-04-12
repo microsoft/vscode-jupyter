@@ -21,23 +21,22 @@ export class PortAttributesProviders implements PortAttributesProvider, IExtensi
             traceError('Failure in registering port attributes', ex);
         }
     }
-    public providePortAttributes(
-        ports: number[],
+    providePortAttributes(
+        port: number,
         _pid: number | undefined,
         _commandLine: string | undefined,
         _token: CancellationToken
-    ): PortAttributes[] {
+    ): PortAttributes | undefined {
         try {
-            return ports
-                .filter((port) => KernelLauncher.usedPorts.includes(port) || NotebookStarter.usedPorts.includes(port))
-                .map((port) => ({
+            if (KernelLauncher.usedPorts.includes(port) || NotebookStarter.usedPorts.includes(port)) {
+                return {
                     autoForwardAction: PortAutoForwardAction.Ignore,
                     port
-                }));
+                };
+            }
         } catch (ex) {
             // In case proposed API changes.
             traceError('Failure in returning port attributes', ex);
-            return [];
         }
     }
 }

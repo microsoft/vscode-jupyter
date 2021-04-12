@@ -61,9 +61,7 @@ export function translateCellToNative(
         const query = '?query#';
         return {
             index: 0,
-            metadata: new NotebookCellMetadata().with({
-                hasExecutionOrder: true
-            }),
+            metadata: new NotebookCellMetadata(),
             latestExecutionSummary: {
                 executionOrder: cell.data.execution_count as number,
                 success: true,

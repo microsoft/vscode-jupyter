@@ -173,17 +173,45 @@ export interface NotebookDocument {
     readonly uri: Uri;
     readonly version: number;
 
+    /** @deprecated Use `uri` instead */
     // todo@API don't have this...
     readonly fileName: string;
 
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
-    readonly cells: ReadonlyArray<NotebookCell>;
+
+    /**
+     * `true` if the notebook has been closed. A closed notebook isn't synchronized anymore
+     * and won't be re-used when the same resource is opened again.
+     */
+    readonly isClosed: boolean;
 
     readonly metadata: NotebookDocumentMetadata;
 
     // todo@API should we really expose this?
     readonly viewType: string;
+
+    /**
+     * The number of cells in the notebook document.
+     */
+    readonly cellCount: number;
+
+    /**
+     * Return the cell at the specified index. The index will be adjusted to the notebook.
+     *
+     * @param index - The index of the cell to retrieve.
+     * @return A [cell](#NotebookCell).
+     */
+    cellAt(index: number): NotebookCell;
+
+    /**
+     * Get the cells of this notebook. A subset can be retrieved by providing
+     * a range. The range will be adjuset to the notebook.
+     *
+     * @param range A notebook range.
+     * @returns The cells contained by the range or all cells.
+     */
+    getCells(range?: NotebookCellRange): ReadonlyArray<NotebookCell>;
 
     /**
      * Save the document. The saving will be handled by the corresponding content provider
@@ -195,6 +223,7 @@ export interface NotebookDocument {
     save(): Thenable<boolean>;
 }
 
+// todo@API RENAME to NotebookRange
 // todo@API maybe have a NotebookCellPosition sibling
 export class NotebookCellRange {
     readonly start: number;
@@ -206,6 +235,8 @@ export class NotebookCellRange {
     readonly isEmpty: boolean;
 
     constructor(start: number, end: number);
+
+    with(change: { start?: number; end?: number }): NotebookCellRange;
 }
 
 export enum NotebookEditorRevealType {
@@ -260,16 +291,7 @@ export interface NotebookEditor {
     /**
      * The column in which this editor shows.
      */
-    // @jrieken
-    // this is not implemented...
     readonly viewColumn?: ViewColumn;
-
-    /**
-     * @deprecated
-     */
-    // @rebornix REMOVE/REplace NotebookCommunication
-    // todo@API fishy? notebooks are public objects, there should be a "global" events for this
-    readonly onDidDispose: Event<void>;
 }
 
 export interface NotebookDocumentMetadataChangeEvent {
@@ -598,13 +620,6 @@ export interface NotebookContentProvider {
     readonly options?: NotebookDocumentContentOptions;
     readonly onDidChangeNotebookContentOptions?: Event<NotebookDocumentContentOptions>;
 
-    // todo@API remove! against separation of data provider and renderer
-    /**
-     * @deprecated
-     */
-    // eslint-disable-next-line vscode-dts-cancellation
-    resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Thenable<void>;
-
     /**
      * Content providers should always use [file system providers](#FileSystemProvider) to
      * resolve the raw content for `uri` as the resouce is not necessarily a file on disk.
@@ -730,10 +745,10 @@ export interface NotebookCellExecutionTask {
     readonly token: CancellationToken;
 
     clearOutput(cellIndex?: number): Thenable<void>;
-    appendOutput(out: NotebookCellOutput[], cellIndex?: number): Thenable<void>;
-    replaceOutput(out: NotebookCellOutput[], cellIndex?: number): Thenable<void>;
-    appendOutputItems(items: NotebookCellOutputItem[], outputId: string): Thenable<void>;
-    replaceOutputItems(items: NotebookCellOutputItem[], outputId: string): Thenable<void>;
+    appendOutput(out: NotebookCellOutput | NotebookCellOutput[], cellIndex?: number): Thenable<void>;
+    replaceOutput(out: NotebookCellOutput | NotebookCellOutput[], cellIndex?: number): Thenable<void>;
+    appendOutputItems(items: NotebookCellOutputItem | NotebookCellOutputItem[], outputId: string): Thenable<void>;
+    replaceOutputItems(items: NotebookCellOutputItem | NotebookCellOutputItem[], outputId: string): Thenable<void>;
 }
 
 export enum NotebookCellExecutionState {
@@ -765,6 +780,14 @@ export interface NotebookDocumentFilter {
     viewType?: string | string[];
     filenamePattern?: NotebookFilenamePattern;
 }
+
+// export interface NotebookFilter {
+// 	readonly viewType?: string;
+// 	readonly scheme?: string;
+// 	readonly pattern?: GlobPattern;
+// }
+
+// export type NotebookSelector = NotebookFilter | string | ReadonlyArray<NotebookFilter | string>;
 
 // todo@API very unclear, provider MUST not return alive object but only data object
 // todo@API unclear how the flow goes
@@ -932,16 +955,16 @@ export interface PortAttributes {
 
 export interface PortAttributesProvider {
     /**
-     * Provides attributes for the given ports. For ports that your extension doesn't know about, simply don't include
-     * them in the returned array. For example, if `providePortAttributes` is called with ports [3000, 4000] but your
-     * extension doesn't know anything about those ports you can return an empty array.
+     * Provides attributes for the given port. For ports that your extension doesn't know about, simply
+     * return undefined. For example, if `providePortAttributes` is called with ports 3000 but your
+     * extension doesn't know anything about 3000 you should return undefined.
      */
     providePortAttributes(
-        ports: number[],
+        port: number,
         pid: number | undefined,
         commandLine: string | undefined,
         token: CancellationToken
-    ): ProviderResult<PortAttributes[]>;
+    ): ProviderResult<PortAttributes>;
 }
 
 export namespace workspace {
@@ -952,12 +975,13 @@ export namespace workspace {
      * ignored, since they don't need to be user facing.
      *
      * @param portSelector If registerPortAttributesProvider is called after you start your process then you may already
-     * know the range of ports or the pid of your process.
+     * know the range of ports or the pid of your process. All properties of a the portSelector must be true for your
+     * provider to get called.
      * The `portRange` is start inclusive and end exclusive.
      * @param provider The PortAttributesProvider
      */
     export function registerPortAttributesProvider(
-        portSelector: { pid?: number; portRange?: [number, number] },
+        portSelector: { pid?: number; portRange?: [number, number]; commandMatcher?: RegExp },
         provider: PortAttributesProvider
     ): Disposable;
 }

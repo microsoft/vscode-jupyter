@@ -217,7 +217,6 @@ export function notebookModelToVSCNotebookData(
             custom: notebookContentWithoutCells, // Include metadata in VSC Model (so that VSC can display these if required)
             cellEditable: isNotebookTrusted,
             editable: isNotebookTrusted,
-            cellHasExecutionOrder: true,
             trusted: isNotebookTrusted
         })
     );
@@ -295,7 +294,6 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        hasExecutionOrder: false,
         custom: getNotebookCellMetadata(cell)
     });
     return new NotebookCellData(
@@ -321,7 +319,6 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
 function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        hasExecutionOrder: false,
         custom: getNotebookCellMetadata(cell)
     });
     return new NotebookCellData(
@@ -347,7 +344,6 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
 
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        hasExecutionOrder: true,
         statusMessage,
         custom: getNotebookCellMetadata(cell)
     });

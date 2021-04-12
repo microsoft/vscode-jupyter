@@ -21,7 +21,6 @@ export namespace vscMockExtHostedTypes {
             public readonly editable?: boolean,
             public readonly breakpointMargin?: boolean,
             public readonly runnable?: boolean,
-            public readonly hasExecutionOrder?: boolean,
             public readonly executionOrder?: number,
             public readonly runState?: NotebookCellRunState,
             public readonly runStartTime?: number,
@@ -37,7 +36,6 @@ export namespace vscMockExtHostedTypes {
             editable?: boolean | null;
             breakpointMargin?: boolean | null;
             runnable?: boolean | null;
-            hasExecutionOrder?: boolean | null;
             executionOrder?: number | null;
             runState?: NotebookCellRunState | null;
             runStartTime?: number | null;
@@ -51,7 +49,6 @@ export namespace vscMockExtHostedTypes {
                 change.editable || this.editable,
                 change.breakpointMargin || this.breakpointMargin,
                 change.runnable || this.runnable,
-                change.hasExecutionOrder || this.hasExecutionOrder,
                 change.executionOrder || this.executionOrder,
                 change.runState || this.runState,
                 change.runStartTime || this.runStartTime,

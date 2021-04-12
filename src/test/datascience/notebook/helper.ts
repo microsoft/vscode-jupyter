@@ -101,9 +101,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
                 kind: NotebookCellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
                 source,
-                metadata: new NotebookCellMetadata().with({
-                    hasExecutionOrder: false
-                }),
+                metadata: new NotebookCellMetadata(),
                 outputs: []
             }
         ])
@@ -123,9 +121,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
             kind: NotebookCellKind.Code,
             language: options?.language || PYTHON_LANGUAGE,
             source,
-            metadata: new NotebookCellMetadata().with({
-                hasExecutionOrder: true
-            }),
+            metadata: new NotebookCellMetadata(),
             outputs: []
         }
     ]);
