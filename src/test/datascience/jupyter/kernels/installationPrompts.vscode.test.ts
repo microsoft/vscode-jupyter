@@ -114,6 +114,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     [true, false].forEach((which, i) => {
         // Use index on test name as it messes up regex matching
         test(`Ensure prompt is displayed when ipykernel module is not found and it gets installed ${i}`, async function () {
+            if (!(await canRunNotebookTests()) || IS_REMOTE_NATIVE_TEST) {
+                return this.skip();
+            }
             // Confirm message is displayed & we click 'Install` button.
             const prompt = await hijackPrompt(
                 'showErrorMessage',
