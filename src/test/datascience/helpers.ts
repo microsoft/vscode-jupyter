@@ -105,8 +105,8 @@ export async function openNotebook(
         30_000,
         'Notebook not opened, editors.lenght = ' +
             editorProvider.editors.length +
-            ', activeEditor.file.fsPath = ' +
-            editorProvider.activeEditor?.file.fsPath +
+            ', activeEditor = ' +
+            editorProvider.activeEditor +
             ', path.basename(ipynbFile) = ' +
             path.basename(ipynbFile)
     );
