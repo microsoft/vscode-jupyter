@@ -14,7 +14,7 @@ import { createDeferred } from '../../../../client/common/utils/async';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { INotebookEditorProvider } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
-import { IS_CI_SERVER } from '../../../ciConstants';
+// import { IS_CI_SERVER } from '../../../ciConstants';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
@@ -60,7 +60,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             return this.skip();
         }
         if (
-            (IS_CI_SERVER && getOSType() !== OSType.Linux) ||
+            // (IS_CI_SERVER && getOSType() !== OSType.Linux) ||
             !fs.pathExistsSync(venvPythonPath) ||
             !fs.pathExistsSync(venvNoRegPath)
         ) {
