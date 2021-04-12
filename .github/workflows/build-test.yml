@@ -141,17 +141,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      # - name: Cache pip files
-      #   uses: actions/cache@v2.1.4
-      #   with:
-      #     path: ~/.cache/pip
-      #     key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}
+      - name: Cache pip files
+        uses: actions/cache@v2.1.4
+        with:
+          path: ~/.cache/pip
+          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{env.PYTHON_VERSION}}
 
-      # - name: Cache npm files
-      #   uses: actions/cache@v2.1.4
-      #   with:
-      #     path: ~/.npm
-      #     key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+      - name: Cache npm files
+        uses: actions/cache@v2.1.4
+        with:
+          path: ~/.npm
+          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       # - name: Install dependencies (npm ci)
       #   run: npm ci --prefer-offline
@@ -206,20 +206,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-  #     - name: Use Node ${{env.NODE_VERSION}}
-  #       uses: actions/setup-node@v2.1.5
-  #       with:
-  #         node-version: ${{env.NODE_VERSION}}
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.5
+        with:
+          node-version: ${{env.NODE_VERSION}}
 
-  #     # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
-  #     - name: Cache npm on linux/mac
-  #       uses: actions/cache@v2.1.4
-  #       if: matrix.os != 'windows-latest'
-  #       with:
-  #         path: ~/.npm
-  #         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-node-
+      # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
+      - name: Cache npm on linux/mac
+        uses: actions/cache@v2.1.4
+        if: matrix.os != 'windows-latest'
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
   #     - name: Get npm cache directory
   #       if: matrix.os == 'windows-latest'
@@ -273,30 +273,30 @@ jobs:
   #         path: .nyc_output
   #         retention-days: 1
 
-  # tests:
-  #   needs: pick_environment
-  #   name: Functional Jupyter Tests
-  #   runs-on: ${{ matrix.os }}
-  #   if: github.repository == 'microsoft/vscode-jupyter'
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
-  #       python: [3.8]
-  #       test-suite: [group1, group2, group3, group4]
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
+  tests:
+    needs: pick_environment
+    name: Functional Jupyter Tests
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'microsoft/vscode-jupyter'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
+        python: [3.8]
+        test-suite: [group1, group2, group3, group4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-  #     - name: Use conda for group1 and group3
-  #       if: matrix.test-suite == 'group1' || matrix.test-suite == 'group3'
-  #       run: |
-  #         echo "conda_python=true" >> $GITHUB_ENV
+      - name: Use conda for group1 and group3
+        if: matrix.test-suite == 'group1' || matrix.test-suite == 'group3'
+        run: |
+          echo "conda_python=true" >> $GITHUB_ENV
 
-  #     - name: Use Python ${{matrix.python}}
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: ${{matrix.python}}
+      - name: Use Python ${{matrix.python}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{matrix.python}}
 
   #     - name: Use Conda Python ${{matrix.python}}
   #       uses: conda-incubator/setup-miniconda@v2
