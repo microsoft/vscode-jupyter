@@ -9,7 +9,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
-import { traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { DataScience } from '../../common/utils/localize';
@@ -40,15 +40,15 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
         this.disposables.push(this.commandManager.registerCommand(Commands.NotebookTrusted, () => noop(), this));
     }
     @swallowExceptions('Trusting notebook')
-    private async onTrustNotebook(uri?: Uri) {
+    private async onTrustNotebook(uri?: Uri): Promise<boolean> {
         uri = uri ?? this.editorProvider.activeEditor?.file;
         if (!uri) {
-            return;
+            return true;
         }
 
         const model = await this.storageProvider.getOrCreateModel({ file: uri });
         if (model.isTrusted) {
-            return;
+            return true;
         }
         traceInfo('Display prompt to trust notebook');
         const selection = await this.applicationShell.showErrorMessage(
@@ -65,10 +65,14 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
                 sendTelemetryEvent(Telemetry.TrustAllNotebooks);
                 break;
             case DataScience.trustNotebook():
-                if (model instanceof VSCodeNotebookModel) {
-                    await this.trustNativeNotebook(model);
-                } else {
-                    await this.trustNotebook(model);
+                try {
+                    if (model instanceof VSCodeNotebookModel) {
+                        await this.trustNativeNotebook(model);
+                    } else {
+                        await this.trustNotebook(model);
+                    }
+                } catch (e) {
+                    traceError('Error while trusting notebook', e);
                 }
                 break;
             case DataScience.doNotTrustNotebook():
@@ -77,6 +81,7 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
             default:
                 break;
         }
+        return selection === DataScience.trustNotebook();
     }
     private async trustNotebook(model: INotebookModel) {
         // Update model trust

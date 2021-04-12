@@ -63,6 +63,13 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
      * resolved, the cell will be put back into the Idle state.
      */
     public async executeCellsRequest(document: NotebookDocument, ranges: NotebookCellRange[]): Promise<void> {
+        // When we receive a cell execute request, first ensure that the notebook is trusted.
+        // If it isn't already trusted, block execution until the user trusts it.
+        const isTrusted = await this.commandManager.executeCommand(Commands.TrustNotebook, document.uri);
+        if (!isTrusted) {
+            return;
+        }
+        // Notebook is trusted. Continue to execute cells
         const cells = document
             .getCells()
             .filter(
@@ -71,7 +78,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
                     ranges.some((range) => range.start <= cell.index && cell.index < range.end)
             );
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
-        await cells.map((cell) => this.executeCell(document, cell));
+        await Promise.all(cells.map((cell) => this.executeCell(document, cell)));
     }
 
     private executeCell(doc: NotebookDocument, cell: NotebookCell) {
