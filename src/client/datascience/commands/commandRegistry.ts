@@ -9,7 +9,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
@@ -458,9 +458,12 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async createNewNotebook(): Promise<void> {
+        traceInfo('1111111111111111111111');
         if (this.useNativeNotebook) {
+            traceInfo('uses native');
             await this.nativeNotebookCreator.createNewNotebook();
         } else {
+            traceInfo('uses old');
             await this.notebookEditorProvider.createNew();
         }
     }
