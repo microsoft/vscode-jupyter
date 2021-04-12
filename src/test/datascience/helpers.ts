@@ -103,7 +103,12 @@ export async function openNotebook(
             !!editorProvider.activeEditor &&
             editorProvider.activeEditor.file.fsPath.endsWith(path.basename(ipynbFile)),
         30_000,
-        'Notebook not opened'
+        'Notebook not opened, editors.lenght = ' +
+            editorProvider.editors.length +
+            ', activeEditor.file.fsPath = ' +
+            editorProvider.activeEditor?.file.fsPath +
+            ', path.basename(ipynbFile) = ' +
+            path.basename(ipynbFile)
     );
 
     if (
