@@ -25,6 +25,7 @@ import { verifyViewVariables } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../client/common/logger';
+import { createDeferred, createDeferredFromPromise } from '../../../client/common/utils/async';
 
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
@@ -74,7 +75,7 @@ suite('DataScience - VariableView', () => {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test showing the basic variable view with a value or two
-    test('IANHU Can show VariableView (webview-test)', async function () {
+    test('Can show VariableView (webview-test)', async function () {
         //return this.skip();
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
@@ -152,12 +153,16 @@ suite('DataScience - VariableView', () => {
         await commandManager.executeCommand(Commands.OpenVariableView);
 
         // Aquire the variable view from the provider
-        const coreVariableView2 = await variableViewProvider.activeVariableView;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const variableView2 = (coreVariableView2 as any) as ITestWebviewHost;
+        //const coreVariableView2 = await variableViewProvider.activeVariableView;
+        //// eslint-disable-next-line @typescript-eslint/no-explicit-any
+        //const variableView2 = (coreVariableView2 as any) as ITestWebviewHost;
 
         // Add our message listener
-        const onMessageListener2 = new OnMessageListener(variableView2);
+        //const onMessageListener2 = new OnMessageListener(variableView);
+
+        const varsDone = createDeferredFromPromise(
+            onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete)
+        );
 
         // Execute a second cell on the second document
         await insertCodeCell('test3 = "MYTESTVALUE3"', { index: 1 });
@@ -166,9 +171,12 @@ suite('DataScience - VariableView', () => {
         await waitForExecutionCompletedSuccessfully(cell3);
 
         // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
-        await onMessageListener2.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+        await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
 
-        const htmlResult2 = await variableView2?.getHTMLById('variable-view-main-panel');
+        //const htmlResult2 = await variableView2?.getHTMLById('variable-view-main-panel');
+        //await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+
+        const htmlResult2 = await variableView?.getHTMLById('variable-view-main-panel');
 
         // Parse the HTML for our expected variables
         const expectedVariables2 = [
