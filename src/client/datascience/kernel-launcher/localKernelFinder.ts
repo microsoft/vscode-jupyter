@@ -224,7 +224,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                                 return interpreter;
                             });
                     }
-                    // No interpreter found. If python, use the active interpreter anyway
                     const result: KernelSpecConnectionMetadata = {
                         kind: 'startUsingKernelSpec',
                         kernelSpec: k,
