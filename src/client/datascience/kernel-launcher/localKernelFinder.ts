@@ -11,7 +11,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IExtensionContext, IPathUtils, Resource } from '../../common/types';
+import { IExtensionContext, IPathUtils, ReadWrite, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -189,35 +189,52 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         let filteredInterpreters = [...interpreters];
 
         // Then go through all of the kernels and generate their metadata
-        const kernelMetadata = kernelSpecs.map((k) => {
-            // Find the interpreter that matches. If we find one, we want to use
-            // this to start the kernel.
-            const matchingInterpreters = this.findMatchingInterpreters(k, interpreters);
-            if (matchingInterpreters && matchingInterpreters.length) {
-                const result: PythonKernelConnectionMetadata = {
-                    kind: 'startUsingPythonInterpreter',
-                    kernelSpec: k,
-                    interpreter: matchingInterpreters[0],
-                    id: getKernelId(k, matchingInterpreters[0])
-                };
+        const kernelMetadata = await Promise.all(
+            kernelSpecs.map(async (k) => {
+                // Find the interpreter that matches. If we find one, we want to use
+                // this to start the kernel.
+                const matchingInterpreters = this.findMatchingInterpreters(k, interpreters);
+                if (matchingInterpreters && matchingInterpreters.length) {
+                    const result: PythonKernelConnectionMetadata = {
+                        kind: 'startUsingPythonInterpreter',
+                        kernelSpec: k,
+                        interpreter: matchingInterpreters[0],
+                        id: getKernelId(k, matchingInterpreters[0])
+                    };
 
-                // If interpreters were found, remove them from the interpreter list we'll eventually
-                // return as interpreter only items
-                filteredInterpreters = filteredInterpreters.filter((i) => !matchingInterpreters.includes(i));
+                    // If interpreters were found, remove them from the interpreter list we'll eventually
+                    // return as interpreter only items
+                    filteredInterpreters = filteredInterpreters.filter((i) => !matchingInterpreters.includes(i));
 
-                // Return our metadata that uses an interpreter to start
-                return result;
-            } else {
-                // No interpreter found. If python, use the active interpreter anyway
-                const result: KernelSpecConnectionMetadata = {
-                    kind: 'startUsingKernelSpec',
-                    kernelSpec: k,
-                    interpreter: k.language === PYTHON_LANGUAGE ? activeInterpreter : undefined,
-                    id: getKernelId(k, activeInterpreter)
-                };
-                return result;
-            }
-        });
+                    // Return our metadata that uses an interpreter to start
+                    return result;
+                } else {
+                    let interpreter = k.language === PYTHON_LANGUAGE ? activeInterpreter : undefined;
+                    // If the interpreter information is stored in kernelspec.json then use that to determine the interpreter.
+                    if (
+                        k.language === PYTHON_LANGUAGE &&
+                        this.extensionChecker.isPythonExtensionInstalled &&
+                        k.metadata?.interpreter?.path &&
+                        k.metadata?.interpreter?.path !== activeInterpreter?.path
+                    ) {
+                        interpreter = await this.interpreterService
+                            .getInterpreterDetails(k.metadata?.interpreter?.path)
+                            .catch((ex) => {
+                                traceError(`Failed to get interpreter details for Kernel Spec ${k.specFile}`, ex);
+                                return interpreter;
+                            });
+                    }
+                    // No interpreter found. If python, use the active interpreter anyway
+                    const result: KernelSpecConnectionMetadata = {
+                        kind: 'startUsingKernelSpec',
+                        kernelSpec: k,
+                        interpreter,
+                        id: getKernelId(k, activeInterpreter)
+                    };
+                    return result;
+                }
+            })
+        );
 
         // Combine the two into our list
         const results = [
@@ -424,7 +441,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
-        let kernelJson;
+        let kernelJson: ReadWrite<IJupyterKernelSpec>;
         try {
             traceInfo(`Loading kernelspec from ${specPath} for ${interpreter?.path}`);
             kernelJson = JSON.parse(await this.fs.readLocalFile(specPath));
@@ -447,7 +464,13 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 ? interpreter?.displayName || kernelJson.display_name
                 : kernelJson.display_name;
 
-        const kernelSpec: IJupyterKernelSpec = new JupyterKernelSpec(kernelJson, specPath, interpreter?.path);
+        const kernelSpec: IJupyterKernelSpec = new JupyterKernelSpec(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            kernelJson as any,
+            specPath,
+            // Interpreter information may be saved in the metadata (if this is a kernel spec created/registered by us).
+            interpreter?.path || kernelJson?.metadata?.interpreter?.path
+        );
 
         // Some registered kernel specs do not have a name, in this case use the last part of the path
         kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath));
