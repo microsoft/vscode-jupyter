@@ -9,7 +9,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
-import { traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { DataScience } from '../../common/utils/localize';
@@ -65,10 +65,14 @@ export class TrustCommandHandler implements IExtensionSingleActivationService {
                 sendTelemetryEvent(Telemetry.TrustAllNotebooks);
                 break;
             case DataScience.trustNotebook():
-                if (model instanceof VSCodeNotebookModel) {
-                    await this.trustNativeNotebook(model);
-                } else {
-                    await this.trustNotebook(model);
+                try {
+                    if (model instanceof VSCodeNotebookModel) {
+                        await this.trustNativeNotebook(model);
+                    } else {
+                        await this.trustNotebook(model);
+                    }
+                } catch (e) {
+                    traceError('Error while trusting notebook', e);
                 }
                 break;
             case DataScience.doNotTrustNotebook():
