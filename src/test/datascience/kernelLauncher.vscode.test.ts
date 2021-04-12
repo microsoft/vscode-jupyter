@@ -159,7 +159,7 @@ suite('DataScience - Kernel Launcher', () => {
                 undefined,
                 new CancellationTokenSource().token
             );
-            assert.isUndefined(portsAttribute, 'Port attribute should not be undefined');
+            assert.isOk(portsAttribute, 'Port attribute should not be undefined');
             assert.equal(
                 portsAttribute!.autoForwardAction,
                 PortAutoForwardAction.Ignore,
