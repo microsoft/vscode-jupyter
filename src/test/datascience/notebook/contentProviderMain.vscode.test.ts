@@ -59,14 +59,12 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             {
                                 cell_type: 'code',
                                 execution_count: 10,
-                                hasExecutionOrder: true,
                                 outputs: [],
                                 source: 'print(1)',
                                 metadata: {}
                             },
                             {
                                 cell_type: 'markdown',
-                                hasExecutionOrder: false,
                                 source: '# HEAD',
                                 metadata: {}
                             }
@@ -92,7 +90,6 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                                 metadata: {}
                             },
                             editable: true,
-                            hasExecutionOrder: true,
                             statusMessage: undefined
                         }),
                         latestExecutionSummary: {
@@ -108,8 +105,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             custom: {
                                 metadata: {}
                             },
-                            editable: true,
-                            hasExecutionOrder: false
+                            editable: true
                         }),
                         latestExecutionSummary: undefined
                     }
@@ -133,14 +129,12 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             {
                                 cell_type: 'code',
                                 execution_count: 10,
-                                hasExecutionOrder: true,
                                 outputs: [],
                                 source: 'Console.WriteLine("1")',
                                 metadata: {}
                             },
                             {
                                 cell_type: 'markdown',
-                                hasExecutionOrder: false,
                                 source: '# HEAD',
                                 metadata: {}
                             }
@@ -167,7 +161,6 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                                 metadata: {}
                             },
                             editable: true,
-                            hasExecutionOrder: true,
                             statusMessage: undefined
                         }),
                         latestExecutionSummary: {
@@ -183,8 +176,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                             custom: {
                                 metadata: {}
                             },
-                            editable: true,
-                            hasExecutionOrder: false
+                            editable: true
                         }),
                         latestExecutionSummary: undefined
                     }

@@ -68,7 +68,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                             transientMetadata: {
                                 breakpointMargin: true,
                                 editable: true,
-                                hasExecutionOrder: true,
                                 inputCollapsed: true,
                                 outputCollapsed: true,
                                 custom: false,

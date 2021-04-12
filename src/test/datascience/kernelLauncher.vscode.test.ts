@@ -150,33 +150,38 @@ suite('DataScience - Kernel Launcher', () => {
             kernel.connection.stdin_port
         ];
         const portAttributeProvider = new PortAttributesProviders(disposables);
-        let portsAttributes = portAttributeProvider.providePortAttributes(
-            kernelPorts,
-            undefined,
-            undefined,
-            new CancellationTokenSource().token
-        );
-        // The current kernels ports are hidden.
-        assert.equal(
-            portsAttributes.filter((item) => item.autoForwardAction === PortAutoForwardAction.Ignore).length,
-            5,
-            'All 5 ports should be hidden'
-        );
 
+        // The current kernels ports are hidden.
+        kernelPorts.forEach((port) => {
+            let portsAttribute = portAttributeProvider.providePortAttributes(
+                port,
+                undefined,
+                undefined,
+                new CancellationTokenSource().token
+            );
+            assert.isUndefined(portsAttribute, 'Port attribute should not be undefined');
+            assert.equal(
+                portsAttribute!.autoForwardAction,
+                PortAutoForwardAction.Ignore,
+                `Port ${port} should be hidden`
+            );
+        });
         const kernelDiedEvent = createEventHandler(kernel, 'exited', disposables);
         // Upon disposing, we should get an exit event within 100ms or less.
         // If this happens, then we know a process existed.
         await kernel.dispose();
         await kernelDiedEvent.assertFiredAtLeast(1, 1_000);
 
-        portsAttributes = portAttributeProvider.providePortAttributes(
-            kernelPorts,
-            undefined,
-            undefined,
-            new CancellationTokenSource().token
-        );
         // The current kernels ports are no longer hidden.
-        assert.equal(portsAttributes.length, 0, 'Ports should no longer be hidden');
+        kernelPorts.forEach((port) => {
+            let portsAttribute = portAttributeProvider.providePortAttributes(
+                port,
+                undefined,
+                undefined,
+                new CancellationTokenSource().token
+            );
+            assert.isUndefined(portsAttribute);
+        });
     }).timeout(test_Timeout);
 
     test('Bind with ZMQ', async function () {
