@@ -788,7 +788,7 @@ jobs:
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
-          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'stable'
         id: test_notebook_vscode
         if: matrix.test-suite == 'notebook' && matrix.python != 'noPython'
 
@@ -808,7 +808,7 @@ jobs:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'stable'
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
 
@@ -834,7 +834,7 @@ jobs:
           VSC_JUPYTER_REMOTE_NATIVE_TEST: 'false'
           VSC_JUPYTER_NON_RAW_NATIVE_TEST: 'false'
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: 'false'
-          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'stable'
         id: test_notebook_webview_vscode
         if: matrix.test-suite == 'notebookAndWebview' && matrix.python != 'noPython'
 

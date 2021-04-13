@@ -127,7 +127,7 @@ export class ExportCommands implements IDisposable {
         const items: IExportQuickPickItem[] = [];
         const notebook = JSON.parse(contents) as nbformat.INotebookContent;
 
-        if (notebook.metadata && isPythonNotebook(notebook.metadata)) {
+        if (interpreter || (notebook.metadata && isPythonNotebook(notebook.metadata))) {
             items.push({
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
@@ -135,7 +135,12 @@ export class ExportCommands implements IDisposable {
                     sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                         format: ExportFormat.python
                     });
-                    this.commandManager.executeCommand(Commands.ExportAsPythonScript, contents, source, interpreter);
+                    void this.commandManager.executeCommand(
+                        Commands.ExportAsPythonScript,
+                        contents,
+                        source,
+                        interpreter
+                    );
                 }
             });
         }
@@ -149,7 +154,7 @@ export class ExportCommands implements IDisposable {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                             format: ExportFormat.html
                         });
-                        this.commandManager.executeCommand(
+                        void this.commandManager.executeCommand(
                             Commands.ExportToHTML,
                             contents,
                             source,
@@ -165,7 +170,7 @@ export class ExportCommands implements IDisposable {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                             format: ExportFormat.pdf
                         });
-                        this.commandManager.executeCommand(
+                        void this.commandManager.executeCommand(
                             Commands.ExportToPDF,
                             contents,
                             source,

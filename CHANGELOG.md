@@ -1,11 +1,25 @@
 # Changelog
 
-## 2021.5.1 (07 April 2021)
+## 2021.5.1 (12 April 2021)
 
 ### Code Health
 
 1. Check the responses of prompts for installation of missing packages such as `IPyKernel`.
    ([#5432](https://github.com/Microsoft/vscode-jupyter/issues/5432))
+
+### Fixes
+
+1. Fix for 'Export as Python Script' option not appearing.
+   ([#5403](https://github.com/Microsoft/vscode-jupyter/issues/5403))
+1. Delete extension context secrets if we get an error when getting them.
+   Small fixes on error handling.
+   ([#5419](https://github.com/Microsoft/vscode-jupyter/issues/5419))
+1. Enable correct plot background for Native Notebooks.
+   ([#5353](https://github.com/Microsoft/vscode-jupyter/issues/5353))
+1. Stop asking users to install ipykernel on autostart, only do it when a cell is ran.
+   ([#5368](https://github.com/microsoft/vscode-jupyter/issues/5368))
+1. Invalidate cached interpreters when Python extension active interpreter changes.
+   ([#5470](https://github.com/microsoft/vscode-jupyter/issues/5470))
 
 ## 2021.5.0 (31 March 2021)
 
