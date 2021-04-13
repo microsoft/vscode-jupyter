@@ -84,7 +84,7 @@ async function getServices() {
 
 export async function selectCell(notebook: NotebookDocument, start: number, end: number) {
     await window.showNotebookDocument(notebook, {
-        selection: new NotebookCellRange(start, end)
+        selections: [new NotebookCellRange(start, end)]
     });
 }
 

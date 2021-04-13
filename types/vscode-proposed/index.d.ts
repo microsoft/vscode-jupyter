@@ -268,12 +268,6 @@ export interface NotebookEditor {
     readonly document: NotebookDocument;
 
     /**
-     * @deprecated
-     */
-    // todo@API should not be undefined, rather a default
-    readonly selection?: NotebookCell;
-
-    /**
      * todo@API should replace selection
      * The selections on this notebook editor.
      *
@@ -418,7 +412,7 @@ export interface NotebookDocumentShowOptions {
     viewColumn?: ViewColumn;
     preserveFocus?: boolean;
     preview?: boolean;
-    selection?: NotebookCellRange;
+    selections?: NotebookCellRange[];
 }
 
 export namespace notebook {
