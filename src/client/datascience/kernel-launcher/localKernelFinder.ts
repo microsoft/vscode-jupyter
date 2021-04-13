@@ -211,6 +211,14 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 } else {
                     let interpreter = k.language === PYTHON_LANGUAGE ? activeInterpreter : undefined;
                     // If the interpreter information is stored in kernelspec.json then use that to determine the interpreter.
+                    // This can happen under the following circumstances:
+                    // 1. Open workspace folder XYZ, and create a virtual environment named venvA
+                    // 2. Now assume we don't have raw kernels, and a kernel gets registered for venvA in kernelspecs folder.
+                    // 3. The kernel spec will contain metadata pointing to venvA.
+                    // 4. Now open a different folder (e.g. a sub directory of XYZ or a completely different folder).
+                    // 5. Now venvA will not be listed as an interpreter as Python will not discover this.
+                    // 6. However the kernel we registered against venvA will be in global kernels folder
+                    // In such an instance the interpreter information is stored in the kernelspec.json file.
                     if (
                         k.language === PYTHON_LANGUAGE &&
                         this.extensionChecker.isPythonExtensionInstalled &&
