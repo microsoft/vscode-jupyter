@@ -8,6 +8,7 @@ import {
     Event,
     EventEmitter,
     NotebookCell,
+    NotebookCellData,
     NotebookCellKind,
     NotebookCellMetadata,
     NotebookCellRange,
@@ -310,6 +311,7 @@ export class NotebookEditor implements INotebookEditor {
         try {
             await kernel.restart();
             sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
+            this.resetExecutionState();
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
@@ -360,6 +362,36 @@ export class NotebookEditor implements INotebookEditor {
             this.configurationService
                 .updateSetting('askForKernelRestart', false, undefined, ConfigurationTarget.Global)
                 .ignoreErrors();
+        }
+    }
+    
+    private resetExecutionState() {
+        // After kernel restart, clear timer and check mark for VS Code notebooks only.
+        // This is intended to provide a clearer visual indication that the kernel has
+        // been restarted
+        console.log('Resetting execution state');
+        if (!this.vscodeNotebook.activeNotebookEditor) {
+            console.log('No active notebook, returning early');
+            return;
+        }
+        const notebook = this.vscodeNotebook.activeNotebookEditor.document;
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            chainWithPendingUpdates(editor.document, (edit) => {
+                const newCells = notebook.getCells().map((cell) => {
+                    const outputs = [...cell.outputs];
+                    return new NotebookCellData(
+                        cell.kind,
+                        cell.document.getText(),
+                        cell.document.languageId,
+                        outputs,
+                        cell.metadata,
+                        { executionOrder: cell.latestExecutionSummary?.executionOrder }
+                    );
+                });
+                console.log('Replacing cells', newCells);
+                edit.replaceNotebookCells(editor.document.uri, 0, notebook.cellCount, newCells);
+            }).then(noop, noop);
         }
     }
 }

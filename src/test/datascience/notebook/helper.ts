@@ -627,6 +627,21 @@ export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
     assert.isTrue(hasErrorOutput(cell.outputs), 'No error output in cell');
     return true;
 }
+export function assertVSCCellExecutionSummaryClearedAfterRestart(cell: NotebookCell) {
+    // After restart, verify that cell status and timer are cleared, but not execution order
+    assert.ok(
+        cell.latestExecutionSummary?.executionOrder !== undefined,
+        'Cell execution order cleared on kernel restart'
+    );
+    assert.ok(
+        cell.latestExecutionSummary?.duration === undefined,
+        'Cell execution duration not cleared on kernel restart'
+    );
+    assert.ok(
+        cell.latestExecutionSummary?.success === undefined,
+        'Cell execution success not cleared on kernel restart'
+    );
+}
 
 export async function saveActiveNotebook(disposables: IDisposable[]) {
     const api = await initialize();

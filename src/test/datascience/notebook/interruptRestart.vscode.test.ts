@@ -16,10 +16,11 @@ import { Commands } from '../../../client/datascience/constants';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { traceCellMessage } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
+import { createEventHandler, getOSType, IExtensionTestApi, OSType, sleep, waitForCondition } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 import {
+    assertVSCCellExecutionSummaryClearedAfterRestart,
     assertVSCCellIsNotRunning,
     assertVSCCellIsRunning,
     canRunNotebookTests,
@@ -296,5 +297,21 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // Run cell 3 now, & confirm we can run it to completion.
         await runCell(cell3);
         await waitForExecutionCompletedSuccessfully(cell3);
+    });
+    test('Restart kernel should clear cell execution state', async function () {
+        await insertCodeCell('print("foo")', { index: 0 });
+        await insertCodeCell('print("bar")', { index: 1 });
+        let [cell1, cell2] = vscEditor.document.getCells();
+
+        await runAllCellsInActiveNotebook();
+        await Promise.all([waitForExecutionCompletedSuccessfully(cell1), waitForExecutionCompletedSuccessfully(cell2)]);
+
+        // All cells have executed. Now verify restarting kernel clears status
+        await commandManager.executeCommand(Commands.NotebookEditorRestartKernel);
+        await sleep(1_000); // Edits are asynchronously applied, so wait for them to take
+        [cell1, cell2] = vscEditor.document.getCells(); // Cells have been replaced, so fetch them again
+        [cell1, cell2].forEach((cell) => {
+            assertVSCCellExecutionSummaryClearedAfterRestart(cell);
+        });
     });
 });
