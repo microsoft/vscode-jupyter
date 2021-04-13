@@ -876,7 +876,7 @@
                 {
                     "command": "jupyter.notebookeditor.keybind.toggleOutput",
                     "title": "%DataScience.toggleCellOutput%",
-                    "when": "notebookViewType == jupyter-notebook"
+                    "when": "false"
                 },
                 {
                     "command": "jupyter.notebookeditor.runallcellsabove",
