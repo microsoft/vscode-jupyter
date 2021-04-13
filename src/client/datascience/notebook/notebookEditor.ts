@@ -176,11 +176,9 @@ export class NotebookEditor implements INotebookEditor {
             });
             chainWithPendingUpdates(editor.document, (edit) => {
                 cells.forEach((cell) => {
-                    if (cell) {
-                        const value = cell.metadata.outputCollapsed || false;
-                        const metadata = cell.metadata.with({ outputCollapsed: !value });
-                        edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
-                    }
+                    const collapsed = cell.metadata.outputCollapsed || false;
+                    const metadata = cell.metadata.with({ outputCollapsed: !collapsed });
+                    edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
                 });
             }).then(noop, noop);
         }
