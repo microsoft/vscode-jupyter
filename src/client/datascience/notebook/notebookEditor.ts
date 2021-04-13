@@ -75,6 +75,7 @@ export class NotebookEditor implements INotebookEditor {
     private _modified = new EventEmitter<INotebookEditor>();
     private restartingKernel?: boolean;
     private kernelInterruptedDontAskToRestart: boolean = false;
+    private outputCollapsed: boolean = false;
     constructor(
         public readonly model: INotebookModel,
         public readonly document: NotebookDocument,
@@ -157,6 +158,22 @@ export class NotebookEditor implements INotebookEditor {
                     }
                 ])
             ).then(noop, noop);
+        }
+    }
+    public toggleOutput(): void {
+        if (!this.vscodeNotebook.activeNotebookEditor) {
+            return;
+        }
+        const notebook = this.vscodeNotebook.activeNotebookEditor.document;
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            this.outputCollapsed = !this.outputCollapsed;
+            chainWithPendingUpdates(editor.document, (edit) => {
+                notebook.getCells().forEach((cell, index) => {
+                    const metadata = cell.metadata.with({ outputCollapsed: this.outputCollapsed });
+                    edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
+                });
+            }).then(noop, noop);
         }
     }
     public expandAllCells(): void {

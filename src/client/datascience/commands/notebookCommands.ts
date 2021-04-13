@@ -35,11 +35,18 @@ export class NotebookCommands implements IDisposable {
             this.commandManager.registerCommand(Commands.NotebookEditorCollapseAllCells, this.collapseAll, this),
             this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this),
             this.commandManager.registerCommand(Commands.NotebookEditorKeybindSave, this.keybindSave, this),
-            this.commandManager.registerCommand(Commands.NotebookEditorKeybindUndo, this.keybindUndo, this)
+            this.commandManager.registerCommand(Commands.NotebookEditorKeybindUndo, this.keybindUndo, this),
+            this.commandManager.registerCommand(Commands.NotebookEditorToggleOutput, this.toggleOutput, this)
         );
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
+    }
+
+    private toggleOutput() {
+        if (this.notebookEditorProvider.activeEditor) {
+            this.notebookEditorProvider.activeEditor.toggleOutput();
+        }
     }
 
     private collapseAll() {
