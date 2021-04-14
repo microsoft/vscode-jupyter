@@ -11,7 +11,7 @@ import { ICellViewModel } from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { ErrorBoundary } from '../react-common/errorBoundary';
-import { Image, ImageName } from '../react-common/image';
+import { Codicon, Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
@@ -160,11 +160,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                             onClick={this.props.toggleVariableExplorer}
                             tooltip={variableExplorerTooltip}
                         >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.VariableExplorer}
-                            />
+                            <Codicon codicon="variable-group" />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}

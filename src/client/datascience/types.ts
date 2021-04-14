@@ -620,8 +620,8 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
     syncAllCells(): Promise<void>;
-    runAbove(uri: Uri): void;
-    runCellAndBelow(uri: Uri): void;
+    runAbove(cell: NotebookCell | undefined): void;
+    runCellAndBelow(cell: NotebookCell | undefined): void;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');
@@ -1193,7 +1193,7 @@ export type GetServerOptions = {
     resource: Resource;
     metadata?: nbformat.INotebookMetadata;
     kernelConnection?: KernelConnectionMetadata;
-    onConnectionMade?(): void; // Optional callback for when the first connection is made
+    onConnectionMade?(disableUI?: boolean): void; // Optional callback for when the first connection is made
 };
 
 /**
@@ -1221,7 +1221,7 @@ export interface INotebookProvider {
     /**
      * Fired just the first time that this provider connects
      */
-    onConnectionMade: Event<void>;
+    onConnectionMade: Event<boolean | undefined>;
     /**
      * Fired when a kernel would have been changed if a notebook had existed.
      */

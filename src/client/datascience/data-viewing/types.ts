@@ -54,7 +54,7 @@ export interface IGetSliceRequest {
 export type IDataViewerMapping = {
     [DataViewerMessages.Started]: never | undefined;
     [DataViewerMessages.UpdateSettings]: string;
-    [DataViewerMessages.InitializeData]: IDataFrameInfo & { isSliceDataEnabled: boolean };
+    [DataViewerMessages.InitializeData]: IDataFrameInfo;
     [DataViewerMessages.GetAllRowsRequest]: never | undefined | string;
     [DataViewerMessages.GetAllRowsResponse]: IRowsResponse;
     [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;

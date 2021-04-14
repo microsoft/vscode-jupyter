@@ -109,6 +109,11 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
     if (metadata?.language_info?.name && metadata.language_info.name !== PYTHON_LANGUAGE) {
         return false;
     }
+
+    if (kernelSpec?.name.includes(PYTHON_LANGUAGE)) {
+        return true;
+    }
+
     // Valid notebooks will have a language information in the metadata.
     return kernelSpec?.language === PYTHON_LANGUAGE;
 }
@@ -212,7 +217,6 @@ export function notebookModelToVSCNotebookData(
             custom: notebookContentWithoutCells, // Include metadata in VSC Model (so that VSC can display these if required)
             cellEditable: isNotebookTrusted,
             editable: isNotebookTrusted,
-            cellHasExecutionOrder: true,
             trusted: isNotebookTrusted
         })
     );
@@ -290,7 +294,6 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        hasExecutionOrder: false,
         custom: getNotebookCellMetadata(cell)
     });
     return new NotebookCellData(
@@ -316,7 +319,6 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
 function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        hasExecutionOrder: false,
         custom: getNotebookCellMetadata(cell)
     });
     return new NotebookCellData(
@@ -342,7 +344,6 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
 
     const notebookCellMetadata = new NotebookCellMetadata().with({
         editable: true,
-        hasExecutionOrder: true,
         statusMessage,
         custom: getNotebookCellMetadata(cell)
     });
@@ -823,6 +824,6 @@ export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: readon
 
 export function findAssociatedNotebookDocument(cellUri: Uri, vscodeNotebook: IVSCodeNotebook, fs: IFileSystem) {
     return vscodeNotebook.notebookDocuments.find((item) =>
-        item.cells.some((cell) => fs.arePathsSame(cell.document.uri, cellUri))
+        item.getCells().some((cell) => fs.arePathsSame(cell.document.uri, cellUri))
     );
 }

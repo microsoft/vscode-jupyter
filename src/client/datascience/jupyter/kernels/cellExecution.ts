@@ -825,7 +825,7 @@ export class CellExecution {
     private async handleUpdateDisplayDataMessage(msg: KernelMessage.IUpdateDisplayDataMsg): Promise<void> {
         const document = this.cell.notebook;
         // Find any cells that have this same display_id
-        for (const cell of document.cells) {
+        for (const cell of document.getCells()) {
             if (cell.kind !== NotebookCellKind.Code) {
                 continue;
             }

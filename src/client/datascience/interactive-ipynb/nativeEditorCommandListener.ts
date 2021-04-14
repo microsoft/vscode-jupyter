@@ -5,7 +5,7 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { NotebookCell, NotebookDocument, Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -34,7 +34,10 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, () => this.interruptKernel())
+            commandManager.registerCommand(
+                Commands.NotebookEditorInterruptKernel,
+                (document: NotebookDocument | undefined) => this.interruptKernel(document)
+            )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel())
@@ -53,11 +56,11 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NativeNotebookRunAllCellsAbove, (uri) => this.runAbove(uri))
+            commandManager.registerCommand(Commands.NativeNotebookRunAllCellsAbove, (cell) => this.runAbove(cell))
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NativeNotebookRunCellAndAllBelow, (uri) =>
-                this.runCellAndBelow(uri)
+            commandManager.registerCommand(Commands.NativeNotebookRunCellAndAllBelow, (cell) =>
+                this.runCellAndBelow(cell)
             )
         );
     }
@@ -97,10 +100,14 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         }
     }
 
-    private interruptKernel() {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.interruptKernel().ignoreErrors();
+    private interruptKernel(document: NotebookDocument | undefined) {
+        // `document` may be undefined if this command is invoked from the command palette.
+        const target =
+            this.provider.activeEditor?.file.toString() === document?.uri.toString()
+                ? this.provider.activeEditor
+                : this.provider.editors.find((editor) => editor.file.toString() === document?.uri.toString());
+        if (target) {
+            target.interruptKernel().ignoreErrors();
         }
     }
 
@@ -129,16 +136,16 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         }
     }
 
-    private runAbove(uri: Uri): void {
+    private runAbove(cell: NotebookCell | undefined): void {
         const activeEditor = this.provider.activeEditor;
         if (activeEditor) {
-            activeEditor.runAbove(uri);
+            activeEditor.runAbove(cell);
         }
     }
-    private runCellAndBelow(uri: Uri): void {
+    private runCellAndBelow(cell: NotebookCell | undefined): void {
         const activeEditor = this.provider.activeEditor;
         if (activeEditor) {
-            activeEditor.runCellAndBelow(uri);
+            activeEditor.runCellAndBelow(cell);
         }
     }
 }

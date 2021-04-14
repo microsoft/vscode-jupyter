@@ -735,7 +735,15 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
     [Telemetry.PythonModuleInstal]: {
         moduleName: string;
-        action: 'displayed' | 'installed' | 'ignored' | 'disabled' | 'failed';
+        action:
+            | 'displayed' // Install prompt displayed.
+            | 'installed' // Installation disabled (this is what python extension returns).
+            | 'ignored' // Installation disabled (this is what python extension returns).
+            | 'disabled' // Installation disabled (this is what python extension returns).
+            | 'failed' // Installation disabled (this is what python extension returns).
+            | 'install' // User chose install from prompt.
+            | 'donotinstall' // User chose not to install from prompt.
+            | 'dismissed'; // User chose to dismiss the prompt.
     };
     /**
      * This telemetry tracks the display of the Picker for Jupyter Remote servers.

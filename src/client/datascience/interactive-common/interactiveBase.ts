@@ -231,8 +231,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
 
         // If we have already auto started our server then we can go ahead and try to create a notebook on construction
+        // Disable the UI to avoid errors before the user runs a cell
         setTimeout(() => {
-            this.createNotebookIfProviderConnectionExists().ignoreErrors();
+            this.createNotebookIfProviderConnectionExists(true).ignoreErrors();
         }, 0);
     }
 
@@ -889,9 +890,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
     // the same protection to not be called twice
     // eslint-disable-next-line @typescript-eslint/member-ordering
-    protected async ensureNotebook(serverConnection: INotebookProviderConnection): Promise<void> {
+    protected async ensureNotebook(serverConnection: INotebookProviderConnection, disableUI = false): Promise<void> {
         if (!this.notebookPromise) {
-            this.notebookPromise = this.ensureNotebookImpl(serverConnection);
+            this.notebookPromise = this.ensureNotebookImpl(serverConnection, disableUI);
         }
         try {
             await this.notebookPromise;
@@ -903,20 +904,18 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
     }
 
-    protected async createNotebookIfProviderConnectionExists(): Promise<void> {
-        let providerConnection = this._notebook?.connection;
-        if (!providerConnection) {
-            // Check to see if we are already connected to our provider
-            providerConnection = await this.notebookProvider.connect({
-                getOnly: true,
-                resource: this.owningResource,
-                metadata: this.notebookMetadata
-            });
-        }
+    protected async createNotebookIfProviderConnectionExists(disableUI?: boolean): Promise<void> {
+        // Check to see if we are already connected to our provider
+        const providerConnection = await this.notebookProvider.connect({
+            getOnly: true,
+            resource: this.owningResource,
+            metadata: this.notebookMetadata,
+            disableUI
+        });
 
         if (providerConnection) {
             try {
-                await this.ensureNotebook(providerConnection);
+                await this.ensureNotebook(providerConnection, disableUI);
             } catch (e) {
                 this.errorHandler.handleError(e).ignoreErrors();
             }
@@ -1200,7 +1199,10 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             .then(noop, noop);
     }
 
-    private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook | undefined> {
+    private async createNotebook(
+        serverConnection: INotebookProviderConnection,
+        disableUI: boolean
+    ): Promise<INotebook | undefined> {
         let notebook: INotebook | undefined;
         while (!notebook) {
             try {
@@ -1208,7 +1210,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     identity: this.notebookIdentity.resource,
                     resource: this.owningResource,
                     metadata: this.notebookMetadata,
-                    kernelConnection: this.kernelConnection
+                    kernelConnection: this.kernelConnection,
+                    disableUI
                 });
                 if (notebook) {
                     const executionActivation = { ...this.notebookIdentity, owningResource: this.owningResource };
@@ -1270,7 +1273,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         notebook.registerIOPubListener(this.handleKernelMessage.bind(this));
     }
 
-    private async ensureNotebookImpl(serverConnection: INotebookProviderConnection): Promise<void> {
+    private async ensureNotebookImpl(serverConnection: INotebookProviderConnection, disableUI: boolean): Promise<void> {
         // Create a new notebook if we need to.
         if (!this._notebook) {
             // While waiting make the notebook look busy
@@ -1281,7 +1284,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 language: PYTHON_LANGUAGE
             }).ignoreErrors();
 
-            this._notebook = await this.createNotebook(serverConnection);
+            this._notebook = await this.createNotebook(serverConnection, disableUI);
 
             // If that works notify the UI and listen to status changes.
             if (this._notebook && this._notebook.identity) {

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
+import { CancellationToken, NotebookCell, NotebookDocument, Position, TextDocument, Uri } from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
@@ -41,7 +41,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.NotebookEditorUndoCells]: [];
     [DSCommands.NotebookEditorRedoCells]: [];
     [DSCommands.NotebookEditorRemoveAllCells]: [];
-    [DSCommands.NotebookEditorInterruptKernel]: [];
     [DSCommands.NotebookEditorRestartKernel]: [];
     [DSCommands.NotebookEditorRunAllCells]: [];
     [DSCommands.NotebookEditorAddCellBelow]: [];
@@ -87,13 +86,14 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.save']: [Uri];
     ['undo']: [];
     [DSCommands.UpdateOrCreateDataViewer]: [];
+    [DSCommands.NotebookEditorInterruptKernel]: [NotebookDocument];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];
     [DSCommands.RunAllCellsAbove]: [Uri, number, number];
     [DSCommands.RunCellAndAllBelow]: [Uri, number, number];
-    [DSCommands.NativeNotebookRunAllCellsAbove]: [Uri];
-    [DSCommands.NativeNotebookRunCellAndAllBelow]: [Uri];
+    [DSCommands.NativeNotebookRunAllCellsAbove]: [NotebookCell];
+    [DSCommands.NativeNotebookRunCellAndAllBelow]: [NotebookCell];
     [DSCommands.RunAllCellsAbovePalette]: [];
     [DSCommands.RunCellAndAllBelowPalette]: [];
     [DSCommands.DebugCurrentCellPalette]: [];
@@ -141,7 +141,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.SaveAsNotebookNonCustomEditor]: [INotebookModel, Uri];
     [DSCommands.OpenNotebookNonCustomEditor]: [Uri];
     [DSCommands.LatestExtension]: [string];
-    [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [undefined | never];
+    [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
     [DSCommands.TrustNotebook]: [undefined | never | Uri];
     [DSCommands.NotebookTrusted]: [];
     [DSCommands.NotebookEditorExpandAllCells]: [];

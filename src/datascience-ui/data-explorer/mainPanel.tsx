@@ -278,7 +278,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initializeData(payload: any) {
         if (payload) {
-            const variable = payload as IDataFrameInfo & { isSliceDataEnabled: boolean };
+            const variable = payload as IDataFrameInfo;
             if (variable) {
                 const columns = this.generateColumns(variable);
                 const totalRowCount = variable.rowCount ?? 0;
@@ -288,8 +288,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const originalVariableShape = variable.shape ?? this.state.originalVariableShape;
                 const variableName = variable.name ?? this.state.variableName;
                 const fileName = this.state.fileName ?? variable.fileName;
-                const isSliceDataEnabled =
-                    variable.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
+                const isSliceDataEnabled = SliceableTypes.has(originalVariableType || '');
                 const sliceExpression = variable.sliceExpression;
 
                 // New data coming in, so reset everything and clear our cache of columns

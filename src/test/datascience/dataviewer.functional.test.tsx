@@ -36,6 +36,7 @@ import { IMountedWebView } from './mountedWebView';
 import { SliceControl } from '../../datascience-ui/data-explorer/sliceControl';
 import { Dropdown } from '@fluentui/react';
 import { CheckboxState, SliceOperationSource } from '../../client/telemetry/constants';
+import { range } from 'lodash';
 
 interface ISliceControlTestInterface {
     toggleEnablement: () => void;
@@ -969,6 +970,38 @@ foo = torch.tensor([[[0, 1, 2], [3, 4, 5]]])`;
             // Preselected slice is applied
             verifyReadonlyIndicator(wrapper.wrapper, '[0, :, :]');
             verifyRows(wrapper.wrapper, [0, 0, 1]);
+        });
+
+        runMountedTest('Large data', async (wrapper) => {
+            // Make sure data viewer is well-behaved when working with very large data
+            const numCols = 50;
+            const numRows = 6000;
+            await injectCode(
+                `import numpy as np\r\nfoo = np.arange(${numRows} * ${numCols}).reshape(${numRows}, ${numCols})`
+            );
+            const gotAllRows = getCompletedPromise(wrapper);
+            const dv = await createJupyterVariableDataViewer('foo', 'ndarray');
+            assert.ok(dv, 'DataViewer not created');
+            await gotAllRows;
+
+            // Make sure sort works
+            const expectedCells: number[] = [];
+            for (let i = 5999; i >= 0; i++) {
+                expectedCells.push(i);
+                expectedCells.push(...range(i * numCols, i * numCols + numCols));
+            }
+            sortRows(wrapper.wrapper, '3', false);
+            verifyRows(wrapper.wrapper, expectedCells);
+
+            // Make sure filter works and there's no duplicated data
+            // Verifies https://github.com/microsoft/vscode-jupyter/issues/5200
+            await filterRows(wrapper.wrapper, '0', '92500');
+            // Should filter to row #18, containing 900-949 inclusive
+            verifyRows(wrapper.wrapper, [1850, ...range(92500, 92549)]);
+
+            // Make sure slicing + filter works
+            await applySliceAndVerifyReadonlyIndicator(wrapper, '[1850:1851, :5]');
+            verifyRows(wrapper.wrapper, [0, ...range(92500, 92505)]);
         });
     });
 

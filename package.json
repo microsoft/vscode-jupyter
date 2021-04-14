@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.5.0",
+    "version": "2021.6.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.55.0-insider"
+        "vscode": "1.56.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -293,20 +293,14 @@
                 "command": "jupyter.notebookeditor.runallcellsabove",
                 "title": "%DataScience.runAbove%",
                 "category": "Notebook",
-                "icon": {
-                    "light": "resources/light/runabove.svg",
-                    "dark": "resources/dark/runabove-inverse.svg"
-                },
-                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted && jupyter.notebookeditor.canRunCellsAboveInNativeNotebook"
+                "icon": "$(run-above)",
+                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
             },
             {
                 "command": "jupyter.notebookeditor.runcellandallbelow",
                 "title": "%DataScience.runBelow%",
                 "category": "Notebook",
-                "icon": {
-                    "light": "resources/light/runbelow.svg",
-                    "dark": "resources/dark/runbelow-inverse.svg"
-                },
+                "icon": "$(run-below)",
                 "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
             },
             {
@@ -739,10 +733,7 @@
             {
                 "command": "jupyter.openVariableView",
                 "title": "%jupyter.command.jupyter.openVariableView.title%",
-                "icon": {
-                    "light": "resources/light/variable_explorer.svg",
-                    "dark": "resources/dark/variable_explorer.svg"
-                },
+                "icon": "$(variable-group)",
                 "category": "Jupyter",
                 "enablement": "notebookViewType == jupyter-notebook && !jupyter.variableViewVisible"
             },
@@ -814,18 +805,6 @@
             ],
             "editor/title": [
                 {
-                    "command": "jupyter.notebookeditor.runallcellsabove",
-                    "title": "%DataScience.runAbove%",
-                    "group": "overflow@1",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.runcellandallbelow",
-                    "title": "%DataScience.runBelow%",
-                    "group": "overflow@2",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                },
-                {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "group": "navigation@1",
@@ -862,6 +841,20 @@
                     "when": "notebookViewType == 'jupyter-notebook'"
                 }
             ],
+            "notebook/cell/title": [
+                {
+                    "command": "jupyter.notebookeditor.runallcellsabove",
+                    "title": "%DataScience.runAbove%",
+                    "group": "inline/cell@0",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.runcellandallbelow",
+                    "title": "%DataScience.runBelow%",
+                    "group": "inline/cell@0",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                }
+            ],
             "explorer/context": [
                 {
                     "when": "resourceLangId == python && !notebookEditorFocused",
@@ -890,6 +883,16 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.notebookeditor.runallcellsabove",
+                    "title": "%DataScience.runAbove%",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.notebookeditor.runcellandallbelow",
+                    "title": "%DataScience.runBelow%",
+                    "when": "false"
+                },
                 {
                     "command": "jupyter.exportAsPythonScript",
                     "title": "%jupyter.command.jupyter.exportAsPythonScript.title%",
@@ -1694,7 +1697,7 @@
                 },
                 "jupyter.variableQueries": {
                     "type": "array",
-                    "description": "Language to query mapping for returning the list of active variables in a Jupyter kernel. Used by the Variable Explorer in both the Interactive Window and Notebooks. Example: \n'[\n{\n   \"language\": \"python\",\n   \"query\": \"%who_ls\",\n  \"parseExpr\": \"'(\\\\w+)'\"\n}\n]'",
+                    "markdownDescription": "Language to query mapping for returning the list of active variables in a Jupyter kernel. Used by the Variable Explorer in both the Interactive Window and Notebooks. Example:\n```\n[\n  {\n    \"language\": \"python\",\n    \"query\": \"%who_ls\",\n    \"parseExpr\": \"'(\\\\w+)'\"\n  }\n]\n```",
                     "scope": "machine",
                     "examples": [
                         [
@@ -1921,7 +1924,7 @@
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
         "@nteract/transform-plotly": "^6.0.0",
-        "@nteract/transform-vega": "^6.0.3",
+        "@nteract/transform-vega": "^7.0.0",
         "@nteract/transforms": "^4.4.7",
         "@octokit/rest": "^18.0.6",
         "@phosphor/widgets": "^1.9.3",
@@ -1953,6 +1956,7 @@
         "pdfkit": "^0.11.0",
         "plotly.js-dist": "^1.58.4",
         "portfinder": "^1.0.25",
+        "re-resizable": "~6.5.5",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",
         "react-dom": "^16.5.2",
@@ -1975,6 +1979,7 @@
         "stack-trace": "0.0.10",
         "string-argv": "^0.3.1",
         "strip-ansi": "^5.2.0",
+        "styled-components": "^5.2.1",
         "svg-inline-react": "^3.1.0",
         "svg-to-pdfkit": "^0.1.8",
         "tcp-port-used": "^1.0.1",

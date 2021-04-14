@@ -40,7 +40,6 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 source: 'print(1)',
                 metadata: new NotebookCellMetadata().with({
                     editable: true,
-                    hasExecutionOrder: true,
                     statusMessage: undefined,
                     custom: { metadata: {} }
                 }),
@@ -55,7 +54,6 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 source: '# HEAD',
                 metadata: new NotebookCellMetadata().with({
                     editable: true,
-                    hasExecutionOrder: false,
                     custom: { metadata: {} }
                 }),
                 latestExecutionSummary: undefined

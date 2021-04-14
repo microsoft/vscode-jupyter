@@ -7,14 +7,17 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { NotebookCellKind, commands, Uri } from 'vscode';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { NotebookCellKind, commands, Uri, NotebookDocument } from 'vscode';
+import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { Commands } from '../../../client/datascience/constants';
-import { deleteKernelMetadataForTests } from '../../../client/datascience/notebook/helpers/helpers';
+import {
+    deleteKernelMetadataForTests,
+    NotebookCellStateTracker
+} from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
@@ -29,7 +32,9 @@ import {
     deleteCell,
     hijackPrompt,
     insertCodeCell,
+    runAllCellsInActiveNotebook,
     saveActiveNotebook,
+    waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from './helper';
 
@@ -58,7 +63,7 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
     let storageProvider: INotebookStorageProvider;
     let vscodeNotebook: IVSCodeNotebook;
     let trustService: ITrustService;
-    this.timeout(15_000);
+    this.timeout(30_000);
     suiteSetup(async function () {
         api = await initialize();
         if (!(await canRunNotebookTests())) {
@@ -85,7 +90,7 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
         assert.equal(document.metadata.editable, trusted);
         assert.equal(document.metadata.trusted, trusted);
 
-        document.cells.forEach((cell) => {
+        document.getCells().forEach((cell) => {
             assert.equal(cell.metadata.editable, true);
             if (cell.kind === NotebookCellKind.Code) {
                 if (hasOutput) {
@@ -95,6 +100,16 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
         });
         return true;
     }
+
+    function noCellsExecuted(document: NotebookDocument) {
+        const cells = document.getCells();
+        return (
+            cells.filter((cell) => {
+                return NotebookCellStateTracker.getCellState(cell) === undefined;
+            }).length === cells.length
+        );
+    }
+
     [true, false].forEach((withOutput) => {
         suite(`Test notebook ${withOutput ? 'with' : 'without'} output`, () => {
             let ipynbFile: Uri;
@@ -321,6 +336,69 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
                 // Confirm the notebook is now trusted.
                 assert.isTrue(model.isTrusted);
                 await waitForCondition(async () => assertDocumentTrust(true, withOutput), 10_000, 'Not trusted');
+            });
+            test('Running cells in an untrusted notebook', async () => {
+                const sandbox = sinon.createSandbox();
+
+                // Open an untrusted notebook and ignore the first prompt
+                const ignorePrompt = await hijackPrompt(
+                    'showErrorMessage',
+                    { exactMatch: DataScience.launchNotebookTrustPrompt() },
+                    { dismissPrompt: true },
+                    disposables
+                );
+                await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
+                await waitForCondition(() => ignorePrompt.displayed, 10_000, 'Prompt to trust not displayed');
+                const document = vscodeNotebook.activeNotebookEditor?.document;
+                assert.ok(document !== undefined, 'No active notebook document');
+                ignorePrompt.clickButton();
+                ignorePrompt.dispose(); // Remove stub
+
+                // Set up trust prompt stub to select 'No'
+                const applicationShell = api.serviceManager.get<IApplicationShell>(IApplicationShell);
+                const doNotTrustPrompt = sandbox
+                    .stub(applicationShell, 'showErrorMessage')
+                    .withArgs(
+                        DataScience.launchNotebookTrustPrompt(),
+                        DataScience.trustNotebook() as any,
+                        DataScience.doNotTrustNotebook() as any,
+                        DataScience.trustAllNotebooks() as any
+                    )
+                    .resolves(DataScience.doNotTrustNotebook() as any);
+                // Try to run a cell
+                await runAllCellsInActiveNotebook();
+                // Verify trust prompt comes up
+                assert.ok(doNotTrustPrompt.calledOnce, 'Trust prompt was not shown');
+                // No cells should have been executed
+                assert.ok(noCellsExecuted(document!), 'Cells were executed for untrusted notebook');
+                sandbox.restore();
+
+                // Set up trust prompt stub to select 'Trust notebook'
+                const trustPrompt = sandbox
+                    .stub(applicationShell, 'showErrorMessage')
+                    .withArgs(
+                        DataScience.launchNotebookTrustPrompt(),
+                        DataScience.trustNotebook() as any,
+                        DataScience.doNotTrustNotebook() as any,
+                        DataScience.trustAllNotebooks() as any
+                    )
+                    .resolves(DataScience.trustNotebook() as any);
+                const trustSetEvent = createEventHandler(trustService, 'onDidSetNotebookTrust', disposables);
+                // Try to run a cell
+                await runAllCellsInActiveNotebook();
+                // Verify trust prompt comes up
+                assert.ok(trustPrompt.calledOnce, 'Trust prompt was not shown');
+                await trustSetEvent.assertFiredAtLeast(1, 10_000);
+                sandbox.restore();
+
+                // Confirm the notebook is now trusted.
+                const model = storageProvider.get(ipynbFile)!;
+                assert.isTrue(model.isTrusted);
+                await waitForCondition(async () => assertDocumentTrust(true, withOutput), 10_000, 'Not trusted');
+                // Verify cells executed
+                const firstCell = document?.cellAt(0);
+                assert.ok(firstCell !== undefined, '1st cell unexpectedly missing from notebook');
+                await waitForExecutionCompletedSuccessfully(firstCell!);
             });
         });
     });
