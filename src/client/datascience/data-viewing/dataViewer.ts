@@ -402,7 +402,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 code = `${newVariableName} = ${currentVariableName}.fillna(${newValue})`;
         }
         if (code && matchingNotebookEditor !== undefined) {
-            const cells = (matchingNotebookEditor as any).document.cells;
+            const cells = (matchingNotebookEditor as any).document.getCells();
             const lastCell = cells[cells.length - 1] as NotebookCell;
             await updateCellCode(lastCell, code);
             await addNewCellAfter(lastCell, '');

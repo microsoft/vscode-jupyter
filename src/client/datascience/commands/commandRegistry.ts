@@ -527,7 +527,7 @@ export class CommandRegistry implements IDisposable {
                 return;
             }
             // Add code cell to import dataframe
-            const blankCell = (notebookEditor as any).document.cells[0] as NotebookCell;
+            const blankCell = (notebookEditor as any).document.cellAt(0) as NotebookCell;
             const code = getImportCodeForFileType(file.fsPath);
             await updateCellCode(blankCell, code);
             // Run the cells
