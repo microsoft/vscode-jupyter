@@ -13,14 +13,20 @@ import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands, Telemetry } from '../constants';
-import { IDataScienceCommandListener, IDataScienceErrorHandler, INotebookEditorProvider } from '../types';
+import {
+    IDataScienceCommandListener,
+    IDataScienceErrorHandler,
+    IInteractiveWindowProvider,
+    INotebookEditorProvider
+} from '../types';
 
 @injectable()
 export class NativeEditorCommandListener implements IDataScienceCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
-        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
+        @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -62,6 +68,9 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NativeNotebookRunCellAndAllBelow, (cell) =>
                 this.runCellAndBelow(cell)
             )
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.OpenScratchPad, (cell) => this.openScratchPad(cell))
         );
     }
 
@@ -146,6 +155,20 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         const activeEditor = this.provider.activeEditor;
         if (activeEditor) {
             activeEditor.runCellAndBelow(cell);
+        }
+    }
+
+    private openScratchPad(cell: NotebookCell | undefined): void {
+        const file = cell?.notebook.uri || this.provider.activeEditor?.file;
+        if (file) {
+            this.interactiveProvider
+                .getOrCreate(file)
+                .then(async (i) => {
+                    if (cell) {
+                        await i.addCode(cell.document.getText(), undefined, 0);
+                    }
+                })
+                .ignoreErrors();
         }
     }
 }

@@ -17,6 +17,9 @@ import {
     EventEmitter,
     Memento,
     NotebookCell,
+    NotebookCellRange,
+    NotebookEditor,
+    NotebookEditorRevealType,
     Position,
     Range,
     Selection,
@@ -31,6 +34,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
+    IVSCodeNotebook,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -109,6 +113,7 @@ import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
+import { addNewCellAfter } from '../notebook/helpers/executionHelpers';
 
 export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
@@ -127,7 +132,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     public abstract isInteractive: boolean;
-    protected abstract get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined;
+    protected abstract getNotebookMetadata(): Promise<Readonly<nbformat.INotebookMetadata> | undefined>;
     protected abstract get kernelConnection(): Readonly<KernelConnectionMetadata> | undefined;
 
     protected abstract get notebookIdentity(): INotebookIdentity;
@@ -176,7 +181,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         private readonly notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private selector: KernelSelector,
-        private serverStorage: IJupyterServerUriStorage
+        private serverStorage: IJupyterServerUriStorage,
+        private readonly vscNotebook: IVSCodeNotebook
     ) {
         super(
             configuration,
@@ -907,7 +913,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         const providerConnection = await this.notebookProvider.connect({
             getOnly: true,
             resource: this.owningResource,
-            metadata: this.notebookMetadata,
+            metadata: await this.getNotebookMetadata(),
             disableUI
         });
 
@@ -940,7 +946,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             serverConnection = await this.notebookProvider.connect({
                 disableUI: true,
                 resource: this.owningResource,
-                metadata: this.notebookMetadata
+                metadata: await this.getNotebookMetadata()
             });
         }
         let displayName =
@@ -999,7 +1005,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 getOnly: false,
                 disableUI: false,
                 resource: this.owningResource,
-                metadata: this.notebookMetadata
+                metadata: await this.getNotebookMetadata()
             });
             if (serverConnection) {
                 await this.ensureNotebook(serverConnection);
@@ -1183,15 +1189,17 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         sendTelemetryEvent(event);
     };
 
-    private selectNewKernel() {
+    private async selectNewKernel() {
+        const metadata = await this.getNotebookMetadata();
+
         // This is handled by a command.
         this.commandManager
             .executeCommand(Commands.SwitchJupyterKernel, {
                 identity: this.notebookIdentity.resource,
                 resource: this.owningResource,
                 currentKernelDisplayName:
-                    this.notebookMetadata?.kernelspec?.display_name ||
-                    this.notebookMetadata?.kernelspec?.name ||
+                    metadata?.kernelspec?.display_name ||
+                    metadata?.kernelspec?.name ||
                     getDisplayNameOrNameOfKernelConnection(this._notebook?.getKernelConnection())
             })
             .then(noop, noop);
@@ -1207,7 +1215,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 notebook = await this.notebookProvider.getOrCreateNotebook({
                     identity: this.notebookIdentity.resource,
                     resource: this.owningResource,
-                    metadata: this.notebookMetadata,
+                    metadata: await this.getNotebookMetadata(),
                     kernelConnection: this.kernelConnection,
                     disableUI
                 });
@@ -1347,6 +1355,33 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     private async copyCodeInternal(source: string) {
         let editor = this.documentManager.activeTextEditor;
+        let notebook = this.vscNotebook.activeNotebookEditor;
+        if (!notebook && !editor) {
+            // Find the first visible notebook editor if nothing is visible
+            const notebookEditors = this.vscNotebook.notebookEditors;
+            if (notebookEditors.length > 0) {
+                notebook = notebookEditors[0];
+            }
+        }
+        if (notebook) {
+            return this.copyCodeToNotebook(notebook, source);
+        }
+        if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
+            // Find the first visible python editor
+            const pythonEditors = this.documentManager.visibleTextEditors.filter(
+                (e) => e.document.languageId === PYTHON_LANGUAGE || e.document.isUntitled
+            );
+
+            if (pythonEditors.length > 0) {
+                editor = pythonEditors[0];
+            }
+        }
+        if (editor) {
+            return this.copyCodeToEditor(editor, source);
+        }
+    }
+
+    private async copyCodeToEditor(editor: TextEditor, source: string) {
         if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
             // Find the first visible python editor
             const pythonEditors = this.documentManager.visibleTextEditors.filter(
@@ -1395,6 +1430,18 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             const selectionLine = line + newCode.split('\n').length - 1;
             editor.selection = new Selection(new Position(selectionLine, 0), new Position(selectionLine, 0));
         }
+    }
+
+    private async copyCodeToNotebook(editor: NotebookEditor, source: string) {
+        // Add a new cell with our source
+        var lastCell = editor.document.cellAt(editor.document.cellCount - 1);
+        await addNewCellAfter(lastCell, source);
+
+        // Make sure this cell is shown to the user
+        editor.revealRange(
+            new NotebookCellRange(lastCell.index + 1, lastCell.index + 1),
+            NotebookEditorRevealType.InCenterIfOutsideViewport
+        );
     }
 
     private async ensureDarkSet(): Promise<void> {

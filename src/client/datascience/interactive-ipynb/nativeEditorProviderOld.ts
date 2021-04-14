@@ -13,6 +13,7 @@ import {
     ICustomEditorService,
     IDocumentManager,
     ILiveShareApi,
+    IVSCodeNotebook,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -229,7 +230,8 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
-            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage)
+            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
+            this.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook)
         );
         this.activeEditors.set(model.file.fsPath, editor);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));

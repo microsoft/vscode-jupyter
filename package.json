@@ -606,6 +606,13 @@
                 "enablement": "jupyter.notebookeditor.canrestartNotebookkernel && jupyter.isnotebooktrusted"
             },
             {
+                "command": "jupyter.notebookeditor.openInInteractive",
+                "title": "%jupyter.command.jupyter.openInInteractive.title%",
+                "category": "Notebook",
+                "icon": "$(edit)",
+                "enablement": "jupyter.isnotebooktrusted"
+            },
+            {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
                 "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                 "category": "Jupyter",
@@ -833,6 +840,12 @@
                 {
                     "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
+                    "group": "inline/cell@0",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.openInInteractive",
+                    "title": "%jupyter.command.jupyter.openInInteractive.title%",
                     "group": "inline/cell@0",
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 }
@@ -1126,6 +1139,12 @@
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
+                    "category": "Notebook",
+                    "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.openInInteractive",
+                    "title": "%jupyter.command.jupyter.openInInteractive.title%",
                     "category": "Notebook",
                     "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
                 },

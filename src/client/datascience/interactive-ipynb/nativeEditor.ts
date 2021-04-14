@@ -21,6 +21,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
+    IVSCodeNotebook,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -184,7 +185,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
         private extensionChecker: IPythonExtensionChecker,
-        serverStorage: IJupyterServerUriStorage
+        serverStorage: IJupyterServerUriStorage,
+        vscNotebook: IVSCodeNotebook
     ) {
         super(
             listeners,
@@ -221,7 +223,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             notebookProvider,
             useCustomEditorApi,
             selector,
-            serverStorage
+            serverStorage,
+            vscNotebook
         );
         asyncRegistry.push(this);
         asyncRegistry.push(this.trustService.onDidSetNotebookTrust(this.monitorChangesToTrust, this));
@@ -377,7 +380,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    public get notebookMetadata(): nbformat.INotebookMetadata | undefined {
+    public async getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined> {
         return this.model.metadata;
     }
 
@@ -842,7 +845,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // If we don't have a server right now, at least show our kernel name (this seems to slow down tests
         // too much though)
         if (!isTestExecution()) {
-            const metadata = this.notebookMetadata;
+            const metadata = await this.getNotebookMetadata();
             if (!this.notebook && metadata?.kernelspec) {
                 this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                     jupyterServerStatus: ServerStatus.NotStarted,

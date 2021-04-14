@@ -10,6 +10,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
+    IVSCodeNotebook,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -58,6 +59,7 @@ import {
     IJupyterVariables,
     INotebookExporter,
     INotebookProvider,
+    INotebookStorage,
     IStatusProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
@@ -101,6 +103,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private mode: InteractiveWindowMode = 'multiple';
     private loadPromise: Promise<void>;
     private _kernelConnection?: KernelConnectionMetadata;
+    private _cachedNotebookMetadata: nbformat.INotebookMetadata | undefined;
 
     constructor(
         listeners: IInteractiveWindowListener[],
@@ -134,7 +137,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         selector: KernelSelector,
         private readonly extensionChecker: IPythonExtensionChecker,
         serverStorage: IJupyterServerUriStorage,
-        private readonly exportDialog: IExportDialog
+        private readonly exportDialog: IExportDialog,
+        private readonly notebookStorage: INotebookStorage,
+        vscNotebook: IVSCodeNotebook
     ) {
         super(
             listeners,
@@ -171,7 +176,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             notebookProvider,
             useCustomEditorApi,
             selector,
-            serverStorage
+            serverStorage,
+            vscNotebook
         );
 
         // Send a telemetry event to indicate window is opening
@@ -210,7 +216,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
     public dispose() {
         super.dispose();
-        if (this.notebook) {
+        // Don't dispose our notebook if came from a native editor
+        if (this.notebook && !this._cachedNotebookMetadata) {
             this.notebook.dispose().ignoreErrors();
         }
         if (this.closedEvent) {
@@ -232,7 +239,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
+    public async addCode(code: string, file: Resource, line: number): Promise<boolean> {
         return this.addOrDebugCode(code, file, line, false);
     }
 
@@ -386,8 +393,14 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    protected get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined {
-        return undefined;
+    protected async getNotebookMetadata(): Promise<Readonly<nbformat.INotebookMetadata> | undefined> {
+        // Compute metadata if possible
+        if (this._owner && this._owner.fsPath.toLowerCase().endsWith('.ipynb')) {
+            const model = await this.notebookStorage.getOrCreateModel({ file: this._owner });
+            this._cachedNotebookMetadata = model.metadata;
+        }
+
+        return this._cachedNotebookMetadata;
     }
     protected get kernelConnection(): Readonly<KernelConnectionMetadata> | undefined {
         return this._kernelConnection;
@@ -400,7 +413,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected get notebookIdentity(): INotebookIdentity {
         // Use this identity for the lifetime of the notebook
         return {
-            resource: this._identity,
+            // Special case. If started from a native editor, use the same notebook
+            resource: this._owner && this._owner.fsPath.toLowerCase().endsWith('.ipynb') ? this._owner : this._identity,
             type: 'interactive'
         };
     }
@@ -409,7 +423,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
         // extension contexts
-        if (this.commandManager && this.commandManager.executeCommand) {
+        if (this.commandManager && typeof this.commandManager.executeCommand === 'function') {
             const interactiveContext = new ContextKey(EditorContexts.HaveInteractive, this.commandManager);
             interactiveContext.set(!this.isDisposed).catch();
             const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);
@@ -473,12 +487,12 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return super.ensureConnectionAndNotebook();
     }
 
-    private async addOrDebugCode(code: string, file: Uri, line: number, debug: boolean): Promise<boolean> {
-        if (this.owner && !this.fs.areLocalPathsSame(file.fsPath, this.owner.fsPath)) {
+    private async addOrDebugCode(code: string, file: Resource, line: number, debug: boolean): Promise<boolean> {
+        if (this.owner && file && !this.fs.areLocalPathsSame(file.fsPath, this.owner.fsPath)) {
             sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
         }
         // Update the owner for this window if not already set
-        if (!this._owner) {
+        if (!this._owner && file) {
             this._owner = file;
 
             // Update the title if we're in per file mode
@@ -488,7 +502,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
 
         // Add to the list of 'submitters' for this window.
-        if (!this._submitters.find((s) => this.fs.areLocalPathsSame(s.fsPath, file.fsPath))) {
+        if (file && !this._submitters.find((s) => this.fs.areLocalPathsSame(s.fsPath, file.fsPath))) {
             this._submitters.push(file);
         }
 
@@ -496,10 +510,19 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         await this.show();
 
         // Tell the webpanel about the new directory.
-        this.updateCwd(path.dirname(file.fsPath));
+        if (file) {
+            this.updateCwd(path.dirname(file.fsPath));
+        }
 
         // Call the internal method.
-        return this.submitCode(code, file.fsPath, line, undefined, undefined, debug ? { runByLine: false } : undefined);
+        return this.submitCode(
+            code,
+            file?.fsPath || Identifiers.EmptyFileName,
+            line,
+            undefined,
+            undefined,
+            debug ? { runByLine: false } : undefined
+        );
     }
 
     @captureTelemetry(Telemetry.ExportNotebookInteractive, undefined, false)

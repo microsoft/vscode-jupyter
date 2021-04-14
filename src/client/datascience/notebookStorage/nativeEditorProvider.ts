@@ -20,6 +20,7 @@ import {
     ICustomEditorService,
     IDocumentManager,
     ILiveShareApi,
+    IVSCodeNotebook,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -235,6 +236,10 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         return model as NativeEditorNotebookModel;
     }
 
+    public async openScratchPad() {
+        // Open a new interactive window with the same resource and kernel
+    }
+
     protected createNotebookEditor(model: NativeEditorNotebookModel, panel?: WebviewPanel): NativeEditor {
         const editor = new NativeEditor(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
@@ -269,7 +274,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
-            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage)
+            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
+            this.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook)
         );
         this.openedEditor(editor);
         return editor;

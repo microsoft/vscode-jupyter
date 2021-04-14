@@ -11,6 +11,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
+    IVSCodeNotebook,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -100,7 +101,8 @@ export class NativeEditorOldWebView extends NativeEditor {
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
         extensionChecker: IPythonExtensionChecker,
-        serverStorage: IJupyterServerUriStorage
+        serverStorage: IJupyterServerUriStorage,
+        vscNotebook: IVSCodeNotebook
     ) {
         super(
             listeners,
@@ -135,7 +137,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             webviewPanel,
             selector,
             extensionChecker,
-            serverStorage
+            serverStorage,
+            vscNotebook
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.

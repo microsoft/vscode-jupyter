@@ -12,6 +12,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
+    IVSCodeNotebook,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -52,6 +53,7 @@ import {
     IJupyterVariables,
     INotebookExporter,
     INotebookProvider,
+    INotebookStorage,
     IStatusProvider,
     IThemeFinder
 } from '../types';
@@ -202,7 +204,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<KernelSelector>(KernelSelector),
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
             this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
-            this.serviceContainer.get<IExportDialog>(IExportDialog)
+            this.serviceContainer.get<IExportDialog>(IExportDialog),
+            this.serviceContainer.get<INotebookStorage>(INotebookStorage),
+            this.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook)
         );
         this._windows.push(result);
 
