@@ -36,6 +36,8 @@ export class KernelCreator implements IExtensionSingleActivationService {
                 id: 'testid',
                 label: 'testlabel',
                 selector: { viewType: 'jupyter-notebook' },
+                supportedLanguages: ['python'],
+                hasExecutionOrder: true,
                 executeHandler: (executions) => {
                     for (let exec of executions) {
                         traceInfo(exec.document.uri.toString());
@@ -46,6 +48,8 @@ export class KernelCreator implements IExtensionSingleActivationService {
                 id: 'testid2',
                 label: 'testlabel2',
                 selector: { viewType: 'jupyter-notebook' },
+                supportedLanguages: ['python'],
+                hasExecutionOrder: true,
                 executeHandler: (executions) => {
                     for (let exec of executions) {
                         traceInfo(exec.document.uri.toString());
