@@ -81,6 +81,34 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebook.bind(this));
     }
 
+    public async createKernels(document: NotebookDocument, token: CancellationToken): Promise<void> {
+        const stopWatch = new StopWatch();
+        const kernels = await this.getKernels(document, token);
+        if (token.isCancellationRequested) {
+            return;
+        }
+
+        // Send telemetry related to the list
+        sendKernelListTelemetry(document.uri, kernels, stopWatch);
+
+        kernels.sort((a, b) => {
+            if (a.label > b.label) {
+                return 1;
+            } else if (a.label === b.label) {
+                return 0;
+            } else {
+                return -1;
+            }
+        });
+
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Providing kernels with length ${kernels.length} for ${document.uri.fsPath}. Preferred is ${
+                kernels.find((m) => m.isPreferred)?.label
+            }, ${kernels.find((m) => m.isPreferred)?.id}`
+        );
+    }
+
     public async resolveKernel?(
         kernel: VSCodeNotebookKernelMetadata,
         document: NotebookDocument,

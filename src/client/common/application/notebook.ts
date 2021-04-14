@@ -15,6 +15,8 @@ import {
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookKernel,
+    NotebookKernel2,
+    NotebookKernelOptions,
     NotebookKernelProvider,
     window
 } from 'vscode';
@@ -94,12 +96,19 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     ): Disposable {
         return notebook.registerNotebookContentProvider(notebookType, provider, options);
     }
-    public registerNotebookKernelProvider(
-        selector: NotebookDocumentFilter,
-        provider: NotebookKernelProvider
-    ): Disposable {
-        return notebook.registerNotebookKernelProvider(selector, provider);
+
+    // IANHU
+    // public registerNotebookKernelProvider(
+    // selector: NotebookDocumentFilter,
+    // provider: NotebookKernelProvider
+    // ): Disposable {
+    // return notebook.registerNotebookKernelProvider(selector, provider);
+    // }
+    //createNotebookKernel(options: NotebookKernelOptions): NotebookKernel2;
+    public createNotebookKernel(options: NotebookKernelOptions): NotebookKernel2 {
+        return notebook.createNotebookKernel(options);
     }
+
     private createDisposableEventEmitter<T>() {
         const eventEmitter = new EventEmitter<T>();
         this.disposables.push(eventEmitter);

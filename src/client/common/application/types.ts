@@ -69,7 +69,9 @@ import {
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookKernel,
-    NotebookKernelProvider
+    NotebookKernelProvider,
+    NotebookKernelOptions,
+    NotebookKernel2
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -1586,7 +1588,9 @@ export interface IVSCodeNotebook {
         }
     ): Disposable;
 
-    registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
+    createNotebookKernel(options: NotebookKernelOptions): NotebookKernel2;
+    // IANHU
+    // registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
 }
 
 export const IEncryptedStorage = Symbol('IAuthenticationService');

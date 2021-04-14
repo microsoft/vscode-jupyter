@@ -18,6 +18,7 @@ import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageSer
 import { NotebookIntegration } from './integration';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
 import { IntroduceNativeNotebookStartPage } from './introStartPage';
+import { KernelCreator } from './kernelCreator';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
@@ -44,7 +45,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
+    // IANHU: Drop this for now
     serviceManager.addSingleton<INotebookKernelProvider>(INotebookKernelProvider, VSCodeKernelPickerProvider);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, KernelCreator);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         GitHubIssueCodeLensProvider

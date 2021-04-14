@@ -76,12 +76,13 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                         }
                     )
                 );
-                this.disposables.push(
-                    this.vscNotebook.registerNotebookKernelProvider(
-                        { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
-                        this.kernelProvider
-                    )
-                );
+
+                // this.disposables.push(
+                // this.vscNotebook.registerNotebookKernelProvider(
+                // { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
+                // this.kernelProvider
+                // )
+                // );
             } catch (ex) {
                 // If something goes wrong, and we're not in Insiders & not using the NativeEditor experiment, then swallow errors.
                 traceError('Failed to register VS Code Notebook API', ex);

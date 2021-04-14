@@ -12,7 +12,10 @@ import {
 export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
 export const INotebookKernelProvider = Symbol('INotebookKernelProvider');
-export interface INotebookKernelProvider extends NotebookKernelProvider {}
+export interface INotebookKernelProvider extends NotebookKernelProvider {
+    // IANHU: New interface / class / name? For now just put on the old provider
+    createKernels(document: NotebookDocument, token: CancellationToken): Promise<void>;
+}
 
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 
