@@ -606,6 +606,13 @@
                 "enablement": "jupyter.notebookeditor.canrestartNotebookkernel && jupyter.isnotebooktrusted"
             },
             {
+                "command": "jupyter.notebookeditor.openScratchPad",
+                "title": "%jupyter.command.jupyter.openScratchPad.title%",
+                "category": "Notebook",
+                "icon": "$(edit)",
+                "enablement": "jupyter.isnotebooktrusted"
+            },
+            {
                 "command": "jupyter.notebookeditor.openInInteractive",
                 "title": "%jupyter.command.jupyter.openInInteractive.title%",
                 "category": "Notebook",
@@ -844,8 +851,8 @@
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 },
                 {
-                    "command": "jupyter.notebookeditor.openInInteractive",
-                    "title": "%jupyter.command.jupyter.openInInteractive.title%",
+                    "command": "jupyter.notebookeditor.openScratchPad",
+                    "title": "%jupyter.command.jupyter.openScratchPad.title%",
                     "group": "inline/cell@0",
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 }
@@ -1139,6 +1146,12 @@
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
+                    "category": "Notebook",
+                    "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.openScratchPad",
+                    "title": "%jupyter.command.jupyter.openScratchPad.title%",
                     "category": "Notebook",
                     "when": "jupyter.isnativeactive && jupyter.isnotebooktrusted"
                 },
@@ -1838,7 +1851,7 @@
         "viewsContainers": {
             "panel": [
                 {
-                    "id": "jupyter-variables",
+                    "id": "jupyter",
                     "title": "Jupyter",
                     "icon": "$(notebook)"
                 }
@@ -1850,6 +1863,14 @@
                     "type": "webview",
                     "id": "jupyterViewVariables",
                     "name": "Variables",
+                    "when": "jupyter.hasNativeNotebookOpen"
+                }
+            ],
+            "jupyter-scratchPad": [
+                {
+                    "type": "webview",
+                    "id": "jupyterScratchPad",
+                    "name": "Scratch Pad",
                     "when": "jupyter.hasNativeNotebookOpen"
                 }
             ]

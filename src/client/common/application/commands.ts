@@ -30,6 +30,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['editor.action.rename']: [];
     ['jupyter.selectJupyterInterpreter']: [];
     ['jupyterViewVariables.focus']: [];
+    ['jupyterScratchPad.focus']: [];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.CreateNewInteractive]: [];
@@ -53,6 +54,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.ResetLoggingLevel]: [];
     [DSCommands.OpenVariableView]: [];
     [DSCommands.OpenScratchPad]: [NotebookCell];
+    [DSCommands.OpenScratchPadInteractive]: [NotebookCell];
 }
 
 /**

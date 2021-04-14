@@ -22,6 +22,7 @@ import {
 
 @injectable()
 export class NativeEditorCommandListener implements IDataScienceCommandListener {
+    private commandManager: ICommandManager | undefined;
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
@@ -30,6 +31,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     ) {}
 
     public register(commandManager: ICommandManager): void {
+        this.commandManager = commandManager;
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorUndoCells, () => this.undoCells())
         );
@@ -70,7 +72,12 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             )
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.OpenScratchPad, (cell) => this.openScratchPad(cell))
+            commandManager.registerCommand(Commands.OpenScratchPad, () => this.openScratchPad())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.OpenScratchPadInteractive, (cell) =>
+                this.openScratchPadInteractive(cell)
+            )
         );
     }
 
@@ -158,7 +165,14 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         }
     }
 
-    private openScratchPad(cell: NotebookCell | undefined): void {
+    private async openScratchPad(): Promise<void> {
+        // For all contributed views vscode creates a command with the format [view ID].focus to focus that view
+        // It's the given way to focus a single view so using that here, note that it needs to match the view ID
+        return this.commandManager?.executeCommand('jupyterScratchPad.focus');
+    }
+
+    // This also works, not sure if we want both or not.
+    private openScratchPadInteractive(cell: NotebookCell | undefined): void {
         const file = cell?.notebook.uri || this.provider.activeEditor?.file;
         if (file) {
             this.interactiveProvider

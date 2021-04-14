@@ -32,7 +32,8 @@ function getEntry(bundle) {
             return {
                 plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
                 dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`],
-                variableView: ['babel-polyfill', `./src/datascience-ui/variable-view/index.tsx`]
+                variableView: ['babel-polyfill', `./src/datascience-ui/variable-view/index.tsx`],
+                scratchPad: ['babel-polyfill', `./src/datascience-ui/scratch-pad/index.tsx`]
             };
         case 'ipywidgetsKernel':
             return {
@@ -114,6 +115,12 @@ function getPlugins(bundle) {
                         indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'variableView'],
                         filename: 'index.variableView.html'
+                    }),
+                    new HtmlWebpackPlugin({
+                        template: 'src/datascience-ui/variable-view/index.html',
+                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                        chunks: ['commons', 'scratchPad'],
+                        filename: 'index.scratchPad.html'
                     })
                 ]
             );

@@ -188,13 +188,15 @@ import {
     ITrustService,
     IWebviewExtensibility
 } from './types';
-import { NotebookWatcher } from './variablesView/notebookWatcher';
-import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
+import { NotebookWatcher } from './notebook/notebookWatcher';
+import { IVariableViewProvider } from './variablesView/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { WebviewExtensibility } from './webviewExtensibility';
 import { RemoteKernelFinder } from './kernel-launcher/remoteKernelFinder';
 import { IApplicationEnvironment } from '../common/application/types';
+import { INotebookWatcher, IScratchPadProvider } from './notebook/types';
+import { ScratchPadProvider } from './notebook/scratchPadProvider';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -352,6 +354,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addBinding(INotebookExtensibility, INotebookExecutionLogger);
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
+    serviceManager.addSingleton<IScratchPadProvider>(IScratchPadProvider, ScratchPadProvider);
 
     registerNotebookTypes(serviceManager);
     registerContextTypes(serviceManager);

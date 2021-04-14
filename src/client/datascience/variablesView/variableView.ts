@@ -34,9 +34,10 @@ import {
     IThemeFinder
 } from '../types';
 import { WebviewViewHost } from '../webviews/webviewViewHost';
-import { INotebookWatcher, IVariableViewPanelMapping } from './types';
-import { VariableViewMessageListener } from './variableViewMessageListener';
+import { IVariableViewPanelMapping } from './types';
 import { ContextKey } from '../../common/contextKey';
+import { SimpleMessageListener } from '../interactive-common/simpleMessageListener';
+import { INotebookWatcher } from '../notebook/types';
 
 const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
@@ -68,7 +69,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             cssGenerator,
             themeFinder,
             workspaceService,
-            (c, d) => new VariableViewMessageListener(c, d),
+            (c, d) => new SimpleMessageListener(c, d),
             provider,
             variableViewDir,
             [path.join(variableViewDir, 'commons.initial.bundle.js'), path.join(variableViewDir, 'variableView.js')]

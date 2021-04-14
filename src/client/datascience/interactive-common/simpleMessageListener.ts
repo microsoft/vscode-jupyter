@@ -7,8 +7,8 @@ import { IWebviewViewMessageListener } from '../../common/application/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-// Message listening class for the native variable viewer
-export class VariableViewMessageListener implements IWebviewViewMessageListener {
+// Message listening class for the native variable viewer and scratch pad
+export class SimpleMessageListener implements IWebviewViewMessageListener {
     private disposedCallback: () => void;
     private callback: (message: string, payload: any) => void;
 

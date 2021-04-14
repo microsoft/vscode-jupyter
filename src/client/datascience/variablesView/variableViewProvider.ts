@@ -15,8 +15,9 @@ import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
+import { INotebookWatcher } from '../notebook/types';
 import { ICodeCssGenerator, IJupyterVariableDataProviderFactory, IJupyterVariables, IThemeFinder } from '../types';
-import { INotebookWatcher, IVariableViewProvider } from './types';
+import { IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
 
 // This class creates our UI for our variable view and links it to the vs code webview view

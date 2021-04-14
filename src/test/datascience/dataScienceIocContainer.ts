@@ -260,7 +260,7 @@ import {
     ITrustService,
     IWebviewExtensibility
 } from '../../client/datascience/types';
-import { INotebookWatcher, IVariableViewProvider } from '../../client/datascience/variablesView/types';
+import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
 import { VariableViewActivationService } from '../../client/datascience/variablesView/variableViewActivationService';
 import { VariableViewProvider } from '../../client/datascience/variablesView/variableViewProvider';
 import { WebviewExtensibility } from '../../client/datascience/webviewExtensibility';
@@ -312,12 +312,13 @@ import { WebviewViewProvider } from '../../client/common/application/webviewView
 import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/interactive-ipynb/randomBytes';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { PreferredRemoteKernelIdProvider } from '../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
-import { NotebookWatcher } from '../../client/datascience/variablesView/notebookWatcher';
+import { NotebookWatcher } from '../../client/datascience/notebook/notebookWatcher';
 import { InterpreterPackages } from '../../client/datascience/telemetry/interpreterPackages';
 import { RemoteKernelFinder } from '../../client/datascience/kernel-launcher/remoteKernelFinder';
 import { Extensions } from '../../client/common/application/extensions';
 import { NotebookCreator } from '../../client/datascience/notebook/creation/notebookCreator';
 import { CreationOptionService } from '../../client/datascience/notebook/creation/creationOptionsService';
+import { INotebookWatcher } from '../../client/datascience/notebook/types';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {

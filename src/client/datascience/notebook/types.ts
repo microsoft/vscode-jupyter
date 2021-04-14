@@ -2,12 +2,14 @@
 // Licensed under the MIT License.
 
 import {
+    Event,
     CancellationToken,
     NotebookCommunication,
     NotebookDocument,
     NotebookKernel,
     NotebookKernelProvider
 } from 'vscode';
+import { INotebook, IScratchPadWebviewViewProvider } from '../types';
 
 export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
@@ -30,3 +32,20 @@ export enum CellOutputMimeTypes {
     stderr = 'application/x.notebook.stderr',
     stdout = 'application/x.notebook.stdout'
 }
+
+export interface IActiveNotebookChangedEvent {
+    notebook?: INotebook;
+    executionCount?: number;
+}
+
+export const INotebookWatcher = Symbol('INotebookWatcher');
+export interface INotebookWatcher {
+    readonly activeNotebook?: INotebook;
+    readonly activeNotebookExecutionCount?: number;
+    readonly onDidChangeActiveNotebook: Event<IActiveNotebookChangedEvent>;
+    readonly onDidExecuteActiveNotebook: Event<{ executionCount: number }>;
+    readonly onDidRestartActiveNotebook: Event<void>;
+}
+
+export const IScratchPadProvider = Symbol('IScratchPadProvider');
+export interface IScratchPadProvider extends IScratchPadWebviewViewProvider {}

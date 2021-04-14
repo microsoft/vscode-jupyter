@@ -1444,6 +1444,11 @@ export interface IVSCWebviewViewProvider extends WebviewViewProvider {
     readonly viewType: 'jupyterViewVariables';
 }
 
+// Wraps the VS Code WebviewViewProvider. VSC Prefix as we also have our own IWebviewViewProvider
+export interface IScratchPadWebviewViewProvider extends WebviewViewProvider {
+    readonly viewType: 'jupyterScratchPad';
+}
+
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
     readonly onDidChangeUri: Event<void>;
