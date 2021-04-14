@@ -320,6 +320,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    readonly onIOPubMessage?: Event<KernelMessage.IIOPubMessage>;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;

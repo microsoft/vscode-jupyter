@@ -82,7 +82,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
     }
 
     public async resolveKernel?(
-        kernel: VSCodeNotebookKernelMetadata,
+        _kernel: VSCodeNotebookKernelMetadata,
         document: NotebookDocument,
         webview: NotebookCommunication,
         token: CancellationToken
@@ -95,7 +95,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         }
         list.push(webview);
 
-        return this.kernelResolver.resolveKernel(kernel, document, webview, token);
+        return this.kernelResolver.resolveKernel(document, webview, token);
     }
     @captureTelemetry(Telemetry.KernelProviderPerf)
     public async provideKernels(

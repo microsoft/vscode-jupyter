@@ -85,7 +85,6 @@ export class CommonMessageCoordinator {
         await result.initialize();
         return result;
     }
-
     public dispose() {
         this.ipyWidgetMessageDispatcher?.dispose(); // NOSONAR
         this.ipyWidgetScriptSource?.dispose(); // NOSONAR

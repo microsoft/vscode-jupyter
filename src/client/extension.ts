@@ -77,6 +77,9 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             registerNewNotebookContent: () => Promise.resolve(),
             registerPythonApi: noop,
             registerRemoteServerProvider: noop,
+            getKernel: () => Promise.resolve(undefined),
+            registerCellExecutionHandler: noop,
+            initializeWebViewKernel: () => Promise.resolve(),
             showDataViewer: () => Promise.resolve()
         };
     }

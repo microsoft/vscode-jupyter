@@ -8,13 +8,15 @@ import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
 import {
     ExtensionMode,
+    Event,
     notebook,
     NotebookCell,
     NotebookCellExecutionTask,
     NotebookCellKind,
     NotebookCellExecutionSummary,
     NotebookDocument,
-    workspace
+    workspace,
+    EventEmitter
 } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
@@ -69,6 +71,13 @@ export class CellExecutionFactory {
     }
 }
 
+type PreExecuteEventArgs = {
+    sender: IJupyterSession;
+    cell: NotebookCell;
+    handled?: Promise<void>;
+    args: Parameters<Kernel.IKernelConnection['requestExecute']>;
+};
+
 /**
  * Responsible for execution of an individual cell and manages the state of the cell as it progresses through the execution phases.
  * Execution phases include - enqueue for execution (done in ctor), start execution, completed execution with/without errors, cancel execution or dequeue.
@@ -104,6 +113,10 @@ export class CellExecution {
     private started?: boolean;
 
     private _completed?: boolean;
+    public static get onPreExecuteCell(): Event<PreExecuteEventArgs> {
+        return CellExecution._preExecuteCell.event;
+    }
+    private static _preExecuteCell = new EventEmitter<PreExecuteEventArgs>();
     private startTime?: number;
     private readonly initPromise?: Promise<void>;
     private task?: NotebookCellExecutionTask;
@@ -431,7 +444,7 @@ export class CellExecution {
 
         // For Jupyter requests, silent === don't output, while store_history === don't update execution count
         // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
-        const request = (this.request = session.requestExecute(
+        const args: Parameters<Kernel.IKernelConnection['requestExecute']> = [
             {
                 code,
                 silent: false,
@@ -441,7 +454,14 @@ export class CellExecution {
             },
             false,
             metadata
-        ));
+        ];
+        const eventArgs: PreExecuteEventArgs = { sender: session, cell: this.cell, args };
+        CellExecution._preExecuteCell.fire(eventArgs);
+        if (eventArgs.handled) {
+            await eventArgs.handled;
+        }
+        // Fire event allowing others to modify or be notified of executions.
+        const request = (this.request = session.requestExecute(...args));
 
         // Listen to messages and update our cell execution state appropriately
 

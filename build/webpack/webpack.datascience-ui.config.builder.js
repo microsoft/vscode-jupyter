@@ -42,6 +42,10 @@ function getEntry(bundle) {
             return {
                 ipywidgetsRenderer: [`./src/datascience-ui/ipywidgets/renderer/index.ts`]
             };
+        case 'sidecarRenderer':
+            return {
+                sidecarRenderer: [`./src/datascience-ui/ipywidgets/renderer/sidecar.ts`]
+            };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
     }
@@ -119,6 +123,7 @@ function getPlugins(bundle) {
             );
             break;
         }
+        case 'sidecarRenderer':
         case 'ipywidgetsRenderer':
         case 'ipywidgetsKernel': {
             const definePlugin = new webpack.DefinePlugin({
@@ -169,7 +174,7 @@ function buildConfiguration(bundle) {
         );
     }
     let outputProps = {};
-    if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
+    if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel' || bundle === 'sidecarRenderer') {
         // Nothing
     } else {
         filesToCopy.push({
@@ -362,7 +367,7 @@ function buildConfiguration(bundle) {
     };
 
     // Do not split for renderer kernel.
-    if (bundle === 'ipywidgetsKernel' || bundle === 'ipywidgetsRenderer') {
+    if (bundle === 'ipywidgetsKernel' || bundle === 'ipywidgetsRenderer' || bundle == 'sidecarRenderer') {
         delete config.optimization.splitChunks;
     }
     return config;
@@ -372,3 +377,4 @@ exports.notebooks = buildConfiguration('notebook');
 exports.viewers = buildConfiguration('viewers');
 exports.ipywidgetsKernel = buildConfiguration('ipywidgetsKernel');
 exports.ipywidgetsRenderer = buildConfiguration('ipywidgetsRenderer');
+exports.sidecarRenderer = buildConfiguration('sidecarRenderer');

@@ -5,7 +5,6 @@ import {
     CancellationToken,
     NotebookCommunication,
     NotebookDocument,
-    NotebookKernel,
     NotebookKernelProvider
 } from 'vscode';
 
@@ -17,12 +16,7 @@ export interface INotebookKernelProvider extends NotebookKernelProvider {}
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 
 export interface INotebookKernelResolver {
-    resolveKernel(
-        kernel: NotebookKernel,
-        document: NotebookDocument,
-        webview: NotebookCommunication,
-        token: CancellationToken
-    ): Promise<void>;
+    resolveKernel(document: NotebookDocument, webview: NotebookCommunication, token: CancellationToken): Promise<void>;
 }
 
 export enum CellOutputMimeTypes {

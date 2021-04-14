@@ -3,16 +3,33 @@
 
 'use strict';
 
-import { Disposable, Event, NotebookCell, Uri } from 'vscode';
+import type { ISignal, Slot } from '@phosphor/signaling';
+import * as fastDeepEqual from 'fast-deep-equal';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { JSONObject } from '@phosphor/coreutils';
+import {
+    CancellationToken,
+    Disposable,
+    Event,
+    NotebookCell,
+    NotebookCommunication,
+    NotebookDocument,
+    Uri,
+    window
+} from 'vscode';
+import { ServerStatus } from '../datascience-ui/interactive-common/mainState';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
+import { createDeferred } from './common/utils/async';
 import { VSCodeNotebookProvider } from './datascience/constants';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
-import { NotebookCellRunState } from './datascience/jupyter/kernels/types';
+import { CellExecution } from './datascience/jupyter/kernels/cellExecution';
+import { IKernelProvider, NotebookCellRunState } from './datascience/jupyter/kernels/types';
 import { CreationOptionService } from './datascience/notebook/creation/creationOptionsService';
 import { KernelStateEventArgs } from './datascience/notebookExtensibility';
 import {
+    IJupyterSession,
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
     INotebookEditorProvider,
@@ -20,6 +37,7 @@ import {
     IWebviewExtensibility
 } from './datascience/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
+import { INotebookKernelResolver } from './datascience/notebook/types';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -75,6 +93,20 @@ export interface IExtensionApi {
      * Creates a blank notebook and defaults the empty cell to the language provided.
      */
     createBlankNotebook(options: { defaultCellLanguage: string }): Promise<void>;
+    registerCellExecutionHandler(
+        cb: (cell: NotebookCell, args: Parameters<Kernel.IKernelConnection['requestExecute']>) => void
+    ): void;
+    getKernel(
+        notebook: NotebookDocument
+    ): Promise<
+        | undefined
+        | Pick<Kernel.IKernel, 'isReady' | 'ready' | 'requestExecute' | 'iopubMessage' | 'statusChanged' | 'status'>
+    >;
+    initializeWebViewKernel(
+        document: NotebookDocument,
+        webview: NotebookCommunication,
+        token: CancellationToken
+    ): Promise<void>;
 }
 
 export function buildApi(
@@ -118,6 +150,105 @@ export function buildApi(
         createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
             const service = serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
             await service.createNew(options);
+        },
+        registerCellExecutionHandler(
+            cb: (cell: NotebookCell, args: Parameters<Kernel.IKernelConnection['requestExecute']>) => void
+        ): void {
+            CellExecution.onPreExecuteCell(async (e) => {
+                const originalData: typeof e.args = JSON.parse(JSON.stringify(e.args));
+                cb(e.cell, e.args);
+                const updatedData = JSON.parse(JSON.stringify(e.args));
+                if (!fastDeepEqual(originalData, updatedData)) {
+                    const deferred = createDeferred<void>();
+                    // Possible we have multiple listeners.
+                    if (e.handled) {
+                        e.handled = e.handled.then(() => deferred.promise);
+                    } else {
+                        e.handled = deferred.promise;
+                    }
+                    const selection = await window.showWarningMessage(
+                        'Do you want Extension A to be able to modify the code prior to execution',
+                        { modal: true },
+                        'Yes',
+                        'No'
+                    );
+                    if (selection != 'Yes') {
+                        e.args = originalData;
+                    }
+                    deferred.resolve();
+                }
+            });
+        },
+        initializeWebViewKernel(document: NotebookDocument, webview: NotebookCommunication, token: CancellationToken) {
+            const resolver = serviceContainer.get<INotebookKernelResolver>(INotebookKernelResolver);
+            return resolver.resolveKernel(document, webview, token);
+        },
+        getKernel: async (
+            notebook: NotebookDocument
+        ): Promise<
+            | undefined
+            | Pick<Kernel.IKernel, 'isReady' | 'ready' | 'requestExecute' | 'iopubMessage' | 'status' | 'statusChanged'>
+        > => {
+            const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
+            const kernel = kernelProvider.get(notebook.uri);
+            if (!kernel) {
+                return;
+            }
+            const session = await kernel.session;
+            if (!session) {
+                return;
+            }
+
+            class ProxyKernel {
+                get isReady() {
+                    return this.session.status === ServerStatus.Idle;
+                }
+                get status(): Kernel.Status {
+                    return sessionStatusToKernelStatus(this.session.status);
+                }
+                get ready(): Promise<void> {
+                    if (this.session.status === ServerStatus.Idle) {
+                        return Promise.resolve();
+                    }
+                    const deferred = createDeferred<void>();
+                    const timer = setInterval(() => {
+                        if (this.session.status === ServerStatus.Idle) {
+                            return deferred.resolve();
+                        }
+                        clearInterval(timer);
+                    }, 1000);
+                    return deferred.promise;
+                }
+                get iopubMessage(): ISignal<Kernel.IKernel, KernelMessage.IIOPubMessage> {
+                    return this.iopubMessageSignal;
+                }
+                get statusChanged(): ISignal<Kernel.IKernel, Kernel.Status> {
+                    return this.kernelStatusSignal;
+                }
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                private readonly iopubMessageSignal = new Signal<Kernel.IKernel, KernelMessage.IIOPubMessage>();
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                private readonly kernelStatusSignal = new Signal<Kernel.IKernel, Kernel.Status>();
+                constructor(private readonly session: IJupyterSession) {
+                    if (session.onIOPubMessage) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        session.onIOPubMessage((e) => this.iopubMessageSignal.fire(this as any, e));
+                    }
+                    session.onSessionStatusChanged((e) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        this.kernelStatusSignal.fire(this as any, sessionStatusToKernelStatus(e));
+                    });
+                }
+                requestExecute(
+                    content: KernelMessage.IExecuteRequestMsg['content'],
+                    disposeOnDone?: boolean,
+                    metadata?: JSONObject
+                ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    return this.session.requestExecute(content, disposeOnDone, metadata) as any;
+                }
+            }
+            return new ProxyKernel(session);
         }
     };
 
@@ -129,4 +260,43 @@ export function buildApi(
         /* eslint-enable @typescript-eslint/no-explicit-any */
     }
     return api;
+}
+
+class Signal<T, S> implements ISignal<T, S> {
+    private slots: Set<Slot<T, S>> = new Set<Slot<T, S>>();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public connect(slot: Slot<T, S>, thisArg?: any): boolean {
+        const bound = thisArg ? slot.bind(thisArg) : slot;
+        this.slots.add(bound);
+        return true;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public disconnect(slot: Slot<T, S>, thisArg?: any): boolean {
+        const bound = thisArg ? slot.bind(thisArg) : slot;
+        this.slots.delete(bound);
+        return true;
+    }
+
+    public fire(sender: T, args: S): void {
+        this.slots.forEach((s) => s(sender, args));
+    }
+}
+function sessionStatusToKernelStatus(status: ServerStatus) {
+    switch (status) {
+        case ServerStatus.Busy:
+            return 'busy';
+        case ServerStatus.Dead:
+            return 'dead';
+        case ServerStatus.Idle:
+            return 'idle';
+        case ServerStatus.NotStarted:
+            return 'unknown';
+        case ServerStatus.Restarting:
+            return 'restarting';
+        case ServerStatus.Starting:
+            return 'starting';
+        default:
+            return 'unknown';
+    }
 }

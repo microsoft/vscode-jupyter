@@ -33,6 +33,9 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     private static _instance = new ReplaySubject<WidgetManager | undefined>();
     private manager?: IJupyterLabWidgetManager;
     private proxyKernel?: Kernel.IKernel;
+    public get kernel() {
+        return this.proxyKernel;
+    }
     private options?: KernelSocketOptions;
     private pendingMessages: { message: string; payload: any }[] = [];
     /**

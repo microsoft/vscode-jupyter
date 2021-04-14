@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 /* eslint-disable no-console */
 import type { nbformat } from '@jupyterlab/coreutils';
+import { Kernel } from '@jupyterlab/services';
 import { NotebookOutputEventParams } from 'vscode-notebook-renderer';
 import {
     IInteractiveWindowMapping,
@@ -169,6 +170,10 @@ async function getWidgetManager(): Promise<WidgetManager> {
     return widgetManagerPromise;
 }
 
+export async function getKernel(): Promise<Kernel.IKernel | undefined> {
+    return getWidgetManager().then((wm) => wm.kernel);
+}
+
 async function createWidgetView(
     widgetData: nbformat.IMimeBundle & { model_id: string; version_major: number },
     element: HTMLElement
@@ -187,6 +192,8 @@ function initialize() {
         // Setup the widget manager
         const postOffice = new PostOffice();
         const mgr = new WidgetManagerComponent(postOffice);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any)._jupyter_postOffice = postOffice;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any)._mgr = mgr;
     } catch (ex) {
@@ -213,7 +220,8 @@ function convertVSCodeOutputToExecutResultOrDisplayData(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).ipywidgetsKernel = {
     renderOutput,
-    disposeOutput
+    disposeOutput,
+    getKernel
 };
 
 // To ensure we initialize after the other scripts, wait for them.

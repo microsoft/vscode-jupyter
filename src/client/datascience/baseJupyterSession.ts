@@ -79,6 +79,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private _jupyterLab?: typeof import('@jupyterlab/services');
     private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
+    public get onIOPubMessage(){
+        return this.ioPubEventEmitter.event;
+    }
     private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
 
     constructor(

@@ -23,6 +23,7 @@ import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
+    IJupyterSession,
     INotebook,
     INotebookEditorProvider,
     INotebookProvider,
@@ -36,7 +37,7 @@ import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
-        return this.notebook?.connection;
+        return this._notebook?.connection;
     }
     get onStatusChanged(): Event<ServerStatus> {
         return this._onStatusChanged.event;
@@ -52,21 +53,27 @@ export class Kernel implements IKernel {
         return this._info;
     }
     get status(): ServerStatus {
-        return this.notebook?.status ?? ServerStatus.NotStarted;
+        return this._notebook?.status ?? ServerStatus.NotStarted;
     }
     get disposed(): boolean {
-        return this._disposed === true || this.notebook?.disposed === true;
+        return this._disposed === true || this._notebook?.disposed === true;
     }
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
-    private notebook?: INotebook;
+    private _notebook?: INotebook;
     private _disposed?: boolean;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
     private _notebookPromise?: Promise<INotebook>;
+    public get session(): Promise<IJupyterSession | undefined> {
+        if (!this._notebookPromise) {
+            return Promise.resolve(undefined);
+        }
+        return this._notebookPromise.then((item) => item.session);
+    }
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
@@ -128,12 +135,12 @@ export class Kernel implements IKernel {
         traceInfo(`Dispose kernel ${this.uri.toString()}`);
         this.restarting = undefined;
         this._notebookPromise = undefined;
-        if (this.notebook) {
-            await this.notebook.dispose();
+        if (this._notebook) {
+            await this._notebook.dispose();
             this._disposed = true;
             this._onDisposed.fire();
             this._onStatusChanged.fire(ServerStatus.Dead);
-            this.notebook = undefined;
+            this._notebook = undefined;
         }
         this.kernelExecution.dispose();
     }
@@ -141,10 +148,10 @@ export class Kernel implements IKernel {
         if (this.restarting) {
             return this.restarting.promise;
         }
-        if (this.notebook) {
+        if (this._notebook) {
             this.restarting = createDeferred<void>();
             try {
-                await this.notebook.restartKernel(this.launchTimeout);
+                await this._notebook.restartKernel(this.launchTimeout);
                 await this.initializeAfterStart();
                 this.restarting.resolve();
             } catch (ex) {
@@ -186,7 +193,7 @@ export class Kernel implements IKernel {
                 try {
                     try {
                         traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
-                        this.notebook = await this.notebookProvider.getOrCreateNotebook({
+                        this._notebook = await this.notebookProvider.getOrCreateNotebook({
                             identity: this.uri,
                             resource: this.uri,
                             disableUI: options?.disableUI,
@@ -195,7 +202,7 @@ export class Kernel implements IKernel {
                             kernelConnection: this.kernelConnectionMetadata,
                             token: this.startCancellation.token
                         });
-                        if (!this.notebook) {
+                        if (!this._notebook) {
                             // This is an unlikely case.
                             // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
                             throw new Error('Kernel has not been started');
@@ -210,10 +217,10 @@ export class Kernel implements IKernel {
                         Telemetry.PerceivedJupyterStartupNotebook,
                         stopWatch.elapsedTime
                     );
-                    if (this.notebook?.connection) {
-                        this.updateRemoteUriList(this.notebook.connection).catch(noop);
+                    if (this._notebook?.connection) {
+                        this.updateRemoteUriList(this._notebook.connection).catch(noop);
                     }
-                    resolve(this.notebook);
+                    resolve(this._notebook);
                 } catch (ex) {
                     sendKernelTelemetryEvent(
                         options.document.uri,
@@ -249,32 +256,32 @@ export class Kernel implements IKernel {
     }
 
     private async initializeAfterStart() {
-        if (!this.notebook) {
+        if (!this._notebook) {
             return;
         }
 
         // Set the notebook property on the matching editor
         const editor = this.editorProvider.editors.find((item) => this.fs.arePathsSame(item.file, this.uri));
         if (editor) {
-            editor.notebook = this.notebook;
+            editor.notebook = this._notebook;
         }
 
         this.disableJedi();
-        if (!this.hookedNotebookForEvents.has(this.notebook)) {
-            this.hookedNotebookForEvents.add(this.notebook);
-            this.notebook.kernelSocket.subscribe(this._kernelSocket);
-            this.notebook.onDisposed(() => {
+        if (!this.hookedNotebookForEvents.has(this._notebook)) {
+            this.hookedNotebookForEvents.add(this._notebook);
+            this._notebook.kernelSocket.subscribe(this._kernelSocket);
+            this._notebook.onDisposed(() => {
                 traceInfo(`Kernel got disposed as a result of notebook.onDisposed ${this.uri.toString()}`);
                 this._notebookPromise = undefined;
                 this._onDisposed.fire();
             });
-            this.notebook.onKernelRestarted(() => {
-                traceInfo(`Notebook Kernel restarted ${this.notebook?.identity}`);
+            this._notebook.onKernelRestarted(() => {
+                traceInfo(`Notebook Kernel restarted ${this._notebook?.identity}`);
                 this._onRestarted.fire();
             });
-            this.notebook.onSessionStatusChanged(
+            this._notebook.onSessionStatusChanged(
                 (e) => {
-                    traceInfo(`Notebook Session status ${this.notebook?.identity} # ${e}`);
+                    traceInfo(`Notebook Session status ${this._notebook?.identity} # ${e}`);
                     this._onStatusChanged.fire(e);
                 },
                 this,
@@ -282,18 +289,18 @@ export class Kernel implements IKernel {
             );
         }
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            await this.notebook.setLaunchingFile(this.uri.fsPath);
+            await this._notebook.setLaunchingFile(this.uri.fsPath);
         }
-        await this.notebook
+        await this._notebook
             .requestKernelInfo()
             .then((item) => (this._info = item.content))
             .catch(traceWarning.bind('Failed to request KernelInfo'));
-        await this.notebook.waitForIdle(this.launchTimeout);
+        await this._notebook.waitForIdle(this.launchTimeout);
     }
 
     private disableJedi() {
-        if (isPythonKernelConnection(this.kernelConnectionMetadata) && this.notebook) {
-            this.notebook.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
+        if (isPythonKernelConnection(this.kernelConnectionMetadata) && this._notebook) {
+            this._notebook.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
         }
     }
 }

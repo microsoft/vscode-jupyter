@@ -9,7 +9,13 @@ import type { CancellationToken, Event, NotebookCell, NotebookDocument, QuickPic
 import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
-import type { IJupyterKernel, IJupyterKernelSpec, InterruptResult, KernelSocketInformation } from '../../types';
+import type {
+    IJupyterKernel,
+    IJupyterKernelSpec,
+    IJupyterSession,
+    InterruptResult,
+    KernelSocketInformation
+} from '../../types';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
@@ -114,6 +120,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly onRestarted: Event<void>;
     readonly status: ServerStatus;
     readonly disposed: boolean;
+    readonly session: Promise<IJupyterSession | undefined>;
     /**
      * Kernel information, used to save in ipynb in the metadata.
      * Crucial for non-python notebooks, else we save the incorrect information.
