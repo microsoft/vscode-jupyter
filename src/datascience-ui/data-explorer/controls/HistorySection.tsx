@@ -51,17 +51,18 @@ export class HistorySection extends React.Component<IProps, IState> {
 
     }
 
-    viewHistoryItem(index: number) {
-        console.log("blaaaaaa");
-        this.props.submitCommand({
-            command: 'get_history_item',
-            args: {
-                index: index
-            }
-        });
+    viewHistoryItem(index: number | undefined) {
+        if (index !== undefined) {
+          this.props.submitCommand({
+              command: 'get_history_item',
+              args: {
+                  index: index
+              }
+          });
+        }
     }
 
-    onRenderCell = (item: any, index: number): JSX.Element => {
+    onRenderCell = (item?: any, index?: number): JSX.Element => {
         return (
           <div data-is-focusable>
             <div 
@@ -77,7 +78,6 @@ export class HistorySection extends React.Component<IProps, IState> {
         );
       };
 
-    //TODO add the ability to click on list items to view their history
     //TODO add the ability to X and delete list items
     render() {
         return (

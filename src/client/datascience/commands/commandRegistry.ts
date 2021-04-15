@@ -647,8 +647,8 @@ export class CommandRegistry implements IDisposable {
         }
 
         if (setting == OpenDataViewerSetting.STANDALONE) {
-            const notebook = await this.notebookProvider.getOrCreateNotebook({ resource: file, identity: file, disableUI: true });
-            const code = getImportCodeForFileType(file.fsPath);
+            const notebook = await this.notebookProvider.getOrCreateNotebook({ resource: file, identity: file!, disableUI: true });
+            const code = getImportCodeForFileType(file!.fsPath);
             notebook?.execute(code, '', 0, '', undefined, true).then(async () => {
                 await this.commandManager.executeCommand('jupyter.openVariableView');
                 // Open data viewer for this variable
@@ -684,7 +684,7 @@ export class CommandRegistry implements IDisposable {
             }
             // Add code cell to import dataframe
             const blankCell = (notebookEditor as any).document.cellAt(0) as NotebookCell;
-            const code = getImportCodeForFileType(file.fsPath);
+            const code = getImportCodeForFileType(file!.fsPath);
             await updateCellCode(blankCell, code);
             // Run the cells
             this.commandManager.executeCommand('notebook.cell.executeAndInsertBelow').then(async () => {

@@ -9,6 +9,7 @@ interface IProps {
 }
 
 interface IState {
+    columnRenameTargetKey: number | undefined;
     columnRenameTargetText: string | undefined;
     newColumnName: string | undefined;
 }
@@ -17,6 +18,7 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
         this.state = {
+            columnRenameTargetKey: 1,
             columnRenameTargetText: '',
             newColumnName: ''
         };
@@ -42,7 +44,6 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
                             label={'Rename column:'}
                             style={{ marginRight: '10px', width: '100px' }}
                             styles={dropdownStyles}
-                            selectedKey={this.state.columnRenameTargetText}
                             options={this.props.options}
                             className="dropdownTitleOverrides"
                             onChange={this.updateRenameTarget}
@@ -57,7 +58,7 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
                         />
                         <button
                             onClick={() => {
-                                if (this.state.newColumnName)
+                                if (this.state.newColumnName) {                                    
                                     this.props.submitCommand({
                                         command: 'rename',
                                         args: {
@@ -65,6 +66,7 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
                                             new: this.state.newColumnName
                                         }
                                     });
+                                }
                             }}
                             style={{
                                 backgroundColor: 'var(--vscode-button-background)',
@@ -85,7 +87,8 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
     }
 
     private updateRenameTarget = (_data: React.FormEvent, option: IDropdownOption | undefined) => {
-        this.setState({ columnRenameTargetText: option?.text });
+        console.log('Update rename target', option);
+        this.setState({ columnRenameTargetKey: option?.key as number, columnRenameTargetText: option?.text });
     };
     private handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         this.setState({ newColumnName: event.currentTarget.value });

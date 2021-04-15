@@ -49,6 +49,12 @@ import { isValidSliceExpression, preselectedSliceExpression } from '../../../dat
 import { addNewCellAfter, updateCellCode } from '../notebook/helpers/executionHelpers';
 import { CheckboxState } from '../../telemetry/constants';
 
+interface IHistoryItem {
+    name: string;
+    variableName: string;
+    code: string;
+}
+
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
@@ -61,7 +67,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private sentDataViewerSliceDimensionalityTelemetry = false;
     private variableCounter = 0;
     private existingDisposable: Disposable | undefined;
-    private historyList = [];
+    private historyList: IHistoryItem[] = [];
 
     public get visible() {
         return !!this.webPanel?.isVisible();
@@ -363,7 +369,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         }
     }
 
-    private addToHistory(transformation: String, variableName: String, code: String) {
+    private addToHistory(transformation: string, variableName: string, code: string) {
         const newHistItem = {
             name: transformation,
             variableName: variableName,
@@ -375,11 +381,9 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
     private async handleCommand(payload: { command: string; args: any }) {
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
-        let result;
         let code = '';
         const currentVariableName = (await this.dataFrameInfoPromise)!.name;
-        let newVariableName = '';
-        //TODO fix this not finding the dummy notebook provider
+        let newVariableName = currentVariableName ?? '';
         const matchingNotebookEditor = this.notebookEditorProvider.editors.find(
             (editor) => editor.notebook?.identity.fsPath === notebook?.identity.fsPath
         );
@@ -389,7 +393,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 await this.interactiveWindowProvider.getOrCreate(notebook?.resource, notebook);
                 break;
             case 'export_to_csv':
-                result = await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
+                await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
                 break;
             case 'export_to_python_script':
                 //TODO get code from notebook
@@ -417,14 +421,27 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.variableCounter += 1;
                 newVariableName = `df${this.variableCounter}`;
                 const labels = payload.args.targets as string[];
-                code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(',') + ']'})`;
-                this.addToHistory("Dropped Column(s): " + labels.map((label) => `"${label}"`).join(','), newVariableName, code);
+                if (payload.args.mode === 'row') {
+                    // Drop rows by index
+                    code = `df${this.variableCounter} = ${currentVariableName}.drop(${'[' + labels.join(', ') + ']'})`;
+                    this.addToHistory("Dropped Rows(s): " + labels.map((label) => `${label}`).join(','), newVariableName, code);
+                } else {
+                    // Drop columns by column name
+                    code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(', ') + ']'})`;
+                    this.addToHistory("Dropped Column(s): " + labels.map((label) => `"${label}"`).join(','), newVariableName, code);
+                }
                 break;
             case 'dropna':
                 this.variableCounter += 1;
                 newVariableName = `df${this.variableCounter}`;
-                code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})`;
-                this.addToHistory(payload.args.target == 0 ? "Dropped rows with missing data" : "Dropped columns with missing data", newVariableName, code);
+                if (payload.args.subset !== undefined) {
+                    // This assumes only one column/row at a time
+                    code = `${newVariableName} = ${currentVariableName}.dropna(subset=["${payload.args.subset}"])`;
+                    this.addToHistory(`Dropped column with missing data: "${payload.args.subset}"`, newVariableName, code);
+                } else {
+                    code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})`;
+                    this.addToHistory(payload.args.target == 0 ? "Dropped rows with missing data" : "Dropped columns with missing data", newVariableName, code);
+                }
                 break;
             case 'pyplot.hist':
                 refreshRequired = false;
@@ -445,31 +462,33 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.getHistoryItem(payload.args.index).ignoreErrors();
                 break;
         }
-        
-        if (code && notebook !== undefined) {
-            //TODO this is not executing properly in the then() 
-            notebook?.execute(code, '', 0, uuid()).then(async () => {
+        const dataCleaningMode = this.configService.getSettings().dataCleaningMode;
+        if (dataCleaningMode === 'standalone') {
+            if (code && notebook !== undefined) {
+                //TODO this is not executing properly in the then() 
+                notebook?.execute(code, '', 0, uuid()).then(async () => {
+                    if (this.existingDisposable) {
+                        this.existingDisposable.dispose();
+                    }
+                    await this.updateWithNewVariable(newVariableName)
+                });
+            }
+        } else if (dataCleaningMode === 'jupyter_notebook') {
+            if (code && matchingNotebookEditor !== undefined) {
+                const cells = (matchingNotebookEditor as any).document.getCells();
+                const lastCell = cells[cells.length - 1] as NotebookCell;
+                await updateCellCode(lastCell, code);
+                await addNewCellAfter(lastCell, '');
                 if (this.existingDisposable) {
                     this.existingDisposable.dispose();
                 }
-                await this.updateWithNewVariable(newVariableName)
-            });
+                this.existingDisposable = vscNotebook.onDidChangeCellExecutionState(async (e: NotebookCellExecutionStateChangeEvent) => {
+                    if (e.executionState === NotebookCellExecutionState.Idle && refreshRequired) {
+                        await this.updateWithNewVariable(newVariableName);
+                    };
+                });
+            }
         }
-        // if (code && matchingNotebookEditor !== undefined) {
-        //     const cells = (matchingNotebookEditor as any).document.getCells();
-        //     const lastCell = cells[cells.length - 1] as NotebookCell;
-        //     await updateCellCode(lastCell, code);
-        //     await addNewCellAfter(lastCell, '');
-        //     if (this.existingDisposable) {
-        //         this.existingDisposable.dispose();
-        //     }
-        //     this.existingDisposable = vscNotebook.onDidChangeCellExecutionState(async (e: NotebookCellExecutionStateChangeEvent) => {
-        //         if (e.executionState === NotebookCellExecutionState.Idle) {
-        //             await this.updateWithNewVariable(newVariableName);
-        //         }
-        //     });
-        //     await this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow'); // TODO ensure correct cell is selected
-        // }
     }
     private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {
         if (!this.sentDataViewerSliceDimensionalityTelemetry) {
