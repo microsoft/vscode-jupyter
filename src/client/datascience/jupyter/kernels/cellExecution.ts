@@ -348,7 +348,7 @@ export class CellExecution {
                 this.temporaryTask.executionOrder = this.previousResultsToRestore.executionOrder;
             }
             this.temporaryTask.end({
-                duration: this.previousResultsToRestore.duration,
+                endTime: this.previousResultsToRestore.endTime,
                 success: this.previousResultsToRestore.success
             });
         } else {

@@ -97,7 +97,7 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
 
     traceInfoIf(
         !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-        `Notebook metadata for ${document.fileName} is ${data?.metadata?.id}`
+        `Notebook metadata for ${document.uri.fsPath} is ${data?.metadata?.id}`
     );
 
     return notebookContent.metadata;
@@ -415,8 +415,7 @@ export class NotebookCellStateTracker implements IDisposable {
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
-        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
-            cell.latestExecutionSummary?.executionOrder
+        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${cell.latestExecutionSummary?.executionOrder
         }. ${message}`
     );
 }
