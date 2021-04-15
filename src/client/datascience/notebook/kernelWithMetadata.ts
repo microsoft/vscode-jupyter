@@ -10,6 +10,7 @@ import {
     NotebookKernel as VSCNotebookKernel,
     NotebookCellRange,
     NotebookCellKind,
+    NotebookKernelPreload,
     notebook
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
@@ -25,13 +26,15 @@ import { traceCellMessage, trackKernelInfoInNotebookMetadata } from './helpers/h
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
-    get preloads(): Uri[] {
+    get preloads(): NotebookKernelPreload[] {
         return [
-            Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
-            Uri.file(
-                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
-            ),
-            Uri.file(join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js'))
+            { uri: Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')) },
+            {
+                uri: Uri.file(
+                    join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
+                )
+            },
+            { uri: Uri.file(join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')) }
         ];
     }
     get id() {
@@ -48,7 +51,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly context: IExtensionContext,
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         private readonly commandManager: ICommandManager
-    ) {}
+    ) { }
     public interrupt(document: NotebookDocument) {
         document.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         this.commandManager
