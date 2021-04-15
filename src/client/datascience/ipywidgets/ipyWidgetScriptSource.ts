@@ -236,6 +236,15 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             );
             const map = IPyWidgetScriptSource.listOfAllScriptsSent.get(this.identity.toString())!;
             map.set(widgetSource.moduleName, widgetSource);
+            if (widgetSource.moduleName === 'qgrid'){
+                const localFileUri = Uri.file(
+                    '/Users/donjayamanne/Desktop/Development/vsc/vscode-hackathonJupyterExecutions/libs/qgrid/static/index.js'
+                );
+                const scriptUri = await this.asWebviewUri(localFileUri)
+                widgetSource.fileUri = localFileUri.toString();
+                widgetSource.scriptUri = scriptUri.toString();
+                widgetSource.source = 'local';
+            }
             // Send to UI (even if there's an error) continues instead of hanging while waiting for a response.
             this.postEmitter.fire({
                 message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,

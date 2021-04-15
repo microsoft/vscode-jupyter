@@ -61,7 +61,7 @@ function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
             : script.scriptUri;
         // Register the script source into requirejs so it gets loaded via requirejs.
         config.paths[script.moduleName] = scriptUri;
-        console.log(`Registering in requirejs ${script.moduleName}`);
+        console.log(`Registering in requirejs ${script.moduleName} ${scriptUri}`);
     });
 
     requirejsfunc.config(config);

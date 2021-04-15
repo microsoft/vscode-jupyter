@@ -201,6 +201,7 @@ export class ScriptManager extends EventEmitter {
             return;
         }
         console.warn(`registerScriptSourcesInRequirejs ${sources.map((item) => item.moduleName).join(', ')}`);
+        console.warn(`registerScriptSourcesInRequirejs ${sources.map((item) => item.scriptUri).join(', ')}`);
         registerScripts(sources);
 
         // Now resolve promises (anything that was waiting for modules to get registered can carry on).

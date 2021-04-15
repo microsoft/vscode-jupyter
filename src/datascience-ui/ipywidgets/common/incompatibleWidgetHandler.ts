@@ -6,7 +6,7 @@
 import * as semver from 'semver';
 import { WidgetScriptSource } from '../../../client/datascience/ipywidgets/types';
 const supportedVersionOfQgrid = '1.1.1';
-const qgridModuleName = 'qgrid';
+const qgridModuleName = 'qgrid123';
 
 /**
  * For now only warns about qgrid.
