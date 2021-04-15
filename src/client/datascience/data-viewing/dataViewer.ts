@@ -447,7 +447,12 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 break;
             case 'normalize':
                 const { start, end, target } = payload.args;
-                code = `from sklearn.preprocessing import MinMaxScaler\nscaler = MinMaxScaler(feature_range=(${start}, ${end}))\n${currentVariableName}["${target}"] = scaler.fit_transform(${currentVariableName}["${target}"].values.reshape(-1, 1))`;
+                this.variableCounter += 1;
+                newVariableName = `df${this.variableCounter}`;
+                code = `from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler(feature_range=(${start}, ${end}))
+${newVariableName} = ${currentVariableName}.copy()
+${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${target}"].values.reshape(-1, 1))`;
                 this.addToHistory("Normalized " + target + " column", newVariableName, code);
                 break;
             case 'fillna':
@@ -485,6 +490,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                         await this.updateWithNewVariable(newVariableName);
                     };
                 });
+                await this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow')
             }
         }
     }
