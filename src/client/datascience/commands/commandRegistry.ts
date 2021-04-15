@@ -5,7 +5,7 @@
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
 import * as path from 'path';
-import { CodeLens, ConfigurationTarget, env, NotebookCell, Range, Uri } from 'vscode';
+import { CodeLens, ConfigurationTarget, env, NotebookCell, Range, Uri, ProgressLocation, ProgressOptions, QuickPickOptions } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
@@ -25,6 +25,7 @@ import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
 import { NotebookCreator } from '../notebook/creation/notebookCreator';
+import { QuickPickItem } from 'vscode';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -41,6 +42,13 @@ import { ExportCommands } from './exportCommands';
 import { NotebookCommands } from './notebookCommands';
 import { JupyterServerSelectorCommand } from './serverSelector';
 import { updateCellCode } from '../notebook/helpers/executionHelpers';
+
+enum OpenDataViewerSetting {
+    STANDALONE,
+    WITH_JUPYTER_NOTEBOOK,
+    WITH_PYTHON_FILE,
+    WITH_INTERACTIVE_WINDOW
+}
 
 @injectable()
 export class CommandRegistry implements IDisposable {
@@ -128,6 +136,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.ResetLoggingLevel, this.resetLoggingLevel);
         this.registerCommand(Commands.ShowDataViewer, this.onVariablePanelShowDataViewerRequest);
         this.registerCommand(Commands.ImportAsDataFrame, this.importFileAsDataFrame);
+        this.registerCommand(Commands.ImportAsDataFrameFromUrl, this.importFileAsDataFrameFromUrl);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
@@ -143,10 +152,11 @@ export class CommandRegistry implements IDisposable {
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
+
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);
@@ -519,9 +529,155 @@ export class CommandRegistry implements IDisposable {
         // It's the given way to focus a single view so using that here, note that it needs to match the view ID
         return this.commandManager.executeCommand('jupyterViewVariables.focus');
     }
+
     private async importFileAsDataFrame(file?: Uri) {
         if (file && file.fsPath && file.fsPath.length > 0) {
-            // Create notebook
+            let dataCleaningMode = this.configService.getSettings().dataCleaningMode;
+
+            if (dataCleaningMode == undefined) {
+                const qpoptions: QuickPickOptions = {
+                    ignoreFocusOut: false,
+                    matchOnDescription: true,
+                    matchOnDetail: true
+                };
+
+                const qpitems = [
+                    {
+                        label: 'Open just the Data Viewer',
+                        picked: true
+                    },
+                    {
+                        label: 'Open with Jupyter Notebook',
+                    },
+                    {
+                        label: 'Open with Python file',
+                    },
+                    {
+                        label: 'Open with an Interactive Python session',
+                    }
+                ];
+
+                const selection = await this.appShell.showQuickPick(qpitems, qpoptions);
+                switch (selection?.label) {
+                    case 'Open just the Data Viewer':
+                        dataCleaningMode = 'standalone'
+                        await this.configService.updateSetting('dataCleaningMode', 'standalone', undefined, ConfigurationTarget.Global);
+                        break;
+                    case 'Open with Jupyter Notebook':
+                        dataCleaningMode = 'jupyter_notebook'
+                        await this.configService.updateSetting('dataCleaningMode', 'jupyter_notebook', undefined, ConfigurationTarget.Global);
+                        break;
+                    case 'Open with Python file':
+                        dataCleaningMode = 'python_file'
+                        await this.configService.updateSetting('dataCleaningMode', 'python_file', undefined, ConfigurationTarget.Global);
+                        break;
+                    case 'Open with an Interactive Python session':
+                        dataCleaningMode = 'interactive_window'
+                        await this.configService.updateSetting('dataCleaningMode', 'interactive_window', undefined, ConfigurationTarget.Global);
+                        break;
+                }
+            }
+
+            switch (dataCleaningMode) {
+                case 'standalone': {
+                    let options: ProgressOptions = {
+                        location: ProgressLocation.Notification,
+                        cancellable: true,
+                        title: "Importing Data and Launching Data Viewer...",
+                    }
+
+                    await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataViewer(file, OpenDataViewerSetting.STANDALONE));
+                    break;
+                }
+                case 'jupyter_notebook': {
+                    let options: ProgressOptions = {
+                        location: ProgressLocation.Notification,
+                        cancellable: true,
+                        title: "Importing Data and Launching Data Viewer with a Jupyter Notebook..."
+                    };
+
+                    await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataViewer(file, OpenDataViewerSetting.WITH_JUPYTER_NOTEBOOK));
+                    break;
+                }
+                case 'python_file': {
+                    let options: ProgressOptions = {
+                        location: ProgressLocation.Notification,
+                        cancellable: true,
+                        title: "Importing Data and Launching Data Viewer with a Python file..."
+                    };
+
+                    await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataViewer(file, OpenDataViewerSetting.WITH_PYTHON_FILE));
+                    break;
+                }
+                case 'interactive_window': {
+                    let options: ProgressOptions = {
+                        location: ProgressLocation.Notification,
+                        cancellable: true,
+                        title: "Importing Data and Launching Data Viewer with an Interactive Window..."
+                    };
+
+                    await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataViewer(file, OpenDataViewerSetting.WITH_INTERACTIVE_WINDOW));
+                    break;
+                }
+            }
+        }
+    }
+
+    //TODO FIX
+    private async importFileAsDataFrameFromUrl() {
+        // const fileUrl = await this.appShell.showInputBox({
+        //     title: 'Enter a url',
+        //     value: '',
+        //     prompt: 'Enter a url prompt'
+        // });
+
+        // const options: ProgressOptions = {
+        //     location: ProgressLocation.Notification,
+        //     cancellable: true,
+        //     title: "Retreiving Data and Launching Data Viewer..."
+        // };
+
+        // await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataViewer(undefined, fileUrl));
+    }
+
+    private async importAndLaunchDataViewer(file?: Uri, setting?: OpenDataViewerSetting) {
+        if (file == undefined) {
+            //TODO set file to be something temp if using URL
+            // file = vscode.Uri.file()
+        }
+
+        if (setting == OpenDataViewerSetting.STANDALONE) {
+            const notebook = await this.notebookProvider.getOrCreateNotebook({ resource: file, identity: file, disableUI: true });
+            const code = getImportCodeForFileType(file.fsPath);
+            notebook?.execute(code, '', 0, '', undefined, true).then(async () => {
+                await this.commandManager.executeCommand('jupyter.openVariableView');
+                // Open data viewer for this variable
+                const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
+                    {
+                        name: 'df',
+                        value: '',
+                        supportsDataExplorer: true,
+                        type: 'DataFrame',
+                        size: 0,
+                        shape: '',
+                        count: 0,
+                        truncated: true
+                    },
+                    notebook
+                );
+                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
+                    jupyterVariable
+                );
+                jupyterVariableDataProvider.setDependencies(jupyterVariable, notebook);
+                const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
+                const columnSize = dataFrameInfo?.columns?.length;
+                if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
+                    const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
+                    await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
+                    sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
+                }
+            });
+        } else if (setting == OpenDataViewerSetting.WITH_JUPYTER_NOTEBOOK) {
             const notebookEditor = await this.createNewNotebook();
             if (!notebookEditor) {
                 return;
@@ -559,8 +715,13 @@ export class CommandRegistry implements IDisposable {
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }
             });
+        } else if (setting == OpenDataViewerSetting.WITH_PYTHON_FILE) {
+            //TODO
+        } else { //interactive window
+            //TODO
         }
     }
+
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
         if (this.debugService.activeDebugSession) {

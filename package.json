@@ -56,6 +56,7 @@
         "onCommand:jupyter.importnotebook",
         "onCommand:jupyter.importnotebookfile",
         "onCommand:jupyter.importFileAsDataFrame",
+        "onCommand:jupyter.importFileAsDataFrameFromUrl",
         "onCommand:jupyter.opennotebook",
         "onCommand:jupyter.opennotebookInPreviewEditor",
         "onCommand:jupyter.selectjupyteruri",
@@ -726,6 +727,11 @@
                 "category": "Jupyter"
             },
             {
+                "command": "jupyter.importFileAsDataFrameFromUrl",
+                "title": "Import File as DataFrame From Url",
+                "category": "Jupyter"
+            },
+            {
                 "command": "jupyter.clearSavedJupyterUris",
                 "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
                 "category": "Jupyter"
@@ -1348,6 +1354,15 @@
             "type": "object",
             "title": "Jupyter",
             "properties": {
+                "jupyter.dataCleaningMode": {
+                    "type": "string",
+                    "enum": [
+                        "standalone",
+                        "jupyter_notebook",
+                        "python_file",
+                        "interactive_window"
+                    ]
+                },
                 "jupyter.experiments.enabled": {
                     "type": "boolean",
                     "default": true,

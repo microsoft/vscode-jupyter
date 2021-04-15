@@ -69,6 +69,7 @@ export interface ISlickGridProps {
     dataDimensionality: number;
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
+    historyList: any[];
     handleSliceRequest(args: IGetSliceRequest): void;
     submitCommand(args: { command: string; args: any }): void;
     handleRefreshRequest(): void;
@@ -313,6 +314,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 <div style={{ flexDirection: 'row', display: 'flex' }}>
                     <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                     <ControlPanel
+                        historyList={this.props.historyList}
                         data={this.dataView.getItems()}
                         headers={
                             this.state.grid

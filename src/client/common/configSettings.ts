@@ -93,6 +93,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     public verboseLogging: boolean = false;
+    public dataCleaningMode: string = '';
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
             Tensor: ['shape', 'dtype', 'device']
@@ -200,7 +201,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         keys.forEach((k) => {
             // Replace variables with their actual value.
             const val = systemVariables.resolveAny(jupyterConfig.get(k));
-            if (k !== 'variableTooltipFields' || val) {
+            if (k !== 'variableTooltipFields' || val !== undefined ) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (<any>this)[k] = val;
             }

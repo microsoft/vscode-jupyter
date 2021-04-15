@@ -20,7 +20,10 @@ export class Toolbar extends React.PureComponent<IProps> {
                     onClick={() => this.props.submitCommand({ command: 'export_to_csv', args: null })}
                     title="Export to CSV"
                 />
-                <div className="codicon codicon-go-to-file codicon-button" title="Open in Python Script" />
+                <div 
+                    className="codicon codicon-go-to-file codicon-button" 
+                    onClick={() => this.props.submitCommand({ command: 'export_to_python_script', args: null })}
+                    title="Open in Python Script" />
                 <div className="codicon codicon-notebook codicon-button" title="Open in Notebook" />
                 <div
                     className="codicon codicon-window codicon-button"

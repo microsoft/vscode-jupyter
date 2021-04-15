@@ -31,6 +31,8 @@ export namespace DataViewerMessages {
     export const SubmitCommand = 'submit_command';
     export const RefreshDataViewer = 'refresh_data_viewer';
     export const SliceEnablementStateChanged = 'slice_enablement_state_changed';
+    export const UpdateHistoryList = 'update_history_list';
+    export const GetHistoryItem = 'get_history_item';
 }
 
 export interface IGetRowsRequest {
@@ -64,6 +66,8 @@ export type IDataViewerMapping = {
     [DataViewerMessages.SubmitCommand]: { command: string; args: any };
     [DataViewerMessages.RefreshDataViewer]: never | undefined;
     [DataViewerMessages.SliceEnablementStateChanged]: { newState: boolean };
+    [DataViewerMessages.UpdateHistoryList]: any[] | undefined;
+    [DataViewerMessages.GetHistoryItem]: number | undefined;
 };
 
 export interface IDataFrameInfo {

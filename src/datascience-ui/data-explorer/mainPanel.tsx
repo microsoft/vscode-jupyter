@@ -64,6 +64,7 @@ interface IMainPanelState {
     variableName?: string;
     fileName?: string;
     sliceExpression?: string;
+    historyList: [];
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -102,7 +103,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 dataDimensionality: data.dataDimensionality ?? 2,
                 originalVariableShape: data.originalVariableShape,
                 isSliceDataEnabled: false,
-                originalVariableType: undefined
+                originalVariableType: undefined,
+                historyList: [],
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -119,7 +121,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 dataDimensionality: 2,
                 originalVariableShape: undefined,
                 isSliceDataEnabled: false,
-                originalVariableType: undefined
+                originalVariableType: undefined,
+                historyList: [],
             };
         }
     }
@@ -220,6 +223,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             case DataViewerMessages.GetRowsResponse:
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
+            
+            case DataViewerMessages.UpdateHistoryList:
+                this.handleUpdateHistoryList(payload);
+                break;
 
             case SharedMessages.UpdateSettings:
                 this.updateSettings(payload);
@@ -268,6 +275,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 dataDimensionality={this.state.dataDimensionality}
                 originalVariableShape={this.state.originalVariableShape}
                 isSliceDataEnabled={this.state.isSliceDataEnabled}
+                historyList={this.state.historyList}
                 handleSliceRequest={this.handleSliceRequest}
                 submitCommand={this.submitCommand}
                 handleRefreshRequest={this.handleRefreshRequest}
@@ -337,6 +345,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const chunkEnd = startIndex + Math.min(this.rowFetchSizeFirst, endIndex);
         const chunkStart = startIndex;
         this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd, sliceExpression });
+    }
+
+    private handleUpdateHistoryList(response: []) {
+        this.setState({ historyList: response });
     }
 
     private handleGetAllRowsResponse(response: IRowsResponse) {
