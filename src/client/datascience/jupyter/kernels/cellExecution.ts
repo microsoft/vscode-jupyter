@@ -297,7 +297,6 @@ export class CellExecution {
             this.task?.end({});
         } else if (success === 'success' || success === 'failed') {
             this.endTime = new Date().getTime();
-            // this.task?.end({ duration: this.lastRunDuration, success: success === 'success' });
             this.task?.end({ endTime: this.endTime, success: success === 'success' });
         } else {
             // Cell was cancelled.
