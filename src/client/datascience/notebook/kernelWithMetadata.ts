@@ -8,7 +8,7 @@ import {
     NotebookCell,
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel,
-    NotebookCellRange,
+    NotebookRange,
     NotebookCellKind,
     NotebookKernelPreload,
     notebook
@@ -55,7 +55,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly context: IExtensionContext,
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         private readonly commandManager: ICommandManager
-    ) {}
+    ) { }
     public interrupt(document: NotebookDocument) {
         document.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         this.commandManager
@@ -69,7 +69,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
      * createNotebookCellExecutionTask has not been called by the time the promise returned by this method is
      * resolved, the cell will be put back into the Idle state.
      */
-    public async executeCellsRequest(document: NotebookDocument, ranges: NotebookCellRange[]): Promise<void> {
+    public async executeCellsRequest(document: NotebookDocument, ranges: NotebookRange[]): Promise<void> {
         // When we receive a cell execute request, first ensure that the notebook is trusted.
         // If it isn't already trusted, block execution until the user trusts it.
         const isTrusted = await this.commandManager.executeCommand(Commands.TrustNotebook, document.uri);
