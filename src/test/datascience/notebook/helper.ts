@@ -24,7 +24,7 @@ import {
     NotebookCellMetadata,
     NotebookCellOutputItem,
     CancellationTokenSource,
-    NotebookCellRange,
+    NotebookRange,
     NotebookCellExecutionState
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
@@ -84,7 +84,7 @@ async function getServices() {
 
 export async function selectCell(notebook: NotebookDocument, start: number, end: number) {
     await window.showNotebookDocument(notebook, {
-        selections: [new NotebookCellRange(start, end)]
+        selections: [new NotebookRange(start, end)]
     });
 }
 
@@ -677,7 +677,7 @@ export async function runCell(cell: NotebookCell) {
         throw new Error('No notebook or kernel');
     }
     void vscodeNotebook.activeNotebookEditor.kernel.executeCellsRequest(cell.notebook, [
-        new NotebookCellRange(cell.index, cell.index + 1)
+        new NotebookRange(cell.index, cell.index + 1)
     ]);
 }
 export async function runAllCellsInActiveNotebook() {
@@ -693,7 +693,7 @@ export async function runAllCellsInActiveNotebook() {
     }
     const document = vscodeNotebook.activeNotebookEditor.document;
     void vscodeNotebook.activeNotebookEditor.kernel.executeCellsRequest(document, [
-        new NotebookCellRange(0, document.cellCount)
+        new NotebookRange(0, document.cellCount)
     ]);
 }
 
