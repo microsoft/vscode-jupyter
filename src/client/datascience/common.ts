@@ -181,3 +181,27 @@ export function sendNotebookOrKernelLanguageTelemetry(
     }
     sendTelemetryEvent(telemetryEvent, undefined, { language });
 }
+
+export function combineData(
+    oldData: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | undefined,
+    cell: ICell
+): ICell {
+    if (oldData) {
+        const result = {
+            ...cell,
+            data: {
+                ...oldData,
+                ...cell.data,
+                metadata: {
+                    ...oldData.metadata,
+                    ...cell.data.metadata
+                }
+            }
+        };
+        // Workaround the nyc compiler problem.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (result as any) as ICell;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (cell as any) as ICell;
+}

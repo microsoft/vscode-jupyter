@@ -4,9 +4,26 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
-import { IWorkspaceService, IWebviewViewProvider, IVSCodeNotebook } from '../../../common/application/types';
+import {
+    IWorkspaceService,
+    IWebviewViewProvider,
+    IVSCodeNotebook,
+    IApplicationShell,
+    ICommandManager
+} from '../../../common/application/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
-import { ICodeCssGenerator, IThemeFinder } from '../../types';
+import { IServiceContainer } from '../../../ioc/types';
+import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
+import { INotebookStorageProvider } from '../../notebookStorage/notebookStorageProvider';
+import {
+    ICodeCssGenerator,
+    IDataScienceErrorHandler,
+    IInteractiveWindowListener,
+    IJupyterServerUriStorage,
+    INotebookProvider,
+    IStatusProvider,
+    IThemeFinder
+} from '../../types';
 import { IScratchPadProvider, INotebookWatcher } from '../types';
 import { ScratchPad } from './scratchPad';
 
@@ -16,16 +33,7 @@ export class ScratchPadProvider implements IScratchPadProvider {
     public readonly viewType = 'jupyterScratchPad';
     private scratchPad?: ScratchPad;
 
-    constructor(
-        @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(ICodeCssGenerator) private readonly cssGenerator: ICodeCssGenerator,
-        @inject(IThemeFinder) private readonly themeFinder: IThemeFinder,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IWebviewViewProvider) private readonly webviewViewProvider: IWebviewViewProvider,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher,
-        @inject(IVSCodeNotebook) private readonly vscNotebooks: IVSCodeNotebook
-    ) {}
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
     public async resolveWebviewView(
         webviewView: WebviewView,
@@ -36,14 +44,23 @@ export class ScratchPadProvider implements IScratchPadProvider {
 
         // Create our actual variable view
         this.scratchPad = new ScratchPad(
-            this.configuration,
-            this.cssGenerator,
-            this.themeFinder,
-            this.workspaceService,
-            this.webviewViewProvider,
-            this.disposables,
-            this.notebookWatcher,
-            this.vscNotebooks
+            this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
+            this.serviceContainer.get<IConfigurationService>(IConfigurationService),
+            this.serviceContainer.get<ICodeCssGenerator>(ICodeCssGenerator),
+            this.serviceContainer.get<IThemeFinder>(IThemeFinder),
+            this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+            this.serviceContainer.get<IWebviewViewProvider>(IWebviewViewProvider),
+            this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
+            this.serviceContainer.get<INotebookWatcher>(INotebookWatcher),
+            this.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
+            this.serviceContainer.get<IStatusProvider>(IStatusProvider),
+            this.serviceContainer.get<IApplicationShell>(IApplicationShell),
+            this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
+            this.serviceContainer.get<INotebookProvider>(INotebookProvider),
+            this.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider),
+            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
+            this.serviceContainer.get<KernelSelector>(KernelSelector),
+            this.serviceContainer.get<ICommandManager>(ICommandManager)
         );
 
         await this.scratchPad.load(webviewView);

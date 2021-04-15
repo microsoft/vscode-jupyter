@@ -52,7 +52,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { translateKernelLanguageToMonaco } from '../common';
+import { combineData, translateKernelLanguageToMonaco } from '../common';
 import { Commands, Identifiers, Settings, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import {
@@ -712,7 +712,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 observable.subscribe(
                     (cells: ICell[]) => {
                         // Combine the cell data with the possible input data (so we don't lose anything that might have already been in the cells)
-                        const combined = cells.map(this.combineData.bind(undefined, data));
+                        const combined = cells.map(combineData.bind(undefined, data));
 
                         // Then send the combined output to the UI
                         this.sendCellsToWebView(combined);
@@ -971,30 +971,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         }
 
         return displayName;
-    }
-
-    private combineData(
-        oldData: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | undefined,
-        cell: ICell
-    ): ICell {
-        if (oldData) {
-            const result = {
-                ...cell,
-                data: {
-                    ...oldData,
-                    ...cell.data,
-                    metadata: {
-                        ...oldData.metadata,
-                        ...cell.data.metadata
-                    }
-                }
-            };
-            // Workaround the nyc compiler problem.
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return (result as any) as ICell;
-        }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (cell as any) as ICell;
     }
 
     private async ensureConnectionAndNotebookImpl(): Promise<void> {

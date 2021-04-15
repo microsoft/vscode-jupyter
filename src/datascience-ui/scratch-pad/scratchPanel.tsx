@@ -98,6 +98,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
         if (!this.props.monacoReady && !this.props.testMode) {
+            console.log('Not rendering content because of monaco ready')
+
             return null;
         }
 
@@ -117,9 +119,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             editable: true,
             renderCell: this.renderCell,
             scrollToBottom: this.scrollDiv,
-            scrollBeyondLastLine: this.props.settings
-                ? this.props.settings.extraSettings.editor.scrollBeyondLastLine
-                : false
+            scrollBeyondLastLine: false
         };
     };
 
@@ -136,6 +136,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     private renderCell = (cellVM: ICellViewModel): JSX.Element | null => {
         // Don't render until we have settings
         if (!this.props.settings || !this.props.editorOptions) {
+            console.log('Not rendering cell because of settings')
             return null;
         }
         const maxOutputSize = this.props.settings.maxOutputSize;

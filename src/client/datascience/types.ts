@@ -520,11 +520,14 @@ export interface ILocalResourceUriConverter {
     asWebviewUri(localResource: Uri): Promise<Uri>;
 }
 
-export interface IInteractiveBase extends Disposable {
-    onExecutedCode?: Event<string>;
-    notebook?: INotebook;
+export interface IProgress {
     startProgress(): void;
     stopProgress(): void;
+}
+
+export interface IInteractiveBase extends Disposable, IProgress {
+    onExecutedCode?: Event<string>;
+    notebook?: INotebook;
     undoCells(): void;
     redoCells(): void;
     removeAllCells(): void;
@@ -804,7 +807,7 @@ export interface IStatusProvider {
         showInWebView: boolean,
         timeout?: number,
         canceled?: () => void,
-        interactivePanel?: IInteractiveBase
+        panel?: IProgress
     ): Disposable;
 
     // call this function to wait for a promise while displaying status
@@ -814,7 +817,7 @@ export interface IStatusProvider {
         showInWebView: boolean,
         timeout?: number,
         canceled?: () => void,
-        interactivePanel?: IInteractiveBase
+        panel?: IProgress
     ): Promise<T>;
 }
 
