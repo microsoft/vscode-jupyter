@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, languages, NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
+import { ConfigurationTarget, languages, NotebookContentProvider as VSCNotebookContentProvider, NotebookCellStatusBarItemProvider as VSCNotebookCellStatusBarItemProvider } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationEnvironment,
@@ -18,7 +18,7 @@ import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook, NotebookCellStateTracker } from './helpers/helpers';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
-import { INotebookContentProvider, INotebookKernelProvider } from './types';
+import { INotebookContentProvider, INotebookKernelProvider, INotebookStatusBarProvider } from './types';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
@@ -36,8 +36,9 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(INotebookStatusBarProvider) private readonly statusBarProvider: VSCNotebookCellStatusBarItemProvider,
         @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.
@@ -70,8 +71,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                                 editable: true,
                                 inputCollapsed: true,
                                 outputCollapsed: true,
-                                custom: false,
-                                statusMessage: true
+                                custom: false
                             }
                         }
                     )
@@ -80,6 +80,12 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                     this.vscNotebook.registerNotebookKernelProvider(
                         { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
                         this.kernelProvider
+                    )
+                );
+                this.disposables.push(
+                    this.vscNotebook.registerNotebookCellStatusBarItemProvider(
+                        { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
+                        this.statusBarProvider
                     )
                 );
             } catch (ex) {
