@@ -194,8 +194,7 @@ export async function canRunNotebookTests() {
         !process.env.VSC_JUPYTER_RUN_NB_TEST
     ) {
         console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
-                process.env.VSC_JUPYTER_RUN_NB_TEST
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST
             }`
         );
         return false;
@@ -510,12 +509,7 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
 export async function waitForExecutionInProgress(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () => {
-            const result =
-                NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing &&
-                !cell.metadata.statusMessage
-                    ? true
-                    : false;
-            return result;
+            return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing;
         },
         timeout,
         `Cell ${cell.index + 1} did not start`
@@ -526,11 +520,9 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
  */
 export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
-        async () =>
-            NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending &&
-            !cell.metadata.statusMessage
-                ? true
-                : false,
+        async () => {
+            return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending;
+        },
         timeout,
         `Cell ${cell.index + 1} not queued for execution`
     );
@@ -539,8 +531,7 @@ export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, tim
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
-        `Cell ${
-            cell.index + 1
+        `Cell ${cell.index + 1
         } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);

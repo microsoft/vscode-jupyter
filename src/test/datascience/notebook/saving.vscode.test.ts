@@ -10,6 +10,7 @@ import * as sinon from 'sinon';
 import { NotebookCell, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
+import { StatusBarProvider } from '../../../client/datascience/notebook/statusBarProvider';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
@@ -113,10 +114,14 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
                 'Execution count must be undefined for cell 4'
             );
 
-            assert.isEmpty(cell1.metadata.statusMessage || '', 'Cell 1 status should be empty'); // No errors.
-            assert.isNotEmpty(cell2.metadata.statusMessage, 'Cell 1 status should be empty'); // Errors.
-            assert.isEmpty(cell3.metadata.statusMessage || '', 'Cell 3 status should be empty'); // Not executed.
-            assert.isEmpty(cell4.metadata.statusMessage || '', 'Cell 4 status should be empty'); // Not executed.
+            const statusBarItem1 = StatusBarProvider.getCellStatusBarItem(cell1);
+            const statusBarItem2 = StatusBarProvider.getCellStatusBarItem(cell2);
+            const statusBarItem3 = StatusBarProvider.getCellStatusBarItem(cell3);
+            const statusBarItem4 = StatusBarProvider.getCellStatusBarItem(cell4);
+            assert.isEmpty(statusBarItem1?.text || '', 'Cell 1 status should be empty'); // No errors.
+            assert.isNotEmpty(statusBarItem2?.text, 'Cell 1 status should be empty'); // Errors.
+            assert.isEmpty(statusBarItem3?.text || '', 'Cell 3 status should be empty'); // Not executed.
+            assert.isEmpty(statusBarItem4?.text || '', 'Cell 4 status should be empty'); // Not executed.
         }
 
         verifyCelMetadata();

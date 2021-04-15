@@ -19,11 +19,24 @@ import { getCellStatusMessageBasedOnFirstCellErrorOutput } from './helpers/helpe
  */
 @injectable()
 export class StatusBarProvider implements VSCNotebookCellStatusBarItemProvider {
+    // Weakmap, as we don't own the lifetime of either of these, just a helpful mapping for tests
+    private static cellStatusMappings = new WeakMap<NotebookCell, NotebookCellStatusBarItem>();
     constructor(
     ) { }
 
+    // Allow test code to see what status is currently on any cell
+    public static getCellStatusBarItem(cell: NotebookCell): NotebookCellStatusBarItem | undefined {
+        return StatusBarProvider.cellStatusMappings.get(cell);
+    }
+
+    // For any NotebookCell, check its output to see if we need to put up a status message
     provideCellStatusBarItems(cell: NotebookCell, _token: CancellationToken): ProviderResult<NotebookCellStatusBarItem[]> {
+        // Get our message from the cell output and create a basic message
         const statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(cell.outputs);
-        return [new NotebookCellStatusBarItem(statusMessage, NotebookCellStatusBarAlignment.Left)];
+        const statusItem = new NotebookCellStatusBarItem(statusMessage, NotebookCellStatusBarAlignment.Left);
+
+        // Save our mapping
+        StatusBarProvider.cellStatusMappings.set(cell, statusItem);
+        return [statusItem];
     }
 }
