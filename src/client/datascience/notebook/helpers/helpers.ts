@@ -97,7 +97,7 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
 
     traceInfoIf(
         !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-        `Notebook metadata for ${document.uri.fsPath} is ${data?.metadata?.id}`
+        `Notebook metadata for ${document.uri.toString()} is ${data?.metadata?.id}`
     );
 
     return notebookContent.metadata;
