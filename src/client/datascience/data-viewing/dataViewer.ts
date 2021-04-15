@@ -356,10 +356,9 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
     private async handleCommand(payload: { command: string; args: any }) {
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
-        let result;
         let code = '';
         const currentVariableName = (await this.dataFrameInfoPromise)!.name;
-        let newVariableName = '';
+        let newVariableName = currentVariableName ?? '';
         const matchingNotebookEditor = this.notebookEditorProvider.editors.find(
             (editor) => editor.notebook?.identity.fsPath === notebook?.identity.fsPath
         );
@@ -369,7 +368,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 await this.interactiveWindowProvider.getOrCreate(notebook?.resource, notebook);
                 break;
             case 'export_to_csv':
-                result = await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
+                await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
                 break;
             case 'rename':
                 this.variableCounter += 1;
@@ -380,12 +379,23 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.variableCounter += 1;
                 newVariableName = `df${this.variableCounter}`;
                 const labels = payload.args.targets as string[];
-                code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(',') + ']'})`;
+                if (payload.args.mode === 'row') {
+                    // Drop rows by index
+                    code = `df${this.variableCounter} = ${currentVariableName}.drop(${'[' + labels.join(', ') + ']'})`;
+                } else {
+                    // Drop columns by column name
+                    code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(', ') + ']'})`;
+                }
                 break;
             case 'dropna':
                 this.variableCounter += 1;
                 newVariableName = `df${this.variableCounter}`;
-                code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})`;
+                if (payload.args.subset !== undefined) {
+                    // This assumes only one column/row at a time
+                    code = `${newVariableName} = ${currentVariableName}.dropna(subset=["${payload.args.subset}"])`;
+                } else {
+                    code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})`;
+                }
                 break;
             case 'pyplot.hist':
                 refreshRequired = false;
@@ -410,7 +420,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.existingDisposable.dispose();
             }
             this.existingDisposable = vscNotebook.onDidChangeCellExecutionState(async (e: NotebookCellExecutionStateChangeEvent) => {
-                if (e.executionState === NotebookCellExecutionState.Idle) {
+                if (e.executionState === NotebookCellExecutionState.Idle && refreshRequired) {
                     await this.updateWithNewVariable(newVariableName);
                 }
             });

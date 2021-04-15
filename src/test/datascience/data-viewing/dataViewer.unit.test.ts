@@ -6,6 +6,7 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
+import { CommandManager } from '../../../client/common/application/commandManager';
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
 import { WebviewPanelProvider } from '../../../client/common/application/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -15,7 +16,11 @@ import { IConfigurationService } from '../../../client/common/types';
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataViewer } from '../../../client/datascience/data-viewing/dataViewer';
 import { JupyterVariableDataProvider } from '../../../client/datascience/data-viewing/jupyterVariableDataProvider';
+import { JupyterVariableDataProviderFactory } from '../../../client/datascience/data-viewing/jupyterVariableDataProviderFactory';
 import { IDataViewer, IDataViewerDataProvider } from '../../../client/datascience/data-viewing/types';
+import { InteractiveWindowProvider } from '../../../client/datascience/interactive-window/interactiveWindowProvider';
+import { KernelVariables } from '../../../client/datascience/jupyter/kernelVariables';
+import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
 import { ICodeCssGenerator, IThemeFinder } from '../../../client/datascience/types';
 import { MockMemento } from '../../mocks/mementos';
@@ -29,6 +34,12 @@ suite('DataScience - DataViewer', () => {
     let workspaceService: IWorkspaceService;
     let applicationShell: IApplicationShell;
     let dataProvider: IDataViewerDataProvider;
+    let interactiveWindowProvider: InteractiveWindowProvider;
+    let commandManager: CommandManager;
+    let jupyterVariables: KernelVariables;
+    let dataProviderFactory: JupyterVariableDataProviderFactory;
+    let notebookEditorProvider: NotebookEditorProvider;
+
     const title: string = 'Data Viewer - Title';
 
     setup(async () => {
@@ -39,6 +50,12 @@ suite('DataScience - DataViewer', () => {
         workspaceService = mock(WorkspaceService);
         applicationShell = mock(ApplicationShell);
         dataProvider = mock(JupyterVariableDataProvider);
+        interactiveWindowProvider = mock(InteractiveWindowProvider);
+        commandManager = mock(CommandManager);
+        jupyterVariables = mock(KernelVariables);
+        dataProviderFactory = mock(JupyterVariableDataProviderFactory);
+        notebookEditorProvider = mock(NotebookEditorProvider);
+
         const settings = mock(JupyterSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 
@@ -58,7 +75,12 @@ suite('DataScience - DataViewer', () => {
             instance(workspaceService),
             instance(applicationShell),
             false,
-            new MockMemento()
+            new MockMemento(),
+            instance(interactiveWindowProvider),
+            instance(commandManager),
+            instance(jupyterVariables),
+            instance(dataProviderFactory),
+            instance(notebookEditorProvider)
         );
     });
     test('Data viewer showData calls gets dataFrame info from data provider', async () => {

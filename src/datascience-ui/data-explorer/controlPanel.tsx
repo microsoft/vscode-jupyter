@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DropColumnsSection } from './controls/DropColumnSection';
+// import { DropColumnsSection } from './controls/DropColumnSection';
 import { DropMissingValuesSection } from './controls/DropMissingValuesSection';
 import { NormalizeDataSection } from './controls/NormalizeDataSection';
 import { PlotHistogramSection } from './controls/PlotHistogramSection';
@@ -70,11 +70,11 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                         autoComplete="on"
                     />
                 </details> */}
-                <DropColumnsSection
+                {/* <DropColumnsSection
                     submitCommand={this.props.submitCommand}
                     options={columnDropdownOptions}
                     headers={this.props.headers}
-                />
+                /> */}
                 <NormalizeDataSection
                     submitCommand={this.props.submitCommand}
                     options={columnDropdownOptions}
@@ -90,11 +90,11 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                     options={columnDropdownOptions}
                     headers={this.props.headers}
                 />
-                <PlotHistogramSection
+                {/* <PlotHistogramSection
                     submitCommand={this.props.submitCommand}
                     options={columnDropdownOptions}
                     headers={this.props.headers}
-                />
+                /> */}
 
                 {/* <details className="slicing-control" style={{ borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)', paddingTop: '4px', paddingBottom: '4px'}}>
                     <summary className="slice-summary">
