@@ -17,13 +17,15 @@ const styles = mergeStyleSets({
     container: {
       overflow: 'auto',
       maxHeight: 300,
-      marginTop: 20,
+      marginTop: 4,
       selectors: {
         '.ms-List-cell:nth-child(odd)': {
-          background: theme.palette.neutralLighter,
-          color: theme.palette.black,
+          backgroundColor: "var(--override-selection-background, var(--vscode-list-hoverBackground))",
+          color: "var(--vscode-list-hoverForeground)",
         },
         '.ms-List-cell:nth-child(even)': {
+          backgroundColor: "var(--vscode-sideBar-background)",
+          color: "var(--vscode-sideBar-foreground)"
         },
         '&:hover': { background: theme.palette.neutralLight },
       },
@@ -34,7 +36,10 @@ const styles = mergeStyleSets({
       {
         position: 'relative',
         boxSizing: 'border-box',
-        display: 'block',
+        fontFamily: 'var(--vscode-font-family)',
+        fontSize: 'var(--vscode-font-size)',
+        fontWeight: 'var(--vscode-font-weight)',
+        display: 'inline-block',
         borderLeft: '3px solid ' + theme.palette.themePrimary,
         paddingLeft: 15,
         paddingRight: 15,
@@ -68,12 +73,15 @@ export class HistorySection extends React.Component<IProps, IState> {
           <div data-is-focusable>
             <div 
                 className={styles.itemContent + " history-item"}
+                style={{ paddingBottom: '4px', paddingTop: '2px' }}
                 onClick={() => this.viewHistoryItem(index)}>
                 <div
                     className="codicon codicon-close codicon-button"
                     onClick={this.handleDeleteHistoryItem}
+                    style={{ verticalAlign: 'middle' }}
                     title={"Remove step"}
-                /> {item.name}
+                />
+                <span style={{ verticalAlign: 'middle' }}>{item.name}</span>
             </div>
           </div>
         );
@@ -82,21 +90,29 @@ export class HistorySection extends React.Component<IProps, IState> {
     //TODO add the ability to X and delete list items
     render() {
         return (
-            <div className="slice-control-row slice-form-container" style={{ marginLeft: 0, paddingBottom: '20px' }}>
-                <div style={{ display: "block", margin: "auto" }}>
-                    <summary className="slice-summary">
-                        <span className="slice-summary-detail" style={{ margin: "auto" }}>{'HISTORY'}</span>
-                    </summary>
+          <details
+                open  
+                className="slicing-control"
+                style={{
+                    borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
+                    paddingTop: '4px',
+                    paddingBottom: '4px'
+                }}
+            >
+                <summary className="slice-summary">
+                    <span className="slice-summary-detail">{'HISTORY'}</span>
+                </summary>
+                  {this.props.historyList.length > 0 ? 
                     <div className={styles.container} data-is-scrollable>
-                        <List
-                            items={this.props.historyList}
-                            style={{ }}
-                            className="historyList"
-                            onRenderCell={this.onRenderCell}
-                        />
+                      <List
+                          items={this.props.historyList}
+                          style={{ }}
+                          className="historyList"
+                          onRenderCell={this.onRenderCell}
+                      /> 
                     </div>
-                </div>
-            </div>
+                    : <span style={{ paddingLeft: '19px' }}>No transformations applied.</span>}
+            </details>
         );
     }
 }
