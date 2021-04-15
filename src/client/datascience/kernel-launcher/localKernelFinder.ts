@@ -132,6 +132,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                     resource?.fsPath || this.workspaceService.rootPath
                 ) || 'root';
 
+            // IANHU: REMOVE! Just trying to see why this is not working currently
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const kcm = await this.findResourceKernelMetadata(resource, cancelToken);
+
             // If we have not already searched for this resource, then generate the search
             if (workspaceFolderId && !this.workspaceToMetadata.has(workspaceFolderId)) {
                 this.workspaceToMetadata.set(
@@ -176,13 +180,19 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         resource: Resource,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
+        traceInfo('IANHU');
         // First find the on disk kernel specs and interpreters
-        const [kernelSpecs, interpreters, rootSpecPath, activeInterpreter] = await Promise.all([
-            this.findResourceKernelSpecs(resource, cancelToken),
-            this.findResourceInterpreters(resource, cancelToken),
-            this.getKernelSpecRootPath(),
-            this.getActiveInterpreter(resource)
-        ]);
+        const activeInterpreter = await this.getActiveInterpreter(resource);
+        const kernelSpecs = await this.findResourceKernelSpecs(resource, cancelToken);
+        const interpreters = await this.findResourceInterpreters(resource, cancelToken);
+        const rootSpecPath = await this.getKernelSpecRootPath();
+
+        //const [kernelSpecs, interpreters, rootSpecPath, activeInterpreter] = await Promise.all([
+        //this.findResourceKernelSpecs(resource, cancelToken),
+        //this.findResourceInterpreters(resource, cancelToken),
+        //this.getKernelSpecRootPath(),
+        //this.getActiveInterpreter(resource)
+        //]);
 
         // Copy the interpreter list. We need to filter out those items
         // which have matched one or more kernelspecs
@@ -520,7 +530,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     private async getActiveInterpreterPath(
         resource: Resource
     ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: string }[]> {
-        const activeInterpreter = await this.getActiveInterpreter(resource);
+        //const activeInterpreter = await this.getActiveInterpreter(resource);
+        const activeInterpreter = resource
+            ? await this.getActiveInterpreter(resource)
+            : await this.getActiveInterpreter();
 
         if (activeInterpreter) {
             return [
@@ -538,7 +551,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         cancelToken?: CancellationToken
     ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: string }[]> {
         if (this.extensionChecker.isPythonExtensionInstalled) {
-            const interpreters = await this.interpreterService.getInterpreters(resource);
+            // const interpreters = await this.interpreterService.getInterpreters(resource);
+            const interpreters = resource
+                ? await this.interpreterService.getInterpreters(resource)
+                : await this.interpreterService.getInterpreters();
             if (cancelToken?.isCancellationRequested) {
                 return [];
             }

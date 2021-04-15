@@ -64,12 +64,10 @@ import {
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
-    NotebookDocumentFilter,
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookKernel,
-    NotebookKernelProvider,
     NotebookKernelOptions,
     NotebookKernel2
 } from 'vscode';

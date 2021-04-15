@@ -11,13 +11,11 @@ import {
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
-    NotebookDocumentFilter,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookKernel,
     NotebookKernel2,
     NotebookKernelOptions,
-    NotebookKernelProvider,
     window
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
