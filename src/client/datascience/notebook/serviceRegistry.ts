@@ -3,7 +3,10 @@
 
 'use strict';
 
-import { NotebookContentProvider as VSCNotebookContentProvider, NotebookCellStatusBarItemProvider as VSCNotebookCellStatusBarItemProvider } from 'vscode';
+import {
+    NotebookContentProvider as VSCNotebookContentProvider,
+    NotebookCellStatusBarItemProvider as VSCNotebookCellStatusBarItemProvider
+} from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
@@ -22,7 +25,12 @@ import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
 import { StatusBarProvider } from './statusBarProvider';
-import { INotebookContentProvider, INotebookKernelProvider, INotebookKernelResolver, INotebookStatusBarProvider } from './types';
+import {
+    INotebookContentProvider,
+    INotebookKernelProvider,
+    INotebookKernelResolver,
+    INotebookStatusBarProvider
+} from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<VSCNotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);

@@ -61,7 +61,7 @@ export class CellExecutionFactory {
         private readonly appShell: IApplicationShell,
         private readonly context: IExtensionContext,
         private readonly disposables: IDisposableRegistry
-    ) { }
+    ) {}
 
     public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -456,23 +456,23 @@ export class CellExecution {
 
         // Listen to messages & chain each (to process them in the order we get them).
         request.onIOPub = (msg) =>
-        (this.requestHandlerChain = this.requestHandlerChain.then(() => {
-            // Cell has been deleted or the like.
-            if (this.cell.document.isClosed) {
-                request.dispose();
-                return Promise.resolve();
-            }
-            return this.handleIOPub(clearState, loggers, msg).catch(noop);
-        }));
+            (this.requestHandlerChain = this.requestHandlerChain.then(() => {
+                // Cell has been deleted or the like.
+                if (this.cell.document.isClosed) {
+                    request.dispose();
+                    return Promise.resolve();
+                }
+                return this.handleIOPub(clearState, loggers, msg).catch(noop);
+            }));
         request.onReply = (msg) =>
-        (this.requestHandlerChain = this.requestHandlerChain.then(() => {
-            // Cell has been deleted or the like.
-            if (this.cell.document.isClosed) {
-                request.dispose();
-                return Promise.resolve();
-            }
-            return this.handleReply(clearState, msg).catch(noop);
-        }));
+            (this.requestHandlerChain = this.requestHandlerChain.then(() => {
+                // Cell has been deleted or the like.
+                if (this.cell.document.isClosed) {
+                    request.dispose();
+                    return Promise.resolve();
+                }
+                return this.handleReply(clearState, msg).catch(noop);
+            }));
         request.onStdin = this.handleInputRequest.bind(this, session);
 
         // WARNING: Do not dispose `request`.

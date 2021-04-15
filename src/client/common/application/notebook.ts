@@ -95,7 +95,10 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     ): Disposable {
         return notebook.registerNotebookContentProvider(notebookType, provider, options);
     }
-    public registerNotebookCellStatusBarItemProvider(selector: NotebookDocumentFilter, provider: NotebookCellStatusBarItemProvider): Disposable {
+    public registerNotebookCellStatusBarItemProvider(
+        selector: NotebookDocumentFilter,
+        provider: NotebookCellStatusBarItemProvider
+    ): Disposable {
         return notebook.registerNotebookCellStatusBarItemProvider(selector, provider);
     }
     public registerNotebookKernelProvider(

@@ -14,7 +14,7 @@ export const INotebookContentProvider = Symbol('INotebookContentProvider');
 export const INotebookStatusBarProvider = Symbol('INotebookStatusBarProvider');
 
 export const INotebookKernelProvider = Symbol('INotebookKernelProvider');
-export interface INotebookKernelProvider extends NotebookKernelProvider { }
+export interface INotebookKernelProvider extends NotebookKernelProvider {}
 
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 

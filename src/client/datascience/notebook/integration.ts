@@ -2,7 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, languages, NotebookContentProvider as VSCNotebookContentProvider, NotebookCellStatusBarItemProvider as VSCNotebookCellStatusBarItemProvider } from 'vscode';
+import {
+    ConfigurationTarget,
+    languages,
+    NotebookContentProvider as VSCNotebookContentProvider,
+    NotebookCellStatusBarItemProvider as VSCNotebookCellStatusBarItemProvider
+} from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationEnvironment,
@@ -38,7 +43,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(INotebookStatusBarProvider) private readonly statusBarProvider: VSCNotebookCellStatusBarItemProvider,
         @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.

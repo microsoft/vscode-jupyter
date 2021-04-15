@@ -1041,7 +1041,7 @@ export interface IWebviewPanelMessageListener extends IWebviewMessageListener, I
 }
 
 export const IWebviewViewMessageListener = Symbol('IWebviewViewMessageListener');
-export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable { }
+export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable {}
 
 export type WebviewMessage = {
     /**
@@ -1588,7 +1588,10 @@ export interface IVSCodeNotebook {
     ): Disposable;
 
     registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
-    registerNotebookCellStatusBarItemProvider(selector: NotebookDocumentFilter, provider: NotebookCellStatusBarItemProvider): Disposable;
+    registerNotebookCellStatusBarItemProvider(
+        selector: NotebookDocumentFilter,
+        provider: NotebookCellStatusBarItemProvider
+    ): Disposable;
 }
 
 export const IEncryptedStorage = Symbol('IAuthenticationService');

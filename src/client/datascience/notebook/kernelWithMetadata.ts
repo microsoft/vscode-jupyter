@@ -34,7 +34,11 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
                     join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
                 )
             },
-            { uri: Uri.file(join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')) }
+            {
+                uri: Uri.file(
+                    join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')
+                )
+            }
         ];
     }
     get id() {
@@ -51,7 +55,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
         private readonly context: IExtensionContext,
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         private readonly commandManager: ICommandManager
-    ) { }
+    ) {}
     public interrupt(document: NotebookDocument) {
         document.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         this.commandManager
