@@ -26,6 +26,7 @@ const root = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 // This is the client side host for the scratch pad (shown in the jupyter tab)
 @injectable()
 export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> implements IDisposable {
+    private vscodeWebView: vscodeWebviewView | undefined;
     protected get owningResource(): Resource {
         return undefined;
     }
@@ -63,6 +64,7 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
     }
 
     public async load(codeWebview: vscodeWebviewView) {
+        this.vscodeWebView = codeWebview;
         await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
 
         // Send our first empty cell
@@ -80,12 +82,9 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         });
 
         // Set the title if there is an active notebook
-        if (this.vscNotebooks.activeNotebookEditor) {
-            await this.postMessage(
-                InteractiveWindowMessages.SetTitle,
-                localize.DataScience.addCell().format(
-                    path.basename(this.vscNotebooks.activeNotebookEditor.document.uri.fsPath)
-                )
+        if (this.vscNotebooks.activeNotebookEditor && this.vscodeWebView) {
+            this.vscodeWebView.title = localize.DataScience.scratchPadTitleFormat().format(
+                path.basename(this.vscNotebooks.activeNotebookEditor.document.uri.fsPath)
             );
         }
     }

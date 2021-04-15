@@ -959,7 +959,7 @@ export namespace DataScience {
     );
 
     export const defaultNotebookName = localize('DataScience.defaultNotebookName', 'default');
-    export const scratchPadTitleFormat = localize('DataScience.scratchPadTitleFormat', '{0}');
+    export const scratchPadTitleFormat = localize('DataScience.scratchPadTitleFormat', 'Scratch Pad {0}');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
