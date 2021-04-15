@@ -172,7 +172,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Register a link opener so when a user clicks on a link we can navigate to it.
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const openerService = (editor.getContribution('editor.linkDetector') as any).openerService;
+            const linkDetector = editor.getContribution('editor.linkDetector');
+            const openerService = linkDetector ? (linkDetector as any).openerService : undefined;
             if (openerService && openerService.open) {
                 openerService.open = this.props.openLink;
             }
