@@ -266,7 +266,7 @@ export interface INotebookServerOptions {
     allowUI(): boolean;
 }
 
-export interface IHoverProvider extends HoverProvider {}
+export interface IHoverProvider extends HoverProvider { }
 export const IHoverProvider = Symbol('IHoverProvider');
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
@@ -887,7 +887,7 @@ export interface IJupyterVariable {
     dataDimensionality?: number;
     count: number;
     truncated: boolean;
-    columns?: { key: string; type: string }[];
+    columns?: { key: string; type: string; describe: string }[];
     rowCount?: number;
     indexColumn?: string;
     maximumRowChunkSize?: number;

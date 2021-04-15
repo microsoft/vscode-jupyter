@@ -402,11 +402,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Generate a column for row numbers
             const rowNumberColumn = {
                 key: RowNumberColumnName,
-                type: ColumnType.Number,
+                type: ColumnType.Number
             };
             const columns = [rowNumberColumn].concat(variable.columns);
             return columns.reduce(
-                (accum: Slick.Column<Slick.SlickData>[], c: { key: string; type: ColumnType }, i: number) => {
+                (accum: Slick.Column<Slick.SlickData>[], c: { key: string; type: ColumnType; describe?: string}, i: number) => {
                     // Only show index column for pandas DataFrame and Series
                     if (
                         variable?.type === 'DataFrame' ||
@@ -419,6 +419,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                             id: `${i}`,
                             name: c.key === RowNumberColumnName ? '' : c.key.toString(),
                             sortable: true,
+                            toolTip: c.describe,
                             formatter: cellFormatterFunc
                         } as Slick.Column<Slick.SlickData>);
                     }

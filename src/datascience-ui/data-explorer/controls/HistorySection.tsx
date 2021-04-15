@@ -25,6 +25,7 @@ const styles = mergeStyleSets({
         },
         '.ms-List-cell:nth-child(even)': {
         },
+        '&:hover': { background: theme.palette.neutralLight },
       },
     },
     itemContent: [

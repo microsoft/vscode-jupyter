@@ -182,6 +182,7 @@ def _VSCODE_getDataFrameInfo(df):
         columnTypes.insert(0, "int64")
 
     # Then loop and generate our output json
+    # TODO check to see if column is numeric type?
     columns = []
     for n in _VSCODE_builtins.range(0, _VSCODE_builtins.len(columnNames)):
         column_type = columnTypes[n]
@@ -190,6 +191,7 @@ def _VSCODE_getDataFrameInfo(df):
         colobj["key"] = column_name
         colobj["name"] = column_name
         colobj["type"] = str(column_type)
+        colobj["describe"] = df.describe().to_string(header=False)
         columns.append(colobj)
 
     # Save this in our target

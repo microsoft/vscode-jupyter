@@ -71,7 +71,7 @@ export type IDataViewerMapping = {
 };
 
 export interface IDataFrameInfo {
-    columns?: { key: string; type: ColumnType }[];
+    columns?: { key: string; type: ColumnType; describe: string }[];
     indexColumn?: string;
     rowCount?: number;
     shape?: number[];

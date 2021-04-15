@@ -10,7 +10,6 @@ import { Disposable, EventEmitter, Memento, notebook as vscNotebook, NotebookCel
 
 import {
     IApplicationShell,
-    ICommandManager,
     IWebviewPanelProvider,
     IWorkspaceService,
     IDocumentManager
@@ -94,7 +93,6 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IJupyterVariables)
         @named(Identifiers.KERNEL_VARIABLES)
@@ -396,7 +394,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
                 break;
             case 'export_to_python_script':
-                //TODO get code from notebook
+                //TODO get code from notebook?
                 // this.notebook
                 var dataCleanCode = this.historyList.map(function (item) {
                     return item.code;
@@ -437,7 +435,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 if (payload.args.subset !== undefined) {
                     // This assumes only one column/row at a time
                     code = `${newVariableName} = ${currentVariableName}.dropna(subset=["${payload.args.subset}"])`;
-                    this.addToHistory(`Dropped column with missing data: "${payload.args.subset}"`, newVariableName, code);
+                    this.addToHistory(`Dropped rows with missing data from column: "${payload.args.subset}"`, newVariableName, code);
                 } else {
                     code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})`;
                     this.addToHistory(payload.args.target == 0 ? "Dropped rows with missing data" : "Dropped columns with missing data", newVariableName, code);
