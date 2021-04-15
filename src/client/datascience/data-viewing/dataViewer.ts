@@ -10,6 +10,7 @@ import { Disposable, EventEmitter, Memento, notebook as vscNotebook, NotebookCel
 
 import {
     IApplicationShell,
+    ICommandManager,
     IWebviewPanelProvider,
     IWorkspaceService,
     IDocumentManager
@@ -93,6 +94,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IJupyterVariables)
         @named(Identifiers.KERNEL_VARIABLES)

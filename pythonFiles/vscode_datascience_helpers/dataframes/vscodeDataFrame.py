@@ -191,7 +191,8 @@ def _VSCODE_getDataFrameInfo(df):
         colobj["key"] = column_name
         colobj["name"] = column_name
         colobj["type"] = str(column_type)
-        colobj["describe"] = df.describe().to_string(header=False)
+        if column_name != 'index':
+            colobj["describe"] = df[column_name].describe().to_string(header=False)
         columns.append(colobj)
 
     # Save this in our target
