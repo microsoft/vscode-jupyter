@@ -172,4 +172,11 @@ export namespace Effects {
 
         return arg.prevState;
     }
+
+    export function setTitle(arg: InteractiveReducerArg<string>): IMainState {
+        return {
+            ...arg.prevState,
+            title: arg.payload.data
+        };
+    }
 }

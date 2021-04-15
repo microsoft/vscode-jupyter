@@ -1,43 +1,63 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+'use strict';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
+import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
-import { JupyterInfo } from '../interactive-common/jupyterInfo';
-import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
+import {
+    ICellViewModel,
+    IMainState
+} from '../interactive-common/mainState';
+import { IStore } from '../interactive-common/redux/store';
 import { ErrorBoundary } from '../react-common/errorBoundary';
-import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
-import { ScratchCellComponent } from './scratchCell';
+import { getConnectedScratchCell } from './scratchCell';
 import './scratchPanel.less';
 import { actionCreators } from './redux/actions';
+import { ToolbarComponent } from './toolbar';
 
-/* eslint-disable  */
+type IScratchPanelProps = IMainState & typeof actionCreators;
 
-export type IScratchPanelProps = IMainWithVariables & typeof actionCreators;
-
-function mapStateToProps(state: IStore): IMainWithVariables {
-    return { ...state.main, variableState: state.variables };
+function mapStateToProps(state: IStore): IMainState {
+    return { ...state.main };
 }
 
-export class ScratchPanel extends React.Component<IScratchPanelProps> {
-    private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
-    private mainPanelToolbarRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
-    private renderCount: number = 0;
+const ConnectedScratchCell = getConnectedScratchCell();
 
-    constructor(props: IScratchPanelProps) {
-        super(props);
-    }
+export class ScratchPanel extends React.Component<IScratchPanelProps> {
+    private renderCount: number = 0;
+    private waitingForLoadRender = true;
+    private mainPanelToolbarRef: React.RefObject<HTMLDivElement> = React.createRef();
 
     public componentDidMount() {
-        document.addEventListener('click', this.linkClick, true);
         this.props.editorLoaded();
+        window.addEventListener('keydown', this.mainKeyDown);
+        window.addEventListener('resize', () => this.forceUpdate(), true);
+        document.addEventListener('click', this.linkClick, true);
     }
 
     public componentWillUnmount() {
+        window.removeEventListener('keydown', this.mainKeyDown);
+        window.removeEventListener('resize', () => this.forceUpdate());
         document.removeEventListener('click', this.linkClick);
         this.props.editorUnmounted();
+    }
+
+    public componentDidUpdate(prevProps: IMainState) {
+        if (this.props.loaded && !prevProps.loaded && this.waitingForLoadRender) {
+            this.waitingForLoadRender = false;
+            // After this render is complete (see this SO)
+            // https://stackoverflow.com/questions/26556436/react-after-render-code,
+            // indicate we are done loading. We want to wait for the render
+            // so we get accurate timing on first launch.
+            setTimeout(() => {
+                window.requestAnimationFrame(() => {
+                    this.props.loadedAllCells();
+                });
+            });
+        }
     }
 
     public render() {
@@ -46,108 +66,118 @@ export class ScratchPanel extends React.Component<IScratchPanelProps> {
             fontFamily: this.props.font.family
         };
 
-        const progressBar = (this.props.busy || !this.props.loaded) && !this.props.testMode ? <Progress /> : undefined;
-
         // If in test mode, update our count. Use this to determine how many renders a normal update takes.
         if (this.props.testMode) {
             this.renderCount = this.renderCount + 1;
         }
 
+        // Update the state controller with our new state
+        const progressBar = (this.props.busy || !this.props.loaded) && !this.props.testMode ? <Progress /> : undefined;
         return (
-            <div id="main-panel" ref={this.mainPanelRef} role="Main" style={dynamicFont}>
+            <div id="main-panel" role="Main" style={dynamicFont}>
                 <div className="styleSetter">
                     <style>{`${this.props.rootCss ? this.props.rootCss : ''}
 ${buildSettingsCss(this.props.settings)}`}</style>
                 </div>
-                <header id="main-panel-toolbar" ref={this.mainPanelToolbarRef}>
+                <header ref={this.mainPanelToolbarRef} id="main-panel-toolbar">
                     {this.renderToolbarPanel()}
                     {progressBar}
                 </header>
-                <section
-                    id="main-panel-footer"
-                    onClick={this.footerPanelClick}
-                    aria-label={getLocString('DataScience.editSection', 'Input new cells here')}
-                >
-                    {this.renderCell(this.props.baseTheme)}
-                </section>
+                <main id="main-panel-content">
+                    {this.renderContentPanel(this.props.baseTheme)}
+                </main>
             </div>
         );
     }
 
-    // Make the entire footer focus our input, instead of having to click directly on the monaco editor
-    private footerPanelClick = (_event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        this.props.focusInput();
-    };
-
-    // eslint-disable-next-line
     private renderToolbarPanel() {
-        return (
-            <div id="toolbar-panel">
-                <div className="toolbar-menu-bar">
-                    {this.renderKernelSelection()}
-                </div>
-            </div>
-        );
+        return <ToolbarComponent />;
     }
 
-    private renderKernelSelection() {
-        return (
-            <JupyterInfo
-                baseTheme={this.props.baseTheme}
-                font={this.props.font}
-                kernel={this.props.kernel}
-                selectServer={this.props.selectServer}
-                selectKernel={this.props.selectKernel}
-                shouldShowTrustMessage={false}
-            />
-        );
-    }
-
-    private renderCell(baseTheme: string) {
+    private renderContentPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
-        if (
-            !this.props.monacoReady ||
-            !this.props.editCellVM ||
-            !this.props.settings ||
-            !this.props.editorOptions ||
-            !this.props.settings.allowInput
-        ) {
+        if (!this.props.monacoReady && !this.props.testMode) {
             return null;
         }
 
-        const executionCount = this.getInputExecutionCount();
-        const editPanelClass = this.props.settings.colorizeInputBox ? 'edit-panel-colorized' : 'edit-panel';
+        // Otherwise render our cells.
+        const contentProps = this.getContentProps(baseTheme);
+        return <ContentPanel {...contentProps} />;
+    }
+
+    private getContentProps = (baseTheme: string): IContentPanelProps => {
+        return {
+            baseTheme: baseTheme,
+            cellVMs: this.props.cellVMs,
+            testMode: this.props.testMode,
+            codeTheme: this.props.codeTheme,
+            submittedText: this.props.submittedText,
+            skipNextScroll: this.props.skipNextScroll ? true : false,
+            editable: true,
+            renderCell: this.renderCell,
+            scrollToBottom: this.scrollDiv,
+            scrollBeyondLastLine: this.props.settings
+                ? this.props.settings.extraSettings.editor.scrollBeyondLastLine
+                : false
+        };
+    };
+
+    // eslint-disable-next-line complexity
+    private mainKeyDown = (event: KeyboardEvent) => {
+        // Handler for key down presses in the main panel
+        switch (event.key) {
+            default:
+                break;
+        }
+    };
+
+
+    private renderCell = (cellVM: ICellViewModel): JSX.Element | null => {
+        // Don't render until we have settings
+        if (!this.props.settings || !this.props.editorOptions) {
+            return null;
+        }
+        const maxOutputSize = this.props.settings.maxOutputSize;
+        const outputSizeLimit = 10000;
+        const maxTextSize =
+            maxOutputSize && maxOutputSize < outputSizeLimit && maxOutputSize > 0
+                ? maxOutputSize
+                : this.props.settings.enableScrollingForCellOutputs
+                ? 400
+                : undefined;
 
         return (
-            <div className={editPanelClass}>
+            <div key={cellVM.cell.id} id={cellVM.cell.id}>
                 <ErrorBoundary>
-                    <ScratchCellComponent
-                        role="form"
-                        editorOptions={this.props.editorOptions}
-                        maxTextSize={undefined}
-                        enableScroll={false}
-                        autoFocus={document.hasFocus()}
+                    <ConnectedScratchCell
+                        role="listitem"
+                        maxTextSize={maxTextSize}
+                        enableScroll={this.props.settings.enableScrollingForCellOutputs}
                         testMode={this.props.testMode}
-                        cellVM={this.props.editCellVM}
-                        baseTheme={baseTheme}
+                        cellVM={cellVM}
+                        baseTheme={this.props.baseTheme}
                         codeTheme={this.props.codeTheme}
-                        showWatermark={true}
-                        editExecutionCount={executionCount.toString()}
                         monacoTheme={this.props.monacoTheme}
+                        lastCell={true}
+                        firstCell={true}
                         font={this.props.font}
-                        settings={this.props.settings}
-                        focusPending={this.props.focusPending}
+                        allowUndo={this.props.undoStack.length > 0}
+                        editorOptions={this.props.editorOptions}
+                        themeMatplotlibPlots={this.props.settings.themeMatplotlibPlots}
+                        // Focus pending does not apply to native editor.
+                        focusPending={0}
+                        busy={this.props.busy}
+                        useCustomEditorApi={this.props.settings?.extraSettings.useCustomEditorApi}
                         language={this.props.kernel.language}
-                        externalButtons={this.props.externalButtons}
                     />
                 </ErrorBoundary>
             </div>
         );
-    }
+    };
 
-    private getInputExecutionCount = (): number => {
-        return this.props.currentExecutionCount + 1;
+    private scrollDiv = (_div: HTMLDivElement) => {
+        // Doing nothing for now. This should be implemented once redux refactor is done.
     };
 
     private linkClick = (ev: MouseEvent) => {
@@ -156,6 +186,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
 }
 
 // Main export, return a redux connected editor
-export function getConnectedScratchEditor() {
+export function getConnectedScratchPanel() {
     return connect(mapStateToProps, actionCreators)(ScratchPanel);
 }

@@ -12,19 +12,18 @@ import {
     IJupyterVariable,
     IJupyterVariablesRequest
 } from '../../../client/datascience/types';
+import { CursorPos } from '../../interactive-common/mainState';
 import {
     CommonAction,
     CommonActionType,
     CommonActionTypeMapping,
     ICellAction,
-    ICodeAction,
+    ICellAndCursorAction,
     ICodeCreatedAction,
     IEditCellAction,
     ILinkClickAction,
     IOpenSettingsAction,
-    IScrollAction,
-    IShowDataViewerAction,
-    IVariableExplorerHeight
+    IShowDataViewerAction
 } from '../../interactive-common/redux/reducers/types';
 import { IMonacoModelContentChangeEvent } from '../../react-common/monacoHelpers';
 
@@ -43,25 +42,27 @@ function createIncomingAction(type: CommonActionType | InteractiveWindowMessages
 
 // See https://react-redux.js.org/using-react-redux/connect-mapdispatch#defining-mapdispatchtoprops-as-an-object
 export const actionCreators = {
-    focusInput: (): CommonAction => createIncomingAction(CommonActionType.FOCUS_INPUT),
+    executeCell: (cellId: string, code: string, moveOp: 'add' | 'select' | 'none') =>
+        createIncomingActionWithPayload(CommonActionType.EXECUTE_CELL_AND_ADVANCE, { cellId, code, moveOp }),
+    focusCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> =>
+        createIncomingActionWithPayload(CommonActionType.FOCUS_CELL, { cellId, cursorPos }),
+    unfocusCell: (cellId: string, code: string) =>
+        createIncomingActionWithPayload(CommonActionType.UNFOCUS_CELL, { cellId, code }),
+    selectCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> =>
+        createIncomingActionWithPayload(CommonActionType.SELECT_CELL, { cellId, cursorPos }),
     restartKernel: (): CommonAction => createIncomingAction(CommonActionType.RESTART_KERNEL),
     interruptKernel: (): CommonAction => createIncomingAction(CommonActionType.INTERRUPT_KERNEL),
-    deleteAllCells: (): CommonAction => createIncomingAction(InteractiveWindowMessages.DeleteAllCells),
-    deleteCell: (cellId: string): CommonAction<ICellAction> =>
-        createIncomingActionWithPayload(CommonActionType.DELETE_CELL, { cellId }),
-    undo: (): CommonAction => createIncomingAction(CommonActionType.UNDO),
-    redo: (): CommonAction => createIncomingAction(CommonActionType.REDO),
-    linkClick: (href: string): CommonAction<ILinkClickAction> =>
-        createIncomingActionWithPayload(CommonActionType.LINK_CLICK, { href }),
-    showPlot: (imageHtml: string) => createIncomingActionWithPayload(InteractiveWindowMessages.ShowPlot, imageHtml),
-    toggleInputBlock: (cellId: string): CommonAction<ICellAction> =>
-        createIncomingActionWithPayload(CommonActionType.TOGGLE_INPUT_BLOCK, { cellId }),
-    gotoCell: (cellId: string): CommonAction<ICellAction> =>
-        createIncomingActionWithPayload(CommonActionType.GOTO_CELL, { cellId }),
-    copyCellCode: (cellId: string): CommonAction<ICellAction> =>
-        createIncomingActionWithPayload(CommonActionType.COPY_CELL_CODE, { cellId }),
-    clickCell: (cellId: string): CommonAction<ICellAction> =>
-        createIncomingActionWithPayload(CommonActionType.CLICK_CELL, { cellId }),
+    clearAllOutputs: (): CommonAction => createIncomingAction(InteractiveWindowMessages.ClearAllOutputs),
+    export: (): CommonAction => createIncomingAction(CommonActionType.EXPORT),
+    exportAs: (): CommonAction => createIncomingAction(CommonActionType.EXPORT_NOTEBOOK_AS),
+    save: (): CommonAction => createIncomingAction(CommonActionType.SAVE),
+    showDataViewer: (variable: IJupyterVariable, columnSize: number): CommonAction<IShowDataViewerAction> =>
+        createIncomingActionWithPayload(CommonActionType.SHOW_DATA_VIEWER, { variable, columnSize }),
+    changeCellType: (cellId: string) => createIncomingActionWithPayload(CommonActionType.CHANGE_CELL_TYPE, { cellId }),
+    toggleLineNumbers: (cellId: string): CommonAction<ICellAction> =>
+        createIncomingActionWithPayload(CommonActionType.TOGGLE_LINE_NUMBERS, { cellId }),
+    toggleOutput: (cellId: string): CommonAction<ICellAction> =>
+        createIncomingActionWithPayload(CommonActionType.TOGGLE_OUTPUT, { cellId }),
     editCell: (cellId: string, e: IMonacoModelContentChangeEvent): CommonAction<IEditCellAction> =>
         createIncomingActionWithPayload(CommonActionType.EDIT_CELL, {
             cellId,
@@ -72,27 +73,17 @@ export const actionCreators = {
             id: cellId,
             code: e.model.getValue()
         }),
-    submitInput: (code: string, cellId: string): CommonAction<ICodeAction> =>
-        createIncomingActionWithPayload(CommonActionType.SUBMIT_INPUT, { code, cellId }),
-    toggleVariableExplorer: (): CommonAction => createIncomingAction(CommonActionType.TOGGLE_VARIABLE_EXPLORER),
-    setVariableExplorerHeight: (containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight> =>
-        createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT, { containerHeight, gridHeight }),
-    expandAll: (): CommonAction => createIncomingAction(InteractiveWindowMessages.ExpandAll),
-    collapseAll: (): CommonAction => createIncomingAction(InteractiveWindowMessages.CollapseAll),
-    export: (): CommonAction => createIncomingAction(CommonActionType.EXPORT),
-    exportAs: (): CommonAction => createIncomingAction(CommonActionType.EXPORT_NOTEBOOK_AS),
-    showDataViewer: (variable: IJupyterVariable, columnSize: number): CommonAction<IShowDataViewerAction> =>
-        createIncomingActionWithPayload(CommonActionType.SHOW_DATA_VIEWER, { variable, columnSize }),
+    linkClick: (href: string): CommonAction<ILinkClickAction> =>
+        createIncomingActionWithPayload(CommonActionType.LINK_CLICK, { href }),
+    showPlot: (imageHtml: string) => createIncomingActionWithPayload(InteractiveWindowMessages.ShowPlot, imageHtml),
     editorLoaded: (): CommonAction => createIncomingAction(CommonActionType.EDITOR_LOADED),
-    scroll: (isAtBottom: boolean): CommonAction<IScrollAction> =>
-        createIncomingActionWithPayload(CommonActionType.SCROLL, { isAtBottom }),
-    unfocus: (cellId: string | undefined): CommonAction<ICellAction> =>
-        createIncomingActionWithPayload(CommonActionType.UNFOCUS_CELL, { cellId }),
     codeCreated: (cellId: string | undefined, modelId: string): CommonAction<ICodeCreatedAction> =>
         createIncomingActionWithPayload(CommonActionType.CODE_CREATED, { cellId, modelId }),
+    loadedAllCells: (): CommonAction => createIncomingAction(CommonActionType.LOADED_ALL_CELLS),
     editorUnmounted: (): CommonAction => createIncomingAction(CommonActionType.UNMOUNT),
     selectKernel: (): CommonAction => createIncomingAction(InteractiveWindowMessages.SelectKernel),
     selectServer: (): CommonAction => createIncomingAction(CommonActionType.SELECT_SERVER),
+    launchNotebookTrustPrompt: (): CommonAction => createIncomingAction(CommonActionType.LAUNCH_NOTEBOOK_TRUST_PROMPT),
     openSettings: (setting?: string): CommonAction<IOpenSettingsAction> =>
         createIncomingActionWithPayload(CommonActionType.OPEN_SETTINGS, { setting }),
     getVariableData: (

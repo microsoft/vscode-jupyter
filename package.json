@@ -1849,7 +1849,7 @@
             }
         ],
         "viewsContainers": {
-            "panel": [
+            "activitybar": [
                 {
                     "id": "jupyter",
                     "title": "Jupyter",
@@ -1858,20 +1858,16 @@
             ]
         },
         "views": {
-            "jupyter-variables": [
+            "jupyter": [
                 {
                     "type": "webview",
                     "id": "jupyterViewVariables",
-                    "name": "Variables",
-                    "when": "jupyter.hasNativeNotebookOpen"
-                }
-            ],
-            "jupyter-scratchPad": [
+                    "name": "Variables"
+                },
                 {
                     "type": "webview",
                     "id": "jupyterScratchPad",
-                    "name": "Scratch Pad",
-                    "when": "jupyter.hasNativeNotebookOpen"
+                    "name": "Notebook Scratch Pad"
                 }
             ]
         }

@@ -1,24 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
+import '../../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
-import { IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
-import {
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages
-} from '../../datascience/interactive-common/interactiveWindowTypes';
-import { ICodeCssGenerator, INotebook, IThemeFinder } from '../types';
-import { WebviewViewHost } from '../webviews/webviewViewHost';
-import { INotebookWatcher } from './types';
-import { SimpleMessageListener } from '../interactive-common/simpleMessageListener';
-import { traceError } from '../../common/logger';
+import { IVSCodeNotebook, IWebviewViewProvider, IWorkspaceService } from '../../../common/application/types';
+import { EXTENSION_ROOT_DIR, isTestExecution } from '../../../common/constants';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../interactive-common/interactiveWindowTypes';
+import { CellState, ICodeCssGenerator, INotebook, IThemeFinder } from '../../types';
+import { WebviewViewHost } from '../../webviews/webviewViewHost';
+import { INotebookWatcher } from '../types';
+import { SimpleMessageListener } from '../../interactive-common/simpleMessageListener';
+import { traceError } from '../../../common/logger';
+import { Identifiers } from '../../constants';
+import { createCodeCell } from '../../../../datascience-ui/common/cellFactory';
+import * as localize from '../../../common/utils/localize';
+import { SharedMessages } from '../../messages';
 
 const root = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
@@ -35,7 +36,8 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         @unmanaged() workspaceService: IWorkspaceService,
         @unmanaged() provider: IWebviewViewProvider,
         @unmanaged() private readonly disposables: IDisposableRegistry,
-        @unmanaged() private readonly notebookWatcher: INotebookWatcher
+        @unmanaged() private readonly notebookWatcher: INotebookWatcher,
+        @unmanaged() private readonly vscNotebooks: IVSCodeNotebook
     ) {
         super(
             configuration,
@@ -62,11 +64,44 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
 
     public async load(codeWebview: vscodeWebviewView) {
         await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
+
+        // Send our first empty cell
+        await this.postMessage(InteractiveWindowMessages.LoadAllCells, {
+            cells: [
+                {
+                    id: '0',
+                    file: Identifiers.EmptyFileName,
+                    line: 0,
+                    state: CellState.finished,
+                    data: createCodeCell('')
+                }
+            ],
+            isNotebookTrusted: true
+        });
+
+        // Set the title if there is an active notebook
+        if (this.vscNotebooks.activeNotebookEditor) {
+            await this.postMessage(
+                InteractiveWindowMessages.SetTitle,
+                localize.DataScience.addCell().format(
+                    path.basename(this.vscNotebooks.activeNotebookEditor.document.uri.fsPath)
+                )
+            );
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
+            case InteractiveWindowMessages.Started:
+                // Send the first settings message
+                this.onDataScienceSettingsChanged().ignoreErrors();
+
+                // Send the loc strings (skip during testing as it takes up a lot of memory)
+                const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
+                this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
+                break;
+
             default:
                 break;
         }

@@ -96,6 +96,7 @@ export type IMainState = {
     kernel: IServerState;
     isNotebookTrusted: boolean;
     externalButtons: IExternalWebviewCellButton[];
+    title?: string;
 };
 
 export type SelectionAndFocusedInfo = {

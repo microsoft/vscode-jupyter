@@ -17,7 +17,7 @@ import { TextAreaFocusTracker } from '../interactive-common/textAreaFocusTracker
 import { WidgetManagerComponent } from '../ipywidgets/webViews/container';
 import { IVsCodeApi, PostOffice } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
-import { getConnectedScratchEditor } from './scratchPanel';
+import { getConnectedScratchPanel } from './scratchPanel';
 import { createStore } from './redux/store';
 
 // This special function talks to vscode from a web panel
@@ -33,14 +33,14 @@ const postOffice = new PostOffice();
 const store = createStore(skipDefault, baseTheme, testMode, postOffice);
 
 // Wire up a connected react control for our ScratchEditor
-const ConnectedInteractiveEditor = getConnectedScratchEditor();
+const ConnectedScratchEditor = getConnectedScratchPanel();
 
 // Stick them all together
 /* eslint-disable  */
 ReactDOM.render(
     <Provider store={store}>
         <TextAreaFocusTracker />
-        <ConnectedInteractiveEditor />
+        <ConnectedScratchEditor />
         <WidgetManagerComponent postOffice={postOffice} widgetContainerId={'rootWidget'} store={store} />
     </Provider>,
     document.getElementById('root') as HTMLElement

@@ -4,10 +4,10 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, WebviewView, WebviewViewResolveContext } from 'vscode';
-import { IWebviewViewProvider, IWorkspaceService } from '../../common/application/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { ICodeCssGenerator, IThemeFinder } from '../types';
-import { INotebookWatcher, IScratchPadProvider } from './types';
+import { IWorkspaceService, IWebviewViewProvider, IVSCodeNotebook } from '../../../common/application/types';
+import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { ICodeCssGenerator, IThemeFinder } from '../../types';
+import { IScratchPadProvider, INotebookWatcher } from '../types';
 import { ScratchPad } from './scratchPad';
 
 // This class creates our UI for our variable view and links it to the vs code webview view
@@ -23,7 +23,8 @@ export class ScratchPadProvider implements IScratchPadProvider {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IWebviewViewProvider) private readonly webviewViewProvider: IWebviewViewProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher
+        @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher,
+        @inject(IVSCodeNotebook) private readonly vscNotebooks: IVSCodeNotebook
     ) {}
 
     public async resolveWebviewView(
@@ -41,7 +42,8 @@ export class ScratchPadProvider implements IScratchPadProvider {
             this.workspaceService,
             this.webviewViewProvider,
             this.disposables,
-            this.notebookWatcher
+            this.notebookWatcher,
+            this.vscNotebooks
         );
 
         await this.scratchPad.load(webviewView);

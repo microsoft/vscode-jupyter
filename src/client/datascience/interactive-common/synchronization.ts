@@ -228,6 +228,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.ExecuteExternalCommand]: MessageType.other,
     [InteractiveWindowMessages.GetHTMLByIdRequest]: MessageType.other,
     [InteractiveWindowMessages.GetHTMLByIdResponse]: MessageType.other,
+    [InteractiveWindowMessages.SetTitle]: MessageType.other,
     // Types from CssMessages
     [CssMessages.GetCssRequest]: MessageType.other,
     [CssMessages.GetCssResponse]: MessageType.other,
