@@ -25,7 +25,6 @@ import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
 import { NotebookCreator } from '../notebook/creation/notebookCreator';
-import { QuickPickItem } from 'vscode';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -534,7 +533,7 @@ export class CommandRegistry implements IDisposable {
         if (file && file.fsPath && file.fsPath.length > 0) {
             let dataCleaningMode = this.configService.getSettings().dataCleaningMode;
 
-            if (dataCleaningMode == undefined) {
+            if (dataCleaningMode == '') {
                 const qpoptions: QuickPickOptions = {
                     ignoreFocusOut: false,
                     matchOnDescription: true,

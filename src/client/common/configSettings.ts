@@ -201,7 +201,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         keys.forEach((k) => {
             // Replace variables with their actual value.
             const val = systemVariables.resolveAny(jupyterConfig.get(k));
-            if (k !== 'variableTooltipFields' || val !== undefined ) {
+            if (k !== 'variableTooltipFields' || val !== undefined) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (<any>this)[k] = val;
             }
