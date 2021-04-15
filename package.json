@@ -1817,6 +1817,13 @@
             }
         ],
         "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "jupyter",
+                    "title": "Jupyter",
+                    "icon": "$(notebook)"
+                }
+            ],
             "panel": [
                 {
                     "id": "jupyter-variables",

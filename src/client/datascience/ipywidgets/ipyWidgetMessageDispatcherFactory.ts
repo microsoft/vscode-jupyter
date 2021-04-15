@@ -152,54 +152,54 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
         if (message.message === IPyWidgetMessages.IPyWidgets_mirror_execute) {
             return;
         }
-        if (
-            message.message === IPyWidgetMessages.IPyWidgets_msg &&
-            'data' in message.payload &&
-            typeof message.payload.data === 'string' &&
-            message.payload.data.includes('comm_open')
-        ) {
-            const msg = JSON.parse(message.payload.data) as KernelMessage.IMessage;
-            if (msg.header.msg_type === 'comm_open') {
-                this.messagesByUri.get(uri)!.push(message);
-            }
-        }
-        if (message.message === IPyWidgetMessages.IPyWidgets_msg) {
-            const msg = JSON.parse(message.payload.data) as KernelMessage.IMessage;
-            if (
-                msg.header.msg_type === 'clear_output' ||
-                msg.header.msg_type === 'stream' ||
-                msg.header.msg_type === 'execute_input' ||
-                msg.header.msg_type === 'error' ||
-                msg.header.msg_type === 'debug_event' ||
-                msg.header.msg_type === 'complete_reply' ||
-                msg.header.msg_type === 'complete_request' ||
-                msg.header.msg_type === 'debug_reply' ||
-                msg.header.msg_type === 'debug_request' ||
-                msg.header.msg_type === 'comm_close' ||
-                msg.header.msg_type === 'comm_info_reply' ||
-                msg.header.msg_type === 'comm_info_request' ||
-                msg.header.msg_type === 'execute_reply' ||
-                msg.header.msg_type === 'execute_request' ||
-                msg.header.msg_type === 'execute_result' ||
-                msg.header.msg_type === 'history_reply' ||
-                msg.header.msg_type === 'history_request' ||
-                msg.header.msg_type === 'input_reply' ||
-                msg.header.msg_type === 'input_request' ||
-                msg.header.msg_type === 'inspect_reply' ||
-                msg.header.msg_type === 'inspect_request' ||
-                msg.header.msg_type === 'interrupt_reply' ||
-                msg.header.msg_type === 'interrupt_request' ||
-                msg.header.msg_type === 'is_complete_reply' ||
-                msg.header.msg_type === 'is_complete_request' ||
-                msg.header.msg_type === 'kernel_info_reply' ||
-                msg.header.msg_type === 'kernel_info_request' ||
-                msg.header.msg_type === 'shutdown_reply' ||
-                msg.header.msg_type === 'shutdown_request' ||
-                msg.header.msg_type === 'status'
-            ) {
-                return;
-            }
-        }
-        // this.messagesByUri.get(uri)!.push(message);
+        // if (
+        //     message.message === IPyWidgetMessages.IPyWidgets_msg &&
+        //     'data' in message.payload &&
+        //     typeof message.payload.data === 'string' &&
+        //     (message.payload.data.includes('comm_open') || message.payload.data.includes('comm_msg'))
+        // ) {
+        //     const msg = JSON.parse(message.payload.data) as KernelMessage.IMessage;
+        //     if (msg.header.msg_type === 'comm_open' || msg.header.msg_type === 'comm_msg') {
+        //         this.messagesByUri.get(uri)!.push(message);
+        //     }
+        // }
+        // if (message.message === IPyWidgetMessages.IPyWidgets_msg) {
+        //     const msg = JSON.parse(message.payload.data) as KernelMessage.IMessage;
+        //     if (
+        //         msg.header.msg_type === 'clear_output' ||
+        //         msg.header.msg_type === 'stream' ||
+        //         msg.header.msg_type === 'execute_input' ||
+        //         msg.header.msg_type === 'error' ||
+        //         msg.header.msg_type === 'debug_event' ||
+        //         msg.header.msg_type === 'complete_reply' ||
+        //         msg.header.msg_type === 'complete_request' ||
+        //         msg.header.msg_type === 'debug_reply' ||
+        //         msg.header.msg_type === 'debug_request' ||
+        //         msg.header.msg_type === 'comm_close' ||
+        //         msg.header.msg_type === 'comm_info_reply' ||
+        //         msg.header.msg_type === 'comm_info_request' ||
+        //         msg.header.msg_type === 'execute_reply' ||
+        //         msg.header.msg_type === 'execute_request' ||
+        //         msg.header.msg_type === 'execute_result' ||
+        //         msg.header.msg_type === 'history_reply' ||
+        //         msg.header.msg_type === 'history_request' ||
+        //         msg.header.msg_type === 'input_reply' ||
+        //         msg.header.msg_type === 'input_request' ||
+        //         msg.header.msg_type === 'inspect_reply' ||
+        //         msg.header.msg_type === 'inspect_request' ||
+        //         msg.header.msg_type === 'interrupt_reply' ||
+        //         msg.header.msg_type === 'interrupt_request' ||
+        //         msg.header.msg_type === 'is_complete_reply' ||
+        //         msg.header.msg_type === 'is_complete_request' ||
+        //         msg.header.msg_type === 'kernel_info_reply' ||
+        //         msg.header.msg_type === 'kernel_info_request' ||
+        //         msg.header.msg_type === 'shutdown_reply' ||
+        //         msg.header.msg_type === 'shutdown_request' ||
+        //         msg.header.msg_type === 'status'
+        //     ) {
+        //         return;
+        //     }
+        // }
+        this.messagesByUri.get(uri)!.push(message);
     }
 }

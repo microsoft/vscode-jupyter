@@ -23,17 +23,50 @@ export declare function acquireVsCodeApi(): IVsCodeApi;
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function initialize() {
-    // const vscApi = acquireVsCodeApi();
+    console.log('acquireVsCodeApi');
+    console.log(acquireVsCodeApi);
     // vscApi.postMessage('Initialized');
     console.log('Initialized sidecar');
     console.log('(window as any)._jupyter_postOffice');
     console.log((window as any)._jupyter_postOffice);
+    const postOffice = (window as any)._jupyter_postOffice;
     console.log('(window as any).ipywidgetsKernel');
     console.log((window as any).ipywidgetsKernel);
     console.log('(window as any).getKernel');
-    console.log((window as any).getKernel);
+    console.log((window as any).ipywidgetsKernel.getKernel);
     if (window.onmessage) {
         (window.onmessage as any)(messageHandler);
+    }
+    if (postOffice) {
+        console.error('Post Office exists & sending message');
+        postOffice.sendMessage('CUSTOM_VIEW', { h: 'helloFromUI' });
+        postOffice.addHandler({
+            handleMessage: (type: string, payload?: any) => {
+                console.log(`type = ${type}, payload = ${payload}`);
+                if (type === 'HelloWordFromExt'){
+                    console.error('Received message from Exteension');
+                }
+                if (type === 'RENDER_WIDGET'){
+                    console.error('Received message to reender Widget', payload);
+                    const renderOutputFunc =
+                    (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
+                    if (renderOutputFunc) {
+                        console.error('Rendering');
+                        renderOutputFunc({
+                            element: document.getElementById('variableWidgetContainer'),
+                            outputId: 'variableWidgetContainer',
+                            value: payload.data['application/vnd.jupyter.widget-view+json'],
+                            mime: 'application/vnd.jupyter.widget-view+json',
+                            metadata: payload.metadata
+                        });
+                    }
+
+                }
+                return true;
+            }
+        });
+    } else {
+        console.error('Post Office does not exist');
     }
 }
 

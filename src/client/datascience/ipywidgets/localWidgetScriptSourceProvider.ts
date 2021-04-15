@@ -77,7 +77,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
             const fileUri = Uri.file(path.join(nbextensionsPath, file));
             const scriptUri = (await this.localResourceUriConverter.asWebviewUri(fileUri)).toString();
             // eslint-disable-next-line
-            const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };
+            const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local', fileUri: fileUri.fsPath };
             return widgetScriptSource;
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

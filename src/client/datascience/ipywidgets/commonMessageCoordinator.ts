@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -6,7 +7,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
-import { Event, EventEmitter, Uri } from 'vscode';
+import { Event, EventEmitter, NotebookCommunication, Uri } from 'vscode';
 import {
     ILoadIPyWidgetClassFailureAction,
     LoadIPyWidgetClassLoadAction,
@@ -43,8 +44,10 @@ import { IIPyWidgetMessageDispatcher } from './types';
 @injectable()
 //
 export class CommonMessageCoordinator {
+    private listening?: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
+        this.listening = true;
         return this.postEmitter.event;
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
@@ -60,7 +63,8 @@ export class CommonMessageCoordinator {
         private readonly identity: Uri,
         private readonly serviceContainer: IServiceContainer,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        postEmitter?: EventEmitter<{ message: string; payload: any }>
+        postEmitter?: EventEmitter<{ message: string; payload: any }>,
+        private readonly webview?: NotebookCommunication
     ) {
         this.postEmitter =
             postEmitter ??
@@ -79,9 +83,10 @@ export class CommonMessageCoordinator {
         identity: Uri,
         serviceContainer: IServiceContainer,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        postEmitter?: EventEmitter<{ message: string; payload: any }>
+        postEmitter?: EventEmitter<{ message: string; payload: any }>,
+        webview?: NotebookCommunication
     ): Promise<CommonMessageCoordinator> {
-        const result = new CommonMessageCoordinator(identity, serviceContainer, postEmitter);
+        const result = new CommonMessageCoordinator(identity, serviceContainer, postEmitter, webview);
         await result.initialize();
         return result;
     }
@@ -111,11 +116,9 @@ export class CommonMessageCoordinator {
         this.getIPyWidgetScriptSource()?.onMessage(message, payload);
     }
 
-    private initialize(): Promise<[void, void]> {
-        return Promise.all([
-            this.getIPyWidgetMessageDispatcher()?.initialize(),
-            this.getIPyWidgetScriptSource()?.initialize()
-        ]);
+    private async initialize(): Promise<void> {
+        const promise1 = this.getIPyWidgetScriptSource()?.initialize(this.webview) || Promise.resolve();
+        await promise1.then(() => this.getIPyWidgetMessageDispatcher()?.initialize());
     }
 
     private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
@@ -213,9 +216,7 @@ export class CommonMessageCoordinator {
             this.ipyWidgetMessageDispatcher = this.serviceContainer
                 .get<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory)
                 .create(this.identity);
-            this.disposables.push(
-                this.ipyWidgetMessageDispatcher.postMessage(this.postEmitter.fire.bind(this.postEmitter))
-            );
+            this.disposables.push(this.ipyWidgetMessageDispatcher.postMessage(this.cacheOrSend.bind(this)));
         }
         return this.ipyWidgetMessageDispatcher;
     }
@@ -235,11 +236,22 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
                 this.serviceContainer.get<IExtensionContext>(IExtensionContext)
             );
-            this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.postEmitter.fire.bind(this.postEmitter)));
-            this.disposables.push(
-                this.ipyWidgetScriptSource.postInternalMessage(this.postEmitter.fire.bind(this.postEmitter))
-            );
+            this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.cacheOrSend.bind(this)));
+            this.disposables.push(this.ipyWidgetScriptSource.postInternalMessage(this.cacheOrSend.bind(this)));
         }
         return this.ipyWidgetScriptSource;
+    }
+    private cachedMessages: any[] = [];
+    private cacheOrSend(data: any) {
+        if (!this.listening) {
+            this.cachedMessages.push(data);
+            return;
+        }
+        this.sendCachedMessages();
+        this.postEmitter.fire(data);
+    }
+    private sendCachedMessages() {
+        this.cachedMessages.forEach((item) => this.postEmitter.fire(item));
+        this.cachedMessages = [];
     }
 }

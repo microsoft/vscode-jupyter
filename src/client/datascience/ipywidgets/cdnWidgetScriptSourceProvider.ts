@@ -100,7 +100,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         // Might be on disk, try there first.
         if (diskPath && (await this.fs.localFileExists(diskPath))) {
             const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
-            return { moduleName, scriptUri, source: 'cdn' };
+            return { moduleName, scriptUri, source: 'cdn', fileUri: diskPath };
         }
 
         // If still not found, download it.
@@ -124,7 +124,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
                 // Now we can generate the script URI so the local converter doesn't try to copy it.
                 const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
-                return { moduleName, scriptUri, source: 'cdn' };
+                return { moduleName, scriptUri, source: 'cdn', fileUri: diskPath };
             } else {
                 return { moduleName };
             }

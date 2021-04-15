@@ -6,7 +6,7 @@ import type * as jupyterlabService from '@jupyterlab/services';
 import { sha256 } from 'hash.js';
 import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
-import { Event, EventEmitter, Uri } from 'vscode';
+import { Event, EventEmitter, NotebookCommunication, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -167,13 +167,13 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         } else if (message === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest) {
             if (payload) {
                 const { moduleName, moduleVersion } = payload as { moduleName: string; moduleVersion: string };
-                this.sendWidgetSource(moduleName, moduleVersion).catch(
-                    traceError.bind('Failed to send widget sources upon ready')
-                );
+                this.sendWidgetSource(moduleName, moduleVersion).catch((ex) => {
+                    return traceError('Failed to send widget sources upon ready', ex);
+                });
             }
         }
     }
-    public async initialize() {
+    public async initialize(webview?: NotebookCommunication) {
         if (!this.jupyterLab) {
             // Lazy load jupyter lab for faster extension loading.
             // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -205,9 +205,9 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             this.stateFactory,
             this.httpClient
         );
-        await this.initializeNotebook();
+        await this.initializeNotebook(webview);
     }
-
+    private static readonly listOfAllScriptsSent = new Map<string, Map<string, WidgetScriptSource>>();
     /**
      * Send the widget script source for a specific widget module & version.
      * This is a request made when a widget is certainly used in a notebook.
@@ -229,6 +229,13 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             traceError('Failed to get widget source due to an error', ex);
             sendTelemetryEvent(Telemetry.HashedIPyWidgetScriptDiscoveryError);
         } finally {
+            IPyWidgetScriptSource.listOfAllScriptsSent.set(
+                this.identity.toString(),
+                IPyWidgetScriptSource.listOfAllScriptsSent.get(this.identity.toString()) ||
+                    new Map<string, WidgetScriptSource>()
+            );
+            const map = IPyWidgetScriptSource.listOfAllScriptsSent.get(this.identity.toString())!;
+            map.set(widgetSource.moduleName, widgetSource);
             // Send to UI (even if there's an error) continues instead of hanging while waiting for a response.
             this.postEmitter.fire({
                 message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
@@ -236,7 +243,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             });
         }
     }
-    private async initializeNotebook() {
+    private async initializeNotebook(webview?: NotebookCommunication) {
         if (!this.notebook) {
             return;
         }
@@ -258,9 +265,9 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             this,
             this.disposables
         );
-        this.handlePendingRequests();
+        this.handlePendingRequests(webview);
     }
-    private handlePendingRequests() {
+    private handlePendingRequests(webview?: NotebookCommunication) {
         const pendingModuleNames = Array.from(this.pendingModuleRequests.keys());
         while (pendingModuleNames.length) {
             const moduleName = pendingModuleNames.shift();
@@ -271,6 +278,23 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
                     traceError.bind(`Failed to send WidgetScript for ${moduleName}`)
                 );
             }
+        }
+        const map = IPyWidgetScriptSource.listOfAllScriptsSent.get(this.identity.toString());
+        if (map?.size) {
+            Array.from(map.values()).forEach((widgetSource) => {
+                if (webview && widgetSource.fileUri) {
+                    const scriptUri = webview.asWebviewUri(Uri.file(widgetSource.fileUri)).toString();
+                    this.postEmitter.fire({
+                        message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
+                        payload: { ...widgetSource, scriptUri }
+                    });
+                } else {
+                    this.postEmitter.fire({
+                        message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
+                        payload: widgetSource
+                    });
+                }
+            });
         }
     }
 

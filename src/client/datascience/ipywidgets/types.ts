@@ -37,6 +37,10 @@ export type WidgetScriptSource = {
      * Resource Uri (not using Uri type as this needs to be sent from extension to UI).
      */
     scriptUri?: string;
+    /**
+     * File on disc
+     */
+    fileUri?: string;
 };
 
 /**

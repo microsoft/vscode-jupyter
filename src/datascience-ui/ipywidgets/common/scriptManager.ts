@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as fastDeepEqual from 'fast-deep-equal';
 import { EventEmitter } from 'events';
 import * as isonline from 'is-online';
 import '../../../client/common/extensions';
@@ -26,6 +27,7 @@ export class ScriptManager extends EventEmitter {
         string,
         { deferred: Deferred<void>; timer: NodeJS.Timeout | number | undefined }
     >();
+    private previousKernelOptions?: any;
     private readonly registeredWidgetSources = new Map<string, WidgetScriptSource>();
     private timedoutWaitingForWidgetsToGetLoaded?: boolean;
     private widgetsCanLoadFromCDN: boolean = false;
@@ -45,11 +47,19 @@ export class ScriptManager extends EventEmitter {
                     const settings = JSON.parse(payload) as IJupyterExtraSettings;
                     this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
                 } else if (type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse) {
+                    console.warn(`Got scripr ${(payload as WidgetScriptSource).moduleName}`);
                     this.registerScriptSourceInRequirejs(payload as WidgetScriptSource);
-                } else if (
-                    type === IPyWidgetMessages.IPyWidgets_kernelOptions ||
-                    type === IPyWidgetMessages.IPyWidgets_onKernelChanged
-                ) {
+                } else if (type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
+                    console.warn(`IPyWidgets_kernelOptions in ScriptManager`);
+                    if (this.previousKernelOptions && !fastDeepEqual(this.previousKernelOptions, payload)) {
+                        console.error(`IPyWidgets_kernelOptions in ScriptManager and they are different`);
+                        console.error(this.previousKernelOptions);
+                        console.error(payload);
+                        this.previousKernelOptions = payload;
+                        this.clear();
+                    }
+                } else if (type === IPyWidgetMessages.IPyWidgets_onKernelChanged) {
+                    console.warn(`IPyWidgets_onKernelChanged in ScriptManager`);
                     this.clear();
                 }
                 return true;
@@ -98,9 +108,10 @@ export class ScriptManager extends EventEmitter {
      */
     public loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void> {
         // eslint-disable-next-line no-console
-        console.log(`Fetch IPyWidget source for ${moduleName}`);
+        console.error(`Fetch IPyWidget source for ${moduleName}, ${moduleVersion}`);
         let request = this.widgetSourceRequests.get(moduleName);
         if (!request) {
+            console.error(`Fetch IPyWidget source for (not found) ${moduleName}, ${moduleVersion}`);
             request = {
                 deferred: createDeferred<void>(),
                 timer: undefined
@@ -132,6 +143,8 @@ export class ScriptManager extends EventEmitter {
             }, timeoutTime);
 
             this.widgetSourceRequests.set(moduleName, request);
+        } else {
+            console.log(`Fetch IPyWidget source for (found) ${moduleName}, ${moduleVersion}`);
         }
         // Whether we have the scripts or not, send message to extension.
         // Useful telemetry and also we know it was explicity requested by ipywidgets.
@@ -187,11 +200,12 @@ export class ScriptManager extends EventEmitter {
         if (!Array.isArray(sources) || sources.length === 0) {
             return;
         }
-
+        console.warn(`registerScriptSourcesInRequirejs ${sources.map((item) => item.moduleName).join(', ')}`);
         registerScripts(sources);
 
         // Now resolve promises (anything that was waiting for modules to get registered can carry on).
         sources.forEach((source) => {
+            console.warn(`registerScriptSourcesInRequirejs2 ${source.moduleName}`);
             this.registeredWidgetSources.set(source.moduleName, source);
             // We have fetched the script sources for all of these modules.
             // In some cases we might not have the source, meaning we don't have it or couldn't find it.
@@ -204,6 +218,7 @@ export class ScriptManager extends EventEmitter {
                 this.widgetSourceRequests.set(source.moduleName, request);
             }
             request.deferred.resolve();
+            console.warn(`registerScriptSourcesInRequirejs3 ${source.moduleName}`);
             if (request.timer !== undefined) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 clearTimeout(request.timer as any); // This is to make this work on Node and Browser

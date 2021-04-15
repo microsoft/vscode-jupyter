@@ -56,8 +56,10 @@ export class PostOffice implements IDisposable {
     public sendUnsafeMessage(type: string, payload?: any) {
         const api = this.acquireApi();
         if (api) {
+            console.log(`Sending message ${type}`);
             api.postMessage({ type: type, payload });
         } else {
+            console.error(`NOT Sending message ${type}`);
             logMessage(`No vscode API to post message ${type}`);
         }
     }
@@ -73,19 +75,24 @@ export class PostOffice implements IDisposable {
     }
 
     public acquireApi(): IVsCodeApi | undefined {
+        console.log('acquireApi');
         // Only do this once as it crashes if we ask more than once
         // eslint-disable-next-line
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
+            console.log('acquireApi1');
             this.vscodeApi = acquireVsCodeApi(); // NOSONAR
+            console.error('this.vscodeApi');
+            console.error(this.vscodeApi);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any,
         } else if (!this.vscodeApi && typeof (window as any).acquireVsCodeApi !== 'undefined') {
+            console.log('acquireApi2');
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.vscodeApi = (window as any).acquireVsCodeApi();
         }
         if (!this.registered) {
             this.registered = true;
             window.addEventListener('message', this.baseHandler);
-
+            this.vscodeApi?.postMessage({type:'CUSTOM_VIEW', message:'Initialized'});
             try {
                 // For testing, we might use a  browser to load  the stuff.
                 // In such instances the `acquireVSCodeApi` will return the event handler to get messages from extension.
@@ -93,9 +100,13 @@ export class PostOffice implements IDisposable {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const api = (this.vscodeApi as any) as undefined | { handleMessage?: Function };
                 if (api && api.handleMessage) {
+                    // console.log('api.handleMessage exists');
                     api.handleMessage(this.handleMessages.bind(this));
+                } else {
+                    // console.error('api.handleMessage does NOT exists');
                 }
-            } catch {
+            } catch (ex) {
+                console.error('failed to add message handler', ex);
                 // Ignore.
             }
         }
@@ -103,9 +114,11 @@ export class PostOffice implements IDisposable {
         return this.vscodeApi;
     }
     private async handleMessages(ev: MessageEvent) {
+        console.log(`handleMessages Postoffice`, ev);
         if (this.handlers) {
             const msg = ev.data as WebviewMessage;
             if (msg) {
+                console.log(`handleMessages Postoffice2`, msg);
                 this.subject.next({ type: msg.type, payload: msg.payload });
                 this.handlers.forEach((h: IMessageHandler | null) => {
                     if (h) {

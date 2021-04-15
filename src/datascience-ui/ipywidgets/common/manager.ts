@@ -24,6 +24,7 @@ import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { create as createKernel } from './kernel';
 import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, ScriptLoader } from './types';
 
+let counter = 0;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
@@ -53,6 +54,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         private readonly postOffice: PostOffice,
         private readonly scriptLoader: ScriptLoader
     ) {
+        console.error('Created Instance');
         this.postOffice.addHandler(this);
 
         // Handshake.
@@ -67,6 +69,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         await this.manager?.clear_state();
     }
     public handleMessage(message: string, payload?: any) {
+        console.log(`manager.ts handleMessage ${message}`);
         if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
             this.initializeKernelAndWidgetManager(payload);
         } else if (message === IPyWidgetMessages.IPyWidgets_onRestartKernel) {
@@ -140,8 +143,22 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         if (this.proxyKernel && fastDeepEqual(options, this.options)) {
             return;
         }
+        console.error('(window as any).secondTIME = true');
+        console.error((window as any).secondTIME);
+        console.error(counter);
+        (window as any).secondTIME = ((window as any).secondTIME ?? 0) + 1;
+        counter = counter + 1;
         this.proxyKernel?.dispose(); // NOSONAR
+        console.log('this.proxyKernel');
+        console.log(this.proxyKernel);
+        console.log('this.options');
+        console.log(JSON.stringify(this.options));
+        console.log('options');
+        console.log(JSON.stringify(options));
+        console.log('initializeKernelAndWidgetManager1');
+        this.options = options;
         this.proxyKernel = createKernel(options, this.postOffice, this.pendingMessages);
+        console.log('initializeKernelAndWidgetManager2');
         this.pendingMessages = [];
 
         // Dispose any existing managers.

@@ -225,6 +225,7 @@ export namespace CommonEffects {
     export function handleLoadIPyWidgetClassFailure(
         arg: CommonReducerArg<CommonActionType, ILoadIPyWidgetClassFailureAction>
     ): IMainState {
+        console.error(`handleLoadIPyWidgetClassFailure`, arg);
         // Find the first currently executing cell and add an error to its output
         let index = arg.prevState.cellVMs.findIndex((c) => c.cell.state === CellState.executing);
 

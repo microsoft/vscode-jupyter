@@ -22,12 +22,15 @@ class WidgetManagerComponent {
         this.scriptManager.onWidgetLoadError(this.handleLoadError.bind(this));
         this.scriptManager.onWidgetLoadSuccess(this.handleLoadSuccess.bind(this));
         this.scriptManager.onWidgetVersionNotSupported(this.handleUnsupportedWidgetVersion.bind(this));
+        console.error('Initialized WidgetManagerComponent1');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.widgetManager = new WidgetManager(undefined as any, postOffice, this.scriptManager.getScriptLoader());
+        console.error('Initialized WidgetManagerComponent2');
 
         postOffice.addHandler({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handleMessage: (type: string, payload?: any) => {
+                console.log(`Message in IPyWidgets/kernel/index.ts ${type}`);
                 if (type === SharedMessages.UpdateSettings) {
                     const settings = JSON.parse(payload);
                     this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
@@ -101,6 +104,7 @@ export function renderOutput(request: NotebookOutputEventParams) {
             // eslint-disable-next-line no-console
             return console.error('Nothing to render');
         }
+        console.log('Wow this works');
         /* eslint-disable no-console */
         renderIPyWidget(request.outputId, model, request.element);
     } catch (ex) {
@@ -231,6 +235,7 @@ function attemptInitialize() {
         console.log('IPyWidget kernel initializing...');
         initialize();
     } else {
+        console.log('IPyWidget kernel not found initializing...');
         setTimeout(attemptInitialize, 100);
     }
 }
