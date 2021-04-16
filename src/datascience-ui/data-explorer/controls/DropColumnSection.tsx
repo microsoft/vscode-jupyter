@@ -20,18 +20,18 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
 
     render() {
         return (
-            <details
-                className="slicing-control"
-                style={{
-                    borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                    paddingTop: '4px',
-                    paddingBottom: '4px'
-                }}
-            >
-                <summary className="slice-summary">
-                    <span className="slice-summary-detail">{'DROP COLUMNS'}</span>
-                </summary>
-                <div className="slice-control-row slice-form-container" style={{ paddingBottom: '5px' }}>
+            // <details
+            //     className="slicing-control"
+            //     style={{
+            //         borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
+            //         paddingTop: '4px',
+            //         paddingBottom: '4px'
+            //     }}
+            // >
+            //     <summary className="slice-summary">
+            //         <span className="slice-summary-detail">{'DROP COLUMNS'}</span>
+            //     </summary>
+                <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
                     <Dropdown
                         responsiveMode={ResponsiveMode.xxxLarge}
                         label={'Column(s) to drop:'}
@@ -56,21 +56,22 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
                             this.setState({ columnsToDrop: [] });
                         }}
                         style={{
+                            // width: '50px',
                             backgroundColor: 'var(--vscode-button-background)',
                             color: 'var(--vscode-button-foreground)',
                             margin: '4px',
-                            padding: '4px',
+                            padding: '8px',
                             border: 'none',
                             cursor: 'pointer',
                             height: '26px',
-                            marginTop: '27px',
+                            marginTop: '22px',
                             marginLeft: '0px'
                         }}
                     >
                         Drop
                     </button>
                 </div>
-            </details>
+            // </details>
         );
     }
 

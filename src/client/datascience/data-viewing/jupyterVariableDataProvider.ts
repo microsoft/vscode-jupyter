@@ -104,7 +104,8 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 type: variable.type,
                 maximumRowChunkSize: variable.maximumRowChunkSize,
                 name: variable.name,
-                fileName: variable.fileName
+                fileName: variable.fileName,
+                sourceFile: variable.sourceFile
             };
         }
         if (isRefresh) {

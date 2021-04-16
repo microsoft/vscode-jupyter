@@ -13,7 +13,7 @@ interface IState {
 }
 
 const theme = getTheme();
-const styles = mergeStyleSets({
+export const styles = mergeStyleSets({
     container: {
       overflow: 'auto',
       maxHeight: 300,
@@ -75,12 +75,12 @@ export class HistorySection extends React.Component<IProps, IState> {
                 className={styles.itemContent + " history-item"}
                 style={{ paddingBottom: '4px', paddingTop: '2px' }}
                 onClick={() => this.viewHistoryItem(index)}>
-                <div
+                {/* <div
                     className="codicon codicon-close codicon-button"
                     onClick={this.handleDeleteHistoryItem}
                     style={{ verticalAlign: 'middle' }}
                     title={"Remove step"}
-                />
+                /> */}
                 <span style={{ verticalAlign: 'middle' }}>{item.name}</span>
             </div>
           </div>

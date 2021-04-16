@@ -93,6 +93,7 @@ export interface IDataFrameInfo {
      * The name of the file that this variable was declared in.
      */
     fileName?: string;
+    sourceFile?: string;
 }
 
 export interface IDataViewerDataProvider {
