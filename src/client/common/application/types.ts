@@ -70,9 +70,14 @@ import {
     NotebookEditorSelectionChangeEvent,
     NotebookKernel,
     NotebookKernelProvider,
-    NotebookCellStatusBarItemProvider
+    NotebookCellStatusBarItemProvider,
+    NotebookSelector,
+    NotebookExecutionHandler,
+    NotebookKernelPreload,
+    NotebookController
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
+import { NotebookControllerManager } from '../../datascience/notebook/notebookControllerManager';
 
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
@@ -1041,7 +1046,7 @@ export interface IWebviewPanelMessageListener extends IWebviewMessageListener, I
 }
 
 export const IWebviewViewMessageListener = Symbol('IWebviewViewMessageListener');
-export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable {}
+export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable { }
 
 export type WebviewMessage = {
     /**
@@ -1557,6 +1562,7 @@ export type NotebookCellChangedEvent =
     | NotebookDocumentMetadataChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
+    // IANHU: Remove
     readonly onDidChangeActiveNotebookKernel: Event<{
         document: NotebookDocument;
         kernel: NotebookKernel | undefined;
@@ -1587,6 +1593,8 @@ export interface IVSCodeNotebook {
         }
     ): Disposable;
 
+    createNotebookController(id: string, selector: NotebookSelector, label: string, handler?: NotebookExecutionHandler, preloads?: NotebookKernelPreload[]): NotebookController;
+    // IANHU: Remove
     registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
     registerNotebookCellStatusBarItemProvider(
         selector: NotebookDocumentFilter,

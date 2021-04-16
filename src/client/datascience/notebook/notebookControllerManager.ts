@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-// import { CancellationTokenSource, NotebookController, NotebookDocument } from 'vscode';
-import { CancellationTokenSource, NotebookDocument } from 'vscode';
+import { CancellationTokenSource, NotebookController, NotebookDocument, NotebookSelector } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IConfigurationService, IDisposableRegistry, IExtensions } from '../../common/types';
@@ -11,6 +10,7 @@ import { isLocalLaunch } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { INotebookProvider } from '../types';
+import { JupyterNotebookView } from './constants';
 import { getNotebookMetadata } from './helpers/helpers';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -18,7 +18,7 @@ import { getNotebookMetadata } from './helpers/helpers';
  */
 @injectable()
 export class NotebookControllerManager implements IExtensionSingleActivationService {
-    //private controllerMapping = new WeakMap<NotebookDocument, NotebookController>();
+    private controllerMapping = new WeakMap<NotebookDocument, NotebookController[]>();
 
     private isLocalLaunch: boolean;
     constructor(
@@ -42,16 +42,45 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
     private async onDidOpenNotebookDocument(document: NotebookDocument) {
         // IANHU: Need to do stopwatch and telemetry here?
 
-        this.getKernelConnectionMetadata(document);
-        // const kernelConnectionMetadata = this.getKernelConnectionMetadata(document);
+        const connections = await this.getKernelConnectionMetadata(document);
+        this.createNotebookControllers(document, connections);
     }
 
-    private async onDidCloseNotebookDocument() {
+    private async onDidCloseNotebookDocument(document: NotebookDocument) {
+        // See if we have NotebookControllers for this document, if we do, dispose them
+        if (this.controllerMapping.has(document)) {
+            this.controllerMapping.get(document)?.forEach(controller => {
+                controller.dispose();
+            });
+
+            this.controllerMapping.delete(document);
+        }
     }
 
     // For this notebook document, create NotebookControllers for all associated kernel connections
-    private async createNotebookControllers(document: NotebookDocument, kernelConnections: KernelConnectionMetadata[]) {
+    private createNotebookControllers(document: NotebookDocument, kernelConnections: KernelConnectionMetadata[]) {
+        if (this.controllerMapping.get(document)) {
+            // IANHU: Should this happen ever?
+        }
 
+        // Map KernelConnectionMetadata => NotebookController
+        const controllers = kernelConnections.map(value => {
+            return this.createNotebookController(document, value);
+        });
+
+        // Store our NotebookControllers to dispose on doc close
+        this.controllerMapping.set(document, controllers);
+    }
+
+    private createNotebookController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata): NotebookController {
+        // Create notebook selector
+        // IANHU: move into call
+        const selector: NotebookSelector = { viewType: JupyterNotebookView, pattern: document.uri.fsPath };
+        const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
+        const controller = this.notebook.createNotebookController(id, selector, document.uri.toString());
+        this.disposables.push(controller); // Make sure we set this to dispose
+
+        return controller;
     }
 
     // For the given NotebookDocument find all associated KernelConnectionMetadata

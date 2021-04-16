@@ -11,12 +11,16 @@ import {
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookCellStatusBarItemProvider,
     NotebookContentProvider,
+    NotebookController,
     NotebookDocument,
     NotebookDocumentFilter,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
+    NotebookExecutionHandler,
     NotebookKernel,
+    NotebookKernelPreload,
     NotebookKernelProvider,
+    NotebookSelector,
     window
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
@@ -106,6 +110,9 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         provider: NotebookKernelProvider
     ): Disposable {
         return notebook.registerNotebookKernelProvider(selector, provider);
+    }
+    public createNotebookController(id: string, selector: NotebookSelector, label: string, handler?: NotebookExecutionHandler, preloads?: NotebookKernelPreload[]): NotebookController {
+        return notebook.createNotebookController(id, selector, label, handler, preloads);
     }
     private createDisposableEventEmitter<T>() {
         const eventEmitter = new EventEmitter<T>();
