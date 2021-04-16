@@ -6,7 +6,16 @@ import '../../../common/extensions';
 import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import * as fsextra from 'fs-extra';
-import { CancellationError, ConfigurationTarget, Disposable, Uri, WebviewView as vscodeWebviewView } from 'vscode';
+import {
+    CancellationError,
+    ConfigurationTarget,
+    Disposable,
+    NotebookCellRange,
+    NotebookEditor,
+    NotebookEditorRevealType,
+    Uri,
+    WebviewView as vscodeWebviewView
+} from 'vscode';
 
 import {
     IApplicationShell,
@@ -18,6 +27,7 @@ import {
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../../common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../common/types';
 import {
+    ICopyCode,
     IInteractiveWindowMapping,
     InteractiveWindowMessages,
     IReExecuteCells
@@ -64,6 +74,8 @@ import {
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { NativeEditorNotebookModel } from '../../notebookStorage/notebookModel';
+import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
+import { addNewCellAfter } from '../helpers/executionHelpers';
 
 const root = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
@@ -71,7 +83,6 @@ const root = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
 export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> implements IDisposable, IProgress {
     private vscodeWebView: vscodeWebviewView | undefined;
-    private _currentNotebookUri: Uri | undefined;
     private _notebook: INotebook | undefined;
     private restartingKernel: boolean = false;
     private unfinishedCells: ICell[] = [];
@@ -80,7 +91,10 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
     private notebookPromise: Promise<void> | undefined;
 
     protected get owningResource(): Resource {
-        return this._currentNotebookUri;
+        if (this.vscNotebooks.activeNotebookEditor?.document) {
+            return this.vscNotebooks.activeNotebookEditor.document.uri;
+        }
+        return undefined;
     }
     constructor(
         @unmanaged() private readonly listeners: IInteractiveWindowListener[],
@@ -116,6 +130,7 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         this.notebookWatcher.onDidExecuteActiveNotebook(this.activeNotebookExecuted, this, this.disposables);
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
+        this.vscNotebooks.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
     }
 
     // Used to identify this webview in telemetry, not shown to user so no localization
@@ -143,8 +158,8 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         });
 
         // Set the title if there is an active notebook
-        if (this.vscNotebooks.activeNotebookEditor && this.vscodeWebView) {
-            this._currentNotebookUri = this.vscNotebooks.activeNotebookEditor.document.uri;
+        if (this.vscodeWebView) {
+            await this.activeEditorChanged(this.vscNotebooks.activeNotebookEditor);
             await this.activeNotebookChanged({
                 notebook: this.notebookWatcher.activeNotebook,
                 executionCount: this.notebookWatcher.activeNotebookExecutionCount
@@ -176,6 +191,10 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
                 // Send the loc strings (skip during testing as it takes up a lot of memory)
                 const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
                 this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
+                break;
+
+            case InteractiveWindowMessages.CopyCodeCell:
+                this.handleMessage(message, payload, this.copyCode);
                 break;
 
             case InteractiveWindowMessages.LoadTmLanguageRequest:
@@ -252,6 +271,7 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
     }
 
     protected async clearResult(id: string): Promise<void> {
+        await this.ensureConnectionAndNotebook();
         if (this._notebook) {
             this._notebook.clear(id);
         }
@@ -290,6 +310,38 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
                     break; // might want to do a progress bar or something
             }
         });
+    }
+
+    private copyCode(args: ICopyCode) {
+        return this.copyCodeInternal(args.source).catch((err) => {
+            this.applicationShell.showErrorMessage(err).then(noop, noop);
+        });
+    }
+
+    private async copyCodeInternal(source: string) {
+        let notebook = this.vscNotebooks.activeNotebookEditor;
+        if (!notebook) {
+            // Find the first visible notebook editor if nothing is visible
+            const notebookEditors = this.vscNotebooks.notebookEditors;
+            if (notebookEditors.length > 0) {
+                notebook = notebookEditors[0];
+            }
+        }
+        if (notebook) {
+            return this.copyCodeToNotebook(notebook, source);
+        }
+    }
+
+    private async copyCodeToNotebook(editor: NotebookEditor, source: string) {
+        // Add a new cell with our source
+        var lastCell = editor.document.cellAt(editor.document.cellCount - 1);
+        await addNewCellAfter(lastCell, source);
+
+        // Make sure this cell is shown to the user
+        editor.revealRange(
+            new NotebookCellRange(lastCell.index + 1, lastCell.index + 1),
+            NotebookEditorRevealType.InCenterIfOutsideViewport
+        );
     }
 
     private async reexecuteCell(cell: ICell, code: string): Promise<void> {
@@ -684,17 +736,36 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         }).ignoreErrors();
     }
 
-    // The active notebook has changed, so force a refresh on the view to pick up the new info
-    private async activeNotebookChanged(arg: { notebook?: INotebook; executionCount?: number }) {
-        this._currentNotebookUri = arg.notebook?.identity || this._currentNotebookUri;
-        if (this._currentNotebookUri && this.vscodeWebView) {
-            this.vscodeWebView.title = localize.DataScience.scratchPadTitleFormat().format(
-                path.basename(this._currentNotebookUri.fsPath)
-            );
+    private async activeEditorChanged(editor: NotebookEditor | undefined) {
+        if (this.vscodeWebView) {
+            this.vscodeWebView.title = editor
+                ? localize.DataScience.scratchPadTitleFormat().format(path.basename(editor.document.uri.fsPath))
+                : localize.DataScience.scratchPadTitleEmpty();
         }
 
-        // Sign up for notebook changes
-        this.listenToNotebook(arg.notebook);
+        // Update the state of the control based on editor
+        await this.postMessage(InteractiveWindowMessages.HideUI, editor === undefined);
+    }
+
+    // The active notebook has changed, so force a refresh on the view to pick up the new info
+    private async activeNotebookChanged(arg: { notebook?: INotebook; executionCount?: number }) {
+        // Sign up for notebook changes if we haven't already.
+        if (arg.notebook && this._notebook !== arg.notebook) {
+            this.listenToNotebook(arg.notebook);
+        } else if (!arg.notebook && this.vscNotebooks.activeNotebookEditor) {
+            // Editor doesn't have a notebook, but likely still has a server status
+            const kernel = this.vscNotebooks.activeNotebookEditor.kernel as VSCodeNotebookKernelMetadata;
+            const name = getDisplayNameOrNameOfKernelConnection(kernel.selection);
+
+            await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                jupyterServerStatus: ServerStatus.Idle,
+                serverName: await this.getServerDisplayName(undefined),
+                kernelName: name,
+                language: translateKernelLanguageToMonaco(
+                    getKernelConnectionLanguage(kernel.selection) || PYTHON_LANGUAGE
+                )
+            });
+        }
 
         // TODO: Should probably clear or reset the cell shown
     }

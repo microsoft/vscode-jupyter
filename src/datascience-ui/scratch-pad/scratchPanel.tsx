@@ -17,6 +17,7 @@ import { getConnectedScratchCell } from './scratchCell';
 import './scratchPanel.less';
 import { actionCreators } from './redux/actions';
 import { ToolbarComponent } from './toolbar';
+import { getLocString } from '../react-common/locReactSide';
 
 type IScratchPanelProps = IMainState & typeof actionCreators;
 
@@ -71,6 +72,20 @@ export class ScratchPanel extends React.Component<IScratchPanelProps> {
             this.renderCount = this.renderCount + 1;
         }
 
+        // If we're hiding the UI, just render the empty string
+        if (this.props.hideUI) {
+            return (
+                <div id="main-panel" className="native-editor-celltoolbar-middle">
+                    <div className="styleSetter">
+                        <style>{`${this.props.rootCss ? this.props.rootCss : ''}
+                        ${buildSettingsCss(this.props.settings)}`}</style>
+                    </div>
+                    <label className="inputLabel">
+                                {getLocString('DataScience.scratchPadEmpty', 'Select a notebook to get a scratch pad.')}
+                    </label>
+                </div>
+            )
+        }
         // Update the state controller with our new state
         const progressBar = (this.props.busy || !this.props.loaded) && !this.props.testMode ? <Progress /> : undefined;
         return (

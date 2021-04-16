@@ -68,6 +68,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.OPEN_SETTINGS]: CommonEffects.openSettings,
     [CommonActionType.UNDO]: Execution.undo,
     [CommonActionType.REDO]: Execution.redo,
+    [CommonActionType.COPY_CELL_CODE]: Transfer.copyCellCode,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
@@ -101,5 +102,6 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [InteractiveWindowMessages.StartDebugging]: Execution.startDebugging,
     [InteractiveWindowMessages.StopDebugging]: Execution.stopDebugging,
     [InteractiveWindowMessages.UpdateExternalCellButtons]: CommonEffects.handleWebviewButtons,
-    [InteractiveWindowMessages.ExecuteExternalCommand]: Transfer.executeExternalCommand
+    [InteractiveWindowMessages.ExecuteExternalCommand]: Transfer.executeExternalCommand,
+    [InteractiveWindowMessages.HideUI]: Effects.hideUI
 };

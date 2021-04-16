@@ -390,6 +390,7 @@ export class ScratchCell extends React.Component<IScratchCellProps> {
         const runCell = () => {
             this.submitCell(this.getCurrentCode(), 'none');
         };
+        const copyCode = () => this.props.copyCellCode(cellId);
         const switchTooltip =
             this.props.cellVM.cell.data.cell_type === 'code'
                 ? getLocString('DataScience.switchToMarkdown', 'Change to markdown')
@@ -422,6 +423,13 @@ export class ScratchCell extends React.Component<IScratchCellProps> {
                         tooltip={switchTooltip}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={otherCellImage} />
+                    </ImageButton>
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={copyCode}
+                        tooltip={getLocString('DataScience.copyBackToSourceButtonTooltip', 'Paste code into file')}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Copy} />
                     </ImageButton>
                 </div>
                 <div className="native-editor-celltoolbar-divider" />

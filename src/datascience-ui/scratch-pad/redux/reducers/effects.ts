@@ -244,4 +244,11 @@ export namespace Effects {
             }
         };
     }
+
+    export function hideUI(arg: NativeEditorReducerArg<boolean>): IMainState {
+        return {
+            ...arg.prevState,
+            hideUI: arg.payload.data
+        };
+    }
 }

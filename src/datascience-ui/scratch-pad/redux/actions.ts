@@ -48,6 +48,8 @@ export const actionCreators = {
         createIncomingActionWithPayload(CommonActionType.FOCUS_CELL, { cellId, cursorPos }),
     unfocusCell: (cellId: string, code: string) =>
         createIncomingActionWithPayload(CommonActionType.UNFOCUS_CELL, { cellId, code }),
+    copyCellCode: (cellId: string): CommonAction<ICellAction> =>
+        createIncomingActionWithPayload(CommonActionType.COPY_CELL_CODE, { cellId }),
     selectCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> =>
         createIncomingActionWithPayload(CommonActionType.SELECT_CELL, { cellId, cursorPos }),
     restartKernel: (): CommonAction => createIncomingAction(CommonActionType.RESTART_KERNEL),

@@ -488,5 +488,7 @@
     "DataScience.sliceMismatchedAxesError": "Expected {0} axes, got {1} in slice expression",
     "DataScience.clearFilters": "Clear all filters",
     "DataScience.defaultNotebookName": "default",
-    "DataScience.scratchPadTitleFormat": "Notebook Scratch Pad -- {0}"
+    "DataScience.scratchPadTitleFormat": "Notebook Scratch Pad -- {0}",
+    "DataScience.scratchPadTitleEmpty": "Notebook Scratch Pad",
+    "DataScience.scratchPadEmpty": "Select a notebook to get a scratch pad"
 }

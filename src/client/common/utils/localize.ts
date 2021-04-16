@@ -960,6 +960,11 @@ export namespace DataScience {
 
     export const defaultNotebookName = localize('DataScience.defaultNotebookName', 'default');
     export const scratchPadTitleFormat = localize('DataScience.scratchPadTitleFormat', 'Scratch Pad {0}');
+    export const scratchPadTitleEmpty = localize(
+        'DataScience.scratchPadTitleEmpty',
+        'Notebook Scratch Pad -- No notebook selected'
+    );
+    export const scratchPadEmpty = localize('DataScience.scratchPadEmpty', 'Select a notebook to get a scratch pad');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

@@ -96,7 +96,7 @@ export type IMainState = {
     kernel: IServerState;
     isNotebookTrusted: boolean;
     externalButtons: IExternalWebviewCellButton[];
-    title?: string;
+    hideUI: boolean;
 };
 
 export type SelectionAndFocusedInfo = {
@@ -205,7 +205,8 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
             language: PYTHON_LANGUAGE
         },
         isNotebookTrusted: true,
-        externalButtons: []
+        externalButtons: [],
+        hideUI: false
     };
 }
 
