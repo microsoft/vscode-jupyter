@@ -107,8 +107,7 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
         );
     }
 
-    //[true, false].forEach((withOutput) => {
-    [false].forEach((withOutput) => {
+    [true, false].forEach((withOutput) => {
         suite(`Test notebook ${withOutput ? 'with' : 'without'} output`, () => {
             let ipynbFile: Uri;
             setup(async function () {
