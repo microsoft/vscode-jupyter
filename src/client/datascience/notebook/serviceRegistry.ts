@@ -22,6 +22,7 @@ import { NotebookIntegration } from './integration';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
 import { IntroduceNativeNotebookStartPage } from './introStartPage';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
+import { NotebookControllerManager } from './notebookControllerManager';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
 import { StatusBarProvider } from './statusBarProvider';
@@ -68,4 +69,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
     serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
     serviceManager.addSingleton<VSCNotebookCellStatusBarItemProvider>(INotebookStatusBarProvider, StatusBarProvider);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookControllerManager);
 }

@@ -352,7 +352,8 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
 
     const executionSummary: NotebookCellExecutionSummary = {};
     if (hasExecutionCount) {
-        executionSummary.executionOrder = cell.execution_count as number;
+        // IANHU: Just removed for building
+        // executionSummary.executionOrder = cell.execution_count as number;
     }
     return new NotebookCellData(
         NotebookCellKind.Code,
@@ -415,8 +416,7 @@ export class NotebookCellStateTracker implements IDisposable {
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
-        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
-            cell.latestExecutionSummary?.executionOrder
+        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${cell.latestExecutionSummary?.executionOrder
         }. ${message}`
     );
 }
