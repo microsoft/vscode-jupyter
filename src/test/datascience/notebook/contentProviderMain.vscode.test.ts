@@ -88,9 +88,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         metadata: new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
-                            },
-                            editable: true,
-                            statusMessage: undefined
+                            }
                         }),
                         latestExecutionSummary: {
                             executionOrder: 10
@@ -104,8 +102,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         metadata: new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
-                            },
-                            editable: true
+                            }
                         }),
                         latestExecutionSummary: undefined
                     }
@@ -159,9 +156,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         metadata: new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
-                            },
-                            editable: true,
-                            statusMessage: undefined
+                            }
                         }),
                         latestExecutionSummary: {
                             executionOrder: 10
@@ -175,8 +170,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         metadata: new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
-                            },
-                            editable: true
+                            }
                         }),
                         latestExecutionSummary: undefined
                     }
