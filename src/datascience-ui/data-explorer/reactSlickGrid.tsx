@@ -38,7 +38,6 @@ import 'slickgrid/slick.grid.css';
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
 import { generateDisplayValue } from './cellFormatter';
-import { getLocString } from '../react-common/locReactSide';
 import { ControlPanel } from './controlPanel';
 import './contextMenu.css';
 
@@ -87,6 +86,7 @@ export interface ISlickGridProps {
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
     historyList: any[];
+    currentVariableName: string;
     handleSliceRequest(args: IGetSliceRequest): void;
     submitCommand(args: { command: string; args: any }): void;
     handleRefreshRequest(): void;
@@ -388,6 +388,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                                 .map((c) => c.name)
                                 .filter((c) => c !== undefined) as string[]
                         }
+                        currentVariableName={this.props.currentVariableName}
                         submitCommand={this.props.submitCommand}
                     />
                 </div>

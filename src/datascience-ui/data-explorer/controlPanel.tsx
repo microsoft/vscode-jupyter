@@ -10,6 +10,7 @@ interface IControlPanelProps {
     data: ISlickRow[];
     headers: string[];
     historyList: any[];
+    currentVariableName: string;
     submitCommand(data: { command: string; args: any }): void;
 }
 
@@ -99,6 +100,7 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                 /> */}
                 <HistorySection
                     historyList={this.props.historyList}
+                    currentVariableName={this.props.currentVariableName}
                     submitCommand={this.props.submitCommand}
                     headers={this.props.headers}/>
                 {/* <PlotHistogramSection

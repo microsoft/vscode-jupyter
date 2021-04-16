@@ -286,6 +286,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 handleSliceRequest={this.handleSliceRequest}
                 submitCommand={this.submitCommand}
                 handleRefreshRequest={this.handleRefreshRequest}
+                currentVariableName={this.state.variableName!}
             />
         );
     }
