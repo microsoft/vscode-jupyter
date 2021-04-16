@@ -422,6 +422,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.notebookIdentity.resource;
     }
 
+    public toggleOutput(): void {
+        throw Error('Not implemented Exception');
+    }
+
     public expandAllCells(): void {
         throw Error('Not implemented Exception');
     }
