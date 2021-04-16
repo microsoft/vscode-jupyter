@@ -49,6 +49,12 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
     private async onDidCloseNotebookDocument() {
     }
 
+    // For this notebook document, create NotebookControllers for all associated kernel connections
+    private async createNotebookControllers(document: NotebookDocument, kernelConnections: KernelConnectionMetadata[]) {
+
+    }
+
+    // For the given NotebookDocument find all associated KernelConnectionMetadata
     private async getKernelConnectionMetadata(document: NotebookDocument): Promise<KernelConnectionMetadata[]> {
         // IANHU: Need a token passed in here?
         const token = new CancellationTokenSource().token;
