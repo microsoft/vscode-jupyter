@@ -19,6 +19,7 @@ import {
     IInteractiveWindowProvider,
     INotebookEditorProvider
 } from '../types';
+import { IScratchPadProvider } from '../notebook/types';
 
 @injectable()
 export class NativeEditorCommandListener implements IDataScienceCommandListener {
@@ -27,7 +28,8 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
-        @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider
+        @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
+        @inject(IScratchPadProvider) private readonly scratchPadProvider: IScratchPadProvider
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -72,7 +74,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             )
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.OpenScratchPad, () => this.openScratchPad())
+            commandManager.registerCommand(Commands.OpenScratchPad, (cell) => this.openScratchPad(cell))
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.OpenScratchPadInteractive, (cell) =>
@@ -165,10 +167,15 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         }
     }
 
-    private async openScratchPad(): Promise<void> {
+    private async openScratchPad(cell: NotebookCell | undefined): Promise<void> {
         // For all contributed views vscode creates a command with the format [view ID].focus to focus that view
         // It's the given way to focus a single view so using that here, note that it needs to match the view ID
-        return this.commandManager?.executeCommand('jupyterScratchPad.focus');
+        await this.commandManager?.executeCommand('jupyterScratchPad.focus');
+
+        // Once it has focus, send it the cell if we have one
+        if (cell) {
+            this.scratchPadProvider.scratchPad?.loadCell(cell);
+        }
     }
 
     // This also works, not sure if we want both or not.

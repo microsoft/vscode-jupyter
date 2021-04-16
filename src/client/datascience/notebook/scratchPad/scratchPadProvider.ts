@@ -22,6 +22,7 @@ import {
     IInteractiveWindowListener,
     IJupyterServerUriStorage,
     INotebookProvider,
+    IScratchPad,
     IStatusProvider,
     IThemeFinder
 } from '../../types';
@@ -32,7 +33,7 @@ import { ScratchPad } from './scratchPad';
 @injectable()
 export class ScratchPadProvider implements IScratchPadProvider {
     public readonly viewType = 'jupyterScratchPad';
-    private scratchPad?: ScratchPad;
+    private _scratchPad?: ScratchPad;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
@@ -44,7 +45,7 @@ export class ScratchPadProvider implements IScratchPadProvider {
         webviewView.webview.options = { enableScripts: true, enableCommandUris: true };
 
         // Create our actual variable view
-        this.scratchPad = new ScratchPad(
+        this._scratchPad = new ScratchPad(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
             this.serviceContainer.get<IConfigurationService>(IConfigurationService),
             this.serviceContainer.get<ICodeCssGenerator>(ICodeCssGenerator),
@@ -65,6 +66,10 @@ export class ScratchPadProvider implements IScratchPadProvider {
             this.serviceContainer.get<IKernelProvider>(IKernelProvider)
         );
 
-        await this.scratchPad.load(webviewView);
+        await this._scratchPad.load(webviewView);
+    }
+
+    public get scratchPad(): IScratchPad | undefined {
+        return this._scratchPad;
     }
 }

@@ -525,6 +525,10 @@ export interface IProgress {
     stopProgress(): void;
 }
 
+export interface IScratchPad {
+    loadCell(cell: NotebookCell): void;
+}
+
 export interface IInteractiveBase extends Disposable, IProgress {
     onExecutedCode?: Event<string>;
     notebook?: INotebook;

@@ -10,6 +10,7 @@ import {
     CancellationError,
     ConfigurationTarget,
     Disposable,
+    NotebookCell,
     NotebookEditor,
     NotebookEditorRevealType,
     NotebookRange,
@@ -45,6 +46,7 @@ import {
     INotebookStorage,
     InterruptResult,
     IProgress,
+    IScratchPad,
     IStatusProvider,
     IThemeFinder
 } from '../../types';
@@ -74,12 +76,14 @@ import {
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { IKernelProvider, KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { addNewCellAfter } from '../helpers/executionHelpers';
+import { createJupyterCellFromVSCNotebookCell } from '../helpers/helpers';
 
 const root = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
 // This is the client side host for the scratch pad (shown in the jupyter tab)
 @injectable()
-export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> implements IDisposable, IProgress {
+export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping>
+    implements IDisposable, IProgress, IScratchPad {
     private vscodeWebView: vscodeWebviewView | undefined;
     private restartingKernel: boolean = false;
     private unfinishedCells: ICell[] = [];
@@ -153,6 +157,27 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
     // for webview views
     public get title(): string {
         return 'scratchPad';
+    }
+
+    public loadCell(input: NotebookCell) {
+        const cell: ICell = {
+            id: '1',
+            file: Identifiers.EmptyFileName,
+            line: 0,
+            state: CellState.finished,
+            data: createJupyterCellFromVSCNotebookCell(input)
+        };
+
+        // Replace the source in our single cell with the new results
+        this.postMessage(InteractiveWindowMessages.LoadAllCells, {
+            cells: [cell],
+            isNotebookTrusted: true
+        }).ignoreErrors();
+
+        // Update our map
+        if (this.owningResource) {
+            this.notebookCellMap.set(this.owningResource.toString(), cell);
+        }
     }
 
     public async load(codeWebview: vscodeWebviewView) {
@@ -709,19 +734,20 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
 
         // Reset the cell to whatever was last seen for this notebook
         if (this.owningResource) {
-            const cell = this.notebookCellMap.get(this.owningResource.toString());
+            const cell = this.notebookCellMap.get(this.owningResource.toString()) || {
+                id: '1',
+                file: Identifiers.EmptyFileName,
+                line: 0,
+                state: CellState.finished,
+                data: createCodeCell('')
+            };
             await this.postMessage(InteractiveWindowMessages.LoadAllCells, {
-                cells: [
-                    cell || {
-                        id: '1',
-                        file: Identifiers.EmptyFileName,
-                        line: 0,
-                        state: CellState.finished,
-                        data: createCodeCell('')
-                    }
-                ],
+                cells: [cell],
                 isNotebookTrusted: true
             });
+
+            // Update our map
+            this.notebookCellMap.set(this.owningResource.toString(), cell);
         }
 
         // Tell each listener our new identity
