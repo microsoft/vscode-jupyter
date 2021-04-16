@@ -50,6 +50,7 @@ import {
     NotebookCellStateTracker,
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
+import { StatusBarProvider } from '../../../client/datascience/notebook/statusBarProvider';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -203,7 +204,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         expect(cell.latestExecutionSummary?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Idle, 'Incorrect State');
         assert.isFalse(hasErrorOutput(cell.outputs), 'Incorrect State');
-        assert.equal(cell.metadata.statusMessage, '', 'Incorrect Status message');
+        const statusBarItem = StatusBarProvider.getCellStatusBarItem(cell);
+        assert.equal(statusBarItem?.text, '', 'Incorrect Status message');
     });
     test('Verify output & metadata for executed cell with errors', async () => {
         await insertCodeCell('print(abcd)');
@@ -223,8 +225,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         expect(cell.latestExecutionSummary?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Idle, 'Incorrect State');
         assert.ok(hasErrorOutput(cell.outputs), 'Incorrect State');
-        assert.include(cell.metadata.statusMessage!, 'NameError', 'Must contain error message');
-        assert.include(cell.metadata.statusMessage!, 'abcd', 'Must contain error message');
+        const statusBarItem = StatusBarProvider.getCellStatusBarItem(cell);
+        assert.isDefined(statusBarItem);
+        statusBarItem && assert.include(statusBarItem?.text, 'NameError', 'Must contain error message');
+        statusBarItem && assert.include(statusBarItem?.text, 'abcd', 'Must contain error message');
     });
     test('Updating display data', async () => {
         await insertCodeCell('from IPython.display import Markdown\n');

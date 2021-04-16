@@ -105,11 +105,11 @@ export class CellExecution {
 
     private _completed?: boolean;
     private startTime?: number;
+    private endTime?: number;
     private readonly initPromise?: Promise<void>;
     private task?: NotebookCellExecutionTask;
     private temporaryTask?: NotebookCellExecutionTask;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
-    private lastRunDuration?: number;
     private cancelHandled = false;
     private requestHandlerChain = Promise.resolve();
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
@@ -296,8 +296,8 @@ export class CellExecution {
         if (this.isEmptyCodeCell) {
             this.task?.end({});
         } else if (success === 'success' || success === 'failed') {
-            this.lastRunDuration = this.stopWatch.elapsedTime;
-            this.task?.end({ duration: this.lastRunDuration, success: success === 'success' });
+            this.endTime = new Date().getTime();
+            this.task?.end({ endTime: this.endTime, success: success === 'success' });
         } else {
             // Cell was cancelled.
             this.task?.end({});
@@ -347,7 +347,7 @@ export class CellExecution {
                 this.temporaryTask.executionOrder = this.previousResultsToRestore.executionOrder;
             }
             this.temporaryTask.end({
-                duration: this.previousResultsToRestore.duration,
+                endTime: this.previousResultsToRestore.endTime,
                 success: this.previousResultsToRestore.success
             });
         } else {

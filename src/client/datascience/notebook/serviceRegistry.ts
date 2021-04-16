@@ -3,7 +3,10 @@
 
 'use strict';
 
-import { NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
+import {
+    NotebookContentProvider as VSCNotebookContentProvider,
+    NotebookCellStatusBarItemProvider as VSCNotebookCellStatusBarItemProvider
+} from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
@@ -21,7 +24,13 @@ import { IntroduceNativeNotebookStartPage } from './introStartPage';
 import { VSCodeKernelPickerProvider } from './kernelProvider';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
-import { INotebookContentProvider, INotebookKernelProvider, INotebookKernelResolver } from './types';
+import { StatusBarProvider } from './statusBarProvider';
+import {
+    INotebookContentProvider,
+    INotebookKernelProvider,
+    INotebookKernelResolver,
+    INotebookStatusBarProvider
+} from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<VSCNotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);
@@ -58,4 +67,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<NotebookCompletionProvider>(NotebookCompletionProvider, NotebookCompletionProvider);
     serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
     serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
+    serviceManager.addSingleton<VSCNotebookCellStatusBarItemProvider>(INotebookStatusBarProvider, StatusBarProvider);
 }

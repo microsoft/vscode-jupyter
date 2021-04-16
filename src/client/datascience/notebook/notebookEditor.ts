@@ -10,7 +10,7 @@ import {
     NotebookCell,
     NotebookCellKind,
     NotebookCellMetadata,
-    NotebookCellRange,
+    NotebookRange,
     NotebookDocument,
     ProgressLocation,
     Uri,
@@ -269,14 +269,14 @@ export class NotebookEditor implements INotebookEditor {
         if (cell && cell.index > 0) {
             // Get all cellIds until `index`.
             //const cells = this.document.cells.slice(0, cell.index);
-            const cells = this.document.getCells(new NotebookCellRange(0, cell.index));
+            const cells = this.document.getCells(new NotebookRange(0, cell.index));
             this.runCellRange([...cells]);
         }
     }
     public runCellAndBelow(cell: NotebookCell | undefined): void {
         if (cell && cell.index >= 0) {
             // Get all cellIds starting from `index`.
-            const cells = this.document.getCells(new NotebookCellRange(cell.index, this.document.cellCount));
+            const cells = this.document.getCells(new NotebookRange(cell.index, this.document.cellCount));
             this.runCellRange([...cells]);
         }
     }
