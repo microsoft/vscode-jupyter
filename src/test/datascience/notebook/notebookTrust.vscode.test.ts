@@ -86,12 +86,9 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
 
     function assertDocumentTrust(trusted: boolean, hasOutput: boolean) {
         const document = vscodeNotebook.activeNotebookEditor?.document!;
-        assert.equal(document.metadata.cellEditable, trusted);
-        assert.equal(document.metadata.editable, trusted);
         assert.equal(document.metadata.trusted, trusted);
 
         document.getCells().forEach((cell) => {
-            assert.equal(cell.metadata.editable, true);
             if (cell.kind === NotebookCellKind.Code) {
                 if (hasOutput) {
                     assert.ok(cell.outputs.length, 'No output in trusted cell (should always exist)');
@@ -110,7 +107,8 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
         );
     }
 
-    [true, false].forEach((withOutput) => {
+    //[true, false].forEach((withOutput) => {
+    [false].forEach((withOutput) => {
         suite(`Test notebook ${withOutput ? 'with' : 'without'} output`, () => {
             let ipynbFile: Uri;
             setup(async function () {
@@ -127,7 +125,7 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
                 traceInfo(`Ended Test ${this.currentTest?.title}`);
                 await closeNotebooks(disposables);
             });
-            test('Opening an untrusted notebook', async () => {
+            test('IANHU Opening an untrusted notebook', async () => {
                 await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 const model = storageProvider.get(ipynbFile)!;
                 assert.isFalse(model.isTrusted);
