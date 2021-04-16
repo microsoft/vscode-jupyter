@@ -107,7 +107,6 @@ export class HistorySection extends React.Component<IProps, IState> {
         );
       };
 
-    //TODO add the ability to X and delete list items
     render() {
         return (
           <details

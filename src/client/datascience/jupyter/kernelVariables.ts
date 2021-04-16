@@ -193,7 +193,6 @@ export class KernelVariables implements IJupyterVariables {
 
         // Then execute a call to get the rows and turn it into JSON
         const results = await notebook.execute(
-            //TODO CHANGE THIS
             `print(${DataFrameLoading.DataFrameColFunc}(${expression}, '${columnName}'))`,
             Identifiers.EmptyFileName,
             0,

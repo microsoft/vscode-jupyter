@@ -623,29 +623,7 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    //TODO FIX
-    private async importFileAsDataFrameFromUrl() {
-        // const fileUrl = await this.appShell.showInputBox({
-        //     title: 'Enter a url',
-        //     value: '',
-        //     prompt: 'Enter a url prompt'
-        // });
-
-        // const options: ProgressOptions = {
-        //     location: ProgressLocation.Notification,
-        //     cancellable: true,
-        //     title: "Retreiving Data and Launching Data Viewer..."
-        // };
-
-        // await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataViewer(undefined, fileUrl));
-    }
-
     private async importAndLaunchDataViewer(file?: Uri, setting?: OpenDataViewerSetting) {
-        if (file == undefined) {
-            //TODO set file to be something temp if using URL
-            // file = vscode.Uri.file()
-        }
-
         if (setting == OpenDataViewerSetting.STANDALONE) {
             const notebook = await this.notebookProvider.getOrCreateNotebook({ resource: file, identity: file!, disableUI: true });
             const code = getImportCodeForFileType(file!.fsPath);
