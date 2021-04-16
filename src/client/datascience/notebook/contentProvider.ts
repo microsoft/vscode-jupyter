@@ -57,11 +57,11 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
                         kind: NotebookCellKind.Markdown,
                         language: MARKDOWN_LANGUAGE,
                         source: `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
-                        metadata: new NotebookCellMetadata().with({ editable: false }),
+                        metadata: new NotebookCellMetadata(),
                         outputs: []
                     }
                 ],
-                metadata: new NotebookDocumentMetadata().with({ cellEditable: false, editable: false })
+                metadata: new NotebookDocumentMetadata()
             };
         }
         // If there's no backup id, then skip loading dirty contents.

@@ -8,8 +8,9 @@ import {
     NotebookCell,
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel,
-    NotebookCellRange,
+    NotebookRange,
     NotebookCellKind,
+    NotebookKernelPreload,
     notebook
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
@@ -25,13 +26,19 @@ import { traceCellMessage, trackKernelInfoInNotebookMetadata } from './helpers/h
 
 export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
-    get preloads(): Uri[] {
+    get preloads(): NotebookKernelPreload[] {
         return [
-            Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')),
-            Uri.file(
-                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
-            ),
-            Uri.file(join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js'))
+            { uri: Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')) },
+            {
+                uri: Uri.file(
+                    join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
+                )
+            },
+            {
+                uri: Uri.file(
+                    join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')
+                )
+            }
         ];
     }
     get id() {
@@ -62,7 +69,7 @@ export class VSCodeNotebookKernelMetadata implements VSCNotebookKernel {
      * createNotebookCellExecutionTask has not been called by the time the promise returned by this method is
      * resolved, the cell will be put back into the Idle state.
      */
-    public async executeCellsRequest(document: NotebookDocument, ranges: NotebookCellRange[]): Promise<void> {
+    public async executeCellsRequest(document: NotebookDocument, ranges: NotebookRange[]): Promise<void> {
         // When we receive a cell execute request, first ensure that the notebook is trusted.
         // If it isn't already trusted, block execution until the user trusts it.
         const isTrusted = await this.commandManager.executeCommand(Commands.TrustNotebook, document.uri);

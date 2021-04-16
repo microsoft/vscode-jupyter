@@ -76,8 +76,6 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                 const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
 
                 assert.isOk(notebook);
-                assert.equal(notebook.metadata?.cellEditable, isNotebookTrusted);
-                assert.equal(notebook.metadata?.editable, isNotebookTrusted);
 
                 assert.deepEqual(notebook.cells, [
                     {
@@ -88,9 +86,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         metadata: new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
-                            },
-                            editable: true,
-                            statusMessage: undefined
+                            }
                         }),
                         latestExecutionSummary: {
                             executionOrder: 10
@@ -104,8 +100,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         metadata: new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
-                            },
-                            editable: true
+                            }
                         }),
                         latestExecutionSummary: undefined
                     }
@@ -147,9 +142,6 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
 
                 assert.isOk(notebook);
 
-                assert.equal(notebook.metadata?.cellEditable, isNotebookTrusted);
-                assert.equal(notebook.metadata?.editable, isNotebookTrusted);
-
                 assert.deepEqual(notebook.cells, [
                     {
                         kind: NotebookCellKind.Code,
@@ -159,9 +151,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         metadata: new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
-                            },
-                            editable: true,
-                            statusMessage: undefined
+                            }
                         }),
                         latestExecutionSummary: {
                             executionOrder: 10
@@ -175,8 +165,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         metadata: new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
-                            },
-                            editable: true
+                            }
                         }),
                         latestExecutionSummary: undefined
                     }
