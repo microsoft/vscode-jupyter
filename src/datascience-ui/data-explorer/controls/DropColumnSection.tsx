@@ -84,7 +84,7 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
 
     private updateDropTarget = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
         if (item) {
-            if (item.key === -1) {
+            if (item.key === -1) { // User toggled Select All
                 if (item.selected) {
                     // Mark all options as selected
                     this.setState({ columnsToDrop: this.generateOptions().map((option) => option.key as number) });
@@ -96,7 +96,8 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
                 this.setState({
                     columnsToDrop: item.selected
                         ? [...this.state.columnsToDrop, item.key as number]
-                        : this.state.columnsToDrop.filter((key) => key !== item.key)
+                        // If the user unselected some other item, unselect Select All too
+                        : this.state.columnsToDrop.filter((key) => key !== item.key && key !== -1)
                 });
             }
         }
