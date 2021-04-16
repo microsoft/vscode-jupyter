@@ -10,9 +10,9 @@ import {
     CancellationError,
     ConfigurationTarget,
     Disposable,
-    NotebookCellRange,
     NotebookEditor,
     NotebookEditorRevealType,
+    NotebookRange,
     Uri,
     WebviewView as vscodeWebviewView
 } from 'vscode';
@@ -60,7 +60,7 @@ import { noop } from '../../../common/utils/misc';
 import { JupyterKernelPromiseFailedError } from '../../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { serializeLanguageConfiguration } from '../../interactive-common/serialization';
 import { nbformat } from '@jupyterlab/coreutils';
-import { createDeferred } from '../../../common/utils/async';
+import { createDeferred, Deferred } from '../../../common/utils/async';
 import { CellMatcher } from '../../cellMatcher';
 import { combineData, translateKernelLanguageToMonaco } from '../../common';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
@@ -72,9 +72,7 @@ import {
     kernelConnectionMetadataHasKernelSpec
 } from '../../jupyter/kernels/helpers';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
-import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
-import { NativeEditorNotebookModel } from '../../notebookStorage/notebookModel';
-import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
+import { IKernelProvider, KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { addNewCellAfter } from '../helpers/executionHelpers';
 
 const root = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
@@ -83,12 +81,13 @@ const root = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
 export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> implements IDisposable, IProgress {
     private vscodeWebView: vscodeWebviewView | undefined;
-    private _notebook: INotebook | undefined;
     private restartingKernel: boolean = false;
     private unfinishedCells: ICell[] = [];
     private potentiallyUnfinishedStatus: Disposable[] = [];
-    private connectionAndNotebookPromise: Promise<void> | undefined;
-    private notebookPromise: Promise<void> | undefined;
+    private notebookCellMap = new Map<string, ICell>();
+    private lastOwningResource: Resource;
+    private getAllCellsPromise: Deferred<ICell[]> | undefined;
+    private notebookSignup = new Set<INotebook>();
 
     protected get owningResource(): Resource {
         if (this.vscNotebooks.activeNotebookEditor?.document) {
@@ -113,7 +112,8 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         @unmanaged() private readonly notebookStorage: INotebookStorage,
         @unmanaged() private readonly serverStorage: IJupyterServerUriStorage,
         @unmanaged() private readonly selector: KernelSelector,
-        @unmanaged() private readonly commandManager: ICommandManager
+        @unmanaged() private readonly commandManager: ICommandManager,
+        @unmanaged() private readonly kernelProvider: IKernelProvider
     ) {
         super(
             configuration,
@@ -131,6 +131,7 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
         this.vscNotebooks.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
+        this.kernelProvider.onKernelChanged(this.kernelChanged, this, this.disposables);
 
         // For each listener sign up for their post events
         this.listeners.forEach((l) => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
@@ -151,20 +152,6 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
     public async load(codeWebview: vscodeWebviewView) {
         this.vscodeWebView = codeWebview;
         await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
-
-        // Send our first empty cell
-        await this.postMessage(InteractiveWindowMessages.LoadAllCells, {
-            cells: [
-                {
-                    id: '1',
-                    file: Identifiers.EmptyFileName,
-                    line: 0,
-                    state: CellState.finished,
-                    data: createCodeCell('')
-                }
-            ],
-            isNotebookTrusted: true
-        });
 
         // Set the title if there is an active notebook
         if (this.vscodeWebView) {
@@ -215,6 +202,9 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
                 break;
             case InteractiveWindowMessages.ReExecuteCells:
                 this.handleMessage(message, payload, this.reexecuteCells);
+                break;
+            case InteractiveWindowMessages.ReturnAllCells:
+                this.handleMessage(message, payload, this.handleReturnAllCells);
                 break;
             case InteractiveWindowMessages.RestartKernel:
                 this.restartKernel().ignoreErrors();
@@ -280,9 +270,9 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
     }
 
     protected async clearResult(id: string): Promise<void> {
-        await this.ensureConnectionAndNotebook();
-        if (this._notebook) {
-            this._notebook.clear(id);
+        const notebook = await this.getNotebook(false);
+        if (notebook) {
+            notebook.clear(id);
         }
     }
 
@@ -308,7 +298,7 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
                     // Tell the react controls we're done
                     this.postMessage(InteractiveWindowMessages.FinishCell, {
                         cell,
-                        notebookIdentity: this._notebook!.identity
+                        notebookIdentity: this.owningResource!
                     }).ignoreErrors();
 
                     // Remove from the list of unfinished cells
@@ -319,6 +309,18 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
                     break; // might want to do a progress bar or something
             }
         });
+
+        // Update our current cell state
+        if (this.owningResource) {
+            this.notebookCellMap.set(this.owningResource.toString(), cells[0]);
+        }
+    }
+
+    private handleReturnAllCells(cells: ICell[]) {
+        // See what we're waiting for.
+        if (this.getAllCellsPromise) {
+            this.getAllCellsPromise.resolve(cells);
+        }
     }
 
     private copyCode(args: ICopyCode) {
@@ -328,16 +330,16 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
     }
 
     private async copyCodeInternal(source: string) {
-        let notebook = this.vscNotebooks.activeNotebookEditor;
-        if (!notebook) {
+        let editor = this.vscNotebooks.activeNotebookEditor;
+        if (!editor) {
             // Find the first visible notebook editor if nothing is visible
             const notebookEditors = this.vscNotebooks.notebookEditors;
             if (notebookEditors.length > 0) {
-                notebook = notebookEditors[0];
+                editor = notebookEditors[0];
             }
         }
-        if (notebook) {
-            return this.copyCodeToNotebook(notebook, source);
+        if (editor) {
+            return this.copyCodeToNotebook(editor, source);
         }
     }
 
@@ -348,7 +350,7 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
 
         // Make sure this cell is shown to the user
         editor.revealRange(
-            new NotebookCellRange(lastCell.index + 1, lastCell.index + 1),
+            new NotebookRange(lastCell.index + 1, lastCell.index + 1),
             NotebookEditorRevealType.InCenterIfOutsideViewport
         );
     }
@@ -431,11 +433,11 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
 
         try {
             // Make sure we're loaded first.
-            await this.ensureConnectionAndNotebook();
+            const notebook = await this.getNotebook(false);
 
-            if (this._notebook) {
+            if (notebook) {
                 const owningResource = this.owningResource;
-                const observable = this._notebook.executeObservable(code, file, line, id, false);
+                const observable = notebook.executeObservable(code, file, line, id, false);
 
                 // Sign up for cell changes
                 observable.subscribe(
@@ -475,29 +477,6 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         return result;
     }
 
-    protected async ensureConnectionAndNotebook(): Promise<void> {
-        // Start over if we somehow end up with a disposed notebook.
-        if (this._notebook && this._notebook.disposed) {
-            this._notebook = undefined;
-            this.connectionAndNotebookPromise = undefined;
-        }
-        // If the notebook owner has changed, also recreate the notebook
-        if (this._notebook && this._notebook.identity.toString() !== this.owningResource!.toString()) {
-            this._notebook = undefined;
-            this.connectionAndNotebookPromise = undefined;
-        }
-        if (!this.connectionAndNotebookPromise) {
-            this.connectionAndNotebookPromise = this.ensureConnectionAndNotebookImpl();
-        }
-        try {
-            await this.connectionAndNotebookPromise;
-        } catch (e) {
-            // Reset the load promise. Don't want to keep hitting the same error
-            this.connectionAndNotebookPromise = undefined;
-            throw e;
-        }
-    }
-
     private async getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined> {
         if (this.owningResource) {
             const model = await this.notebookStorage.getOrCreateModel({ file: this.owningResource!, isNative: true });
@@ -507,28 +486,10 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
 
     protected async getKernelConnection(): Promise<Readonly<KernelConnectionMetadata> | undefined> {
         if (this.owningResource) {
-            const model = await this.notebookStorage.getOrCreateModel({ file: this.owningResource!, isNative: true });
-            return (model as NativeEditorNotebookModel).kernelConnection;
-        }
-    }
-
-    private async ensureConnectionAndNotebookImpl(): Promise<void> {
-        // Make sure we're loaded first.
-        try {
-            const serverConnection = await this.notebookProvider.connect({
-                getOnly: false,
-                disableUI: false,
-                resource: this.owningResource,
-                metadata: await this.getNotebookMetadata()
-            });
-            if (serverConnection) {
-                await this.ensureNotebook(serverConnection);
+            const kernel = this.kernelProvider.get(this.owningResource);
+            if (kernel) {
+                return kernel.kernelConnectionMetadata;
             }
-        } catch (exc) {
-            traceError(`Exception attempting to start notebook: `, exc);
-
-            // Finally throw the exception so the user can do something about it.
-            throw exc;
         }
     }
 
@@ -571,41 +532,9 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         return displayName;
     }
 
-    // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
-    // the same protection to not be called twice
-    // eslint-disable-next-line @typescript-eslint/member-ordering
-    protected async ensureNotebook(serverConnection: INotebookProviderConnection, disableUI = false): Promise<void> {
-        if (!this.notebookPromise) {
-            this.notebookPromise = this.ensureNotebookImpl(serverConnection, disableUI);
-        }
-        try {
-            await this.notebookPromise;
-        } catch (e) {
-            // Reset the load promise. Don't want to keep hitting the same error
-            this.notebookPromise = undefined;
-
-            throw e;
-        }
-    }
-
-    private async ensureNotebookImpl(serverConnection: INotebookProviderConnection, disableUI: boolean): Promise<void> {
-        // Create a new notebook if we need to.
-        if (!this._notebook) {
-            // While waiting make the notebook look busy
-            this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                jupyterServerStatus: ServerStatus.Busy,
-                serverName: await this.getServerDisplayName(serverConnection),
-                kernelName: '',
-                language: PYTHON_LANGUAGE
-            }).ignoreErrors();
-
-            this.listenToNotebook(await this.createNotebook(this.owningResource!, serverConnection, disableUI));
-        }
-    }
-
     private listenToNotebook(notebook: INotebook | undefined) {
-        this._notebook = notebook;
-        if (notebook) {
+        if (notebook && !this.notebookSignup.has(notebook)) {
+            this.notebookSignup.add(notebook);
             const statusChangeHandler = async (status: ServerStatus) => {
                 const connectionMetadata = notebook.getKernelConnection();
                 const name = getDisplayNameOrNameOfKernelConnection(connectionMetadata);
@@ -626,40 +555,49 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         }
     }
 
-    private async createNotebook(
-        identity: Uri,
-        serverConnection: INotebookProviderConnection,
-        disableUI: boolean
-    ): Promise<INotebook | undefined> {
+    private async getNotebook(getOnly: boolean): Promise<INotebook | undefined> {
         let notebook: INotebook | undefined;
-        while (!notebook) {
+        while (!notebook && this.owningResource) {
             try {
                 notebook = await this.notebookProvider.getOrCreateNotebook({
-                    identity,
+                    getOnly,
+                    identity: this.owningResource,
                     resource: this.owningResource,
                     metadata: await this.getNotebookMetadata(),
                     kernelConnection: await this.getKernelConnection(),
-                    disableUI
+                    disableUI: getOnly
                 });
                 if (notebook) {
-                    const executionActivation = { ...identity, owningResource: this.owningResource };
+                    const executionActivation = { ...this.owningResource, owningResource: this.owningResource };
                     this.postMessageToListeners(
                         InteractiveWindowMessages.NotebookExecutionActivated,
                         executionActivation
                     );
+                    this.listenToNotebook(notebook);
+                } else if (getOnly) {
+                    break;
                 }
             } catch (e) {
                 // If we get an invalid kernel error, make sure to ask the user to switch
-                if (e instanceof JupyterInvalidKernelError && serverConnection && serverConnection.localLaunch) {
+                if (
+                    e instanceof JupyterInvalidKernelError &&
+                    this.configService.getSettings(this.owningResource).jupyterServerType ===
+                        Settings.JupyterServerLocalLaunch
+                ) {
                     // Ask the user for a new local kernel
                     const newKernel = await this.selector.askForLocalKernel(
                         this.owningResource,
-                        serverConnection,
+                        undefined,
                         e.kernelConnectionMetadata
                     );
                     if (newKernel && kernelConnectionMetadataHasKernelSpec(newKernel) && newKernel.kernelSpec) {
                         this.commandManager
-                            .executeCommand(Commands.SetJupyterKernel, newKernel, identity, this.owningResource)
+                            .executeCommand(
+                                Commands.SetJupyterKernel,
+                                newKernel,
+                                this.owningResource,
+                                this.owningResource
+                            )
                             .then(noop, noop);
                     } else {
                         break;
@@ -673,7 +611,8 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
     }
 
     private async restartKernel(_internal: boolean = false): Promise<void> {
-        if (this._notebook && !this.restartingKernel) {
+        const notebook = await this.getNotebook(true);
+        if (notebook && !this.restartingKernel) {
             this.restartingKernel = true;
             this.startProgress();
 
@@ -688,12 +627,12 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
                     const v = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
                     if (v === dontAskAgain) {
                         await this.disableAskForRestart();
-                        await this.restartKernelInternal();
+                        await this.restartKernelInternal(notebook);
                     } else if (v === yes) {
-                        await this.restartKernelInternal();
+                        await this.restartKernelInternal(notebook);
                     }
                 } else {
-                    await this.restartKernelInternal();
+                    await this.restartKernelInternal(notebook);
                 }
             } finally {
                 this.restartingKernel = false;
@@ -717,12 +656,12 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
     }
 
     private finishOutstandingCells() {
-        if (this._notebook) {
+        if (this.owningResource) {
             this.unfinishedCells.forEach((c) => {
                 c.state = CellState.error;
                 this.postMessage(InteractiveWindowMessages.FinishCell, {
                     cell: c,
-                    notebookIdentity: this._notebook!.identity
+                    notebookIdentity: this.owningResource!
                 }).ignoreErrors();
             });
             this.unfinishedCells = [];
@@ -752,6 +691,33 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
                 : localize.DataScience.scratchPadTitleEmpty();
         }
 
+        // If we had an existing owner, make sure to save its cells
+        if (this.lastOwningResource) {
+            this.getAllCellsPromise = createDeferred<ICell[]>();
+            await this.postMessage(InteractiveWindowMessages.GetAllCells);
+            const cells = await this.getAllCellsPromise.promise;
+            this.notebookCellMap.set(this.lastOwningResource.toString(), cells[0]);
+            this.getAllCellsPromise = undefined;
+        }
+        this.lastOwningResource = this.owningResource;
+
+        // Reset the cell to whatever was last seen for this notebook
+        if (this.owningResource) {
+            const cell = this.notebookCellMap.get(this.owningResource.toString());
+            await this.postMessage(InteractiveWindowMessages.LoadAllCells, {
+                cells: [
+                    cell || {
+                        id: '1',
+                        file: Identifiers.EmptyFileName,
+                        line: 0,
+                        state: CellState.finished,
+                        data: createCodeCell('')
+                    }
+                ],
+                isNotebookTrusted: true
+            });
+        }
+
         // Tell each listener our new identity
         if (this.owningResource) {
             this.listeners.forEach((l) =>
@@ -769,24 +735,31 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
     // The active notebook has changed, so force a refresh on the view to pick up the new info
     private async activeNotebookChanged(arg: { notebook?: INotebook; executionCount?: number }) {
         // Sign up for notebook changes if we haven't already.
-        if (arg.notebook && this._notebook !== arg.notebook) {
+        if (arg.notebook) {
             this.listenToNotebook(arg.notebook);
-        } else if (!arg.notebook && this.vscNotebooks.activeNotebookEditor) {
+        } else if (!arg.notebook && this.owningResource) {
             // Editor doesn't have a notebook, but likely still has a server status
-            const kernel = this.vscNotebooks.activeNotebookEditor.kernel as VSCodeNotebookKernelMetadata;
-            const name = getDisplayNameOrNameOfKernelConnection(kernel.selection);
-
-            await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                jupyterServerStatus: ServerStatus.Idle,
-                serverName: await this.getServerDisplayName(undefined),
-                kernelName: name,
-                language: translateKernelLanguageToMonaco(
-                    getKernelConnectionLanguage(kernel.selection) || PYTHON_LANGUAGE
-                )
-            });
+            this.kernelChanged().ignoreErrors();
         }
+    }
 
-        // TODO: Should probably clear or reset the cell shown
+    private async kernelChanged() {
+        if (this.owningResource) {
+            const kernel = await this.kernelProvider.get(this.owningResource);
+            const notebook = await this.getNotebook(true);
+            if (kernel?.kernelConnectionMetadata) {
+                const name = getDisplayNameOrNameOfKernelConnection(kernel?.kernelConnectionMetadata);
+
+                await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                    jupyterServerStatus: notebook ? notebook.status : ServerStatus.Idle,
+                    serverName: await this.getServerDisplayName(notebook?.connection),
+                    kernelName: name,
+                    language: translateKernelLanguageToMonaco(
+                        getKernelConnectionLanguage(kernel?.kernelConnectionMetadata) || PYTHON_LANGUAGE
+                    )
+                });
+            }
+        }
     }
 
     private async activeNotebookRestarted() {
@@ -794,7 +767,8 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
     }
 
     public async interruptKernel(): Promise<void> {
-        if (this._notebook && !this.restartingKernel) {
+        const notebook = await this.getNotebook(true);
+        if (notebook && !this.restartingKernel) {
             const status = this.statusProvider.set(
                 localize.DataScience.interruptKernelStatus(),
                 true,
@@ -807,7 +781,7 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
                 const settings = this.configuration.getSettings(this.owningResource);
                 const interruptTimeout = settings.jupyterInterruptTimeout;
 
-                const result = await this._notebook.interruptKernel(interruptTimeout);
+                const result = await notebook.interruptKernel(interruptTimeout);
                 status.dispose();
 
                 // We timed out, ask the user if they want to restart instead.
@@ -817,7 +791,7 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
                     const no = localize.DataScience.restartKernelMessageNo();
                     const v = await this.applicationShell.showInformationMessage(message, yes, no);
                     if (v === yes) {
-                        await this.restartKernelInternal();
+                        await this.restartKernelInternal(notebook);
                     }
                 }
             } catch (err) {
@@ -867,7 +841,7 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         }
     }
 
-    private async restartKernelInternal(): Promise<void> {
+    private async restartKernelInternal(notebook: INotebook | undefined): Promise<void> {
         this.restartingKernel = true;
 
         // First we need to finish all outstanding cells.
@@ -883,21 +857,19 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         );
 
         try {
-            if (this._notebook) {
-                await this._notebook.restartKernel(
-                    (await this.generateDataScienceExtraSettings()).jupyterInterruptTimeout
-                );
+            if (notebook) {
+                await notebook.restartKernel((await this.generateDataScienceExtraSettings()).jupyterInterruptTimeout);
 
                 // Compute if dark or not.
                 const knownDark = await this.isDark();
 
                 // Before we run any cells, update the dark setting
-                await this._notebook.setMatplotLibStyle(knownDark);
+                await notebook.setMatplotLibStyle(knownDark);
             }
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server
-            if (exc instanceof JupyterKernelPromiseFailedError && this._notebook) {
-                await this._notebook.dispose();
+            if (exc instanceof JupyterKernelPromiseFailedError && notebook) {
+                await notebook.dispose();
             } else {
                 // Show the error message
                 this.applicationShell.showErrorMessage(exc).then(noop, noop);

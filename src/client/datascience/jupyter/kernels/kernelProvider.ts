@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -29,6 +29,7 @@ import { IKernel, IKernelProvider, KernelOptions } from './types';
 export class KernelProvider implements IKernelProvider {
     private readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
+    private readonly kernelChangedEmitter = new EventEmitter<void>();
     constructor(
         @inject(IAsyncDisposableRegistry) private asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
@@ -42,6 +43,10 @@ export class KernelProvider implements IKernelProvider {
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage
     ) {
         this.asyncDisposables.push(this);
+    }
+
+    public get onKernelChanged(): Event<void> {
+        return this.kernelChangedEmitter.event;
     }
 
     public get(uri: Uri): IKernel | undefined {
@@ -80,6 +85,7 @@ export class KernelProvider implements IKernelProvider {
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });
         this.deleteMappingIfKernelIsDisposed(uri, kernel);
+        this.kernelChangedEmitter.fire();
         return kernel;
     }
     /**

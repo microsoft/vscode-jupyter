@@ -131,6 +131,11 @@ export type KernelOptions = { metadata: KernelConnectionMetadata };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
     /**
+     * Event fired when the current kernel for a URI is changed.
+     */
+    readonly onKernelChanged: Event<void>;
+
+    /**
      * Get hold of the active kernel for a given Uri (Notebook or other file).
      */
     get(uri: Uri): IKernel | undefined;

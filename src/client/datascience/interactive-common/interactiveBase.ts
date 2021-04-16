@@ -17,7 +17,7 @@ import {
     EventEmitter,
     Memento,
     NotebookCell,
-    NotebookCellRange,
+    NotebookRange,
     NotebookEditor,
     NotebookEditorRevealType,
     Position,
@@ -1415,7 +1415,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
         // Make sure this cell is shown to the user
         editor.revealRange(
-            new NotebookCellRange(lastCell.index + 1, lastCell.index + 1),
+            new NotebookRange(lastCell.index + 1, lastCell.index + 1),
             NotebookEditorRevealType.InCenterIfOutsideViewport
         );
     }

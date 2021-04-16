@@ -14,6 +14,7 @@ import {
 import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
+import { IKernelProvider } from '../../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../../notebookStorage/notebookStorageProvider';
 import {
     ICodeCssGenerator,
@@ -60,7 +61,8 @@ export class ScratchPadProvider implements IScratchPadProvider {
             this.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider),
             this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
             this.serviceContainer.get<KernelSelector>(KernelSelector),
-            this.serviceContainer.get<ICommandManager>(ICommandManager)
+            this.serviceContainer.get<ICommandManager>(ICommandManager),
+            this.serviceContainer.get<IKernelProvider>(IKernelProvider)
         );
 
         await this.scratchPad.load(webviewView);
