@@ -131,6 +131,15 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
         this.vscNotebooks.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
+
+        // For each listener sign up for their post events
+        this.listeners.forEach((l) => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
+        // Channel for listeners to send messages to the scratch pad
+        this.listeners.forEach((l) => {
+            if (l.postInternalMessage) {
+                l.postInternalMessage((e) => this.onMessage(e.message, e.payload));
+            }
+        });
     }
 
     // Used to identify this webview in telemetry, not shown to user so no localization
@@ -741,6 +750,16 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
             this.vscodeWebView.title = editor
                 ? localize.DataScience.scratchPadTitleFormat().format(path.basename(editor.document.uri.fsPath))
                 : localize.DataScience.scratchPadTitleEmpty();
+        }
+
+        // Tell each listener our new identity
+        if (this.owningResource) {
+            this.listeners.forEach((l) =>
+                l.onMessage(InteractiveWindowMessages.NotebookIdentity, {
+                    resource: this.owningResource,
+                    type: 'native'
+                })
+            );
         }
 
         // Update the state of the control based on editor
