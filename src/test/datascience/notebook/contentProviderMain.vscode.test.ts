@@ -76,8 +76,6 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                 const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
 
                 assert.isOk(notebook);
-                assert.equal(notebook.metadata?.cellEditable, isNotebookTrusted);
-                assert.equal(notebook.metadata?.editable, isNotebookTrusted);
 
                 assert.deepEqual(notebook.cells, [
                     {
@@ -143,9 +141,6 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                 const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
 
                 assert.isOk(notebook);
-
-                assert.equal(notebook.metadata?.cellEditable, isNotebookTrusted);
-                assert.equal(notebook.metadata?.editable, isNotebookTrusted);
 
                 assert.deepEqual(notebook.cells, [
                     {
