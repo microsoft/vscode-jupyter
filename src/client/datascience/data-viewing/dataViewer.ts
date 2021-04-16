@@ -421,8 +421,6 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
                 break;
             case 'export_to_python_script':
-                //TODO get code from notebook?
-                // this.notebook
                 await this.generatePythonCode(notebook);
                 break;
             case 'rename':
@@ -487,7 +485,6 @@ ${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${tar
         const dataCleaningMode = this.configService.getSettings().dataCleaningMode;
         if (dataCleaningMode === 'standalone') {
             if (code && notebook !== undefined) {
-                //TODO this is not executing properly in the then() 
                 notebook?.execute(code, '', 0, uuid()).then(async () => {
                     if (this.existingDisposable) {
                         this.existingDisposable.dispose();

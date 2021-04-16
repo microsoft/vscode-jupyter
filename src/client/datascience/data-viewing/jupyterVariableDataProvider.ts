@@ -155,8 +155,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 columnName,
                 this.notebook
             )
-            //TODO fix type error
-            columns = dataFrameColumnData;
+            columns = dataFrameColumnData as any as IColsResponse;
         }
         return columns;
     }

@@ -9,7 +9,6 @@ import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import './globalJQueryImports';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
-import { debounce } from 'lodash';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -200,8 +199,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.props.columnsUpdated.subscribe(this.updateColumns);
         this.props.toggleFilterEvent.subscribe(this.clickFilterButton);
     }
-
-    private debounceRequest = debounce(this.props.submitCommand, 1000);
 
     // eslint-disable-next-line
     public componentDidMount = () => {
