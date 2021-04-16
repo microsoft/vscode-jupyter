@@ -250,9 +250,6 @@ export class ScratchCell extends React.Component<IScratchCellProps> {
 
     // eslint-disable-next-line complexity,
     private keyDownInput = (cellId: string, e: IKeyboardEvent) => {
-        if (!isCellNavigationKeyboardEvent(e)) {
-            return;
-        }
         const isFocusedWhenNotSuggesting = this.isFocused() && e.editorInfo && !e.editorInfo.isSuggesting;
         switch (e.code) {
             case 's':
@@ -598,13 +595,3 @@ export function getConnectedScratchCell() {
     return connect(null, actionCreators)(ScratchCell);
 }
 
-function isCellNavigationKeyboardEvent(e: IKeyboardEvent) {
-    return (
-        ((e.code === 'Enter' || e.code === 'NumpadEnter') && !e.shiftKey && !e.ctrlKey && !e.altKey) ||
-        e.code === 'ArrowUp' ||
-        e.code === 'k' ||
-        e.code === 'ArrowDown' ||
-        e.code === 'j' ||
-        e.code === 'Escape'
-    );
-}

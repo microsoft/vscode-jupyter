@@ -41,7 +41,7 @@ export class ScratchPadProvider implements IScratchPadProvider {
         _context: WebviewViewResolveContext,
         _token: CancellationToken
     ): Promise<void> {
-        webviewView.webview.options = { enableScripts: true };
+        webviewView.webview.options = { enableScripts: true, enableCommandUris: true };
 
         // Create our actual variable view
         this.scratchPad = new ScratchPad(

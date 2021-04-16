@@ -106,7 +106,6 @@ export class PostOffice implements IDisposable {
         if (this.handlers) {
             const msg = ev.data as WebviewMessage;
             if (msg) {
-                console.log(`++++ Handling message: ${msg.type} in PostOffice`);
                 this.subject.next({ type: msg.type, payload: msg.payload });
                 this.handlers.forEach((h: IMessageHandler | null) => {
                     if (h) {
