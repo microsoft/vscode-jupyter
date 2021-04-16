@@ -36,6 +36,7 @@ export interface IDataViewerDataProvider {
     getDataFrameInfo(): Promise<IDataFrameInfo>;
     getAllRows(): Promise<IRowsResponse>;
     getRows(start: number, end: number): Promise<IRowsResponse>;
+    getCols(columnName: string): Promise<IColsResponse>;
 }
 
 export enum ColumnType {
@@ -46,6 +47,7 @@ export enum ColumnType {
 
 // tslint:disable-next-line: no-any
 export type IRowsResponse = any[];
+export type IColsResponse = any[];
 
 export interface IJupyterServerUri {
     baseUrl: string;

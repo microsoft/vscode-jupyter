@@ -33,6 +33,8 @@ export namespace DataViewerMessages {
     export const SliceEnablementStateChanged = 'slice_enablement_state_changed';
     export const UpdateHistoryList = 'update_history_list';
     export const GetHistoryItem = 'get_history_item';
+    export const GetColsRequest = 'get_cols_request';
+    export const GetColsResponse = 'get_cols_response';
 }
 
 export interface IGetRowsRequest {
@@ -45,6 +47,10 @@ export interface IGetRowsResponse {
     rows: IRowsResponse;
     start: number;
     end: number;
+}
+
+export interface IGetColsResponse {
+    cols: IColsResponse;
 }
 
 export interface IGetSliceRequest {
@@ -68,6 +74,7 @@ export type IDataViewerMapping = {
     [DataViewerMessages.SliceEnablementStateChanged]: { newState: boolean };
     [DataViewerMessages.UpdateHistoryList]: any[] | undefined;
     [DataViewerMessages.GetHistoryItem]: number | undefined;
+    [DataViewerMessages.GetColsResponse]: IGetColsResponse;
 };
 
 export interface IDataFrameInfo {
@@ -93,6 +100,7 @@ export interface IDataViewerDataProvider {
     getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo>;
     getAllRows(sliceExpression?: string): Promise<IRowsResponse>;
     getRows(start: number, end: number, sliceExpression?: string): Promise<IRowsResponse>;
+    getCols(columnName: string): Promise<IColsResponse>;
 }
 
 export enum ColumnType {
@@ -103,6 +111,7 @@ export enum ColumnType {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type IRowsResponse = any[];
+export type IColsResponse = any[];
 
 export const IDataViewerFactory = Symbol('IDataViewerFactory');
 export interface IDataViewerFactory {

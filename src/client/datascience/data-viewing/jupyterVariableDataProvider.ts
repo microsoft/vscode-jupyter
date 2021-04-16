@@ -8,7 +8,7 @@ import { inject, injectable, named } from 'inversify';
 import { Identifiers } from '../constants';
 import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables, INotebook } from '../types';
 import { DataViewerDependencyService } from './dataViewerDependencyService';
-import { ColumnType, IDataFrameInfo, IRowsResponse } from './types';
+import { ColumnType, IDataFrameInfo, IRowsResponse, IColsResponse } from './types';
 import { traceError } from '../../common/logger';
 
 @injectable()
@@ -143,6 +143,21 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
             rows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
         }
         return rows;
+    }
+
+    public async getCols(columnName: string) {
+        let columns: IColsResponse = [];
+        await this.ensureInitialized();
+        if (this.variable) {
+            const dataFrameColumnData = await this.variableManager.getDataFrameColumn(
+                this.variable,
+                columnName,
+                this.notebook
+            )
+            //TODO fix type error
+            columns = dataFrameColumnData;
+        }
+        return columns;
     }
 
     private async ensureInitialized(): Promise<void> {

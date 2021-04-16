@@ -32,7 +32,8 @@ import {
     IJupyterVariables,
     INotebookEditorProvider,
     IThemeFinder,
-    WebViewViewChangeEventArgs
+    WebViewViewChangeEventArgs,
+    INotebook
 } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
@@ -379,6 +380,28 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         this.postMessage(DataViewerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
     }
 
+    private async generatePythonCode(notebook: INotebook | undefined) {
+        var dataCleanCode = this.historyList.map(function (item) {
+            return item.code;
+        }).join("\n");
+
+        dataCleanCode = 'import pandas as pd\n\ndf = pd.read_csv(\'' + notebook?.identity.path + '\')\n' + dataCleanCode;
+
+        const doc = await this.documentManager.openTextDocument({
+            language: 'python',
+            content: dataCleanCode
+        });
+
+        await this.documentManager.showTextDocument(doc, 1, true);
+    }
+
+    private async getColumnData(columnName: string) {
+        if (this.dataProvider) {
+            const columnData = await this.dataProvider.getCols(columnName);
+            this.postMessage(DataViewerMessages.GetColsResponse, { cols: columnData });
+        }
+    }
+
     private async handleCommand(payload: { command: string; args: any }) {
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
         let code = '';
@@ -398,18 +421,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             case 'export_to_python_script':
                 //TODO get code from notebook?
                 // this.notebook
-                var dataCleanCode = this.historyList.map(function (item) {
-                    return item.code;
-                }).join("\n");
-
-                dataCleanCode = 'import pandas as pd\n\ndf = pd.read_csv(\'' + notebook?.identity.path + '\')\n' + dataCleanCode;
-
-                const doc = await this.documentManager.openTextDocument({
-                    language: 'python',
-                    content: dataCleanCode
-                });
-
-                await this.documentManager.showTextDocument(doc, 1, true);
+                await this.generatePythonCode(notebook);
                 break;
             case 'rename':
                 this.variableCounter += 1;
@@ -465,6 +477,9 @@ ${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${tar
                 break;
             case DataViewerMessages.GetHistoryItem:
                 this.getHistoryItem(payload.args.index).ignoreErrors();
+                break;
+            case 'getColumnData':
+                this.getColumnData(payload.args.columnName);
                 break;
         }
         const dataCleaningMode = this.configService.getSettings().dataCleaningMode;

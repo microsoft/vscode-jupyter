@@ -752,9 +752,16 @@
         "menus": {
             "notebook/cell/title": [
                 {
-                    "command": "jupyter.openDataFrameInDataViewer",
-                    "group": "navigation",
-                    "when": "true"
+                    "command": "jupyter.notebookeditor.runallcellsabove",
+                    "title": "%DataScience.runAbove%",
+                    "group": "inline/cell@0",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.runcellandallbelow",
+                    "title": "%DataScience.runBelow%",
+                    "group": "inline/cell@0",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 }
             ],
             "editor/context": [
@@ -845,20 +852,6 @@
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "group": "overflow@1000",
                     "when": "notebookViewType == 'jupyter-notebook'"
-                }
-            ],
-            "notebook/cell/title": [
-                {
-                    "command": "jupyter.notebookeditor.runallcellsabove",
-                    "title": "%DataScience.runAbove%",
-                    "group": "inline/cell@0",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.runcellandallbelow",
-                    "title": "%DataScience.runBelow%",
-                    "group": "inline/cell@0",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 }
             ],
             "explorer/context": [
@@ -1949,6 +1942,7 @@
         "arch": "^2.1.0",
         "bootstrap": "^4.3.1",
         "bootstrap-less": "^3.3.8",
+        "chart.js": "^3.1.0",
         "detect-indent": "^6.0.0",
         "diff-match-patch": "^1.0.0",
         "fast-deep-equal": "^2.0.1",
@@ -1973,6 +1967,7 @@
         "portfinder": "^1.0.25",
         "re-resizable": "~6.5.5",
         "react": "^16.5.2",
+        "react-chartjs-2": "^2.11.1",
         "react-data-grid": "^6.0.2-0",
         "react-dom": "^16.5.2",
         "react-draggable": "^4.4.2",

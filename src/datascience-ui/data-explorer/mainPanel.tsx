@@ -14,6 +14,7 @@ import {
     DataViewerMessages,
     IDataFrameInfo,
     IDataViewerMapping,
+    IGetColsResponse,
     IGetRowsResponse,
     IGetSliceRequest,
     IRowsResponse
@@ -73,6 +74,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private postOffice: PostOffice = new PostOffice();
     private resetGridEvent: Slick.Event<ISlickGridSlice> = new Slick.Event<ISlickGridSlice>();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
+    private histogramEvent: Slick.Event<any> = new Slick.Event<any>();
     private gridColumnUpdateEvent: Slick.Event<Slick.Column<Slick.SlickData>[]> = new Slick.Event<
         Slick.Column<Slick.SlickData>[]
     >();
@@ -223,6 +225,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             case DataViewerMessages.GetRowsResponse:
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
+
+            case DataViewerMessages.GetColsResponse:
+                this.handleGetColResponse(payload as IGetColsResponse);
+                break; 
             
             case DataViewerMessages.UpdateHistoryList:
                 this.handleUpdateHistoryList(payload);
@@ -269,6 +275,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 idProperty={RowNumberColumnName}
                 rowsAdded={this.gridAddEvent}
                 resetGridEvent={this.resetGridEvent}
+                histogramEvent={this.histogramEvent}
                 columnsUpdated={this.gridColumnUpdateEvent}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
@@ -395,6 +402,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 sliceExpression: this.state.sliceExpression
             });
         }
+    }
+
+
+    private handleGetColResponse(response: IGetColsResponse) {
+        const cols = response.cols ? (response.cols as JSONArray) : [];
+
+        this.histogramEvent.notify({ cols });
     }
 
     private generateColumns(variable: IDataFrameInfo): Slick.Column<Slick.SlickData>[] {

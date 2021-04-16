@@ -927,6 +927,11 @@ export interface IJupyterVariables {
         notebook?: INotebook,
         sliceExpression?: string
     ): Promise<JSONObject>;
+    getDataFrameColumn(
+        targetVariable: IJupyterVariable,
+        columnName: string,
+        notebook?: INotebook
+    ): Promise<JSONObject>;
     getMatchingVariable(
         name: string,
         notebook?: INotebook,

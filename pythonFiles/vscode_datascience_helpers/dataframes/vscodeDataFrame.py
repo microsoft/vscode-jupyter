@@ -150,6 +150,23 @@ def _VSCODE_getDataFrameRows(df, start, end):
     return _VSCODE_pd_json.to_json(None, df, orient="table", date_format="iso")
 
 
+# Function to retrieve a set of rows for a data frame
+def _VSCODE_getDataFrameColumn(df, columnName):
+    df = _VSCODE_convertToDataFrame(df)
+    # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
+    try:
+        df = df.replace(
+            {
+                _VSCODE_np.inf: "inf",
+                -_VSCODE_np.inf: "-inf",
+                _VSCODE_np.nan: "nan",
+            }
+        )
+    except:
+        pass
+    return df[columnName].values.tolist()
+
+
 # Function to get info on the passed in data frame
 def _VSCODE_getDataFrameInfo(df):
     df = _VSCODE_convertToDataFrame(df)

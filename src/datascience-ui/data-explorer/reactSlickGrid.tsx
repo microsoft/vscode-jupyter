@@ -9,6 +9,7 @@ import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import './globalJQueryImports';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
+import { debounce } from 'lodash';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -41,6 +42,7 @@ import { generateDisplayValue } from './cellFormatter';
 import { getLocString } from '../react-common/locReactSide';
 import { ControlPanel } from './controlPanel';
 import './contextMenu.css';
+import { Bar } from 'react-chartjs-2';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -55,6 +57,7 @@ enum RowContextMenuItem {
 }
 
 enum ColumnContextMenuItem {
+    GetColumnStats= "Get Column Stats",
     DropColumns = "Drop Column",
     NormalizeColumn = "Normalize Column",
     PlotHistogram = "Plot Histogram",
@@ -79,6 +82,7 @@ export interface ISlickGridProps {
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
     resetGridEvent: Slick.Event<ISlickGridSlice>;
+    histogramEvent: Slick.Event<any>;
     columnsUpdated: Slick.Event<Slick.Column<Slick.SlickData>[]>;
     filterRowsTooltip: string;
     forceHeight?: number;
@@ -194,7 +198,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.props.rowsAdded.subscribe(this.addedRows);
         this.props.resetGridEvent.subscribe(this.resetGrid);
         this.props.columnsUpdated.subscribe(this.updateColumns);
+        this.props.histogramEvent.subscribe(this.histogramEvent);
     }
+
+    private debounceRequest = debounce(this.props.submitCommand, 1000);
 
     // eslint-disable-next-line
     public componentDidMount = () => {
@@ -252,6 +259,15 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             grid.onHeaderCellRendered.subscribe((_e, args) => {
                 // Add a tab index onto our header cell
                 args.node.tabIndex = 0;
+
+                //TOOLTIPS FOR HISTOGRAM AND DESCRIBE
+                //TODO DEBOUNCE
+                slickgridJQ(".react-grid-header-cell").hover((e: any) => {
+                    const columnName = e.target.outerText; 
+
+                    this.debounceRequest({ command: 'getColumnData', args: { columnName: columnName } });
+                    // this.props.submitCommand({ command: 'getColumnData', args: { columnName: columnName } });
+                });
             });
 
             // Unbind the slickgrid key handler from the canvas code
@@ -314,6 +330,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 // Submit a drop column request
                 const contextMenuItem = e?.target?.id;
                 switch (contextMenuItem) {
+                    case ColumnContextMenuItem.GetColumnStats:
+                        return this.props.submitCommand({ command: 'describe', args: { targets: [this.contextMenuColumnName]} });
                     case ColumnContextMenuItem.DropColumns:
                         return this.props.submitCommand({ command: 'drop', args: { targets: [this.contextMenuColumnName]} });
                     case ColumnContextMenuItem.NormalizeColumn:
@@ -657,6 +675,32 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.setColumns(newColumns);
         this.state.grid?.render(); // We might be able to skip this rerender?
     };
+
+    private histogramEvent = (_e: Slick.EventData, columnData: []) => {
+        const data = {
+            labels: ['test'],
+            datasets: [
+                {
+                    data: columnData
+                }
+            ]
+        };
+
+        const options = {
+            title: {
+                display: true,
+                text: "test"
+            }
+        };
+
+        <Bar
+            data={data}
+        />
+        
+        console.log('histogram event');
+
+        slickgridJQ().tooltip({})
+    }
 
     private setColumns = (newColumns: Slick.Column<Slick.SlickData>[]) => {
         // HACK: SlickGrid header row does not rerender if its visibility is false when columns

@@ -63,7 +63,7 @@ export class KernelVariables implements IJupyterVariables {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IExperimentService) private experimentService: IExperimentService
-    ) {}
+    ) { }
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;
@@ -178,6 +178,30 @@ export class KernelVariables implements IJupyterVariables {
             undefined,
             true
         );
+        return this.deserializeJupyterResult(results);
+    }
+
+    public async getDataFrameColumn(
+        targetVariable: IJupyterVariable,
+        columnName: string,
+        notebook: INotebook
+    ): Promise<{}> {
+        // Import the data frame script directory if we haven't already
+        await this.importDataFrameScripts(notebook);
+
+        let expression = targetVariable.name;
+
+        // Then execute a call to get the rows and turn it into JSON
+        const results = await notebook.execute(
+            //TODO CHANGE THIS
+            `print(${DataFrameLoading.DataFrameColFunc}(${expression}, '${columnName}'))`,
+            Identifiers.EmptyFileName,
+            0,
+            uuid(),
+            undefined,
+            true
+        );
+
         return this.deserializeJupyterResult(results);
     }
 
@@ -402,7 +426,7 @@ export class KernelVariables implements IJupyterVariables {
             result.pageStartIndex = startPos;
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
-            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
+            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length;) {
                 const fullVariable = list.variables[i].value
                     ? list.variables[i]
                     : await this.getVariableValueFromKernel(list.variables[i], notebook);

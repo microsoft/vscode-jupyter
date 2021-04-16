@@ -565,6 +565,7 @@ export namespace DataFrameLoading {
 
     export const DataFrameInfoFunc = '_VSCODE_getDataFrameInfo';
     export const DataFrameRowFunc = '_VSCODE_getDataFrameRows';
+    export const DataFrameColFunc = '_VSCODE_getDataFrameColumn';
 
     // Constants for the debugger which imports the script files
     export const DataFrameImportName = '_VSCODE_DataFrameImport';
