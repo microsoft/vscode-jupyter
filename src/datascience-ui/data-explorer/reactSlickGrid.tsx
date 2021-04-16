@@ -89,6 +89,7 @@ export interface ISlickGridProps {
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
     historyList: any[];
     histogramData?: IGetColsResponse;
+    currentVariableName: string;
     handleSliceRequest(args: IGetSliceRequest): void;
     submitCommand(args: { command: string; args: any }): void;
     handleRefreshRequest(): void;
@@ -393,6 +394,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                                 .map((c) => c.name)
                                 .filter((c) => c !== undefined) as string[]
                         }
+                        currentVariableName={this.props.currentVariableName}
                         submitCommand={this.props.submitCommand}
                     />
                 </div>

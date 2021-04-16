@@ -13,6 +13,7 @@ interface IControlPanelProps {
     headers: string[];
     historyList: any[];
     histogramData?: IGetColsResponse;
+    currentVariableName: string;
     submitCommand(data: { command: string; args: any }): void;
 }
 
@@ -52,6 +53,7 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                 />
                 <HistorySection
                     historyList={this.props.historyList}
+                    currentVariableName={this.props.currentVariableName}
                     submitCommand={this.props.submitCommand}
                     headers={this.props.headers}
                 />

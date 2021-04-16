@@ -1,3 +1,7 @@
 .history-item:hover {
     cursor: pointer;
 }
+
+.selected-history-item {
+    border-left: 3px solid var(--vscode-focusBorder); 
+}

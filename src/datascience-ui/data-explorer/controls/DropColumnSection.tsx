@@ -9,7 +9,7 @@ interface IProps {
 }
 
 interface IState {
-    columnsToDrop: number[]; // Indices
+    columnsToDrop: number[]; // IDropdownOption keys
 }
 
 export class DropColumnsSection extends React.Component<IProps, IState> {
@@ -38,7 +38,8 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
                         style={{ marginRight: '10px', width: '150px' }}
                         styles={dropdownStyles}
                         multiSelect
-                        options={this.props.options}
+                        selectedKeys={this.state.columnsToDrop}
+                        options={this.generateOptions()}
                         className="dropdownTitleOverrides"
                         onChange={this.updateDropTarget}
                     />
@@ -48,6 +49,7 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
                                 command: 'drop',
                                 args: {
                                     targets: this.state.columnsToDrop
+                                        .filter((v) => v !== -1)
                                         .map((v) => this.props.headers[v as number])
                                         .filter((v) => !!v)
                                 }
@@ -75,13 +77,28 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
         );
     }
 
+    private generateOptions() {
+        const selectAll = { key: -1, text: 'Select All' };
+        return [selectAll, ...this.props.options.filter((option) => option.text !== 'index')]; // Don't let user drop the index column
+    }
+
     private updateDropTarget = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
         if (item) {
-            this.setState({
-                columnsToDrop: item.selected
-                    ? [...this.state.columnsToDrop, item.key as number]
-                    : this.state.columnsToDrop.filter((key) => key !== item.key)
-            });
+            if (item.key === -1) {
+                if (item.selected) {
+                    // Mark all options as selected
+                    this.setState({ columnsToDrop: this.generateOptions().map((option) => option.key as number) });
+                } else {
+                    // Unselect all options
+                    this.setState({ columnsToDrop: [] });
+                }
+            } else {
+                this.setState({
+                    columnsToDrop: item.selected
+                        ? [...this.state.columnsToDrop, item.key as number]
+                        : this.state.columnsToDrop.filter((key) => key !== item.key)
+                });
+            }
         }
     };
 }
