@@ -892,6 +892,7 @@ export interface IJupyterVariable {
     indexColumn?: string;
     maximumRowChunkSize?: number;
     fileName?: string;
+    sourceFile?: string;
 }
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');

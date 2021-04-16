@@ -32,13 +32,13 @@ import '../react-common/codicon/codicon.css';
 import '../react-common/seti/seti.less';
 import { SliceControl } from './sliceControl';
 import { debounce } from 'lodash';
-import * as uuid from 'uuid/v4';
 
 import { initializeIcons } from '@fluentui/react';
+import { Toolbar } from './controls/toolbar';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
-const RowNumberColumnName = uuid(); // Unique key for our column containing row numbers
+const RowNumberColumnName = "No."; // Unique key for our column containing row numbers
 
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {
@@ -71,6 +71,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private container: React.Ref<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
+    private toggleFilterEvent: Slick.Event<void> = new Slick.Event<void>();
     private resetGridEvent: Slick.Event<ISlickGridSlice> = new Slick.Event<ISlickGridSlice>();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
     private gridColumnUpdateEvent: Slick.Event<Slick.Column<Slick.SlickData>[]> = new Slick.Event<
@@ -164,6 +165,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 />
                 {progressBar}
                 {this.renderBreadcrumb()}
+                <Toolbar
+                    handleRefreshRequest={this.handleRefreshRequest} 
+                    submitCommand={this.submitCommand}
+                    onToggleFilter={() => this.toggleFilterEvent.notify()}
+                />
                 {this.renderSliceControls()}
                 {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
             </div>
@@ -269,6 +275,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 idProperty={RowNumberColumnName}
                 rowsAdded={this.gridAddEvent}
                 resetGridEvent={this.resetGridEvent}
+                toggleFilterEvent={this.toggleFilterEvent}
                 columnsUpdated={this.gridColumnUpdateEvent}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}

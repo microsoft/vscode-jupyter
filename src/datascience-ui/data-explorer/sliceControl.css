@@ -67,7 +67,7 @@
 }
 
 .slice-form-container {
-    margin-left: 30px;
+    margin-left: 20px;
 }
 
 .slice-control-column {
@@ -159,6 +159,7 @@ details[open] > summary::before {
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
+    padding-top: 0;
 }
 
 /* This needs to match VS Code settings dropdowns */
@@ -176,6 +177,7 @@ details[open] > summary::before {
     border-radius: 0px;
     height: 26px;
     line-height: 26px;
+    width: 150px;
 }
 
 [class*='dropdown'] {

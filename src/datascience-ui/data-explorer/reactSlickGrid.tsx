@@ -79,6 +79,7 @@ export interface ISlickGridProps {
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
     resetGridEvent: Slick.Event<ISlickGridSlice>;
+    toggleFilterEvent: Slick.Event<void>;
     columnsUpdated: Slick.Event<Slick.Column<Slick.SlickData>[]>;
     filterRowsTooltip: string;
     forceHeight?: number;
@@ -194,6 +195,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.props.rowsAdded.subscribe(this.addedRows);
         this.props.resetGridEvent.subscribe(this.resetGrid);
         this.props.columnsUpdated.subscribe(this.updateColumns);
+        this.props.toggleFilterEvent.subscribe(this.clickFilterButton);
     }
 
     // eslint-disable-next-line
@@ -406,6 +408,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private maybeDropColumns = (e: any, data: Slick.OnHeaderContextMenuEventArgs<ISlickRow>) => {
         this.contextMenuColumnName = data.column.name;
+        // Don't show context menu for the row numbering column
+        if (data.column.field === "No.") {
+            return;
+        }
         // Show our context menu
         slickgridJQ("#headerContextMenu")
             .css("top", e.pageY)
@@ -602,24 +608,24 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 if (c.field !== this.props.idProperty) {
                     c.width = maxFieldWidth;
                 } else {
-                    c.width = (maxFieldWidth / 5) * 4;
+                    c.width = maxFieldWidth / 2;
                     c.name = '';
-                    c.header = {
-                        buttons: [
-                            {
-                                cssClass: 'codicon codicon-filter codicon-button header-cell-button',
-                                handler: this.clickFilterButton,
-                                tooltip: this.state.showingFilters
-                                    ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
-                                    : getLocString('DataScience.dataViewerShowFilters', 'Show filters')
-                            },
-                            {
-                                cssClass: 'codicon codicon-refresh codicon-button header-cell-button refresh-button',
-                                handler: this.props.handleRefreshRequest,
-                                tooltip: getLocString('DataScience.refreshDataViewer', 'Refresh data viewer')
-                            }
-                        ]
-                    };
+                    // c.header = {
+                    //     buttons: [
+                    //         {
+                    //             cssClass: 'codicon codicon-filter codicon-button header-cell-button',
+                    //             handler: this.clickFilterButton,
+                    //             tooltip: this.state.showingFilters
+                    //                 ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
+                    //                 : getLocString('DataScience.dataViewerShowFilters', 'Show filters')
+                    //         },
+                    //         {
+                    //             cssClass: 'codicon codicon-refresh codicon-button header-cell-button refresh-button',
+                    //             handler: this.props.handleRefreshRequest,
+                    //             tooltip: getLocString('DataScience.refreshDataViewer', 'Refresh data viewer')
+                    //         }
+                    //     ]
+                    // };
                 }
             });
             this.state.grid.setColumns(columns);
@@ -704,17 +710,17 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
-        if (args.column.field === this.props.idProperty) {
-            const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
-            ReactDOM.render(
-                <div
-                    className="codicon codicon-clear-all codicon-button"
-                    onClick={this.clearAllFilters}
-                    title={tooltipText}
-                />,
-                args.node
-            );
-        } else {
+        // if (args.column.field === this.props.idProperty) {
+        //     const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
+        //     ReactDOM.render(
+        //         <div
+        //             className="codicon codicon-clear-all codicon-button"
+        //             onClick={this.clearAllFilters}
+        //             title={tooltipText}
+        //         />,
+        //         args.node
+        //     );
+        // } else {
             const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
             ReactDOM.render(
                 <ReactSlickGridFilterBox
@@ -725,7 +731,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 />,
                 args.node
             );
-        }
+        // }
     };
 
     private compareElements(a: any, b: any, col?: Slick.Column<Slick.SlickData>): number {

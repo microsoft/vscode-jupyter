@@ -26,23 +26,23 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
 
     render() {
         return (
-            <details
-                className="slicing-control"
-                style={{
-                    borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                    paddingTop: '4px',
-                    paddingBottom: '4px'
-                }}
-            >
-                <summary className="slice-summary">
-                    <span className="slice-summary-detail">{'RENAME COLUMNS'}</span>
-                </summary>
-                <div className="slice-control-row slice-form-container" style={{ paddingBottom: '5px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px' }}>
+            // <details
+            //     className="slicing-control"
+            //     style={{
+            //         borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
+            //         paddingTop: '4px',
+            //         paddingBottom: '4px'
+            //     }}
+            // >
+            //     <summary className="slice-summary">
+            //         <span className="slice-summary-detail">{'RENAME COLUMNS'}</span>
+            //     </summary>
+                <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', width: '100px' }}>
                         <Dropdown
                             responsiveMode={ResponsiveMode.xxxLarge}
                             label={'Rename column:'}
-                            style={{ marginRight: '10px', width: '100px' }}
+                            style={{ marginRight: '10px', width: '150px', marginBottom: '16px' }}
                             styles={dropdownStyles}
                             options={this.props.options}
                             className="dropdownTitleOverrides"
@@ -53,7 +53,7 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
                             value={this.state.newColumnName}
                             onChange={this.handleChange}
                             className={'slice-data'}
-                            style={{ width: '100px', marginTop: '4px', marginBottom: '4px' }}
+                            style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
                             autoComplete="on"
                         />
                         <button
@@ -72,7 +72,8 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
                                 backgroundColor: 'var(--vscode-button-background)',
                                 color: 'var(--vscode-button-foreground)',
                                 margin: '4px',
-                                padding: '4px',
+                                marginLeft: '0px',
+                                padding: '8px',
                                 border: 'none',
                                 cursor: 'pointer',
                                 height: '26px'
@@ -82,7 +83,7 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
                         </button>
                     </div>
                 </div>
-            </details>
+            // </details>
         );
     }
 

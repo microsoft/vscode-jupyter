@@ -26,23 +26,23 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
 
     render() {
         return (
-            <details
-                className="slicing-control"
-                style={{
-                    borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                    paddingTop: '4px',
-                    paddingBottom: '4px'
-                }}
-            >
-                <summary className="slice-summary">
-                    <span className="slice-summary-detail">{'NORMALIZE DATA'}</span>
-                </summary>
-                <div className="slice-control-row slice-form-container" style={{ paddingBottom: '5px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px' }}>
+            // <details
+            //     className="slicing-control"
+            //     style={{
+            //         borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
+            //         paddingTop: '4px',
+            //         paddingBottom: '4px'
+            //     }}
+            // >
+            //     <summary className="slice-summary">
+            //         <span className="slice-summary-detail">{'NORMALIZE'}</span>
+            //     </summary>
+                <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', width: '100px', /* paddingTop: '6px' */ }}>
                         <Dropdown
                             responsiveMode={ResponsiveMode.xxxLarge}
-                            label={'Column to normalize:'}
-                            style={{ marginRight: '10px', width: '150px' }}
+                            label={'Target column:'}
+                            style={{ marginRight: '10px', width: '150px', marginBottom: '16px' }}
                             styles={dropdownStyles}
                             options={this.props.options}
                             className="dropdownTitleOverrides"
@@ -53,7 +53,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                             value={this.state.normalizeRangeStart}
                             onChange={this.handleNormalizeStartChange}
                             className={'slice-data'}
-                            style={{ width: '100px', marginTop: '4px', marginBottom: '4px' }}
+                            style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
                             autoComplete="on"
                         />
                         <span>{'New end range:'}</span>
@@ -61,7 +61,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                             value={this.state.normalizeRangeEnd}
                             onChange={this.handleNormalizeEndChange}
                             className={'slice-data'}
-                            style={{ width: '100px', marginTop: '4px', marginBottom: '4px' }}
+                            style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
                             autoComplete="on"
                         />
                         <button
@@ -83,7 +83,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                                 backgroundColor: 'var(--vscode-button-background)',
                                 color: 'var(--vscode-button-foreground)',
                                 margin: '4px',
-                                padding: '4px',
+                                padding: '8px',
                                 border: 'none',
                                 cursor: 'pointer',
                                 height: '26px',
@@ -94,7 +94,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                         </button>
                     </div>
                 </div>
-            </details>
+            // </details>
         );
     }
 

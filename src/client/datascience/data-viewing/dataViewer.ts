@@ -68,6 +68,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private variableCounter = 0;
     private existingDisposable: Disposable | undefined;
     private historyList: IHistoryItem[] = [];
+    private sourceFile: string | undefined;
 
     public get visible() {
         return !!this.webPanel?.isVisible();
@@ -132,6 +133,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             await super.show(true);
 
             let dataFrameInfo = await this.prepDataFrameInfo();
+            this.sourceFile = dataFrameInfo.sourceFile;
 
             // If higher dimensional data, preselect a slice to show
             if (dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
@@ -396,13 +398,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
                 break;
             case 'export_to_python_script':
-                //TODO get code from notebook?
-                // this.notebook
                 var dataCleanCode = this.historyList.map(function (item) {
                     return item.code;
                 }).join("\n");
 
-                dataCleanCode = 'import pandas as pd\n\ndf = pd.read_csv(\'' + notebook?.identity.path + '\')\n' + dataCleanCode;
+                dataCleanCode = 'import pandas as pd\n\ndf = pd.read_csv(r\'' + this.sourceFile + '\')\n' + dataCleanCode;
 
                 const doc = await this.documentManager.openTextDocument({
                     language: 'python',
@@ -415,7 +415,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.variableCounter += 1;
                 newVariableName = `df${this.variableCounter}`;
                 code = `${newVariableName} = ${currentVariableName}.rename(columns={ "${payload.args.old}": "${payload.args.new}" })`;
-                this.addToHistory("Renamed column " + payload.args.old + " to " + payload.args.new, newVariableName, code);
+                this.addToHistory(`Renamed column "${payload.args.old}" to "${payload.args.new}"`, newVariableName, code);
                 break;
             case 'drop':
                 this.variableCounter += 1;
@@ -424,11 +424,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 if (payload.args.mode === 'row') {
                     // Drop rows by index
                     code = `df${this.variableCounter} = ${currentVariableName}.drop(${'[' + labels.join(', ') + ']'})`;
-                    this.addToHistory("Dropped Rows(s): " + labels.map((label) => `${label}`).join(','), newVariableName, code);
+                    this.addToHistory("Dropped rows(s): " + labels.map((label) => `${label}`).join(','), newVariableName, code);
                 } else {
                     // Drop columns by column name
                     code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(', ') + ']'})`;
-                    this.addToHistory("Dropped Column(s): " + labels.map((label) => `"${label}"`).join(','), newVariableName, code);
+                    this.addToHistory("Dropped column(s): " + labels.map((label) => `"${label}"`).join(','), newVariableName, code);
                 }
                 break;
             case 'dropna':
@@ -437,7 +437,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 if (payload.args.subset !== undefined) {
                     // This assumes only one column/row at a time
                     code = `${newVariableName} = ${currentVariableName}.dropna(subset=["${payload.args.subset}"])`;
-                    this.addToHistory(`Dropped rows with missing data from column: "${payload.args.subset}"`, newVariableName, code);
+                    this.addToHistory(`Dropped row with missing data in column: "${payload.args.subset}"`, newVariableName, code);
                 } else {
                     code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})`;
                     this.addToHistory(payload.args.target == 0 ? "Dropped rows with missing data" : "Dropped columns with missing data", newVariableName, code);
@@ -455,7 +455,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 scaler = MinMaxScaler(feature_range=(${start}, ${end}))
 ${newVariableName} = ${currentVariableName}.copy()
 ${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${target}"].values.reshape(-1, 1))`;
-                this.addToHistory("Normalized " + target + " column", newVariableName, code);
+                this.addToHistory(`Normalized column: "${target}"`, newVariableName, code);
                 break;
             case 'fillna':
                 const { newValue } = payload.args;
