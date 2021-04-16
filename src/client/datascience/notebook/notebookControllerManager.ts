@@ -12,13 +12,14 @@ import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/type
 import { INotebookProvider } from '../types';
 import { JupyterNotebookView } from './constants';
 import { getNotebookMetadata } from './helpers/helpers';
+import { VSCodeNotebookController } from './notebookExecutionHandler';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
  */
 @injectable()
 export class NotebookControllerManager implements IExtensionSingleActivationService {
-    private controllerMapping = new WeakMap<NotebookDocument, NotebookController[]>();
+    private controllerMapping = new WeakMap<NotebookDocument, VSCodeNotebookController[]>();
 
     private isLocalLaunch: boolean;
     constructor(
@@ -72,12 +73,14 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
         this.controllerMapping.set(document, controllers);
     }
 
-    private createNotebookController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata): NotebookController {
+    private createNotebookController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata): VSCodeNotebookController {
         // Create notebook selector
-        // IANHU: move into call
-        const selector: NotebookSelector = { viewType: JupyterNotebookView, pattern: document.uri.fsPath };
-        const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
-        const controller = this.notebook.createNotebookController(id, selector, document.uri.toString());
+        //// IANHU: move into call
+        //const selector: NotebookSelector = { viewType: JupyterNotebookView, pattern: document.uri.fsPath };
+        //const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
+        //// IANHU: Preloads go here as well
+        //const controller = this.notebook.createNotebookController(id, selector, document.uri.toString());
+        const controller = new VSCodeNotebookController(document, kernelConnection, this.notebook);
         this.disposables.push(controller); // Make sure we set this to dispose
 
         return controller;
