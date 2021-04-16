@@ -65,7 +65,7 @@ export function translateCellToNative(
             latestExecutionSummary: {
                 executionOrder: cell.data.execution_count as number,
                 success: true,
-                duration: 0
+                endTime: 0
             },
             outputs: [],
             kind: NotebookCellKind.Code,

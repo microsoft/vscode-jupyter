@@ -24,7 +24,7 @@ import {
     NotebookCellMetadata,
     NotebookCellOutputItem,
     CancellationTokenSource,
-    NotebookCellRange,
+    NotebookRange,
     NotebookCellExecutionState
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
@@ -84,7 +84,7 @@ async function getServices() {
 
 export async function selectCell(notebook: NotebookDocument, start: number, end: number) {
     await window.showNotebookDocument(notebook, {
-        selections: [new NotebookCellRange(start, end)]
+        selections: [new NotebookRange(start, end)]
     });
 }
 
@@ -510,12 +510,7 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
 export async function waitForExecutionInProgress(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () => {
-            const result =
-                NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing &&
-                !cell.metadata.statusMessage
-                    ? true
-                    : false;
-            return result;
+            return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing;
         },
         timeout,
         `Cell ${cell.index + 1} did not start`
@@ -526,11 +521,9 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
  */
 export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
-        async () =>
-            NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending &&
-            !cell.metadata.statusMessage
-                ? true
-                : false,
+        async () => {
+            return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending;
+        },
         timeout,
         `Cell ${cell.index + 1} not queued for execution`
     );
@@ -684,7 +677,7 @@ export async function runCell(cell: NotebookCell) {
         throw new Error('No notebook or kernel');
     }
     void vscodeNotebook.activeNotebookEditor.kernel.executeCellsRequest(cell.notebook, [
-        new NotebookCellRange(cell.index, cell.index + 1)
+        new NotebookRange(cell.index, cell.index + 1)
     ]);
 }
 export async function runAllCellsInActiveNotebook() {
@@ -700,7 +693,7 @@ export async function runAllCellsInActiveNotebook() {
     }
     const document = vscodeNotebook.activeNotebookEditor.document;
     void vscodeNotebook.activeNotebookEditor.kernel.executeCellsRequest(document, [
-        new NotebookCellRange(0, document.cellCount)
+        new NotebookRange(0, document.cellCount)
     ]);
 }
 

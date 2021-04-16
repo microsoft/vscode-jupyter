@@ -236,7 +236,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                         kind: 'startUsingKernelSpec',
                         kernelSpec: k,
                         interpreter,
-                        id: getKernelId(k, activeInterpreter)
+                        id: getKernelId(k, interpreter)
                     };
                     return result;
                 }

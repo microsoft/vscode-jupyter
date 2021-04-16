@@ -13,6 +13,8 @@ import { INotebook, IScratchPadWebviewViewProvider } from '../types';
 
 export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
+export const INotebookStatusBarProvider = Symbol('INotebookStatusBarProvider');
+
 export const INotebookKernelProvider = Symbol('INotebookKernelProvider');
 export interface INotebookKernelProvider extends NotebookKernelProvider {}
 
