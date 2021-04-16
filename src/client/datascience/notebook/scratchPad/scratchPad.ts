@@ -75,7 +75,7 @@ import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { IKernelProvider, KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { addNewCellAfter } from '../helpers/executionHelpers';
 
-const root = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
+const root = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
 // This is the client side host for the scratch pad (shown in the jupyter tab)
 @injectable()
@@ -123,7 +123,13 @@ export class ScratchPad extends WebviewViewHost<IInteractiveWindowMapping> imple
             (c, d) => new SimpleMessageListener(c, d),
             provider,
             root,
-            [path.join(root, 'commons.initial.bundle.js'), path.join(root, 'scratchPad.js')]
+            [
+                path.join(root, 'require.js'),
+                path.join(root, 'ipywidgets.js'),
+                path.join(root, 'monaco.bundle.js'),
+                path.join(root, 'commons.initial.bundle.js'),
+                path.join(root, 'scratchPad.js')
+            ]
         );
 
         // Sign up if the active variable view notebook is changed, restarted or updated

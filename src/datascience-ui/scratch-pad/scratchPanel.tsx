@@ -33,10 +33,10 @@ export class ScratchPanel extends React.Component<IScratchPanelProps> {
     private mainPanelToolbarRef: React.RefObject<HTMLDivElement> = React.createRef();
 
     public componentDidMount() {
-        this.props.editorLoaded();
         window.addEventListener('keydown', this.mainKeyDown);
         window.addEventListener('resize', () => this.forceUpdate(), true);
         document.addEventListener('click', this.linkClick, true);
+        this.props.editorLoaded();
     }
 
     public componentWillUnmount() {

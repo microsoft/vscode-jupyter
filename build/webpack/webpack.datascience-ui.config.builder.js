@@ -26,14 +26,14 @@ function getEntry(bundle) {
         case 'notebook':
             return {
                 nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
-                interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`]
+                interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`],
+                scratchPad: ['babel-polyfill', `./src/datascience-ui/scratch-pad/index.tsx`]
             };
         case 'viewers':
             return {
                 plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
                 dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`],
-                variableView: ['babel-polyfill', `./src/datascience-ui/variable-view/index.tsx`],
-                scratchPad: ['babel-polyfill', `./src/datascience-ui/scratch-pad/index.tsx`]
+                variableView: ['babel-polyfill', `./src/datascience-ui/variable-view/index.tsx`]
             };
         case 'ipywidgetsKernel':
             return {
@@ -85,6 +85,12 @@ function getPlugins(bundle) {
                     template: 'src/datascience-ui/history-react/index.html',
                     chunks: ['monaco', 'commons', 'interactiveWindow'],
                     filename: 'index.interactiveWindow.html'
+                }),
+                new HtmlWebpackPlugin({
+                    template: 'src/datascience-ui/scratch-pad/index.html',
+                    indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                    chunks: ['commons', 'scratchPad'],
+                    filename: 'index.scratchPad.html'
                 })
             );
             break;
@@ -115,12 +121,6 @@ function getPlugins(bundle) {
                         indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'variableView'],
                         filename: 'index.variableView.html'
-                    }),
-                    new HtmlWebpackPlugin({
-                        template: 'src/datascience-ui/variable-view/index.html',
-                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                        chunks: ['commons', 'scratchPad'],
-                        filename: 'index.scratchPad.html'
                     })
                 ]
             );
