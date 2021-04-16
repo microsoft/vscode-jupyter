@@ -26,7 +26,7 @@ export const dropdownStyles = {
         ...styleOverrides,
         selectors: {
             '@media(min-width: 300px)': {
-                maxHeight: 100
+                maxHeight: 200
             }
         }
     },
