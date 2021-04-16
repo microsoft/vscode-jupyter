@@ -397,10 +397,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         await this.documentManager.showTextDocument(doc, 1, true);
     }
 
-    private async getColumnData(columnName: string) {
+    private async getColumnStats(columnName: string) {
         if (this.dataProvider) {
             const columnData = await this.dataProvider.getCols(columnName);
-            this.postMessage(DataViewerMessages.GetColsResponse, { cols: columnData });
+            this.postMessage(DataViewerMessages.GetHistogramResponse, { cols: columnData, columnName: columnName });
         }
     }
 
@@ -480,8 +480,8 @@ ${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${tar
             case DataViewerMessages.GetHistoryItem:
                 this.getHistoryItem(payload.args.index).ignoreErrors();
                 break;
-            case 'getColumnData':
-                this.getColumnData(payload.args.columnName);
+            case 'describe':
+                this.getColumnStats(payload.args.columnName);
                 break;
         }
         const dataCleaningMode = this.configService.getSettings().dataCleaningMode;

@@ -66,6 +66,7 @@ interface IMainPanelState {
     fileName?: string;
     sliceExpression?: string;
     historyList: [];
+    histogramData?: IGetColsResponse;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -75,7 +76,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private toggleFilterEvent: Slick.Event<void> = new Slick.Event<void>();
     private resetGridEvent: Slick.Event<ISlickGridSlice> = new Slick.Event<ISlickGridSlice>();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
-    private histogramEvent: Slick.Event<any> = new Slick.Event<any>();
     private gridColumnUpdateEvent: Slick.Event<Slick.Column<Slick.SlickData>[]> = new Slick.Event<
         Slick.Column<Slick.SlickData>[]
     >();
@@ -108,6 +108,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 isSliceDataEnabled: false,
                 originalVariableType: undefined,
                 historyList: [],
+                histogramData: undefined,
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -126,6 +127,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 isSliceDataEnabled: false,
                 originalVariableType: undefined,
                 historyList: [],
+                histogramData: undefined,
             };
         }
     }
@@ -232,8 +234,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
 
-            case DataViewerMessages.GetColsResponse:
-                this.handleGetColResponse(payload as IGetColsResponse);
+            case DataViewerMessages.GetHistogramResponse:
+                this.handleGetHistogram(payload);
                 break; 
             
             case DataViewerMessages.UpdateHistoryList:
@@ -281,7 +283,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 idProperty={RowNumberColumnName}
                 rowsAdded={this.gridAddEvent}
                 resetGridEvent={this.resetGridEvent}
-                histogramEvent={this.histogramEvent}
                 toggleFilterEvent={this.toggleFilterEvent}
                 columnsUpdated={this.gridColumnUpdateEvent}
                 filterRowsTooltip={filterRowsTooltip}
@@ -290,6 +291,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableShape={this.state.originalVariableShape}
                 isSliceDataEnabled={this.state.isSliceDataEnabled}
                 historyList={this.state.historyList}
+                histogramData={this.state.histogramData}
                 handleSliceRequest={this.handleSliceRequest}
                 submitCommand={this.submitCommand}
                 handleRefreshRequest={this.handleRefreshRequest}
@@ -361,6 +363,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd, sliceExpression });
     }
 
+    private handleGetHistogram(response: IGetColsResponse) {
+        this.setState({ histogramData: response });
+    }
+
     private handleUpdateHistoryList(response: []) {
         this.setState({ historyList: response });
     }
@@ -409,13 +415,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 sliceExpression: this.state.sliceExpression
             });
         }
-    }
-
-
-    private handleGetColResponse(response: IGetColsResponse) {
-        const cols = response.cols ? (response.cols as JSONArray) : [];
-
-        this.histogramEvent.notify({ cols });
     }
 
     private generateColumns(variable: IDataFrameInfo): Slick.Column<Slick.SlickData>[] {

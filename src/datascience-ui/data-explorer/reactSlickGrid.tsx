@@ -39,10 +39,9 @@ import 'slickgrid/slick.grid.css';
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
 import { generateDisplayValue } from './cellFormatter';
-import { getLocString } from '../react-common/locReactSide';
 import { ControlPanel } from './controlPanel';
 import './contextMenu.css';
-import { Bar } from 'react-chartjs-2';
+import { IGetColsResponse } from '../../client/datascience/data-viewing/types';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -60,7 +59,6 @@ enum ColumnContextMenuItem {
     GetColumnStats= "Get Column Stats",
     DropColumns = "Drop Column",
     NormalizeColumn = "Normalize Column",
-    PlotHistogram = "Plot Histogram",
     DropNA = "Drop NA"
 }
 
@@ -82,7 +80,6 @@ export interface ISlickGridProps {
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
     resetGridEvent: Slick.Event<ISlickGridSlice>;
-    histogramEvent: Slick.Event<any>;
     toggleFilterEvent: Slick.Event<void>;
     columnsUpdated: Slick.Event<Slick.Column<Slick.SlickData>[]>;
     filterRowsTooltip: string;
@@ -91,6 +88,7 @@ export interface ISlickGridProps {
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
     historyList: any[];
+    histogramData?: IGetColsResponse;
     handleSliceRequest(args: IGetSliceRequest): void;
     submitCommand(args: { command: string; args: any }): void;
     handleRefreshRequest(): void;
@@ -199,7 +197,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.props.rowsAdded.subscribe(this.addedRows);
         this.props.resetGridEvent.subscribe(this.resetGrid);
         this.props.columnsUpdated.subscribe(this.updateColumns);
-        this.props.histogramEvent.subscribe(this.histogramEvent);
         this.props.toggleFilterEvent.subscribe(this.clickFilterButton);
     }
 
@@ -261,15 +258,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             grid.onHeaderCellRendered.subscribe((_e, args) => {
                 // Add a tab index onto our header cell
                 args.node.tabIndex = 0;
-
-                //TOOLTIPS FOR HISTOGRAM AND DESCRIBE
-                //TODO DEBOUNCE
-                slickgridJQ(".react-grid-header-cell").hover((e: any) => {
-                    const columnName = e.target.outerText; 
-
-                    this.debounceRequest({ command: 'getColumnData', args: { columnName: columnName } });
-                    // this.props.submitCommand({ command: 'getColumnData', args: { columnName: columnName } });
-                });
             });
 
             // Unbind the slickgrid key handler from the canvas code
@@ -333,13 +321,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 const contextMenuItem = e?.target?.id;
                 switch (contextMenuItem) {
                     case ColumnContextMenuItem.GetColumnStats:
-                        return this.props.submitCommand({ command: 'describe', args: { targets: [this.contextMenuColumnName]} });
+                        return this.props.submitCommand({ command: 'describe', args: { columnName: this.contextMenuColumnName} });
                     case ColumnContextMenuItem.DropColumns:
                         return this.props.submitCommand({ command: 'drop', args: { targets: [this.contextMenuColumnName]} });
                     case ColumnContextMenuItem.NormalizeColumn:
                         return this.props.submitCommand({ command: 'normalize', args: { start: 0, end: 1, target: this.contextMenuColumnName }});
-                    case ColumnContextMenuItem.PlotHistogram:
-                        return this.props.submitCommand({ command: 'pyplot.hist', args: { target: this.contextMenuColumnName } });
                     case ColumnContextMenuItem.DropNA:
                         return this.props.submitCommand({ command: 'dropna', args: { subset: this.contextMenuColumnName, target: 0 } });
                 }
@@ -399,6 +385,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                     <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                     <ControlPanel
                         historyList={this.props.historyList}
+                        histogramData={this.props.histogramData}
                         data={this.dataView.getItems()}
                         headers={
                             this.state.grid
@@ -411,9 +398,9 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 </div>
                 <div className="react-grid-measure" ref={this.measureRef} />
                 <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
+                    <li id={ColumnContextMenuItem.GetColumnStats}>{ColumnContextMenuItem.GetColumnStats}</li>
                     <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>
                     <li id={ColumnContextMenuItem.NormalizeColumn}>{ColumnContextMenuItem.NormalizeColumn}</li>
-                    <li id={ColumnContextMenuItem.PlotHistogram}>{ColumnContextMenuItem.PlotHistogram}</li>
                     <li id={ColumnContextMenuItem.DropNA}>{ColumnContextMenuItem.DropNA}</li>
                 </ul>
                 <ul id="contextMenu" style={{ display: 'none', position: 'absolute' }}>
@@ -628,22 +615,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 } else {
                     c.width = maxFieldWidth / 2;
                     c.name = '';
-                    // c.header = {
-                    //     buttons: [
-                    //         {
-                    //             cssClass: 'codicon codicon-filter codicon-button header-cell-button',
-                    //             handler: this.clickFilterButton,
-                    //             tooltip: this.state.showingFilters
-                    //                 ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
-                    //                 : getLocString('DataScience.dataViewerShowFilters', 'Show filters')
-                    //         },
-                    //         {
-                    //             cssClass: 'codicon codicon-refresh codicon-button header-cell-button refresh-button',
-                    //             handler: this.props.handleRefreshRequest,
-                    //             tooltip: getLocString('DataScience.refreshDataViewer', 'Refresh data viewer')
-                    //         }
-                    //     ]
-                    // };
                 }
             });
             this.state.grid.setColumns(columns);
@@ -681,32 +652,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.setColumns(newColumns);
         this.state.grid?.render(); // We might be able to skip this rerender?
     };
-
-    private histogramEvent = (_e: Slick.EventData, columnData: []) => {
-        const data = {
-            labels: ['test'],
-            datasets: [
-                {
-                    data: columnData
-                }
-            ]
-        };
-
-        const options = {
-            title: {
-                display: true,
-                text: "test"
-            }
-        };
-
-        <Bar
-            data={data}
-        />
-        
-        console.log('histogram event');
-
-        slickgridJQ().tooltip({})
-    }
 
     private setColumns = (newColumns: Slick.Column<Slick.SlickData>[]) => {
         // HACK: SlickGrid header row does not rerender if its visibility is false when columns
@@ -754,17 +699,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
-        // if (args.column.field === this.props.idProperty) {
-        //     const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
-        //     ReactDOM.render(
-        //         <div
-        //             className="codicon codicon-clear-all codicon-button"
-        //             onClick={this.clearAllFilters}
-        //             title={tooltipText}
-        //         />,
-        //         args.node
-        //     );
-        // } else {
             const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
             ReactDOM.render(
                 <ReactSlickGridFilterBox

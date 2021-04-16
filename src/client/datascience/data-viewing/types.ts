@@ -33,8 +33,7 @@ export namespace DataViewerMessages {
     export const SliceEnablementStateChanged = 'slice_enablement_state_changed';
     export const UpdateHistoryList = 'update_history_list';
     export const GetHistoryItem = 'get_history_item';
-    export const GetColsRequest = 'get_cols_request';
-    export const GetColsResponse = 'get_cols_response';
+    export const GetHistogramResponse = 'get_histogram_response';
 }
 
 export interface IGetRowsRequest {
@@ -51,6 +50,7 @@ export interface IGetRowsResponse {
 
 export interface IGetColsResponse {
     cols: IColsResponse;
+    columnName: string;
 }
 
 export interface IGetSliceRequest {
@@ -74,7 +74,7 @@ export type IDataViewerMapping = {
     [DataViewerMessages.SliceEnablementStateChanged]: { newState: boolean };
     [DataViewerMessages.UpdateHistoryList]: any[] | undefined;
     [DataViewerMessages.GetHistoryItem]: number | undefined;
-    [DataViewerMessages.GetColsResponse]: IGetColsResponse;
+    [DataViewerMessages.GetHistogramResponse]: IGetColsResponse;
 };
 
 export interface IDataFrameInfo {

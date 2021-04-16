@@ -202,7 +202,7 @@ export class KernelVariables implements IJupyterVariables {
             true
         );
 
-        return this.deserializeJupyterResult(results);
+        return this.deserializeJupyterResultColumn(results);
     }
 
     private async importDataFrameScripts(notebook: INotebook, token?: CancellationToken): Promise<void> {
@@ -336,6 +336,11 @@ export class KernelVariables implements IJupyterVariables {
     private deserializeJupyterResult<T>(cells: ICell[]): T {
         const text = this.extractJupyterResultText(cells);
         return JSON.parse(text) as T;
+    }
+
+    private deserializeJupyterResultColumn<T>(cells: ICell[]): T {
+        const text = this.extractJupyterResultText(cells);
+        return text[0].substring(0, text[0].length - 2).split(',').map(e => { return isNaN(e) ? e.substring(2, e.length - 1) : parseFloat(e) }) as unknown as T;
     }
 
     private getParser(notebook: INotebook) {

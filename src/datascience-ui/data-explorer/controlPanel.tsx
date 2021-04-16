@@ -5,11 +5,14 @@ import { ISlickRow } from './reactSlickGrid';
 import './sliceControl.css';
 import { ColumnsSection } from './controls/ColumnsSection';
 import { RowsSection } from './controls/RowsSection';
+import { HistogramSection } from './controls/HistogramSection';
+import { IGetColsResponse } from '../../client/datascience/data-viewing/types';
 
 interface IControlPanelProps {
     data: ISlickRow[];
     headers: string[];
     historyList: any[];
+    histogramData?: IGetColsResponse;
     submitCommand(data: { command: string; args: any }): void;
 }
 
@@ -32,46 +35,11 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                     backgroundColor: 'var(--vscode-sideBar-background)'
                 }}
             >
-                {/* <details className="slicing-control" style={{ borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)', paddingTop: '4px', paddingBottom: '4px'}}>
-					<summary className="slice-summary">
-                        <span className="slice-summary-detail">
-                            {'TRANSFORMATIONS HISTORY'}
-                            <div className="codicon codicon-copy codicon-button" title="Copy code"/>
-                        </span>
-                    </summary>
-                    <div style={{ border: 'var(--vscode-editor-inactiveSelectionBackground)', marginLeft: '10px', marginRight: '10px', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--vscode-editor-background)', color: 'var(--vscode-editor-foreground)', fontFamily: 'var(--vscode-editor-font-family)', padding: '20px' }}>
-                        <span>
-                            {`import pandas as pd\n`}
-                        </span>
-                        <span>
-                            {`df = pd.read_csv("./iris.csv")`}
-                        </span>
-                        <span>
-                            {`import numpy as np`}
-                        </span>
-                        <span>
-                            {`df = df.replace(np.inf, np.nan)`}
-                        </span>
-                    </div>
-                </details>
-                <details className="slicing-control" style={{ borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)', paddingTop: '4px', paddingBottom: '4px'}}>
-					<summary className="slice-summary">
-                        <span className="slice-summary-detail">
-                            {'EVALUATE CUSTOM EXPRESSIONS'}
-                        </span>
-                    </summary>
-                    <input
-                        value={'df = df.groupby(["species"]).replace("setosa", "Setosa")'}
-                        className={'slice-data'}
-                        style={{ width: '400px !important', marginTop: '4px', marginBottom: '4px', marginLeft: '30px', fontFamily: 'var(--vscode-editor-font-family)'  }}
-                        autoComplete="on"
-                    />
-                </details> */}
-                {/* <DropColumnsSection
+                {this.props.histogramData && this.props.histogramData.cols && this.props.histogramData.cols.length > 0 ? (
+                <HistogramSection
+                    histogramData={this.props.histogramData}
                     submitCommand={this.props.submitCommand}
-                    options={columnDropdownOptions}
-                    headers={this.props.headers}
-                /> */}
+                    headers={this.props.headers}/>) : ''}
                 <ColumnsSection
                     submitCommand={this.props.submitCommand}
                     options={columnDropdownOptions}
@@ -82,31 +50,11 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                     options={columnDropdownOptions}
                     headers={this.props.headers}
                 />
-                {/* <NormalizeDataSection
-                    submitCommand={this.props.submitCommand}
-                    options={columnDropdownOptions}
-                    headers={this.props.headers}
-                /> */}
-                {/* <RenameColumnsSection
-                    submitCommand={this.props.submitCommand}
-                    options={columnDropdownOptions}
-                    headers={this.props.headers}
-                /> */}
-                {/* <DropMissingValuesSection
-                    submitCommand={this.props.submitCommand}
-                    options={columnDropdownOptions}
-                    headers={this.props.headers}
-                /> */}
                 <HistorySection
                     historyList={this.props.historyList}
                     submitCommand={this.props.submitCommand}
-                    headers={this.props.headers}/>
-                {/* <PlotHistogramSection
-                    submitCommand={this.props.submitCommand}
-                    options={columnDropdownOptions}
                     headers={this.props.headers}
-                /> */}
-
+                />
                 {/* <details className="slicing-control" style={{ borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)', paddingTop: '4px', paddingBottom: '4px'}}>
                     <summary className="slice-summary">
                         <span className="slice-summary-detail">

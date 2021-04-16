@@ -12,6 +12,7 @@ import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } f
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import * as uuid from 'uuid/v4';
 
 import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
@@ -648,7 +649,7 @@ export class CommandRegistry implements IDisposable {
         if (setting == OpenDataViewerSetting.STANDALONE) {
             const notebook = await this.notebookProvider.getOrCreateNotebook({ resource: file, identity: file!, disableUI: true });
             const code = getImportCodeForFileType(file!.fsPath);
-            notebook?.execute(code, '', 0, '', undefined, true).then(async () => {
+            notebook?.execute(code, '', 0, uuid(), undefined, true).then(async () => {
                 await this.commandManager.executeCommand('jupyter.openVariableView');
                 // Open data viewer for this variable
                 const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
