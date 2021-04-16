@@ -124,7 +124,7 @@ suite('DataScience - VSCode Notebook - (Trust) (slow)', function () {
                 traceInfo(`Ended Test ${this.currentTest?.title}`);
                 await closeNotebooks(disposables);
             });
-            test('IANHU Opening an untrusted notebook', async () => {
+            test('Opening an untrusted notebook', async () => {
                 await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
                 const model = storageProvider.get(ipynbFile)!;
                 assert.isFalse(model.isTrusted);
