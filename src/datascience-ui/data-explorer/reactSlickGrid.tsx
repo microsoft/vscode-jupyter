@@ -386,7 +386,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 <div style={{ display: 'flex', width: '100%', overflow: 'hidden' }}>
                     <Resizable 
                         style={{display: "flex", alignItems: "top", justifyContent: "left", flexDirection: "column" }}
-                        defaultSize={{ width: '70%', height }}
+                        handleClasses={{ right: "resizable-span" }}
+                        defaultSize={{ width: '50%', height }}
                         enable={{ left:false, top:false, right:true, bottom:false, topRight:false, bottomRight:false, bottomLeft:false, topLeft:false }}
                         >
                         <div className="react-grid-container" style={style} ref={this.containerRef}></div>
@@ -476,16 +477,16 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private clearAllFilters = () => {
-        // Avoid rerendering if there are no filters
-        if (this.columnFilters.size > 0) {
-            this.columnFilters = new Map();
-            this.dataView.refresh();
-            // Force column headers to rerender by setting columns
-            // and ensure styles don't get messed up after rerender
-            this.autoResizeColumns();
-        }
-    };
+    // private clearAllFilters = () => {
+    //     // Avoid rerendering if there are no filters
+    //     if (this.columnFilters.size > 0) {
+    //         this.columnFilters = new Map();
+    //         this.dataView.refresh();
+    //         // Force column headers to rerender by setting columns
+    //         // and ensure styles don't get messed up after rerender
+    //         this.autoResizeColumns();
+    //     }
+    // };
 
     private styleColumns(columns: Slick.Column<ISlickRow>[]) {
         // Transform columns so they are sortable and stylable

@@ -1,3 +1,17 @@
+.resizable-span {
+    cursor: ew-resize !important;
+    width: 9px !important;
+    z-index: 99999 !important;
+}
+
+.resizable-span:hover {
+    transition: background-color .1s ease-out 0.4s !important;
+}
+
+.resizable-span:hover, .resizable-span:active, .resizable-span:focus, .resizable-span:target {
+    background: var(--vscode-focusBorder) !important;
+}
+
 .outer-container {
     width: auto;
     height: 100%;
