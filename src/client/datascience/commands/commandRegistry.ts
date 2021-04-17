@@ -136,7 +136,6 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.ResetLoggingLevel, this.resetLoggingLevel);
         this.registerCommand(Commands.ShowDataViewer, this.onVariablePanelShowDataViewerRequest);
         this.registerCommand(Commands.ImportAsDataFrame, this.importFileAsDataFrame);
-        this.registerCommand(Commands.ImportAsDataFrameFromUrl, this.importFileAsDataFrameFromUrl);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
@@ -639,7 +638,8 @@ export class CommandRegistry implements IDisposable {
                         size: 0,
                         shape: '',
                         count: 0,
-                        truncated: true
+                        truncated: true,
+                        sourceFile: file?.fsPath
                     },
                     notebook
                 );
