@@ -43,7 +43,7 @@ export const styles = mergeStyleSets({
         fontSize: 'var(--vscode-font-size)',
         fontWeight: 'var(--vscode-font-weight)',
         display: 'inline-block',
-        paddingLeft: 15,
+        paddingLeft: 10,
         paddingRight: 15,
       },
     ],
@@ -126,7 +126,7 @@ export class HistorySection extends React.Component<IProps, IState> {
                       <List
                           componentRef={this.listRef}
                           items={this.props.historyList}
-                          style={{ }}
+                          style={{ marginLeft: '5px' }}
                           className="historyList"
                           onRenderCell={this.onRenderCell}
                       /> 
