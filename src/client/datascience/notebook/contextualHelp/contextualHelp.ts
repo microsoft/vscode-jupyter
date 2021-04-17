@@ -240,19 +240,42 @@ export class ContextualHelp extends WebviewViewHost<IInteractiveWindowMapping>
             const notebook = await this.getNotebook();
 
             if (notebook) {
-                const result = await notebook.inspect(code);
+                const result = code && code.length > 0 ? await notebook.inspect(code) : undefined;
+                if (result && 'text/plain' in result) {
+                    const output: nbformat.IStream = {
+                        output_type: 'stream',
+                        text: [result['text/plain']!.toString()],
+                        name: 'stdout',
+                        metadata: {},
+                        execution_count: 1
+                    };
 
-                // Turn this into a cell (shortcut to displaying it)
-                const cell: ICell = {
-                    id: '1',
-                    file: Identifiers.EmptyFileName,
-                    line: 0,
-                    state: CellState.finished,
-                    data: createCodeCell([''], (result as unknown) as nbformat.IOutput[])
-                };
+                    // Turn this into a cell (shortcut to displaying it)
+                    const cell: ICell = {
+                        id: '1',
+                        file: Identifiers.EmptyFileName,
+                        line: 0,
+                        state: CellState.finished,
+                        data: createCodeCell([''], [output])
+                    };
+                    cell.data.execution_count = 1;
 
-                // Then send the combined output to the UI
-                this.sendCellsToWebView([cell]);
+                    // Then send the combined output to the UI
+                    this.sendCellsToWebView([cell]);
+                } else {
+                    // Otherwise empty it out.
+                    const cell: ICell = {
+                        id: '1',
+                        file: Identifiers.EmptyFileName,
+                        line: 0,
+                        state: CellState.finished,
+                        data: createCodeCell('')
+                    };
+                    cell.data.execution_count = 1;
+
+                    // Then send the combined output to the UI
+                    this.sendCellsToWebView([cell]);
+                }
             }
         } finally {
             status.dispose();

@@ -129,8 +129,7 @@ export class ContextualCell extends React.Component<IContextualCellProps> {
                         cellVM={this.props.cellVM}
                         baseTheme={this.props.baseTheme}
                         expandImage={this.props.showPlot}
-                        maxTextSize={this.props.maxTextSize}
-                        enableScroll={this.props.enableScroll}
+                        enableScroll={false}
                         themeMatplotlibPlots={false}
                         widgetFailed={this.props.widgetFailed}
                         openSettings={this.props.openSettings}
