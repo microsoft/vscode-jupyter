@@ -33,7 +33,8 @@ function getEntry(bundle) {
             return {
                 plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
                 dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`],
-                variableView: ['babel-polyfill', `./src/datascience-ui/variable-view/index.tsx`]
+                variableView: ['babel-polyfill', `./src/datascience-ui/variable-view/index.tsx`],
+                contextualHelp: ['babel-polyfill', `./src/datascience-ui/contextual-help/index.tsx`]
             };
         case 'ipywidgetsKernel':
             return {

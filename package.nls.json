@@ -95,6 +95,7 @@
     "jupyter.command.jupyter.restartkernel.title": "Restart Jupyter Kernel",
     "jupyter.command.jupyter.openScratchPad.title": "Open notebook scratch pad",
     "jupyter.command.jupyter.openInInteractive.title": "Open notebook in interactive window",
+    "jupyter.command.jupyter.openContextualHelp.title": "Open contextual help panel",
     "jupyter.command.jupyter.expandallcells.title": "Expand All Interactive Cells",
     "jupyter.command.jupyter.collapseallcells.title": "Collapse All Interactive Cells",
     "jupyter.command.jupyter.addcellbelow.title": "Add Empty Cell to File",

@@ -195,9 +195,11 @@ import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { WebviewExtensibility } from './webviewExtensibility';
 import { RemoteKernelFinder } from './kernel-launcher/remoteKernelFinder';
 import { IApplicationEnvironment } from '../common/application/types';
-import { INotebookWatcher, IScratchPadProvider } from './notebook/types';
+import { IContextualHelpProvider, INotebookWatcher, IScratchPadProvider } from './notebook/types';
 import { ScratchPadProvider } from './notebook/scratchPad/scratchPadProvider';
 import { ScratchPadRegister } from './notebook/scratchPad/scratchPadRegister';
+import { ContextualHelpProvider } from './notebook/contextualHelp/contextualHelpProvider';
+import { ContextualHelpRegister } from './notebook/contextualHelp/contextualHelpRegister';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -291,6 +293,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, MigrateJupyterInterpreterStateService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, VariableViewActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ScratchPadRegister);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ContextualHelpRegister);
     serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
@@ -357,6 +360,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IScratchPadProvider>(IScratchPadProvider, ScratchPadProvider);
+    serviceManager.addSingleton<IContextualHelpProvider>(IContextualHelpProvider, ContextualHelpProvider);
 
     registerNotebookTypes(serviceManager);
     registerContextTypes(serviceManager);

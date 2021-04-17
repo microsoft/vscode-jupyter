@@ -529,6 +529,10 @@ export interface IScratchPad {
     loadCell(cell: NotebookCell): void;
 }
 
+export interface IContextualHelp {
+    showHelp(editor: TextEditor, selection: ReadonlyArray<Selection>): void;
+}
+
 export interface IInteractiveBase extends Disposable, IProgress {
     onExecutedCode?: Event<string>;
     notebook?: INotebook;
@@ -1454,6 +1458,11 @@ export interface IVSCWebviewViewProvider extends WebviewViewProvider {
 // Wraps the VS Code WebviewViewProvider. VSC Prefix as we also have our own IWebviewViewProvider
 export interface IScratchPadWebviewViewProvider extends WebviewViewProvider {
     readonly viewType: 'jupyterScratchPad';
+}
+
+// Wraps the VS Code WebviewViewProvider. VSC Prefix as we also have our own IWebviewViewProvider
+export interface IContextualHelpWebviewViewProvider extends WebviewViewProvider {
+    readonly viewType: 'jupyterContextualHelp';
 }
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');

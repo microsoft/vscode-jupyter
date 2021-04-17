@@ -965,6 +965,18 @@ export namespace DataScience {
         'Notebook Scratch Pad -- No notebook selected'
     );
     export const scratchPadEmpty = localize('DataScience.scratchPadEmpty', 'Select a notebook to get a scratch pad');
+    export const contextualHelpTitleFormat = localize(
+        'DataScience.contextualHelpTitleFormat',
+        'Contextual Help for {0}'
+    );
+    export const contextualHelpTitleEmpty = localize(
+        'DataScience.contextualHelpTitleEmpty',
+        'Contextual Help -- No notebook selected'
+    );
+    export const contextualHelpEmpty = localize(
+        'DataScience.contextualHelpEmpty',
+        'Select a notebook to get contextual help'
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

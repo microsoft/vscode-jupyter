@@ -613,6 +613,12 @@
                 "enablement": "jupyter.isnotebooktrusted"
             },
             {
+                "command": "jupyter.notebookeditor.openContextualHelp",
+                "title": "%jupyter.command.jupyter.openContextualHelp.title%",
+                "category": "Notebook",
+                "enablement": "jupyter.isnotebooktrusted"
+            },
+            {
                 "command": "jupyter.notebookeditor.openInInteractive",
                 "title": "%jupyter.command.jupyter.openInInteractive.title%",
                 "category": "Notebook",
@@ -1868,6 +1874,11 @@
                     "type": "webview",
                     "id": "jupyterScratchPad",
                     "name": "Notebook Scratch Pad"
+                },
+                {
+                    "type": "webview",
+                    "id": "jupyterContextualHelp",
+                    "name": "Contextual Help"
                 }
             ]
         }

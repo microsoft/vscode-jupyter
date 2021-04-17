@@ -31,6 +31,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['jupyter.selectJupyterInterpreter']: [];
     ['jupyterViewVariables.focus']: [];
     ['jupyterScratchPad.focus']: [];
+    ['jupyterContextualHelp.focus']: [];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.CreateNewInteractive]: [];
@@ -55,6 +56,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.OpenVariableView]: [];
     [DSCommands.OpenScratchPad]: [NotebookCell];
     [DSCommands.OpenScratchPadInteractive]: [NotebookCell];
+    [DSCommands.OpenContextualHelp]: [];
 }
 
 /**

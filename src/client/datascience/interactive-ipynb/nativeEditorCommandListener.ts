@@ -81,6 +81,9 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
                 this.openScratchPadInteractive(cell)
             )
         );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.OpenContextualHelp, () => this.openContextualHelp())
+        );
     }
 
     private runAllCells() {
@@ -176,6 +179,12 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         if (cell) {
             this.scratchPadProvider.scratchPad?.loadCell(cell);
         }
+    }
+
+    private async openContextualHelp(): Promise<void> {
+        // For all contributed views vscode creates a command with the format [view ID].focus to focus that view
+        // It's the given way to focus a single view so using that here, note that it needs to match the view ID
+        await this.commandManager?.executeCommand('jupyterContextualHelp.focus');
     }
 
     // This also works, not sure if we want both or not.

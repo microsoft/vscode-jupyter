@@ -9,7 +9,13 @@ import {
     NotebookKernel,
     NotebookKernelProvider
 } from 'vscode';
-import { INotebook, IScratchPad, IScratchPadWebviewViewProvider } from '../types';
+import {
+    IContextualHelp,
+    IContextualHelpWebviewViewProvider,
+    INotebook,
+    IScratchPad,
+    IScratchPadWebviewViewProvider
+} from '../types';
 
 export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
@@ -52,4 +58,9 @@ export interface INotebookWatcher {
 export const IScratchPadProvider = Symbol('IScratchPadProvider');
 export interface IScratchPadProvider extends IScratchPadWebviewViewProvider {
     readonly scratchPad: IScratchPad | undefined;
+}
+
+export const IContextualHelpProvider = Symbol('IContextualHelpProvider');
+export interface IContextualHelpProvider extends IContextualHelpWebviewViewProvider {
+    readonly contextualHelp: IContextualHelp | undefined;
 }

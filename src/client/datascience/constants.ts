@@ -139,6 +139,7 @@ export namespace Commands {
     export const NotebookEditorKeybindUndo = 'jupyter.notebookeditor.keybind.undo';
     export const OpenScratchPad = 'jupyter.notebookeditor.openScratchPad';
     export const OpenScratchPadInteractive = 'jupyter.notebookeditor.openInInteractive';
+    export const OpenContextualHelp = 'jupyter.notebookeditor.openContextualHelp';
 }
 
 export namespace CodeLensCommands {
