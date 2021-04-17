@@ -29,8 +29,8 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
             <div
                 style={{
                     resize: 'horizontal',
-                    width: '40%',
-                    height: '1000px',
+                    width: '100%',
+                    zIndex: 99999,
                     border: '1px solid var(--vscode-sideBar-border)',
                     color: 'var(--vscode-sideBar-foreground)',
                     backgroundColor: 'var(--vscode-sideBar-background)'

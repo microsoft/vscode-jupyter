@@ -1965,7 +1965,7 @@
         "plotly.js": "^1.58.4",
         "plotly.js-dist": "^1.58.4",
         "portfinder": "^1.0.25",
-        "re-resizable": "~6.5.5",
+        "re-resizable": "^6.5.5",
         "react": "^16.5.2",
         "react-chartjs-2": "^2.11.1",
         "react-data-grid": "^6.0.2-0",

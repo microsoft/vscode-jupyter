@@ -6,12 +6,16 @@
 .react-grid-container {
     border: none;
     padding-left: 8px;
-    width: 60%;
+    width: 100%;
 }
 
 .react-grid-measure {
     position: absolute;
     bottom: 5px;
+}
+
+.slick-pane {
+    overflow: visible;
 }
 
 .react-grid-header-cell {

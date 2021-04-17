@@ -9,6 +9,7 @@ import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import './globalJQueryImports';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
+import { Resizable } from "re-resizable"; 
 
 /*
 WARNING: Do not change the order of these imports.
@@ -377,10 +378,20 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
               }
             : {};
 
+        const height = this.measureRef?.current && this.containerRef?.current 
+            ? this.measureRef.current.offsetTop - this.containerRef.current.offsetTop
+            : '800px';
         return (
             <div className="outer-container">
-                <div style={{ flexDirection: 'row', display: 'flex' }}>
-                    <div className="react-grid-container" style={style} ref={this.containerRef}></div>
+                <div style={{ display: 'flex', width: '100%', overflow: 'hidden' }}>
+                    <Resizable 
+                        style={{display: "flex", alignItems: "top", justifyContent: "left", flexDirection: "column" }}
+                        defaultSize={{ width: '70%', height }}
+                        enable={{ left:false, top:false, right:true, bottom:false, topRight:false, bottomRight:false, bottomLeft:false, topLeft:false }}
+                        >
+                        <div className="react-grid-container" style={style} ref={this.containerRef}></div>
+                        <div className="react-grid-measure" ref={this.measureRef} />
+                    </Resizable>
                     <ControlPanel
                         historyList={this.props.historyList}
                         histogramData={this.props.histogramData}
@@ -395,7 +406,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                         submitCommand={this.props.submitCommand}
                     />
                 </div>
-                <div className="react-grid-measure" ref={this.measureRef} />
                 <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
                     <li id={ColumnContextMenuItem.GetColumnStats}>{ColumnContextMenuItem.GetColumnStats}</li>
                     <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>
@@ -597,6 +607,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // We use a div at the bottom to figure out our expected height. Slickgrid isn't
             // so good without a specific height set in the style.
             const height = this.measureRef.current.offsetTop - this.containerRef.current.offsetTop;
+            console.log('Computed grid height is ', height);
+            console.log('this.props.forceHeight', this.props.forceHeight);
             this.containerRef.current.style.height = `${this.props.forceHeight ? this.props.forceHeight : height}px`;
             this.state.grid.resizeCanvas();
         }
