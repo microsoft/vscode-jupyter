@@ -449,7 +449,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 if (payload.args.subset !== undefined) {
                     // This assumes only one column/row at a time
                     code = `${newVariableName} = ${currentVariableName}.dropna(subset=["${payload.args.subset}"])`;
-                    this.addToHistory(`Dropped row with missing data in column: "${payload.args.subset}"`, newVariableName, code);
+                    this.addToHistory(`Dropped rows with missing data in column: "${payload.args.subset}"`, newVariableName, code);
                 } else {
                     code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})`;
                     this.addToHistory(payload.args.target == 0 ? "Dropped rows with missing data" : "Dropped columns with missing data", newVariableName, code);
