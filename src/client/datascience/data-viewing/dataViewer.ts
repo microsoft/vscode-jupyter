@@ -32,8 +32,7 @@ import {
     IJupyterVariables,
     INotebookEditorProvider,
     IThemeFinder,
-    WebViewViewChangeEventArgs,
-    INotebook
+    WebViewViewChangeEventArgs
 } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
@@ -382,7 +381,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         this.postMessage(DataViewerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
     }
 
-    private async generatePythonCode(notebook: INotebook | undefined) {
+    private async generatePythonCode() {
         var dataCleanCode = this.historyList.map(function (item) {
             return item.code;
         }).join("\n");
@@ -421,7 +420,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
                 break;
             case 'export_to_python_script':
-                await this.generatePythonCode(notebook);
+                await this.generatePythonCode();
                 break;
             case 'rename':
                 this.variableCounter += 1;
@@ -441,6 +440,18 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                     // Drop columns by column name
                     code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(', ') + ']'})`;
                     this.addToHistory("Dropped column(s): " + labels.map((label) => `"${label}"`).join(','), newVariableName, code);
+                }
+                break;
+            case 'drop_duplicates':
+                this.variableCounter += 1;
+                newVariableName = `df${this.variableCounter}`;
+                if (payload.args?.subset !== undefined) {
+                    const subset = payload.args.subset.map((col: string) => `"${col}"`).join(', ');
+                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates(subset=[${subset}])`
+                    this.addToHistory(`Removed duplicate rows on column(s): ${subset}`, newVariableName, code);
+                } else {
+                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates()`
+                    this.addToHistory("Removed duplicate rows", newVariableName, code);
                 }
                 break;
             case 'dropna':

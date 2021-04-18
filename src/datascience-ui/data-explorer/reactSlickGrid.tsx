@@ -59,7 +59,8 @@ enum ColumnContextMenuItem {
     GetColumnStats= "Get Column Stats",
     DropColumns = "Drop Column",
     NormalizeColumn = "Normalize Column",
-    DropNA = "Drop NA"
+    DropNA = "Drop NA",
+    DropDuplicates = "Drop Duplicates On Column"
 }
 
 export interface ISlickRow extends Slick.SlickData {
@@ -327,6 +328,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                         return this.props.submitCommand({ command: 'normalize', args: { start: 0, end: 1, target: this.contextMenuColumnName }});
                     case ColumnContextMenuItem.DropNA:
                         return this.props.submitCommand({ command: 'dropna', args: { subset: this.contextMenuColumnName, target: 0 } });
+                    case ColumnContextMenuItem.DropDuplicates:
+                        return this.props.submitCommand({ command: 'drop_duplicates', args: { subset: [this.contextMenuColumnName] } });
                 }
             });
 
@@ -412,6 +415,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                     <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>
                     <li id={ColumnContextMenuItem.NormalizeColumn}>{ColumnContextMenuItem.NormalizeColumn}</li>
                     <li id={ColumnContextMenuItem.DropNA}>{ColumnContextMenuItem.DropNA}</li>
+                    <li id={ColumnContextMenuItem.DropDuplicates}>{ColumnContextMenuItem.DropDuplicates}</li>
                 </ul>
                 <ul id="contextMenu" style={{ display: 'none', position: 'absolute' }}>
                     <li id={RowContextMenuItem.DropRow}>{RowContextMenuItem.DropRow}</li>
@@ -423,8 +427,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private maybeDropColumns = (e: any, data: Slick.OnHeaderContextMenuEventArgs<ISlickRow>) => {
         this.contextMenuColumnName = data.column.name;
-        // Don't show context menu for the row numbering column
-        if (data.column.field === "No.") {
+        // Don't show context menu for the row numbering column or index column
+        if (data.column.field === "No." || data.column.field === "index") {
             return;
         }
         // Show our context menu

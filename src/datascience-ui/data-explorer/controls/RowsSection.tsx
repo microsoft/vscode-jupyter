@@ -1,9 +1,7 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
-import { DropColumnsSection } from './DropColumnSection';
+import { DropDuplicateRowsSection } from './DropDuplicateRows';
 import { DropMissingRowsSection } from './DropMissingRowsSection';
-import { NormalizeDataSection } from './NormalizeDataSection';
-import { RenameColumnsSection } from './RenameColumnsSection';
 import { dropdownStyles } from './styles';
 
 interface IProps {
@@ -18,7 +16,8 @@ interface IState {
 }
 
 export enum RowTransformation {
-	DropNA = "Drop NA"
+	DropNA = "Drop NA",
+    DropDuplicates = "Drop Duplicates"
 }
 
 export class RowsSection extends React.Component<IProps, IState> {
@@ -61,11 +60,17 @@ export class RowsSection extends React.Component<IProps, IState> {
 		switch (this.state.operationType) {
 			case RowTransformation.DropNA:
 				return <DropMissingRowsSection headers={this.props.headers} options={this.props.options} submitCommand={this.props.submitCommand} />
+            case RowTransformation.DropDuplicates:
+                return <DropDuplicateRowsSection headers={this.props.headers} options={this.props.options} submitCommand={this.props.submitCommand} />
 		}
 	}
 
 	private generateTransformOperations = () => {
 		return [
+			{
+				text: RowTransformation.DropDuplicates,
+				key: RowTransformation.DropDuplicates,
+			},
 			{
 				text: RowTransformation.DropNA,
 				key: RowTransformation.DropNA,
