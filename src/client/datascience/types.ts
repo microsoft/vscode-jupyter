@@ -928,7 +928,7 @@ export interface IJupyterVariables {
         notebook?: INotebook,
         sliceExpression?: string
     ): Promise<JSONObject>;
-    getDataFrameColumn(
+    getDataFrameColumn?(
         targetVariable: IJupyterVariable,
         columnName: string,
         notebook?: INotebook

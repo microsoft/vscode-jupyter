@@ -38,7 +38,7 @@ export class HistogramSection extends React.Component<IProps, IState> {
                           type: 'histogram'
                         }
                       ]}
-                    layout={{autosize: true, title: 'Column: ' + this.props.histogramData.columnName}}
+                    layout={{ autosize: true, title: 'Column: ' + this.props.histogramData.columnName}}
                     useResizeHandler={true}
                 />
             </details>

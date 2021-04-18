@@ -388,9 +388,9 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             <div className="outer-container">
                 <div style={{ display: 'flex', width: '100%', overflow: 'hidden' }}>
                     <Resizable 
-                        style={{display: "flex", alignItems: "top", justifyContent: "left", flexDirection: "column" }}
+                        style={{display: "flex", alignItems: "top", justifyContent: "left", flexDirection: "column", zIndex: 99998 }}
                         handleClasses={{ right: "resizable-span" }}
-                        defaultSize={{ width: '50%', height }}
+                        defaultSize={{ width: '60%', height }}
                         enable={{ left:false, top:false, right:true, bottom:false, topRight:false, bottomRight:false, bottomLeft:false, topLeft:false }}
                         >
                         <div className="react-grid-container" style={style} ref={this.containerRef}></div>

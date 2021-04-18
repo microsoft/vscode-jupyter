@@ -150,7 +150,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         let columns: IColsResponse = [];
         await this.ensureInitialized();
         if (this.variable) {
-            const dataFrameColumnData = await this.variableManager.getDataFrameColumn(
+            const dataFrameColumnData = await this.variableManager.getDataFrameColumn!(
                 this.variable,
                 columnName,
                 this.notebook

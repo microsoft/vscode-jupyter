@@ -7,6 +7,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
+import { DocumentManager } from '../../../client/common/application/documentManager';
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
 import { WebviewPanelProvider } from '../../../client/common/application/webviewPanels/webviewPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -55,7 +56,7 @@ suite('DataScience - DataViewer', () => {
         jupyterVariables = mock(KernelVariables);
         dataProviderFactory = mock(JupyterVariableDataProviderFactory);
         notebookEditorProvider = mock(NotebookEditorProvider);
-
+        const documentManager = mock(DocumentManager);
         const settings = mock(JupyterSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 
@@ -78,6 +79,7 @@ suite('DataScience - DataViewer', () => {
             new MockMemento(),
             instance(interactiveWindowProvider),
             instance(commandManager),
+            instance(documentManager),
             instance(jupyterVariables),
             instance(dataProviderFactory),
             instance(notebookEditorProvider)

@@ -1,6 +1,5 @@
-import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
+import { IDropdownOption } from '@fluentui/react';
 import * as React from 'react';
-import { dropdownStyles } from './styles';
 
 interface IProps {
     headers: string[];
@@ -77,16 +76,16 @@ export class DropMissingRowsSection extends React.Component<IProps, IState> {
         );
     }
 
-    private generateDropNaOptions() {
-        return [
-            { key: 0, text: 'Rows' },
-            { key: 1, text: 'Columns' }
-        ];
-    }
+    // private generateDropNaOptions() {
+    //     return [
+    //         { key: 0, text: 'Rows' },
+    //         { key: 1, text: 'Columns' }
+    //     ];
+    // }
 
-    private updateDropNaTarget = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
-        if (item) {
-            this.setState({ dropNaTarget: item.key as number });
-        }
-    };
+    // private updateDropNaTarget = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
+    //     if (item) {
+    //         this.setState({ dropNaTarget: item.key as number });
+    //     }
+    // };
 }
