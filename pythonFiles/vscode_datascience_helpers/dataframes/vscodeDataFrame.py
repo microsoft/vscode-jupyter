@@ -208,8 +208,21 @@ def _VSCODE_getDataFrameInfo(df):
         colobj["key"] = column_name
         colobj["name"] = column_name
         colobj["type"] = str(column_type)
+        length = len(df)
         if column_name != 'index':
-            colobj["describe"] = df[column_name].describe().to_string(header=False)
+            describe = df[column_name].describe().to_string(header=False)
+            isna = df[column_name].isna().sum()
+            describe += "\n# null\t" + str(isna)
+            describe += "\n% null\t" + str(isna / length) + "%"
+            isduplicate = df[column_name].duplicated().sum()
+            describe += "\n# repeated\t" + str(isduplicate) + "\n"
+            describe += "% repeated\t" + str(isduplicate / length * 100)[:4] + "%"
+        else:
+            describe = df.describe().to_string()
+            isduplicate = df.duplicated().sum()
+            describe += "\n# repeated\t" + str(isduplicate) + "\n"
+            describe += "% repeated\t" + str(isduplicate / length * 100)[:4] + "%"
+        colobj["describe"] = describe
         columns.append(colobj)
 
     # Save this in our target
