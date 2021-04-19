@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookKernel as VSCNotebookKernel } from 'vscode';
+import { NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IPythonInstaller, IPythonExtensionChecker, IPythonApiProvider } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
@@ -13,6 +13,8 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { isLocalLaunch } from '../jupyter/kernels/helpers';
 import { InterpreterPackages } from './interpreterPackages';
 import { isJupyterKernel } from '../notebook/helpers/helpers';
+import { INotebookControllerManager } from '../notebook/types';
+import { VSCodeNotebookController } from '../notebook/notebookExecutionHandler';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {
@@ -26,24 +28,25 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
-    ) {}
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
+    ) { }
     public async activate(): Promise<void> {
         if (!isLocalLaunch(this.configurationService)) {
             return;
         }
-        this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, this.disposables);
+        this.notebookControllerManager.onNotebookControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.trackPackagesOfActiveInterpreter, this, this.disposables);
         this.installer.onInstalled(this.onDidInstallPackage, this, this.disposables);
         this.extensions.onDidChange(this.trackUponActivation, this, this.disposables);
         this.trackUponActivation().catch(noop);
         this.apiProvider.onDidActivatePythonExtension(this.trackUponActivation, this, this.disposables);
     }
-    private async onDidChangeActiveNotebookKernel({ kernel }: { kernel: VSCNotebookKernel | undefined }) {
-        if (!kernel || !isJupyterKernel(kernel) || !kernel.selection.interpreter) {
+    private async onNotebookControllerSelected(event: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
+        if (!event.controller.connection.interpreter) {
             return;
         }
-        await this.packages.trackPackages(kernel.selection.interpreter);
+        await this.packages.trackPackages(event.controller.connection.interpreter);
     }
     private async trackUponActivation() {
         if (this.activeInterpreterTrackedUponActivation) {

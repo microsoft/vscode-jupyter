@@ -3,20 +3,28 @@
 
 import {
     CancellationToken,
+    Event,
     NotebookCommunication,
     NotebookDocument,
     NotebookKernel,
     NotebookKernelProvider
 } from 'vscode';
+import { IExtensionSingleActivationService } from '../../activation/types';
+import { VSCodeNotebookController } from './notebookExecutionHandler';
 
 export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
 export const INotebookStatusBarProvider = Symbol('INotebookStatusBarProvider');
 
 export const INotebookKernelProvider = Symbol('INotebookKernelProvider');
-export interface INotebookKernelProvider extends NotebookKernelProvider {}
+export interface INotebookKernelProvider extends NotebookKernelProvider { }
 
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
+
+export const INotebookControllerManager = Symbol('INotebookControllerManager');
+export interface INotebookControllerManager {
+    readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>;
+}
 
 export interface INotebookKernelResolver {
     resolveKernel(

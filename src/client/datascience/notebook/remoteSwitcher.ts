@@ -12,6 +12,7 @@ import { Commands, Settings } from '../constants';
 import { JupyterServerSelector } from '../jupyter/serverSelector';
 import { IJupyterServerUriStorage } from '../types';
 import { isJupyterKernel, isJupyterNotebook } from './helpers/helpers';
+import { INotebookControllerManager } from './types';
 
 @injectable()
 export class RemoteSwitcher implements IExtensionSingleActivationService {
@@ -23,7 +24,8 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector
+        @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
+        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
     ) {
         this.disposableRegistry.push(this);
     }
@@ -40,7 +42,7 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         this.notebook.onDidChangeActiveNotebookEditor(this.updateStatusBar.bind(this), this.disposables);
         this.documentManager.onDidChangeActiveTextEditor(this.updateStatusBar.bind(this), this.disposables);
         this.serverUriStorage.onDidChangeUri(this.updateStatusBar.bind(this), this.disposables);
-        this.notebook.onDidChangeActiveNotebookKernel(this.updateStatusBar.bind(this), this.disposables);
+        this.notebookControllerManager.onNotebookControllerSelected(this.updateStatusBar.bind(this), this, this.disposables);
         this.disposables.push(this.statusBarItem);
         this.updateStatusBar().catch(noop);
     }
@@ -48,6 +50,7 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         await this.serverSelector.selectJupyterURI(true, 'nativeNotebookToolbar');
     }
     private async updateStatusBar() {
+        // IANHU: Remove kernel here
         if (
             !this.notebook.activeNotebookEditor ||
             !isJupyterNotebook(this.notebook.activeNotebookEditor.document) ||

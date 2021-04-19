@@ -1562,11 +1562,6 @@ export type NotebookCellChangedEvent =
     | NotebookDocumentMetadataChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
-    // IANHU: Remove
-    readonly onDidChangeActiveNotebookKernel: Event<{
-        document: NotebookDocument;
-        kernel: NotebookKernel | undefined;
-    }>;
     readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;

@@ -76,7 +76,6 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
     ) {
         this.isLocalLaunch = isLocalLaunch(this.configuration);
-        this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, disposables);
         this.extensions.onDidChange(this.onDidChangeExtensions, this, disposables);
         this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebook.bind(this));
     }
@@ -123,8 +122,7 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
 
         traceInfoIf(
             !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-            `Providing kernels with length ${kernels.length} for ${document.uri.fsPath}. Preferred is ${
-                kernels.find((m) => m.isPreferred)?.label
+            `Providing kernels with length ${kernels.length} for ${document.uri.fsPath}. Preferred is ${kernels.find((m) => m.isPreferred)?.label
             }, ${kernels.find((m) => m.isPreferred)?.id}`
         );
         return kernels;

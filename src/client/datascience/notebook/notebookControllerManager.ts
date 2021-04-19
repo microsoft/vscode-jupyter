@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CancellationTokenSource, NotebookController, NotebookDocument, NotebookSelector } from 'vscode';
+import { CancellationTokenSource, EventEmitter, NotebookController, NotebookDocument, NotebookSelector } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -21,13 +21,15 @@ import { INotebookProvider } from '../types';
 import { JupyterNotebookView } from './constants';
 import { getNotebookMetadata, isJupyterKernel, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './notebookExecutionHandler';
+import { INotebookControllerManager } from './types';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
  */
 @injectable()
-export class NotebookControllerManager implements IExtensionSingleActivationService {
+export class NotebookControllerManager implements INotebookControllerManager, IExtensionSingleActivationService {
     private controllerMapping = new WeakMap<NotebookDocument, { selected: VSCodeNotebookController | undefined, controllers: VSCodeNotebookController[] }>();
+    private readonly _onNotebookControllerSelected: EventEmitter<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>;
 
     private isLocalLaunch: boolean;
     constructor(
@@ -45,7 +47,12 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
     ) {
+        this._onNotebookControllerSelected = new EventEmitter<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>();
         this.isLocalLaunch = isLocalLaunch(this.configuration);
+    }
+
+    get onNotebookControllerSelected() {
+        return this._onNotebookControllerSelected.event;
     }
 
     public async activate(): Promise<void> {
@@ -102,7 +109,7 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
 
         // Hook up to if this NotebookController is selected or de-selected
         //controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposables);
-        controller.onNotebookControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
+        controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);
 
         // We are disposing as documents are closed, but do this as well
         this.disposables.push(controller);
@@ -111,7 +118,7 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
     }
 
     // A new NotebookController has been selected, find the associated notebook document and update it
-    private async onNotebookControllerSelected(event: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
+    private async handleOnNotebookControllerSelected(event: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
         if (this.controllerMapping.has(event.notebook)) {
             const currentMapping = this.controllerMapping.get(event.notebook);
             // ! Ok here as we have already checked has above
@@ -119,6 +126,9 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
 
             // Now actually handle the change
             await this.notebookKernelChanged(event.notebook, event.controller);
+
+            // Now notify out that we have updated a notebooks controller
+            this._onNotebookControllerSelected.fire(event);
         }
     }
 

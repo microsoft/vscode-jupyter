@@ -28,6 +28,7 @@ import { RemoteSwitcher } from './remoteSwitcher';
 import { StatusBarProvider } from './statusBarProvider';
 import {
     INotebookContentProvider,
+    INotebookControllerManager,
     INotebookKernelProvider,
     INotebookKernelResolver,
     INotebookStatusBarProvider
@@ -69,5 +70,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
     serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
     serviceManager.addSingleton<VSCNotebookCellStatusBarItemProvider>(INotebookStatusBarProvider, StatusBarProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookControllerManager);
+    // serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookControllerManager);
+    serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
+    serviceManager.addBinding(INotebookControllerManager, IExtensionSingleActivationService);
 }
