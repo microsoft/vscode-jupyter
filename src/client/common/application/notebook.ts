@@ -17,6 +17,7 @@ import {
     NotebookEditorSelectionChangeEvent,
     NotebookKernel,
     NotebookKernelProvider,
+    NotebookSelector,
     window
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
@@ -96,7 +97,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         return notebook.registerNotebookContentProvider(notebookType, provider, options);
     }
     public registerNotebookCellStatusBarItemProvider(
-        selector: NotebookDocumentFilter,
+        selector: NotebookSelector,
         provider: NotebookCellStatusBarItemProvider
     ): Disposable {
         return notebook.registerNotebookCellStatusBarItemProvider(selector, provider);

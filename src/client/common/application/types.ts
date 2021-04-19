@@ -70,7 +70,8 @@ import {
     NotebookEditorSelectionChangeEvent,
     NotebookKernel,
     NotebookKernelProvider,
-    NotebookCellStatusBarItemProvider
+    NotebookCellStatusBarItemProvider,
+    NotebookSelector
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -1589,7 +1590,7 @@ export interface IVSCodeNotebook {
 
     registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
     registerNotebookCellStatusBarItemProvider(
-        selector: NotebookDocumentFilter,
+        selector: NotebookSelector,
         provider: NotebookCellStatusBarItemProvider
     ): Disposable;
 }
