@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, NotebookCell, NotebookController, NotebookDocument, NotebookSelector } from 'vscode';
+import { join } from 'path';
+import { Disposable, NotebookCell, NotebookController, NotebookDocument, NotebookKernelPreload, NotebookSelector, Uri } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
-import { IDisposable } from '../../common/types';
+import { IDisposable, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Commands } from '../constants';
 import { getDescriptionOfKernelConnection, getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
@@ -30,12 +31,14 @@ export class VSCodeNotebookController implements Disposable {
         private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
         private readonly kernelProvider: IKernelProvider,
-        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider) {
+        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
+        private readonly context: IExtensionContext
+    ) {
         const selector: NotebookSelector = { viewType: JupyterNotebookView, pattern: document.uri.fsPath };
         const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
-        // IANHU: Preloads go here as well
-        this.controller = this.notebookApi.createNotebookController(id, selector, getDisplayNameOrNameOfKernelConnection(kernelConnection), this.handleExecution.bind(this));
+        this.controller = this.notebookApi.createNotebookController(id, selector, getDisplayNameOrNameOfKernelConnection(kernelConnection), this.handleExecution.bind(this), this.preloads());
         // IANHU: Detail is missing
+        // IANHU: Interrupt handler here as well
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
         this.controller.hasExecutionOrder = true;
         this.controller.supportedLanguages = ['python'];
@@ -49,6 +52,22 @@ export class VSCodeNotebookController implements Disposable {
         }
     }
 
+    private preloads(): NotebookKernelPreload[] {
+        return [
+            { uri: Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')) },
+            {
+                uri: Uri.file(
+                    join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
+                )
+            },
+            {
+                uri: Uri.file(
+                    join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')
+                )
+            }
+        ];
+    }
+
     // IANHU: Is the async an issue here? 
     private async handleExecution(cells: NotebookCell[]) {
         // When we receive a cell execute request, first ensure that the notebook is trusted.
@@ -58,13 +77,6 @@ export class VSCodeNotebookController implements Disposable {
             return;
         }
         // Notebook is trusted. Continue to execute cells
-        //const cells = document
-        //.getCells()
-        //.filter(
-        //(cell) =>
-        //cell.kind === NotebookCellKind.Code &&
-        //ranges.some((range) => range.start <= cell.index && cell.index < range.end)
-        //);
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
         await Promise.all(cells.map((cell) => this.executeCell(this.document, cell)));
     }

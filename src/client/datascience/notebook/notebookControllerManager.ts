@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationTokenSource, NotebookController, NotebookDocument, NotebookSelector } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { IConfigurationService, IDisposableRegistry, IExtensions } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions } from '../../common/types';
 import { isLocalLaunch } from '../jupyter/kernels/helpers';
 import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
@@ -31,6 +31,7 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
@@ -85,7 +86,7 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
         //const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
         //// IANHU: Preloads go here as well
         //const controller = this.notebook.createNotebookController(id, selector, document.uri.toString());
-        const controller = new VSCodeNotebookController(document, kernelConnection, this.notebook, this.commandManager, this.kernelProvider, this.preferredRemoteKernelIdProvider);
+        const controller = new VSCodeNotebookController(document, kernelConnection, this.notebook, this.commandManager, this.kernelProvider, this.preferredRemoteKernelIdProvider, this.context);
         this.disposables.push(controller); // Make sure we set this to dispose
 
         return controller;
