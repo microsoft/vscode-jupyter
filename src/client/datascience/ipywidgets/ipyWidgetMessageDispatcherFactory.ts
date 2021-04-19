@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
