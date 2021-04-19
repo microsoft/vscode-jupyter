@@ -4,11 +4,12 @@
 import { inject, injectable } from 'inversify';
 import { CancellationTokenSource, NotebookController, NotebookDocument, NotebookSelector } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IVSCodeNotebook } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { IConfigurationService, IDisposableRegistry, IExtensions } from '../../common/types';
 import { isLocalLaunch } from '../jupyter/kernels/helpers';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
+import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { INotebookProvider } from '../types';
 import { JupyterNotebookView } from './constants';
 import { getNotebookMetadata } from './helpers/helpers';
@@ -29,6 +30,10 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
         @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(PreferredRemoteKernelIdProvider)
+        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
     ) {
         this.isLocalLaunch = isLocalLaunch(this.configuration);
@@ -80,7 +85,7 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
         //const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
         //// IANHU: Preloads go here as well
         //const controller = this.notebook.createNotebookController(id, selector, document.uri.toString());
-        const controller = new VSCodeNotebookController(document, kernelConnection, this.notebook);
+        const controller = new VSCodeNotebookController(document, kernelConnection, this.notebook, this.commandManager, this.kernelProvider, this.preferredRemoteKernelIdProvider);
         this.disposables.push(controller); // Make sure we set this to dispose
 
         return controller;
