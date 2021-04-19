@@ -22,7 +22,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
-import { HelpLinks, Identifiers, Telemetry } from '../constants';
+import { Commands, HelpLinks, Identifiers, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
 import {
     ICodeCssGenerator,
@@ -381,12 +381,16 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         this.postMessage(DataViewerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
     }
 
-    private async generatePythonCode() {
+    private getCode() {
         var dataCleanCode = this.historyList.map(function (item) {
             return item.code;
         }).join("\n");
 
-        dataCleanCode = 'import pandas as pd\n\ndf = pd.read_csv(r\'' + this.sourceFile + '\')\n' + dataCleanCode;
+        return 'import pandas as pd\n\ndf = pd.read_csv(r\'' + this.sourceFile + '\')\n' + dataCleanCode;
+    }
+
+    private async generatePythonCode() {
+        var dataCleanCode = this.getCode();
 
         const doc = await this.documentManager.openTextDocument({
             language: 'python',
@@ -394,6 +398,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         });
 
         await this.documentManager.showTextDocument(doc, 1, true);
+    }
+
+    private async generateNotebook() {
+        const dataCleanCode = this.getCode();
+        const notebookEditor = await this.commandManager.executeCommand(Commands.CreateNewNotebook);
+        const blankCell = (notebookEditor as any).document.cellAt(0) as NotebookCell;
+        await updateCellCode(blankCell, dataCleanCode);
     }
 
     private async getColumnStats(columnName: string) {
@@ -421,6 +432,9 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 break;
             case 'export_to_python_script':
                 await this.generatePythonCode();
+                break;
+            case 'export_to_notebook':
+                await this.generateNotebook();
                 break;
             case 'rename':
                 this.variableCounter += 1;

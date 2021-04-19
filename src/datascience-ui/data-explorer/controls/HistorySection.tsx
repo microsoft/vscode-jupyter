@@ -119,7 +119,7 @@ export class HistorySection extends React.Component<IProps, IState> {
                 }}
             >
                 <summary className="slice-summary">
-                    <span className="slice-summary-detail">{'HISTORY'}</span>
+                  <h3 className="slice-summary-detail">HISTORY</h3>
                 </summary>
                   {this.props.historyList.length > 0 ? 
                     <div className={styles.container} style={{ paddingTop: '10px' }} data-is-scrollable>

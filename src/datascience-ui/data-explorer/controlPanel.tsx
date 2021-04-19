@@ -36,11 +36,10 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                     backgroundColor: 'var(--vscode-sideBar-background)'
                 }}
             >
-                {this.props.histogramData && this.props.histogramData.cols && this.props.histogramData.cols.length > 0 ? (
                 <HistogramSection
                     histogramData={this.props.histogramData}
                     submitCommand={this.props.submitCommand}
-                    headers={this.props.headers}/>) : ''}
+                    headers={this.props.headers}/>
                 <ColumnsSection
                     submitCommand={this.props.submitCommand}
                     options={columnDropdownOptions}

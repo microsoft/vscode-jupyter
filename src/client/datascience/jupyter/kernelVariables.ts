@@ -339,7 +339,7 @@ export class KernelVariables implements IJupyterVariables {
 
     private deserializeJupyterResultColumn<T>(cells: ICell[]): T {
         const text = this.extractJupyterResultText(cells);
-        return text[0].substring(0, text[0].length - 2).split(',').map(e => { return isNaN(e) ? e.substring(2, e.length - 1) : parseFloat(e) }) as unknown as T;
+        return text[0].substring(0, text[0].length - 2).split(',').map(e => { return isNaN(parseFloat(e)) ? e.substring(2, e.length - 1) : parseFloat(e) }) as unknown as T;
     }
 
     private getParser(notebook: INotebook) {

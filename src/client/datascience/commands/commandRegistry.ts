@@ -547,12 +547,6 @@ export class CommandRegistry implements IDisposable {
                     },
                     {
                         label: 'Open with Jupyter Notebook',
-                    },
-                    {
-                        label: 'Open with Python file',
-                    },
-                    {
-                        label: 'Open with an Interactive Python session',
                     }
                 ];
 

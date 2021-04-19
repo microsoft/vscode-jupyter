@@ -37,7 +37,7 @@ export class RowsSection extends React.Component<IProps, IState> {
                 }}
             >
                 <summary className="slice-summary">
-                    <span className="slice-summary-detail">{'ROWS'}</span>
+                    <h3 className="slice-summary-detail">ROWS</h3>
                 </summary>
                 <div className="slice-form-container" style={{ paddingBottom: '5px', marginTop: '10px' }}>
                     <Dropdown

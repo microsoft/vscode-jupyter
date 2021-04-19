@@ -59,6 +59,7 @@
     background-color: var(--vscode-sideBar-background);
     color: var(--vscode-sideBar-foreground);
     border-right: 1px solid transparent;
+    border-bottom-color: none;
 }
 
 .slick-headerrow-column.ui-state-default {

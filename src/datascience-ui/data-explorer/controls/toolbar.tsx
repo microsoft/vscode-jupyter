@@ -54,6 +54,17 @@ export class Toolbar extends React.PureComponent<IProps> {
                         <span style={{ verticalAlign: 'middle', paddingLeft: '4px', paddingBottom: '4px' }}>Open as Python script</span>
                         {/* <div className="codicon codicon-notebook codicon-button" title="Open in Notebook" /> */}
                     </div>
+                    <div style={{ paddingRight: '15px', display: 'inline-block', cursor: 'pointer' }}
+                        onClick={() => this.props.submitCommand({ command: 'export_to_notebook', args: null })}
+                    >
+                        <div 
+                            className="codicon codicon-notebook codicon-button" 
+                            style={{ verticalAlign: 'middle' }}
+                            title="Open as Jupyter notebook" 
+                        />
+                        <span style={{ verticalAlign: 'middle', paddingLeft: '4px', paddingBottom: '4px' }}>Open as Jupyter notebook</span>
+                        {/* <div className="codicon codicon-notebook codicon-button" title="Open in Notebook" /> */}
+                    </div>
     {/*                 
                     <div
                         className="codicon codicon-window codicon-button"
