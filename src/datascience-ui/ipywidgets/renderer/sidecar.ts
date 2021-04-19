@@ -62,6 +62,14 @@ function initialize() {
                     }
 
                 }
+                if (type === 'RENDER_HTML'){
+                    console.error('Received message to reender Widget', payload);
+                    const html = payload.data['text/html'];
+                    const ele = document.getElementById('variableWidgetContainer');
+                    if (ele){
+                        ele.innerHTML = html;
+                    }
+                }
                 return true;
             }
         });
