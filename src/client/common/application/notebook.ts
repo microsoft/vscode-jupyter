@@ -13,6 +13,7 @@ import {
     NotebookContentProvider,
     NotebookDocument,
     NotebookDocumentFilter,
+    NotebookDocumentMetadata,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookKernel,
@@ -90,7 +91,8 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         provider: NotebookContentProvider,
         options?: {
             transientOutputs: boolean;
-            transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
+            transientCellMetadata?: { [K in keyof NotebookCellMetadata]?: boolean };
+            transientDocumentMetadata?: { [K in keyof NotebookDocumentMetadata]?: boolean };
         }
     ): Disposable {
         return notebook.registerNotebookContentProvider(notebookType, provider, options);

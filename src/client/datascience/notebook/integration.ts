@@ -71,9 +71,8 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                         this.notebookContentProvider,
                         {
                             transientOutputs: false,
-                            transientMetadata: {
+                            transientCellMetadata: {
                                 breakpointMargin: true,
-                                editable: true,
                                 inputCollapsed: true,
                                 outputCollapsed: true,
                                 custom: false
