@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationTokenSource, NotebookController, NotebookDocument, NotebookSelector } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions } from '../../common/types';
 import { isLocalLaunch } from '../jupyter/kernels/helpers';
 import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -20,7 +21,8 @@ import { VSCodeNotebookController } from './notebookExecutionHandler';
  */
 @injectable()
 export class NotebookControllerManager implements IExtensionSingleActivationService {
-    private controllerMapping = new WeakMap<NotebookDocument, VSCodeNotebookController[]>();
+    private controllerMapping2 = new WeakMap<NotebookDocument, VSCodeNotebookController[]>();
+    private controllerMapping = new WeakMap<NotebookDocument, { selected: VSCodeNotebookController | undefined, controllers: VSCodeNotebookController[] }>();
 
     private isLocalLaunch: boolean;
     constructor(
@@ -56,7 +58,7 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
     private async onDidCloseNotebookDocument(document: NotebookDocument) {
         // See if we have NotebookControllers for this document, if we do, dispose them
         if (this.controllerMapping.has(document)) {
-            this.controllerMapping.get(document)?.forEach(controller => {
+            this.controllerMapping.get(document)?.controllers.forEach(controller => {
                 controller.dispose();
             });
 
@@ -76,20 +78,36 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
         });
 
         // Store our NotebookControllers to dispose on doc close
-        this.controllerMapping.set(document, controllers);
+        this.controllerMapping.set(document, { selected: undefined, controllers: controllers });
     }
 
     private createNotebookController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata): VSCodeNotebookController {
         // Create notebook selector
-        //// IANHU: move into call
-        //const selector: NotebookSelector = { viewType: JupyterNotebookView, pattern: document.uri.fsPath };
-        //const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
-        //// IANHU: Preloads go here as well
-        //const controller = this.notebook.createNotebookController(id, selector, document.uri.toString());
-        const controller = new VSCodeNotebookController(document, kernelConnection, this.notebook, this.commandManager, this.kernelProvider, this.preferredRemoteKernelIdProvider, this.context);
-        this.disposables.push(controller); // Make sure we set this to dispose
+        const controller = new VSCodeNotebookController(document, kernelConnection,
+            this.notebook, this.commandManager, this.kernelProvider,
+            this.preferredRemoteKernelIdProvider, this.context, this.disposables);
+
+        // Hook up to if this NotebookController is selected or de-selected
+        //controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposables);
+        controller.onNotebookControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
+
+        // We are disposing as documents are closed, but do this as well
+        this.disposables.push(controller);
 
         return controller;
+    }
+
+    //private onDidChangeNotebookAssociation(_event: { notebook: NotebookDocument, selected: boolean }) {
+    //traceInfo('IANHU');
+    //}
+
+    // A new NotebookController has been selected, find the associated notebook document and update it
+    private onNotebookControllerSelected(event: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
+        if (this.controllerMapping.has(event.notebook)) {
+            const currentMapping = this.controllerMapping.get(event.notebook);
+            // ! Ok here as we have already checked has above
+            this.controllerMapping.set(event.notebook, { controllers: currentMapping?.controllers!, selected: event.controller })
+        }
     }
 
     // For the given NotebookDocument find all associated KernelConnectionMetadata

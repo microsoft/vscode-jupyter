@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { join } from 'path';
-import { Disposable, NotebookCell, NotebookController, NotebookDocument, NotebookKernelPreload, NotebookSelector, Uri } from 'vscode';
+import { Disposable, Event, EventEmitter, NotebookCell, NotebookController, NotebookDocument, NotebookKernelPreload, NotebookSelector, Uri } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
-import { IDisposable, IExtensionContext } from '../../common/types';
+import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Commands } from '../constants';
 import { getDescriptionOfKernelConnection, getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
@@ -18,6 +18,7 @@ import { trackKernelInfoInNotebookMetadata } from './helpers/helpers';
 
 // IANHU: Rename file, rename class?
 export class VSCodeNotebookController implements Disposable {
+    private readonly _onNotebookControllerSelected: EventEmitter<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>;
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     private controller: NotebookController;
     private isDisposed = false;
@@ -26,14 +27,26 @@ export class VSCodeNotebookController implements Disposable {
         return this.controller.id;
     }
 
+    //get onDidChangeNotebookAssociation(): Event<{ notebook: NotebookDocument, selected: boolean }> {
+    //return this.controller.onDidChangeNotebookAssociation;
+    //}
+
+    get onNotebookControllerSelected() {
+        return this._onNotebookControllerSelected.event;
+    }
+
+
     // IANHU: Passing the API in here? Not sure if that is right, but I like this class owning the create
     constructor(private readonly document: NotebookDocument, private readonly kernelConnection: KernelConnectionMetadata,
         private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
         private readonly kernelProvider: IKernelProvider,
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
-        private readonly context: IExtensionContext
+        private readonly context: IExtensionContext,
+        private readonly disposable: IDisposableRegistry
     ) {
+        this._onNotebookControllerSelected = new EventEmitter<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>();
+
         const selector: NotebookSelector = { viewType: JupyterNotebookView, pattern: document.uri.fsPath };
         const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
         this.controller = this.notebookApi.createNotebookController(id, selector, getDisplayNameOrNameOfKernelConnection(kernelConnection), this.handleExecution.bind(this), this.preloads());
@@ -42,13 +55,28 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
         this.controller.hasExecutionOrder = true;
         this.controller.supportedLanguages = ['python'];
+
+        // Hook up to see when this NotebookController is selected by the UI
+        this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposable);
     }
+
+    //public onNotebookControllerSelected(): Event<{ notebook: NotebookDocument, controller: VSCodeNotebookController }> {
+    //return this._onNotebookControllerSelected.event;
+    //}
 
     public dispose() {
         // IANHU: Need to make sure to check our disposes here
         if (!this.isDisposed) {
             this.isDisposed = true;
             this.controller.dispose();
+        }
+    }
+
+    // IANHU: Need this? Felt like I did to surface the right info
+    private onDidChangeNotebookAssociation(event: { notebook: NotebookDocument, selected: boolean }) {
+        // If this NotebookController was selected, fire off the event
+        if (event.selected) {
+            this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
         }
     }
 
