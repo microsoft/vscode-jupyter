@@ -27,6 +27,11 @@ export class VSCodeNotebookController implements Disposable {
         return this.controller.id;
     }
 
+    // IANHU: Naming? Shouldn't expose?
+    get connection() {
+        return this.kernelConnection;
+    }
+
     //get onDidChangeNotebookAssociation(): Event<{ notebook: NotebookDocument, selected: boolean }> {
     //return this.controller.onDidChangeNotebookAssociation;
     //}

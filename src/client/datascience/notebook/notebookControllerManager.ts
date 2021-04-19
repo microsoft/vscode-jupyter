@@ -5,15 +5,21 @@ import { inject, injectable } from 'inversify';
 import { CancellationTokenSource, NotebookController, NotebookDocument, NotebookSelector } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
+import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceInfo, traceInfoIf } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions } from '../../common/types';
-import { isLocalLaunch } from '../jupyter/kernels/helpers';
+import { noop } from '../../common/utils/misc';
+import { sendNotebookOrKernelLanguageTelemetry } from '../common';
+import { Telemetry } from '../constants';
+import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
 import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
+import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { INotebookProvider } from '../types';
 import { JupyterNotebookView } from './constants';
-import { getNotebookMetadata } from './helpers/helpers';
+import { getNotebookMetadata, isJupyterKernel, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './notebookExecutionHandler';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -21,7 +27,6 @@ import { VSCodeNotebookController } from './notebookExecutionHandler';
  */
 @injectable()
 export class NotebookControllerManager implements IExtensionSingleActivationService {
-    private controllerMapping2 = new WeakMap<NotebookDocument, VSCodeNotebookController[]>();
     private controllerMapping = new WeakMap<NotebookDocument, { selected: VSCodeNotebookController | undefined, controllers: VSCodeNotebookController[] }>();
 
     private isLocalLaunch: boolean;
@@ -38,6 +43,7 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
+        @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
     ) {
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
@@ -46,6 +52,13 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
         // Sign up for document either opening or closing
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
+
+        // Be aware of if we need to re-look for kernels on extension change
+        this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
+    }
+
+    private onDidChangeExtensions() {
+        // IANHU: Need to invalidate kernels here?
     }
 
     private async onDidOpenNotebookDocument(document: NotebookDocument) {
@@ -97,16 +110,15 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
         return controller;
     }
 
-    //private onDidChangeNotebookAssociation(_event: { notebook: NotebookDocument, selected: boolean }) {
-    //traceInfo('IANHU');
-    //}
-
     // A new NotebookController has been selected, find the associated notebook document and update it
-    private onNotebookControllerSelected(event: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
+    private async onNotebookControllerSelected(event: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
         if (this.controllerMapping.has(event.notebook)) {
             const currentMapping = this.controllerMapping.get(event.notebook);
             // ! Ok here as we have already checked has above
             this.controllerMapping.set(event.notebook, { controllers: currentMapping?.controllers!, selected: event.controller })
+
+            // Now actually handle the change
+            await this.notebookKernelChanged(event.notebook, event.controller);
         }
     }
 
@@ -169,5 +181,84 @@ export class NotebookControllerManager implements IExtensionSingleActivationServ
         }
 
         return kernels;
+    }
+
+    private async notebookKernelChanged(document: NotebookDocument, controller: VSCodeNotebookController) {
+        // We're only interested in our Jupyter Notebooks & our kernels.
+        // IANHU: We also checked if it was our kernel here, but I don't believe that we need this any more
+        if (!isJupyterNotebook(document)) {
+            trackKernelInNotebookMetadata(document, undefined);
+            return;
+        }
+        const selectedKernelConnectionMetadata = controller.connection;
+
+        const model = this.storageProvider.get(document.uri);
+        if (model && model.isTrusted === false) {
+            // eslint-disable-next-line
+            // TODO: https://github.com/microsoft/vscode-python/issues/13476
+            // If a model is not trusted, we cannot change the kernel (this results in changes to notebook metadata).
+            // This is because we store selected kernel in the notebook metadata.
+            traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'Kernel not switched, model not trusted');
+            return;
+        }
+
+        // IANHU: Wrong existing kernel here? We might already be checking this, or be able to already check this
+        const existingKernel = this.kernelProvider.get(document.uri);
+        if (
+            existingKernel &&
+            areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
+        ) {
+            traceInfo('Switch kernel did not change kernel.');
+            return;
+        }
+        switch (controller.connection.kind) {
+            case 'startUsingPythonInterpreter':
+                sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, PYTHON_LANGUAGE);
+                break;
+            case 'connectToLiveKernel':
+                sendNotebookOrKernelLanguageTelemetry(
+                    Telemetry.SwitchToExistingKernel,
+                    controller.connection.kernelModel.language
+                );
+                break;
+            case 'startUsingKernelSpec':
+                sendNotebookOrKernelLanguageTelemetry(
+                    Telemetry.SwitchToExistingKernel,
+                    controller.connection.kernelSpec.language
+                );
+                break;
+            default:
+            // We don't know as its the default kernel on Jupyter server.
+        }
+        trackKernelResourceInformation(document.uri, { kernelConnection: controller.connection });
+        sendKernelTelemetryEvent(document.uri, Telemetry.SwitchKernel);
+        // If we have an existing kernel, then we know for a fact the user is changing the kernel.
+        // Else VSC is just setting a kernel for a notebook after it has opened.
+        if (existingKernel) {
+            const telemetryEvent = this.isLocalLaunch
+                ? Telemetry.SelectLocalJupyterKernel
+                : Telemetry.SelectRemoteJupyterKernel;
+            sendKernelTelemetryEvent(document.uri, telemetryEvent);
+        }
+
+        trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
+
+        // Make this the new kernel (calling this method will associate the new kernel with this Uri).
+        // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
+        // This will dispose any existing (older kernels) associated with this notebook.
+        // This way other parts of extension have access to this kernel immediately after event is handled.
+        // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
+        const newKernel = this.kernelProvider.getOrCreate(document.uri, {
+            metadata: selectedKernelConnectionMetadata
+        });
+        traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}}`);
+
+        // Before we start the notebook, make sure the metadata is set to this new kernel.
+        trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
+
+        // Auto start the local kernels.
+        if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
+            await newKernel.start({ disableUI: true, document }).catch(noop);
+        }
     }
 }
