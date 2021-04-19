@@ -70,7 +70,7 @@ import {
     NotebookKernel,
     NotebookKernelProvider,
     NotebookCellStatusBarItemProvider,
-    NotebookSelector, 
+    NotebookSelector,
     NotebookDocumentContentOptions
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
