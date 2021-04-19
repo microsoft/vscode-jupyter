@@ -337,10 +337,9 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
 
     const source = concatMultilineString(cell.source);
 
-    const executionSummary: NotebookCellExecutionSummary = {};
-    if (hasExecutionCount) {
-        executionSummary.executionOrder = cell.execution_count as number;
-    }
+    const executionSummary: NotebookCellExecutionSummary = hasExecutionCount
+        ? { executionOrder: cell.execution_count as number }
+        : {};
     return new NotebookCellData(
         NotebookCellKind.Code,
         source,

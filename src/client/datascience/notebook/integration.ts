@@ -88,7 +88,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                 );
                 this.disposables.push(
                     this.vscNotebook.registerNotebookCellStatusBarItemProvider(
-                        { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
+                        { pattern: '**/*.ipynb', viewType: JupyterNotebookView },
                         this.statusBarProvider
                     )
                 );
