@@ -7,7 +7,7 @@ import {
     NotebookContentProvider as VSCNotebookContentProvider,
     NotebookCellStatusBarItemProvider as VSCNotebookCellStatusBarItemProvider
 } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
@@ -70,7 +70,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
     serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
     serviceManager.addSingleton<VSCNotebookCellStatusBarItemProvider>(INotebookStatusBarProvider, StatusBarProvider);
-    // serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookControllerManager);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
-    serviceManager.addBinding(INotebookControllerManager, IExtensionSingleActivationService);
+    serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);
 }

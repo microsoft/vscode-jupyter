@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
+import { IExtensionSyncActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceInfo, traceInfoIf } from '../../common/logger';
@@ -28,7 +28,7 @@ import { INotebookControllerManager } from './types';
  * each of them
  */
 @injectable()
-export class NotebookControllerManager implements INotebookControllerManager, IExtensionSingleActivationService {
+export class NotebookControllerManager implements INotebookControllerManager, IExtensionSyncActivationService {
     private controllerMapping = new WeakMap<NotebookDocument, { selected: VSCodeNotebookController | undefined, controllers: VSCodeNotebookController[] }>();
     private readonly _onNotebookControllerSelected: EventEmitter<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>;
 
@@ -57,7 +57,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this._onNotebookControllerSelected.event;
     }
 
-    public async activate(): Promise<void> {
+    public activate() {
         // Sign up for document either opening or closing
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
@@ -161,10 +161,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
 
         if (this.isLocalLaunch) {
+            // First start our search for preferred
+            const preferredConnectionPromise = preferred ? Promise.resolve(preferred) : this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
             kernels = await this.localKernelFinder.listKernels(document.uri, token);
-            preferred =
-                preferred ??
-                (await this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token));
+            preferred = await preferredConnectionPromise;
 
             // We need to filter out those items that are for other extensions.
             kernels = kernels.filter((r) => {
@@ -186,15 +186,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 localOnly: false
             });
 
+            const preferredConnectionPromise = preferred ? Promise.resolve(preferred) : this.remoteKernelFinder.findKernel(
+                document.uri,
+                connection,
+                getNotebookMetadata(document),
+                token
+            );
             kernels = await this.remoteKernelFinder.listKernels(document.uri, connection, token);
-            preferred =
-                preferred ??
-                (await this.remoteKernelFinder.findKernel(
-                    document.uri,
-                    connection,
-                    getNotebookMetadata(document),
-                    token
-                ));
+            preferred = await preferredConnectionPromise;
         }
 
         return { connections: kernels, preferred };
