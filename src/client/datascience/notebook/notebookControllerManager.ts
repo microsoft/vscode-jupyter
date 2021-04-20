@@ -81,6 +81,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
     }
 
+    // IANHU: Needs testing in Notebook/Dev
+    // Look up what NotebookController is currently selected for the given notebook document
+    public getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined {
+        if (this.controllerMapping.has(document)) {
+            return this.controllerMapping.get(document)?.selected;
+        }
+    }
+
     private onDidChangeExtensions() {
         // IANHU: Need to invalidate kernels here?
     }

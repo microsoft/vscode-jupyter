@@ -131,7 +131,7 @@ export class VSCodeNotebookController implements Disposable {
             .then(noop, (ex) => console.error(ex));
     }
 
-    // IANHU: Is the async an issue here?
+    // Handle the execution of notebook cell
     private async handleExecution(cells: NotebookCell[]) {
         // When we receive a cell execute request, first ensure that the notebook is trusted.
         // If it isn't already trusted, block execution until the user trusts it.

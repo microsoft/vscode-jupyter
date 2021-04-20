@@ -8,7 +8,6 @@ import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from './telemetry';
 
-// IANHU: Remove when we remove the old classes
 export function sendKernelListTelemetry(
     resource: Resource,
     kernels: { selection: KernelConnectionMetadata }[],

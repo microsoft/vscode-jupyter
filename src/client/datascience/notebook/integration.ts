@@ -80,13 +80,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                     )
                 );
 
-                // IANHU: Hide the kernel provider
-                // this.disposables.push(
-                // this.vscNotebook.registerNotebookKernelProvider(
-                // { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
-                // this.kernelProvider
-                // )
-                // );
                 this.disposables.push(
                     this.vscNotebook.registerNotebookCellStatusBarItemProvider(
                         { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },

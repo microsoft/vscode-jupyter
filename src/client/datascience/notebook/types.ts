@@ -23,6 +23,7 @@ export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 export const INotebookControllerManager = Symbol('INotebookControllerManager');
 export interface INotebookControllerManager {
     readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: VSCodeNotebookController }>;
+    getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
 }
 
 export interface INotebookKernelResolver {

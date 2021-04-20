@@ -46,12 +46,10 @@ import { JupyterServerSelector } from '../../../client/datascience/jupyter/serve
 import {
     getTextOutputValue,
     hasErrorOutput,
-    isJupyterKernel,
     NotebookCellStateTracker
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
-import { VSCodeNotebookKernelMetadata } from '../../../client/datascience/notebook/kernelWithMetadata';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import {
     CellOutputMimeTypes,

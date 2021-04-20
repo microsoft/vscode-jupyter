@@ -68,7 +68,6 @@ import {
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
-    NotebookKernelProvider,
     NotebookCellStatusBarItemProvider,
     NotebookSelector,
     NotebookExecutionHandler,
@@ -1593,8 +1592,6 @@ export interface IVSCodeNotebook {
         handler?: NotebookExecutionHandler,
         preloads?: NotebookKernelPreload[]
     ): NotebookController;
-    // IANHU: Remove
-    registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
     registerNotebookCellStatusBarItemProvider(
         selector: NotebookDocumentFilter,
         provider: NotebookCellStatusBarItemProvider

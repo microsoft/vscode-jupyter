@@ -12,7 +12,6 @@ import {
     NotebookCellMetadata,
     NotebookData,
     NotebookDocument,
-    NotebookKernel as VSCNotebookKernel,
     NotebookCellKind,
     NotebookDocumentMetadata,
     NotebookCellExecutionState,
@@ -37,7 +36,6 @@ import { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
-import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
 import { IDisposable, Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { CellOutputMimeTypes } from '../types';
@@ -56,13 +54,6 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     } else {
         return option.viewType === JupyterNotebookView;
     }
-}
-
-export function isJupyterKernel(kernel?: VSCNotebookKernel): kernel is VSCodeNotebookKernelMetadata {
-    if (!kernel) {
-        return false;
-    }
-    return kernel instanceof VSCodeNotebookKernelMetadata;
 }
 
 const kernelInformationForNotebooks = new WeakMap<
@@ -416,7 +407,8 @@ export class NotebookCellStateTracker implements IDisposable {
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
-        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${cell.latestExecutionSummary?.executionOrder
+        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
+            cell.latestExecutionSummary?.executionOrder
         }. ${message}`
     );
 }
