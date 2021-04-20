@@ -1168,14 +1168,14 @@
                 {
                     "command": "jupyter.notebookeditor.expandallcells",
                     "title": "%jupyter.command.jupyter.expandallcells.title%",
-                    "category": "Notebook",
-                    "when": "notebookEditorFocused"
+                    "category": "Jupyter",
+                    "when": "notebookEditorFocused && notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.collapseallcells",
                     "title": "%jupyter.command.jupyter.collapseallcells.title%",
-                    "category": "Notebook",
-                    "when": "notebookEditorFocused"
+                    "category": "Jupyter",
+                    "when": "notebookEditorFocused && notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.keybind.undo",
