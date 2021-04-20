@@ -14,7 +14,7 @@
  * - Copy this file to your project.
  */
 
- declare module 'vscode' {
+declare module 'vscode' {
 
 	//#region auth provider: https://github.com/microsoft/vscode/issues/88309
 
@@ -1423,7 +1423,7 @@
 		replaceNotebookMetadata(uri: Uri, value: NotebookDocumentMetadata): void;
 
 		// todo@API use NotebookCellRange
-		replaceNotebookCells(uri: Uri, start: number, end: number, cells: NotebookCellData[], metadata?: WorkspaceEditEntryMetadata): void;
+		replaceNotebookCells(uri: Uri, range: NotebookRange, cells: NotebookCellData[], metadata?: WorkspaceEditEntryMetadata): void;
 		replaceNotebookCellMetadata(uri: Uri, index: number, cellMetadata: NotebookCellMetadata, metadata?: WorkspaceEditEntryMetadata): void;
 
 		replaceNotebookCellOutput(uri: Uri, index: number, outputs: NotebookCellOutput[], metadata?: WorkspaceEditEntryMetadata): void;

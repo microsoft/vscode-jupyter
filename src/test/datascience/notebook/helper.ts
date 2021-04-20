@@ -96,7 +96,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
     }
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
+        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, 0), [
             {
                 kind: NotebookCellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
@@ -116,7 +116,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     }
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     const edit = new WorkspaceEdit();
-    edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
+    edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, 0), [
         {
             kind: NotebookCellKind.Code,
             language: options?.language || PYTHON_LANGUAGE,
@@ -140,7 +140,7 @@ export async function deleteCell(index: number = 0) {
         return;
     }
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, index, 1, [])
+        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(index, 1), [])
     );
 }
 export async function deleteAllCellsAndWait() {
@@ -150,7 +150,7 @@ export async function deleteAllCellsAndWait() {
         return;
     }
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, 0, activeEditor.document.cellCount, [])
+        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(0, activeEditor.document.cellCount), [])
     );
 }
 

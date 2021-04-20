@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCellKind, NotebookCellOutput, NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode';
+import { NotebookCellKind, NotebookCellOutput, NotebookDocument, NotebookKernel as VSCNotebookKernel, NotebookRange } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -87,7 +87,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
                 if (monacoLanguage.toLowerCase() === cell.document.languageId) {
                     return;
                 }
-                edit.replaceNotebookCells(editor.document.uri, cell.index, cell.index + 1, [
+                edit.replaceNotebookCells(editor.document.uri, new NotebookRange(cell.index, cell.index + 1), [
                     {
                         kind: cell.kind,
                         language: monacoLanguage,

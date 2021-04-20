@@ -147,7 +147,7 @@ export class NotebookEditor implements INotebookEditor {
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) =>
-                edit.replaceNotebookCells(editor.document.uri, 0, this.document.cellCount, [
+                edit.replaceNotebookCells(editor.document.uri, new NotebookRange(0, this.document.cellCount), [
                     {
                         kind: NotebookCellKind.Code,
                         language: defaultLanguage,
