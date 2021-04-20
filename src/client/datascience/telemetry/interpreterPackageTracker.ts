@@ -12,7 +12,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { isLocalLaunch } from '../jupyter/kernels/helpers';
 import { InterpreterPackages } from './interpreterPackages';
 import { INotebookControllerManager } from '../notebook/types';
-import { VSCodeNotebookController } from '../notebook/notebookExecutionHandler';
+import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {
@@ -27,19 +27,26 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
         if (!isLocalLaunch(this.configurationService)) {
             return;
         }
-        this.notebookControllerManager.onNotebookControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
+        this.notebookControllerManager.onNotebookControllerSelected(
+            this.onNotebookControllerSelected,
+            this,
+            this.disposables
+        );
         this.interpreterService.onDidChangeInterpreter(this.trackPackagesOfActiveInterpreter, this, this.disposables);
         this.installer.onInstalled(this.onDidInstallPackage, this, this.disposables);
         this.extensions.onDidChange(this.trackUponActivation, this, this.disposables);
         this.trackUponActivation().catch(noop);
         this.apiProvider.onDidActivatePythonExtension(this.trackUponActivation, this, this.disposables);
     }
-    private async onNotebookControllerSelected(event: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
+    private async onNotebookControllerSelected(event: {
+        notebook: NotebookDocument;
+        controller: VSCodeNotebookController;
+    }) {
         if (!event.controller.connection.interpreter) {
             return;
         }

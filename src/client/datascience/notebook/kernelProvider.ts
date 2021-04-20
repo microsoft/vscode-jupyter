@@ -122,7 +122,8 @@ export class VSCodeKernelPickerProvider implements INotebookKernelProvider {
 
         traceInfoIf(
             !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-            `Providing kernels with length ${kernels.length} for ${document.uri.fsPath}. Preferred is ${kernels.find((m) => m.isPreferred)?.label
+            `Providing kernels with length ${kernels.length} for ${document.uri.fsPath}. Preferred is ${
+                kernels.find((m) => m.isPreferred)?.label
             }, ${kernels.find((m) => m.isPreferred)?.id}`
         );
         return kernels;

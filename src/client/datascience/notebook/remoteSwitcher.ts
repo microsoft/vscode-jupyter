@@ -42,7 +42,11 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         this.notebook.onDidChangeActiveNotebookEditor(this.updateStatusBar.bind(this), this.disposables);
         this.documentManager.onDidChangeActiveTextEditor(this.updateStatusBar.bind(this), this.disposables);
         this.serverUriStorage.onDidChangeUri(this.updateStatusBar.bind(this), this.disposables);
-        this.notebookControllerManager.onNotebookControllerSelected(this.updateStatusBar.bind(this), this, this.disposables);
+        this.notebookControllerManager.onNotebookControllerSelected(
+            this.updateStatusBar.bind(this),
+            this,
+            this.disposables
+        );
         this.disposables.push(this.statusBarItem);
         this.updateStatusBar().catch(noop);
     }

@@ -13,7 +13,11 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
-import { areKernelConnectionsEqual, getDisplayNameOrNameOfKernelConnection, isLocalLaunch } from '../jupyter/kernels/helpers';
+import {
+    areKernelConnectionsEqual,
+    getDisplayNameOrNameOfKernelConnection,
+    isLocalLaunch
+} from '../jupyter/kernels/helpers';
 import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
@@ -22,7 +26,7 @@ import { sendNotebookControllerCreateTelemetry } from '../telemetry/kernelTeleme
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
-import { VSCodeNotebookController } from './notebookExecutionHandler';
+import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -30,9 +34,15 @@ import { INotebookControllerManager } from './types';
  */
 @injectable()
 export class NotebookControllerManager implements INotebookControllerManager, IExtensionSyncActivationService {
-    private controllerMapping = new WeakMap<NotebookDocument, { selected: VSCodeNotebookController | undefined, controllers: VSCodeNotebookController[] }>();
+    private controllerMapping = new WeakMap<
+        NotebookDocument,
+        { selected: VSCodeNotebookController | undefined; controllers: VSCodeNotebookController[] }
+    >();
     private findingInProgress = new WeakMap<NotebookDocument, CancellationTokenSource>();
-    private readonly _onNotebookControllerSelected: EventEmitter<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>;
+    private readonly _onNotebookControllerSelected: EventEmitter<{
+        notebook: NotebookDocument;
+        controller: VSCodeNotebookController;
+    }>;
 
     private isLocalLaunch: boolean;
     constructor(
@@ -48,9 +58,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
-        @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
+        @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider
     ) {
-        this._onNotebookControllerSelected = new EventEmitter<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>();
+        this._onNotebookControllerSelected = new EventEmitter<{
+            notebook: NotebookDocument;
+            controller: VSCodeNotebookController;
+        }>();
         this.disposables.push(this._onNotebookControllerSelected);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
@@ -86,28 +99,33 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Keep track of our token so we can cancel if the document is closed
         this.findingInProgress.set(document, tokenSource);
 
-        this.getKernelConnectionMetadata(document, tokenSource.token).then(connections => {
-            if (tokenSource.token.isCancellationRequested) {
-                // Bail out on making the controllers if we are cancelling
-                traceInfo('Not creating NotebookControllers as document was closed.');
-                return;
-            }
+        this.getKernelConnectionMetadata(document, tokenSource.token)
+            .then((connections) => {
+                if (tokenSource.token.isCancellationRequested) {
+                    // Bail out on making the controllers if we are cancelling
+                    traceInfo('Not creating NotebookControllers as document was closed.');
+                    return;
+                }
 
-            // From our kernel connections create our notebook controllers
-            const controllers = this.createNotebookControllers(document, connections);
+                // From our kernel connections create our notebook controllers
+                const controllers = this.createNotebookControllers(document, connections);
 
-            // Send telemetry related to fetching the kernel connections
-            sendNotebookControllerCreateTelemetry(document.uri, controllers, stopWatch);
+                // Send telemetry related to fetching the kernel connections
+                sendNotebookControllerCreateTelemetry(document.uri, controllers, stopWatch);
 
-            traceInfoIf(
-                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                `Providing notebook controllers with length ${controllers.length} for ${document.uri.fsPath}. Preferred is ${controllers.find((m) => m.isPreferred)?.label
-                }, ${controllers.find((m) => m.isPreferred)?.id}`
-            );
-        }).finally(() => {
-            // Make sure to remove our token when we are done finding
-            this.findingInProgress.delete(document);
-        });
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Providing notebook controllers with length ${controllers.length} for ${
+                        document.uri.fsPath
+                    }. Preferred is ${controllers.find((m) => m.isPreferred)?.label}, ${
+                        controllers.find((m) => m.isPreferred)?.id
+                    }`
+                );
+            })
+            .finally(() => {
+                // Make sure to remove our token when we are done finding
+                this.findingInProgress.delete(document);
+            });
     }
 
     private onDidCloseNotebookDocument(document: NotebookDocument) {
@@ -118,7 +136,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // See if we have NotebookControllers for this document, if we do, dispose them
         if (this.controllerMapping.has(document)) {
-            this.controllerMapping.get(document)?.controllers.forEach(controller => {
+            this.controllerMapping.get(document)?.controllers.forEach((controller) => {
                 controller.dispose();
             });
 
@@ -127,15 +145,18 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // For this notebook document, create NotebookControllers for all associated kernel connections
-    private createNotebookControllers(document: NotebookDocument, kernelConnections: { connections: KernelConnectionMetadata[], preferred: KernelConnectionMetadata | undefined }): VSCodeNotebookController[] {
+    private createNotebookControllers(
+        document: NotebookDocument,
+        kernelConnections: { connections: KernelConnectionMetadata[]; preferred: KernelConnectionMetadata | undefined }
+    ): VSCodeNotebookController[] {
         if (this.controllerMapping.has(document)) {
             // If we already have this document just use what we have already
             return this.controllerMapping.get(document)?.controllers!;
         }
 
         // First sort our items by label
-        const connectionsWithLabel = kernelConnections.connections.map(value => {
-            return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) }
+        const connectionsWithLabel = kernelConnections.connections.map((value) => {
+            return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
         });
         connectionsWithLabel.sort((a, b) => {
             if (a.label > b.label) {
@@ -148,8 +169,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         // Next pull the preferred item to the top of the list if we have one
-        const preferredIndex = connectionsWithLabel.findIndex(value => {
-            return areKernelConnectionsEqual(value.connection, kernelConnections.preferred)
+        const preferredIndex = connectionsWithLabel.findIndex((value) => {
+            return areKernelConnectionsEqual(value.connection, kernelConnections.preferred);
         });
         if (preferredIndex > 0) {
             const removedValue = connectionsWithLabel.splice(preferredIndex, 1);
@@ -157,8 +178,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
 
         // Map KernelConnectionMetadata => NotebookController
-        const controllers = connectionsWithLabel.map(value => {
-            return this.createNotebookController(document, value.connection, areKernelConnectionsEqual(value.connection, kernelConnections.preferred), value.label);
+        const controllers = connectionsWithLabel.map((value) => {
+            return this.createNotebookController(
+                document,
+                value.connection,
+                areKernelConnectionsEqual(value.connection, kernelConnections.preferred),
+                value.label
+            );
         });
 
         // Store our NotebookControllers to dispose on doc close
@@ -167,11 +193,24 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return controllers;
     }
 
-    private createNotebookController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata, preferred: boolean, label: string): VSCodeNotebookController {
+    private createNotebookController(
+        document: NotebookDocument,
+        kernelConnection: KernelConnectionMetadata,
+        preferred: boolean,
+        label: string
+    ): VSCodeNotebookController {
         // Create notebook selector
-        const controller = new VSCodeNotebookController(document, kernelConnection, label,
-            this.notebook, this.commandManager, this.kernelProvider,
-            this.preferredRemoteKernelIdProvider, this.context, this.disposables);
+        const controller = new VSCodeNotebookController(
+            document,
+            kernelConnection,
+            label,
+            this.notebook,
+            this.commandManager,
+            this.kernelProvider,
+            this.preferredRemoteKernelIdProvider,
+            this.context,
+            this.disposables
+        );
 
         // Setting preferred handled here in the manager as it's meta to the Controllers themselves
         controller.isPreferred = preferred;
@@ -186,11 +225,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // A new NotebookController has been selected, find the associated notebook document and update it
-    private async handleOnNotebookControllerSelected(event: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
+    private async handleOnNotebookControllerSelected(event: {
+        notebook: NotebookDocument;
+        controller: VSCodeNotebookController;
+    }) {
         if (this.controllerMapping.has(event.notebook)) {
             const currentMapping = this.controllerMapping.get(event.notebook);
             // ! Ok here as we have already checked has above
-            this.controllerMapping.set(event.notebook, { controllers: currentMapping?.controllers!, selected: event.controller })
+            this.controllerMapping.set(event.notebook, {
+                controllers: currentMapping?.controllers!,
+                selected: event.controller
+            });
 
             // Now actually handle the change
             await this.notebookKernelChanged(event.notebook, event.controller);
@@ -201,7 +246,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // For the given NotebookDocument find all associated KernelConnectionMetadata
-    private async getKernelConnectionMetadata(document: NotebookDocument, token: CancellationToken): Promise<{ connections: KernelConnectionMetadata[], preferred: KernelConnectionMetadata | undefined }> {
+    private async getKernelConnectionMetadata(
+        document: NotebookDocument,
+        token: CancellationToken
+    ): Promise<{ connections: KernelConnectionMetadata[]; preferred: KernelConnectionMetadata | undefined }> {
         let kernels: KernelConnectionMetadata[] = [];
         let preferred: KernelConnectionMetadata | undefined;
 
@@ -212,7 +260,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         if (this.isLocalLaunch) {
             // First start our search for preferred
-            const preferredConnectionPromise = preferred ? Promise.resolve(preferred) : this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
+            const preferredConnectionPromise = preferred
+                ? Promise.resolve(preferred)
+                : this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
             kernels = await this.localKernelFinder.listKernels(document.uri, token);
             preferred = await preferredConnectionPromise;
 
@@ -236,12 +286,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 localOnly: false
             });
 
-            const preferredConnectionPromise = preferred ? Promise.resolve(preferred) : this.remoteKernelFinder.findKernel(
-                document.uri,
-                connection,
-                getNotebookMetadata(document),
-                token
-            );
+            const preferredConnectionPromise = preferred
+                ? Promise.resolve(preferred)
+                : this.remoteKernelFinder.findKernel(document.uri, connection, getNotebookMetadata(document), token);
             kernels = await this.remoteKernelFinder.listKernels(document.uri, connection, token);
             preferred = await preferredConnectionPromise;
         }

@@ -2,23 +2,34 @@
 // Licensed under the MIT License.
 
 import { join } from 'path';
-import { Disposable, EventEmitter, NotebookCell, NotebookController, NotebookDocument, NotebookKernelPreload, NotebookSelector, Uri } from 'vscode';
+import {
+    Disposable,
+    EventEmitter,
+    NotebookCell,
+    NotebookController,
+    NotebookDocument,
+    NotebookKernelPreload,
+    NotebookSelector,
+    Uri
+} from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Commands } from '../constants';
-import { getDescriptionOfKernelConnection, getDisplayNameOrNameOfKernelConnection } from '../jupyter/kernels/helpers';
+import { getDescriptionOfKernelConnection } from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
 import { JupyterNotebookView } from './constants';
 import { traceCellMessage, trackKernelInfoInNotebookMetadata } from './helpers/helpers';
 
-// IANHU: Rename file, rename class?
 export class VSCodeNotebookController implements Disposable {
-    private readonly _onNotebookControllerSelected: EventEmitter<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>;
+    private readonly _onNotebookControllerSelected: EventEmitter<{
+        notebook: NotebookDocument;
+        controller: VSCodeNotebookController;
+    }>;
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     private controller: NotebookController;
     private isDisposed = false;
@@ -46,7 +57,8 @@ export class VSCodeNotebookController implements Disposable {
         return this._onNotebookControllerSelected.event;
     }
 
-    constructor(private readonly document: NotebookDocument,
+    constructor(
+        private readonly document: NotebookDocument,
         private readonly kernelConnection: KernelConnectionMetadata,
         label: string,
         private readonly notebookApi: IVSCodeNotebook,
@@ -56,11 +68,20 @@ export class VSCodeNotebookController implements Disposable {
         private readonly context: IExtensionContext,
         private readonly disposable: IDisposableRegistry
     ) {
-        this._onNotebookControllerSelected = new EventEmitter<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>();
+        this._onNotebookControllerSelected = new EventEmitter<{
+            notebook: NotebookDocument;
+            controller: VSCodeNotebookController;
+        }>();
 
         const selector: NotebookSelector = { viewType: JupyterNotebookView, pattern: document.uri.fsPath };
         const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
-        this.controller = this.notebookApi.createNotebookController(id, selector, label, this.handleExecution.bind(this), this.getPreloads());
+        this.controller = this.notebookApi.createNotebookController(
+            id,
+            selector,
+            label,
+            this.handleExecution.bind(this),
+            this.getPreloads()
+        );
         // IANHU: Detail is missing
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
@@ -80,7 +101,7 @@ export class VSCodeNotebookController implements Disposable {
         }
     }
 
-    private onDidChangeNotebookAssociation(event: { notebook: NotebookDocument, selected: boolean }) {
+    private onDidChangeNotebookAssociation(event: { notebook: NotebookDocument; selected: boolean }) {
         // If this NotebookController was selected, fire off the event
         if (event.selected) {
             this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
@@ -110,7 +131,7 @@ export class VSCodeNotebookController implements Disposable {
             .then(noop, (ex) => console.error(ex));
     }
 
-    // IANHU: Is the async an issue here? 
+    // IANHU: Is the async an issue here?
     private async handleExecution(cells: NotebookCell[]) {
         // When we receive a cell execute request, first ensure that the notebook is trusted.
         // If it isn't already trusted, block execution until the user trusts it.

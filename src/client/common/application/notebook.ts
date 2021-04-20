@@ -101,7 +101,13 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     ): Disposable {
         return notebook.registerNotebookKernelProvider(selector, provider);
     }
-    public createNotebookController(id: string, selector: NotebookSelector, label: string, handler?: NotebookExecutionHandler, preloads?: NotebookKernelPreload[]): NotebookController {
+    public createNotebookController(
+        id: string,
+        selector: NotebookSelector,
+        label: string,
+        handler?: NotebookExecutionHandler,
+        preloads?: NotebookKernelPreload[]
+    ): NotebookController {
         return notebook.createNotebookController(id, selector, label, handler, preloads);
     }
     private createDisposableEventEmitter<T>() {

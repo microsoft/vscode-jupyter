@@ -12,7 +12,7 @@ import { noop } from '../../common/utils/misc';
 import { translateKernelLanguageToMonaco } from '../common';
 import { isJupyterNotebook } from './helpers/helpers';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
-import { VSCodeNotebookController } from './notebookExecutionHandler';
+import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
 /**
  * If user creates a blank notebook, then they'll mostl likely end up with a blank cell with language, lets assume `Python`.
@@ -27,12 +27,19 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
-        this.notebookControllerManager.onNotebookControllerSelected(this.onDidChangeNotebookController, this, this.disposables);
+        this.notebookControllerManager.onNotebookControllerSelected(
+            this.onDidChangeNotebookController,
+            this,
+            this.disposables
+        );
     }
 
-    private async onDidChangeNotebookController(event: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
+    private async onDidChangeNotebookController(event: {
+        notebook: NotebookDocument;
+        controller: VSCodeNotebookController;
+    }) {
         const document = event.notebook;
         const connection = event.controller.connection;
         // We're only interested in our Jupyter Notebooks & our kernels.

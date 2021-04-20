@@ -1044,7 +1044,7 @@ export interface IWebviewPanelMessageListener extends IWebviewMessageListener, I
 }
 
 export const IWebviewViewMessageListener = Symbol('IWebviewViewMessageListener');
-export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable { }
+export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable {}
 
 export type WebviewMessage = {
     /**
@@ -1586,7 +1586,13 @@ export interface IVSCodeNotebook {
         }
     ): Disposable;
 
-    createNotebookController(id: string, selector: NotebookSelector, label: string, handler?: NotebookExecutionHandler, preloads?: NotebookKernelPreload[]): NotebookController;
+    createNotebookController(
+        id: string,
+        selector: NotebookSelector,
+        label: string,
+        handler?: NotebookExecutionHandler,
+        preloads?: NotebookKernelPreload[]
+    ): NotebookController;
     // IANHU: Remove
     registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
     registerNotebookCellStatusBarItemProvider(

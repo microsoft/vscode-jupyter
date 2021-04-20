@@ -5,7 +5,7 @@ import { Resource } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Telemetry } from '../constants';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { VSCodeNotebookController } from '../notebook/notebookExecutionHandler';
+import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from './telemetry';
 
 // IANHU: Remove when we remove the old classes
