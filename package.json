@@ -652,17 +652,17 @@
             {
                 "command": "jupyter.notebookeditor.removeallcells",
                 "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
-                "category": "Jupyter"
+                "category": "Notebook"
             },
             {
                 "command": "jupyter.notebookeditor.expandallcells",
                 "title": "%jupyter.command.jupyter.notebookeditor.expandallcells.title%",
-                "category": "Jupyter"
+                "category": "Notebook"
             },
             {
                 "command": "jupyter.notebookeditor.collapseallcells",
                 "title": "%jupyter.command.jupyter.notebookeditor.collapseallcells.title%",
-                "category": "Jupyter"
+                "category": "Notebook"
             },
             {
                 "command": "jupyter.expandallcells",
@@ -1132,7 +1132,7 @@
                 {
                     "command": "jupyter.notebookeditor.removeallcells",
                     "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "jupyter.havenativecells && jupyter.isnativeactive && jupyter.isnotebooktrusted"
                 },
                 {
@@ -1168,13 +1168,13 @@
                 {
                     "command": "jupyter.notebookeditor.expandallcells",
                     "title": "%jupyter.command.jupyter.expandallcells.title%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "notebookEditorFocused && notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.collapseallcells",
                     "title": "%jupyter.command.jupyter.collapseallcells.title%",
-                    "category": "Jupyter",
+                    "category": "Notebook",
                     "when": "notebookEditorFocused && notebookViewType == 'jupyter-notebook'"
                 },
                 {
