@@ -652,17 +652,17 @@
             {
                 "command": "jupyter.notebookeditor.removeallcells",
                 "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
-                "category": "Notebook"
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.notebookeditor.expandallcells",
                 "title": "%jupyter.command.jupyter.notebookeditor.expandallcells.title%",
-                "category": "Notebook"
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.notebookeditor.collapseallcells",
                 "title": "%jupyter.command.jupyter.notebookeditor.collapseallcells.title%",
-                "category": "Notebook"
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.expandallcells",
@@ -1132,7 +1132,7 @@
                 {
                     "command": "jupyter.notebookeditor.removeallcells",
                     "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
-                    "category": "Notebook",
+                    "category": "Jupyter",
                     "when": "jupyter.havenativecells && jupyter.isnativeactive && jupyter.isnotebooktrusted"
                 },
                 {
