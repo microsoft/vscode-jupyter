@@ -38,21 +38,14 @@ export class VSCodeNotebookController implements Disposable {
         return this.controller.label;
     }
 
-    // IANHU: Naming? Shouldn't expose?
     get connection() {
         return this.kernelConnection;
     }
-
-    //get onDidChangeNotebookAssociation(): Event<{ notebook: NotebookDocument, selected: boolean }> {
-    //return this.controller.onDidChangeNotebookAssociation;
-    //}
 
     get onNotebookControllerSelected() {
         return this._onNotebookControllerSelected.event;
     }
 
-
-    // IANHU: Passing the API in here? Not sure if that is right, but I like this class owning the create
     constructor(private readonly document: NotebookDocument,
         private readonly kernelConnection: KernelConnectionMetadata,
         private readonly notebookApi: IVSCodeNotebook,
@@ -66,7 +59,7 @@ export class VSCodeNotebookController implements Disposable {
 
         const selector: NotebookSelector = { viewType: JupyterNotebookView, pattern: document.uri.fsPath };
         const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
-        this.controller = this.notebookApi.createNotebookController(id, selector, getDisplayNameOrNameOfKernelConnection(kernelConnection), this.handleExecution.bind(this), this.preloads());
+        this.controller = this.notebookApi.createNotebookController(id, selector, getDisplayNameOrNameOfKernelConnection(kernelConnection), this.handleExecution.bind(this), this.getPreloads());
         // IANHU: Detail is missing
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
@@ -78,19 +71,14 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposable);
     }
 
-    //public onNotebookControllerSelected(): Event<{ notebook: NotebookDocument, controller: VSCodeNotebookController }> {
-    //return this._onNotebookControllerSelected.event;
-    //}
-
     public dispose() {
-        // IANHU: Need to make sure to check our disposes here
         if (!this.isDisposed) {
             this.isDisposed = true;
+            this._onNotebookControllerSelected.dispose();
             this.controller.dispose();
         }
     }
 
-    // IANHU: Need this? Felt like I did to surface the right info
     private onDidChangeNotebookAssociation(event: { notebook: NotebookDocument, selected: boolean }) {
         // If this NotebookController was selected, fire off the event
         if (event.selected) {
@@ -98,7 +86,7 @@ export class VSCodeNotebookController implements Disposable {
         }
     }
 
-    private preloads(): NotebookKernelPreload[] {
+    private getPreloads(): NotebookKernelPreload[] {
         return [
             { uri: Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')) },
             {

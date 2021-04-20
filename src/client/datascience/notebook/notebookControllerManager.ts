@@ -49,6 +49,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>();
+        this.disposables.push(this._onNotebookControllerSelected);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
 
