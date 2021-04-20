@@ -27,6 +27,14 @@ export class VSCodeNotebookController implements Disposable {
         return this.controller.id;
     }
 
+    get isPreferred() {
+        return this.controller.isPreferred;
+    }
+
+    get label() {
+        return this.controller.label;
+    }
+
     // IANHU: Naming? Shouldn't expose?
     get connection() {
         return this.kernelConnection;

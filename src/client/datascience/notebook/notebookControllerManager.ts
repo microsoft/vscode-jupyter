@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CancellationTokenSource, EventEmitter, NotebookController, NotebookDocument, NotebookSelector } from 'vscode';
+import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceInfo, traceInfoIf } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
 import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
@@ -16,10 +17,10 @@ import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/ty
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
+import { sendKernelListTelemetry, sendNotebookControllerCreateTelemetry } from '../telemetry/kernelTelemetry';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { INotebookProvider } from '../types';
-import { JupyterNotebookView } from './constants';
-import { getNotebookMetadata, isJupyterKernel, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
+import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './notebookExecutionHandler';
 import { INotebookControllerManager } from './types';
 /**
@@ -69,10 +70,19 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     private async onDidOpenNotebookDocument(document: NotebookDocument) {
-        // IANHU: Need to do stopwatch and telemetry here?
+        const stopWatch = new StopWatch();
 
         const connections = await this.getKernelConnectionMetadata(document);
-        this.createNotebookControllers(document, connections);
+        const controllers = this.createNotebookControllers(document, connections);
+
+        // Send telemetry related to fetching the kernel connections
+        sendNotebookControllerCreateTelemetry(document.uri, controllers, stopWatch);
+
+        traceInfoIf(
+            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+            `Providing notebook controllers with length ${controllers.length} for ${document.uri.fsPath}. Preferred is ${controllers.find((m) => m.isPreferred)?.label
+            }, ${controllers.find((m) => m.isPreferred)?.id}`
+        );
     }
 
     private async onDidCloseNotebookDocument(document: NotebookDocument) {
@@ -87,7 +97,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // For this notebook document, create NotebookControllers for all associated kernel connections
-    private createNotebookControllers(document: NotebookDocument, kernelConnections: KernelConnectionMetadata[]) {
+    private createNotebookControllers(document: NotebookDocument, kernelConnections: KernelConnectionMetadata[]): VSCodeNotebookController[] {
         if (this.controllerMapping.get(document)) {
             // IANHU: Should this happen ever?
         }
@@ -99,6 +109,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Store our NotebookControllers to dispose on doc close
         this.controllerMapping.set(document, { selected: undefined, controllers: controllers });
+
+        return controllers;
     }
 
     private createNotebookController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata): VSCodeNotebookController {
@@ -108,7 +120,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.preferredRemoteKernelIdProvider, this.context, this.disposables);
 
         // Hook up to if this NotebookController is selected or de-selected
-        //controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposables);
         controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);
 
         // We are disposing as documents are closed, but do this as well
@@ -140,18 +151,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         let kernels: KernelConnectionMetadata[] = [];
         let preferred: KernelConnectionMetadata | undefined;
 
-        // If we already have a kernel selected, then set that one as preferred
-        // IANHU
-        // const editor =
-        // this.notebook.notebookEditors.find((e) => e.document === document) ||
-        // (this.notebook.activeNotebookEditor?.document === document
-        // ? this.notebook.activeNotebookEditor
-        // : undefined);
-
-        // IANHU
-        // if (editor && isJupyterKernel(editor.kernel)) {
-        // preferred = (editor.kernel as VSCodeNotebookKernelMetadata).selection;
-        // }
+        // If we already have a kernel selected, set that one as preferred
+        if (this.controllerMapping.has(document)) {
+            preferred = this.controllerMapping.get(document)?.selected?.connection;
+        }
 
         if (this.isLocalLaunch) {
             kernels = await this.localKernelFinder.listKernels(document.uri, token);
