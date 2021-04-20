@@ -30,6 +30,9 @@ export class VSCodeNotebookController implements Disposable {
     get isPreferred() {
         return this.controller.isPreferred;
     }
+    set isPreferred(value: boolean | undefined) {
+        this.controller.isPreferred = value;
+    }
 
     get label() {
         return this.controller.label;
@@ -50,7 +53,8 @@ export class VSCodeNotebookController implements Disposable {
 
 
     // IANHU: Passing the API in here? Not sure if that is right, but I like this class owning the create
-    constructor(private readonly document: NotebookDocument, private readonly kernelConnection: KernelConnectionMetadata,
+    constructor(private readonly document: NotebookDocument,
+        private readonly kernelConnection: KernelConnectionMetadata,
         private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
         private readonly kernelProvider: IKernelProvider,

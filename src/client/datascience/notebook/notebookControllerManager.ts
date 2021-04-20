@@ -85,7 +85,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         );
     }
 
-    private async onDidCloseNotebookDocument(document: NotebookDocument) {
+    private onDidCloseNotebookDocument(document: NotebookDocument) {
         // See if we have NotebookControllers for this document, if we do, dispose them
         if (this.controllerMapping.has(document)) {
             this.controllerMapping.get(document)?.controllers.forEach(controller => {
@@ -97,14 +97,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // For this notebook document, create NotebookControllers for all associated kernel connections
-    private createNotebookControllers(document: NotebookDocument, kernelConnections: KernelConnectionMetadata[]): VSCodeNotebookController[] {
+    private createNotebookControllers(document: NotebookDocument, kernelConnections: { connections: KernelConnectionMetadata[], preferred: KernelConnectionMetadata | undefined }): VSCodeNotebookController[] {
         if (this.controllerMapping.get(document)) {
             // IANHU: Should this happen ever?
         }
 
         // Map KernelConnectionMetadata => NotebookController
-        const controllers = kernelConnections.map(value => {
-            return this.createNotebookController(document, value);
+        const controllers = kernelConnections.connections.map(value => {
+            return this.createNotebookController(document, value, areKernelConnectionsEqual(value, kernelConnections.preferred));
         });
 
         // Store our NotebookControllers to dispose on doc close
@@ -113,11 +113,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return controllers;
     }
 
-    private createNotebookController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata): VSCodeNotebookController {
+    private createNotebookController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata, preferred: boolean): VSCodeNotebookController {
         // Create notebook selector
         const controller = new VSCodeNotebookController(document, kernelConnection,
             this.notebook, this.commandManager, this.kernelProvider,
             this.preferredRemoteKernelIdProvider, this.context, this.disposables);
+
+        // Setting preferred handled here in the manager as it's meta to the Controllers themselves
+        controller.isPreferred = preferred;
 
         // Hook up to if this NotebookController is selected or de-selected
         controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);
@@ -144,7 +147,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // For the given NotebookDocument find all associated KernelConnectionMetadata
-    private async getKernelConnectionMetadata(document: NotebookDocument): Promise<KernelConnectionMetadata[]> {
+    private async getKernelConnectionMetadata(document: NotebookDocument): Promise<{ connections: KernelConnectionMetadata[], preferred: KernelConnectionMetadata | undefined }> {
         // IANHU: Need a token passed in here?
         const token = new CancellationTokenSource().token;
 
@@ -193,12 +196,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 ));
         }
 
-        return kernels;
+        return { connections: kernels, preferred };
     }
 
     private async notebookKernelChanged(document: NotebookDocument, controller: VSCodeNotebookController) {
-        // We're only interested in our Jupyter Notebooks & our kernels.
-        // IANHU: We also checked if it was our kernel here, but I don't believe that we need this any more
+        // We're only interested in our Jupyter Notebooks.
         if (!isJupyterNotebook(document)) {
             trackKernelInNotebookMetadata(document, undefined);
             return;
@@ -215,7 +217,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
-        // IANHU: Wrong existing kernel here? We might already be checking this, or be able to already check this
         const existingKernel = this.kernelProvider.get(document.uri);
         if (
             existingKernel &&
