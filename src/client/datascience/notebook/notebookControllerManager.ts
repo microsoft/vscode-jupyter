@@ -17,7 +17,7 @@ import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/ty
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { sendKernelListTelemetry, sendNotebookControllerCreateTelemetry } from '../telemetry/kernelTelemetry';
+import { sendNotebookControllerCreateTelemetry } from '../telemetry/kernelTelemetry';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';

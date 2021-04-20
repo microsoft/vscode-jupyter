@@ -17,7 +17,6 @@ import {
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookExecutionHandler,
-    NotebookKernel,
     NotebookKernelPreload,
     NotebookKernelProvider,
     NotebookSelector,

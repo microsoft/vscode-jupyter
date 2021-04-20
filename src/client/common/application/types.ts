@@ -68,7 +68,6 @@ import {
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
-    NotebookKernel,
     NotebookKernelProvider,
     NotebookCellStatusBarItemProvider,
     NotebookSelector,
@@ -77,7 +76,6 @@ import {
     NotebookController
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
-import { NotebookControllerManager } from '../../datascience/notebook/notebookControllerManager';
 
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';

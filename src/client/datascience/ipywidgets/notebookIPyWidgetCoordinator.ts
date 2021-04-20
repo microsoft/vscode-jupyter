@@ -7,7 +7,7 @@ import { Cancellation } from '../../common/cancellation';
 import { createDeferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { INotebookControllerManager, INotebookKernelResolver } from '../notebook/types';
+import { INotebookKernelResolver } from '../notebook/types';
 import { CommonMessageCoordinator } from './commonMessageCoordinator';
 
 /**

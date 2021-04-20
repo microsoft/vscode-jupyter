@@ -9,7 +9,6 @@ import {
     NotebookKernel,
     NotebookKernelProvider
 } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
 import { VSCodeNotebookController } from './notebookExecutionHandler';
 
 export const INotebookContentProvider = Symbol('INotebookContentProvider');

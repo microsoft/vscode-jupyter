@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { join } from 'path';
-import { Disposable, Event, EventEmitter, NotebookCell, NotebookController, NotebookDocument, NotebookKernelPreload, NotebookSelector, Uri } from 'vscode';
+import { Disposable, EventEmitter, NotebookCell, NotebookController, NotebookDocument, NotebookKernelPreload, NotebookSelector, Uri } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
