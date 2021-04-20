@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+import { CancellationToken } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
@@ -30,6 +31,7 @@ import { INotebookControllerManager } from './types';
 @injectable()
 export class NotebookControllerManager implements INotebookControllerManager, IExtensionSyncActivationService {
     private controllerMapping = new WeakMap<NotebookDocument, { selected: VSCodeNotebookController | undefined, controllers: VSCodeNotebookController[] }>();
+    private findingInProgress = new WeakMap<NotebookDocument, CancellationTokenSource>();
     private readonly _onNotebookControllerSelected: EventEmitter<{ notebook: NotebookDocument, controller: VSCodeNotebookController }>;
 
     private isLocalLaunch: boolean;
@@ -70,23 +72,50 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // IANHU: Need to invalidate kernels here?
     }
 
-    private async onDidOpenNotebookDocument(document: NotebookDocument) {
+    private onDidOpenNotebookDocument(document: NotebookDocument) {
+        // We are already finding for this document, shouldn't happen so just bail out
+        if (this.findingInProgress.has(document)) {
+            return;
+        }
+
         const stopWatch = new StopWatch();
 
-        const connections = await this.getKernelConnectionMetadata(document);
-        const controllers = this.createNotebookControllers(document, connections);
+        // Create a cancellation so we can cancel out of kernel finding if needed
+        const tokenSource = new CancellationTokenSource();
 
-        // Send telemetry related to fetching the kernel connections
-        sendNotebookControllerCreateTelemetry(document.uri, controllers, stopWatch);
+        // Keep track of our token so we can cancel if the document is closed
+        this.findingInProgress.set(document, tokenSource);
 
-        traceInfoIf(
-            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-            `Providing notebook controllers with length ${controllers.length} for ${document.uri.fsPath}. Preferred is ${controllers.find((m) => m.isPreferred)?.label
-            }, ${controllers.find((m) => m.isPreferred)?.id}`
-        );
+        this.getKernelConnectionMetadata(document, tokenSource.token).then(connections => {
+            if (tokenSource.token.isCancellationRequested) {
+                // Bail out on making the controllers if we are cancelling
+                traceInfo('Not creating NotebookControllers as document was closed.');
+                return;
+            }
+
+            // From our kernel connections create our notebook controllers
+            const controllers = this.createNotebookControllers(document, connections);
+
+            // Send telemetry related to fetching the kernel connections
+            sendNotebookControllerCreateTelemetry(document.uri, controllers, stopWatch);
+
+            traceInfoIf(
+                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                `Providing notebook controllers with length ${controllers.length} for ${document.uri.fsPath}. Preferred is ${controllers.find((m) => m.isPreferred)?.label
+                }, ${controllers.find((m) => m.isPreferred)?.id}`
+            );
+        }).finally(() => {
+            // Make sure to remove our token when we are done finding
+            this.findingInProgress.delete(document);
+        });
     }
 
     private onDidCloseNotebookDocument(document: NotebookDocument) {
+        // If this document is being currently loaded, trigger the cancellation token
+        if (this.findingInProgress.has(document)) {
+            this.findingInProgress.get(document)?.cancel();
+        }
+
         // See if we have NotebookControllers for this document, if we do, dispose them
         if (this.controllerMapping.has(document)) {
             this.controllerMapping.get(document)?.controllers.forEach(controller => {
@@ -99,8 +128,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // For this notebook document, create NotebookControllers for all associated kernel connections
     private createNotebookControllers(document: NotebookDocument, kernelConnections: { connections: KernelConnectionMetadata[], preferred: KernelConnectionMetadata | undefined }): VSCodeNotebookController[] {
-        if (this.controllerMapping.get(document)) {
-            // IANHU: Should this happen ever?
+        if (this.controllerMapping.has(document)) {
+            // If we already have this document just use what we have already
+            return this.controllerMapping.get(document)?.controllers!;
         }
 
         // First sort our items by label
@@ -171,10 +201,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // For the given NotebookDocument find all associated KernelConnectionMetadata
-    private async getKernelConnectionMetadata(document: NotebookDocument): Promise<{ connections: KernelConnectionMetadata[], preferred: KernelConnectionMetadata | undefined }> {
-        // IANHU: Need a token passed in here?
-        const token = new CancellationTokenSource().token;
-
+    private async getKernelConnectionMetadata(document: NotebookDocument, token: CancellationToken): Promise<{ connections: KernelConnectionMetadata[], preferred: KernelConnectionMetadata | undefined }> {
         let kernels: KernelConnectionMetadata[] = [];
         let preferred: KernelConnectionMetadata | undefined;
 
