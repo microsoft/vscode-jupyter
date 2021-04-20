@@ -2,17 +2,15 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode';
+import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IPythonInstaller, IPythonExtensionChecker, IPythonApiProvider } from '../../api/types';
-import { IVSCodeNotebook } from '../../common/application/types';
 import { InterpreterUri } from '../../common/installer/types';
 import { IExtensions, IDisposableRegistry, Product, IConfigurationService } from '../../common/types';
 import { isResource, noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { isLocalLaunch } from '../jupyter/kernels/helpers';
 import { InterpreterPackages } from './interpreterPackages';
-import { isJupyterKernel } from '../notebook/helpers/helpers';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/notebookExecutionHandler';
 
@@ -26,7 +24,6 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager

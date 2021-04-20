@@ -22,8 +22,7 @@ import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook, NotebookCellStateTracker } from './helpers/helpers';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
-import { VSCodeKernelPickerProvider } from './kernelProvider';
-import { INotebookContentProvider, INotebookKernelProvider, INotebookStatusBarProvider } from './types';
+import { INotebookContentProvider, INotebookStatusBarProvider } from './types';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
@@ -37,7 +36,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNb: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookContentProvider) private readonly notebookContentProvider: VSCNotebookContentProvider,
-        @inject(INotebookKernelProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,

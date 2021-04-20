@@ -14,7 +14,7 @@ import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/k
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
 import { JupyterNotebookView } from './constants';
-import { trackKernelInfoInNotebookMetadata } from './helpers/helpers';
+import { traceCellMessage, trackKernelInfoInNotebookMetadata } from './helpers/helpers';
 
 // IANHU: Rename file, rename class?
 export class VSCodeNotebookController implements Disposable {
@@ -56,9 +56,10 @@ export class VSCodeNotebookController implements Disposable {
         const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
         this.controller = this.notebookApi.createNotebookController(id, selector, getDisplayNameOrNameOfKernelConnection(kernelConnection), this.handleExecution.bind(this), this.preloads());
         // IANHU: Detail is missing
-        // IANHU: Interrupt handler here as well
+        this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
         this.controller.hasExecutionOrder = true;
+        // IANHU: Add our full supported language list here
         this.controller.supportedLanguages = ['python'];
 
         // Hook up to see when this NotebookController is selected by the UI
@@ -99,6 +100,13 @@ export class VSCodeNotebookController implements Disposable {
                 )
             }
         ];
+    }
+
+    private handleInterrupt() {
+        this.document.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
+        this.commandManager
+            .executeCommand(Commands.NotebookEditorInterruptKernel, this.document)
+            .then(noop, (ex) => console.error(ex));
     }
 
     // IANHU: Is the async an issue here? 
