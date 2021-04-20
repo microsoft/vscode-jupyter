@@ -48,6 +48,7 @@ export class VSCodeNotebookController implements Disposable {
 
     constructor(private readonly document: NotebookDocument,
         private readonly kernelConnection: KernelConnectionMetadata,
+        label: string,
         private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
         private readonly kernelProvider: IKernelProvider,
@@ -59,7 +60,7 @@ export class VSCodeNotebookController implements Disposable {
 
         const selector: NotebookSelector = { viewType: JupyterNotebookView, pattern: document.uri.fsPath };
         const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
-        this.controller = this.notebookApi.createNotebookController(id, selector, getDisplayNameOrNameOfKernelConnection(kernelConnection), this.handleExecution.bind(this), this.getPreloads());
+        this.controller = this.notebookApi.createNotebookController(id, selector, label, this.handleExecution.bind(this), this.getPreloads());
         // IANHU: Detail is missing
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);

@@ -12,7 +12,7 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
-import { areKernelConnectionsEqual, isLocalLaunch } from '../jupyter/kernels/helpers';
+import { areKernelConnectionsEqual, getDisplayNameOrNameOfKernelConnection, isLocalLaunch } from '../jupyter/kernels/helpers';
 import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
@@ -103,9 +103,32 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // IANHU: Should this happen ever?
         }
 
+        // First sort our items by label
+        const connectionsWithLabel = kernelConnections.connections.map(value => {
+            return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) }
+        });
+        connectionsWithLabel.sort((a, b) => {
+            if (a.label > b.label) {
+                return 1;
+            } else if (a.label === b.label) {
+                return 0;
+            } else {
+                return -1;
+            }
+        });
+
+        // Next pull the preferred item to the top of the list if we have one
+        const preferredIndex = connectionsWithLabel.findIndex(value => {
+            return areKernelConnectionsEqual(value.connection, kernelConnections.preferred)
+        });
+        if (preferredIndex > 0) {
+            const removedValue = connectionsWithLabel.splice(preferredIndex, 1);
+            connectionsWithLabel.unshift(removedValue[0]);
+        }
+
         // Map KernelConnectionMetadata => NotebookController
-        const controllers = kernelConnections.connections.map(value => {
-            return this.createNotebookController(document, value, areKernelConnectionsEqual(value, kernelConnections.preferred));
+        const controllers = connectionsWithLabel.map(value => {
+            return this.createNotebookController(document, value.connection, areKernelConnectionsEqual(value.connection, kernelConnections.preferred), value.label);
         });
 
         // Store our NotebookControllers to dispose on doc close
@@ -114,9 +137,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return controllers;
     }
 
-    private createNotebookController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata, preferred: boolean): VSCodeNotebookController {
+    private createNotebookController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata, preferred: boolean, label: string): VSCodeNotebookController {
         // Create notebook selector
-        const controller = new VSCodeNotebookController(document, kernelConnection,
+        const controller = new VSCodeNotebookController(document, kernelConnection, label,
             this.notebook, this.commandManager, this.kernelProvider,
             this.preferredRemoteKernelIdProvider, this.context, this.disposables);
 
