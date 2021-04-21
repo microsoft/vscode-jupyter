@@ -82,7 +82,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
     }
 
-    // IANHU: Needs testing in Notebook/Dev
     // Look up what NotebookController is currently selected for the given notebook document
     public getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined {
         if (this.controllerMapping.has(document)) {
@@ -91,7 +90,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     private onDidChangeExtensions() {
-        // IANHU: Need to invalidate kernels here?
+        // KERNELPUSH: On extension load we might fetch different kernels, need to invalidate here and regen
     }
 
     private onDidOpenNotebookDocument(document: NotebookDocument) {
@@ -195,7 +194,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         // Store our NotebookControllers to dispose on doc close
-        this.controllerMapping.set(document, { selected: undefined, controllers: controllers });
+        // KERNELPUSH: We don't get an onDidChangeNotebookAssociation for the initial kernel setting
+        // Also instead of picking the preferred one, it just takes the first in the list, so we put our preferred
+        // kernel at the start of the list and then just use that as selected here (since we don't get selection event)
+        this.controllerMapping.set(document, { selected: controllers[0], controllers: controllers });
 
         return controllers;
     }

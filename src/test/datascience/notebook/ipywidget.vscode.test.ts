@@ -134,7 +134,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     // Resolve a deferred when we see the target uri has an associated webview and the webview
     // loaded a widget successfully
     function flagForWebviewLoad(_flag: Deferred<boolean>, _targetDoc: NotebookDocument) {
-        // IANHU: Old class removed
+        // KERNELPUSH: Old class removed
         // const notebookKernelProvider = api.serviceContainer.get<INotebookKernelProvider>(
         // INotebookKernelProvider
         // ) as VSCodeKernelPickerProvider;
