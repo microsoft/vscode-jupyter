@@ -112,6 +112,19 @@ export class VSCodeNotebookController implements Disposable {
         }
     }
 
+    // Handle the execution of notebook cell
+    public async handleExecution(cells: NotebookCell[]) {
+        // When we receive a cell execute request, first ensure that the notebook is trusted.
+        // If it isn't already trusted, block execution until the user trusts it.
+        const isTrusted = await this.commandManager.executeCommand(Commands.TrustNotebook, this.document.uri);
+        if (!isTrusted) {
+            return;
+        }
+        // Notebook is trusted. Continue to execute cells
+        traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
+        await Promise.all(cells.map((cell) => this.executeCell(this.document, cell)));
+    }
+
     private onDidChangeNotebookAssociation(event: { notebook: NotebookDocument; selected: boolean }) {
         // If this NotebookController was selected, fire off the event
         if (event.selected) {
@@ -140,19 +153,6 @@ export class VSCodeNotebookController implements Disposable {
         this.commandManager
             .executeCommand(Commands.NotebookEditorInterruptKernel, this.document)
             .then(noop, (ex) => console.error(ex));
-    }
-
-    // Handle the execution of notebook cell
-    private async handleExecution(cells: NotebookCell[]) {
-        // When we receive a cell execute request, first ensure that the notebook is trusted.
-        // If it isn't already trusted, block execution until the user trusts it.
-        const isTrusted = await this.commandManager.executeCommand(Commands.TrustNotebook, this.document.uri);
-        if (!isTrusted) {
-            return;
-        }
-        // Notebook is trusted. Continue to execute cells
-        traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
-        await Promise.all(cells.map((cell) => this.executeCell(this.document, cell)));
     }
 
     private executeCell(doc: NotebookDocument, cell: NotebookCell) {

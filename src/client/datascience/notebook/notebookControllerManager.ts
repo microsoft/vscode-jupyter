@@ -95,6 +95,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
 
+    // Find all the current NotebookControllers for the given document allow undefined to tell between
+    // having no controllers = [] versus not having loaded = undefined
+    public getNotebookControllers(document: NotebookDocument): VSCodeNotebookController[] | undefined {
+        if (this.controllerMapping.has(document)) {
+            // ! is ok here as we have check the .has above already
+            return this.controllerMapping.get(document)?.controllers;
+        }
+    }
+
     private onDidChangeExtensions() {
         // KERNELPUSH: On extension load we might fetch different kernels, need to invalidate here and regen
     }

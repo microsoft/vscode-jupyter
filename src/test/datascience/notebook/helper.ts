@@ -27,7 +27,7 @@ import {
     NotebookCellExecutionState
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { traceInfo } from '../../../client/common/logger';
 import {
@@ -50,7 +50,11 @@ import {
 import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
-import { CellOutputMimeTypes, INotebookContentProvider } from '../../../client/datascience/notebook/types';
+import {
+    CellOutputMimeTypes,
+    INotebookContentProvider,
+    INotebookControllerManager
+} from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
@@ -70,6 +74,7 @@ async function getServices() {
         contentProvider: api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider),
         vscodeNotebook: api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
         editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider),
+        notebookControllerManager: api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager),
         serviceContainer: api.serviceContainer
     };
 }
@@ -253,61 +258,81 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     disposeAllDisposables(disposables);
 }
 
-export async function waitForKernelToChange(_criteria: { labelOrId?: string; interpreterPath?: string }) {
-    // KERNELPUSH: Re-enable
-    // const { vscodeNotebook, kernelProvider } = await getServices();
-    // // Wait for the active editor to come up
-    // await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'Active editor not a notebook');
-    // // Get the list of kernels possible
-    // const kernels = (await kernelProvider.provideKernels(
-    // vscodeNotebook.activeNotebookEditor!.document,
-    // new CancellationTokenSource().token
-    // )) as VSCodeNotebookKernelMetadata[];
-    // traceInfo(`Kernels found for wait search: ${kernels?.map((k) => `${k.label}:${k.id}`).join('\n')}`);
-    // // Find the kernel id that matches the name we want
-    // let id: string | undefined;
-    // if (criteria.labelOrId) {
-    // const labelOrId = criteria.labelOrId;
-    // id = kernels?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
-    // if (!id) {
-    // // Try includes instead
-    // id = kernels?.find((k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId))?.id;
-    // }
-    // }
-    // if (criteria.interpreterPath && !id) {
-    // id = kernels
-    // ?.filter((k) => k.selection.interpreter)
-    // .find((k) => k.selection.interpreter!.path.toLowerCase().includes(criteria.interpreterPath!.toLowerCase()))
-    // ?.id;
-    // }
-    // traceInfo(`Switching to kernel id ${id}`);
-    // // Send a select kernel on the active notebook editor
-    // void commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
-    // const isRightKernel = () => {
-    // if (!vscodeNotebook.activeNotebookEditor) {
-    // return false;
-    // }
-    // if (!vscodeNotebook.activeNotebookEditor.kernel) {
-    // return false;
-    // }
-    // if (vscodeNotebook.activeNotebookEditor.kernel.id === id) {
-    // traceInfo(
-    // `Found selected kernel id:label ${vscodeNotebook.activeNotebookEditor.kernel.id}:${vscodeNotebook.activeNotebookEditor.kernel.label}`
-    // );
-    // return true;
-    // }
-    // traceInfo(
-    // `Active kernel is id:label = ${vscodeNotebook.activeNotebookEditor.kernel.id}:${vscodeNotebook.activeNotebookEditor.kernel.label}`
-    // );
-    // return false;
-    // };
-    // await waitForCondition(
-    // async () => isRightKernel(),
-    // defaultTimeout,
-    // `Kernel with criteria ${JSON.stringify(criteria)} not selected`
-    // );
-    // // Make sure the kernel is actually in use before returning (switching is async)
-    // await sleep(500);
+export async function waitForKernelToChange(criteria: { labelOrId?: string; interpreterPath?: string }) {
+    const { vscodeNotebook, notebookControllerManager } = await getServices();
+
+    // Wait for the active editor to come up
+    await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'Active editor not a notebook');
+
+    // Wait for the notebookControllerManager to have results for this given document
+    await waitForCondition(
+        async () => {
+            return (
+                notebookControllerManager.getSelectedNotebookController(
+                    vscodeNotebook.activeNotebookEditor?.document!
+                ) !== undefined
+            );
+        },
+        10_000,
+        'Failed to set notebook controllers'
+    );
+
+    // Get the list of NotebookControllers for this document
+    const notebookControllers = notebookControllerManager.getNotebookControllers(
+        vscodeNotebook.activeNotebookEditor?.document!
+    );
+
+    // Get the list of kernels possible
+    traceInfo(`Controllers found for wait search: ${notebookControllers?.map((k) => `${k.label}:${k.id}`).join('\n')}`);
+
+    // Find the kernel id that matches the name we want
+    // IANHU: Do we actually want k.connection.id?
+    let id: string | undefined;
+    if (criteria.labelOrId) {
+        const labelOrId = criteria.labelOrId;
+        id = notebookControllers?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
+        if (!id) {
+            // Try includes instead
+            id = notebookControllers?.find(
+                (k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId)
+            )?.id;
+        }
+    }
+    if (criteria.interpreterPath && !id) {
+        id = notebookControllers
+            ?.filter((k) => k.connection.interpreter)
+            .find((k) => k.connection.interpreter!.path.toLowerCase().includes(criteria.interpreterPath!.toLowerCase()))
+            ?.id;
+    }
+    traceInfo(`Switching to kernel id ${id}`);
+    // Send a select kernel on the active notebook editor
+    void commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
+    const isRightKernel = () => {
+        if (!vscodeNotebook.activeNotebookEditor) {
+            return false;
+        }
+
+        const selectedController = notebookControllerManager.getSelectedNotebookController(
+            vscodeNotebook.activeNotebookEditor.document
+        );
+        if (!selectedController) {
+            return false;
+        }
+        if (selectedController.id === id) {
+            traceInfo(`Found selected kernel id:label ${selectedController.id}:${selectedController.label}`);
+            return true;
+        }
+        traceInfo(`Active kernel is id:label = ${selectedController.id}:${selectedController.label}`);
+        return false;
+    };
+    await waitForCondition(
+        async () => isRightKernel(),
+        defaultTimeout,
+        `Kernel with criteria ${JSON.stringify(criteria)} not selected`
+    );
+
+    // Make sure the kernel is actually in use before returning (switching is async)
+    await sleep(500);
 }
 
 export async function waitForKernelToGetAutoSelected(_expectedLanguage?: string, _time = 100_000) {
@@ -667,21 +692,34 @@ export async function runCell(_cell: NotebookCell) {
     // ]);
 }
 export async function runAllCellsInActiveNotebook() {
-    // KERNELPUSH: Re-enable
-    // const api = await initialize();
-    // const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    // await waitForCondition(
-    // async () => !!vscodeNotebook.activeNotebookEditor?.kernel,
-    // 60_000, // Validating kernel can take a while (this is required to ensure a kernel is available for use).
-    // 'Timeout waiting for active kernel'
-    // );
-    // if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.kernel) {
-    // throw new Error('No notebook or kernel');
-    // }
-    // const document = vscodeNotebook.activeNotebookEditor.document;
-    // void vscodeNotebook.activeNotebookEditor.kernel.executeCellsRequest(document, [
-    // new NotebookRange(0, document.cellCount)
-    // ]);
+    const api = await initialize();
+    const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    const notebookControllerManager = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
+    await waitForCondition(
+        async () => {
+            return (
+                notebookControllerManager.getSelectedNotebookController(
+                    vscodeNotebook.activeNotebookEditor?.document!
+                ) !== undefined
+            );
+        },
+        60_000,
+        'Failed to set notebook controllers'
+    );
+
+    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
+        throw new Error('No editor or document');
+    }
+
+    const notebookController = notebookControllerManager.getSelectedNotebookController(
+        vscodeNotebook.activeNotebookEditor.document
+    );
+
+    if (!notebookController) {
+        throw new Error('No notebook controller');
+    }
+
+    void notebookController.handleExecution(vscodeNotebook.activeNotebookEditor.document.getCells());
 }
 
 /**

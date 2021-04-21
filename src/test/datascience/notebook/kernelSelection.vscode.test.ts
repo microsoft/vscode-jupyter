@@ -207,7 +207,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         assertHasTextOutputInVSCode(cell, venvKernelPythonPath, 0, false);
     });
-    test('Switch kernel to an interpreter that is registered as a kernel', async function () {
+    test('IANHU Switch kernel to an interpreter that is registered as a kernel', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
@@ -217,7 +217,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Run all cells
         await runAllCellsInActiveNotebook();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await waitForExecutionCompletedSuccessfully(cell);
+        await waitForExecutionCompletedSuccessfully(cell, 60_000);
 
         // Confirm the executable printed is not venvkernel
         assert.ok(cell.outputs.length);

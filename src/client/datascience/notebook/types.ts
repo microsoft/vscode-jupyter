@@ -13,6 +13,7 @@ export const INotebookControllerManager = Symbol('INotebookControllerManager');
 export interface INotebookControllerManager {
     readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: VSCodeNotebookController }>;
     getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
+    getNotebookControllers(document: NotebookDocument): VSCodeNotebookController[] | undefined;
 }
 
 export enum CellOutputMimeTypes {
