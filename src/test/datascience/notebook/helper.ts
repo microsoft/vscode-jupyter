@@ -307,14 +307,14 @@ export async function waitForKernelToChange(_criteria: { labelOrId?: string; int
     // `Active kernel is id:label = ${vscodeNotebook.activeNotebookEditor.kernel.id}:${vscodeNotebook.activeNotebookEditor.kernel.label}`
     // );
     // return false;
-};
-await waitForCondition(
-    async () => isRightKernel(),
-    defaultTimeout,
-    `Kernel with criteria ${JSON.stringify(criteria)} not selected`
-);
-// Make sure the kernel is actually in use before returning (switching is async)
-await sleep(500);
+    // };
+    // await waitForCondition(
+    // async () => isRightKernel(),
+    // defaultTimeout,
+    // `Kernel with criteria ${JSON.stringify(criteria)} not selected`
+    // );
+    // // Make sure the kernel is actually in use before returning (switching is async)
+    // await sleep(500);
 }
 
 export async function waitForKernelToGetAutoSelected(_expectedLanguage?: string, _time = 100_000) {
@@ -367,16 +367,16 @@ export async function waitForKernelToGetAutoSelected(_expectedLanguage?: string,
     // return true;
     // }
     // return false;
-};
+    // };
 
-// Wait for the active kernel to be a julia kernel.
-const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
-await waitForCondition(async () => isRightKernel(), defaultTimeout, errorMessage);
+    // // Wait for the active kernel to be a julia kernel.
+    // const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
+    // await waitForCondition(async () => isRightKernel(), defaultTimeout, errorMessage);
 
-// If it works, make sure kernel has enough time to actually switch the active notebook to this
-// kernel (kernel changes are async)
-await sleep(500);
-traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
+    // // If it works, make sure kernel has enough time to actually switch the active notebook to this
+    // // kernel (kernel changes are async)
+    // await sleep(500);
+    // traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
 }
 export async function trustNotebook(ipynbFile: string | Uri) {
     traceInfo(`Trusting Notebook ${ipynbFile}`);
