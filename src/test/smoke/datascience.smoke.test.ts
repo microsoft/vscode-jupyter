@@ -30,6 +30,48 @@ suite('Smoke Tests', () => {
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 
+    test('Interactive window should always pick up current active interpreter', async function () {
+        this.timeout(60_000);
+        // Make an interactive window
+        await vscode.commands.executeCommand<void>('jupyter.createnewinteractive');
+        const provider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+        assert.ok(provider.windows.length === 1, 'Unexpected number of interactive windows created');
+        const currentWindow = provider.windows[0];
+        const interpreterForCurrentWindow = currentWindow.notebook?.getMatchingInterpreter();
+        assert.ok(interpreterForCurrentWindow !== undefined, 'Unable to get matching interpreter for current window');
+
+        // Now change active interpreter
+        const interpreterService = api.serviceManager.get<IInterpreterService>(IInterpreterService);
+        const allInterpreters = await interpreterService.getInterpreters();
+        assert.ok(allInterpreters.length > 1, 'Not enough interpreters to run interactive window smoke test');
+        const differentInterpreter = allInterpreters.find((interpreter) => interpreter !== interpreterForCurrentWindow);
+        const originalSettingValues: (string | undefined)[] = [];
+        const settingNames = ['python.defaultInterpreterPath', 'python.pythonPath'];
+        const configuration = vscode.workspace.getConfiguration();
+        for (const setting of settingNames) {
+            originalSettingValues.push(configuration.get<string | undefined>(setting));
+            // Save the original setting so we can restore it
+            await configuration.update(setting, differentInterpreter?.path);
+        }
+        await sleep(1_000); // Wait for the Python extension to respond to the setting change
+
+        // Now make another interactive window and confirm it's using the newly selected interpreter
+        await vscode.commands.executeCommand<void>('jupyter.createnewinteractive');
+        assert.ok(provider.windows.length === 2, 'Unexpected number of interactive windows created');
+        const newWindow = provider.windows.find((window) => window !== currentWindow);
+        const interpreterForNewWindow = newWindow?.notebook?.getMatchingInterpreter();
+        assert.ok(interpreterForNewWindow !== undefined, 'Unable to get matching interpreter for current window');
+        assert.ok(
+            interpreterForNewWindow === differentInterpreter,
+            'Interactive window not created with newly selected interpreter'
+        );
+
+        // Restore the settings we changed in the middle of this test
+        settingNames.forEach(async (setting, i) => {
+            await configuration.update(setting, originalSettingValues[i]);
+        });
+    });
+
     test('Random bytes generation', async function () {
         return this.skip(); // Failing on windows. Tracked by 4444
         // We do have a unit test testing this, however create a smoke test to
@@ -101,45 +143,4 @@ suite('Smoke Tests', () => {
         // Give time for the file to be saved before we shutdown
         await sleep(300);
     }).timeout(timeoutForCellToRun);
-
-    test('Interactive window should always pick up current active interpreter', async function () {
-        // Make an interactive window
-        await vscode.commands.executeCommand<void>('jupyter.createnewinteractive');
-        const provider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        assert.ok(provider.windows.length === 1, 'Unexpected number of interactive windows created');
-        const currentWindow = provider.windows[0];
-        const interpreterForCurrentWindow = currentWindow.notebook?.getMatchingInterpreter();
-        assert.ok(interpreterForCurrentWindow !== undefined, 'Unable to get matching interpreter for current window');
-
-        // Now change active interpreter
-        const interpreterService = api.serviceManager.get<IInterpreterService>(IInterpreterService);
-        const allInterpreters = await interpreterService.getInterpreters();
-        assert.ok(allInterpreters.length > 1, 'Not enough interpreters to run interactive window smoke test');
-        const differentInterpreter = allInterpreters.find((interpreter) => interpreter !== interpreterForCurrentWindow);
-        const originalSettingValues: (string | undefined)[] = [];
-        const settingNames = ['python.defaultInterpreterPath', 'python.pythonPath'];
-        const configuration = vscode.workspace.getConfiguration();
-        for (const setting of settingNames) {
-            originalSettingValues.push(configuration.get<string | undefined>(setting));
-            // Save the original setting so we can restore it
-            await configuration.update(setting, differentInterpreter?.path);
-        }
-        await sleep(1_000); // Wait for the Python extension to respond to the setting change
-
-        // Now make another interactive window and confirm it's using the newly selected interpreter
-        await vscode.commands.executeCommand<void>('jupyter.createnewinteractive');
-        assert.ok(provider.windows.length === 2, 'Unexpected number of interactive windows created');
-        const newWindow = provider.windows.find((window) => window !== currentWindow);
-        const interpreterForNewWindow = newWindow?.notebook?.getMatchingInterpreter();
-        assert.ok(interpreterForNewWindow !== undefined, 'Unable to get matching interpreter for current window');
-        assert.ok(
-            interpreterForNewWindow === differentInterpreter,
-            'Interactive window not created with newly selected interpreter'
-        );
-
-        // Restore the settings we changed in the middle of this test
-        settingNames.forEach(async (setting, i) => {
-            await configuration.update(setting, originalSettingValues[i]);
-        });
-    });
 });

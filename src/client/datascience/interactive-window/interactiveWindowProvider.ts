@@ -118,6 +118,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     }
 
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
+        console.log('getOrCreate interactive window');
         // Ask for a configuration change if appropriate
         const mode = await this.getInteractiveMode(resource);
 
@@ -126,13 +127,14 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         if (!result) {
             // No match. Create a new item.
             result = this.create(resource, mode);
-
+            console.log('this.create');
             // Wait for monaco ready (it's not really useable until it has a language)
             const readyPromise = createDeferred();
             const disposable = result.ready(() => readyPromise.resolve());
 
             // Wait for monaco ready
             await readyPromise.promise;
+            console.log('readyPromise resolved');
             disposable.dispose();
         }
 
