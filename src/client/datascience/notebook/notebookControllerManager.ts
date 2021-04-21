@@ -8,7 +8,7 @@ import { IExtensionSyncActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceInfo, traceInfoIf } from '../../common/logger';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions, IPathUtils } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
@@ -58,7 +58,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
-        @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider
+        @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -216,6 +217,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.preferredRemoteKernelIdProvider,
             this.context,
             this,
+            this.pathUtils,
             this.disposables
         );
 

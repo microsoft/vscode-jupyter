@@ -15,10 +15,10 @@ import {
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
-import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../common/types';
+import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Commands } from '../constants';
-import { getDescriptionOfKernelConnection } from '../jupyter/kernels/helpers';
+import { getDescriptionOfKernelConnection, getDetailOfKernelConnection } from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
@@ -68,6 +68,7 @@ export class VSCodeNotebookController implements Disposable {
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         private readonly context: IExtensionContext,
         private readonly notebookControllerManager: INotebookControllerManager,
+        private readonly pathUtils: IPathUtils,
         private readonly disposable: IDisposableRegistry
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -84,9 +85,11 @@ export class VSCodeNotebookController implements Disposable {
             this.handleExecution.bind(this),
             this.getPreloads()
         );
-        // IANHU: Detail is missing
+
+        // Fill in extended info for our controller
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
+        this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils);
         this.controller.hasExecutionOrder = true;
         // IANHU: Add our full supported language list here
         this.controller.supportedLanguages = ['python'];
