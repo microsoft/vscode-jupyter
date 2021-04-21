@@ -463,7 +463,7 @@ export interface INotebookExporter extends Disposable {
     exportToFile(cells: ICell[], file: string, showOpenPrompt?: boolean): Promise<void>;
 }
 
-export const IInteractiveWindowProvider = Symbol('IInteractiveWindowProvider');
+export const IInteractiveWindowProvider = Symbol.for('IInteractiveWindowProvider');
 export interface IInteractiveWindowProvider {
     /**
      * The active interactive window if it has the focus.
