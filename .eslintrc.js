@@ -426,7 +426,6 @@ module.exports = {
         'src/client/interpreter/autoSelection/rules/system.ts',
         'src/client/interpreter/autoSelection/index.ts',
         'src/client/interpreter/interpreterVersion.ts',
-        'src/client/interpreter/contracts.ts',
         'src/client/interpreter/activation/wrapperEnvironmentActivationService.ts',
         'src/client/interpreter/activation/terminalEnvironmentActivationService.ts',
         'src/client/interpreter/activation/types.ts',
