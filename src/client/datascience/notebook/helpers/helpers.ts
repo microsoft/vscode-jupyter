@@ -206,8 +206,6 @@ export function notebookModelToVSCNotebookData(
         cells,
         new NotebookDocumentMetadata().with({
             custom: notebookContentWithoutCells, // Include metadata in VSC Model (so that VSC can display these if required)
-            cellEditable: isNotebookTrusted,
-            editable: isNotebookTrusted,
             trusted: isNotebookTrusted
         })
     );
@@ -284,7 +282,6 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
-        editable: true,
         custom: getNotebookCellMetadata(cell)
     });
     return new NotebookCellData(
@@ -309,7 +306,6 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
 }
 function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
-        editable: true,
         custom: getNotebookCellMetadata(cell)
     });
     return new NotebookCellData(
@@ -324,28 +320,17 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
-    const hasErrors = outputs.some((output) => output.outputs.some((opit) => opit.mime === CellOutputMimeTypes.error));
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
-    let statusMessage: string | undefined;
-    if (hasExecutionCount && hasErrors) {
-        // Error details are stripped from the output, get raw output.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        statusMessage = getCellStatusMessageBasedOnFirstErrorOutput(cellOutputs);
-    }
 
     const notebookCellMetadata = new NotebookCellMetadata().with({
-        editable: true,
-        statusMessage,
         custom: getNotebookCellMetadata(cell)
     });
 
     const source = concatMultilineString(cell.source);
 
-    const executionSummary: NotebookCellExecutionSummary = {};
-    if (hasExecutionCount) {
-        // IANHU: Just removed for building
-        // executionSummary.executionOrder = cell.execution_count as number;
-    }
+    const executionSummary: NotebookCellExecutionSummary = hasExecutionCount
+        ? { executionOrder: cell.execution_count as number }
+        : {};
     return new NotebookCellData(
         NotebookCellKind.Code,
         source,

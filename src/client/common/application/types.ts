@@ -58,7 +58,6 @@ import {
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent,
-    NotebookCellMetadata,
     NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
@@ -68,6 +67,7 @@ import {
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookCellStatusBarItemProvider,
+    NotebookDocumentContentOptions,
     NotebookSelector,
     NotebookExecutionHandler,
     NotebookKernelPreload,
@@ -1042,7 +1042,7 @@ export interface IWebviewPanelMessageListener extends IWebviewMessageListener, I
 }
 
 export const IWebviewViewMessageListener = Symbol('IWebviewViewMessageListener');
-export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable { }
+export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable {}
 
 export type WebviewMessage = {
     /**
@@ -1570,18 +1570,7 @@ export interface IVSCodeNotebook {
     registerNotebookContentProvider(
         notebookType: string,
         provider: NotebookContentProvider,
-        options?: {
-            /**
-             * Controls if outputs change will trigger notebook document content change and if it will be used in the diff editor
-             * Default to false. If the content provider doesn't persisit the outputs in the file document, this should be set to true.
-             */
-            transientOutputs: boolean;
-            /**
-             * Controls if a meetadata property change will trigger notebook document content change and if it will be used in the diff editor
-             * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
-             */
-            transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
-        }
+        options?: NotebookDocumentContentOptions
     ): Disposable;
 
     createNotebookController(

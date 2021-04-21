@@ -10,17 +10,18 @@ import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
 import { hasErrorOutput, NotebookCellStateTracker } from '../../../client/datascience/notebook/helpers/helpers';
-import { IExtensionTestApi } from '../../common';
+import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     insertCodeCell,
     selectCell,
     startJupyterServer,
     trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
-    createEmptyPythonNotebook
+    createEmptyPythonNotebook,
+    runAllCellsInActiveNotebook,
+    canRunNotebookTests
 } from './helper';
 
 suite('Notebook Editor tests', function () {
@@ -57,6 +58,36 @@ suite('Notebook Editor tests', function () {
         traceInfo(`End Test Completed ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+
+    test('Toggle selected cells output - O Keybind', async function () {
+        // add some cells
+        await insertCodeCell('print("0")', { index: 0 });
+        await insertCodeCell('print("1")', { index: 1 });
+        await insertCodeCell('print("2")', { index: 2 });
+
+        const firstCell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const secondCell = vscodeNotebook.activeNotebookEditor?.document!.cellAt(1)!;
+        const thirdCell = vscodeNotebook.activeNotebookEditor?.document!.cellAt(2)!;
+
+        // select second and third cell
+        await selectCell(vscodeNotebook.activeNotebookEditor?.document!, 1, 3);
+
+        // run and wait
+        await runAllCellsInActiveNotebook();
+        await waitForExecutionCompletedSuccessfully(firstCell);
+        await waitForExecutionCompletedSuccessfully(secondCell);
+        await waitForExecutionCompletedSuccessfully(thirdCell);
+
+        // execute command
+        await commandManager.executeCommand(Commands.NotebookEditorToggleOutput);
+
+        // check that the outputs are collapsed
+        await waitForCondition(
+            async () => secondCell?.metadata.outputCollapsed! && thirdCell?.metadata.outputCollapsed!,
+            10000,
+            'Outputs were not collapsed'
+        );
+    });
 
     test('Run cells above', async function () {
         return this.skip();

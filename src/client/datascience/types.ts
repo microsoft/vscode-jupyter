@@ -622,6 +622,7 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     syncAllCells(): Promise<void>;
     runAbove(cell: NotebookCell | undefined): void;
     runCellAndBelow(cell: NotebookCell | undefined): void;
+    toggleOutput(): void;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');

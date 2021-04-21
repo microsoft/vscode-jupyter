@@ -179,6 +179,14 @@
                 "command": "notebook.cell.paste"
             },
             {
+                "mac": "O",
+                "win": "O",
+                "linux": "O",
+                "key": "O",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
+                "command": "jupyter.notebookeditor.keybind.toggleOutput"
+            },
+            {
                 "mac": "ctrl+shift+-",
                 "win": "ctrl+shift+-",
                 "linux": "ctrl+shift+-",
@@ -365,6 +373,11 @@
             {
                 "command": "jupyter.deleteCells",
                 "title": "%jupyter.command.jupyter.deleteCells.title%",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.notebookeditor.keybind.toggleOutput",
+                "title": "%DataScience.toggleCellOutput%",
                 "category": "Jupyter"
             },
             {
@@ -860,6 +873,11 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.notebookeditor.keybind.toggleOutput",
+                    "title": "%DataScience.toggleCellOutput%",
+                    "when": "notebookViewType == jupyter-notebook"
+                },
                 {
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",

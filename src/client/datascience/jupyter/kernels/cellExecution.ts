@@ -595,7 +595,15 @@ export class CellExecution {
             // When using temporary tasks, we end up updating the UI with no execution order and spinning icons.
             // Doing this causes UI updates, removing the awaits will enure there's no time for ui updates.
             if (promise) {
-                await promise;
+                try {
+                    // When user clears cells, we could end up using an output that no longer exists.
+                    // Ignore such exceptions, next time we get an output its possible the outputs are now in sync.
+                    await promise;
+                } catch (ex) {
+                    // Don't crash the updates, just ignore & hope & pray things work.
+                    // This way (at a minimum) we have the errors logged and we try to get things working by ignoring errors that are beyond our control.
+                    traceError(`Failed to update cell ${this.cell.index}, ${this.cell.document.uri.toString()}`, ex);
+                }
             }
         });
     }
