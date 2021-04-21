@@ -1,20 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { NotebookCommunication, NotebookDocument, NotebookKernel, CancellationToken, Disposable } from 'vscode';
+import { NotebookCommunication, NotebookDocument, CancellationToken, Disposable } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { createDeferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { INotebookKernelResolver } from '../notebook/types';
 import { CommonMessageCoordinator } from './commonMessageCoordinator';
 
 /**
  * This class wires up VSC notebooks to ipywidget communications.
  */
 @injectable()
-export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
+export class NotebookIPyWidgetCoordinator {
     private messageCoordinators = new Map<string, Promise<CommonMessageCoordinator>>();
     private attachedWebViews = new Map<string, { webviews: Set<string>; disposables: Disposable[] }>();
     constructor(
@@ -28,7 +27,6 @@ export class NotebookIPyWidgetCoordinator implements INotebookKernelResolver {
         this.messageCoordinators.clear();
     }
     public resolveKernel(
-        _kernel: NotebookKernel,
         document: NotebookDocument,
         webview: NotebookCommunication,
         token: CancellationToken

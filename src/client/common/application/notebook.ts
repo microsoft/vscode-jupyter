@@ -11,12 +11,14 @@ import {
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookCellStatusBarItemProvider,
     NotebookContentProvider,
+    NotebookController,
     NotebookDocument,
-    NotebookDocumentFilter,
+    NotebookDocumentMetadata,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
-    NotebookKernel,
-    NotebookKernelProvider,
+    NotebookExecutionHandler,
+    NotebookKernelPreload,
+    NotebookSelector,
     window
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
@@ -25,10 +27,6 @@ import { IApplicationEnvironment, IVSCodeNotebook, NotebookCellChangedEvent } fr
 
 @injectable()
 export class VSCodeNotebook implements IVSCodeNotebook {
-    public readonly onDidChangeActiveNotebookKernel: Event<{
-        document: NotebookDocument;
-        kernel: NotebookKernel | undefined;
-    }>;
     public readonly onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     public readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     public readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
@@ -63,7 +61,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         if (this.useNativeNb) {
             this.addEventHandlers();
             this.canUseNotebookApi = true;
-            this.onDidChangeActiveNotebookKernel = notebook.onDidChangeActiveNotebookKernel;
             this.onDidChangeNotebookEditorSelection = window.onDidChangeNotebookEditorSelection;
             this.onDidChangeActiveNotebookEditor = window.onDidChangeActiveNotebookEditor;
             this.onDidOpenNotebookDocument = notebook.onDidOpenNotebookDocument;
@@ -71,10 +68,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.onDidSaveNotebookDocument = notebook.onDidSaveNotebookDocument;
             this.onDidChangeNotebookDocument = this._onDidChangeNotebookDocument.event;
         } else {
-            this.onDidChangeActiveNotebookKernel = this.createDisposableEventEmitter<{
-                document: NotebookDocument;
-                kernel: NotebookKernel | undefined;
-            }>();
             this.onDidChangeNotebookEditorSelection = this.createDisposableEventEmitter<
                 NotebookEditorSelectionChangeEvent
             >();
@@ -90,22 +83,26 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         provider: NotebookContentProvider,
         options?: {
             transientOutputs: boolean;
-            transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
+            transientCellMetadata?: { [K in keyof NotebookCellMetadata]?: boolean };
+            transientDocumentMetadata?: { [K in keyof NotebookDocumentMetadata]?: boolean };
         }
     ): Disposable {
         return notebook.registerNotebookContentProvider(notebookType, provider, options);
     }
     public registerNotebookCellStatusBarItemProvider(
-        selector: NotebookDocumentFilter,
+        selector: NotebookSelector,
         provider: NotebookCellStatusBarItemProvider
     ): Disposable {
         return notebook.registerNotebookCellStatusBarItemProvider(selector, provider);
     }
-    public registerNotebookKernelProvider(
-        selector: NotebookDocumentFilter,
-        provider: NotebookKernelProvider
-    ): Disposable {
-        return notebook.registerNotebookKernelProvider(selector, provider);
+    public createNotebookController(
+        id: string,
+        selector: NotebookSelector,
+        label: string,
+        handler?: NotebookExecutionHandler,
+        preloads?: NotebookKernelPreload[]
+    ): NotebookController {
+        return notebook.createNotebookController(id, selector, label, handler, preloads);
     }
     private createDisposableEventEmitter<T>() {
         const eventEmitter = new EventEmitter<T>();
