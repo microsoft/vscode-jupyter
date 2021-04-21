@@ -63,15 +63,15 @@ import {
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
-    NotebookDocumentFilter,
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
-    NotebookKernel,
-    NotebookKernelProvider,
     NotebookCellStatusBarItemProvider,
+    NotebookDocumentContentOptions,
     NotebookSelector,
-    NotebookDocumentContentOptions
+    NotebookExecutionHandler,
+    NotebookKernelPreload,
+    NotebookController
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -1558,10 +1558,6 @@ export type NotebookCellChangedEvent =
     | NotebookDocumentMetadataChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
-    readonly onDidChangeActiveNotebookKernel: Event<{
-        document: NotebookDocument;
-        kernel: NotebookKernel | undefined;
-    }>;
     readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
@@ -1577,7 +1573,13 @@ export interface IVSCodeNotebook {
         options?: NotebookDocumentContentOptions
     ): Disposable;
 
-    registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
+    createNotebookController(
+        id: string,
+        selector: NotebookSelector,
+        label: string,
+        handler?: NotebookExecutionHandler,
+        preloads?: NotebookKernelPreload[]
+    ): NotebookController;
     registerNotebookCellStatusBarItemProvider(
         selector: NotebookSelector,
         provider: NotebookCellStatusBarItemProvider
