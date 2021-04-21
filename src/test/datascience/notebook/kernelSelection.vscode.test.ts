@@ -217,7 +217,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Run all cells
         await runAllCellsInActiveNotebook();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await waitForExecutionCompletedSuccessfully(cell, 60_000);
+        await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed is not venvkernel
         assert.ok(cell.outputs.length);
