@@ -40,7 +40,7 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport,
         @inject(IVSCodeNotebook) readonly notebookProvider: IVSCodeNotebook
-    ) { }
+    ) {}
     public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
         if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {
             // If not supported, return a notebook with error displayed.

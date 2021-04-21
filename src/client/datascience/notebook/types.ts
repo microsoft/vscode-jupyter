@@ -1,10 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-import {
-    Event,
-    NotebookDocument
-} from 'vscode';
+import { Event, NotebookDocument } from 'vscode';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 
 export const INotebookContentProvider = Symbol('INotebookContentProvider');

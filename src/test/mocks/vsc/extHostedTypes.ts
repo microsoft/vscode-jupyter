@@ -7,7 +7,6 @@
 // import * as crypto from 'crypto';
 
 /* eslint-disable  */
-
 import { relative } from 'path';
 import * as vscode from 'vscode';
 import { vscMockHtmlContent } from './htmlContent';
@@ -29,7 +28,7 @@ export namespace vscMockExtHostedTypes {
             public readonly inputCollapsed?: boolean,
             public readonly outputCollapsed?: boolean,
             public readonly custom?: Record<string, any>
-        ) { }
+        ) {}
 
         // todo@API write a proper signature
         with(change: {
@@ -1115,7 +1114,7 @@ export namespace vscMockExtHostedTypes {
         public static readonly Source = CodeActionKind.Empty.append('source');
         public static readonly SourceOrganizeImports = CodeActionKind.Source.append('organizeImports');
 
-        constructor(public readonly value: string) { }
+        constructor(public readonly value: string) {}
 
         public append(parts: string): CodeActionKind {
             return new CodeActionKind(this.value ? this.value + CodeActionKind.sep + parts : parts);

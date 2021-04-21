@@ -8,7 +8,13 @@ import { IExtensionSyncActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceInfo, traceInfoIf } from '../../common/logger';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext, IExtensions, IPathUtils } from '../../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensionContext,
+    IExtensions,
+    IPathUtils
+} from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
@@ -123,8 +129,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Providing notebook controllers with length ${controllers.length} for ${document.uri.fsPath
-                    }. Preferred is ${controllers.find((m) => m.isPreferred)?.label}, ${controllers.find((m) => m.isPreferred)?.id
+                    `Providing notebook controllers with length ${controllers.length} for ${
+                        document.uri.fsPath
+                    }. Preferred is ${controllers.find((m) => m.isPreferred)?.label}, ${
+                        controllers.find((m) => m.isPreferred)?.id
                     }`
                 );
             })

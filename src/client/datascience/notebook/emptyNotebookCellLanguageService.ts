@@ -27,7 +27,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
         this.notebookControllerManager.onNotebookControllerSelected(
             this.onDidChangeNotebookController,

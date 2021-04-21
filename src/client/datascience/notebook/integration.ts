@@ -28,7 +28,6 @@ import { INotebookContentProvider, INotebookStatusBarProvider } from './types';
  * This class basically registers the necessary providers and the like with VSC.
  * I.e. this is where we integrate our stuff with VS Code via their extension endpoints.
  */
-
 @injectable()
 export class NotebookIntegration implements IExtensionSingleActivationService {
     constructor(
@@ -41,7 +40,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(INotebookStatusBarProvider) private readonly statusBarProvider: VSCNotebookCellStatusBarItemProvider,
         @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.

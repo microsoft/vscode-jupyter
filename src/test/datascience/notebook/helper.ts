@@ -50,10 +50,7 @@ import {
 import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/defaultCellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
-import {
-    CellOutputMimeTypes,
-    INotebookContentProvider
-} from '../../../client/datascience/notebook/types';
+import { CellOutputMimeTypes, INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
@@ -189,7 +186,8 @@ export async function canRunNotebookTests() {
         !process.env.VSC_JUPYTER_RUN_NB_TEST
     ) {
         console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
+                process.env.VSC_JUPYTER_RUN_NB_TEST
             }`
         );
         return false;
@@ -258,18 +256,14 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
 export async function waitForKernelToChange(_criteria: { labelOrId?: string; interpreterPath?: string }) {
     // KERNELPUSH: Re-enable
     // const { vscodeNotebook, kernelProvider } = await getServices();
-
     // // Wait for the active editor to come up
     // await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'Active editor not a notebook');
-
     // // Get the list of kernels possible
     // const kernels = (await kernelProvider.provideKernels(
     // vscodeNotebook.activeNotebookEditor!.document,
     // new CancellationTokenSource().token
     // )) as VSCodeNotebookKernelMetadata[];
-
     // traceInfo(`Kernels found for wait search: ${kernels?.map((k) => `${k.label}:${k.id}`).join('\n')}`);
-
     // // Find the kernel id that matches the name we want
     // let id: string | undefined;
     // if (criteria.labelOrId) {
@@ -287,7 +281,6 @@ export async function waitForKernelToChange(_criteria: { labelOrId?: string; int
     // ?.id;
     // }
     // traceInfo(`Switching to kernel id ${id}`);
-
     // // Send a select kernel on the active notebook editor
     // void commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
     // const isRightKernel = () => {
@@ -320,7 +313,6 @@ export async function waitForKernelToChange(_criteria: { labelOrId?: string; int
 export async function waitForKernelToGetAutoSelected(_expectedLanguage?: string, _time = 100_000) {
     // KERNELPUSH: Re-enable
     // const { vscodeNotebook } = await getServices();
-
     // // Wait for the active kernel to be a julia kernel.
     // await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor?.kernel, time, 'Kernel not auto selected');
     // let kernelInfo = '';
@@ -332,7 +324,6 @@ export async function waitForKernelToGetAutoSelected(_expectedLanguage?: string,
     // return false;
     // }
     // traceInfo(`Waiting for kernel and active is ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
-
     // if (isJupyterKernel(vscodeNotebook.activeNotebookEditor.kernel)) {
     // if (!expectedLanguage) {
     // kernelInfo = `<No specific kernel expected> ${JSON.stringify(
@@ -368,11 +359,9 @@ export async function waitForKernelToGetAutoSelected(_expectedLanguage?: string,
     // }
     // return false;
     // };
-
     // // Wait for the active kernel to be a julia kernel.
     // const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
     // await waitForCondition(async () => isRightKernel(), defaultTimeout, errorMessage);
-
     // // If it works, make sure kernel has enough time to actually switch the active notebook to this
     // // kernel (kernel changes are async)
     // await sleep(500);
@@ -528,7 +517,8 @@ export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, tim
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
-        `Cell ${cell.index + 1
+        `Cell ${
+            cell.index + 1
         } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);

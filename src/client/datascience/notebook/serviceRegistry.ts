@@ -24,11 +24,7 @@ import { NotebookControllerManager } from './notebookControllerManager';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
 import { StatusBarProvider } from './statusBarProvider';
-import {
-    INotebookContentProvider,
-    INotebookControllerManager,
-    INotebookStatusBarProvider
-} from './types';
+import { INotebookContentProvider, INotebookControllerManager, INotebookStatusBarProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<VSCNotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);

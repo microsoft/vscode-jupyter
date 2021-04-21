@@ -96,7 +96,7 @@ export class VSCodeNotebookController implements Disposable {
         // KERNELPUSH: We used to be able to leave this empty to support all languages
         // However this is now required to execute a cell, if not specified the cell will not run if the the language does
         // not match. Using our known list for now
-        this.controller.supportedLanguages = KnownNotebookLanguages.map(lang => {
+        this.controller.supportedLanguages = KnownNotebookLanguages.map((lang) => {
             return translateKernelLanguageToMonaco(lang);
         });
 
