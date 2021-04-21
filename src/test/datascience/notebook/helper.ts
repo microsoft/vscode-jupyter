@@ -286,7 +286,6 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     traceInfo(`Controllers found for wait search: ${notebookControllers?.map((k) => `${k.label}:${k.id}`).join('\n')}`);
 
     // Find the kernel id that matches the name we want
-    // IANHU: Do we actually want k.connection.id?
     let id: string | undefined;
     if (criteria.labelOrId) {
         const labelOrId = criteria.labelOrId;
