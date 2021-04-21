@@ -335,62 +335,74 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     await sleep(500);
 }
 
-export async function waitForKernelToGetAutoSelected(_expectedLanguage?: string, _time = 100_000) {
-    // KERNELPUSH: Re-enable
-    // const { vscodeNotebook } = await getServices();
-    // // Wait for the active kernel to be a julia kernel.
+export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, time = 100_000) {
+    const { vscodeNotebook, notebookControllerManager } = await getServices();
+    // Wait for the active kernel to be a julia kernel.
     // await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor?.kernel, time, 'Kernel not auto selected');
-    // let kernelInfo = '';
-    // const isRightKernel = () => {
-    // if (!vscodeNotebook.activeNotebookEditor) {
-    // return false;
-    // }
-    // if (!vscodeNotebook.activeNotebookEditor.kernel) {
-    // return false;
-    // }
-    // traceInfo(`Waiting for kernel and active is ${vscodeNotebook.activeNotebookEditor.kernel.label}`);
-    // if (isJupyterKernel(vscodeNotebook.activeNotebookEditor.kernel)) {
-    // if (!expectedLanguage) {
-    // kernelInfo = `<No specific kernel expected> ${JSON.stringify(
-    // vscodeNotebook.activeNotebookEditor.kernel.selection
-    // )}`;
-    // return true;
-    // }
-    // switch (vscodeNotebook.activeNotebookEditor.kernel.selection.kind) {
-    // case 'startUsingDefaultKernel':
-    // case 'startUsingKernelSpec':
-    // kernelInfo = `<startUsingKernelSpec>${JSON.stringify(
-    // vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec || {}
-    // )}`;
-    // return (
-    // vscodeNotebook.activeNotebookEditor.kernel.selection.kernelSpec?.language?.toLowerCase() ===
-    // expectedLanguage.toLowerCase()
-    // );
-    // case 'startUsingPythonInterpreter':
-    // kernelInfo = `<startUsingPythonInterpreter ${vscodeNotebook.activeNotebookEditor.kernel.selection.interpreter.path}>`;
-    // return expectedLanguage.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
-    // case 'connectToLiveKernel':
-    // kernelInfo = `<connectToLiveKernel id: ${vscodeNotebook.activeNotebookEditor.kernel.selection.kernelModel.id}, name: ${vscodeNotebook.activeNotebookEditor.kernel.selection.kernelModel.id}>`;
-    // return true;
-    // default:
-    // // We don't support testing other kernels, not required hence not added.
-    // // eslint-disable-next-line no-console
-    // throw new Error('Testing other kernel connections not supported');
-    // }
-    // }
-    // if (!expectedLanguage) {
-    // kernelInfo = '<No specific kernel expected>. Non Jupyter Kernel';
-    // return true;
-    // }
-    // return false;
-    // };
-    // // Wait for the active kernel to be a julia kernel.
-    // const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
-    // await waitForCondition(async () => isRightKernel(), defaultTimeout, errorMessage);
-    // // If it works, make sure kernel has enough time to actually switch the active notebook to this
-    // // kernel (kernel changes are async)
-    // await sleep(500);
-    // traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
+
+    // Wait for the notebookControllerManager to have results for this given document
+    await waitForCondition(
+        async () => {
+            return (
+                notebookControllerManager.getSelectedNotebookController(
+                    vscodeNotebook.activeNotebookEditor?.document!
+                ) !== undefined
+            );
+        },
+        time,
+        'Failed to set notebook controllers'
+    );
+
+    let kernelInfo = '';
+    const isRightKernel = () => {
+        if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
+            return false;
+        }
+
+        const selectedController = notebookControllerManager.getSelectedNotebookController(
+            vscodeNotebook.activeNotebookEditor.document
+        );
+
+        if (!selectedController) {
+            return false;
+        }
+
+        traceInfo(`Waiting for kernel and active is ${selectedController.label}`);
+        if (!expectedLanguage) {
+            kernelInfo = `<No specific kernel expected> ${JSON.stringify(selectedController.connection)}`;
+            return true;
+        }
+        switch (selectedController.connection.kind) {
+            case 'startUsingDefaultKernel':
+            case 'startUsingKernelSpec':
+                kernelInfo = `<startUsingKernelSpec>${JSON.stringify(selectedController.connection.kernelSpec || {})}`;
+                return (
+                    selectedController.connection.kernelSpec?.language?.toLowerCase() === expectedLanguage.toLowerCase()
+                );
+            case 'startUsingPythonInterpreter':
+                kernelInfo = `<startUsingPythonInterpreter ${selectedController.connection.interpreter.path}>`;
+                return expectedLanguage.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
+            case 'connectToLiveKernel':
+                kernelInfo = `<connectToLiveKernel id: ${selectedController.connection.kernelModel.id}, name: ${selectedController.connection.kernelModel.id}>`;
+                return true;
+            default:
+                // We don't support testing other kernels, not required hence not added.
+                // eslint-disable-next-line no-console
+                throw new Error('Testing other kernel connections not supported');
+        }
+        if (!expectedLanguage) {
+            kernelInfo = '<No specific kernel expected>. Non Jupyter Kernel';
+            return true;
+        }
+        return false;
+    };
+    // Wait for the active kernel to be a julia kernel.
+    const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
+    await waitForCondition(async () => isRightKernel(), defaultTimeout, errorMessage);
+    // If it works, make sure kernel has enough time to actually switch the active notebook to this
+    // kernel (kernel changes are async)
+    await sleep(500);
+    traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
 }
 export async function trustNotebook(ipynbFile: string | Uri) {
     traceInfo(`Trusting Notebook ${ipynbFile}`);
@@ -675,21 +687,37 @@ export function createNotebookModel(
         nb?.metadata?.language_info?.name || PYTHON_LANGUAGE
     );
 }
-export async function runCell(_cell: NotebookCell) {
-    // KERNELPUSH: Re-enable
-    // const api = await initialize();
-    // const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    // await waitForCondition(
-    // async () => !!vscodeNotebook.activeNotebookEditor?.kernel,
-    // 60_000, // Validating kernel can take a while.
-    // 'Timeout waiting for active kernel'
-    // );
-    // if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.kernel) {
-    // throw new Error('No notebook or kernel');
-    // }
-    // void vscodeNotebook.activeNotebookEditor.kernel.executeCellsRequest(cell.notebook, [
-    // new NotebookRange(cell.index, cell.index + 1)
-    // ]);
+export async function runCell(cell: NotebookCell) {
+    const api = await initialize();
+    const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    const notebookControllerManager = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
+    await waitForCondition(
+        async () => {
+            return (
+                notebookControllerManager.getSelectedNotebookController(
+                    vscodeNotebook.activeNotebookEditor?.document!
+                ) !== undefined
+            );
+        },
+        60_000,
+        'Failed to set notebook controllers'
+    );
+    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
+        throw new Error('No notebook or document');
+    }
+
+    // Get the active notebook controller
+    const notebookController = notebookControllerManager.getSelectedNotebookController(
+        vscodeNotebook.activeNotebookEditor.document
+    );
+
+    if (!notebookController) {
+        throw new Error('No notebook controller');
+    }
+
+    void notebookController.handleExecution(
+        vscodeNotebook.activeNotebookEditor.document.getCells(new NotebookRange(cell.index, cell.index + 1))
+    );
 }
 export async function runAllCellsInActiveNotebook() {
     const api = await initialize();
