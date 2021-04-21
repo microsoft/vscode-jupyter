@@ -18,7 +18,6 @@ import {
     ShowBannerWithExpiryTime
 } from '../../client/datascience/dataScienceSurveyBanner';
 import { INotebookEditorProvider, INotebookExtensibility } from '../../client/datascience/types';
-// import { initialize } from '../initialize';
 import { noop } from '../../client/common/utils/misc';
 import { UIKind } from 'vscode';
 import * as localize from '../../client/common/utils/localize';
