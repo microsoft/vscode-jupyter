@@ -170,7 +170,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Verify execution count.
         assert.ok(cell.latestExecutionSummary?.executionOrder, 'Execution count should be > 0');
     });
-    test('Verify multiple cells get executed', async () => {
+    test('IANHU Verify multiple cells get executed', async () => {
         await insertCodeCell('print("Foo Bar")');
         await insertCodeCell('print("Hello World")');
         const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
