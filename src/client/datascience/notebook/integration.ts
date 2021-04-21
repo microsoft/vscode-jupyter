@@ -41,7 +41,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(INotebookStatusBarProvider) private readonly statusBarProvider: VSCNotebookCellStatusBarItemProvider,
         @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.
@@ -82,7 +82,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
 
                 this.disposables.push(
                     this.vscNotebook.registerNotebookCellStatusBarItemProvider(
-                        { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
+                        { pattern: '**/*.ipynb', viewType: JupyterNotebookView },
                         this.statusBarProvider
                     )
                 );

@@ -2,12 +2,8 @@
 // Licensed under the MIT License.
 
 import {
-    CancellationToken,
     Event,
-    NotebookCommunication,
-    NotebookDocument,
-    NotebookKernel,
-    NotebookKernelProvider
+    NotebookDocument
 } from 'vscode';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 
@@ -15,24 +11,12 @@ export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
 export const INotebookStatusBarProvider = Symbol('INotebookStatusBarProvider');
 
-export const INotebookKernelProvider = Symbol('INotebookKernelProvider');
-export interface INotebookKernelProvider extends NotebookKernelProvider {}
-
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 
 export const INotebookControllerManager = Symbol('INotebookControllerManager');
 export interface INotebookControllerManager {
     readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: VSCodeNotebookController }>;
     getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
-}
-
-export interface INotebookKernelResolver {
-    resolveKernel(
-        kernel: NotebookKernel,
-        document: NotebookDocument,
-        webview: NotebookCommunication,
-        token: CancellationToken
-    ): Promise<void>;
 }
 
 export enum CellOutputMimeTypes {

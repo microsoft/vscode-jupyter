@@ -94,7 +94,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
     }
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
+        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, 0), [
             {
                 kind: NotebookCellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
@@ -114,7 +114,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     }
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     const edit = new WorkspaceEdit();
-    edit.replaceNotebookCells(activeEditor.document.uri, startNumber, 0, [
+    edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, 0), [
         {
             kind: NotebookCellKind.Code,
             language: options?.language || PYTHON_LANGUAGE,
@@ -138,7 +138,7 @@ export async function deleteCell(index: number = 0) {
         return;
     }
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, index, 1, [])
+        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(index, 1), [])
     );
 }
 export async function deleteAllCellsAndWait() {
@@ -148,7 +148,7 @@ export async function deleteAllCellsAndWait() {
         return;
     }
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, 0, activeEditor.document.cellCount, [])
+        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(0, activeEditor.document.cellCount), [])
     );
 }
 
@@ -192,8 +192,7 @@ export async function canRunNotebookTests() {
         !process.env.VSC_JUPYTER_RUN_NB_TEST
     ) {
         console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
-                process.env.VSC_JUPYTER_RUN_NB_TEST
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST
             }`
         );
         return false;
@@ -530,8 +529,7 @@ export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, tim
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
-        `Cell ${
-            cell.index + 1
+        `Cell ${cell.index + 1
         } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);

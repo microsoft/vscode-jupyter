@@ -29,7 +29,7 @@ export namespace vscMockExtHostedTypes {
             public readonly inputCollapsed?: boolean,
             public readonly outputCollapsed?: boolean,
             public readonly custom?: Record<string, any>
-        ) {}
+        ) { }
 
         // todo@API write a proper signature
         with(change: {
@@ -622,8 +622,7 @@ export namespace vscMockExtHostedTypes {
         }
         replaceNotebookCells(
             _uri: vscode.Uri,
-            _start: number,
-            _end: number,
+            _range: vscode.NotebookRange,
             _cells: vscode.NotebookCellData[],
             _metadata?: vscode.WorkspaceEditEntryMetadata
         ): void {
@@ -1116,7 +1115,7 @@ export namespace vscMockExtHostedTypes {
         public static readonly Source = CodeActionKind.Empty.append('source');
         public static readonly SourceOrganizeImports = CodeActionKind.Source.append('organizeImports');
 
-        constructor(public readonly value: string) {}
+        constructor(public readonly value: string) { }
 
         public append(parts: string): CodeActionKind {
             return new CodeActionKind(this.value ? this.value + CodeActionKind.sep + parts : parts);

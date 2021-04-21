@@ -64,7 +64,6 @@ import {
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
-    NotebookDocumentFilter,
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
@@ -1043,7 +1042,7 @@ export interface IWebviewPanelMessageListener extends IWebviewMessageListener, I
 }
 
 export const IWebviewViewMessageListener = Symbol('IWebviewViewMessageListener');
-export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable {}
+export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable { }
 
 export type WebviewMessage = {
     /**
@@ -1593,7 +1592,7 @@ export interface IVSCodeNotebook {
         preloads?: NotebookKernelPreload[]
     ): NotebookController;
     registerNotebookCellStatusBarItemProvider(
-        selector: NotebookDocumentFilter,
+        selector: NotebookSelector,
         provider: NotebookCellStatusBarItemProvider
     ): Disposable;
 }

@@ -24,6 +24,7 @@ import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRem
 import { KernelSocketInformation } from '../types';
 import { JupyterNotebookView } from './constants';
 import { traceCellMessage, trackKernelInfoInNotebookMetadata } from './helpers/helpers';
+import { INotebookControllerManager } from './types';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{
@@ -66,6 +67,7 @@ export class VSCodeNotebookController implements Disposable {
         private readonly kernelProvider: IKernelProvider,
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         private readonly context: IExtensionContext,
+        private readonly notebookControllerManager: INotebookControllerManager,
         private readonly disposable: IDisposableRegistry
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -188,8 +190,10 @@ export class VSCodeNotebookController implements Disposable {
             if (kernel.disposed || !kernel.info) {
                 return;
             }
-            const editor = this.notebookApi.notebookEditors.find((item) => item.document === doc);
-            if (!editor || editor.kernel?.id !== this.id) {
+
+            const documentConnection = this.notebookControllerManager.getSelectedNotebookController(doc);
+            if (!documentConnection || documentConnection.id !== this.id) {
+                // Disregard if we've changed kernels
                 return;
             }
             trackKernelInfoInNotebookMetadata(doc, kernel.info);

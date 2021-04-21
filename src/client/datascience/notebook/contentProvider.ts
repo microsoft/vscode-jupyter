@@ -8,7 +8,6 @@ import {
     CancellationToken,
     NotebookCellKind,
     Uri,
-    NotebookCommunication,
     NotebookContentProvider as VSCNotebookContentProvider,
     NotebookData,
     NotebookDocument,
@@ -41,12 +40,7 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport,
         @inject(IVSCodeNotebook) readonly notebookProvider: IVSCodeNotebook
-    ) {}
-    public async resolveNotebook(_document: NotebookDocument, _webview: NotebookCommunication): Promise<void> {
-        // This function is due for deprecation. Associated code has been moved to
-        // NotebookKernelProvider will remove when removed from the API fully
-        return Promise.resolve();
-    }
+    ) { }
     public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
         if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {
             // If not supported, return a notebook with error displayed.

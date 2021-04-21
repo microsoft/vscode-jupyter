@@ -13,12 +13,10 @@ import {
     NotebookContentProvider,
     NotebookController,
     NotebookDocument,
-    NotebookDocumentFilter,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookExecutionHandler,
     NotebookKernelPreload,
-    NotebookKernelProvider,
     NotebookSelector,
     window
 } from 'vscode';
@@ -90,16 +88,10 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         return notebook.registerNotebookContentProvider(notebookType, provider, options);
     }
     public registerNotebookCellStatusBarItemProvider(
-        selector: NotebookDocumentFilter,
+        selector: NotebookSelector,
         provider: NotebookCellStatusBarItemProvider
     ): Disposable {
         return notebook.registerNotebookCellStatusBarItemProvider(selector, provider);
-    }
-    public registerNotebookKernelProvider(
-        selector: NotebookDocumentFilter,
-        provider: NotebookKernelProvider
-    ): Disposable {
-        return notebook.registerNotebookKernelProvider(selector, provider);
     }
     public createNotebookController(
         id: string,

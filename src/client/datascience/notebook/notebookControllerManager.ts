@@ -123,10 +123,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Providing notebook controllers with length ${controllers.length} for ${
-                        document.uri.fsPath
-                    }. Preferred is ${controllers.find((m) => m.isPreferred)?.label}, ${
-                        controllers.find((m) => m.isPreferred)?.id
+                    `Providing notebook controllers with length ${controllers.length} for ${document.uri.fsPath
+                    }. Preferred is ${controllers.find((m) => m.isPreferred)?.label}, ${controllers.find((m) => m.isPreferred)?.id
                     }`
                 );
             })
@@ -217,6 +215,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.kernelProvider,
             this.preferredRemoteKernelIdProvider,
             this.context,
+            this,
             this.disposables
         );
 
