@@ -18,11 +18,12 @@ import {
     ShowBannerWithExpiryTime
 } from '../../client/datascience/dataScienceSurveyBanner';
 import { INotebookEditorProvider, INotebookExtensibility } from '../../client/datascience/types';
-import { initialize } from '../initialize';
 import { noop } from '../../client/common/utils/misc';
 import { UIKind } from 'vscode';
 import * as localize from '../../client/common/utils/localize';
 import { MillisecondsInADay } from '../../client/constants';
+import { TestPersistentStateFactory } from './testPersistentStateFactory';
+import { MockMemento } from '../mocks/mementos';
 
 [true, false].forEach((UseVSCodeNotebookEditorApi) => {
     const type = UseVSCodeNotebookEditorApi ? 'Insiders' : 'Stable';
@@ -46,7 +47,6 @@ import { MillisecondsInADay } from '../../client/constants';
             clock.uninstall();
         });
         setup(async () => {
-            const api = await initialize();
             sinon.restore();
             clock = fakeTimers.install();
             appShell = mock<IApplicationShell>();
@@ -60,20 +60,25 @@ import { MillisecondsInADay } from '../../client/constants';
             when(appEnv.uiKind).thenReturn(UIKind.Desktop);
             when(appEnv.channel).thenReturn(UseVSCodeNotebookEditorApi ? 'insiders' : 'stable');
             when(editorProvider.onDidOpenNotebookEditor).thenReturn(noop as any);
-            const realStateFactory = api.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-            openNotebookCountState = realStateFactory.createGlobalPersistentState<number>(
+
+            // Fake up persistant storage as this tests has been hanging while trying to update the actual mementos
+            const globalStorage = new MockMemento();
+            const localStorage = new MockMemento();
+            const testStateFactory = new TestPersistentStateFactory(globalStorage, localStorage);
+
+            openNotebookCountState = testStateFactory.createGlobalPersistentState<number>(
                 UseVSCodeNotebookEditorApi
                     ? InsidersNotebookSurveyStateKeys.OpenNotebookCount
                     : DSSurveyStateKeys.OpenNotebookCount,
                 0
             );
-            executionCountState = realStateFactory.createGlobalPersistentState<number>(
+            executionCountState = testStateFactory.createGlobalPersistentState<number>(
                 UseVSCodeNotebookEditorApi
                     ? InsidersNotebookSurveyStateKeys.ExecutionCount
                     : DSSurveyStateKeys.ExecutionCount,
                 0
             );
-            showBannerState = realStateFactory.createGlobalPersistentState<ShowBannerWithExpiryTime>(
+            showBannerState = testStateFactory.createGlobalPersistentState<ShowBannerWithExpiryTime>(
                 UseVSCodeNotebookEditorApi ? InsidersNotebookSurveyStateKeys.ShowBanner : DSSurveyStateKeys.ShowBanner,
                 { data: true }
             );
