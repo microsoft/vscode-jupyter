@@ -133,10 +133,13 @@ import { MockMemento } from '../mocks/mementos';
                 UseVSCodeNotebookEditorApi
             );
         }
-        test(type + ' - Confirm prompt is displayed & only once per session', async () => {
+        test(type + ' - Confirm prompt is displayed (after 10 minutes) & only once per session', async () => {
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve();
             await showBannerState.updateValue({ data: true });
-            await executionCountState.updateValue(100);
+            await executionCountState.updateValue(UseVSCodeNotebookEditorApi ? 100 : 250);
+
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
 
             await bannerService.showBanner(survey);
             await bannerService.showBanner(survey);
@@ -157,13 +160,15 @@ import { MockMemento } from '../mocks/mementos';
 
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
         });
-        test(type + ' - Confirm prompt is displayed 3 months later', async () => {
+        test(type + ' - Confirm prompt is displayed 3/6 months later', async () => {
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                 localize.DataScienceSurveyBanner.bannerLabelNo() as any
             );
             await showBannerState.updateValue({ data: true });
-            await executionCountState.updateValue(100);
+            await executionCountState.updateValue(UseVSCodeNotebookEditorApi ? 100 : 250);
 
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
             await bannerService.showBanner(survey);
 
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
@@ -182,20 +187,26 @@ import { MockMemento } from '../mocks/mementos';
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
 
-            // Advance time by 3.5 month & it will be displayed.
-            clock.tick(MillisecondsInADay * 30 * 3.5);
+            // Advance time by 6.5/3.5 month & it will be displayed.
+            const months = survey === BannerType.DSSurvey ? 6.5 : 3.5;
+            clock.tick(MillisecondsInADay * 30 * months);
             bannerService = createBannerService();
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
             await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
         });
-        test(type + ' - Confirm prompt is displayed 6 months later & survey displayed', async () => {
+        test(type + ' - Confirm prompt is displayed 6/12 months later & survey displayed', async () => {
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                 localize.DataScienceSurveyBanner.bannerLabelYes() as any
             );
 
             await showBannerState.updateValue({ data: true });
-            await executionCountState.updateValue(100);
+            await executionCountState.updateValue(UseVSCodeNotebookEditorApi ? 100 : 250);
+
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
 
             await bannerService.showBanner(survey);
             verify(browser.launch(anything())).once();
@@ -216,11 +227,14 @@ import { MockMemento } from '../mocks/mementos';
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
 
-            // Advance time by 6.5 month & it will be displayed.
-            clock.tick(MillisecondsInADay * 30 * 6.5);
+            // Advance time by 12.5/6.5 month & it will be displayed.
+            const months = survey === BannerType.DSSurvey ? 12.5 : 6.5;
+            clock.tick(MillisecondsInADay * 30 * months);
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                 localize.DataScienceSurveyBanner.bannerLabelNo() as any
             );
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
             bannerService = createBannerService();
             await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();
