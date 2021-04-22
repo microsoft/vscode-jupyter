@@ -26,6 +26,9 @@ export async function chainWithPendingUpdates(
     update: (edit: WorkspaceEdit) => void | Promise<void>
 ): Promise<boolean> {
     const notebook = document;
+    if (document.isClosed){
+        return true;
+    }
     const pendingUpdates = pendingCellUpdates.has(notebook) ? pendingCellUpdates.get(notebook)! : Promise.resolve();
     const deferred = createDeferred<boolean>();
     const aggregatedPromise = pendingUpdates
