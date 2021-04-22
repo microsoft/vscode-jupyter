@@ -25,6 +25,7 @@ suite('Smoke Tests', () => {
             return this.skip();
         }
         api = await initialize();
+        console.log('api', Object.keys(api));
         provider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         await setAutoSaveDelayInWorkspaceRoot(1);
     });
