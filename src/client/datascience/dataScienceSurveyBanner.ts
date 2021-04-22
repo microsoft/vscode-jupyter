@@ -149,7 +149,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         localize.DataScienceSurveyBanner.bannerLabelNo()
     ];
     private readonly showBannerState = new Map<BannerType, IPersistentState<ShowBannerWithExpiryTime>>();
-    public static surveyDelay = false;
+    private static surveyDelay = false;
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
