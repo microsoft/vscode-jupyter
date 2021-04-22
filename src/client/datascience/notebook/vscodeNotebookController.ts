@@ -7,6 +7,7 @@ import {
     EventEmitter,
     NotebookCell,
     NotebookController,
+    NotebookControllerAffinity,
     NotebookDocument,
     NotebookKernelPreload,
     Uri
@@ -82,14 +83,6 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils);
         this.controller.hasExecutionOrder = true;
 
-        // KERNELPUSH: We used to be able to leave this empty to support all languages
-        // However this is now required to execute a cell, if not specified the cell will not run if the the language does
-        // not match. Using our known list for now
-        // IANHU: Was this updated? Check if we can just specify nothing
-        // this.controller.supportedLanguages = KnownNotebookLanguages.map((lang) => {
-        // return translateKernelLanguageToMonaco(lang);
-        // });
-
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposable);
     }
@@ -100,6 +93,10 @@ export class VSCodeNotebookController implements Disposable {
             this._onNotebookControllerSelected.dispose();
             this.controller.dispose();
         }
+    }
+
+    public updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
+        this.controller.updateNotebookAffinity(notebook, affinity);
     }
 
     // Handle the execution of notebook cell
@@ -145,7 +142,6 @@ export class VSCodeNotebookController implements Disposable {
         ];
     }
 
-    // IANHU: Deal with notebook document here
     private handleInterrupt(notebook: NotebookDocument) {
         notebook.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         this.commandManager
@@ -153,9 +149,8 @@ export class VSCodeNotebookController implements Disposable {
             .then(noop, (ex) => console.error(ex));
     }
 
-    // IANHU: Get document URI from cells
     private executeCell(doc: NotebookDocument, cell: NotebookCell) {
-        traceInfo(`Execute Cell ${cell.index} ${cell.notebook.uri.toString()} in kernelWithMetadata.ts`);
+        traceInfo(`Execute Cell ${cell.index} ${cell.notebook.uri.toString()}`);
         const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.kernelConnection });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
