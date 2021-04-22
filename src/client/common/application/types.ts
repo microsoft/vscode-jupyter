@@ -66,7 +66,6 @@ import {
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
-    NotebookCellStatusBarItemProvider,
     NotebookDocumentContentOptions,
     NotebookSelector,
     NotebookExecutionHandler,
@@ -1580,10 +1579,6 @@ export interface IVSCodeNotebook {
         handler?: NotebookExecutionHandler,
         preloads?: NotebookKernelPreload[]
     ): NotebookController;
-    registerNotebookCellStatusBarItemProvider(
-        selector: NotebookSelector,
-        provider: NotebookCellStatusBarItemProvider
-    ): Disposable;
 }
 
 export const IEncryptedStorage = Symbol('IAuthenticationService');

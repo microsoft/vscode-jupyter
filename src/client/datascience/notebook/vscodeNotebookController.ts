@@ -17,8 +17,7 @@ import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { translateKernelLanguageToMonaco } from '../common';
-import { Commands, KnownNotebookLanguages } from '../constants';
+import { Commands } from '../constants';
 import { getDescriptionOfKernelConnection, getDetailOfKernelConnection } from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
@@ -92,13 +91,7 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
         this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils);
         this.controller.hasExecutionOrder = true;
-
-        // KERNELPUSH: We used to be able to leave this empty to support all languages
-        // However this is now required to execute a cell, if not specified the cell will not run if the the language does
-        // not match. Using our known list for now
-        this.controller.supportedLanguages = KnownNotebookLanguages.map((lang) => {
-            return translateKernelLanguageToMonaco(lang);
-        });
+        this.controller.supportedLanguages = [];
 
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposable);
