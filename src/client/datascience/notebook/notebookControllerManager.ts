@@ -7,13 +7,14 @@ import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode'
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceInfo, traceInfoIf } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
     IExtensionContext,
     IExtensions,
-    IPathUtils
+    IPathUtils,
+    Resource
 } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -51,6 +52,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }>;
 
     private isLocalLaunch: boolean;
+    private cancelToken: CancellationTokenSource | undefined;
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -86,6 +88,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
+
+        // Trigger off searching for all the controllers
+        this.loadNotebookControllers().catch(error => {
+            traceError('Error loading notebook controllers', error);
+            throw error;
+        });
     }
 
     // Look up what NotebookController is currently selected for the given notebook document
@@ -101,6 +109,37 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (this.controllerMapping.has(document)) {
             // ! is ok here as we have check the .has above already
             return this.controllerMapping.get(document)?.controllers;
+        }
+    }
+
+    private async loadNotebookControllers(): Promise<void> {
+        const stopWatch = new StopWatch();
+
+        try {
+            this.cancelToken = new CancellationTokenSource();
+
+            const connections = await this.getKernelConnectionMetadata2(this.cancelToken.token)
+
+            if (this.cancelToken.token.isCancellationRequested) {
+                // Bail out on making the controllers if we are cancelling
+                traceInfo('Cancelled loading notebook controllers');
+                return;
+            }
+
+            // Now create the actual controllers from our connections
+            const controllers = await this.createNotebookControllers2(connections);
+
+            // Send telemetry related to fetching the kernel connections
+            // IANHU: undefined works for telemetry?
+            sendNotebookControllerCreateTelemetry(undefined, controllers, stopWatch);
+
+            traceInfoIf(
+                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                `Providing notebook controllers with length ${controllers.length}.`
+            );
+
+        } finally {
+            this.cancelToken = undefined;
         }
     }
 
@@ -164,6 +203,33 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
 
+    private createNotebookControllers2(kernelConnections: KernelConnectionMetadata[]): VSCodeNotebookController[] {
+        // First sort our items by label
+        // IANHU: Do we need to sort here?
+        const connectionsWithLabel = kernelConnections.map((value) => {
+            return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
+        });
+        connectionsWithLabel.sort((a, b) => {
+            if (a.label > b.label) {
+                return 1;
+            } else if (a.label === b.label) {
+                return 0;
+            } else {
+                return -1;
+            }
+        });
+
+        // Map KernelConnectionMetadata => NotebookController
+        const controllers = connectionsWithLabel.map((value) => {
+            return this.createNotebookController(
+                value.connection,
+                value.label
+            );
+        });
+
+        return controllers;
+    }
+
     // For this notebook document, create NotebookControllers for all associated kernel connections
     private createNotebookControllers(
         document: NotebookDocument,
@@ -198,33 +264,31 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
 
         // Map KernelConnectionMetadata => NotebookController
-        const controllers = connectionsWithLabel.map((value) => {
-            return this.createNotebookController(
-                document,
-                value.connection,
-                areKernelConnectionsEqual(value.connection, kernelConnections.preferred),
-                value.label
-            );
-        });
+        // const controllers = connectionsWithLabel.map((value) => {
+        // return this.createNotebookController(
+        // document,
+        // value.connection,
+        // areKernelConnectionsEqual(value.connection, kernelConnections.preferred),
+        // value.label
+        // );
+        // });
 
         // Store our NotebookControllers to dispose on doc close
         // KERNELPUSH: We don't get an onDidChangeNotebookAssociation for the initial kernel setting
         // Also instead of picking the preferred one, it just takes the first in the list, so we put our preferred
         // kernel at the start of the list and then just use that as selected here (since we don't get selection event)
-        this.controllerMapping.set(document, { selected: controllers[0], controllers: controllers });
+        //        this.controllerMapping.set(document, { selected: controllers[0], controllers: controllers });
 
-        return controllers;
+        // return controllers;
+        return [];
     }
 
     private createNotebookController(
-        document: NotebookDocument,
         kernelConnection: KernelConnectionMetadata,
-        preferred: boolean,
         label: string
     ): VSCodeNotebookController {
         // Create notebook selector
         const controller = new VSCodeNotebookController(
-            document,
             kernelConnection,
             label,
             this.notebook,
@@ -265,6 +329,41 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Now notify out that we have updated a notebooks controller
             this._onNotebookControllerSelected.fire(event);
         }
+    }
+
+    private async getKernelConnectionMetadata2(token: CancellationToken): Promise<KernelConnectionMetadata[]> {
+        let kernels: KernelConnectionMetadata[] = [];
+
+        // Instead of a specific resource, we can just search on undefined for the workspace
+        const resource: Resource = undefined;
+
+        if (this.isLocalLaunch) {
+            kernels = await this.localKernelFinder.listKernels(resource, token);
+
+            // We need to filter out those items that are for other extensions.
+            kernels = kernels.filter((r) => {
+                if (r.kind !== 'connectToLiveKernel' && r.kernelSpec) {
+                    if (
+                        r.kernelSpec.metadata?.vscode?.extension_id &&
+                        this.extensions.getExtension(r.kernelSpec.metadata?.vscode?.extension_id)
+                    ) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+        } else {
+            const connection = await this.notebookProvider.connect({
+                getOnly: false,
+                resource: resource,
+                disableUI: false,
+                localOnly: false
+            });
+
+            kernels = await this.remoteKernelFinder.listKernels(resource, connection, token);
+        }
+
+        return kernels;
     }
 
     // For the given NotebookDocument find all associated KernelConnectionMetadata
