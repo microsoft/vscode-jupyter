@@ -41,8 +41,8 @@ import { INotebookControllerManager } from './types';
  */
 @injectable()
 export class NotebookControllerManager implements INotebookControllerManager, IExtensionSyncActivationService {
-
-    private controllerMapping2 = new WeakMap<NotebookDocument, VSCodeNotebookController | undefined>();
+    // Keep tabs on which controller is selected relative to each notebook document
+    private controllerMapping = new WeakMap<NotebookDocument, VSCodeNotebookController | undefined>();
 
     // When opening a document, track our find preferred search so that we can cancel if needed
     private findPreferredInProgress = new WeakMap<NotebookDocument, CancellationTokenSource>();
@@ -52,6 +52,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         controller: VSCodeNotebookController;
     }>;
 
+    // Promise to resolve when we have loaded our controllers
     private controllersPromise: Promise<VSCodeNotebookController[]> | undefined;
 
     private isLocalLaunch: boolean;
@@ -86,8 +87,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     public activate() {
         // Sign up for document either opening or closing
-        this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument2, this, this.disposables);
-        this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument2, this, this.disposables);
+        this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
+        this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
 
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
@@ -100,8 +101,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Look up what NotebookController is currently selected for the given notebook document
     public getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined {
-        if (this.controllerMapping2.has(document)) {
-            return this.controllerMapping2.get(document);
+        if (this.controllerMapping.has(document)) {
+            return this.controllerMapping.get(document);
         }
     }
 
@@ -110,13 +111,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.controllersPromise;
     }
 
+    // Turn all our kernelConnections that we know about into registered NotebookControllers
     private async loadNotebookControllers(): Promise<VSCodeNotebookController[]> {
         const stopWatch = new StopWatch();
 
         try {
             this.cancelToken = new CancellationTokenSource();
 
-            const connections = await this.getKernelConnectionMetadata2(this.cancelToken.token)
+            const connections = await this.getKernelConnectionMetadata(this.cancelToken.token)
 
             if (this.cancelToken.token.isCancellationRequested) {
                 // Bail out on making the controllers if we are cancelling
@@ -125,10 +127,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
 
             // Now create the actual controllers from our connections
-            const controllers = await this.createNotebookControllers2(connections);
+            const controllers = await this.createNotebookControllers(connections);
 
             // Send telemetry related to fetching the kernel connections
-            // IANHU: undefined works for telemetry?
+            // KERNELPUSH: undefined works for telemetry?
             sendNotebookControllerCreateTelemetry(undefined, controllers, stopWatch);
 
             traceInfoIf(
@@ -148,9 +150,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // When a document is opened we need to look for a perferred kernel for it
-    private onDidOpenNotebookDocument2(document: NotebookDocument) {
+    private onDidOpenNotebookDocument(document: NotebookDocument) {
         // Prep so that we can track the selected controller for this document
-        this.controllerMapping2.set(document, undefined);
+        this.controllerMapping.set(document, undefined);
 
         // Keep track of a token per document so that we can cancel the search if the doc is closed
         const preferredSearchToken = new CancellationTokenSource();
@@ -164,7 +166,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
             // If we found a preferred kernel, set the association on the NotebookController
             if (preferredConnection) {
-                // IANHU: Log / telemetry here
+                traceInfo(`PreferredConnection: ${preferredConnection.id} found for NotebookDocument: ${document.uri.toString()}`);
                 this.setPreferredController(document, preferredConnection);
             }
         }).finally(() => {
@@ -190,18 +192,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         if (targetController) {
-            // IANHU: Default
             targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
         }
     }
 
     private async findPreferredKernel(document: NotebookDocument, token: CancellationToken): Promise<KernelConnectionMetadata | undefined> {
         let preferred: KernelConnectionMetadata | undefined;
-
-        // IANHU: Don't think we want this If we already have an item selected, then just use that one
-        // if (this.controllerMapping2.has(document)) {
-        // preferred = this.controllerMapping2.get(document)?.connection;
-        // }
 
         if (this.isLocalLaunch) {
             const preferredConnectionPromise = preferred
@@ -226,19 +222,19 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return preferred;
     }
 
-    private onDidCloseNotebookDocument2(document: NotebookDocument) {
+    private onDidCloseNotebookDocument(document: NotebookDocument) {
         // When we close a document, cancel any preferred searches in progress
         if (this.findPreferredInProgress.has(document)) {
             this.findPreferredInProgress.get(document)?.cancel();
         }
 
         // Remove from our current selection tracking list
-        if (this.controllerMapping2.has(document)) {
-            this.controllerMapping2.delete(document);
+        if (this.controllerMapping.has(document)) {
+            this.controllerMapping.delete(document);
         }
     }
 
-    private createNotebookControllers2(kernelConnections: KernelConnectionMetadata[]): VSCodeNotebookController[] {
+    private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]): VSCodeNotebookController[] {
         // First sort our items by label
         const connectionsWithLabel = kernelConnections.map((value) => {
             return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
@@ -296,8 +292,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
-        if (this.controllerMapping2.has(event.notebook)) {
-            this.controllerMapping2.set(event.notebook, event.controller);
+        if (this.controllerMapping.has(event.notebook)) {
+            this.controllerMapping.set(event.notebook, event.controller);
 
             // Now actually handle the change
             await this.notebookKernelChanged(event.notebook, event.controller);
@@ -307,7 +303,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
 
-    private async getKernelConnectionMetadata2(token: CancellationToken): Promise<KernelConnectionMetadata[]> {
+    private async getKernelConnectionMetadata(token: CancellationToken): Promise<KernelConnectionMetadata[]> {
         let kernels: KernelConnectionMetadata[] = [];
 
         // Instead of a specific resource, we can just search on undefined for the workspace
