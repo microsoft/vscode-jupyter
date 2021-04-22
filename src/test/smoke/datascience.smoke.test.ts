@@ -98,7 +98,6 @@ suite('Smoke Tests', () => {
     });
 
     test('Random bytes generation', async function () {
-        return this.skip(); // Failing on windows. Tracked by 4444
         // We do have a unit test testing this, however create a smoke test to
         // ensure that the bundling of the native node modules worked
         const numRequestedBytes = 1024;
