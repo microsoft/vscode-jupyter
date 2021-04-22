@@ -23,7 +23,12 @@ import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/k
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
 import { JupyterNotebookView } from './constants';
-import { traceCellMessage, trackKernelInfoInNotebookMetadata } from './helpers/helpers';
+import {
+    isSameAsTrackedKernelInNotebookMetadata,
+    traceCellMessage,
+    trackKernelInfoInNotebookMetadata,
+    trackKernelInNotebookMetadata
+} from './helpers/helpers';
 import { INotebookControllerManager } from './types';
 
 export class VSCodeNotebookController implements Disposable {
@@ -122,6 +127,13 @@ export class VSCodeNotebookController implements Disposable {
         // If this NotebookController was selected, fire off the event
         if (event.selected) {
             this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
+        } else {
+            // If this controller was what was previously selected, then wipe that information out.
+            // This happens when user selects our controller & then selects another controller e.g. (.NET Extension).
+            // If the user selects one of our controllers (kernels), then this gets initialized elsewhere.
+            if (isSameAsTrackedKernelInNotebookMetadata(event.notebook, this.connection)) {
+                trackKernelInNotebookMetadata(event.notebook, undefined);
+            }
         }
     }
 
