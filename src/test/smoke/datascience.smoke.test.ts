@@ -113,8 +113,8 @@ suite('Smoke Tests', () => {
         if (!this.api) {
             api = await initialize();
         }
-        provider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         await runCellInInteractiveWindow();
+        provider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         assert.ok(provider?.windows?.length === 1, 'Unexpected number of interactive windows created');
         const currentWindow = provider?.windows[0];
         console.log(currentWindow, currentWindow);
