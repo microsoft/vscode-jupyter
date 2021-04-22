@@ -191,8 +191,7 @@ export async function canRunNotebookTests() {
         !process.env.VSC_JUPYTER_RUN_NB_TEST
     ) {
         console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
-                process.env.VSC_JUPYTER_RUN_NB_TEST
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST
             }`
         );
         return false;
@@ -278,9 +277,7 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     );
 
     // Get the list of NotebookControllers for this document
-    const notebookControllers = notebookControllerManager.getNotebookControllers(
-        vscodeNotebook.activeNotebookEditor?.document!
-    );
+    const notebookControllers = await notebookControllerManager.getNotebookControllers();
 
     // Get the list of kernels possible
     traceInfo(`Controllers found for wait search: ${notebookControllers?.map((k) => `${k.label}:${k.id}`).join('\n')}`);
@@ -553,8 +550,7 @@ export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, tim
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
-        `Cell ${
-            cell.index + 1
+        `Cell ${cell.index + 1
         } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);

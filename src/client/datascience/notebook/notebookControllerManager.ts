@@ -41,10 +41,6 @@ import { INotebookControllerManager } from './types';
  */
 @injectable()
 export class NotebookControllerManager implements INotebookControllerManager, IExtensionSyncActivationService {
-    private controllerMapping = new WeakMap<
-        NotebookDocument,
-        { selected: VSCodeNotebookController | undefined; controllers: VSCodeNotebookController[] }
-    >();
 
     private controllerMapping2 = new WeakMap<NotebookDocument, VSCodeNotebookController | undefined>();
 
@@ -104,18 +100,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Look up what NotebookController is currently selected for the given notebook document
     public getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined {
-        if (this.controllerMapping.has(document)) {
-            return this.controllerMapping.get(document)?.selected;
+        if (this.controllerMapping2.has(document)) {
+            return this.controllerMapping2.get(document);
         }
     }
 
-    // Find all the current NotebookControllers for the given document allow undefined to tell between
-    // having no controllers = [] versus not having loaded = undefined
-    public getNotebookControllers(document: NotebookDocument): VSCodeNotebookController[] | undefined {
-        if (this.controllerMapping.has(document)) {
-            // ! is ok here as we have check the .has above already
-            return this.controllerMapping.get(document)?.controllers;
-        }
+    // Find all the notebook controllers that we have registered
+    public async getNotebookControllers(): Promise<VSCodeNotebookController[] | undefined> {
+        return this.controllersPromise;
     }
 
     private async loadNotebookControllers(): Promise<VSCodeNotebookController[]> {
@@ -206,10 +198,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private async findPreferredKernel(document: NotebookDocument, token: CancellationToken): Promise<KernelConnectionMetadata | undefined> {
         let preferred: KernelConnectionMetadata | undefined;
 
-        // IANHU: Check this, if we already have mapping use that?
-        if (this.controllerMapping.has(document)) {
-            preferred = this.controllerMapping.get(document)?.selected?.connection;
-        }
+        // IANHU: Don't think we want this If we already have an item selected, then just use that one
+        // if (this.controllerMapping2.has(document)) {
+        // preferred = this.controllerMapping2.get(document)?.connection;
+        // }
 
         if (this.isLocalLaunch) {
             const preferredConnectionPromise = preferred
