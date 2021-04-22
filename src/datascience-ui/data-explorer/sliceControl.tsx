@@ -32,6 +32,7 @@ interface ISliceControlProps {
     loadingData: boolean;
     originalVariableShape: number[];
     sliceExpression: string | undefined;
+    onPanelToggled(): void;
     onCheckboxToggled(newState: boolean): void;
     handleSliceRequest(slice: IGetSliceRequest): void;
 }
@@ -65,7 +66,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     className="slicing-control"
                     {...(this.props.originalVariableShape.length > 2 ? { open: true } : {})}
                 >
-                    <summary className="slice-summary">
+                    <summary className="slice-summary" onClick={() => this.props.onPanelToggled()}>
                         <span className="slice-summary-detail">
                             {getLocString('DataScience.sliceSummaryTitle', 'SLICING')}
                         </span>

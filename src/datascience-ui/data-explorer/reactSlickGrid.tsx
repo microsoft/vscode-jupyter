@@ -62,6 +62,7 @@ export interface ISlickGridProps {
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
     resetGridEvent: Slick.Event<ISlickGridSlice>;
+    resizeGridEvent: Slick.Event<void>;
     columnsUpdated: Slick.Event<Slick.Column<Slick.SlickData>[]>;
     filterRowsTooltip: string;
     forceHeight?: number;
@@ -171,6 +172,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
         this.props.resetGridEvent.subscribe(this.resetGrid);
+        this.props.resizeGridEvent.subscribe(this.windowResized);
         this.props.columnsUpdated.subscribe(this.updateColumns);
     }
 
