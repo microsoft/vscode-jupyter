@@ -1042,7 +1042,7 @@ export interface IWebviewPanelMessageListener extends IWebviewMessageListener, I
 }
 
 export const IWebviewViewMessageListener = Symbol('IWebviewViewMessageListener');
-export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable { }
+export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable {}
 
 export type WebviewMessage = {
     /**

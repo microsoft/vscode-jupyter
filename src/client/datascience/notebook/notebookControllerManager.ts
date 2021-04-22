@@ -93,7 +93,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
 
-        this.controllersPromise = this.loadNotebookControllers().catch(error => {
+        this.controllersPromise = this.loadNotebookControllers().catch((error) => {
             traceError('Error loading notebook controllers', error);
             throw error;
         });
@@ -118,7 +118,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         try {
             this.cancelToken = new CancellationTokenSource();
 
-            const connections = await this.getKernelConnectionMetadata(this.cancelToken.token)
+            const connections = await this.getKernelConnectionMetadata(this.cancelToken.token);
 
             if (this.cancelToken.token.isCancellationRequested) {
                 // Bail out on making the controllers if we are cancelling
@@ -139,7 +139,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             );
 
             return controllers;
-
         } finally {
             this.cancelToken = undefined;
         }
@@ -158,21 +157,27 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const preferredSearchToken = new CancellationTokenSource();
         this.findPreferredInProgress.set(document, preferredSearchToken);
 
-        this.findPreferredKernel(document, preferredSearchToken.token).then(preferredConnection => {
-            if (preferredSearchToken.token.isCancellationRequested) {
-                traceInfo('Find preferred kernel cancelled');
-                return;
-            }
+        this.findPreferredKernel(document, preferredSearchToken.token)
+            .then((preferredConnection) => {
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfo('Find preferred kernel cancelled');
+                    return;
+                }
 
-            // If we found a preferred kernel, set the association on the NotebookController
-            if (preferredConnection) {
-                traceInfo(`PreferredConnection: ${preferredConnection.id} found for NotebookDocument: ${document.uri.toString()}`);
-                this.setPreferredController(document, preferredConnection);
-            }
-        }).finally(() => {
-            // Make sure that we clear our finding in progress when done
-            this.findPreferredInProgress.delete(document);
-        });
+                // If we found a preferred kernel, set the association on the NotebookController
+                if (preferredConnection) {
+                    traceInfo(
+                        `PreferredConnection: ${
+                            preferredConnection.id
+                        } found for NotebookDocument: ${document.uri.toString()}`
+                    );
+                    this.setPreferredController(document, preferredConnection).catch(traceError);
+                }
+            })
+            .finally(() => {
+                // Make sure that we clear our finding in progress when done
+                this.findPreferredInProgress.delete(document);
+            });
     }
 
     // For the given document, find the notebook controller that matches this kernel connection and associate the two
@@ -186,7 +191,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // can happen if a document is opened quick and we have not yet loaded our controllers
         const controllers = await this.controllersPromise;
 
-        const targetController = controllers.find(value => {
+        const targetController = controllers.find((value) => {
             // Check for a connection match
             return areKernelConnectionsEqual(kernelConnection, value.connection);
         });
@@ -196,7 +201,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
 
-    private async findPreferredKernel(document: NotebookDocument, token: CancellationToken): Promise<KernelConnectionMetadata | undefined> {
+    private async findPreferredKernel(
+        document: NotebookDocument,
+        token: CancellationToken
+    ): Promise<KernelConnectionMetadata | undefined> {
         let preferred: KernelConnectionMetadata | undefined;
 
         if (this.isLocalLaunch) {
@@ -204,7 +212,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 ? Promise.resolve(preferred)
                 : this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
             preferred = await preferredConnectionPromise;
-
         } else {
             const connection = await this.notebookProvider.connect({
                 getOnly: false,
@@ -251,10 +258,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Map KernelConnectionMetadata => NotebookController
         const controllers = connectionsWithLabel.map((value) => {
-            return this.createNotebookController(
-                value.connection,
-                value.label
-            );
+            return this.createNotebookController(value.connection, value.label);
         });
 
         return controllers;
