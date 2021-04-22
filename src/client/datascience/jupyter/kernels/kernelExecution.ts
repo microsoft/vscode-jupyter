@@ -42,7 +42,7 @@ export class KernelExecution implements IDisposable {
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<void> {
-        if (cell.kind == NotebookCellKind.Markdown){
+        if (cell.kind == NotebookCellKind.Markdown) {
             return;
         }
         sendKernelTelemetryEvent(cell.notebook.uri, Telemetry.ExecuteNativeCell);
