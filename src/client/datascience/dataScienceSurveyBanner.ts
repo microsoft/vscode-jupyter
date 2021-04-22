@@ -149,7 +149,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         localize.DataScienceSurveyBanner.bannerLabelNo()
     ];
     private readonly showBannerState = new Map<BannerType, IPersistentState<ShowBannerWithExpiryTime>>();
-    private tenMinutesPassed = false;
+    public static surveyDelay = false;
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
@@ -168,9 +168,9 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         this.setPersistentState(BannerType.ExperimentNotebookSurvey, ExperimentNotebookSurveyStateKeys.ShowBanner);
         editorProvider.onDidOpenNotebookEditor(this.openedNotebook.bind(this));
 
-        // Change the tenMinutesPassed flag after 10 minutes
+        // Change the surveyDelay flag after 10 minutes
         setTimeout(() => {
-            this.tenMinutesPassed = true;
+            DataScienceSurveyBanner.surveyDelay = true;
         }, 10 * 60 * 1000);
     }
 
@@ -211,7 +211,12 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     private shouldShowBanner(type: BannerType) {
-        if (this.isCodeSpace || !this.isEnabled(type) || this.disabledInCurrentSession || !this.tenMinutesPassed) {
+        if (
+            this.isCodeSpace ||
+            !this.isEnabled(type) ||
+            this.disabledInCurrentSession ||
+            !DataScienceSurveyBanner.surveyDelay
+        ) {
             return false;
         }
 

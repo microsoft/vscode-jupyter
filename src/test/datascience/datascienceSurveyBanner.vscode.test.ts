@@ -133,8 +133,8 @@ import { MillisecondsInADay } from '../../client/constants';
             await showBannerState.updateValue({ data: true });
             await executionCountState.updateValue(100);
 
-            // Wait ten minutes
-            clock.tick(10 * 60 * 1000);
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
 
             await bannerService.showBanner(survey);
             await bannerService.showBanner(survey);
@@ -184,11 +184,13 @@ import { MillisecondsInADay } from '../../client/constants';
             const months = survey === BannerType.DSSurvey ? 6.5 : 3.5;
             clock.tick(MillisecondsInADay * 30 * months);
             bannerService = createBannerService();
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
             await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
         });
-        test(type + ' - Confirm prompt is displayed 6 months later & survey displayed', async () => {
+        test(type + ' - Confirm prompt is displayed 6/12 months later & survey displayed', async () => {
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                 localize.DataScienceSurveyBanner.bannerLabelYes() as any
             );
@@ -221,6 +223,8 @@ import { MillisecondsInADay } from '../../client/constants';
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                 localize.DataScienceSurveyBanner.bannerLabelNo() as any
             );
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
             bannerService = createBannerService();
             await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();
