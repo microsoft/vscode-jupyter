@@ -9,7 +9,6 @@ import {
     notebook,
     NotebookCellMetadata,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
-    NotebookCellStatusBarItemProvider,
     NotebookContentProvider,
     NotebookController,
     NotebookDocument,
@@ -18,7 +17,6 @@ import {
     NotebookEditorSelectionChangeEvent,
     NotebookExecuteHandler,
     NotebookKernelPreload,
-    NotebookSelector,
     window
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
@@ -88,12 +86,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         }
     ): Disposable {
         return notebook.registerNotebookContentProvider(notebookType, provider, options);
-    }
-    public registerNotebookCellStatusBarItemProvider(
-        selector: NotebookSelector,
-        provider: NotebookCellStatusBarItemProvider
-    ): Disposable {
-        return notebook.registerNotebookCellStatusBarItemProvider(selector, provider);
     }
     public createNotebookController(
         id: string,

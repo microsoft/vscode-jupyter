@@ -5,8 +5,6 @@ import { VSCodeNotebookController } from './vscodeNotebookController';
 
 export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
-export const INotebookStatusBarProvider = Symbol('INotebookStatusBarProvider');
-
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 
 export const INotebookControllerManager = Symbol('INotebookControllerManager');

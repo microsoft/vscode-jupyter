@@ -752,51 +752,12 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
         )?.value as any) || ''
     );
 }
-export function getCellStatusMessageBasedOnFirstErrorOutput(outputs?: nbformat.IOutput[]): string {
-    if (!Array.isArray(outputs)) {
-        return '';
-    }
-    const errorOutput = (outputs.find((output) => output.output_type === 'error') as unknown) as
-        | nbformat.IError
-        | undefined;
-    if (!errorOutput) {
-        return '';
-    }
-    return `${errorOutput.ename}${errorOutput.evalue ? ': ' : ''}${errorOutput.evalue}`;
-}
-
 export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
     const errorOutput = outputs.find(
         (op) => op.outputs.length && !op.outputs.some((opit) => opit.mime !== CellOutputMimeTypes.error)
     );
 
     return !!errorOutput;
-}
-
-export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: readonly NotebookCellOutput[]): string {
-    if (!Array.isArray(outputs)) {
-        return '';
-    }
-
-    const errorOutput = outputs.find(
-        (op) =>
-            op.outputs.length &&
-            !op.outputs.some((opit: NotebookCellOutputItem) => opit.mime !== CellOutputMimeTypes.error)
-    );
-
-    if (!errorOutput) {
-        return '';
-    }
-
-    const firstItem = errorOutput.outputs[0];
-
-    if (!firstItem) {
-        return '';
-    }
-
-    const errorValue = firstItem.value as nbformat.IError;
-
-    return `${errorValue.ename}${errorValue.evalue ? ': ' : ''}${errorValue.evalue}`;
 }
 
 export function findAssociatedNotebookDocument(cellUri: Uri, vscodeNotebook: IVSCodeNotebook, fs: IFileSystem) {
