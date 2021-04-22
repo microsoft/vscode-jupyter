@@ -162,6 +162,8 @@ import { MillisecondsInADay } from '../../client/constants';
             await showBannerState.updateValue({ data: true });
             await executionCountState.updateValue(100);
 
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
             await bannerService.showBanner(survey);
 
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
@@ -197,6 +199,9 @@ import { MillisecondsInADay } from '../../client/constants';
 
             await showBannerState.updateValue({ data: true });
             await executionCountState.updateValue(100);
+
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
 
             await bannerService.showBanner(survey);
             verify(browser.launch(anything())).once();
