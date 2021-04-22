@@ -22,7 +22,7 @@ import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook, NotebookCellStateTracker } from './helpers/helpers';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
-import { INotebookContentProvider, INotebookStatusBarProvider } from './types';
+import { INotebookContentProvider } from './types';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
@@ -38,7 +38,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(INotebookStatusBarProvider) private readonly statusBarProvider: VSCNotebookCellStatusBarItemProvider,
         @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider
     ) {}
     public async activate(): Promise<void> {
@@ -75,13 +74,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                                 custom: false
                             }
                         }
-                    )
-                );
-
-                this.disposables.push(
-                    this.vscNotebook.registerNotebookCellStatusBarItemProvider(
-                        { pattern: '**/*.ipynb', viewType: JupyterNotebookView },
-                        this.statusBarProvider
                     )
                 );
             } catch (ex) {
