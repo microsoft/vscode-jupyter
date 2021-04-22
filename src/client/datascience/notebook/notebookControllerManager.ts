@@ -81,8 +81,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     public activate() {
         // Sign up for document either opening or closing
-        this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
-        this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
+        // this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
+        // this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
 
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
@@ -138,11 +138,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Providing notebook controllers with length ${controllers.length} for ${
-                        document.uri.fsPath
-                    }. Preferred is ${controllers.find((m) => m.isPreferred)?.label}, ${
-                        controllers.find((m) => m.isPreferred)?.id
-                    }`
+                    `Providing notebook controllers with length ${controllers.length} for ${document.uri.fsPath
+                    }.`
                 );
             })
             .finally(() => {
@@ -239,9 +236,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.pathUtils,
             this.disposables
         );
-
-        // Setting preferred handled here in the manager as it's meta to the Controllers themselves
-        controller.isPreferred = preferred;
 
         // Hook up to if this NotebookController is selected or de-selected
         controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);

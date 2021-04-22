@@ -15,6 +15,18 @@
  */
 
 declare module 'vscode' {
+    // Temporarily put this back in so that widgets code will build
+    /** @deprecated used NotebookController */
+    export interface NotebookCommunication {
+        /** @deprecated used NotebookController */
+        readonly editorId: string;
+        /** @deprecated used NotebookController */
+        readonly onDidReceiveMessage: Event<any>;
+        /** @deprecated used NotebookController */
+        postMessage(message: any): Thenable<boolean>;
+        /** @deprecated used NotebookController */
+        asWebviewUri(localResource: Uri): Uri;
+    }
 
     //#region auth provider: https://github.com/microsoft/vscode/issues/88309
 

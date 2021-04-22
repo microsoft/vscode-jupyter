@@ -9,7 +9,6 @@ import {
     NotebookController,
     NotebookDocument,
     NotebookKernelPreload,
-    NotebookSelector,
     Uri
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
@@ -38,13 +37,6 @@ export class VSCodeNotebookController implements Disposable {
 
     get id() {
         return this.controller.id;
-    }
-
-    get isPreferred() {
-        return this.controller.isPreferred;
-    }
-    set isPreferred(value: boolean | undefined) {
-        this.controller.isPreferred = value;
     }
 
     get label() {
@@ -77,11 +69,9 @@ export class VSCodeNotebookController implements Disposable {
             controller: VSCodeNotebookController;
         }>();
 
-        const selector: NotebookSelector = { viewType: JupyterNotebookView, pattern: document.uri.fsPath };
-        const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
         this.controller = this.notebookApi.createNotebookController(
-            id,
-            selector,
+            kernelConnection.id,
+            JupyterNotebookView,
             label,
             this.handleExecution.bind(this),
             this.getPreloads()

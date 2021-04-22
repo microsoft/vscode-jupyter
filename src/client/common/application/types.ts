@@ -69,7 +69,7 @@ import {
     NotebookCellStatusBarItemProvider,
     NotebookDocumentContentOptions,
     NotebookSelector,
-    NotebookExecutionHandler,
+    NotebookExecuteHandler,
     NotebookKernelPreload,
     NotebookController
 } from 'vscode';
@@ -1042,7 +1042,7 @@ export interface IWebviewPanelMessageListener extends IWebviewMessageListener, I
 }
 
 export const IWebviewViewMessageListener = Symbol('IWebviewViewMessageListener');
-export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable {}
+export interface IWebviewViewMessageListener extends IWebviewMessageListener, IAsyncDisposable { }
 
 export type WebviewMessage = {
     /**
@@ -1575,9 +1575,9 @@ export interface IVSCodeNotebook {
 
     createNotebookController(
         id: string,
-        selector: NotebookSelector,
+        viewType: string,
         label: string,
-        handler?: NotebookExecutionHandler,
+        handler?: NotebookExecuteHandler,
         preloads?: NotebookKernelPreload[]
     ): NotebookController;
     registerNotebookCellStatusBarItemProvider(
