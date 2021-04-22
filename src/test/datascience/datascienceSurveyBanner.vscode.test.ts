@@ -130,23 +130,17 @@ import { MillisecondsInADay } from '../../client/constants';
         }
         test(type + ' - Confirm prompt is displayed (after 10 minutes) & only once per session', async () => {
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve();
-            console.log('step 1');
             await showBannerState.updateValue({ data: true });
-            console.log('step 2');
-            await executionCountState.updateValue(100);
-            console.log('step 3');
+            await executionCountState.updateValue(UseVSCodeNotebookEditorApi ? 100 : 250);
 
             // Wait for the surveDelay
             clock.tick(11 * 60 * 1000);
-            console.log('step 4');
 
             await bannerService.showBanner(survey);
             await bannerService.showBanner(survey);
             await bannerService.showBanner(survey);
-            console.log('step 5');
 
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
-            console.log('step 6');
         });
         test(type + ' - Confirm prompt is not displayed in codespaces', async () => {
             bannerService = createBannerService(true);
@@ -166,7 +160,7 @@ import { MillisecondsInADay } from '../../client/constants';
                 localize.DataScienceSurveyBanner.bannerLabelNo() as any
             );
             await showBannerState.updateValue({ data: true });
-            await executionCountState.updateValue(100);
+            await executionCountState.updateValue(UseVSCodeNotebookEditorApi ? 100 : 250);
 
             // Wait for the surveDelay
             clock.tick(11 * 60 * 1000);
@@ -204,7 +198,7 @@ import { MillisecondsInADay } from '../../client/constants';
             );
 
             await showBannerState.updateValue({ data: true });
-            await executionCountState.updateValue(100);
+            await executionCountState.updateValue(UseVSCodeNotebookEditorApi ? 100 : 250);
 
             // Wait for the surveDelay
             clock.tick(11 * 60 * 1000);
