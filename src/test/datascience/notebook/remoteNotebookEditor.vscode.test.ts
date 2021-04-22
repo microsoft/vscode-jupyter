@@ -103,6 +103,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         assert.notDeepEqual(previousList, newList, 'MRU not updated');
     });
     test('Use same kernel when re-opening notebook', async () => {
+        // test
         await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
