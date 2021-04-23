@@ -9,7 +9,6 @@ import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
-import { createDeferredFromPromise } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { Commands } from '../../../client/datascience/constants';
@@ -49,7 +48,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
-    let kernelProvider: IKernelProvider;
     let vscEditor: VSCNotebookEditor;
     let vscodeNotebook: IVSCodeNotebook;
     let commandManager: ICommandManager;
@@ -66,7 +64,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await closeNotebooksAndCleanUpAfterTests();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-        kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         oldAskForRestart = dsSettings.askForKernelRestart;
@@ -103,18 +100,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         const showInformationMessage = sinon.stub(appShell, 'showInformationMessage');
         showInformationMessage.resolves(); // Ignore message to restart kernel.
         disposables.push({ dispose: () => showInformationMessage.restore() });
-        await waitForCondition(async () => kernelProvider.get(cell.notebook.uri) !== undefined, 5_000, 'No kernel');
-        const promise = kernelProvider.get(cell.notebook.uri)!.executeCell(cell);
-        const deferred = createDeferredFromPromise(promise);
 
-        // Wait for cell to get busy.
-        await waitForCondition(async () => assertVSCCellIsRunning(cell), 15_000, 'Cell not being executed');
-
-        // Wait for ?s, and verify cell is still running.
-        assert.isFalse(deferred.completed);
-        assertVSCCellIsRunning(cell);
-        // Wait for some output.
-        await waitForTextOutputInVSCode(cell, '1', 0, false, 15_000); // Wait for 15 seconds for it to start (possibly kernel is still starting).
+        await runAllCellsInActiveNotebook();
+        await waitForTextOutputInVSCode(cell, '1', 0, false, 25_000); // Wait for 25 seconds for it to start (possibly kernel is still starting).
 
         // Interrupt the kernel.
         commandManager.executeCommand(Commands.NotebookEditorInterruptKernel, vscEditor.document).then(noop, noop);
@@ -122,13 +110,11 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // Wait for interruption or message prompting to restart kernel to be displayed.
         // Interrupt can fail sometimes and then we display message prompting user to restart kernel.
         await waitForCondition(
-            async () => deferred.completed || showInformationMessage.called,
+            async () => showInformationMessage.called,
             30_000, // Wait for completion or interrupt timeout.
             'Execution not cancelled'
         );
-        if (deferred.completed) {
-            await waitForExecutionCompletedWithErrors(cell);
-        }
+        await waitForExecutionCompletedWithErrors(cell);
     });
     test('Restarting kernel will cancel cell execution & we can re-run a cell', async function () {
         traceInfo('Step 1');
