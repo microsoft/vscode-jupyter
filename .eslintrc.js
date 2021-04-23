@@ -381,7 +381,6 @@ module.exports = {
         'src/datascience-ui/react-common/themeDetector.ts',
         'src/datascience-ui/react-common/event.ts',
         'src/datascience-ui/react-common/codicon/codicon.ts',
-        'src/datascience-ui/react-common/postOffice.ts',
         'src/datascience-ui/react-common/errorBoundary.tsx',
         'src/datascience-ui/common/main.ts',
         'src/datascience-ui/common/cellFactory.ts',
