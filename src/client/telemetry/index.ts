@@ -605,6 +605,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.DeleteCell]: never | undefined;
     [Telemetry.FindJupyterCommand]: { command: string };
     [Telemetry.FindJupyterKernelSpec]: never | undefined;
+    [Telemetry.FailedToUpdateKernelSpec]: never | undefined;
     [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
     [Telemetry.ExecuteCellTime]: never | undefined;
