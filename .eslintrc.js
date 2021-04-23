@@ -376,7 +376,6 @@ module.exports = {
         'src/datascience-ui/react-common/monacoEditor.tsx',
         'src/datascience-ui/react-common/textMeasure.ts',
         'src/datascience-ui/react-common/flyout.tsx',
-        'src/datascience-ui/react-common/logger.ts',
         'src/datascience-ui/react-common/svgList.tsx',
         'src/datascience-ui/react-common/button.tsx',
         'src/datascience-ui/react-common/themeDetector.ts',
