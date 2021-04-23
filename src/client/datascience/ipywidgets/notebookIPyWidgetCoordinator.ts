@@ -55,7 +55,7 @@ class NotebookCommunication implements INotebookCommunication, IDisposable {
                     this.pendingMessages.push(e.message);
                 }
             }
-        });
+        }, this, this.disposables);
     }
     public dispose() {
         disposeAllDisposables(this.disposables);
@@ -176,9 +176,7 @@ export class NotebookIPyWidgetCoordinator {
     }
     private onDidCloseNotebookDocument(notebook: NotebookDocument) {
         const editors = this.notebookEditors.get(notebook) || [];
-        editors.forEach((editor) => this.notebookCommunications.get(editor)?.dispose());
-
-        this.notebookDisposables.get(notebook) || [];
+        disposeAllDisposables(this.notebookDisposables.get(notebook) || []);
         editors.forEach((editor) => this.notebookCommunications.get(editor)?.dispose());
 
         const coordinator = this.messageCoordinators.get(notebook);
