@@ -43,8 +43,14 @@ import { IIPyWidgetMessageDispatcher } from './types';
 @injectable()
 //
 export class CommonMessageCoordinator {
+    private cachedMessages: any[] = [];
+    /**
+     * Whether we have any handlers listerning to this event.
+     */
+    private listeningToPostMessageEvent?: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
+        this.listeningToPostMessageEvent = true;
         return this.postEmitter.event;
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
@@ -112,11 +118,10 @@ export class CommonMessageCoordinator {
         this.getIPyWidgetScriptSource()?.onMessage(message, payload);
     }
 
-    private initialize(): Promise<[void, void]> {
-        return Promise.all([
-            this.getIPyWidgetMessageDispatcher()?.initialize(),
-            this.getIPyWidgetScriptSource()?.initialize()
-        ]);
+    private async initialize(): Promise<void> {
+        // First hook up the widget script source that will listen to messages even before we start sending messages.
+        const promise = this.getIPyWidgetScriptSource()?.initialize();
+        await promise.then(() => this.getIPyWidgetMessageDispatcher()?.initialize());
     }
 
     private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
@@ -236,11 +241,20 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
                 this.serviceContainer.get<IExtensionContext>(IExtensionContext)
             );
-            this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.postEmitter.fire.bind(this.postEmitter)));
-            this.disposables.push(
-                this.ipyWidgetScriptSource.postInternalMessage(this.postEmitter.fire.bind(this.postEmitter))
-            );
+            this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.cacheOrSend, this));
+            this.disposables.push(this.ipyWidgetScriptSource.postInternalMessage(this.cacheOrSend, this));
         }
         return this.ipyWidgetScriptSource;
+    }
+    private cacheOrSend(data: any) {
+        // If no one is listening to the messages, then cache these.
+        // It means its too early to dispatch the messages, we need to wait for the event handlers to get bound.
+        if (!this.listeningToPostMessageEvent) {
+            this.cachedMessages.push(data);
+            return;
+        }
+        this.cachedMessages.forEach((item) => this.postEmitter.fire(item));
+        this.cachedMessages = [];
+        this.postEmitter.fire(data);
     }
 }

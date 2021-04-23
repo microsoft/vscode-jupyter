@@ -9,6 +9,7 @@ import {
     NotebookController,
     NotebookControllerAffinity,
     NotebookDocument,
+    NotebookEditor,
     NotebookKernelPreload,
     Uri
 } from 'vscode';
@@ -17,6 +18,7 @@ import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { ConsoleForegroundColors } from '../../logging/_global';
 import { Commands } from '../constants';
 import { getDescriptionOfKernelConnection, getDetailOfKernelConnection } from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -36,10 +38,10 @@ export class VSCodeNotebookController implements Disposable {
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
+    private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     private controller: NotebookController;
     private isDisposed = false;
-
     get id() {
         return this.controller.id;
     }
@@ -55,7 +57,9 @@ export class VSCodeNotebookController implements Disposable {
     get onNotebookControllerSelected() {
         return this._onNotebookControllerSelected.event;
     }
-
+    get onDidReceiveMessage() {
+        return this.controller.onDidReceiveMessage;
+    }
     constructor(
         private readonly kernelConnection: KernelConnectionMetadata,
         label: string,
@@ -66,8 +70,9 @@ export class VSCodeNotebookController implements Disposable {
         private readonly context: IExtensionContext,
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly pathUtils: IPathUtils,
-        private readonly disposable: IDisposableRegistry
+        disposableRegistry: IDisposableRegistry
     ) {
+        disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
             controller: VSCodeNotebookController;
@@ -88,7 +93,18 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.hasExecutionOrder = true;
 
         // Hook up to see when this NotebookController is selected by the UI
-        this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposable);
+        this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposables);
+    }
+
+    public asWebviewUri(localResource: Uri): Uri {
+        const x = this.controller.asWebviewUri(localResource);
+        return x;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public postMessage(message: any, editor?: NotebookEditor): Thenable<boolean> {
+        const messageType = message && 'message' in message ? message.message : '';
+        traceInfo(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
+        return this.controller.postMessage(message, editor);
     }
 
     public dispose() {
@@ -97,6 +113,7 @@ export class VSCodeNotebookController implements Disposable {
             this._onNotebookControllerSelected.dispose();
             this.controller.dispose();
         }
+        disposeAllDisposables(this.disposables);
     }
 
     public updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
