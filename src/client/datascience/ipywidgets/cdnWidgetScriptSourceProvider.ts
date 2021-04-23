@@ -2,15 +2,14 @@
 // Licensed under the MIT License.
 
 'use strict';
-
+const download: typeof import('download') = require('download');
 import { sha256 } from 'hash.js';
 import * as path from 'path';
-import request from 'request';
 import { Uri } from 'vscode';
 import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../common/types';
-import { createDeferred, sleep } from '../../common/utils/async';
+import { createDeferred } from '../../common/utils/async';
 import { ILocalResourceUriConverter } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
@@ -78,6 +77,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         private readonly fs: IFileSystem
     ) {}
     public dispose() {
+        console.log(typeof this.httpClient);
         this.cache.clear();
     }
     public async getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<WidgetScriptSource> {
@@ -200,30 +200,30 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         return sanitize(sha256().update(`${moduleName}${moduleVersion}`).digest('hex'));
     }
 
-    private handleResponse(req: request.Request, filePath: string): Promise<boolean> {
-        const deferred = createDeferred<boolean>();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const errorHandler = (e: any) => {
-            traceError('Error downloading from CDN', e);
-            deferred.resolve(false);
-        };
-        req.on('response', (r) => {
-            if (r.statusCode === 200) {
-                const ws = this.fs.createLocalWriteStream(filePath);
-                r.on('error', errorHandler)
-                    .pipe(ws)
-                    .on('close', () => deferred.resolve(true));
-            } else if (r.statusCode === 429) {
-                // Special case busy. Sleep for 500 milliseconds
-                sleep(500)
-                    .then(() => deferred.resolve(false))
-                    .ignoreErrors();
-            } else {
-                deferred.resolve(false);
-            }
-        }).on('error', errorHandler);
-        return deferred.promise;
-    }
+    // private handleResponse(req: request.Request, filePath: string): Promise<boolean> {
+    //     const deferred = createDeferred<boolean>();
+    //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    //     const errorHandler = (e: any) => {
+    //         traceError('Error downloading from CDN', e);
+    //         deferred.resolve(false);
+    //     };
+    //     req.on('response', (r) => {
+    //         if (r.statusCode === 200) {
+    //             const ws = this.fs.createLocalWriteStream(filePath);
+    //             r.on('error', errorHandler)
+    //                 .pipe(ws)
+    //                 .on('close', () => deferred.resolve(true));
+    //         } else if (r.statusCode === 429) {
+    //             // Special case busy. Sleep for 500 milliseconds
+    //             sleep(500)
+    //                 .then(() => deferred.resolve(false))
+    //                 .ignoreErrors();
+    //         } else {
+    //             deferred.resolve(false);
+    //         }
+    //     }).on('error', errorHandler);
+    //     return deferred.promise;
+    // }
 
     private async downloadFile(downloadUrl: string): Promise<TemporaryFile | undefined> {
         // Create a temp file to download the results to
@@ -233,10 +233,15 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         let retryCount = 5;
         let success = false;
         while (retryCount > 0 && !success) {
-            let req: request.Request;
+            // let req: request.Request;
             try {
-                req = await this.httpClient.downloadFile(downloadUrl);
-                success = await this.handleResponse(req, tempFile.filePath);
+                tempFile.dispose();
+                console.log(`Downloading from CDN ${downloadUrl} into ${tempFile.filePath}`);
+                await download(downloadUrl, tempFile.filePath);
+                console.log(`Successfully downloaded from CDN ${downloadUrl} into ${tempFile.filePath}`);
+                // req = await this.httpClient.downloadFile(downloadUrl);
+                // success = await this.handleResponse(req, tempFile.filePath);
+                success = true;
             } catch (exc) {
                 traceInfo(`Error downloading from ${downloadUrl}: `, exc);
             } finally {
