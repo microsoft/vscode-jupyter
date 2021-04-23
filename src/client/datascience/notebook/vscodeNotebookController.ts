@@ -97,8 +97,7 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     public asWebviewUri(localResource: Uri): Uri {
-        const x = this.controller.asWebviewUri(localResource);
-        return x;
+        return this.controller.asWebviewUri(localResource);
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public postMessage(message: any, editor?: NotebookEditor): Thenable<boolean> {
