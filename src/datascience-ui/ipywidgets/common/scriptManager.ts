@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as fastDeepEqual from 'fast-deep-equal';
 import { EventEmitter } from 'events';
 import * as isonline from 'is-online';
 import '../../../client/common/extensions';
@@ -19,6 +20,7 @@ import { PostOffice } from '../../react-common/postOffice';
 import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatibleWidgetHandler';
 import { registerScripts } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
+import { logMessage } from '../../react-common/logger';
 
 export class ScriptManager extends EventEmitter {
     public readonly widgetsRegisteredInRequireJs = new Set<string>();
@@ -26,6 +28,7 @@ export class ScriptManager extends EventEmitter {
         string,
         { deferred: Deferred<void>; timer: NodeJS.Timeout | number | undefined }
     >();
+    private previousKernelOptions?: any;
     private readonly registeredWidgetSources = new Map<string, WidgetScriptSource>();
     private timedoutWaitingForWidgetsToGetLoaded?: boolean;
     private widgetsCanLoadFromCDN: boolean = false;
@@ -46,10 +49,15 @@ export class ScriptManager extends EventEmitter {
                     this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
                 } else if (type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse) {
                     this.registerScriptSourceInRequirejs(payload as WidgetScriptSource);
-                } else if (
-                    type === IPyWidgetMessages.IPyWidgets_kernelOptions ||
-                    type === IPyWidgetMessages.IPyWidgets_onKernelChanged
-                ) {
+                } else if (type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
+                    logMessage(`Received IPyWidgets_kernelOptions in ScriptManager`);
+                    if (this.previousKernelOptions && !fastDeepEqual(this.previousKernelOptions, payload)) {
+                        logMessage(`Received IPyWidgets_kernelOptions in ScriptManager with new kernel options`);
+                        this.previousKernelOptions = payload;
+                        this.clear();
+                    }
+                } else if (type === IPyWidgetMessages.IPyWidgets_onKernelChanged) {
+                    logMessage(`Received IPyWidgets_onKernelChanged in ScriptManager`);
                     this.clear();
                 }
                 return true;
@@ -98,7 +106,7 @@ export class ScriptManager extends EventEmitter {
      */
     public loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void> {
         // eslint-disable-next-line no-console
-        console.log(`Fetch IPyWidget source for ${moduleName}`);
+        logMessage(`Fetch IPyWidget source for ${moduleName}`);
         let request = this.widgetSourceRequests.get(moduleName);
         if (!request) {
             request = {
