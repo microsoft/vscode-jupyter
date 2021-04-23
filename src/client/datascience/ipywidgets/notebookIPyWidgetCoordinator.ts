@@ -43,19 +43,23 @@ class NotebookCommunication implements INotebookCommunication, IDisposable {
         }
         this.controllerMessageHandler?.dispose();
         this.controller = controller;
-        this.controllerMessageHandler = controller.onDidReceiveMessage((e) => {
-            // Handle messages from this only if its still the active controller.
-            if (e.editor === this.editor && this.controller === controller) {
-                // If the listeners haven't been hooked up, then dont fire the event (nothing listening).
-                // Instead buffer the messages and fire the events later.
-                if (this.eventHandlerListening) {
-                    this.sendPendingMessages();
-                    this._onDidReceiveMessage.fire(e.message);
-                } else {
-                    this.pendingMessages.push(e.message);
+        this.controllerMessageHandler = controller.onDidReceiveMessage(
+            (e) => {
+                // Handle messages from this only if its still the active controller.
+                if (e.editor === this.editor && this.controller === controller) {
+                    // If the listeners haven't been hooked up, then dont fire the event (nothing listening).
+                    // Instead buffer the messages and fire the events later.
+                    if (this.eventHandlerListening) {
+                        this.sendPendingMessages();
+                        this._onDidReceiveMessage.fire(e.message);
+                    } else {
+                        this.pendingMessages.push(e.message);
+                    }
                 }
-            }
-        }, this, this.disposables);
+            },
+            this,
+            this.disposables
+        );
     }
     public dispose() {
         disposeAllDisposables(this.disposables);
