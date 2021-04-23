@@ -75,6 +75,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private postOffice: PostOffice = new PostOffice();
     private toggleFilterEvent: Slick.Event<void> = new Slick.Event<void>();
     private resetGridEvent: Slick.Event<ISlickGridSlice> = new Slick.Event<ISlickGridSlice>();
+    private resizeGridEvent: Slick.Event<void> = new Slick.Event<void>();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
     private gridColumnUpdateEvent: Slick.Event<Slick.Column<Slick.SlickData>[]> = new Slick.Event<
         Slick.Column<Slick.SlickData>[]
@@ -193,6 +194,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     originalVariableShape={this.state.originalVariableShape}
                     handleSliceRequest={this.handleSliceRequest}
                     onCheckboxToggled={this.handleCheckboxToggle}
+                    onPanelToggled={() => this.resizeGridEvent.notify()}
                 />
             );
         }
@@ -284,6 +286,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 rowsAdded={this.gridAddEvent}
                 resetGridEvent={this.resetGridEvent}
                 toggleFilterEvent={this.toggleFilterEvent}
+                resizeGridEvent={this.resizeGridEvent}
                 columnsUpdated={this.gridColumnUpdateEvent}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}

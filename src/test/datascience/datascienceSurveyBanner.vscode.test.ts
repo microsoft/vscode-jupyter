@@ -18,11 +18,12 @@ import {
     ShowBannerWithExpiryTime
 } from '../../client/datascience/dataScienceSurveyBanner';
 import { INotebookEditorProvider, INotebookExtensibility } from '../../client/datascience/types';
-import { initialize } from '../initialize';
 import { noop } from '../../client/common/utils/misc';
 import { UIKind } from 'vscode';
 import * as localize from '../../client/common/utils/localize';
 import { MillisecondsInADay } from '../../client/constants';
+import { TestPersistentStateFactory } from './testPersistentStateFactory';
+import { MockMemento } from '../mocks/mementos';
 
 [true, false].forEach((UseVSCodeNotebookEditorApi) => {
     const type = UseVSCodeNotebookEditorApi ? 'Insiders' : 'Stable';
@@ -46,7 +47,6 @@ import { MillisecondsInADay } from '../../client/constants';
             clock.uninstall();
         });
         setup(async () => {
-            const api = await initialize();
             sinon.restore();
             clock = fakeTimers.install();
             appShell = mock<IApplicationShell>();
@@ -60,20 +60,25 @@ import { MillisecondsInADay } from '../../client/constants';
             when(appEnv.uiKind).thenReturn(UIKind.Desktop);
             when(appEnv.channel).thenReturn(UseVSCodeNotebookEditorApi ? 'insiders' : 'stable');
             when(editorProvider.onDidOpenNotebookEditor).thenReturn(noop as any);
-            const realStateFactory = api.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-            openNotebookCountState = realStateFactory.createGlobalPersistentState<number>(
+
+            // Fake up persistant storage as this tests has been hanging while trying to update the actual mementos
+            const globalStorage = new MockMemento();
+            const localStorage = new MockMemento();
+            const testStateFactory = new TestPersistentStateFactory(globalStorage, localStorage);
+
+            openNotebookCountState = testStateFactory.createGlobalPersistentState<number>(
                 UseVSCodeNotebookEditorApi
                     ? InsidersNotebookSurveyStateKeys.OpenNotebookCount
                     : DSSurveyStateKeys.OpenNotebookCount,
                 0
             );
-            executionCountState = realStateFactory.createGlobalPersistentState<number>(
+            executionCountState = testStateFactory.createGlobalPersistentState<number>(
                 UseVSCodeNotebookEditorApi
                     ? InsidersNotebookSurveyStateKeys.ExecutionCount
                     : DSSurveyStateKeys.ExecutionCount,
                 0
             );
-            showBannerState = realStateFactory.createGlobalPersistentState<ShowBannerWithExpiryTime>(
+            showBannerState = testStateFactory.createGlobalPersistentState<ShowBannerWithExpiryTime>(
                 UseVSCodeNotebookEditorApi ? InsidersNotebookSurveyStateKeys.ShowBanner : DSSurveyStateKeys.ShowBanner,
                 { data: true }
             );
@@ -128,10 +133,13 @@ import { MillisecondsInADay } from '../../client/constants';
                 UseVSCodeNotebookEditorApi
             );
         }
-        test(type + ' - Confirm prompt is displayed & only once per session', async () => {
+        test(type + ' - Confirm prompt is displayed (after 10 minutes) & only once per session', async () => {
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve();
             await showBannerState.updateValue({ data: true });
-            await executionCountState.updateValue(100);
+            await executionCountState.updateValue(UseVSCodeNotebookEditorApi ? 100 : 250);
+
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
 
             await bannerService.showBanner(survey);
             await bannerService.showBanner(survey);
@@ -152,13 +160,15 @@ import { MillisecondsInADay } from '../../client/constants';
 
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
         });
-        test(type + ' - Confirm prompt is displayed 3 months later', async () => {
+        test(type + ' - Confirm prompt is displayed 3/6 months later', async () => {
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                 localize.DataScienceSurveyBanner.bannerLabelNo() as any
             );
             await showBannerState.updateValue({ data: true });
-            await executionCountState.updateValue(100);
+            await executionCountState.updateValue(UseVSCodeNotebookEditorApi ? 100 : 250);
 
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
             await bannerService.showBanner(survey);
 
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
@@ -177,20 +187,26 @@ import { MillisecondsInADay } from '../../client/constants';
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
 
-            // Advance time by 3.5 month & it will be displayed.
-            clock.tick(MillisecondsInADay * 30 * 3.5);
+            // Advance time by 6.5/3.5 month & it will be displayed.
+            const months = survey === BannerType.DSSurvey ? 6.5 : 3.5;
+            clock.tick(MillisecondsInADay * 30 * months);
             bannerService = createBannerService();
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
             await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
         });
-        test(type + ' - Confirm prompt is displayed 6 months later & survey displayed', async () => {
+        test(type + ' - Confirm prompt is displayed 6/12 months later & survey displayed', async () => {
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                 localize.DataScienceSurveyBanner.bannerLabelYes() as any
             );
 
             await showBannerState.updateValue({ data: true });
-            await executionCountState.updateValue(100);
+            await executionCountState.updateValue(UseVSCodeNotebookEditorApi ? 100 : 250);
+
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
 
             await bannerService.showBanner(survey);
             verify(browser.launch(anything())).once();
@@ -211,11 +227,14 @@ import { MillisecondsInADay } from '../../client/constants';
             verify(browser.launch(anything())).never();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
 
-            // Advance time by 6.5 month & it will be displayed.
-            clock.tick(MillisecondsInADay * 30 * 6.5);
+            // Advance time by 12.5/6.5 month & it will be displayed.
+            const months = survey === BannerType.DSSurvey ? 12.5 : 6.5;
+            clock.tick(MillisecondsInADay * 30 * months);
             when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
                 localize.DataScienceSurveyBanner.bannerLabelNo() as any
             );
+            // Wait for the surveDelay
+            clock.tick(11 * 60 * 1000);
             bannerService = createBannerService();
             await bannerService.showBanner(survey);
             verify(browser.launch(anything())).never();

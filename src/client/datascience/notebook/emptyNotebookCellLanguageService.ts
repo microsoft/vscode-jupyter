@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCellKind, NotebookCellOutput, NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode';
+import { NotebookCellKind, NotebookCellOutput, NotebookDocument, NotebookRange } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -10,8 +10,10 @@ import { traceError } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { translateKernelLanguageToMonaco } from '../common';
-import { isJupyterKernel, isJupyterNotebook } from './helpers/helpers';
+import { isJupyterNotebook } from './helpers/helpers';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
+import { VSCodeNotebookController } from './vscodeNotebookController';
+import { INotebookControllerManager } from './types';
 /**
  * If user creates a blank notebook, then they'll mostl likely end up with a blank cell with language, lets assume `Python`.
  * Now if the user changes the kernel to say `Julia`. After this, they need to also change the language of the cell.
@@ -23,24 +25,29 @@ import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 export class EmptyNotebookCellLanguageService implements IExtensionSingleActivationService {
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
     ) {}
     public async activate(): Promise<void> {
-        this.notebook.onDidChangeActiveNotebookKernel(this.onDidChangeActiveNotebookKernel, this, this.disposables);
+        this.notebookControllerManager.onNotebookControllerSelected(
+            this.onDidChangeNotebookController,
+            this,
+            this.disposables
+        );
     }
-    private async onDidChangeActiveNotebookKernel({
-        document,
-        kernel
-    }: {
-        document: NotebookDocument;
-        kernel: VSCNotebookKernel | undefined;
+
+    private async onDidChangeNotebookController(event: {
+        notebook: NotebookDocument;
+        controller: VSCodeNotebookController;
     }) {
+        const document = event.notebook;
+        const connection = event.controller.connection;
         // We're only interested in our Jupyter Notebooks & our kernels.
-        if (!isJupyterKernel(kernel) || !isJupyterNotebook(document)) {
+        if (!isJupyterNotebook(document)) {
             return;
         }
         // If connecting to a default kernel of Jupyter server, then we don't know the language of the kernel.
-        if (kernel.selection.kind === 'startUsingDefaultKernel') {
+        if (connection.kind === 'startUsingDefaultKernel') {
             return;
         }
         const editor = this.notebook.notebookEditors.find((item) => item.document === document);
@@ -58,14 +65,14 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         }
 
         let language: string | undefined;
-        const kernelKind = kernel.selection.kind;
-        switch (kernel.selection.kind) {
+        const kernelKind = connection.kind;
+        switch (connection.kind) {
             case 'connectToLiveKernel': {
-                language = kernel.selection.kernelModel.language;
+                language = connection.kernelModel.language;
                 break;
             }
             case 'startUsingKernelSpec': {
-                language = kernel.selection.kernelSpec.language;
+                language = connection.kernelSpec.language;
                 break;
             }
             case 'startUsingPythonInterpreter': {
@@ -87,7 +94,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
                 if (monacoLanguage.toLowerCase() === cell.document.languageId) {
                     return;
                 }
-                edit.replaceNotebookCells(editor.document.uri, cell.index, cell.index + 1, [
+                edit.replaceNotebookCells(editor.document.uri, new NotebookRange(cell.index, cell.index + 1), [
                     {
                         kind: cell.kind,
                         language: monacoLanguage,

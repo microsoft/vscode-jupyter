@@ -205,7 +205,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // Stop execution of the cell (if possible) in kernel.
         commandManager.executeCommand(Commands.NotebookEditorInterruptKernel, vscEditor.document).then(noop, noop);
         // Stop the cell (cleaner way to tear down this test, else VS Code can hang due to the fact that we delete/close notebooks & rest of the code is trying to access it).
-        await vscEditor.kernel!.interrupt!(vscEditor.document);
+
+        // KERNELPUSH
+        //await vscEditor.kernel!.interrupt!(vscEditor.document);
     });
     test('Interrupt and running cells again should only run the necessary cells', async function () {
         // Interrupts on windows doesn't work well, not as well as on Unix.

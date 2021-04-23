@@ -35,7 +35,6 @@ import {
 } from '../../notebook/helpers/executionHelpers';
 import {
     cellOutputToVSCCellOutput,
-    getCellStatusMessageBasedOnFirstCellErrorOutput,
     hasErrorOutput,
     isStreamOutput,
     traceCellMessage,
@@ -105,11 +104,11 @@ export class CellExecution {
 
     private _completed?: boolean;
     private startTime?: number;
+    private endTime?: number;
     private readonly initPromise?: Promise<void>;
     private task?: NotebookCellExecutionTask;
     private temporaryTask?: NotebookCellExecutionTask;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
-    private lastRunDuration?: number;
     private cancelHandled = false;
     private requestHandlerChain = Promise.resolve();
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
@@ -268,7 +267,6 @@ export class CellExecution {
     private async completedSuccessfully() {
         traceCellMessage(this.cell, 'Completed successfully');
         this.sendPerceivedCellExecute();
-        let statusMessage = '';
         // If we requested a cancellation, then assume it did not even run.
         // If it did, then we'd get an interrupt error in the output.
         let runState = this.isEmptyCodeCell ? NotebookCellRunState.Idle : NotebookCellRunState.Success;
@@ -278,14 +276,7 @@ export class CellExecution {
         if (hasErrorOutput(this.cell.outputs)) {
             success = 'failed';
             runState = NotebookCellRunState.Error;
-            statusMessage = getCellStatusMessageBasedOnFirstCellErrorOutput(this.cell.outputs);
         }
-
-        await chainWithPendingUpdates(this.cell.notebook, (edit) => {
-            traceCellMessage(this.cell, `Update cell state ${runState} and message '${statusMessage}'`);
-            const metadata = this.cell.metadata.with({ statusMessage });
-            edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
-        });
 
         this.endCellTask(success);
         this._completed = true;
@@ -296,8 +287,8 @@ export class CellExecution {
         if (this.isEmptyCodeCell) {
             this.task?.end({});
         } else if (success === 'success' || success === 'failed') {
-            this.lastRunDuration = this.stopWatch.elapsedTime;
-            this.task?.end({ duration: this.lastRunDuration, success: success === 'success' });
+            this.endTime = new Date().getTime();
+            this.task?.end({ endTime: this.endTime, success: success === 'success' });
         } else {
             // Cell was cancelled.
             this.task?.end({});
@@ -347,7 +338,7 @@ export class CellExecution {
                 this.temporaryTask.executionOrder = this.previousResultsToRestore.executionOrder;
             }
             this.temporaryTask.end({
-                duration: this.previousResultsToRestore.duration,
+                endTime: this.previousResultsToRestore.endTime,
                 success: this.previousResultsToRestore.success
             });
         } else {
@@ -359,13 +350,6 @@ export class CellExecution {
 
     private async completedDueToCancellation() {
         traceCellMessage(this.cell, 'Completed due to cancellation');
-        if (!this.cell.document.isClosed) {
-            await chainWithPendingUpdates(this.cell.notebook, (edit) => {
-                traceCellMessage(this.cell, 'Update cell status as idle and message as empty');
-                const metadata = this.cell.metadata.with({ statusMessage: '' });
-                edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
-            });
-        }
         this.endCellTask('cancelled');
         this._completed = true;
         traceCellMessage(this.cell, 'Cell cancelled & resolving');
@@ -380,12 +364,6 @@ export class CellExecution {
         if (this.cell.document.isClosed) {
             return;
         }
-        await chainWithPendingUpdates(this.cell.notebook, (edit) => {
-            traceCellMessage(this.cell, 'Update cell state as it was enqueued');
-            // We don't want any previous status anymore.
-            const metadata = this.cell.metadata.with({ statusMessage: '' });
-            edit.replaceNotebookCellMetadata(this.cell.notebook.uri, this.cell.index, metadata);
-        });
     }
 
     private sendPerceivedCellExecute() {
@@ -595,7 +573,15 @@ export class CellExecution {
             // When using temporary tasks, we end up updating the UI with no execution order and spinning icons.
             // Doing this causes UI updates, removing the awaits will enure there's no time for ui updates.
             if (promise) {
-                await promise;
+                try {
+                    // When user clears cells, we could end up using an output that no longer exists.
+                    // Ignore such exceptions, next time we get an output its possible the outputs are now in sync.
+                    await promise;
+                } catch (ex) {
+                    // Don't crash the updates, just ignore & hope & pray things work.
+                    // This way (at a minimum) we have the errors logged and we try to get things working by ignoring errors that are beyond our control.
+                    traceError(`Failed to update cell ${this.cell.index}, ${this.cell.document.uri.toString()}`, ex);
+                }
             }
         });
     }

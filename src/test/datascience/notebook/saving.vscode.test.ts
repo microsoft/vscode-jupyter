@@ -112,11 +112,6 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
                 cell4.latestExecutionSummary?.executionOrder,
                 'Execution count must be undefined for cell 4'
             );
-
-            assert.isEmpty(cell1.metadata.statusMessage || '', 'Cell 1 status should be empty'); // No errors.
-            assert.isNotEmpty(cell2.metadata.statusMessage, 'Cell 1 status should be empty'); // Errors.
-            assert.isEmpty(cell3.metadata.statusMessage || '', 'Cell 3 status should be empty'); // Not executed.
-            assert.isEmpty(cell4.metadata.statusMessage || '', 'Cell 4 status should be empty'); // Not executed.
         }
 
         verifyCelMetadata();

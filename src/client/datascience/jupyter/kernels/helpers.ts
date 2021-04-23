@@ -32,6 +32,8 @@ import { traceInfo, traceInfoIf } from '../../../common/logger';
 import { getInterpreterHash } from '../../../pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../../../telemetry/helpers';
 import { IS_CI_SERVER } from '../../../../test/ciConstants';
+import { trackKernelResourceInformation } from '../../telemetry/telemetry';
+import { Uri } from 'vscode';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -468,6 +470,7 @@ export async function sendTelemetryForPythonKernelExecutable(
             match: match ? 'true' : 'false',
             kernelConnectionType: kernelConnection.kind
         });
+        trackKernelResourceInformation(Uri.file(file), { interpreterMatchesKernel: match });
     } catch (ex) {
         // Noop.
     }

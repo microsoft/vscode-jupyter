@@ -81,10 +81,8 @@ export interface ISlickGridProps {
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
     resetGridEvent: Slick.Event<ISlickGridSlice>;
-    toggleFilterEvent: Slick.Event<void>;
-    columnsUpdated: Slick.Event<Slick.Column<Slick.SlickData>[]>;
+    resizeGridEvent: Slick.Event<void>;
     filterRowsTooltip: string;
-    forceHeight?: number;
     dataDimensionality: number;
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
@@ -198,6 +196,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
         this.props.resetGridEvent.subscribe(this.resetGrid);
+        this.props.resizeGridEvent.subscribe(this.windowResized);
         this.props.columnsUpdated.subscribe(this.updateColumns);
         this.props.toggleFilterEvent.subscribe(this.clickFilterButton);
     }
