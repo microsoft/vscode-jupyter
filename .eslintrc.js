@@ -829,7 +829,6 @@ module.exports = {
         'src/client/datascience/ipywidgets/remoteWidgetScriptSourceProvider.ts',
         'src/client/datascience/ipywidgets/constants.ts',
         'src/client/datascience/ipywidgets/ipywidgetHandler.ts',
-        'src/client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory.ts',
         'src/client/datascience/themeFinder.ts',
         'src/client/datascience/multiplexingDebugService.ts',
         'src/client/datascience/interactive-window/identity.ts',
