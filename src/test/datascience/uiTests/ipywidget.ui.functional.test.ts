@@ -224,400 +224,400 @@ use(chaiAsPromised);
                 assert.include(outputHtml, '<input type="checkbox');
             });
         });
-        test('Render ipysheets', async () => {
-            const { notebookUI } = await openIPySheetsIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+        // test('Render ipysheets', async () => {
+        //     const { notebookUI } = await openIPySheetsIpynb();
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
 
-            await notebookUI.executeCell(1);
-            await notebookUI.executeCell(3);
+        //     await notebookUI.executeCell(1);
+        //     await notebookUI.executeCell(3);
 
-            await retryIfFail(async () => {
-                const cellOutput = await notebookUI.getCellOutputHTML(3);
+        //     await retryIfFail(async () => {
+        //         const cellOutput = await notebookUI.getCellOutputHTML(3);
 
-                // Confirm cells with output has been rendered.
-                assert.include(cellOutput, 'Hello</td>');
-                assert.include(cellOutput, 'World</td>');
-            });
-        });
-        test('Widget renders after closing and re-opening notebook', async () => {
-            const result = await openNotebookAndTestSliderWidget();
+        //         // Confirm cells with output has been rendered.
+        //         assert.include(cellOutput, 'Hello</td>');
+        //         assert.include(cellOutput, 'World</td>');
+        //     });
+        // });
+        // test('Widget renders after closing and re-opening notebook', async () => {
+        //     const result = await openNotebookAndTestSliderWidget();
 
-            await result.notebookUI.page?.close();
-            await result.webViewPanel.dispose();
+        //     await result.notebookUI.page?.close();
+        //     await result.webViewPanel.dispose();
 
-            // Open the same notebook again and test.
-            await openNotebookAndTestSliderWidget();
-        });
-        test('Widget renders after restarting kernel', async () => {
-            const { notebookUI, notebookEditor } = await openNotebookAndTestSliderWidget();
+        //     // Open the same notebook again and test.
+        //     await openNotebookAndTestSliderWidget();
+        // });
+        // test('Widget renders after restarting kernel', async () => {
+        //     const { notebookUI, notebookEditor } = await openNotebookAndTestSliderWidget();
 
-            // Clear the output
-            await notebookUI.clearOutput();
-            await retryIfFail(async () => notebookUI.cellHasOutput(0));
+        //     // Clear the output
+        //     await notebookUI.clearOutput();
+        //     await retryIfFail(async () => notebookUI.cellHasOutput(0));
 
-            // Restart the kernel.
-            await notebookEditor.restartKernel();
+        //     // Restart the kernel.
+        //     await notebookEditor.restartKernel();
 
-            // Execute cell again and verify output is displayed.
-            await verifySliderWidgetIsAvailableAfterExecution(notebookUI);
-        });
-        test('Widget renders after interrupting kernel', async () => {
-            const { notebookUI, notebookEditor } = await openNotebookAndTestSliderWidget();
+        //     // Execute cell again and verify output is displayed.
+        //     await verifySliderWidgetIsAvailableAfterExecution(notebookUI);
+        // });
+        // test('Widget renders after interrupting kernel', async () => {
+        //     const { notebookUI, notebookEditor } = await openNotebookAndTestSliderWidget();
 
-            // Clear the output
-            await notebookUI.clearOutput();
-            await retryIfFail(async () => notebookUI.cellHasOutput(0));
+        //     // Clear the output
+        //     await notebookUI.clearOutput();
+        //     await retryIfFail(async () => notebookUI.cellHasOutput(0));
 
-            // Restart the kernel.
-            await notebookEditor.interruptKernel();
+        //     // Restart the kernel.
+        //     await notebookEditor.interruptKernel();
 
-            // Execute cell again and verify output is displayed.
-            await verifySliderWidgetIsAvailableAfterExecution(notebookUI);
-        });
-        test('Button Interaction across Cells', async () => {
-            const { notebookUI } = await openStandardWidgetsIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(4));
+        //     // Execute cell again and verify output is displayed.
+        //     await verifySliderWidgetIsAvailableAfterExecution(notebookUI);
+        // });
+        // test('Button Interaction across Cells', async () => {
+        //     const { notebookUI } = await openStandardWidgetsIpynb();
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(4));
 
-            await notebookUI.executeCell(3);
-            await notebookUI.executeCell(4);
+        //     await notebookUI.executeCell(3);
+        //     await notebookUI.executeCell(4);
 
-            const button = await retryIfFail(async () => {
-                // Find the button & the lable in cell output for 3 & 4 respectively.
-                const buttons = await (await notebookUI.getCellOutput(3)).$$('button.widget-button');
-                const cell4Output = await notebookUI.getCellOutputHTML(4);
+        //     const button = await retryIfFail(async () => {
+        //         // Find the button & the lable in cell output for 3 & 4 respectively.
+        //         const buttons = await (await notebookUI.getCellOutput(3)).$$('button.widget-button');
+        //         const cell4Output = await notebookUI.getCellOutputHTML(4);
 
-                assert.equal(buttons.length, 1, 'No button');
-                assert.include(cell4Output, 'Not Clicked');
+        //         assert.equal(buttons.length, 1, 'No button');
+        //         assert.include(cell4Output, 'Not Clicked');
 
-                return buttons[0];
-            });
+        //         return buttons[0];
+        //     });
 
-            // When we click the button, the text in the label will get updated (i.e. output in Cell 4 will be udpated).
-            await button.click();
+        //     // When we click the button, the text in the label will get updated (i.e. output in Cell 4 will be udpated).
+        //     await button.click();
 
-            await retryIfFail(async () => {
-                const cell4Output = await notebookUI.getCellOutputHTML(4);
-                assert.include(cell4Output, 'Button Clicked');
-            });
-        });
-        test('Search ipysheets with textbox in another cell', async () => {
-            const { notebookUI } = await openIPySheetsIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(6));
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(7));
+        //     await retryIfFail(async () => {
+        //         const cell4Output = await notebookUI.getCellOutputHTML(4);
+        //         assert.include(cell4Output, 'Button Clicked');
+        //     });
+        // });
+        // test('Search ipysheets with textbox in another cell', async () => {
+        //     const { notebookUI } = await openIPySheetsIpynb();
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(6));
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(7));
 
-            await notebookUI.executeCell(5);
-            await notebookUI.executeCell(6);
-            await notebookUI.executeCell(7);
+        //     await notebookUI.executeCell(5);
+        //     await notebookUI.executeCell(6);
+        //     await notebookUI.executeCell(7);
 
-            // Wait for sheets to get rendered.
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(7);
+        //     // Wait for sheets to get rendered.
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(7);
 
-                assert.include(cellOutputHtml, 'test</td>');
-                assert.include(cellOutputHtml, 'train</td>');
+        //         assert.include(cellOutputHtml, 'test</td>');
+        //         assert.include(cellOutputHtml, 'train</td>');
 
-                const cellOutput = await notebookUI.getCellOutput(6);
-                const highlighted = await cellOutput.$$('td.htSearchResult');
-                assert.equal(highlighted.length, 0);
-            });
+        //         const cellOutput = await notebookUI.getCellOutput(6);
+        //         const highlighted = await cellOutput.$$('td.htSearchResult');
+        //         assert.equal(highlighted.length, 0);
+        //     });
 
-            // Type `test` into textbox.
-            await retryIfFail(async () => {
-                const cellOutput = await notebookUI.getCellOutput(6);
-                const textboxes = await cellOutput.$$('input[type=text]');
-                assert.equal(textboxes.length, 1, 'No Texbox');
-                await textboxes[0].focus();
+        //     // Type `test` into textbox.
+        //     await retryIfFail(async () => {
+        //         const cellOutput = await notebookUI.getCellOutput(6);
+        //         const textboxes = await cellOutput.$$('input[type=text]');
+        //         assert.equal(textboxes.length, 1, 'No Texbox');
+        //         await textboxes[0].focus();
 
-                await notebookUI.type('test');
-            });
+        //         await notebookUI.type('test');
+        //     });
 
-            // Confirm cell is filtered and highlighted.
-            await retryIfFail(async () => {
-                const cellOutput = await notebookUI.getCellOutput(7);
-                const highlighted = await cellOutput.$$('td.htSearchResult');
-                assert.equal(highlighted.length, 2);
-            });
-        });
-        test('Update ipysheets cells with textbox & slider in another cell', async () => {
-            const { notebookUI } = await openIPySheetsIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(10));
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(12));
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(13));
+        //     // Confirm cell is filtered and highlighted.
+        //     await retryIfFail(async () => {
+        //         const cellOutput = await notebookUI.getCellOutput(7);
+        //         const highlighted = await cellOutput.$$('td.htSearchResult');
+        //         assert.equal(highlighted.length, 2);
+        //     });
+        // });
+        // test('Update ipysheets cells with textbox & slider in another cell', async () => {
+        //     const { notebookUI } = await openIPySheetsIpynb();
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(10));
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(12));
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(13));
 
-            await notebookUI.executeCell(9);
-            await notebookUI.executeCell(10);
-            await notebookUI.executeCell(12);
-            await notebookUI.executeCell(13);
+        //     await notebookUI.executeCell(9);
+        //     await notebookUI.executeCell(10);
+        //     await notebookUI.executeCell(12);
+        //     await notebookUI.executeCell(13);
 
-            // Wait for slider to get rendered with value `0`.
-            const sliderLabel = await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(10);
+        //     // Wait for slider to get rendered with value `0`.
+        //     const sliderLabel = await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(10);
 
-                assert.include(cellOutputHtml, 'ui-slider-handle');
-                assert.include(cellOutputHtml, 'left: 0%');
+        //         assert.include(cellOutputHtml, 'ui-slider-handle');
+        //         assert.include(cellOutputHtml, 'left: 0%');
 
-                const cellOutput = await notebookUI.getCellOutput(10);
-                const sliderLables = await cellOutput.$$('div.widget-readout');
+        //         const cellOutput = await notebookUI.getCellOutput(10);
+        //         const sliderLables = await cellOutput.$$('div.widget-readout');
 
-                return sliderLables[0];
-            });
+        //         return sliderLables[0];
+        //     });
 
-            // Confirm slider lable reads `0`.
-            await retryIfFail(async () => {
-                const sliderValue = await notebookUI.page?.evaluate((ele) => ele.innerHTML.trim(), sliderLabel);
-                assert.equal(sliderValue || '', '0');
-            });
+        //     // Confirm slider lable reads `0`.
+        //     await retryIfFail(async () => {
+        //         const sliderValue = await notebookUI.page?.evaluate((ele) => ele.innerHTML.trim(), sliderLabel);
+        //         assert.equal(sliderValue || '', '0');
+        //     });
 
-            // Wait for textbox to get rendered.
-            const textbox = await retryIfFail(async () => {
-                const cellOutput = await notebookUI.getCellOutput(12);
-                const textboxes = await cellOutput.$$('input[type=number]');
-                assert.equal(textboxes.length, 1);
+        //     // Wait for textbox to get rendered.
+        //     const textbox = await retryIfFail(async () => {
+        //         const cellOutput = await notebookUI.getCellOutput(12);
+        //         const textboxes = await cellOutput.$$('input[type=number]');
+        //         assert.equal(textboxes.length, 1);
 
-                const value = await notebookUI.page?.evaluate((el) => (el as HTMLInputElement).value, textboxes[0]);
-                assert.equal(value || '', '0');
+        //         const value = await notebookUI.page?.evaluate((el) => (el as HTMLInputElement).value, textboxes[0]);
+        //         assert.equal(value || '', '0');
 
-                return textboxes[0];
-            });
+        //         return textboxes[0];
+        //     });
 
-            // Wait for sheets to get rendered.
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(13);
-                assert.include(cellOutputHtml, '>50.000</td>');
-                assert.notInclude(cellOutputHtml, '>100.000</td>');
-            });
+        //     // Wait for sheets to get rendered.
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(13);
+        //         assert.include(cellOutputHtml, '>50.000</td>');
+        //         assert.notInclude(cellOutputHtml, '>100.000</td>');
+        //     });
 
-            // Type `50` into textbox.
-            await retryIfFail(async () => {
-                await textbox.focus();
-                await notebookUI.type('50');
-            });
+        //     // Type `50` into textbox.
+        //     await retryIfFail(async () => {
+        //         await textbox.focus();
+        //         await notebookUI.type('50');
+        //     });
 
-            // Confirm slider label reads `50`.
-            await retryIfFail(async () => {
-                const sliderValue = await notebookUI.page?.evaluate((ele) => ele.innerHTML.trim(), sliderLabel);
-                assert.equal(sliderValue || '', '50');
-            });
+        //     // Confirm slider label reads `50`.
+        //     await retryIfFail(async () => {
+        //         const sliderValue = await notebookUI.page?.evaluate((ele) => ele.innerHTML.trim(), sliderLabel);
+        //         assert.equal(sliderValue || '', '50');
+        //     });
 
-            // Wait for sheets to get updated with calculation.
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(13);
+        //     // Wait for sheets to get updated with calculation.
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(13);
 
-                assert.include(cellOutputHtml, '>50.000</td>');
-                assert.include(cellOutputHtml, '>100.000</td>');
-            });
-        });
-        test('Render ipyvolume (slider, color picker, figure)', async function () {
-            const { notebookUI } = await openIPyVolumeIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
-            await notebookUI.executeCell(1);
+        //         assert.include(cellOutputHtml, '>50.000</td>');
+        //         assert.include(cellOutputHtml, '>100.000</td>');
+        //     });
+        // });
+        // test('Render ipyvolume (slider, color picker, figure)', async function () {
+        //     const { notebookUI } = await openIPyVolumeIpynb();
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
+        //     await notebookUI.executeCell(1);
 
-            // Confirm sliders and canvas are rendered.
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
-                assert.include(cellOutputHtml, '<canvas ');
+        //     // Confirm sliders and canvas are rendered.
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
+        //         assert.include(cellOutputHtml, '<canvas ');
 
-                const cellOutput = await notebookUI.getCellOutput(1);
-                const sliders = await cellOutput.$$('div.ui-slider');
-                assert.equal(sliders.length, 2);
-            });
-        });
-        test('Render ipyvolume (figure)', async function () {
-            const { notebookUI } = await openIPyVolumeIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
-            await notebookUI.executeCell(2);
+        //         const cellOutput = await notebookUI.getCellOutput(1);
+        //         const sliders = await cellOutput.$$('div.ui-slider');
+        //         assert.equal(sliders.length, 2);
+        //     });
+        // });
+        // test('Render ipyvolume (figure)', async function () {
+        //     const { notebookUI } = await openIPyVolumeIpynb();
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
+        //     await notebookUI.executeCell(2);
 
-            // Confirm canvas is rendered.
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(2);
-                assert.include(cellOutputHtml, '<canvas ');
-            });
-        });
-        test('Render pythreejs', async () => {
-            const { notebookUI } = await openPyThreejsIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(8));
+        //     // Confirm canvas is rendered.
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(2);
+        //         assert.include(cellOutputHtml, '<canvas ');
+        //     });
+        // });
+        // test('Render pythreejs', async () => {
+        //     const { notebookUI } = await openPyThreejsIpynb();
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(8));
 
-            await notebookUI.executeCell(1);
-            await notebookUI.executeCell(2);
-            await notebookUI.executeCell(3);
-            await notebookUI.executeCell(4);
-            await notebookUI.executeCell(5);
-            await notebookUI.executeCell(6);
-            await notebookUI.executeCell(7);
-            await notebookUI.executeCell(8);
+        //     await notebookUI.executeCell(1);
+        //     await notebookUI.executeCell(2);
+        //     await notebookUI.executeCell(3);
+        //     await notebookUI.executeCell(4);
+        //     await notebookUI.executeCell(5);
+        //     await notebookUI.executeCell(6);
+        //     await notebookUI.executeCell(7);
+        //     await notebookUI.executeCell(8);
 
-            // Confirm canvas is rendered.
-            await retryIfFail(async () => {
-                let cellOutputHtml = await notebookUI.getCellOutputHTML(3);
-                assert.include(cellOutputHtml, '<canvas ');
-                // Last cell is flakey. Can take too long to render. We need some way
-                // to know when a widget is done rendering.
-                cellOutputHtml = await notebookUI.getCellOutputHTML(8);
-                assert.include(cellOutputHtml, '<canvas ');
-            });
-        });
-        test('Render beakerx (plot)', async () => {
-            const { notebookUI } = await openBeakerXIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
+        //     // Confirm canvas is rendered.
+        //     await retryIfFail(async () => {
+        //         let cellOutputHtml = await notebookUI.getCellOutputHTML(3);
+        //         assert.include(cellOutputHtml, '<canvas ');
+        //         // Last cell is flakey. Can take too long to render. We need some way
+        //         // to know when a widget is done rendering.
+        //         cellOutputHtml = await notebookUI.getCellOutputHTML(8);
+        //         assert.include(cellOutputHtml, '<canvas ');
+        //     });
+        // });
+        // test('Render beakerx (plot)', async () => {
+        //     const { notebookUI } = await openBeakerXIpynb();
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
 
-            await notebookUI.executeCell(1);
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
-                // Confirm svg graph has been rendered.
-                assert.include(cellOutputHtml, '<svg');
+        //     await notebookUI.executeCell(1);
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
+        //         // Confirm svg graph has been rendered.
+        //         assert.include(cellOutputHtml, '<svg');
 
-                // Confirm graph legened has been rendered.
-                const cellOutput = await notebookUI.getCellOutput(1);
-                const legends = await cellOutput.$$('div.plot-legend');
-                assert.isAtLeast(legends.length, 1);
-            });
-        });
-        test('Render beakerx (histogram)', async () => {
-            const { notebookUI } = await openBeakerXIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
+        //         // Confirm graph legened has been rendered.
+        //         const cellOutput = await notebookUI.getCellOutput(1);
+        //         const legends = await cellOutput.$$('div.plot-legend');
+        //         assert.isAtLeast(legends.length, 1);
+        //     });
+        // });
+        // test('Render beakerx (histogram)', async () => {
+        //     const { notebookUI } = await openBeakerXIpynb();
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
 
-            await notebookUI.executeCell(2);
-            await retryIfFail(async () => {
-                // Confirm graph modal dialog has been rendered.
-                const cellOutput = await notebookUI.getCellOutput(2);
-                const modals = await cellOutput.$$('div.modal-content');
-                assert.isAtLeast(modals.length, 1);
-            });
-        });
-        test('Render bqplot', async () => {
-            const { notebookUI } = await openBqplotIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(4));
+        //     await notebookUI.executeCell(2);
+        //     await retryIfFail(async () => {
+        //         // Confirm graph modal dialog has been rendered.
+        //         const cellOutput = await notebookUI.getCellOutput(2);
+        //         const modals = await cellOutput.$$('div.modal-content');
+        //         assert.isAtLeast(modals.length, 1);
+        //     });
+        // });
+        // test('Render bqplot', async () => {
+        //     const { notebookUI } = await openBqplotIpynb();
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(4));
 
-            await notebookUI.executeCell(1);
-            await notebookUI.executeCell(2);
+        //     await notebookUI.executeCell(1);
+        //     await notebookUI.executeCell(2);
 
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(2);
-                // Confirm svg graph has been rendered.
-                assert.include(cellOutputHtml, '<svg');
-                assert.include(cellOutputHtml, 'plotarea_events');
-            });
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(2);
+        //         // Confirm svg graph has been rendered.
+        //         assert.include(cellOutputHtml, '<svg');
+        //         assert.include(cellOutputHtml, 'plotarea_events');
+        //     });
 
-            // Render empty plot
-            await notebookUI.executeCell(4);
-            await retryIfFail(async () => {
-                const cellOutput = await notebookUI.getCellOutput(4);
-                // Confirm no points have been rendered.
-                const dots = await cellOutput.$$('path.dot');
-                assert.equal(dots.length, 0);
-            });
+        //     // Render empty plot
+        //     await notebookUI.executeCell(4);
+        //     await retryIfFail(async () => {
+        //         const cellOutput = await notebookUI.getCellOutput(4);
+        //         // Confirm no points have been rendered.
+        //         const dots = await cellOutput.$$('path.dot');
+        //         assert.equal(dots.length, 0);
+        //     });
 
-            // Draw points on previous plot.
-            await notebookUI.executeCell(5);
-            await retryIfFail(async () => {
-                const cellOutput = await notebookUI.getCellOutput(4);
-                // Confirm points have been rendered.
-                const dots = await cellOutput.$$('path.dot');
-                assert.isAtLeast(dots.length, 1);
-            });
+        //     // Draw points on previous plot.
+        //     await notebookUI.executeCell(5);
+        //     await retryIfFail(async () => {
+        //         const cellOutput = await notebookUI.getCellOutput(4);
+        //         // Confirm points have been rendered.
+        //         const dots = await cellOutput.$$('path.dot');
+        //         assert.isAtLeast(dots.length, 1);
+        //     });
 
-            // Chage color of plot points to red.
-            await notebookUI.executeCell(7);
-            await retryIfFail(async () => {
-                const cellOutput = await notebookUI.getCellOutput(4);
-                const dots = await cellOutput.$$('path.dot');
-                assert.isAtLeast(dots.length, 1);
-                const dotHtml = await notebookUI.page?.evaluate((ele) => ele.outerHTML, dots[0]);
-                // Confirm color of dot is red.
-                assert.include(dotHtml || '', 'red');
-            });
+        //     // Chage color of plot points to red.
+        //     await notebookUI.executeCell(7);
+        //     await retryIfFail(async () => {
+        //         const cellOutput = await notebookUI.getCellOutput(4);
+        //         const dots = await cellOutput.$$('path.dot');
+        //         assert.isAtLeast(dots.length, 1);
+        //         const dotHtml = await notebookUI.page?.evaluate((ele) => ele.outerHTML, dots[0]);
+        //         // Confirm color of dot is red.
+        //         assert.include(dotHtml || '', 'red');
+        //     });
 
-            // Chage color of plot points to red.
-            await notebookUI.executeCell(8);
-            await retryIfFail(async () => {
-                const cellOutput = await notebookUI.getCellOutput(4);
-                const dots = await cellOutput.$$('path.dot');
-                assert.isAtLeast(dots.length, 1);
-                const dotHtml = await notebookUI.page?.evaluate((ele) => ele.outerHTML, dots[0]);
-                // Confirm color of dot is red.
-                assert.include(dotHtml || '', 'yellow');
-            });
-        });
-        test('Render output and interact', async () => {
-            const { notebookUI } = await openOutputAndInteractIpynb();
-            await notebookUI.executeCell(0);
-            await notebookUI.executeCell(1);
+        //     // Chage color of plot points to red.
+        //     await notebookUI.executeCell(8);
+        //     await retryIfFail(async () => {
+        //         const cellOutput = await notebookUI.getCellOutput(4);
+        //         const dots = await cellOutput.$$('path.dot');
+        //         assert.isAtLeast(dots.length, 1);
+        //         const dotHtml = await notebookUI.page?.evaluate((ele) => ele.outerHTML, dots[0]);
+        //         // Confirm color of dot is red.
+        //         assert.include(dotHtml || '', 'yellow');
+        //     });
+        // });
+        // test('Render output and interact', async () => {
+        //     const { notebookUI } = await openOutputAndInteractIpynb();
+        //     await notebookUI.executeCell(0);
+        //     await notebookUI.executeCell(1);
 
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
-                // Confirm border is visible
-                assert.include(cellOutputHtml, 'border');
-            });
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
+        //         // Confirm border is visible
+        //         assert.include(cellOutputHtml, 'border');
+        //     });
 
-            // Run the cell that will stick output into the out border
-            await notebookUI.executeCell(2);
+        //     // Run the cell that will stick output into the out border
+        //     await notebookUI.executeCell(2);
 
-            // Make sure output is shown
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
-                // Confirm output went inside of previous cell
-                assert.include(cellOutputHtml, 'Hello world');
-            });
+        //     // Make sure output is shown
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
+        //         // Confirm output went inside of previous cell
+        //         assert.include(cellOutputHtml, 'Hello world');
+        //     });
 
-            // Make sure output on print cell is empty
-            await retryIfFail(async () => {
-                const cell = await notebookUI.getCell(2);
-                const output = await cell.$$('.cell-output-wrapper');
-                assert.equal(output.length, 0, 'Cell should not have any output');
-            });
+        //     // Make sure output on print cell is empty
+        //     await retryIfFail(async () => {
+        //         const cell = await notebookUI.getCell(2);
+        //         const output = await cell.$$('.cell-output-wrapper');
+        //         assert.equal(output.length, 0, 'Cell should not have any output');
+        //     });
 
-            // interact portion
-            await notebookUI.executeCell(3);
-            await notebookUI.executeCell(4);
-            await notebookUI.executeCell(5);
-            // See if we have a slider in our output
-            const slider = await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(5);
-                assert.include(cellOutputHtml, 'slider', 'Cell output should have rendered a slider');
-                const sliderInner = await (await notebookUI.getCellOutput(5)).$$('.slider-container');
-                assert.ok(sliderInner.length, 'Slider not found');
-                return sliderInner[0];
-            });
+        //     // interact portion
+        //     await notebookUI.executeCell(3);
+        //     await notebookUI.executeCell(4);
+        //     await notebookUI.executeCell(5);
+        //     // See if we have a slider in our output
+        //     const slider = await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(5);
+        //         assert.include(cellOutputHtml, 'slider', 'Cell output should have rendered a slider');
+        //         const sliderInner = await (await notebookUI.getCellOutput(5)).$$('.slider-container');
+        //         assert.ok(sliderInner.length, 'Slider not found');
+        //         return sliderInner[0];
+        //     });
 
-            // Click on the slider to change the value.
-            const rect = await slider.boundingBox();
-            if (rect) {
-                await notebookUI.page?.mouse.move(rect?.x + 5, rect.y + rect.height / 2);
-                await notebookUI.page?.mouse.down();
-                await notebookUI.page?.mouse.up();
-            }
+        //     // Click on the slider to change the value.
+        //     const rect = await slider.boundingBox();
+        //     if (rect) {
+        //         await notebookUI.page?.mouse.move(rect?.x + 5, rect.y + rect.height / 2);
+        //         await notebookUI.page?.mouse.down();
+        //         await notebookUI.page?.mouse.up();
+        //     }
 
-            // Make sure the output value has changed to something other than 10
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(5);
-                assert.notInclude(cellOutputHtml, '<pre>10', 'Slider click did not update the span');
-            });
-        });
-        test('Render k3d', async () => {
-            const { notebookUI } = await openK3DIpynb();
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
-            await assert.eventually.isFalse(notebookUI.cellHasOutput(5));
+        //     // Make sure the output value has changed to something other than 10
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(5);
+        //         assert.notInclude(cellOutputHtml, '<pre>10', 'Slider click did not update the span');
+        //     });
+        // });
+        // test('Render k3d', async () => {
+        //     const { notebookUI } = await openK3DIpynb();
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+        //     await assert.eventually.isFalse(notebookUI.cellHasOutput(5));
 
-            await notebookUI.executeCell(3);
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(3);
-                // Confirm svg graph has been rendered.
-                assert.include(cellOutputHtml, '<canvas');
-                // Toolbar should be rendered.
-                assert.include(cellOutputHtml, 'Close Controls');
-                // The containing element with a class of `k3d-target` should be rendered.
-                assert.include(cellOutputHtml, 'k3d-target');
-            });
+        //     await notebookUI.executeCell(3);
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(3);
+        //         // Confirm svg graph has been rendered.
+        //         assert.include(cellOutputHtml, '<canvas');
+        //         // Toolbar should be rendered.
+        //         assert.include(cellOutputHtml, 'Close Controls');
+        //         // The containing element with a class of `k3d-target` should be rendered.
+        //         assert.include(cellOutputHtml, 'k3d-target');
+        //     });
 
-            await notebookUI.executeCell(5);
-            await retryIfFail(async () => {
-                const cellOutputHtml = await notebookUI.getCellOutputHTML(5);
-                // Slider should be rendered.
-                assert.include(cellOutputHtml, 'ui-slider');
-            });
-        });
+        //     await notebookUI.executeCell(5);
+        //     await retryIfFail(async () => {
+        //         const cellOutputHtml = await notebookUI.getCellOutputHTML(5);
+        //         // Slider should be rendered.
+        //         assert.include(cellOutputHtml, 'ui-slider');
+        //     });
+        // });
     });
 });
