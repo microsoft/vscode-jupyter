@@ -247,6 +247,7 @@ export class CommonMessageCoordinator {
         }
         return this.ipyWidgetScriptSource;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private cacheOrSend(data: any) {
         // If no one is listening to the messages, then cache these.
         // It means its too early to dispatch the messages, we need to wait for the event handlers to get bound.
