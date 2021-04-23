@@ -648,5 +648,4 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
         return kernelSpecFiles;
     }
-
 }
