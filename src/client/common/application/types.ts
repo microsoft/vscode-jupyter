@@ -67,8 +67,7 @@ import {
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookDocumentContentOptions,
-    NotebookSelector,
-    NotebookExecutionHandler,
+    NotebookExecuteHandler,
     NotebookKernelPreload,
     NotebookController
 } from 'vscode';
@@ -1574,9 +1573,9 @@ export interface IVSCodeNotebook {
 
     createNotebookController(
         id: string,
-        selector: NotebookSelector,
+        viewType: string,
         label: string,
-        handler?: NotebookExecutionHandler,
+        handler?: NotebookExecuteHandler,
         preloads?: NotebookKernelPreload[]
     ): NotebookController;
 }
