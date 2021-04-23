@@ -120,27 +120,27 @@ use(chaiAsPromised);
         async function openStandardWidgetsIpynb() {
             return openNotebookFile('standard_widgets.ipynb');
         }
-        async function openIPySheetsIpynb() {
-            return openNotebookFile('ipySheet_widgets.ipynb');
-        }
-        async function openBeakerXIpynb() {
-            return openNotebookFile('beakerx_widgets.ipynb');
-        }
-        async function openK3DIpynb() {
-            return openNotebookFile('k3d_widgets.ipynb');
-        }
-        async function openBqplotIpynb() {
-            return openNotebookFile('bqplot_widgets.ipynb');
-        }
-        async function openIPyVolumeIpynb() {
-            return openNotebookFile('ipyvolume_widgets.ipynb');
-        }
-        async function openPyThreejsIpynb() {
-            return openNotebookFile('pythreejs_widgets.ipynb');
-        }
-        async function openOutputAndInteractIpynb() {
-            return openNotebookFile('outputinteract_widgets.ipynb');
-        }
+        // async function openIPySheetsIpynb() {
+        //     return openNotebookFile('ipySheet_widgets.ipynb');
+        // }
+        // async function openBeakerXIpynb() {
+        //     return openNotebookFile('beakerx_widgets.ipynb');
+        // }
+        // async function openK3DIpynb() {
+        //     return openNotebookFile('k3d_widgets.ipynb');
+        // }
+        // async function openBqplotIpynb() {
+        //     return openNotebookFile('bqplot_widgets.ipynb');
+        // }
+        // async function openIPyVolumeIpynb() {
+        //     return openNotebookFile('ipyvolume_widgets.ipynb');
+        // }
+        // async function openPyThreejsIpynb() {
+        //     return openNotebookFile('pythreejs_widgets.ipynb');
+        // }
+        // async function openOutputAndInteractIpynb() {
+        //     return openNotebookFile('outputinteract_widgets.ipynb');
+        // }
 
         test('Notebook has 3 cells', async () => {
             const { notebookUI } = await openABCIpynb();
