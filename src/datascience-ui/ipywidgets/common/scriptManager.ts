@@ -28,6 +28,7 @@ export class ScriptManager extends EventEmitter {
         string,
         { deferred: Deferred<void>; timer: NodeJS.Timeout | number | undefined }
     >();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private previousKernelOptions?: any;
     private readonly registeredWidgetSources = new Map<string, WidgetScriptSource>();
     private timedoutWaitingForWidgetsToGetLoaded?: boolean;

@@ -27,10 +27,12 @@ import { CommonMessageCoordinator } from './commonMessageCoordinator';
 
 class NotebookCommunication implements INotebookCommunication, IDisposable {
     private eventHandlerListening?: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private pendingMessages: any[] = [];
     private readonly disposables: IDisposable[] = [];
     private controllerMessageHandler?: IDisposable;
     private controller!: VSCodeNotebookController;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly _onDidReceiveMessage = new EventEmitter<any>();
     constructor(public readonly editor: NotebookEditor, controller: VSCodeNotebookController) {
         this.changeController(controller);
@@ -64,6 +66,7 @@ class NotebookCommunication implements INotebookCommunication, IDisposable {
         setTimeout(() => this.sendPendingMessages(), 0);
         return this._onDidReceiveMessage.event;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public postMessage(message: any): Thenable<boolean> {
         return this.controller.postMessage(message, this.editor);
     }

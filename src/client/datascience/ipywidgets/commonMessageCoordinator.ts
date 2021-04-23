@@ -43,6 +43,7 @@ import { IIPyWidgetMessageDispatcher } from './types';
 @injectable()
 //
 export class CommonMessageCoordinator {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private cachedMessages: any[] = [];
     /**
      * Whether we have any handlers listerning to this event.
