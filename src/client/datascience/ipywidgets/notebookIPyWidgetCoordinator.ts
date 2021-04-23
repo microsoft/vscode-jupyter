@@ -86,15 +86,16 @@ class NotebookCommunication implements INotebookCommunication, IDisposable {
  */
 @injectable()
 export class NotebookIPyWidgetCoordinator {
-    private messageCoordinators = new WeakMap<NotebookDocument, Promise<CommonMessageCoordinator>>();
-    private attachedEditors = new WeakMap<NotebookDocument, WeakSet<NotebookEditor>>();
-    private notebookDisposables = new WeakMap<NotebookDocument, Disposable[]>();
-    private selectedNotebookController = new WeakMap<NotebookDocument, VSCodeNotebookController>();
+    private readonly messageCoordinators = new WeakMap<NotebookDocument, Promise<CommonMessageCoordinator>>();
+    private readonly attachedEditors = new WeakMap<NotebookDocument, WeakSet<NotebookEditor>>();
+    private readonly notebookDisposables = new WeakMap<NotebookDocument, Disposable[]>();
+    private readonly selectedNotebookController = new WeakMap<NotebookDocument, VSCodeNotebookController>();
+    private readonly previouslyInitialized = new WeakSet<NotebookEditor>();
     /**
      * Public for testing purposes
      */
-    public notebookCommunications = new WeakMap<NotebookEditor, NotebookCommunication>();
-    private notebookEditors = new WeakMap<NotebookDocument, NotebookEditor[]>();
+    public readonly notebookCommunications = new WeakMap<NotebookEditor, NotebookCommunication>();
+    private readonly notebookEditors = new WeakMap<NotebookDocument, NotebookEditor[]>();
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
@@ -104,6 +105,22 @@ export class NotebookIPyWidgetCoordinator {
         notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, disposableRegistry);
     }
     public setActiveController(notebook: NotebookDocument, controller: VSCodeNotebookController) {
+        // Dispost previous message coordinators.
+        const previousCoordinators = this.messageCoordinators.get(notebook);
+        if (previousCoordinators) {
+            this.messageCoordinators.delete(notebook);
+            this.attachedEditors.delete(notebook);
+            window.visibleNotebookEditors
+                .filter((editor) => editor.document === notebook)
+                .forEach((editor) => {
+                    const comms = this.notebookCommunications.get(editor);
+                    this.notebookCommunications.delete(editor);
+                    if (comms) {
+                        comms.dispose();
+                    }
+                });
+            previousCoordinators.then((item) => item.dispose()).catch(noop);
+        }
         this.selectedNotebookController.set(notebook, controller);
         // Swap the controller in the communication objects (if we have any).
         const editors = this.notebookEditors.get(notebook) || [];
@@ -175,7 +192,7 @@ export class NotebookIPyWidgetCoordinator {
         const promise = createDeferred<void>();
         const attachedEditors = this.attachedEditors.get(document) || new Set<NotebookEditor>();
         this.attachedEditors.set(document, attachedEditors);
-        if (attachedEditors.has(webview.editor)) {
+        if (attachedEditors.has(webview.editor) || this.previouslyInitialized.has(webview.editor)) {
             promise.resolve();
         } else {
             attachedEditors.add(webview.editor);
@@ -206,14 +223,19 @@ export class NotebookIPyWidgetCoordinator {
                     // to use a kernel. (IPyWidget Dispatcher uses this too)
                     if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
                         promise.resolve();
+                        this.previouslyInitialized.add(webview.editor);
                     }
                 },
                 this,
                 disposables
             );
+            // In case the webview loaded earlier and it already sent the IPyWidgetMessages.IPyWidgets_Ready message
+            // This way we don't make assumptions, we just query widgets and ask its its ready (avoids timing issues etc).
+            webview
+                .postMessage({ type: IPyWidgetMessages.IPyWidgets_IsReadyRequest, payload: undefined })
+                .then(noop, noop);
             this.addNotebookDiposables(document, disposables);
         }
-
         return promise.promise;
     }
 }
