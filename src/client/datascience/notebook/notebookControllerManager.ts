@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CancellationToken, NotebookControllerAffinity, window } from 'vscode';
+import { CancellationToken, NotebookControllerAffinity } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
@@ -400,7 +400,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 ? Telemetry.SelectLocalJupyterKernel
                 : Telemetry.SelectRemoteJupyterKernel;
             sendKernelTelemetryEvent(document.uri, telemetryEvent);
-            window.visibleNotebookEditors
+            this.notebook.notebookEditors
                 .filter((editor) => editor.document === document)
                 .forEach((editor) =>
                     controller.postMessage(
