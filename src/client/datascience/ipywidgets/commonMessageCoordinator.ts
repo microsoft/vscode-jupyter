@@ -69,7 +69,7 @@ export class CommonMessageCoordinator {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         postEmitter?: EventEmitter<{ message: string; payload: any }>
     ) {
-        if (postEmitter){
+        if (postEmitter) {
             this.listeningToPostMessageEvent = true;
         }
         this.postEmitter =
