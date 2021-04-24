@@ -4,7 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, notebook, NotebookDocument, Uri } from 'vscode';
+import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
+import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebook, INotebookProvider } from '../types';
@@ -82,7 +83,8 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
     private disposables: IDisposable[] = [];
     constructor(
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook
     ) {
         disposables.push(this);
         notebookProvider.onNotebookCreated((e) => this.trackDisposingOfNotebook(e.notebook), this, this.disposables);
@@ -100,7 +102,7 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
     }
     public create(identity: Uri): IIPyWidgetMessageDispatcher {
         let baseDispatcher = this.messageDispatchers.get(identity.fsPath);
-        const document = notebook.notebookDocuments.find((item) => item.uri.toString() === identity.toString());
+        const document = this.notebook.notebookDocuments.find((item) => item.uri.toString() === identity.toString());
         if (!baseDispatcher) {
             baseDispatcher = new IPyWidgetMessageDispatcher(this.notebookProvider, identity);
             this.messageDispatchers.set(identity.fsPath, baseDispatcher);
