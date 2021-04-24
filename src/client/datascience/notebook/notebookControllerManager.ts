@@ -35,6 +35,8 @@ import { INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
+import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
+import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -71,7 +73,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -296,6 +299,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
+        this.widgetCoordinator.setActiveController(event.notebook, event.controller);
         if (this.controllerMapping.has(event.notebook)) {
             this.controllerMapping.set(event.notebook, event.controller);
 
@@ -396,6 +400,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 ? Telemetry.SelectLocalJupyterKernel
                 : Telemetry.SelectRemoteJupyterKernel;
             sendKernelTelemetryEvent(document.uri, telemetryEvent);
+            this.notebook.notebookEditors
+                .filter((editor) => editor.document === document)
+                .forEach((editor) =>
+                    controller.postMessage(
+                        { message: IPyWidgetMessages.IPyWidgets_onKernelChanged, payload: undefined },
+                        editor
+                    )
+                );
         }
 
         trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);

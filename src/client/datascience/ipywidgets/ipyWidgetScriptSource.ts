@@ -168,7 +168,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             if (payload) {
                 const { moduleName, moduleVersion } = payload as { moduleName: string; moduleVersion: string };
                 this.sendWidgetSource(moduleName, moduleVersion).catch(
-                    traceError.bind('Failed to send widget sources upon ready')
+                    traceError.bind(undefined, 'Failed to send widget sources upon ready')
                 );
             }
         }
@@ -205,7 +205,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             this.stateFactory,
             this.httpClient
         );
-        await this.initializeNotebook();
+        this.initializeNotebook();
     }
 
     /**
@@ -236,7 +236,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             });
         }
     }
-    private async initializeNotebook() {
+    private initializeNotebook() {
         if (!this.notebook) {
             return;
         }

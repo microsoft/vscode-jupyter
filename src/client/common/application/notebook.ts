@@ -29,6 +29,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     public readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     public readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
+    public readonly onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
     public readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     public readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
@@ -63,6 +64,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.onDidChangeActiveNotebookEditor = window.onDidChangeActiveNotebookEditor;
             this.onDidOpenNotebookDocument = notebook.onDidOpenNotebookDocument;
             this.onDidCloseNotebookDocument = notebook.onDidCloseNotebookDocument;
+            this.onDidChangeVisibleNotebookEditors = window.onDidChangeVisibleNotebookEditors;
             this.onDidSaveNotebookDocument = notebook.onDidSaveNotebookDocument;
             this.onDidChangeNotebookDocument = this._onDidChangeNotebookDocument.event;
         } else {
@@ -72,6 +74,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.onDidChangeActiveNotebookEditor = this.createDisposableEventEmitter<NotebookEditor | undefined>();
             this.onDidOpenNotebookDocument = this.createDisposableEventEmitter<NotebookDocument>();
             this.onDidCloseNotebookDocument = this.createDisposableEventEmitter<NotebookDocument>();
+            this.onDidChangeVisibleNotebookEditors = this.createDisposableEventEmitter<NotebookEditor[]>();
             this.onDidSaveNotebookDocument = this.createDisposableEventEmitter<NotebookDocument>();
             this.onDidChangeNotebookDocument = this.createDisposableEventEmitter<NotebookCellChangedEvent>();
         }

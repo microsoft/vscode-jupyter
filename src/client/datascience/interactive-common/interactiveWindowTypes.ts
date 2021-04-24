@@ -155,6 +155,7 @@ export enum InteractiveWindowMessages {
 }
 
 export enum IPyWidgetMessages {
+    IPyWidgets_IsReadyRequest = 'IPyWidgets_IsReadyRequest',
     IPyWidgets_Ready = 'IPyWidgets_Ready',
     IPyWidgets_onRestartKernel = 'IPyWidgets_onRestartKernel',
     IPyWidgets_onKernelChanged = 'IPyWidgets_onKernelChanged',
