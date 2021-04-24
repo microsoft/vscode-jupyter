@@ -265,7 +265,6 @@ export class DebuggerVariables extends DebugLocationTracker
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
                 await this.evaluate(DataFrameLoading.DataFrameSysImport);
-                await this.evaluate(DataFrameLoading.DataFrameImport);
                 this.importedDataFrameScriptsIntoKernel.add(key);
             }
         } catch (exc) {
@@ -279,7 +278,6 @@ export class DebuggerVariables extends DebugLocationTracker
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
                 await this.evaluate(GetVariableInfo.GetVariableInfoSysImport);
-                await this.evaluate(GetVariableInfo.VariableInfoImport);
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }
         } catch (exc) {

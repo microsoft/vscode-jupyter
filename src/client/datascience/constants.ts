@@ -565,10 +565,9 @@ export namespace DataFrameLoading {
     export const DataFrameRowFunc = '_VSCODE_getDataFrameRows';
 
     // Constants for the debugger which imports the script files
-    export const DataFrameImportName = '_VSCODE_DataFrameImport';
-    export const DataFrameImport = `import vscodeDataFrame as ${DataFrameImportName}`;
-    export const DataFrameInfoImportFunc = `${DataFrameImportName}._VSCODE_getDataFrameInfo`;
-    export const DataFrameRowImportFunc = `${DataFrameImportName}._VSCODE_getDataFrameRows`;
+    export const DataFrameImport = `__import__('vscodeDataFrame')`;
+    export const DataFrameInfoImportFunc = `${DataFrameImport}._VSCODE_getDataFrameInfo`;
+    export const DataFrameRowImportFunc = `${DataFrameImport}._VSCODE_getDataFrameRows`;
 }
 
 export namespace GetVariableInfo {
@@ -584,8 +583,7 @@ export namespace GetVariableInfo {
     export const VariablePropertiesFunc = '_VSCODE_getVariableProperties';
 
     // Constants for the debugger which imports the script files
-    export const VariableInfoImportName = '_VSCODE_VariableImport';
-    export const VariableInfoImport = `import vscodeGetVariableInfo as ${VariableInfoImportName}`;
+    export const VariableInfoImportName = `__import__('vscodeGetVariableInfo')`;
     export const VariableInfoImportFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
 }
 
