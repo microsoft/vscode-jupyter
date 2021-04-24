@@ -9,9 +9,9 @@ import {
     window,
     Uri,
     EventEmitter,
-    notebook,
     CancellationTokenSource
 } from 'vscode';
+import { IVSCodeNotebook } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
@@ -106,9 +106,10 @@ export class NotebookIPyWidgetCoordinator {
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry
+        @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
+        @inject(IVSCodeNotebook) notebook: IVSCodeNotebook
     ) {
-        window.onDidChangeVisibleNotebookEditors(this.onDidChangeVisibleNotebookEditors, this, disposableRegistry);
+        notebook.onDidChangeVisibleNotebookEditors(this.onDidChangeVisibleNotebookEditors, this, disposableRegistry);
         notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, disposableRegistry);
     }
     public setActiveController(notebook: NotebookDocument, controller: VSCodeNotebookController) {
