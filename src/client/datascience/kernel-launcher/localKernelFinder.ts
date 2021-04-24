@@ -11,7 +11,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IExtensionContext, IPathUtils, ReadWrite, Resource } from '../../common/types';
+import { IPathUtils, ReadWrite, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -40,8 +40,6 @@ const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
 const macJupyterPath = path.join('Library', 'Jupyter', 'kernels');
 const baseKernelPath = path.join('share', 'jupyter', 'kernels');
 
-const cacheFile = 'kernelSpecPaths.json';
-
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
 
 /**
@@ -63,8 +61,6 @@ export function isInterpreter(item: nbformat.INotebookMetadata | PythonEnvironme
 @injectable()
 export class LocalKernelFinder implements ILocalKernelFinder {
     private cache?: KernelSpecFileWithContainingInterpreter[];
-    private cacheDirty = false;
-
     // Store our results when listing all possible kernelspecs for a resource
     private workspaceToMetadata = new Map<string, Promise<LocalKernelConnectionMetadata[]>>();
 
@@ -76,7 +72,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
@@ -149,8 +144,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                     })
                 );
             }
-
-            this.writeCache().ignoreErrors();
 
             // ! as the has and set above verify that we have a return here
             return await this.workspaceToMetadata.get(workspaceFolderId)!;
@@ -361,7 +354,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds
-                this.updateCache(resultPath);
                 const kernelspec = await this.getKernelSpec(
                     resultPath.kernelSpecFile,
                     resultPath.interpreter,
@@ -655,33 +647,5 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         });
 
         return kernelSpecFiles;
-    }
-
-    private updateCache(newPath: KernelSpecFileWithContainingInterpreter) {
-        this.cache = Array.isArray(this.cache) ? this.cache : [];
-        if (
-            !this.cache.find(
-                (item) =>
-                    item.interpreter?.path === newPath.interpreter?.path &&
-                    item.kernelSpecFile === newPath.kernelSpecFile
-            )
-        ) {
-            this.cache.push(newPath);
-            this.cacheDirty = true;
-        }
-    }
-
-    private async writeCache() {
-        if (this.cacheDirty && Array.isArray(this.cache)) {
-            await this.fs.writeLocalFile(
-                path.join(this.context.globalStorageUri.fsPath, cacheFile),
-                JSON.stringify(this.cache)
-            );
-            traceInfoIf(
-                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                `Kernel specs in cache ${JSON.stringify(this.cache)}`
-            );
-            this.cacheDirty = false;
-        }
     }
 }
