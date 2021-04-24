@@ -59,39 +59,19 @@ export class CommonMessageCoordinator {
     private appShell: IApplicationShell;
     private commandManager: ICommandManager;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private postEmitter: EventEmitter<{ message: string; payload: any }>;
+    private readonly postEmitter = new EventEmitter<{ message: string; payload: any }>();
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
 
-    private constructor(
-        private readonly identity: Uri,
-        private readonly serviceContainer: IServiceContainer,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        postEmitter?: EventEmitter<{ message: string; payload: any }>
-    ) {
-        if (postEmitter) {
-            this.listeningToPostMessageEvent = true;
-        }
-        this.postEmitter =
-            postEmitter ??
-            new EventEmitter<{
-                message: string;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                payload: any;
-            }>();
+    private constructor(private readonly identity: Uri, private readonly serviceContainer: IServiceContainer) {
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell, IApplicationShell);
         this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
     }
 
-    public static async create(
-        identity: Uri,
-        serviceContainer: IServiceContainer,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        postEmitter?: EventEmitter<{ message: string; payload: any }>
-    ): Promise<CommonMessageCoordinator> {
-        const result = new CommonMessageCoordinator(identity, serviceContainer, postEmitter);
+    public static async create(identity: Uri, serviceContainer: IServiceContainer): Promise<CommonMessageCoordinator> {
+        const result = new CommonMessageCoordinator(identity, serviceContainer);
         await result.initialize();
         return result;
     }
@@ -223,9 +203,7 @@ export class CommonMessageCoordinator {
             this.ipyWidgetMessageDispatcher = this.serviceContainer
                 .get<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory)
                 .create(this.identity);
-            this.disposables.push(
-                this.ipyWidgetMessageDispatcher.postMessage(this.postEmitter.fire.bind(this.postEmitter))
-            );
+            this.disposables.push(this.ipyWidgetMessageDispatcher.postMessage(this.cacheOrSend, this));
         }
         return this.ipyWidgetMessageDispatcher;
     }
