@@ -6,7 +6,6 @@ import {
     CancellationToken,
     Disposable,
     NotebookEditor,
-    window,
     Uri,
     EventEmitter,
     CancellationTokenSource
@@ -107,7 +106,7 @@ export class NotebookIPyWidgetCoordinator {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
-        @inject(IVSCodeNotebook) notebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook
     ) {
         notebook.onDidChangeVisibleNotebookEditors(this.onDidChangeVisibleNotebookEditors, this, disposableRegistry);
         notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, disposableRegistry);
@@ -118,7 +117,7 @@ export class NotebookIPyWidgetCoordinator {
         if (previousCoordinators) {
             this.messageCoordinators.delete(notebook);
             this.attachedEditors.delete(notebook);
-            window.visibleNotebookEditors
+            this.notebook.notebookEditors
                 .filter((editor) => editor.document === notebook)
                 .forEach((editor) => {
                     const comms = this.notebookCommunications.get(editor);
@@ -138,7 +137,7 @@ export class NotebookIPyWidgetCoordinator {
         notebookComms.forEach((comm) => comm.changeController(controller));
 
         // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
-        window.visibleNotebookEditors.map((editor) => this.initializeNotebookCommunication(editor));
+        this.notebook.notebookEditors.map((editor) => this.initializeNotebookCommunication(editor));
     }
     private initializeNotebookCommunication(editor: NotebookEditor) {
         const notebook = editor.document;
