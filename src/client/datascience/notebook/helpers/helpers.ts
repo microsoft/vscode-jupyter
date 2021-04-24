@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as fastDeepEqual from 'fast-deep-equal';
 import { nbformat } from '@jupyterlab/coreutils';
 import {
     NotebookCellOutput,
@@ -156,6 +157,41 @@ export function trackKernelInNotebookMetadata(
     }
 
     kernelInformationForNotebooks.set(document, data);
+}
+/**
+ * Whether the kernel connection information tracked against the document is the same as the one provided.
+ */
+export function isSameAsTrackedKernelInNotebookMetadata(
+    document: NotebookDocument,
+    kernelConnection: KernelConnectionMetadata
+) {
+    const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
+    const expectedData: typeof data = { metadata: kernelConnection };
+    let language: string | undefined;
+    switch (kernelConnection?.kind) {
+        case 'connectToLiveKernel':
+            language = kernelConnection.kernelModel.language;
+            break;
+        case 'startUsingKernelSpec':
+            language = kernelConnection.kernelSpec.language;
+            break;
+        case 'startUsingPythonInterpreter':
+            language = PYTHON_LANGUAGE;
+            break;
+        default:
+            break;
+    }
+    if (language) {
+        expectedData.kernelInfo = {
+            language_info: {
+                name: language,
+                version: ''
+            }
+        };
+    } else {
+        expectedData.kernelInfo = undefined;
+    }
+    return fastDeepEqual(data, expectedData);
 }
 /**
  * Thus this method doesn't update it the notebook metadata, we merely keep track of the information.

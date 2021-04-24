@@ -278,9 +278,7 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     );
 
     // Get the list of NotebookControllers for this document
-    const notebookControllers = notebookControllerManager.getNotebookControllers(
-        vscodeNotebook.activeNotebookEditor?.document!
-    );
+    const notebookControllers = await notebookControllerManager.getNotebookControllers();
 
     // Get the list of kernels possible
     traceInfo(`Controllers found for wait search: ${notebookControllers?.map((k) => `${k.label}:${k.id}`).join('\n')}`);

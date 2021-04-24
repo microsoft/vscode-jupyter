@@ -306,7 +306,7 @@ function hasNativeDependencies() {
         path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep)
     )
         .filter((item) => item.length > 0)
-        .filter((item) => !item.includes('zeromq') && !item.includes('keytar')) // Known native modules
+        .filter((item) => !item.includes('zeromq') && !item.includes('canvas') && !item.includes('keytar')) // Known native modules
         .filter(
             (item) =>
                 jsonProperties.findIndex((flattenedDependency) =>

@@ -67,8 +67,7 @@ import {
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookDocumentContentOptions,
-    NotebookSelector,
-    NotebookExecutionHandler,
+    NotebookExecuteHandler,
     NotebookKernelPreload,
     NotebookController
 } from 'vscode';
@@ -1560,6 +1559,7 @@ export interface IVSCodeNotebook {
     readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
+    readonly onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
     readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     readonly onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
@@ -1574,9 +1574,9 @@ export interface IVSCodeNotebook {
 
     createNotebookController(
         id: string,
-        selector: NotebookSelector,
+        viewType: string,
         label: string,
-        handler?: NotebookExecutionHandler,
+        handler?: NotebookExecuteHandler,
         preloads?: NotebookKernelPreload[]
     ): NotebookController;
 }

@@ -42,6 +42,9 @@ function initialize() {
     configureLogger(globalLogger, getPreDefinedConfiguration());
 }
 
+export enum ConsoleForegroundColors {
+    Green = '\x1b[32m'
+}
 // Set the logging level the extension logs at.
 export function setLoggingLevel(level: LogLevel | 'off') {
     if (level === 'off') {

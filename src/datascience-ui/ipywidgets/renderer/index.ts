@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import './styles.css';
 import { NotebookOutputEventParams, NotebookRendererApi } from 'vscode-notebook-renderer';
 const JupyterIPyWidgetNotebookRenderer = 'jupyter-ipywidget-renderer';
 
@@ -9,6 +10,7 @@ function renderOutput(e: NotebookOutputEventParams) {
     const renderOutputFunc =
         (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
     if (renderOutputFunc) {
+        e.element.className = (e.element.className || '') + ' cell-output-ipywidget-background';
         return renderOutputFunc(e);
     }
     console.error('Rendering widgets on notebook open is not supported.');

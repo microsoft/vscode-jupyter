@@ -8,6 +8,7 @@ import {
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { SharedMessages } from '../../../client/datascience/messages';
+import { logMessage } from '../../react-common/logger';
 import { PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
@@ -220,7 +221,7 @@ function convertVSCodeOutputToExecutResultOrDisplayData(
 function attemptInitialize() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).vscIPyWidgets) {
-        console.log('IPyWidget kernel initializing...');
+        logMessage('IPyWidget kernel initializing...');
         initialize();
     } else {
         setTimeout(attemptInitialize, 100);

@@ -13,8 +13,6 @@ import { IFileSystem, IPlatformService } from '../../../client/common/platform/t
 import { LocalKernelFinder } from '../../../client/datascience/kernel-launcher/localKernelFinder';
 import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import * as typemoq from 'typemoq';
-import { IExtensionContext } from '../../../client/common/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { InterpreterService, PythonExtensionChecker } from '../../../client/api/pythonApi';
@@ -37,7 +35,6 @@ import { arePathsSame } from '../../common';
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
         let fs: IFileSystem;
-        let context: typemoq.IMock<IExtensionContext>;
         let extensionChecker: IPythonExtensionChecker;
         const defaultPython3Name = 'python3';
         const python3Interpreter: PythonEnvironment = {
@@ -142,7 +139,6 @@ import { arePathsSame } from '../../common';
             const envVarsProvider = mock(EnvironmentVariablesProvider);
             when(envVarsProvider.getEnvironmentVariables()).thenResolve({});
             extensionChecker = mock(PythonExtensionChecker);
-            context = typemoq.Mock.ofType<IExtensionContext>();
 
             // Setup file system to return correct values.
             when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
@@ -182,7 +178,6 @@ import { arePathsSame } from '../../common';
                 instance(platformService),
                 instance(fs),
                 pathUtils,
-                context.object,
                 instance(workspaceService),
                 instance(envVarsProvider),
                 instance(extensionChecker)
