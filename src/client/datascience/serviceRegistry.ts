@@ -195,6 +195,7 @@ import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { WebviewExtensibility } from './webviewExtensibility';
 import { RemoteKernelFinder } from './kernel-launcher/remoteKernelFinder';
 import { IApplicationEnvironment } from '../common/application/types';
+import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -250,6 +251,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, WebviewIPyWidgetCoordinator);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, NativeEditorRunByLineListener);
+    serviceManager.addSingleton<NotebookIPyWidgetCoordinator>(NotebookIPyWidgetCoordinator, NotebookIPyWidgetCoordinator);
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);

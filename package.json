@@ -2109,7 +2109,6 @@
         "acorn": "^6.4.1",
         "babel-polyfill": "^6.26.0",
         "cache-loader": "^4.1.0",
-        "canvas": "^2.6.0",
         "chai": "^4.3.0",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
@@ -2168,7 +2167,6 @@
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
-        "playwright-chromium": "^1.4.2",
         "postcss": "^7.0.27",
         "postcss-cssnext": "^3.1.0",
         "postcss-import": "^12.0.1",
@@ -2211,5 +2209,9 @@
         "why-is-node-running": "^2.0.3",
         "yargs": "^15.4.1",
         "yargs-parser": "^13.1.2"
+    },
+    "optionalDependencies": {
+        "canvas": "^2.7.0",
+        "playwright-chromium": "^1.10.0"
     }
 }
