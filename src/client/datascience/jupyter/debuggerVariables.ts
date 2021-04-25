@@ -204,6 +204,8 @@ export class DebuggerVariables extends DebugLocationTracker
             // TODO: Figure out what resource to use
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
             this.monkeyPatchDataViewableVariables(message);
+        } else if (this.isContinueEvent(message)) {
+            this.lastKnownVariables = [];
         } else if (message.type === 'event' && message.event === 'terminated') {
             // When the debugger exits, make sure the variables are cleared
             this.lastKnownVariables = [];
@@ -342,10 +344,14 @@ export class DebuggerVariables extends DebugLocationTracker
             }
             return true;
         });
-
-        this.lastKnownVariables = allowedVariables.map((v) => {
+        // There will be multiple variable requests sent from the client,
+        // one per scope. Combine the variables from the new response with
+        // the existing this.lastKnownVariables, and only clear
+        // this.lastKnownVariables when the user steps. TODO: how to display
+        // shadowed names?
+        this.lastKnownVariables = this.lastKnownVariables.concat(allowedVariables.map((v) => {
             return convertDebugProtocolVariableToIJupyterVariable(v);
-        });
+        }));
 
         this.refreshEventEmitter.fire();
     }

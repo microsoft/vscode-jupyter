@@ -110,7 +110,7 @@ export class DebugLocationTracker implements DebugAdapterTracker {
         return false;
     }
 
-    private isContinueEvent(message: DebugProtocol.ProtocolMessage): boolean {
+    protected isContinueEvent(message: DebugProtocol.ProtocolMessage): boolean {
         if (message.type === 'event') {
             const eventMessage = message as DebugProtocol.Event;
             if (eventMessage.event === 'continue') {
