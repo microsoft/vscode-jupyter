@@ -3,7 +3,7 @@
 
 'use strict';
 
-import download from 'download';
+import * as download from 'download';
 import { sha256 } from 'hash.js';
 import * as path from 'path';
 import { Uri } from 'vscode';
@@ -208,12 +208,13 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         let success = false;
         while (retryCount > 0 && !success) {
             try {
-                if (this.fs.localFileExists(tempFile.filePath)){
+                if (await this.fs.localFileExists(tempFile.filePath)){
                     await this.fs.deleteLocalFile(tempFile.filePath);
                 }
                 console.log(`Downloading from CDN ${downloadUrl} into ${tempFile.filePath}`);
                 await download(downloadUrl, tempFile.filePath);
                 console.log(`Successfully downloaded from CDN ${downloadUrl} into ${tempFile.filePath}`);
+                break;
             } catch (exc) {
                 traceInfo(`Error downloading from ${downloadUrl}: `, exc);
             } finally {
