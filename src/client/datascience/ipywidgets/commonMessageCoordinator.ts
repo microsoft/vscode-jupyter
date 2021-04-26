@@ -224,7 +224,6 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IExtensionContext>(IExtensionContext)
             );
             this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.cacheOrSend, this));
-            this.disposables.push(this.ipyWidgetScriptSource.postInternalMessage(this.cacheOrSend, this));
         }
         return this.ipyWidgetScriptSource;
     }
