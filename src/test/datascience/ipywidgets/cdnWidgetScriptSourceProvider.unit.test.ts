@@ -7,7 +7,7 @@ import { shutdown } from 'log4js';
 import * as nock from 'nock';
 import * as path from 'path';
 import { Readable } from 'stream';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
 import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
