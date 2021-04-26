@@ -36,21 +36,11 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public get postInternalMessage(): Event<{ message: string; payload: any }> {
-        return this.postInternalMessageEmitter.event;
-    }
-
     public get rootScriptFolder(): Uri {
         return Uri.file(this._rootScriptFolder);
     }
     private readonly resourcesMappedToExtensionFolder = new Map<string, Promise<Uri>>();
     private postEmitter = new EventEmitter<{
-        message: string;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        payload: any;
-    }>();
-    private postInternalMessageEmitter = new EventEmitter<{
         message: string;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
@@ -143,7 +133,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         if (!this.uriConversionPromises.has(key)) {
             this.uriConversionPromises.set(key, createDeferred<Uri>());
             // Send a request for the translation.
-            this.postInternalMessageEmitter.fire({
+            this.postEmitter.fire({
                 message: InteractiveWindowMessages.ConvertUriForUseInWebViewRequest,
                 payload: localResource
             });
@@ -168,7 +158,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             if (payload) {
                 const { moduleName, moduleVersion } = payload as { moduleName: string; moduleVersion: string };
                 this.sendWidgetSource(moduleName, moduleVersion).catch(
-                    traceError.bind('Failed to send widget sources upon ready')
+                    traceError.bind(undefined, 'Failed to send widget sources upon ready')
                 );
             }
         }
@@ -205,7 +195,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             this.stateFactory,
             this.httpClient
         );
-        await this.initializeNotebook();
+        this.initializeNotebook();
     }
 
     /**
@@ -236,7 +226,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             });
         }
     }
-    private async initializeNotebook() {
+    private initializeNotebook() {
         if (!this.notebook) {
             return;
         }

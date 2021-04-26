@@ -7,9 +7,10 @@ import {
     EventEmitter,
     NotebookCell,
     NotebookController,
+    NotebookControllerAffinity,
     NotebookDocument,
+    NotebookEditor,
     NotebookKernelPreload,
-    NotebookSelector,
     Uri
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
@@ -17,6 +18,7 @@ import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { ConsoleForegroundColors } from '../../logging/_global';
 import { Commands } from '../constants';
 import { getDescriptionOfKernelConnection, getDetailOfKernelConnection } from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -36,19 +38,12 @@ export class VSCodeNotebookController implements Disposable {
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
+    private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     private controller: NotebookController;
     private isDisposed = false;
-
     get id() {
         return this.controller.id;
-    }
-
-    get isPreferred() {
-        return this.controller.isPreferred;
-    }
-    set isPreferred(value: boolean | undefined) {
-        this.controller.isPreferred = value;
     }
 
     get label() {
@@ -62,9 +57,10 @@ export class VSCodeNotebookController implements Disposable {
     get onNotebookControllerSelected() {
         return this._onNotebookControllerSelected.event;
     }
-
+    get onDidReceiveMessage() {
+        return this.controller.onDidReceiveMessage;
+    }
     constructor(
-        private readonly document: NotebookDocument,
         private readonly kernelConnection: KernelConnectionMetadata,
         label: string,
         private readonly notebookApi: IVSCodeNotebook,
@@ -74,18 +70,17 @@ export class VSCodeNotebookController implements Disposable {
         private readonly context: IExtensionContext,
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly pathUtils: IPathUtils,
-        private readonly disposable: IDisposableRegistry
+        disposableRegistry: IDisposableRegistry
     ) {
+        disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
             controller: VSCodeNotebookController;
         }>();
 
-        const selector: NotebookSelector = { viewType: JupyterNotebookView, pattern: document.uri.fsPath };
-        const id: string = `${document.uri.toString()} - ${kernelConnection.id}`;
         this.controller = this.notebookApi.createNotebookController(
-            id,
-            selector,
+            kernelConnection.id,
+            JupyterNotebookView,
             label,
             this.handleExecution.bind(this),
             this.getPreloads()
@@ -96,10 +91,19 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
         this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils);
         this.controller.hasExecutionOrder = true;
-        this.controller.supportedLanguages = [];
 
         // Hook up to see when this NotebookController is selected by the UI
-        this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposable);
+        this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposables);
+    }
+
+    public asWebviewUri(localResource: Uri): Uri {
+        return this.controller.asWebviewUri(localResource);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public postMessage(message: any, editor?: NotebookEditor): Thenable<boolean> {
+        const messageType = message && 'message' in message ? message.message : '';
+        traceInfo(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
+        return this.controller.postMessage(message, editor);
     }
 
     public dispose() {
@@ -108,19 +112,31 @@ export class VSCodeNotebookController implements Disposable {
             this._onNotebookControllerSelected.dispose();
             this.controller.dispose();
         }
+        disposeAllDisposables(this.disposables);
+    }
+
+    public updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
+        this.controller.updateNotebookAffinity(notebook, affinity);
     }
 
     // Handle the execution of notebook cell
     public async handleExecution(cells: NotebookCell[]) {
+        if (cells.length < 1) {
+            traceInfo('No cells passed to handleExecution');
+            return;
+        }
+        // Get our target document
+        const targetNotebook = cells[0].notebook;
+
         // When we receive a cell execute request, first ensure that the notebook is trusted.
         // If it isn't already trusted, block execution until the user trusts it.
-        const isTrusted = await this.commandManager.executeCommand(Commands.TrustNotebook, this.document.uri);
+        const isTrusted = await this.commandManager.executeCommand(Commands.TrustNotebook, targetNotebook.uri);
         if (!isTrusted) {
             return;
         }
         // Notebook is trusted. Continue to execute cells
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
-        await Promise.all(cells.map((cell) => this.executeCell(this.document, cell)));
+        await Promise.all(cells.map((cell) => this.executeCell(targetNotebook, cell)));
     }
 
     private onDidChangeNotebookAssociation(event: { notebook: NotebookDocument; selected: boolean }) {
@@ -153,15 +169,15 @@ export class VSCodeNotebookController implements Disposable {
         ];
     }
 
-    private handleInterrupt() {
-        this.document.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
+    private handleInterrupt(notebook: NotebookDocument) {
+        notebook.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         this.commandManager
-            .executeCommand(Commands.NotebookEditorInterruptKernel, this.document)
+            .executeCommand(Commands.NotebookEditorInterruptKernel, notebook)
             .then(noop, (ex) => console.error(ex));
     }
 
     private executeCell(doc: NotebookDocument, cell: NotebookCell) {
-        traceInfo(`Execute Cell ${cell.index} ${cell.notebook.uri.toString()} in kernelWithMetadata.ts`);
+        traceInfo(`Execute Cell ${cell.index} ${cell.notebook.uri.toString()}`);
         const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.kernelConnection });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);

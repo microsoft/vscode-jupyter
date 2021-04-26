@@ -66,6 +66,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     public handleMessage(message: string, payload?: any) {
         if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
             this.initializeKernelAndWidgetManager(payload);
+        } else if (message === IPyWidgetMessages.IPyWidgets_IsReadyRequest) {
+            this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready);
         } else if (message === IPyWidgetMessages.IPyWidgets_onRestartKernel) {
             // Kernel was restarted.
             this.manager?.dispose(); // NOSONAR

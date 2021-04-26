@@ -19,6 +19,7 @@ const interestedPackages = new Set(
         'jupyter',
         'jupyter-client',
         'jupyter-core',
+        'ipywidgets',
         'nbconvert',
         'nbformat',
         'notebook',

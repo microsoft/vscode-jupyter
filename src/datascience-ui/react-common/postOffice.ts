@@ -56,6 +56,7 @@ export class PostOffice implements IDisposable {
     public sendUnsafeMessage(type: string, payload?: any) {
         const api = this.acquireApi();
         if (api) {
+            logMessage(`UI PostOffice Sent ${type}`);
             api.postMessage({ type: type, payload });
         } else {
             logMessage(`No vscode API to post message ${type}`);
@@ -106,6 +107,9 @@ export class PostOffice implements IDisposable {
         if (this.handlers) {
             const msg = ev.data as WebviewMessage;
             if (msg) {
+                if ('type' in msg && typeof msg.type === 'string') {
+                    logMessage(`UI PostOffice Received ${msg.type}`);
+                }
                 this.subject.next({ type: msg.type, payload: msg.payload });
                 this.handlers.forEach((h: IMessageHandler | null) => {
                     if (h) {
