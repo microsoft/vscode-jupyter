@@ -210,7 +210,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
             // When we set the target controller we don't actually get a selected event from our controllers
             // to get around that when we see affinity here 'force' an event as if a user selected it
-            void this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController });
+            this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController }).catch(
+                traceError
+            );
         }
     }
 
