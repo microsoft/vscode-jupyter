@@ -11,10 +11,9 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
 import { JupyterSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { HttpClient } from '../../../client/common/net/httpClient';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../../client/common/types';
+import { IConfigurationService, WidgetCDNs } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
@@ -24,18 +23,16 @@ import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyter
 import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
-const request = require('request');
 const sanitize = require('sanitize-filename');
 
 const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('DataScience - ipywidget - CDN', () => {
+suite.only('DataScience - ipywidget - CDN', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let notebook: INotebook;
     let configService: IConfigurationService;
-    let httpClient: IHttpClient;
     let settings: JupyterSettings;
     let fileSystem: IFileSystem;
     let webviewUriConverter: ILocalResourceUriConverter;
@@ -49,12 +46,10 @@ suite('DataScience - ipywidget - CDN', () => {
     setup(() => {
         notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);
-        httpClient = mock(HttpClient);
         fileSystem = mock(FileSystem);
         webviewUriConverter = mock(IPyWidgetScriptSource);
         settings = { widgetScriptSources: [] } as any;
         when(configService.getSettings(anything())).thenReturn(settings as any);
-        when(httpClient.downloadFile(anything())).thenCall(request);
         when(fileSystem.localFileExists(anything())).thenCall((f) => fs.pathExists(f));
 
         when(fileSystem.createTemporaryLocalFile(anything())).thenCall(createTemporaryFile);
@@ -66,7 +61,6 @@ suite('DataScience - ipywidget - CDN', () => {
         when(webviewUriConverter.asWebviewUri(anything())).thenCall((u) => u);
         scriptSourceProvider = new CDNWidgetScriptSourceProvider(
             instance(configService),
-            instance(httpClient),
             instance(webviewUriConverter),
             instance(fileSystem)
         );
@@ -140,7 +134,7 @@ suite('DataScience - ipywidget - CDN', () => {
 
                 assert.deepEqual(value, { moduleName: 'HelloWorld' });
                 // Should not make any http calls.
-                verify(httpClient.exists(anything())).never();
+                // verify(httpClient.exists(anything())).never();
             });
             function updateCDNSettings(...values: WidgetCDNs[]) {
                 settings.widgetScriptSources = values;
@@ -208,12 +202,12 @@ suite('DataScience - ipywidget - CDN', () => {
                                 : ([cdn, 'unpkg.com'] as WidgetCDNs[]);
                         updateCDNSettings(cdns[0], cdns[1]);
                         // Make only one cdn available
-                        when(httpClient.exists(anything())).thenCall((a) => {
-                            if (a.includes(cdn[0])) {
-                                return true;
-                            }
-                            return false;
-                        });
+                        // when(httpClient.exists(anything())).thenCall((a) => {
+                        //     if (a.includes(cdn[0])) {
+                        //         return true;
+                        //     }
+                        //     return false;
+                        // });
                         nock(baseUrl)
                             .get(/.*/)
                             .reply(200, () => {
@@ -231,7 +225,7 @@ suite('DataScience - ipywidget - CDN', () => {
                     test('Retry if busy', async () => {
                         let retryCount = 0;
                         updateCDNSettings(cdn);
-                        when(httpClient.exists(anything())).thenResolve(true);
+                        // when(httpClient.exists(anything())).thenResolve(true);
                         nock(baseUrl).log(console.log).get(/.*/).twice().replyWithError('Not found');
                         nock(baseUrl)
                             .log(console.log)
@@ -255,7 +249,7 @@ suite('DataScience - ipywidget - CDN', () => {
                     test('Script source already on disk', async () => {
                         updateCDNSettings(cdn);
                         // Make nobody available
-                        when(httpClient.exists(anything())).thenResolve(true);
+                        // when(httpClient.exists(anything())).thenResolve(true);
 
                         // Write to where the file should eventually end up
                         const filePath = Uri.parse(scriptUri).fsPath;
