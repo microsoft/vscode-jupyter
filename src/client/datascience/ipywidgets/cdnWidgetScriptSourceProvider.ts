@@ -214,7 +214,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 console.log(`Downloading from CDN ${downloadUrl} into ${tempFile.filePath}`);
                 await download(downloadUrl, tempFile.filePath);
                 console.log(`Successfully downloaded from CDN ${downloadUrl} into ${tempFile.filePath}`);
-                break;
+                success = true;
             } catch (exc) {
                 traceInfo(`Error downloading from ${downloadUrl}: `, exc);
             } finally {
