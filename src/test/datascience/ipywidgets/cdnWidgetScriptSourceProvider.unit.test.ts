@@ -29,7 +29,7 @@ const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite.only('DataScience - ipywidget - CDN', () => {
+suite('DataScience - ipywidget - CDN', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let notebook: INotebook;
     let configService: IConfigurationService;
