@@ -90,7 +90,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 isPythonNotebook(option) || getResourceType(resource) === 'interactive';
 
             // Always include the interpreter in the search if we can
-            const interpreter =
+            const preferredInterpreter =
                 option && isInterpreter(option)
                     ? option
                     : resource && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
@@ -99,7 +99,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
             // Find the preferred kernel index from the list.
             const notebookMetadata = option && !isInterpreter(option) ? option : undefined;
-            const preferred = findPreferredKernel(kernels, resource, [], notebookMetadata, interpreter, undefined);
+            const preferred = findPreferredKernel(kernels, resource, [], notebookMetadata, preferredInterpreter, undefined);
             if (preferred) {
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
