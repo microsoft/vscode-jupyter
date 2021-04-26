@@ -35,6 +35,7 @@ import { INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
+import { JupyterNotebookView } from './constants';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -150,6 +151,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // When a document is opened we need to look for a perferred kernel for it
     private onDidOpenNotebookDocument(document: NotebookDocument) {
+        // Restrict to only our notebook documents
+        if (document.viewType !== JupyterNotebookView) {
+            return;
+        }
+
         // Prep so that we can track the selected controller for this document
         this.controllerMapping.set(document, undefined);
 
@@ -167,8 +173,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredConnection) {
                     traceInfo(
-                        `PreferredConnection: ${
-                            preferredConnection.id
+                        `PreferredConnection: ${preferredConnection.id
                         } found for NotebookDocument: ${document.uri.toString()}`
                     );
                     this.setPreferredController(document, preferredConnection).catch(traceError);
@@ -198,6 +203,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         if (targetController) {
             targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+            this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController });
         }
     }
 
