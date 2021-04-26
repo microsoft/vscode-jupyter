@@ -205,7 +205,6 @@ module.exports = {
         'src/test/datascience/kernel-launcher/kernelDaemonPool.unit.test.ts',
         'src/test/datascience/kernel-launcher/kernelLauncherDaemon.unit.test.ts',
         'src/test/datascience/ipywidgets/ipyWidgetScriptSourceProvider.unit.test.ts',
-        'src/test/datascience/ipywidgets/cdnWidgetScriptSourceProvider.unit.test.ts',
         'src/test/datascience/ipywidgets/localWidgetScriptSourceProvider.unit.test.ts',
         'src/test/datascience/ipywidgets/incompatibleWidgetHandler.unit.test.ts',
         'src/test/datascience/datascienceSurveyBanner.unit.test.ts',
