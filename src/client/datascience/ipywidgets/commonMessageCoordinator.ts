@@ -44,7 +44,14 @@ import { IIPyWidgetMessageDispatcher } from './types';
 //
 export class CommonMessageCoordinator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private cachedMessages: any[] = [];
+    /**
+     * Whether we have any handlers listerning to this event.
+     */
+    private listeningToPostMessageEvent?: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
+        this.listeningToPostMessageEvent = true;
         return this.postEmitter.event;
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
@@ -52,36 +59,19 @@ export class CommonMessageCoordinator {
     private appShell: IApplicationShell;
     private commandManager: ICommandManager;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private postEmitter: EventEmitter<{ message: string; payload: any }>;
+    private readonly postEmitter = new EventEmitter<{ message: string; payload: any }>();
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
 
-    private constructor(
-        private readonly identity: Uri,
-        private readonly serviceContainer: IServiceContainer,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        postEmitter?: EventEmitter<{ message: string; payload: any }>
-    ) {
-        this.postEmitter =
-            postEmitter ??
-            new EventEmitter<{
-                message: string;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                payload: any;
-            }>();
+    private constructor(private readonly identity: Uri, private readonly serviceContainer: IServiceContainer) {
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell, IApplicationShell);
         this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
     }
 
-    public static async create(
-        identity: Uri,
-        serviceContainer: IServiceContainer,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        postEmitter?: EventEmitter<{ message: string; payload: any }>
-    ): Promise<CommonMessageCoordinator> {
-        const result = new CommonMessageCoordinator(identity, serviceContainer, postEmitter);
+    public static async create(identity: Uri, serviceContainer: IServiceContainer): Promise<CommonMessageCoordinator> {
+        const result = new CommonMessageCoordinator(identity, serviceContainer);
         await result.initialize();
         return result;
     }
@@ -112,11 +102,10 @@ export class CommonMessageCoordinator {
         this.getIPyWidgetScriptSource()?.onMessage(message, payload);
     }
 
-    private initialize(): Promise<[void, void]> {
-        return Promise.all([
-            this.getIPyWidgetMessageDispatcher()?.initialize(),
-            this.getIPyWidgetScriptSource()?.initialize()
-        ]);
+    private async initialize(): Promise<void> {
+        // First hook up the widget script source that will listen to messages even before we start sending messages.
+        const promise = this.getIPyWidgetScriptSource()?.initialize();
+        await promise.then(() => this.getIPyWidgetMessageDispatcher()?.initialize());
     }
 
     private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
@@ -214,9 +203,7 @@ export class CommonMessageCoordinator {
             this.ipyWidgetMessageDispatcher = this.serviceContainer
                 .get<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory)
                 .create(this.identity);
-            this.disposables.push(
-                this.ipyWidgetMessageDispatcher.postMessage(this.postEmitter.fire.bind(this.postEmitter))
-            );
+            this.disposables.push(this.ipyWidgetMessageDispatcher.postMessage(this.cacheOrSend, this));
         }
         return this.ipyWidgetMessageDispatcher;
     }
@@ -236,11 +223,20 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
                 this.serviceContainer.get<IExtensionContext>(IExtensionContext)
             );
-            this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.postEmitter.fire.bind(this.postEmitter)));
-            this.disposables.push(
-                this.ipyWidgetScriptSource.postInternalMessage(this.postEmitter.fire.bind(this.postEmitter))
-            );
+            this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.cacheOrSend, this));
         }
         return this.ipyWidgetScriptSource;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private cacheOrSend(data: any) {
+        // If no one is listening to the messages, then cache these.
+        // It means its too early to dispatch the messages, we need to wait for the event handlers to get bound.
+        if (!this.listeningToPostMessageEvent) {
+            this.cachedMessages.push(data);
+            return;
+        }
+        this.cachedMessages.forEach((item) => this.postEmitter.fire(item));
+        this.cachedMessages = [];
+        this.postEmitter.fire(data);
     }
 }

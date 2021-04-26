@@ -36,6 +36,8 @@ import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata }
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
 import { JupyterNotebookView } from './constants';
+import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
+import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -72,7 +74,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -173,7 +176,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredConnection) {
                     traceInfo(
-                        `PreferredConnection: ${preferredConnection.id
+                        `PreferredConnection: ${
+                            preferredConnection.id
                         } found for NotebookDocument: ${document.uri.toString()}`
                     );
                     this.setPreferredController(document, preferredConnection).catch(traceError);
@@ -203,7 +207,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         if (targetController) {
             targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
-            this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController });
+
+            // When we set the target controller we don't actually get a selected event from our controllers
+            // to get around that when we see affinity here 'force' an event as if a user selected it
+            void this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController });
         }
     }
 
@@ -302,6 +309,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
+        this.widgetCoordinator.setActiveController(event.notebook, event.controller);
         if (this.controllerMapping.has(event.notebook)) {
             this.controllerMapping.set(event.notebook, event.controller);
 
@@ -402,6 +410,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 ? Telemetry.SelectLocalJupyterKernel
                 : Telemetry.SelectRemoteJupyterKernel;
             sendKernelTelemetryEvent(document.uri, telemetryEvent);
+            this.notebook.notebookEditors
+                .filter((editor) => editor.document === document)
+                .forEach((editor) =>
+                    controller.postMessage(
+                        { message: IPyWidgetMessages.IPyWidgets_onKernelChanged, payload: undefined },
+                        editor
+                    )
+                );
         }
 
         trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);

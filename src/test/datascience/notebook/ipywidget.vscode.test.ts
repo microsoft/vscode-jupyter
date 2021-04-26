@@ -7,7 +7,7 @@
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { NotebookDocument, Uri } from 'vscode';
+import { NotebookDocument, Uri, window } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { IExtensionTestApi } from '../../common';
@@ -25,6 +25,9 @@ import {
 } from './helper';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_WEBVIEW_BUILD_SKIPPED } from '../../constants';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { NotebookIPyWidgetCoordinator } from '../../../client/datascience/ipywidgets/notebookIPyWidgetCoordinator';
+import { INotebookCommunication } from '../../../client/datascience/notebook/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - IPyWidget test', () => {
@@ -40,6 +43,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
+    let widgetCoordinator: NotebookIPyWidgetCoordinator;
     let testWidgetNb: Uri;
     suiteSetup(async function () {
         // We need to have webviews built to run this, so skip if we don't have them
@@ -56,6 +60,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         await trustAllNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        widgetCoordinator = api.serviceContainer.get<NotebookIPyWidgetCoordinator>(NotebookIPyWidgetCoordinator);
     });
     setup(async function () {
         sinon.restore();
@@ -133,20 +138,28 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
 
     // Resolve a deferred when we see the target uri has an associated webview and the webview
     // loaded a widget successfully
-    function flagForWebviewLoad(_flag: Deferred<boolean>, _targetDoc: NotebookDocument) {
-        // KERNELPUSH: Old class removed
-        // const notebookKernelProvider = api.serviceContainer.get<INotebookKernelProvider>(
-        // INotebookKernelProvider
-        // ) as VSCodeKernelPickerProvider;
-        // // Content provider should have a public member that maps webviews. Listen to messages on this webview
-        // const webviews = notebookKernelProvider.webviews.get(targetDoc);
-        // assert.equal(webviews?.length, 1, 'No webviews found in kernel provider');
-        // if (webviews) {
-        // webviews[0].onDidReceiveMessage((e) => {
-        // if (e.type === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
-        // flag.resolve(true);
-        // }
-        // });
-        // }
+    function flagForWebviewLoad(flag: Deferred<boolean>, targetDoc: NotebookDocument) {
+        const commsList = getNotebookCommunications(targetDoc);
+        assert.equal(commsList.length, 1, 'No webviews found in kernel provider');
+        if (Array.isArray(commsList) && commsList.length > 0) {
+            commsList[0].onDidReceiveMessage((e) => {
+                if (e.type === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
+                    flag.resolve(true);
+                }
+            });
+        }
+    }
+    function getNotebookCommunications(notebook: NotebookDocument) {
+        const items: INotebookCommunication[] = [];
+        window.visibleNotebookEditors.forEach((editor) => {
+            if (editor.document !== notebook) {
+                return;
+            }
+            const comm = widgetCoordinator.notebookCommunications.get(editor);
+            if (comm) {
+                items.push(comm);
+            }
+        });
+        return items;
     }
 });

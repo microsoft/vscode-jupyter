@@ -14,6 +14,7 @@ import {
     IPyWidgetMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { KernelSocketOptions } from '../../../client/datascience/types';
+import { logMessage } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -314,7 +315,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.messageHooks.set(msgId, hook);
 
         // Wrap the hook and send it to the real kernel
-        window.console.log(`Registering hook for ${msgId}`);
+        logMessage(`Registering hook for ${msgId}`);
         this.realKernel.registerMessageHook(msgId, this.messageHook);
     }
 
@@ -340,7 +341,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.lastHookedMessageId = undefined;
 
         // Remove from the real kernel
-        window.console.log(`Removing hook for ${msgId}`);
+        logMessage(`Removing hook for ${msgId}`);
         this.realKernel.removeMessageHook(msgId, this.messageHook);
     }
 
@@ -383,7 +384,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     }
     private messageHookInterceptor(msg: KernelMessage.IIOPubMessage): boolean | PromiseLike<boolean> {
         try {
-            window.console.log(
+            logMessage(
                 `Message hook callback for ${(msg as any).header.msg_type} and ${(msg.parent_header as any).msg_id}`
             );
             // Save the active message that is currently being hooked. The Extension
@@ -481,8 +482,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
                     // has already finished handling it
                     this.finishIOPubMessage(message);
                 })
-                .catch(() => {
-                    window.console.log('Failed to send iopub_msg_handled message');
+                .catch((ex) => {
+                    window.console.error('Failed to send iopub_msg_handled message', ex);
                 });
         }
     }
