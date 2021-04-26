@@ -99,7 +99,14 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
             // Find the preferred kernel index from the list.
             const notebookMetadata = option && !isInterpreter(option) ? option : undefined;
-            const preferred = findPreferredKernel(kernels, resource, [], notebookMetadata, preferredInterpreter, undefined);
+            const preferred = findPreferredKernel(
+                kernels,
+                resource,
+                [],
+                notebookMetadata,
+                preferredInterpreter,
+                undefined
+            );
             if (preferred) {
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
