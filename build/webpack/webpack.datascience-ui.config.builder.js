@@ -184,7 +184,14 @@ function buildConfiguration(bundle) {
         // Nothing
     } else {
         filesToCopy.push({
-            from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
+            from: path.join(
+                constants.ExtensionRootDir,
+                'src',
+                'datascience-ui',
+                'ipywidgets',
+                'renderer',
+                'require.js'
+            ),
             to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
         });
     }
