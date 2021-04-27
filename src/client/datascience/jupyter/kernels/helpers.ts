@@ -382,6 +382,18 @@ export function findPreferredKernel(
                     score += 100;
                 }
 
+                // If the user has kernelspec in metadata & this is a kernelspec we generated & names match, then use that kernelspec.
+                // Reason we are only interested kernelspecs we generate is because user can have kernelspecs named `python`.
+                // Such kernelspecs are ambiguous (we have no idea what `python` kernel means, its not necessarily tied to a specific interpreter).
+                if (
+                    notebookMetadata?.kernelspec?.name &&
+                    isKernelRegisteredByUs(spec) &&
+                    notebookMetadata.kernelspec.name === spec.name
+                ) {
+                    // This is a perfect match.
+                    score += 100;
+                }
+
                 // See if the path matches.
                 if (
                     spec &&
