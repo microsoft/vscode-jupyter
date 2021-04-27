@@ -228,7 +228,9 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 traceInfo(
                     `${ConsoleForegroundColors.Green}Downloading from CDN ${downloadUrl} into ${tempFile.filePath}`
                 );
-                await download(downloadUrl, tempFile.filePath);
+                await download(downloadUrl, path.dirname(tempFile.filePath), {
+                    filename: path.basename(tempFile.filePath)
+                });
                 traceInfo(
                     `${ConsoleForegroundColors.Green}Successfully downloaded from CDN ${downloadUrl} into ${tempFile.filePath}`
                 );
