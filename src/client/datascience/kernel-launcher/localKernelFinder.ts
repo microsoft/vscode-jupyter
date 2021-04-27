@@ -193,18 +193,18 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             kernelSpecs.map(async (k) => {
                 // Find the interpreter that matches. If we find one, we want to use
                 // this to start the kernel.
-                const matchingInterpreters = this.findMatchingInterpreters(k, interpreters);
-                if (matchingInterpreters && matchingInterpreters.length) {
+                const matchingInterpreter = this.findMatchingInterpreter(k, interpreters);
+                if (matchingInterpreter) {
                     const result: PythonKernelConnectionMetadata = {
                         kind: 'startUsingPythonInterpreter',
                         kernelSpec: k,
-                        interpreter: matchingInterpreters[0],
-                        id: getKernelId(k, matchingInterpreters[0])
+                        interpreter: matchingInterpreter,
+                        id: getKernelId(k, matchingInterpreter)
                     };
 
                     // If interpreters were found, remove them from the interpreter list we'll eventually
                     // return as interpreter only items
-                    filteredInterpreters = filteredInterpreters.filter((i) => !matchingInterpreters.includes(i));
+                    filteredInterpreters = filteredInterpreters.filter((i) => matchingInterpreter === i);
 
                     // Return our metadata that uses an interpreter to start
                     return result;
@@ -276,62 +276,67 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         });
     }
 
-    private findMatchingInterpreters(
+    private findMatchingInterpreter(
         kernelSpec: IJupyterKernelSpec,
         interpreters: PythonEnvironment[]
-    ): PythonEnvironment[] | undefined {
-        return interpreters.filter((i) => {
-            // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
-            if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`
-                );
-                return false;
-            }
-
-            // 1. Check if current interpreter has the same path
+    ): PythonEnvironment | undefined {
+        // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
+        if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
+            traceInfoIf(
+                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                `Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`
+            );
+            return;
+        }
+        // 1. Check if current interpreter has the same path
+        const exactMatch = interpreters.find((i) => {
             if (
                 kernelSpec.metadata?.interpreter?.path &&
                 this.fs.areLocalPathsSame(kernelSpec.metadata?.interpreter?.path, i.path)
             ) {
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`
-                );
+                traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
                 return true;
             }
-            if (kernelSpec.interpreterPath && this.fs.areLocalPathsSame(kernelSpec.interpreterPath, i.path)) {
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`
-                );
-                return true;
-            }
-
-            // 2. Check if we have a fully qualified path in `argv`
-            const pathInArgv =
-                kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0
-                    ? kernelSpec.argv[0]
-                    : undefined;
+            return false;
+        });
+        if (exactMatch) {
+            return exactMatch;
+        }
+        // 2. Check if we have a fully qualified path in `argv`
+        const pathInArgv =
+            kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0 ? kernelSpec.argv[0] : undefined;
+        const exactMatchBasedOnArgv = interpreters.find((i) => {
             if (
                 pathInArgv &&
                 path.basename(pathInArgv) !== pathInArgv &&
                 this.fs.areLocalPathsSame(pathInArgv, i.path)
             ) {
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`
-                );
+                traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
                 return true;
             }
+            return false;
+        });
+        if (exactMatchBasedOnArgv) {
+            return exactMatchBasedOnArgv;
+        }
+        // 2. Check if `interpreterPath` is defined in kernel metadata.
+        if (kernelSpec.interpreterPath) {
+            const matchBasedOnInterpreterPath = interpreters.find((i) => {
+                if (kernelSpec.interpreterPath && this.fs.areLocalPathsSame(kernelSpec.interpreterPath, i.path)) {
+                    traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
+                    return true;
+                }
+                return false;
+            });
+            if (matchBasedOnInterpreterPath) {
+                return matchBasedOnInterpreterPath;
+            }
+        }
 
+        return interpreters.find((i) => {
             // 3. Check display name
             if (kernelSpec.display_name === i.displayName) {
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Kernel ${kernelSpec.name} matches ${i.displayName} based on display name.`
-                );
+                traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on display name.`);
                 return true;
             }
 
