@@ -171,9 +171,11 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         if (this.subscribedToKernelSocket) {
             return;
         }
+        traceInfo(`${ConsoleForegroundColors.Green}kernelSocket.subscribe = subscribing`);
         this.subscribedToKernelSocket = true;
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
         notebook.kernelSocket.subscribe((info) => {
+            traceInfo(`${ConsoleForegroundColors.Green}kernelSocket.subscribe`);
             // Remove old handlers.
             this.kernelSocketInfo?.socket?.removeReceiveHook(this.onKernelSocketMessage); // NOSONAR
             this.kernelSocketInfo?.socket?.removeSendHook(this.mirrorSend); // NOSONAR
@@ -192,6 +194,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 this.sendRestartKernel();
             }
             if (!info || !info.socket) {
+                traceInfo(`${ConsoleForegroundColors.Green}kernelSocket.subscribe = info is empty`);
                 // No kernel socket information, hence nothing much we can do.
                 this.kernelSocketInfo = undefined;
                 return;
@@ -201,6 +204,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.kernelSocketInfo = info;
             this.kernelSocketInfo.socket?.addReceiveHook(this.onKernelSocketMessage); // NOSONAR
             this.kernelSocketInfo.socket?.addSendHook(this.mirrorSend); // NOSONAR
+            traceInfo(`${ConsoleForegroundColors.Green}kernelSocket.subscribe = send`);
             this.sendKernelOptions();
             // Since we have connected to a kernel, send any pending messages.
             this.registerCommTargets(notebook);
