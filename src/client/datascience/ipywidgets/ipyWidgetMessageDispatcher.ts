@@ -8,7 +8,7 @@ import * as util from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -159,6 +159,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.subscribeToKernelSocket(notebook);
             this.registerCommTargets(notebook);
         }
+        traceWarning('IPyWidgetMessageDispatcher.initialize');
     }
     protected raisePostMessage<M extends IInteractiveWindowMapping, T extends keyof IInteractiveWindowMapping>(
         message: IPyWidgetMessages,
