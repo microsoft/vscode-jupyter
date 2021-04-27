@@ -208,7 +208,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         let success = false;
         while (retryCount > 0 && !success) {
             try {
-                if (await this.fs.localFileExists(tempFile.filePath)){
+                if (await this.fs.localFileExists(tempFile.filePath)) {
                     await this.fs.deleteLocalFile(tempFile.filePath);
                 }
                 console.log(`Downloading from CDN ${downloadUrl} into ${tempFile.filePath}`);
