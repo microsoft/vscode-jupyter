@@ -193,6 +193,7 @@ export class ScriptManager extends EventEmitter {
      * }});
      */
     private registerScriptSourcesInRequirejs(sources: WidgetScriptSource[]) {
+        logMessage(`Received IPyWidgets ${JSON.stringify(sources)}`);
         if (!Array.isArray(sources) || sources.length === 0) {
             return;
         }
