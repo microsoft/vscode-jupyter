@@ -124,7 +124,9 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
                 // Now we can generate the script URI so the local converter doesn't try to copy it.
                 const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
-                traceInfo(`${ConsoleForegroundColors.Green}Wiget ${moduleName} downloaded into ${scriptUri} from cdn`);
+                traceInfo(
+                    `${ConsoleForegroundColors.Green}Wiget ${moduleName} downloaded into ${scriptUri} from cdn (${diskPath})`
+                );
                 return { moduleName, scriptUri, source: 'cdn' };
             } else {
                 return { moduleName };
