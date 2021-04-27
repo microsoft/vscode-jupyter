@@ -158,6 +158,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         } else if (message === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest) {
             if (payload) {
                 const { moduleName, moduleVersion } = payload as { moduleName: string; moduleVersion: string };
+                traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
                 this.sendWidgetSource(moduleName, moduleVersion).catch(
                     traceError.bind(undefined, 'Failed to send widget sources upon ready')
                 );
