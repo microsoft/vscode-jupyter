@@ -112,6 +112,9 @@ export class NotebookIPyWidgetCoordinator {
         notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, disposableRegistry);
     }
     public setActiveController(notebook: NotebookDocument, controller: VSCodeNotebookController) {
+        if (this.selectedNotebookController.get(notebook) === controller) {
+            return;
+        }
         // Dispost previous message coordinators.
         const previousCoordinators = this.messageCoordinators.get(notebook);
         if (previousCoordinators) {
