@@ -155,6 +155,11 @@ export class VSCodeNotebookController implements Disposable {
 
     private getPreloads(): NotebookKernelPreload[] {
         return [
+            {
+                uri: Uri.file(
+                    join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js')
+                )
+            },
             { uri: Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')) },
             {
                 uri: Uri.file(
