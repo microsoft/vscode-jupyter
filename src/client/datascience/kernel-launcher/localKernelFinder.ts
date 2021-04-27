@@ -204,9 +204,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
                     // If interpreters were found, remove them from the interpreter list we'll eventually
                     // return as interpreter only items
-                    filteredInterpreters = filteredInterpreters.filter(
-                        (i) => matchingInterpreter === i || this.fs.areLocalPathsSame(matchingInterpreter.path, i.path)
-                    );
+                    filteredInterpreters = filteredInterpreters.filter((i) => matchingInterpreter === i);
 
                     // Return our metadata that uses an interpreter to start
                     return result;
