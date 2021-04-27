@@ -1,3 +1,3 @@
 console.warn('Clear requirejs');
-window.require = undefined;
-window.requirejs = undefined;
+delete window.require;
+delete window.requirejs;
