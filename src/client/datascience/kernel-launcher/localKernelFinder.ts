@@ -284,6 +284,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     ): PythonEnvironment | undefined {
         // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
         if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
+            traceInfoIf(
+                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                `Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`
+            );
             return;
         }
         // 1. Check if current interpreter has the same path
