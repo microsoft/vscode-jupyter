@@ -6,9 +6,9 @@
 //problems with requirejs.exec()/transpiler plugins that may not be strict.
 /*jslint regexp: true, nomen: true, sloppy: true */
 /*global window, navigator, document, importScripts, setTimeout, opera */
-console.warn('________1_____');
+console.log('________1_____');
 var requirejs, require, define;
-console.warn('________2_____');
+console.log('________2_____');
 (function (global, setTimeout) {
     var req, s, head, baseElement, dataMain, src,
         interactiveScript, currentlyAddingScript, mainScript, subPath,
@@ -178,14 +178,14 @@ console.warn('________2_____');
     if (typeof define !== 'undefined') {
         //If a define is already in play via another AMD loader,
         //do not overwrite.
-        console.warn('Exiting');
+        console.log('Exiting');
         return;
     }
 
     if (typeof requirejs !== 'undefined') {
         if (isFunction(requirejs)) {
             //Do not overwrite an existing requirejs instance.
-            console.warn('Exiting2');
+            console.log('Exiting2');
             return;
         }
         cfg = requirejs;
@@ -1822,7 +1822,7 @@ console.warn('________2_____');
      * Export require as a global, but only if it does not already exist.
      */
     if (!require) {
-        console.warn('Hello3');
+        console.log('Hello3');
         require = req;
     }
 
@@ -2128,7 +2128,7 @@ console.warn('________2_____');
             globalDefQueue.push([name, deps, callback]);
         }
     };
-    console.warn('Hello4');
+    console.log('Hello4');
     define.amd = {
         jQuery: true
     };
@@ -2146,12 +2146,12 @@ console.warn('________2_____');
 
     //Set up with config info.
     req(cfg);
-    console.warn('Hello5');
+    console.log('Hello5');
 }(this, (typeof setTimeout === 'undefined' ? undefined : setTimeout)));
-console.warn('________3_____');
-console.warn(`Window.require1 = ${typeof window.require}`)
-console.warn(`Window.require2 = ${typeof window.requirejs}`)
-console.warn(`Window.require3 = ${typeof require}`)
-console.warn(`Window.require4 = ${typeof requirejs}`)
+console.log('________3_____');
+console.log(`Window.require1 = ${typeof window.require}`)
+console.log(`Window.require2 = ${typeof window.requirejs}`)
+console.log(`Window.require3 = ${typeof require}`)
+console.log(`Window.require4 = ${typeof requirejs}`)
 window.require = require;
 window.requirejs = requirejs;
