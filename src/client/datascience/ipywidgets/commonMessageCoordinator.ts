@@ -14,7 +14,7 @@ import {
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import {
     IConfigurationService,
@@ -72,8 +72,11 @@ export class CommonMessageCoordinator {
     }
 
     public static async create(identity: Uri, serviceContainer: IServiceContainer): Promise<CommonMessageCoordinator> {
+        traceWarning('CommonMessageCoordinator.create1');
         const result = new CommonMessageCoordinator(identity, serviceContainer);
+        traceWarning('CommonMessageCoordinator.create2');
         await result.initialize();
+        traceWarning('CommonMessageCoordinator.create3');
         return result;
     }
 
@@ -104,6 +107,7 @@ export class CommonMessageCoordinator {
     }
 
     private async initialize(): Promise<void> {
+        traceWarning('CommonMessageCoordinator.initialize');
         // First hook up the widget script source that will listen to messages even before we start sending messages.
         const promise = this.getIPyWidgetScriptSource()?.initialize();
         await promise.then(() => this.getIPyWidgetMessageDispatcher()?.initialize());
@@ -239,7 +243,11 @@ export class CommonMessageCoordinator {
         }
         this.cachedMessages.forEach((item) => this.postEmitter.fire(item));
         this.cachedMessages = [];
-        traceInfo(`${ConsoleForegroundColors.Green}Sending messages in cacheOrSend - ${data && 'message' in data ? data['message'] : ''}`);
+        traceInfo(
+            `${ConsoleForegroundColors.Green}Sending messages in cacheOrSend - ${
+                data && 'message' in data ? data['message'] : ''
+            }`
+        );
         this.postEmitter.fire(data);
     }
 }

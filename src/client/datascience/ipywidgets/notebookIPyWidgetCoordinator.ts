@@ -13,7 +13,7 @@ import {
 import { IVSCodeNotebook } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { disposeAllDisposables } from '../../common/helpers';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -158,6 +158,7 @@ export class NotebookIPyWidgetCoordinator {
     ): Promise<void> {
         // Create a handler for this notebook if we don't already have one. Since there's one of the notebookMessageCoordinator's for the
         // entire VS code session, we have a map of notebook document to message coordinator
+        traceWarning('Resolving kernel');
         let promise = this.messageCoordinators.get(document);
         if (promise === undefined) {
             promise = CommonMessageCoordinator.create(document.uri, this.serviceContainer);
@@ -198,10 +199,12 @@ export class NotebookIPyWidgetCoordinator {
         const attachedEditors = this.attachedEditors.get(document) || new Set<NotebookEditor>();
         this.attachedEditors.set(document, attachedEditors);
         if (attachedEditors.has(webview.editor) || this.previouslyInitialized.has(webview.editor)) {
+            traceWarning('Coordinator already attached');
             promise.resolve();
         } else {
             attachedEditors.add(webview.editor);
             const disposables: IDisposable[] = [];
+            traceWarning('Attach coordinator');
             // Attach message requests to this webview (should dupe to all of them)
             c.postMessage(
                 (e) => {

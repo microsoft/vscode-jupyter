@@ -8,7 +8,7 @@ import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 import {
@@ -198,6 +198,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             this.httpClient
         );
         this.initializeNotebook();
+        traceWarning('IPyWidgetScriptSource.initialize');
     }
 
     /**
