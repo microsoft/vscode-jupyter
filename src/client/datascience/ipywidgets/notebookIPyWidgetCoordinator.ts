@@ -143,8 +143,10 @@ export class NotebookIPyWidgetCoordinator {
         const notebook = editor.document;
         const controller = this.selectedNotebookController.get(notebook);
         if (this.notebookCommunications.has(editor) || !controller) {
+            traceWarning('notebook communications already initialized');
             return;
         }
+        traceWarning('Initialize notebook communications');
         const comms = new NotebookCommunication(editor, controller);
         this.addNotebookDiposables(notebook, [comms]);
         this.notebookCommunications.set(editor, comms);
