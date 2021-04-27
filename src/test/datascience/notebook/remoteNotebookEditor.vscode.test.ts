@@ -103,8 +103,6 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         assert.notDeepEqual(previousList, newList, 'MRU not updated');
     });
     test('Use same kernel when re-opening notebook', async () => {
-        // test
-        traceInfo('David - 1');
         await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
@@ -117,7 +115,6 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await waitForExecutionCompletedSuccessfully(cell2);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
 
-        traceInfo('David - 2');
         // Confirm kernel id gets saved for this notebook.
         // This is not necessary, but this guarantees a faster & non-flaky test to ensure we don't close the notebook too early.
         // If we nb it as soon as output appears, its possible the kernel id hasn't been saved yet & we mess that up.
@@ -128,15 +125,12 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             'Remote Kernel id not saved'
         );
 
-        traceInfo('David - 3');
         await saveActiveNotebook(disposables);
         await closeActiveWindows();
 
         // Re-open and execute the second cell.
         // It should connect to the same live kernel
         // Second cell should display the value of existing variable from previous execution.
-
-        traceInfo('David - 4');
 
         await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
@@ -152,12 +146,10 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             'Cell output not cleared'
         );
 
-        traceInfo('David - 5');
         // Execute second cell
         cell2 = nbEditor.document.getCells()![1]!;
         await runCell(cell2);
         await waitForExecutionCompletedSuccessfully(cell2);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
-        traceInfo('David - 6');
     });
 });

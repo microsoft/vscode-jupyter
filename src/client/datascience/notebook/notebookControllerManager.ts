@@ -35,7 +35,6 @@ import { INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
-import { JupyterNotebookView } from './constants';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 /**
@@ -106,8 +105,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Look up what NotebookController is currently selected for the given notebook document
     public getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined {
         if (this.controllerMapping.has(document)) {
-            const controller = this.controllerMapping.get(document);
-            return controller;
+            return this.controllerMapping.get(document);
         }
     }
 
@@ -155,11 +153,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // When a document is opened we need to look for a perferred kernel for it
     private onDidOpenNotebookDocument(document: NotebookDocument) {
-        // Restrict to only our notebook documents
-        if (document.viewType !== JupyterNotebookView) {
-            return;
-        }
-
         // Prep so that we can track the selected controller for this document
         this.controllerMapping.set(document, undefined);
 
@@ -192,33 +185,22 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // For the given document, find the notebook controller that matches this kernel connection and associate the two
     private async setPreferredController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata) {
-        try {
-            if (!this.controllersPromise) {
-                // Should not happen as this promise is assigned in activate
-                return;
-            }
+        if (!this.controllersPromise) {
+            // Should not happen as this promise is assigned in activate
+            return;
+        }
 
-            // Wait for our controllers to be loaded before we try to set a preferred on
-            // can happen if a document is opened quick and we have not yet loaded our controllers
-            const controllers = await this.controllersPromise;
+        // Wait for our controllers to be loaded before we try to set a preferred on
+        // can happen if a document is opened quick and we have not yet loaded our controllers
+        const controllers = await this.controllersPromise;
 
-            const targetController = controllers.find((value) => {
-                // Check for a connection match
-                return areKernelConnectionsEqual(kernelConnection, value.connection);
-            });
+        const targetController = controllers.find((value) => {
+            // Check for a connection match
+            return areKernelConnectionsEqual(kernelConnection, value.connection);
+        });
 
-            if (targetController) {
-                targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
-
-                // When we set the target controller we don't actually get a selected event from our controllers
-                // to get around that when we see affinity here 'force' an event as if a user selected it
-                this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController }).catch(
-                    traceError
-                );
-            }
-        } catch (e) {
-            traceInfo('David');
-            traceError(e);
+        if (targetController) {
+            targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
         }
     }
 
@@ -351,19 +333,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 return true;
             });
         } else {
-            try {
-                const connection = await this.notebookProvider.connect({
-                    getOnly: false,
-                    resource: resource,
-                    disableUI: false,
-                    localOnly: false
-                });
+            const connection = await this.notebookProvider.connect({
+                getOnly: false,
+                resource: resource,
+                disableUI: false,
+                localOnly: false
+            });
 
-                kernels = await this.remoteKernelFinder.listKernels(resource, connection, token);
-            } catch (e) {
-                traceInfo('David');
-                traceError(e);
-            }
+            kernels = await this.remoteKernelFinder.listKernels(resource, connection, token);
         }
 
         return kernels;
