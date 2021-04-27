@@ -169,22 +169,22 @@ function buildConfiguration(bundle) {
         );
     }
     let outputProps = {};
+    filesToCopy.push({
+        from: path.join(
+            constants.ExtensionRootDir,
+            'src',
+            'datascience-ui',
+            'ipywidgets',
+            'renderer',
+            'clearRequire.js'
+        ),
+        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+    });
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
         // Nothing
     } else {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
-            to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
-        });
-        filesToCopy.push({
-            from: path.join(
-                constants.ExtensionRootDir,
-                'src',
-                'datascience-ui',
-                'ipywidgets',
-                'renderer',
-                'clearRequire.js'
-            ),
             to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
         });
     }
