@@ -8,6 +8,7 @@ import * as sinon from 'sinon';
 import { commands } from 'vscode';
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { traceInfo } from '../../../client/common/logger';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { IDisposable } from '../../../client/common/types';
@@ -15,7 +16,7 @@ import { getTextOutputValue } from '../../../client/datascience/notebook/helpers
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
-import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';
+import { closeActiveWindows, initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
     assertHasTextOutputInVSCode,
@@ -66,7 +67,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         this.timeout(120_000);
         // These are slow tests, hence lets run only on linux on CI.
         if (
-            (IS_CI_SERVER && getOSType() !== OSType.Linux) ||
+            // (IS_CI_SERVER && getOSType() !== OSType.Linux) ||
             !fs.pathExistsSync(venvNoKernelPython) ||
             !fs.pathExistsSync(venvKernelPython) ||
             !fs.pathExistsSync(venvNoRegPath)
@@ -245,25 +246,32 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Run all cells
         await runAllCellsInActiveNotebook();
+        traceInfo('qwerty - 1');
 
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
+        traceInfo('qwerty - 2');
 
         // Confirm the executable printed is not venvNoReg
         assert.ok(cell.outputs.length);
         const outputText = getTextOutputValue(cell.outputs[0]).trim();
         assert.equal(outputText.toLowerCase().indexOf(venvNoRegPythonPath), -1);
+        traceInfo('qwerty - 3');
 
         // Change kernel to the interpreter venvNoReg
         await waitForKernelToChange({ interpreterPath: venvNoRegPythonPath });
+        traceInfo('qwerty - 4');
 
         // Clear the cells & execute again
         await commands.executeCommand('notebook.clearAllCellsOutputs');
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
+        traceInfo('qwerty - 5');
         await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(cell);
+        traceInfo('qwerty - 6');
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         assertHasTextOutputInVSCode(cell, venvNoRegPythonPath, 0, false);
+        traceInfo('qwerty - 7');
     });
 });
