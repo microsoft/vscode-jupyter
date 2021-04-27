@@ -7,7 +7,7 @@ import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode'
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -191,8 +191,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // For the given document, find the notebook controller that matches this kernel connection and associate the two
     private async setPreferredController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata) {
+        traceWarning(`setPreferredController1`);
         if (!this.controllersPromise) {
             // Should not happen as this promise is assigned in activate
+            traceWarning(`setPreferredController2 Nohting to do`);
             return;
         }
 
@@ -205,7 +207,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return areKernelConnectionsEqual(kernelConnection, value.connection);
         });
 
+        traceWarning(`setPreferredController2 check`);
         if (targetController) {
+            traceWarning(`setPreferredController2 got a target`);
             targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
 
             // When we set the target controller we don't actually get a selected event from our controllers
@@ -311,8 +315,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
+        traceWarning(`handleOnNotebookControllerSelected`);
         this.widgetCoordinator.setActiveController(event.notebook, event.controller);
+        traceWarning(`handleOnNotebookControllerSelected`);
         if (this.controllerMapping.has(event.notebook)) {
+            traceWarning(`handleOnNotebookControllerSelected2`);
             this.controllerMapping.set(event.notebook, event.controller);
 
             // Now actually handle the change
@@ -320,6 +327,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
             // Now notify out that we have updated a notebooks controller
             this._onNotebookControllerSelected.fire(event);
+        } else {
+            traceError(`handleOnNotebookControllerSelected Not found`);
         }
     }
 
@@ -362,8 +371,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // We're only interested in our Jupyter Notebooks.
         if (!isJupyterNotebook(document)) {
             trackKernelInNotebookMetadata(document, undefined);
+            traceWarning(`notebookKernelChanged Exit`);
             return;
         }
+        traceWarning(`notebookKernelChanged Ok`);
         const selectedKernelConnectionMetadata = controller.connection;
 
         const model = this.storageProvider.get(document.uri);

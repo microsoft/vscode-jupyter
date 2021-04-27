@@ -15,7 +15,7 @@ import {
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { ConsoleForegroundColors } from '../../logging/_global';
@@ -116,6 +116,7 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     public updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
+        traceWarning(`updateNotebookAffinity`);
         this.controller.updateNotebookAffinity(notebook, affinity);
     }
 
@@ -142,8 +143,10 @@ export class VSCodeNotebookController implements Disposable {
     private onDidChangeNotebookAssociation(event: { notebook: NotebookDocument; selected: boolean }) {
         // If this NotebookController was selected, fire off the event
         if (event.selected) {
+            traceWarning('onDidChangeNotebookAssociation Set as expected');
             this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
         } else {
+            traceWarning('onDidChangeNotebookAssociation not selected');
             // If this controller was what was previously selected, then wipe that information out.
             // This happens when user selects our controller & then selects another controller e.g. (.NET Extension).
             // If the user selects one of our controllers (kernels), then this gets initialized elsewhere.

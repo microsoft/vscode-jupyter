@@ -113,6 +113,7 @@ export class NotebookIPyWidgetCoordinator {
     }
     public setActiveController(notebook: NotebookDocument, controller: VSCodeNotebookController) {
         // Dispost previous message coordinators.
+        traceWarning('setActiveController');
         const previousCoordinators = this.messageCoordinators.get(notebook);
         if (previousCoordinators) {
             this.messageCoordinators.delete(notebook);
@@ -137,7 +138,9 @@ export class NotebookIPyWidgetCoordinator {
         notebookComms.forEach((comm) => comm.changeController(controller));
 
         // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
+        traceWarning('setActiveController for editors');
         this.notebook.notebookEditors.map((editor) => this.initializeNotebookCommunication(editor));
+        traceWarning('setActiveController for editors - Done');
     }
     private initializeNotebookCommunication(editor: NotebookEditor) {
         const notebook = editor.document;
