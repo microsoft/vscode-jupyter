@@ -123,9 +123,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                     )}`
                 );
                 if (!(await this.fs.localFileExists(diskPath))) {
-                    traceInfo(
-                        `${ConsoleForegroundColors.Green}Wiget ${moduleName} being copied into ${diskPath}`
-                    );
+                    traceInfo(`${ConsoleForegroundColors.Green}Wiget ${moduleName} being copied into ${diskPath}`);
                     // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
                     await this.fs.copyLocal(tempFile.filePath, diskPath);
                 }
