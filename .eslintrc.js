@@ -27,7 +27,6 @@ module.exports = {
         'build/ci/performance/createNewPerformanceBenchmark.js',
         'build/ci/performance/savePerformanceResults.js',
         'build/webpack/webpack.datascience-ui.config.js',
-        'build/webpack/webpack.extension.config.js',
         'build/webpack/webpack.datascience-ui-notebooks.config.js',
         'build/webpack/plugins/less-plugin-base64.js',
         'build/webpack/pdfkit.js',
