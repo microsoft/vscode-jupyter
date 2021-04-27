@@ -35,6 +35,7 @@ import { INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
+import { JupyterNotebookView } from './constants';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 /**
@@ -153,6 +154,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // When a document is opened we need to look for a perferred kernel for it
     private onDidOpenNotebookDocument(document: NotebookDocument) {
+        // Restrict to only our notebook documents
+        if (document.viewType !== JupyterNotebookView) {
+            return;
+        }
+
         // Prep so that we can track the selected controller for this document
         this.controllerMapping.set(document, undefined);
 
@@ -205,6 +211,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (targetController) {
             traceWarning(`setPreferredController2 got a target`);
             targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+
+            // When we set the target controller we don't actually get a selected event from our controllers
             // to get around that when we see affinity here 'force' an event as if a user selected it
             this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController }).catch(
                 traceError
