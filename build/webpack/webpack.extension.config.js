@@ -56,7 +56,7 @@ const config = {
             { enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: 'transform-loader?brfs' }
         ]
     },
-    externals: ['vscode', 'commonjs', ...existingModulesInOutDir], // Don't bundle these
+    externals: ['vscode', 'commonjs', 'electron', ...existingModulesInOutDir], // Don't bundle these
     plugins: [
         ...common.getDefaultPlugins('extension'),
         new copyWebpackPlugin({

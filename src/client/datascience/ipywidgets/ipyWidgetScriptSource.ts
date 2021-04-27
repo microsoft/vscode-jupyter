@@ -21,6 +21,7 @@ import {
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { ConsoleForegroundColors } from '../../logging/_global';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -36,21 +37,11 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public get postInternalMessage(): Event<{ message: string; payload: any }> {
-        return this.postInternalMessageEmitter.event;
-    }
-
     public get rootScriptFolder(): Uri {
         return Uri.file(this._rootScriptFolder);
     }
     private readonly resourcesMappedToExtensionFolder = new Map<string, Promise<Uri>>();
     private postEmitter = new EventEmitter<{
-        message: string;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        payload: any;
-    }>();
-    private postInternalMessageEmitter = new EventEmitter<{
         message: string;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
@@ -143,7 +134,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         if (!this.uriConversionPromises.has(key)) {
             this.uriConversionPromises.set(key, createDeferred<Uri>());
             // Send a request for the translation.
-            this.postInternalMessageEmitter.fire({
+            this.postEmitter.fire({
                 message: InteractiveWindowMessages.ConvertUriForUseInWebViewRequest,
                 payload: localResource
             });
@@ -167,6 +158,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         } else if (message === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest) {
             if (payload) {
                 const { moduleName, moduleVersion } = payload as { moduleName: string; moduleVersion: string };
+                traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
                 this.sendWidgetSource(moduleName, moduleVersion).catch(
                     traceError.bind(undefined, 'Failed to send widget sources upon ready')
                 );
@@ -224,11 +216,15 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
 
         let widgetSource: WidgetScriptSource = { moduleName };
         try {
+            traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${moduleName}`);
             widgetSource = await this.scriptProvider.getWidgetScriptSource(moduleName, moduleVersion);
         } catch (ex) {
             traceError('Failed to get widget source due to an error', ex);
             sendTelemetryEvent(Telemetry.HashedIPyWidgetScriptDiscoveryError);
         } finally {
+            traceInfo(
+                `${ConsoleForegroundColors.Green}Script for ${moduleName}, is ${widgetSource.scriptUri} from ${widgetSource.source}`
+            );
             // Send to UI (even if there's an error) continues instead of hanging while waiting for a response.
             this.postEmitter.fire({
                 message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
