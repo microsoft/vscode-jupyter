@@ -2062,7 +2062,7 @@ console.warn('________2_____');
      * return a value to define the module corresponding to the first argument's
      * name.
      */
-    define = function (name, deps, callback) {
+    window.define = define = function (name, deps, callback) {
         var node, context;
 
         //Allow for anonymous modules
