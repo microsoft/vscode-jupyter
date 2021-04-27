@@ -113,6 +113,9 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             // Then get the first one that returns.
             tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
             if (tempFile) {
+                traceInfo(
+                    `${ConsoleForegroundColors.Green}Wiget ${moduleName} successfully downloaded to temp file ${tempFile.filePath}`
+                );
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_FORCE_LOGGING,
                     `Widget Script downloaded for ${moduleName}:${moduleVersion}, already downloaded ${await this.fs.localFileExists(
@@ -120,6 +123,9 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                     )}`
                 );
                 if (!(await this.fs.localFileExists(diskPath))) {
+                    traceInfo(
+                        `${ConsoleForegroundColors.Green}Wiget ${moduleName} being copied into ${diskPath}`
+                    );
                     // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
                     await this.fs.copyLocal(tempFile.filePath, diskPath);
                 }
@@ -138,7 +144,11 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             return { moduleName };
         } finally {
             if (tempFile) {
-                tempFile.dispose();
+                try {
+                    tempFile.dispose();
+                } catch {
+                    // We don't care.
+                }
             }
         }
     }
