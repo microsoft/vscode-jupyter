@@ -6,7 +6,9 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
+import { traceInfo } from '../../common/logger';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
+import { ConsoleForegroundColors } from '../../logging/_global';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebook, INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher';
@@ -50,6 +52,7 @@ class IPyWidgetMessageDispatcherWithOldMessages implements IIPyWidgetMessageDisp
             this._postMessageEmitter.fire(oldMessage);
         });
         this.oldMessages = [];
+        traceInfo(`${ConsoleForegroundColors.Green} sending message from OldMessagse.raisePostMessage`);
         this._postMessageEmitter.fire(message);
     }
 }

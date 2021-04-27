@@ -28,6 +28,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { ConsoleForegroundColors } from '../../logging/_global';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Commands, Telemetry } from '../constants';
@@ -232,11 +233,13 @@ export class CommonMessageCoordinator {
         // If no one is listening to the messages, then cache these.
         // It means its too early to dispatch the messages, we need to wait for the event handlers to get bound.
         if (!this.listeningToPostMessageEvent) {
+            traceInfo(`${ConsoleForegroundColors.Green}Queuing messages in cacheOrSend (no listenerts)`);
             this.cachedMessages.push(data);
             return;
         }
         this.cachedMessages.forEach((item) => this.postEmitter.fire(item));
         this.cachedMessages = [];
+        traceInfo(`${ConsoleForegroundColors.Green}Sending messages in cacheOrSend - ${data && 'message' in data ? data['message'] : ''}`);
         this.postEmitter.fire(data);
     }
 }

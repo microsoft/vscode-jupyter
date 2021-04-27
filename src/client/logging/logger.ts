@@ -49,7 +49,7 @@ interface IConfigurableLogger {
  */
 export function getPreDefinedConfiguration(): LoggerConfig {
     const config: LoggerConfig = {};
-
+    process.env.VSC_JUPYTER_FORCE_LOGGING = '1';
     // Do not log to console if running tests and we're not
     // asked to do so.
     if (process.env.VSC_JUPYTER_FORCE_LOGGING) {

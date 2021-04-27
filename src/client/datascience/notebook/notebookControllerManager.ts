@@ -201,6 +201,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         if (targetController) {
             targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+            // to get around that when we see affinity here 'force' an event as if a user selected it
+            this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController }).catch(
+                traceError
+            );
         }
     }
 
