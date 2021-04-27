@@ -11,6 +11,7 @@ import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IConfigurationService, WidgetCDNs } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
+import { ConsoleForegroundColors } from '../../logging/_global';
 import { ILocalResourceUriConverter } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
@@ -123,6 +124,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
                 // Now we can generate the script URI so the local converter doesn't try to copy it.
                 const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
+                traceInfo(`${ConsoleForegroundColors.Green}Wiget ${moduleName} downloaded into ${scriptUri} from cdn`);
                 return { moduleName, scriptUri, source: 'cdn' };
             } else {
                 return { moduleName };
