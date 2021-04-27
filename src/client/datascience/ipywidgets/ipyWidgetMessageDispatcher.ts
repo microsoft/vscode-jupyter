@@ -13,6 +13,7 @@ import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../common/utils/serializers';
+import { ConsoleForegroundColors } from '../../logging/_global';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
@@ -163,6 +164,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         message: IPyWidgetMessages,
         payload: M[T]
     ) {
+        traceInfo(`${ConsoleForegroundColors.Green} sending message from IPyWidgetMessageDispatcher.raisePostMessage`);
         this._postMessageEmitter.fire({ message, payload });
     }
     private subscribeToKernelSocket(notebook: INotebook) {
@@ -270,6 +272,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private async onKernelSocketMessage(data: WebSocketData): Promise<void> {
+        traceInfo('onKernelSocketMessage');
         // Hooks expect serialized data as this normally comes from a WebSocket
         let message;
 
