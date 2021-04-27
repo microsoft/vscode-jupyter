@@ -157,6 +157,11 @@ export class VSCodeNotebookController implements Disposable {
         return [
             {
                 uri: Uri.file(
+                    join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsRenderer', 'clearRequire.js')
+                )
+            },
+            {
+                uri: Uri.file(
                     join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsRenderer', 'require.js')
                 )
             },
