@@ -822,7 +822,6 @@ module.exports = {
         'src/client/datascience/kernel-launcher/kernelDaemonPool.ts',
         'src/client/datascience/ipywidgets/localWidgetScriptSourceProvider.ts',
         'src/client/datascience/ipywidgets/rceProvider.ts',
-        'src/client/datascience/ipywidgets/cdnWidgetScriptSourceProvider.ts',
         'src/client/datascience/ipywidgets/types.ts',
         'src/client/datascience/ipywidgets/remoteWidgetScriptSourceProvider.ts',
         'src/client/datascience/ipywidgets/constants.ts',
