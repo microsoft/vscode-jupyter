@@ -82,6 +82,8 @@ export interface ISlickGridProps {
     rowsAdded: Slick.Event<ISlickGridAdd>;
     resetGridEvent: Slick.Event<ISlickGridSlice>;
     resizeGridEvent: Slick.Event<void>;
+    columnsUpdated: Slick.Event<Slick.Column<ISlickRow>[]>;
+    toggleFilterEvent: Slick.Event<void>;
     filterRowsTooltip: string;
     dataDimensionality: number;
     originalVariableShape: number[] | undefined;
@@ -89,6 +91,7 @@ export interface ISlickGridProps {
     historyList: any[];
     histogramData?: IGetColsResponse;
     currentVariableName: string;
+    forceHeight?: number;
     handleSliceRequest(args: IGetSliceRequest): void;
     submitCommand(args: { command: string; args: any }): void;
     handleRefreshRequest(): void;
