@@ -193,6 +193,7 @@ export class ScriptManager extends EventEmitter {
      * }});
      */
     private registerScriptSourcesInRequirejs(sources: WidgetScriptSource[]) {
+        logMessage(`Received IPyWidget scripts ${JSON.stringify(sources || [])}`);
         if (!Array.isArray(sources) || sources.length === 0) {
             return;
         }
@@ -221,6 +222,7 @@ export class ScriptManager extends EventEmitter {
     }
     private registerScriptSourceInRequirejs(source?: WidgetScriptSource) {
         if (!source) {
+            logMessage('No widget script source');
             return;
         }
         this.registerScriptSourcesInRequirejs([source]);

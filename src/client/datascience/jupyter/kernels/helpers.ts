@@ -34,6 +34,7 @@ import { getTelemetrySafeVersion } from '../../../telemetry/helpers';
 import { IS_CI_SERVER } from '../../../../test/ciConstants';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { Uri } from 'vscode';
+import { getResourceType } from '../../common';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -324,7 +325,7 @@ export function findPreferredKernel(
     resource: Resource,
     languages: string[],
     notebookMetadata: nbformat.INotebookMetadata | undefined,
-    interpreter: PythonEnvironment | undefined,
+    preferredInterpreter: PythonEnvironment | undefined,
     remoteKernelPreferredProvider: PreferredRemoteKernelIdProvider | undefined
 ): KernelConnectionMetadata | undefined {
     let index = -1;
@@ -337,6 +338,18 @@ export function findPreferredKernel(
             index = kernels.findIndex(
                 (k) => k.kind === 'connectToLiveKernel' && k.kernelModel.id === preferredKernelId
             );
+        }
+    }
+
+    // If this is an interactive window & we don't have metadata, then just return the preferred interpreter.
+    if (!notebookMetadata && getResourceType(resource) === 'interactive' && preferredInterpreter) {
+        //  Find kernel that matches the preferred interpreter.
+        const kernelMatchingPreferredInterpreter = kernels.find(
+            (kernel) =>
+                kernel.kind === 'startUsingPythonInterpreter' && kernel.interpreter.path === preferredInterpreter.path
+        );
+        if (kernelMatchingPreferredInterpreter) {
+            return kernelMatchingPreferredInterpreter;
         }
     }
 
@@ -362,8 +375,8 @@ export function findPreferredKernel(
                     !notebookMetadata && // If we don't have metadata, only then should we compare against the interpreter.
                     isKernelRegisteredByUs(spec) === 'newVersion' &&
                     isPythonKernelSpec(spec) &&
-                    interpreter &&
-                    spec.name === getInterpreterKernelSpecName(interpreter)
+                    preferredInterpreter &&
+                    spec.name === getInterpreterKernelSpecName(preferredInterpreter)
                 ) {
                     // This is a perfect match.
                     score += 100;
@@ -374,8 +387,8 @@ export function findPreferredKernel(
                     spec &&
                     spec.path &&
                     spec.path.length > 0 &&
-                    interpreter &&
-                    spec.path === interpreter.path &&
+                    preferredInterpreter &&
+                    spec.path === preferredInterpreter.path &&
                     nbMetadataLanguage === PYTHON_LANGUAGE
                 ) {
                     // Path match. This is worth more if no notebook metadata as that should
@@ -384,13 +397,19 @@ export function findPreferredKernel(
                 }
 
                 // See if the version is the same
-                if (interpreter && interpreter.version && spec && spec.name && nbMetadataLanguage === PYTHON_LANGUAGE) {
+                if (
+                    preferredInterpreter &&
+                    preferredInterpreter.version &&
+                    spec &&
+                    spec.name &&
+                    nbMetadataLanguage === PYTHON_LANGUAGE
+                ) {
                     // Search for a digit on the end of the name. It should match our major version
                     const match = /\D+(\d+)/.exec(spec.name);
                     if (match && match !== null && match.length > 0) {
                         // See if the version number matches
                         const nameVersion = parseInt(match[1][0], 10);
-                        if (nameVersion && nameVersion === interpreter.version.major) {
+                        if (nameVersion && nameVersion === preferredInterpreter.version.major) {
                             score += 4;
                         }
                     }
@@ -404,7 +423,7 @@ export function findPreferredKernel(
                 // See if interpreter should be tried instead.
                 if (
                     spec.display_name &&
-                    spec.display_name === interpreter?.displayName &&
+                    spec.display_name === preferredInterpreter?.displayName &&
                     !notebookMetadata?.kernelspec?.display_name &&
                     nbMetadataLanguage === PYTHON_LANGUAGE
                 ) {

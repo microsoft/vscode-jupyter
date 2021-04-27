@@ -28,6 +28,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnviro
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { arePathsSame } from '../../common';
+import { Uri } from 'vscode';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -360,23 +361,24 @@ import { arePathsSame } from '../../common';
                 condaEnvironmentBase
             ]);
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+            const nbUri = Uri.file('test.ipynb');
 
             // Try python
-            let kernel = await kernelFinder.findKernel(undefined, {
+            let kernel = await kernelFinder.findKernel(nbUri, {
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             });
             assert.equal(kernel?.kernelSpec?.language, 'python', 'No python kernel found matching notebook metadata');
 
             // Julia
-            kernel = await kernelFinder.findKernel(undefined, {
+            kernel = await kernelFinder.findKernel(nbUri, {
                 language_info: { name: 'julia' },
                 orig_nbformat: 4
             });
             assert.equal(kernel?.kernelSpec?.language, 'julia', 'No julia kernel found matching notebook metadata');
 
             // Python 2
-            kernel = await kernelFinder.findKernel(undefined, {
+            kernel = await kernelFinder.findKernel(nbUri, {
                 kernelspec: {
                     display_name: 'Python 2 on Disk',
                     name: 'python2'
@@ -387,7 +389,7 @@ import { arePathsSame } from '../../common';
             assert.equal(kernel?.kernelSpec?.language, 'python', 'No python2 kernel found matching notebook metadata');
 
             // Interpreter name
-            kernel = await kernelFinder.findKernel(undefined, {
+            kernel = await kernelFinder.findKernel(nbUri, {
                 kernelspec: {
                     display_name: 'Some oddball kernel',
                     name: getInterpreterKernelSpecName(condaEnvironment)
@@ -398,7 +400,7 @@ import { arePathsSame } from '../../common';
             assert.ok(kernel, 'No interpreter kernel found matching notebook metadata');
 
             // Generic python 3
-            kernel = await kernelFinder.findKernel(undefined, {
+            kernel = await kernelFinder.findKernel(nbUri, {
                 kernelspec: {
                     display_name: 'Python 3',
                     name: defaultPython3Name
@@ -407,6 +409,23 @@ import { arePathsSame } from '../../common';
                 orig_nbformat: 4
             });
             assert.equal(kernel?.kernelSpec?.language, 'python', 'No kernel found matching default notebook metadata');
+        });
+        test('Return active interpreter for interactive window', async () => {
+            when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+            when(interpreterService.getInterpreters(anything())).thenResolve([
+                python3Interpreter,
+                condaEnvironment,
+                python2Interpreter,
+                condaEnvironmentBase
+            ]);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+
+            // Try python
+            let kernel = await kernelFinder.findKernel(Uri.file('wow.py'), {
+                language_info: { name: PYTHON_LANGUAGE },
+                orig_nbformat: 4
+            });
+            assert.equal(kernel?.kernelSpec?.language, 'python', 'No python kernel found matching notebook metadata');
         });
     });
 });

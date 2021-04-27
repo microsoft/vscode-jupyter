@@ -55,6 +55,7 @@ function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
         paths: {}
     };
     scripts.forEach((script) => {
+        logMessage(`Registering IPyWidget ${script.moduleName} found in ${script.scriptUri}.`);
         scriptsAlreadyRegisteredInRequireJs.set(script.moduleName, script.scriptUri);
         // Drop the `.js` from the scriptUri.
         const scriptUri = script.scriptUri.toLowerCase().endsWith('.js')

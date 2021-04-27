@@ -11,6 +11,7 @@ import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IConfigurationService, WidgetCDNs } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
+import { ConsoleForegroundColors } from '../../logging/_global';
 import { ILocalResourceUriConverter } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
@@ -98,18 +99,23 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
         // Might be on disk, try there first.
         if (diskPath && (await this.fs.localFileExists(diskPath))) {
+            traceInfo(`${ConsoleForegroundColors.Green}Widget Script ${moduleName}#${moduleVersion} found`);
             const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
             return { moduleName, scriptUri, source: 'cdn' };
         }
 
         // If still not found, download it.
         try {
+            traceInfo(`${ConsoleForegroundColors.Green}Widget Script ${moduleName}#${moduleVersion} searching`);
             // Make sure the disk path directory exists. We'll be downloading it to there.
             await this.fs.createLocalDirectory(path.dirname(diskPath));
 
             // Then get the first one that returns.
             tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
             if (tempFile) {
+                traceInfo(
+                    `${ConsoleForegroundColors.Green}Wiget ${moduleName} successfully downloaded to temp file ${tempFile.filePath}`
+                );
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_FORCE_LOGGING,
                     `Widget Script downloaded for ${moduleName}:${moduleVersion}, already downloaded ${await this.fs.localFileExists(
@@ -117,12 +123,16 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                     )}`
                 );
                 if (!(await this.fs.localFileExists(diskPath))) {
+                    traceInfo(`${ConsoleForegroundColors.Green}Wiget ${moduleName} being copied into ${diskPath}`);
                     // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
                     await this.fs.copyLocal(tempFile.filePath, diskPath);
                 }
 
                 // Now we can generate the script URI so the local converter doesn't try to copy it.
                 const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
+                traceInfo(
+                    `${ConsoleForegroundColors.Green}Wiget ${moduleName} downloaded into ${scriptUri} from cdn (${diskPath})`
+                );
                 return { moduleName, scriptUri, source: 'cdn' };
             } else {
                 return { moduleName };
@@ -132,7 +142,11 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             return { moduleName };
         } finally {
             if (tempFile) {
-                tempFile.dispose();
+                try {
+                    tempFile.dispose();
+                } catch {
+                    // We don't care.
+                }
             }
         }
     }
@@ -211,9 +225,15 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 if (await this.fs.localFileExists(tempFile.filePath)) {
                     await this.fs.deleteLocalFile(tempFile.filePath);
                 }
-                console.log(`Downloading from CDN ${downloadUrl} into ${tempFile.filePath}`);
-                await download(downloadUrl, tempFile.filePath);
-                console.log(`Successfully downloaded from CDN ${downloadUrl} into ${tempFile.filePath}`);
+                traceInfo(
+                    `${ConsoleForegroundColors.Green}Downloading from CDN ${downloadUrl} into ${tempFile.filePath}`
+                );
+                await download(downloadUrl, path.dirname(tempFile.filePath), {
+                    filename: path.basename(tempFile.filePath)
+                });
+                traceInfo(
+                    `${ConsoleForegroundColors.Green}Successfully downloaded from CDN ${downloadUrl} into ${tempFile.filePath}`
+                );
                 success = true;
             } catch (exc) {
                 traceInfo(`Error downloading from ${downloadUrl}: `, exc);
