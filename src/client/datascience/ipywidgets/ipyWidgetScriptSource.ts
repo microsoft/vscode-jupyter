@@ -198,6 +198,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             this.httpClient
         );
         this.initializeNotebook();
+        traceInfo('IPyWidgetScriptSource.initialize');
     }
 
     /**
