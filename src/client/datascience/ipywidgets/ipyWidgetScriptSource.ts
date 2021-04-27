@@ -215,6 +215,7 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
 
         let widgetSource: WidgetScriptSource = { moduleName };
         try {
+            traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${moduleName}`);
             widgetSource = await this.scriptProvider.getWidgetScriptSource(moduleName, moduleVersion);
         } catch (ex) {
             traceError('Failed to get widget source due to an error', ex);
