@@ -117,6 +117,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Turn all our kernelConnections that we know about into registered NotebookControllers
     private async loadNotebookControllers(): Promise<VSCodeNotebookController[]> {
+        traceInfo('IANHU Start loadNotebookControllers');
         const stopWatch = new StopWatch();
 
         try {
@@ -136,6 +137,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Send telemetry related to fetching the kernel connections
             // KERNELPUSH: undefined works for telemetry?
             sendNotebookControllerCreateTelemetry(undefined, controllers, stopWatch);
+
+            traceInfo(`IANHU loadNotebookControllers ${controllers.length}`);
 
             traceInfoIf(
                 !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
