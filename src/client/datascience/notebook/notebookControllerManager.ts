@@ -179,11 +179,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredConnection) {
                     traceInfo(
-                        `PreferredConnection: ${
+                        `IANHU PreferredConnection: ${
                             preferredConnection.id
                         } found for NotebookDocument: ${document.uri.toString()}`
                     );
-                    this.setPreferredController(document, preferredConnection).catch(traceError);
+                    this.setPreferredController(document, preferredConnection).catch((err) => {
+                        traceError(err);
+                        traceInfo('IANHU failed set preferred controller');
+                    });
                 }
             })
             .finally(() => {
@@ -194,6 +197,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // For the given document, find the notebook controller that matches this kernel connection and associate the two
     private async setPreferredController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata) {
+        traceInfo('IANHU start set preferred controller');
         if (!this.controllersPromise) {
             // Should not happen as this promise is assigned in activate
             return;
@@ -203,12 +207,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // can happen if a document is opened quick and we have not yet loaded our controllers
         const controllers = await this.controllersPromise;
 
+        traceInfo('IANHU controllers promise found');
+
         const targetController = controllers.find((value) => {
             // Check for a connection match
             return areKernelConnectionsEqual(kernelConnection, value.connection);
         });
 
         if (targetController) {
+            traceInfo('IANHU targetController found');
             targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
 
             // When we set the target controller we don't actually get a selected event from our controllers
@@ -217,6 +224,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 traceError
             );
         }
+
+        traceInfo('IANHU end set preferred controller');
     }
 
     private async findPreferredKernel(
