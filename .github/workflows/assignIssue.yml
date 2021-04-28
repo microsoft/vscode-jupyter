@@ -9,7 +9,7 @@ jobs:
   assignIssue:
     name: Assign Issue to Someone
     runs-on: ubuntu-latest
-    if: github.repository == 'donjayamanne/vscode-jupyter'
+    if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - uses: actions/checkout@v2
       - name: Created internally
@@ -26,7 +26,7 @@ jobs:
             ISSUE_ASSIGNEES: ${{toJson(github.event.issue.assignees)}}
             ISSUE_IS_INTERNAL: ${{steps.internal.outputs.result}}
         run: |
-          echo ::set-output name=result::$(node -p -e "process.env.ISSUE_IS_INTERNAL === '0' && JSON.parse(process.env.ISSUE_ASSIGNEES).length === 0 && JSON.parse(process.env.ISSUE_LABELS).filter(item => item.name.indexOf('data science') >= 0).length === 1 && JSON.parse(process.env.ISSUE_LABELS).filter(item => item.name.indexOf('Epic') >= 0).length === 0 ? 1 : 0")
+          echo ::set-output name=result::$(node -p -e "process.env.ISSUE_IS_INTERNAL === '0' && JSON.parse(process.env.ISSUE_ASSIGNEES).length === 0 ? 1 : 0")
         shell: bash
       - name: Day of week
         if: steps.proceed.outputs.result == 1
@@ -63,7 +63,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees ['DavidKutu']
+              assignees: ['DavidKutu']
             })
       - name: Odd late friday (Joyce)
         if: steps.proceed.outputs.result == 1 && steps.week.outputs.odd == 1 && steps.day.outputs.number == 5 && steps.hour.outputs.hour >= 16
@@ -75,7 +75,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees ['joyceerhl']
+              assignees: ['joyceerhl']
             })
       - name: Even weekends (David)
         if: steps.proceed.outputs.result == 1 && steps.week.outputs.odd == 0 && (steps.day.outputs.number == 6 || steps.day.outputs.number == 0)
@@ -87,7 +87,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees ['DavidKutu']
+              assignees: ['DavidKutu']
             })
       - name: Odd weekends (Joyce)
         if: steps.proceed.outputs.result == 1 && steps.week.outputs.odd == 1 && (steps.day.outputs.number == 6 || steps.day.outputs.number == 0)
@@ -99,7 +99,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees ['joyceerhl']
+              assignees: ['joyceerhl']
             })
       - name: Odd Monday (David)
         if: steps.proceed.outputs.result == 1 && steps.week.outputs.odd == 1 && steps.day.outputs.number == 1 && steps.hour.outputs.hour < 16
@@ -111,7 +111,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees ['DavidKutu']
+              assignees: ['DavidKutu']
             })
       - name: Even Monday (Joyce)
         if: steps.proceed.outputs.result == 1 && steps.week.outputs.odd == 0 && steps.day.outputs.number == 1 && steps.hour.outputs.hour < 16
@@ -123,7 +123,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees ['joyceerhl']
+              assignees: ['joyceerhl']
             })
       - name: Tuesday (Ian)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 1 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 2 && steps.hour.outputs.hour < 16)
@@ -135,7 +135,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees ['IanMatthewHuff']
+              assignees: ['IanMatthewHuff']
             })
       - name: Wednesday (Rich)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 2 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 3 && steps.hour.outputs.hour < 16)
@@ -147,7 +147,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees ['rchiodo']
+              assignees: ['rchiodo']
             })
       - name: Thursday (Don)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 3 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 4 && steps.hour.outputs.hour < 16)
@@ -159,7 +159,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees ['DonJayamanne']
+              assignees: ['DonJayamanne']
             })
       - name: Friday (Claudia)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 4 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 5 && steps.hour.outputs.hour < 16)
@@ -171,5 +171,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees ['claudiaregio']
+              assignees: ['claudiaregio']
             })
