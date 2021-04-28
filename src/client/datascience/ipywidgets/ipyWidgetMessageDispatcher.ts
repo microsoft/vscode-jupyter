@@ -158,6 +158,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.subscribeToKernelSocket(notebook);
             this.registerCommTargets(notebook);
         }
+        traceInfo('IPyWidgetMessageDispatcher.initialize');
     }
     protected raisePostMessage<M extends IInteractiveWindowMapping, T extends keyof IInteractiveWindowMapping>(
         message: IPyWidgetMessages,
