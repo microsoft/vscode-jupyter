@@ -667,7 +667,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.addSingletonInstance<NotebookCreator>(NotebookCreator, instance(mock(NotebookCreator)));
         const creationService = mock<CreationOptionService>();
-        when(creationService.registerNewNotebookContent(anything())).thenResolve();
         when(creationService.registrations).thenReturn([]);
         this.serviceManager.addSingletonInstance<CreationOptionService>(
             CreationOptionService,

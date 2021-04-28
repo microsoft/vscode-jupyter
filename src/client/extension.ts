@@ -74,7 +74,6 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             onKernelStateChange: () => ({ dispose: noop }),
             ready: Promise.resolve(),
             registerCellToolbarButton: () => ({ dispose: noop }),
-            registerNewNotebookContent: () => Promise.resolve(),
             registerPythonApi: noop,
             registerRemoteServerProvider: noop,
             showDataViewer: () => Promise.resolve()
