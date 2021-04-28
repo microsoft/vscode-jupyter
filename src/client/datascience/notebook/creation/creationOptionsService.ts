@@ -10,7 +10,7 @@ import { Telemetry } from '../../constants';
 @injectable()
 export class CreationOptionService {
     private readonly _registrations: { extensionId: string; displayName: string; defaultCellLanguage: string }[] = [];
-    constructor(@inject(IExtensions) private readonly extensions: IExtensions) {
+    constructor(@inject(IExtensions) extensions: IExtensions) {
         const contributingExtensions = extensions.all.filter((item) =>
             item.packageJSON.contributes && item.packageJSON.contributes['jupyter.kernels'] ? true : false
         );
@@ -18,10 +18,11 @@ export class CreationOptionService {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 ext.packageJSON.contributes['jupyter.kernels'].forEach((kernel: any) => {
+                    sendTelemetryEvent(Telemetry.OpenNotebookSelectionRegistered, undefined, { extensionId: ext.id });
                     this._registrations.push({
                         extensionId: ext.id,
                         displayName: kernel['title'],
-                        defaultCellLanguage: kernel['defaultlanguage']
+                        defaultCellLanguage: kernel['defaultlanguage'] || kernel['defaultLanguage']
                     });
                 });
             } catch {
@@ -29,13 +30,11 @@ export class CreationOptionService {
             }
         });
     }
-    public async registerNewNotebookContent(options: { defaultCellLanguage: string; label?: string }): Promise<void> {
-        const info = await this.extensions.determineExtensionFromCallStack();
-        if (this._registrations.find((item) => item.extensionId.toLowerCase() === info.extensionId)) {
-            return;
-        }
-        sendTelemetryEvent(Telemetry.OpenNotebookSelectionRegistered, undefined, { extensionId: info.extensionId });
-        this._registrations.push({ ...info, ...options, displayName: options.label || info.displayName });
+    /**
+     * Used purely for testing purposes.
+     */
+    public async registerNewNotebookContent(defaultCellLanguage: string): Promise<void> {
+        this._registrations.push({ displayName: defaultCellLanguage, defaultCellLanguage, extensionId: '<bogus>' });
     }
     public get registrations() {
         return this._registrations;
