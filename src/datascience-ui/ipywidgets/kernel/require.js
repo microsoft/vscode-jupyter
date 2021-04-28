@@ -7,6 +7,8 @@
 /*jslint regexp: true, nomen: true, sloppy: true */
 /*global window, navigator, document, importScripts, setTimeout, opera */
 var requirejs, require, define;
+// Clear all of the existing values
+window.requirejs = window.require = window.define = requirejs = require = define = undefined;
 console.warn('Registering custom require.js for Jupyter Kernel');
 (function (global, setTimeout) {
     var req, s, head, baseElement, dataMain, src,
