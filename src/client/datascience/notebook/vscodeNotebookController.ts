@@ -116,6 +116,7 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     public updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
+        traceInfo(`IANHU Controller: ${this.label} Notebook: ${notebook.uri.toString()}`);
         this.controller.updateNotebookAffinity(notebook, affinity);
     }
 
