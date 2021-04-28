@@ -170,7 +170,10 @@ function buildConfiguration(bundle) {
     }
     let outputProps = {};
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
-        // Nothing
+        filesToCopy.push({
+            from: path.join(constants.ExtensionRootDir, 'src/datascience-ui/ipywidgets/kernel/require.js'),
+            to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'ipywidgetsKernel')
+        });
     } else {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
@@ -265,7 +268,7 @@ function buildConfiguration(bundle) {
         plugins: [
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin({
-                patterns: [{ from: 'node_modules/requirejs/require.js' }, ...filesToCopy]
+                patterns: [...filesToCopy]
             }),
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 100
