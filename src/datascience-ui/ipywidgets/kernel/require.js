@@ -174,7 +174,7 @@ console.warn('Registering custom require.js for Jupyter Kernel');
             e.originalError = err;
         }
         return e;
-    }
+}
 
     if (typeof define !== 'undefined') {
         //If a define is already in play via another AMD loader,

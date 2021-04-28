@@ -268,7 +268,7 @@ function buildConfiguration(bundle) {
         plugins: [
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin({
-                patterns: [{ from: 'node_modules/requirejs/require.js' }, ...filesToCopy]
+                patterns: [...filesToCopy]
             }),
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 100
