@@ -1,15 +1,15 @@
 name: Assign DS issue to someone
 
 on:
-#   issues:
-#     types: [opened, labeled]
-  workflow_dispatch:
+  issues:
+    types: [opened]
+#   workflow_dispatch:
 
 jobs:
   assignIssue:
     name: Assign Issue to Someone
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-jupyter'
+    if: github.repository == 'donjayamanne/vscode-jupyter'
     steps:
       - uses: actions/checkout@v2
       - name: Created internally
