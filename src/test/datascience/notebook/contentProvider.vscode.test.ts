@@ -201,7 +201,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
 
         const originalJsonStr = (await fs.readFile(templateIPynb, { encoding: 'utf8' })).trim();
         const originalJson: nbformat.INotebookContent = JSON.parse(originalJsonStr);
-        assert.equal(
+        assert.deepEqual(
             JSON.parse(model.getContent()).cells,
             originalJson.cells,
             'Untrusted notebook json content is invalid'
@@ -211,7 +211,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
 
         model.trust();
         // , originalJson, 'Trusted notebook json content is invalid');
-        assert.equal(
+        assert.deepEqual(
             JSON.parse(model.getContent()).cells,
             originalJson.cells,
             'Trusted notebook json content is invalid'
