@@ -3,10 +3,11 @@
 
 'use strict';
 
-import { Disposable, Event, NotebookCell, Uri } from 'vscode';
+import { Disposable, Event, ExtensionMode, NotebookCell, Uri } from 'vscode';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
+import { IExtensionContext } from './common/types';
 import { VSCodeNotebookProvider } from './datascience/constants';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
 import { NotebookCellRunState } from './datascience/jupyter/kernels/types';
@@ -81,7 +82,8 @@ export function buildApi(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ready: Promise<any>,
     serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer
+    serviceContainer: IServiceContainer,
+    context: IExtensionContext
 ): IExtensionApi {
     const notebookExtensibility = serviceContainer.get<INotebookExtensibility>(INotebookExtensibility);
     const webviewExtensibility = serviceContainer.get<IWebviewExtensibility>(IWebviewExtensibility);
@@ -121,8 +123,12 @@ export function buildApi(
         }
     };
 
-    // In test environment return the DI Container.
-    if (isTestExecution() || process.env.VSC_JUPYTER_EXPOSE_SVC) {
+    // In test/dev environment return the DI Container.
+    if (
+        isTestExecution() ||
+        process.env.VSC_JUPYTER_EXPOSE_SVC ||
+        context.extensionMode === ExtensionMode.Development
+    ) {
         /* eslint-disable @typescript-eslint/no-explicit-any */
         (api as any).serviceContainer = serviceContainer;
         (api as any).serviceManager = serviceManager;
