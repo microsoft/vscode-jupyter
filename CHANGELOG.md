@@ -6,8 +6,6 @@
 
 1. Manage contributed Jupyter kernels registration.
    ([#4490](https://github.com/Microsoft/vscode-jupyter/issues/4490))
-1. Hide the Jupyter Server status bar item when a third party extension kernel is used.
-   ([#5156](https://github.com/Microsoft/vscode-jupyter/issues/5156))
 1. Update variable explorer icon.
    ([#5355](https://github.com/Microsoft/vscode-jupyter/issues/5355))
 1. Add keybind 'O' to toggle the output of all selected cells in a notebook.
