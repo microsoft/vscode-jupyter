@@ -9,6 +9,8 @@ import { disposeAllDisposables } from '../common/helpers';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../common/types';
 import { Common, DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
+import { sendTelemetryEvent } from '../telemetry';
+import { Telemetry } from './constants';
 import {
     getKernelConnectionLanguage,
     getLanguageInNotebookMetadata,
@@ -103,6 +105,7 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
             `[${extensionInfo.displayName}](${extensionInfo.extensionLink})`,
             language
         );
+        sendTelemetryEvent(Telemetry.RecommendExtension, undefined, { extensionId, action: 'displayed' });
         const selection = await this.appShell.showInformationMessage(
             message,
             Common.bannerLabelYes(),
@@ -110,19 +113,26 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
             Common.doNotShowAgain()
         );
         switch (selection) {
-            case Common.bannerLabelYes():
+            case Common.bannerLabelYes(): {
+                sendTelemetryEvent(Telemetry.RecommendExtension, undefined, { extensionId, action: 'ok' });
                 this.commandManager.executeCommand('extension.open', extensionId).then(noop, noop);
                 break;
-
-            case Common.bannerLabelNo():
+            }
+            case Common.bannerLabelNo(): {
+                sendTelemetryEvent(Telemetry.RecommendExtension, undefined, { extensionId, action: 'cancel' });
                 break;
-            case Common.doNotShowAgain():
+            }
+            case Common.doNotShowAgain(): {
+                sendTelemetryEvent(Telemetry.RecommendExtension, undefined, { extensionId, action: 'doNotShowAgain' });
                 const list = this.globalMemento.get<string[]>(mementoKeyToNeverPromptExtensionAgain, []);
                 if (!list.includes(extensionId)) {
                     list.push(extensionId);
                     await this.globalMemento.update(mementoKeyToNeverPromptExtensionAgain, list);
                 }
                 break;
+            }
+            default:
+                sendTelemetryEvent(Telemetry.RecommendExtension, undefined, { extensionId, action: 'dismissed' });
         }
     }
 }

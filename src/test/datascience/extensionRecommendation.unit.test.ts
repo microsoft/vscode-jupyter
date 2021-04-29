@@ -19,7 +19,7 @@ import { IJupyterKernelSpec } from '../../client/datascience/types';
 suite('DataScience Extension Recommendation', () => {
     ['kernelspec', 'language_info'].forEach((whereIsLanguageDefined) => {
         ['csharp', 'fsharp', 'powershell'].forEach((languageToBeTested) => {
-            suite(`Notebook langauge '${languageToBeTested}' defined in ${whereIsLanguageDefined}`, () => {
+            suite(`Notebook language '${languageToBeTested}' defined in ${whereIsLanguageDefined}`, () => {
                 const disposables: IDisposable[] = [];
                 let recommendation: ExtensionRecommendationService;
                 let vscNotebook: IVSCodeNotebook;
