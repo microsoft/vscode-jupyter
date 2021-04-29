@@ -198,6 +198,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // For the given document, find the notebook controller that matches this kernel connection and associate the two
     private async setPreferredController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata) {
         traceInfo('IANHU start set preferred controller');
+        traceInfo(`IANHU preferred connection ${kernelConnection}`);
         if (!this.controllersPromise) {
             // Should not happen as this promise is assigned in activate
             return;
@@ -286,6 +287,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Map KernelConnectionMetadata => NotebookController
         const controllers = connectionsWithLabel.map((value) => {
             return this.createNotebookController(value.connection, value.label);
+        });
+
+        controllers.forEach((value) => {
+            traceInfo(`IANHU Controller Created ${value}`);
         });
 
         return controllers;
