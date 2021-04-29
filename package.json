@@ -1972,6 +1972,7 @@
         "tmp": "^0.0.29",
         "typescript-char": "^0.0.0",
         "uint64be": "^1.0.1",
+        "underscore": "^1.12.1",
         "unicode": "^10.0.0",
         "untildify": "^3.0.2",
         "uuid": "^3.3.2",
