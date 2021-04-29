@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, named } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../common/application/types';
@@ -34,6 +34,7 @@ const extensionsThatSupportJupyterKernelLanguages = new Map<string, string>([
     ['fsharp', 'ms-dotnettools.dotnet-interactive-vscode'],
     ['powershell', 'ms-dotnettools.dotnet-interactive-vscode']
 ]);
+@injectable()
 export class ExtensionRecommendationService implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
     private recommendedInSession = new Set<string>();
