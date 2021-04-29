@@ -320,7 +320,9 @@ export class NotebookEditor implements INotebookEditor {
         if (!controller || this.restartingKernel) {
             return;
         }
-        controller.handleExecution(cells.filter((cell) => cell.kind === NotebookCellKind.Code)).catch(noop);
+        controller
+            .handleExecution(cells.filter((cell) => cell.kind === NotebookCellKind.Code))
+            .catch((ex) => traceError('Failed to run cellRange', ex));
     }
 
     private async restartKernelInternal(kernel: IKernel): Promise<void> {
