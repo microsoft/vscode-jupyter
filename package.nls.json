@@ -486,5 +486,6 @@
     "DataScience.sliceIndexError": "Index {0} out of range for axis {1} with {2} elements",
     "DataScience.sliceMismatchedAxesError": "Expected {0} axes, got {1} in slice expression",
     "DataScience.clearFilters": "Clear all filters",
-    "DataScience.defaultNotebookName": "default"
+    "DataScience.defaultNotebookName": "default",
+    "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targetting the language '{1}'"
 }
