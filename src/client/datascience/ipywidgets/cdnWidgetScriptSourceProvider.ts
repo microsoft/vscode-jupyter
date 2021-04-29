@@ -222,9 +222,6 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         let success = false;
         while (retryCount > 0 && !success) {
             try {
-                if (await this.fs.localFileExists(tempFile.filePath)) {
-                    await this.fs.deleteLocalFile(tempFile.filePath);
-                }
                 traceInfo(
                     `${ConsoleForegroundColors.Green}Downloading from CDN ${downloadUrl} into ${tempFile.filePath}`
                 );
