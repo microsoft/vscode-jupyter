@@ -30,7 +30,9 @@ const knownExtensionsToRecommend = new Map<string, { displayName: string; extens
     ]
 ]);
 const extensionsThatSupportJupyterKernelLanguages = new Map<string, string>([
+    ['c#', 'ms-dotnettools.dotnet-interactive-vscode'],
     ['csharp', 'ms-dotnettools.dotnet-interactive-vscode'],
+    ['f#', 'ms-dotnettools.dotnet-interactive-vscode'],
     ['fsharp', 'ms-dotnettools.dotnet-interactive-vscode'],
     ['powershell', 'ms-dotnettools.dotnet-interactive-vscode']
 ]);
@@ -82,7 +84,7 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
     }
 
     private async recommendExtensionForLanguage(language: string) {
-        const extensionId = extensionsThatSupportJupyterKernelLanguages.get(language);
+        const extensionId = extensionsThatSupportJupyterKernelLanguages.get(language.toLowerCase());
         if (!extensionId || this.extensions.getExtension(extensionId)) {
             return;
         }
