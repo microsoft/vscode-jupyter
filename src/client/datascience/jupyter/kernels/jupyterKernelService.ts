@@ -6,7 +6,7 @@
 import type { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { CancellationToken, CancellationTokenSource, EventEmitter } from 'vscode';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import '../../../common/extensions';
 import { traceDecorators, traceInfo } from '../../../common/logger';
@@ -34,12 +34,23 @@ import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from './types
  */
 @injectable()
 export class JupyterKernelService {
+    private readonly _onKernelRegistered: EventEmitter<{
+        kernelConnection: KernelConnectionMetadata;
+        filePath: string;
+    }>;
+
+    get onKernelRegistered() {
+        return this._onKernelRegistered.event;
+    }
+
     constructor(
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(ILocalKernelFinder) private readonly kernelFinder: ILocalKernelFinder
-    ) {}
+    ) {
+        this._onKernelRegistered = new EventEmitter<{ kernelConnection: KernelConnectionMetadata; filePath: string }>();
+    }
 
     /**
      * Makes sure that the kernel pointed to is a valid jupyter kernel (it registers it) and
@@ -112,6 +123,7 @@ export class JupyterKernelService {
         kernel: LocalKernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<void> {
+        traceInfo(`IANHU registering kernel for connection ID: ${kernel.id}`);
         // Get the global kernel location
         const root = await this.kernelFinder.getKernelSpecRootPath();
 
@@ -170,6 +182,9 @@ export class JupyterKernelService {
                 })
             );
         }
+
+        // Notify any listeners that we have registered a kernel
+        this._onKernelRegistered.fire({ kernelConnection: kernel, filePath: kernelSpecFilePath });
 
         sendTelemetryEvent(Telemetry.RegisterAndUseInterpreterAsKernel);
     }

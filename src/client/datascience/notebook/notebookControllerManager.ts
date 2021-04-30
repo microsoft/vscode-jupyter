@@ -38,6 +38,7 @@ import { INotebookControllerManager } from './types';
 import { JupyterNotebookView } from './constants';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
+import { JupyterKernelService } from '../jupyter/kernels/jupyterKernelService';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -75,7 +76,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator
+        @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
+        @inject(JupyterKernelService) private readonly kernelService: JupyterKernelService
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -97,6 +99,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
 
+        // We need to know if we register a new kernel so we can create a controller for it
+        this.kernelService.onKernelRegistered(this.onKernelRegistered, this, this.disposables);
+
+        // Start the initial load of our controllers
         this.controllersPromise = this.loadNotebookControllers().catch((error) => {
             traceError('Error loading notebook controllers', error);
             throw error;
@@ -149,6 +155,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         } finally {
             this.cancelToken = undefined;
         }
+    }
+
+    // If we register a new kernel (for example with Jupyter for an interpreter) we need to create a new controller for it right away
+    private onKernelRegistered(event: { kernelConnection: KernelConnectionMetadata; filePath: string }) {
+        traceInfo(`IANHU Adding connection: ${event.kernelConnection.id} to our controllers`);
+        const label = getDisplayNameOrNameOfKernelConnection(event.kernelConnection);
+        this.createNotebookController(event.kernelConnection, label);
     }
 
     private onDidChangeExtensions() {
