@@ -10,7 +10,7 @@
    ([#5355](https://github.com/Microsoft/vscode-jupyter/issues/5355))
 1. Add keybind 'O' to toggle the output of all selected cells in a notebook.
    ([#5425](https://github.com/Microsoft/vscode-jupyter/issues/5425))
-1. Recommend extensions when opening notebooks targetting specific language..
+1. Recommend extensions when opening notebooks targeting specific languages.
    ([#5577](https://github.com/Microsoft/vscode-jupyter/issues/5577))
 
 ### Fixes
