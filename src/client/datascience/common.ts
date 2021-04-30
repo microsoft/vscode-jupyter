@@ -10,8 +10,9 @@ import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
 import { DataScience } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
-import { KnownKernelLanguageAliases, KnownNotebookLanguages, Telemetry } from './constants';
+import { Telemetry } from './constants';
 import { ICell } from './types';
+import { getTelemetrySafeLanguage } from '../telemetry/helpers';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -172,12 +173,8 @@ export function parseSemVer(versionString: string): SemVer | undefined {
 
 export function sendNotebookOrKernelLanguageTelemetry(
     telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
-    language: string = 'unknown'
+    language?: string
 ) {
-    language = (language || 'unknown').toLowerCase();
-    language = KnownKernelLanguageAliases.get(language) || language;
-    if (!KnownNotebookLanguages.includes(language)) {
-        language = 'unknown';
-    }
+    language = getTelemetrySafeLanguage(language);
     sendTelemetryEvent(telemetryEvent, undefined, { language });
 }

@@ -378,7 +378,7 @@
             {
                 "command": "jupyter.notebookeditor.keybind.toggleOutput",
                 "title": "%DataScience.toggleCellOutput%",
-                "category": "Jupyter"
+                "category": "Notebook"
             },
             {
                 "command": "jupyter.selectCell",

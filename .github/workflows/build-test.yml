@@ -429,7 +429,7 @@ jobs:
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
           python -m pip uninstall jedi --yes
           python -m pip install jedi==0.17.2
-          conda install pytorch torchvision torchaudio cpuonly -c pytorch
+          conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cpuonly -c pytorch
 
       # Install PyTorch with pip
       - name: Install PyTorch on Windows and Linux
@@ -687,7 +687,7 @@ jobs:
           python -m pip uninstall jedi --yes
           python -m pip install jedi==0.17.2
           beakerx_kernel_java install
-          conda install pytorch torchvision torchaudio cpuonly -c pytorch
+          conda install pytorch==1.8.0 torchvision==0.9.0 torchaudio==0.8.0 cpuonly -c pytorch
 
       # Install PyTorch with pip
       - name: Install PyTorch on Windows and Linux

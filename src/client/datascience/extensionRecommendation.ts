@@ -25,7 +25,7 @@ const knownExtensionsToRecommend = new Map<string, { displayName: string; extens
     [
         'ms-dotnettools.dotnet-interactive-vscode',
         {
-            displayName: '.NET Interactive NotebooksPreview',
+            displayName: '.NET Interactive Notebooks Preview',
             extensionLink:
                 'https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode'
         }
