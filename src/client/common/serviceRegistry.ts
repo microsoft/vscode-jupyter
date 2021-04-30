@@ -59,6 +59,7 @@ import {
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { PortAttributesProviders } from './net/portAttributeProvider';
+import { LanguageInitializer } from '../telemetry/languageInitializer';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
@@ -92,6 +93,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
     serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);
     serviceManager.addBinding(IImportTracker, INotebookExecutionLogger);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        LanguageInitializer
+    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ReloadVSCodeCommandHandler
