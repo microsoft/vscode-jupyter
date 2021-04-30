@@ -474,6 +474,7 @@ export enum Telemetry {
      * to a sliceable Python variable in the data viewer.
      */
     DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
+    RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION',
     UpdateCustomEditorAssociation = 'DS_INTERNAL.UPDATE_CUSTOM_EDITOR_ASSOCIATION'
 }
 

@@ -37,6 +37,7 @@ import {
 } from '../types';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
+import { INotebookControllerManager } from './types';
 
 export class NotebookEditor implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
@@ -86,7 +87,8 @@ export class NotebookEditor implements INotebookEditor {
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
-        private readonly cellLanguageService: NotebookCellLanguageService
+        private readonly cellLanguageService: NotebookCellLanguageService,
+        private readonly controllerManager: INotebookControllerManager
     ) {
         disposables.push(model.onDidEdit(() => this._modified.fire(this)));
         disposables.push(
@@ -311,17 +313,16 @@ export class NotebookEditor implements INotebookEditor {
     }
 
     private runCellRange(cells: NotebookCell[]) {
-        const kernel = this.kernelProvider.get(this.file);
-
-        if (!kernel || this.restartingKernel) {
+        if (cells.length === 0) {
             return;
         }
-
-        cells.forEach(async (cell) => {
-            if (cell.kind === NotebookCellKind.Code) {
-                await kernel.executeCell(cell);
-            }
-        });
+        const controller = this.controllerManager.getSelectedNotebookController(cells[0].notebook);
+        if (!controller || this.restartingKernel) {
+            return;
+        }
+        controller
+            .handleExecution(cells.filter((cell) => cell.kind === NotebookCellKind.Code))
+            .catch((ex) => traceError('Failed to run cellRange', ex));
     }
 
     private async restartKernelInternal(kernel: IKernel): Promise<void> {
