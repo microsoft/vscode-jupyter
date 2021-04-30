@@ -253,7 +253,7 @@ export function createInterpreterKernelSpec(
         metadata: {
             interpreter
         },
-        argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
+        argv: [interpreter?.path || 'python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
         env: {},
         resources: {}
     };
