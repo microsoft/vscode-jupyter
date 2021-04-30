@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.6.0 (27 April 2021)
+## 2021.6.0 (05 May 2021)
 
 ### Enhancements
 
@@ -10,6 +10,8 @@
    ([#5355](https://github.com/Microsoft/vscode-jupyter/issues/5355))
 1. Add keybind 'O' to toggle the output of all selected cells in a notebook.
    ([#5425](https://github.com/Microsoft/vscode-jupyter/issues/5425))
+1. Recommend extensions when opening notebooks targeting specific languages.
+   ([#5577](https://github.com/Microsoft/vscode-jupyter/issues/5577))
 
 ### Fixes
 
@@ -68,6 +70,8 @@
    ([#5628](https://github.com/Microsoft/vscode-jupyter/issues/5628))
 1. Use `download` package to download widget scripts.
    ([#5633](https://github.com/Microsoft/vscode-jupyter/issues/5633))
+1. Start kernel if not already started when using `Run cells above/below`.
+   ([#5636](https://github.com/Microsoft/vscode-jupyter/issues/5636))
 
 ### Code Health
 
