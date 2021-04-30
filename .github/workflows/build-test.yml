@@ -451,7 +451,7 @@ jobs:
           python ./pythonFiles/install_debugpy.py
           conda env update --file ./build/conda-functional-requirements.yml
           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          conda install pytorch torchvision torchaudio cpuonly -c pytorch
+          conda install pytorch==1.7.1 torchvision==0.8.2 torchaudio==0.7.2 cpuonly -c pytorch
 
         # This step is slow.
       - name: Install dependencies (npm ci)
