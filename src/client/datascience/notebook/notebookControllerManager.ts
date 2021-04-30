@@ -142,6 +142,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 `Providing notebook controllers with length ${controllers.length}.`
             );
 
+            controllers.forEach((controller) => {
+                traceInfo(`IANHU Controller Label ${controller.id}`);
+                traceInfo(`IANHU Controller ID ${controller.label}`);
+                traceInfo(`IANHU Connection ID ${controller.connection.id}`);
+                traceInfo(`IANHU Connection Kind ${controller.connection.kind}`);
+            });
+
             return controllers;
         } finally {
             this.cancelToken = undefined;
@@ -154,6 +161,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // When a document is opened we need to look for a perferred kernel for it
     private onDidOpenNotebookDocument(document: NotebookDocument) {
+        traceInfo('IANHU OnDidOpen');
         // Restrict to only our notebook documents
         if (document.viewType !== JupyterNotebookView) {
             return;
@@ -176,7 +184,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredConnection) {
                     traceInfo(
-                        `PreferredConnection: ${
+                        `IANHU PreferredConnection: ${
                             preferredConnection.id
                         } found for NotebookDocument: ${document.uri.toString()}`
                     );
@@ -200,12 +208,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // can happen if a document is opened quick and we have not yet loaded our controllers
         const controllers = await this.controllersPromise;
 
+        traceInfo(`IANHU finding targetController for connection ID ${kernelConnection.id}`);
         const targetController = controllers.find((value) => {
             // Check for a connection match
             return areKernelConnectionsEqual(kernelConnection, value.connection);
         });
 
         if (targetController) {
+            traceInfo(`IANHU targetController found ID: ${targetController.id}`);
             targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
 
             // When we set the target controller we don't actually get a selected event from our controllers
