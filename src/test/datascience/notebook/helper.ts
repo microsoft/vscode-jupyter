@@ -332,10 +332,10 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     await sleep(500);
 }
 
-export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, time = 100_000) {
+export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, time = 200_000) {
     const { vscodeNotebook, notebookControllerManager } = await getServices();
-    // Wait for the active kernel to be a julia kernel.
-    // await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor?.kernel, time, 'Kernel not auto selected');
+
+    traceInfo('IANHU waitForKernelToGetAutoSelected');
 
     // Wait for the notebookControllerManager to have results for this given document
     await waitForCondition(

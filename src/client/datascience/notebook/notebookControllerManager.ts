@@ -38,6 +38,8 @@ import { INotebookControllerManager } from './types';
 import { JupyterNotebookView } from './constants';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
+import { JupyterKernelService } from '../jupyter/kernels/jupyterKernelService';
+import { createDeferred, Deferred } from '../../common/utils/async';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -55,8 +57,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         controller: VSCodeNotebookController;
     }>;
 
-    // Promise to resolve when we have loaded our controllers
-    private controllersPromise: Promise<VSCodeNotebookController[]> | undefined;
+    private loadNotebookControllersInProgress: Deferred<void> | undefined;
+    private registeredControllers: VSCodeNotebookController[] = [];
 
     private isLocalLaunch: boolean;
     private cancelToken: CancellationTokenSource | undefined;
@@ -75,7 +77,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator
+        @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
+        @inject(JupyterKernelService) private readonly kernelService: JupyterKernelService
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -97,7 +100,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
 
-        this.controllersPromise = this.loadNotebookControllers().catch((error) => {
+        // We need to know if we register a new kernel so we can create a controller for it
+        this.kernelService.onKernelRegistered(this.onKernelRegistered, this, this.disposables);
+
+        // Start the initial load of our controllers
+        // this.controllersPromise = this.loadNotebookControllers().catch((error) => {
+        // traceError('Error loading notebook controllers', error);
+        // throw error;
+        // });
+
+        // Start the inital load of our controllers
+        this.loadNotebookControllers().catch((error) => {
             traceError('Error loading notebook controllers', error);
             throw error;
         });
@@ -112,11 +125,23 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Find all the notebook controllers that we have registered
     public async getNotebookControllers(): Promise<VSCodeNotebookController[] | undefined> {
-        return this.controllersPromise;
+        if (this.loadNotebookControllersInProgress) {
+            await this.loadNotebookControllersInProgress.promise;
+        }
+
+        return this.registeredControllers;
+        //return this.controllersPromise;
     }
 
     // Turn all our kernelConnections that we know about into registered NotebookControllers
-    private async loadNotebookControllers(): Promise<VSCodeNotebookController[]> {
+    private async loadNotebookControllers() {
+        if (this.loadNotebookControllersInProgress) {
+            await this.loadNotebookControllersInProgress.promise;
+        }
+        // Create a new deferred to signal when we are done loading
+        this.loadNotebookControllersInProgress = createDeferred<void>();
+
+        traceInfo('IANHU Start loadNotebookControllers');
         const stopWatch = new StopWatch();
 
         try {
@@ -131,21 +156,37 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
 
             // Now create the actual controllers from our connections
-            const controllers = await this.createNotebookControllers(connections);
+            await this.createNotebookControllers(connections);
 
             // Send telemetry related to fetching the kernel connections
             // KERNELPUSH: undefined works for telemetry?
-            sendNotebookControllerCreateTelemetry(undefined, controllers, stopWatch);
+            sendNotebookControllerCreateTelemetry(undefined, this.registeredControllers, stopWatch);
+
+            traceInfo(`IANHU loadNotebookControllers ${this.registeredControllers.length}`);
 
             traceInfoIf(
                 !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                `Providing notebook controllers with length ${controllers.length}.`
+                `Providing notebook controllers with length ${this.registeredControllers.length}.`
             );
-
-            return controllers;
         } finally {
             this.cancelToken = undefined;
+
+            // Notify anyone waiting that we are done loading
+            this.loadNotebookControllersInProgress.resolve();
+            this.loadNotebookControllersInProgress = undefined;
         }
+    }
+
+    // If we register a new kernel (for example with Jupyter for an interpreter) we need to create a new controller for it right away
+    private onKernelRegistered(_event: { kernelConnection: KernelConnectionMetadata; filePath: string }) {
+        traceInfo('IANHU onKernelRegistered');
+        // traceInfo(`IANHU Adding connection: ${event.kernelConnection.id} to our controllers`);
+        // const label = getDisplayNameOrNameOfKernelConnection(event.kernelConnection);
+        // this.createNotebookController(event.kernelConnection, label);
+        // this.loadNotebookControllers().catch((error) => {
+        // traceError('Error loading notebook controllers', error);
+        // throw error;
+        // });
     }
 
     private onDidChangeExtensions() {
@@ -176,11 +217,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredConnection) {
                     traceInfo(
-                        `PreferredConnection: ${
+                        `IANHU PreferredConnection: ${
                             preferredConnection.id
                         } found for NotebookDocument: ${document.uri.toString()}`
                     );
-                    this.setPreferredController(document, preferredConnection).catch(traceError);
+                    this.setPreferredController(document, preferredConnection).catch((err) => {
+                        traceError(err);
+                        traceInfo('IANHU failed set preferred controller');
+                    });
                 }
             })
             .finally(() => {
@@ -191,14 +235,19 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // For the given document, find the notebook controller that matches this kernel connection and associate the two
     private async setPreferredController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata) {
-        if (!this.controllersPromise) {
-            // Should not happen as this promise is assigned in activate
-            return;
-        }
+        traceInfo('IANHU start set preferred controller');
+        traceInfo(`IANHU set preferred connection kind ${kernelConnection.kind}`);
+        traceInfo(`IANHU set preferred connection ID ${kernelConnection.id}`);
 
         // Wait for our controllers to be loaded before we try to set a preferred on
         // can happen if a document is opened quick and we have not yet loaded our controllers
-        const controllers = await this.controllersPromise;
+        // const controllers = await this.controllersPromise;
+        if (this.loadNotebookControllersInProgress) {
+            await this.loadNotebookControllersInProgress.promise;
+        }
+        const controllers = this.registeredControllers;
+
+        traceInfo('IANHU controllers promise found');
 
         const targetController = controllers.find((value) => {
             // Check for a connection match
@@ -206,6 +255,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         if (targetController) {
+            traceInfo('IANHU targetController found');
             targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
 
             // When we set the target controller we don't actually get a selected event from our controllers
@@ -214,6 +264,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 traceError
             );
         }
+
+        traceInfo('IANHU end set preferred controller');
     }
 
     private async findPreferredKernel(
@@ -256,7 +308,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
 
-    private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]): VSCodeNotebookController[] {
+    private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]) {
         // First sort our items by label
         const connectionsWithLabel = kernelConnections.map((value) => {
             return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
@@ -272,17 +324,28 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         // Map KernelConnectionMetadata => NotebookController
-        const controllers = connectionsWithLabel.map((value) => {
+        connectionsWithLabel.forEach((value) => {
             return this.createNotebookController(value.connection, value.label);
         });
 
-        return controllers;
+        this.registeredControllers.forEach((value) => {
+            traceInfo(`IANHU Controller Created ${value.label}`);
+            traceInfo(`IANHU Controller ID ${value.id}`);
+            traceInfo(`IANHU Connection Kind ${value.connection.kind}`);
+            traceInfo(`IANHU Connection ID ${value.connection.id}`);
+        });
     }
 
-    private createNotebookController(
-        kernelConnection: KernelConnectionMetadata,
-        label: string
-    ): VSCodeNotebookController {
+    private createNotebookController(kernelConnection: KernelConnectionMetadata, label: string) {
+        // First check to see if we have already registered this ID
+        if (
+            this.registeredControllers.find((value) => {
+                value.connection.id === kernelConnection.id;
+            })
+        ) {
+            return;
+        }
+
         // Create notebook selector
         const controller = new VSCodeNotebookController(
             kernelConnection,
@@ -300,10 +363,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Hook up to if this NotebookController is selected or de-selected
         controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);
 
-        // We are disposing as documents are closed, but do this as well
+        // Add our controllers to be disposed
         this.disposables.push(controller);
 
-        return controller;
+        this.registeredControllers.push(controller);
     }
 
     // A new NotebookController has been selected, find the associated notebook document and update it
