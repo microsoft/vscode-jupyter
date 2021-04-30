@@ -126,7 +126,7 @@ suite('DataScience Extension Recommendation', () => {
                     onDidOpenNotebookDocument.fire(nb2);
 
                     // Only one prompt regardless of how many notebooks were opened.
-                    const expectedMessage = `The [.NET Interactive NotebooksPreview](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension is recommended for notebooks targetting the language '${languageToBeTested}'`;
+                    const expectedMessage = `The [.NET Interactive Notebooks Preview](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) extension is recommended for notebooks targetting the language '${languageToBeTested}'`;
                     verify(
                         appShell.showInformationMessage(
                             expectedMessage,
