@@ -121,7 +121,7 @@ async function activateUnsafe(
         startupDurations.endActivateTime = startupStopWatch.elapsedTime;
         activationDeferred.resolve();
 
-        const api = buildApi(activationPromise, serviceManager, serviceContainer);
+        const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
         return [api, activationPromise, serviceContainer];
     } finally {
         // Make sure that we clear our status message

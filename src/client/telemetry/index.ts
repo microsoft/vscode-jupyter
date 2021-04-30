@@ -1278,4 +1278,21 @@ export interface IEventNamePropertyMapping {
          */
         type: 'added' | 'removed';
     } & Partial<TelemetryErrorProperties>;
+    /*
+     * Telemetry sent when we recommend installing an extension.
+     */
+    [Telemetry.RecommendExtension]: {
+        /**
+         * Extension we recommended the user to install.
+         */
+        extensionId: string;
+        /**
+         * `displayed` - If prompt was displayed
+         * `dismissed` - If prompt was displayed & dismissed by the user
+         * `ok` - If prompt was displayed & ok clicked by the user
+         * `cancel` - If prompt was displayed & cancel clicked by the user
+         * `doNotShowAgain` - If prompt was displayed & doNotShowAgain clicked by the user
+         */
+        action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
+    };
 }

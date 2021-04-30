@@ -4,6 +4,7 @@
 import { join } from 'path';
 import {
     Disposable,
+    env,
     EventEmitter,
     NotebookCell,
     NotebookController,
@@ -11,6 +12,7 @@ import {
     NotebookDocument,
     NotebookEditor,
     NotebookKernelPreload,
+    UIKind,
     Uri
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
@@ -154,7 +156,25 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     private getPreloads(): NotebookKernelPreload[] {
+        // Work around for known issue with CodeSpaces
+        const codeSpaceScripts =
+            env.uiKind === UIKind.Web
+                ? [
+                      {
+                          uri: Uri.file(
+                              join(
+                                  this.context.extensionPath,
+                                  'out',
+                                  'datascience-ui',
+                                  'ipywidgetsKernel',
+                                  'require.js'
+                              )
+                          )
+                      }
+                  ]
+                : [];
         return [
+            ...codeSpaceScripts,
             { uri: Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')) },
             {
                 uri: Uri.file(

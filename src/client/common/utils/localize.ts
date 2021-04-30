@@ -959,6 +959,10 @@ export namespace DataScience {
     );
 
     export const defaultNotebookName = localize('DataScience.defaultNotebookName', 'default');
+    export const recommendExtensionForNotebookLanguage = localize(
+        'DataScience.recommendExtensionForNotebook',
+        "The {0} extension is recommended for notebooks targetting the language '{1}'."
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

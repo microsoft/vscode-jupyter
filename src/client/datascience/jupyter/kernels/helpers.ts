@@ -185,7 +185,7 @@ export function getKernelConnectionLanguage(kernelConnection?: KernelConnectionM
     const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
         ? kernelConnection.kernelSpec
         : undefined;
-    return model?.language || kernelSpec?.language;
+    return model?.language || getLanguageInKernelSpec(kernelSpec);
 }
 export function getLanguageInNotebookMetadata(metadata?: nbformat.INotebookMetadata): string | undefined {
     if (!metadata) {
@@ -194,12 +194,12 @@ export function getLanguageInNotebookMetadata(metadata?: nbformat.INotebookMetad
     // If kernel spec is defined & we have a language in that, then use that information.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const kernelSpec: IJupyterKernelSpec | undefined = metadata.kernelspec as any;
+    return getLanguageInKernelSpec(kernelSpec) || metadata.language_info?.name;
+}
+export function getLanguageInKernelSpec(kernelSpec?: IJupyterKernelSpec | undefined): string | undefined {
     // When a kernel spec is stored in ipynb, the `language` of the kernel spec is also saved.
     // Unfortunately there's no strong typing for this.
-    if (kernelSpec?.language) {
-        return kernelSpec.language;
-    }
-    return metadata.language_info?.name;
+    return kernelSpec?.language;
 }
 
 /**
