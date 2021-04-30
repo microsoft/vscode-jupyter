@@ -212,6 +212,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     test('Interrupt and running cells again should only run the necessary cells', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/5713
         // The pending cells are always timing out on interrupt, and it might not be up to us
+        // We handle it by asking the user to restart the kernel instead
         return this.skip();
         // Interrupts on windows doesn't work well, not as well as on Unix.
         // This is how Python works, hence this test is better tested on Unix OS.
