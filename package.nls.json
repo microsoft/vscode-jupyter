@@ -384,7 +384,7 @@
     "DataScience.runAll": "Run all cells",
     "DataScience.runAbove": "Run cells above",
     "DataScience.runBelow": "Run cell and below",
-    "DataScience.toggleCellOutput": "Toggle output of all selected cells",
+    "DataScience.toggleCellOutput": "Toggle Output of All Selected Cells",
     "DataScience.convertingToPythonFile": "Converting ipynb to python file",
     "DataScience.untitledNotebookMessage": "Your changes will be lost if you don't save them.",
     "DataScience.untitledNotebookYes": "Save",
