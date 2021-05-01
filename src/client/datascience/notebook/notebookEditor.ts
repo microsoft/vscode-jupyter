@@ -17,7 +17,7 @@ import {
     WebviewPanel
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -217,17 +217,20 @@ export class NotebookEditor implements INotebookEditor {
     }
     public async interruptKernel(): Promise<void> {
         if (this.restartingKernel) {
+            traceInfo(`Interrupt requested & currently restarting ${this.document.uri} in notebookEditor.`);
             trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
         const kernel = this.kernelProvider.get(this.file);
         if (!kernel || this.restartingKernel) {
+            traceInfo(`Interrupt requested & no kernel or currently restarting ${this.document.uri} in notebookEditor.`);
             trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
         const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
 
         try {
+            traceInfo(`Interrupt requested & sent for ${this.document.uri} in notebookEditor.`);
             const result = await kernel.interrupt(this.document);
             if (result === InterruptResult.TimedOut) {
                 const message = DataScience.restartKernelAfterInterruptMessage();

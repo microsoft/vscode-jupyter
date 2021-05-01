@@ -8,7 +8,7 @@ import * as path from 'path';
 import { NotebookCell, NotebookDocument, Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
@@ -107,7 +107,10 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
                 ? this.provider.activeEditor
                 : this.provider.editors.find((editor) => editor.file.toString() === document?.uri.toString());
         if (target) {
+            traceInfo(`Interrupt requested for ${document?.uri} in nativeEditorCommandListener`);
             target.interruptKernel().ignoreErrors();
+        } else {
+            traceInfo(`Interrupt requested & editor not found ${document?.uri}`);
         }
     }
 
