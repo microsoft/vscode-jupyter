@@ -8,7 +8,7 @@ import * as path from 'path';
 import { NotebookCell, Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
@@ -102,14 +102,20 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     private interruptKernel(document: Uri | undefined) {
         // `document` may be undefined if this command is invoked from the command palette.
         if (document) {
+            traceInfo(`Interrupt requested for ${document.toString()} in nativeEditorCommandListener`);
             const target =
                 this.provider.activeEditor?.file.toString() === document.toString()
                     ? this.provider.activeEditor
                     : this.provider.editors.find((editor) => editor.file.toString() === document.toString());
             if (target) {
                 target.interruptKernel().ignoreErrors();
+            } else {
+                traceInfo(
+                    `Interrupt requested for ${document.toString()} in nativeEditorCommandListener & editor not found`
+                );
             }
         } else {
+            traceInfo(`Interrupt requested for active editor in nativeEditorCommandListener`);
             this.provider.activeEditor?.interruptKernel().ignoreErrors();
         }
     }
