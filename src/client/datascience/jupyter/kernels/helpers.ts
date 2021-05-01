@@ -63,7 +63,7 @@ export function kernelConnectionMetadataHasKernelModel(
 export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnvironment) {
     // Non-Python kernels cannot contain an interpreter (even in their id).
     interpreter = isPythonKernelSpec(spec) ? interpreter : undefined;
-    return `${spec.id || ''}.${spec.name}.${spec.path}.${interpreter?.path || ''}.${
+    return `${spec.id || ''}.${spec.name}.${interpreter?.path || spec.path}.${interpreter?.path || ''}.${
         spec.display_name || interpreter?.displayName || ''
     }`;
 }
@@ -253,7 +253,7 @@ export function createInterpreterKernelSpec(
         metadata: {
             interpreter
         },
-        argv: [interpreter?.path || 'python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
+        argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
         env: {},
         resources: {}
     };
