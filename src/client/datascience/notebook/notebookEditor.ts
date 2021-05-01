@@ -223,7 +223,9 @@ export class NotebookEditor implements INotebookEditor {
         }
         const kernel = this.kernelProvider.get(this.file);
         if (!kernel || this.restartingKernel) {
-            traceInfo(`Interrupt requested & no kernel or currently restarting ${this.document.uri} in notebookEditor.`);
+            traceInfo(
+                `Interrupt requested & no kernel or currently restarting ${this.document.uri} in notebookEditor.`
+            );
             trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
