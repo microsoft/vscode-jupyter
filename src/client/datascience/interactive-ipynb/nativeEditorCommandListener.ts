@@ -5,7 +5,7 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { NotebookCell, NotebookDocument, Uri } from 'vscode';
+import { NotebookCell, Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -34,9 +34,8 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(
-                Commands.NotebookEditorInterruptKernel,
-                (document: NotebookDocument | undefined) => this.interruptKernel(document)
+            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, (document: Uri | undefined) =>
+                this.interruptKernel(document)
             )
         );
         this.disposableRegistry.push(
@@ -100,14 +99,18 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         }
     }
 
-    private interruptKernel(document: NotebookDocument | undefined) {
+    private interruptKernel(document: Uri | undefined) {
         // `document` may be undefined if this command is invoked from the command palette.
-        const target =
-            this.provider.activeEditor?.file.toString() === document?.uri.toString()
-                ? this.provider.activeEditor
-                : this.provider.editors.find((editor) => editor.file.toString() === document?.uri.toString());
-        if (target) {
-            target.interruptKernel().ignoreErrors();
+        if (document) {
+            const target =
+                this.provider.activeEditor?.file.toString() === document.toString()
+                    ? this.provider.activeEditor
+                    : this.provider.editors.find((editor) => editor.file.toString() === document.toString());
+            if (target) {
+                target.interruptKernel().ignoreErrors();
+            }
+        } else {
+            this.provider.activeEditor?.interruptKernel().ignoreErrors();
         }
     }
 
