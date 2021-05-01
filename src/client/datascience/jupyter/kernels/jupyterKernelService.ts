@@ -146,7 +146,7 @@ export class JupyterKernelService {
             };
         }
 
-        traceInfo(`IANHU RegisterKernel for ${kernel.id}`);
+        traceInfo(`RegisterKernel for ${kernel.id}`);
 
         // Write out the contents into the new spec file
         try {

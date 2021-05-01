@@ -136,19 +136,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
             // If we have not already searched for this resource, then generate the search
             if (workspaceFolderId && !this.workspaceToMetadata.has(workspaceFolderId)) {
-                traceInfo(`IANHU listKernels for ${workspaceFolderId}`);
                 this.workspaceToMetadata.set(
                     workspaceFolderId,
                     this.findResourceKernelMetadata(resource, cancelToken).then((items) => {
-                        // traceInfoIf(
-                        // !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                        // `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(
-                        // items,
-                        // undefined,
-                        // 4
-                        // )}`
-                        // );
-                        traceInfo(
+                        traceInfoIf(
+                            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
                             `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(
                                 items,
                                 undefined,
