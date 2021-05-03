@@ -529,7 +529,10 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
 export async function waitForExecutionInProgress(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () => {
-            return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing;
+            return (
+                NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing &&
+                (cell.latestExecutionSummary?.executionOrder || 0) > 0 // If execution count > 0, then jupyter has started running this cell.
+            );
         },
         timeout,
         `Cell ${cell.index + 1} did not start`
@@ -622,6 +625,8 @@ export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string,
 }
 export function assertVSCCellIsRunning(cell: NotebookCell) {
     assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Executing);
+    // If execution count > 0, then jupyter has started running this cell.
+    assert.isAtLeast(cell.latestExecutionSummary?.executionOrder || 0, 1);
     return true;
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {
