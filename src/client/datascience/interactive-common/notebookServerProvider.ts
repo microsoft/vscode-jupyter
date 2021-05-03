@@ -108,11 +108,15 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
         traceInfo('IANHU startServer start');
 
+        traceInfo(`IANHU startServer options: ${JSON.stringify(options)}`);
+
         // If the URI is 'remote' then the encrypted storage is not working. Ask user again for server URI
         if (serverOptions.uri === Settings.JupyterServerRemoteLaunch) {
             await this.serverSelector.selectJupyterURI(true);
+            traceInfo('IANHU startServer selectJupyterURI done');
             // Should have been saved
             serverOptions.uri = await this.serverUriStorage.getUri();
+            traceInfo('IANHU startServer serverURIStorage done');
         }
 
         traceInfo('IANHU startServer uri selected');
