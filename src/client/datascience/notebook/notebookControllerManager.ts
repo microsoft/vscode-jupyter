@@ -361,12 +361,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 return true;
             });
         } else {
+            traceInfo('IANHU about to connect notebook provider');
             const connection = await this.notebookProvider.connect({
                 getOnly: false,
                 resource: resource,
                 disableUI: false,
                 localOnly: false
             });
+
+            traceInfo('IANHU notebook provider connected');
 
             kernels = await this.remoteKernelFinder.listKernels(resource, connection, token);
         }
