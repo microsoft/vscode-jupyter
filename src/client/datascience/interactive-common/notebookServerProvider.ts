@@ -53,6 +53,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         options: GetServerOptions,
         token?: CancellationToken
     ): Promise<INotebookServer | undefined> {
+        traceInfo('IANHU getOrCreateServer start');
         const serverOptions = await this.getNotebookServerOptions(options);
 
         // If we are just fetching or only want to create for local, see if exists
@@ -75,6 +76,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         options: GetServerOptions,
         token?: CancellationToken
     ): Promise<INotebookServer | undefined> {
+        traceInfo('IANHU createServer start');
         // When we finally try to create a server, update our flag indicating if we're going to allow UI or not. This
         // allows the server to be attempted without a UI, but a future request can come in and use the same startup
         this.allowingUI = options.disableUI ? this.allowingUI : true;
