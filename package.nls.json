@@ -187,6 +187,7 @@
     "Common.and": "and",
     "Common.ok": "Ok",
     "Common.install": "Install",
+    "Common.reInstall": "Re-Install",
     "Common.learnMore": "Learn more",
     "Common.reportThisIssue": "Report this issue",
     "CommonSurvey.remindMeLaterLabel": "Remind me later",

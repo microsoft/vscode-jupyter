@@ -104,10 +104,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         const installPrompt = isModulePresent ? Common.reInstall() : Common.install();
         const selection = this.isCodeSpace
             ? installPrompt
-            : await Promise.race([
-                  this.appShell.showErrorMessage(message, installPrompt),
-                  promptCancellationPromise
-              ]);
+            : await Promise.race([this.appShell.showErrorMessage(message, installPrompt), promptCancellationPromise]);
         if (installerToken.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }
