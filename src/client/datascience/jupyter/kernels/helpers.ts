@@ -394,6 +394,19 @@ export function findPreferredKernel(
                     score += 100;
                 }
 
+                // If the user has kernelspec in metadata & the interpreter hash is stored in metadata, then its a perfect match.
+                if (
+                    notebookMetadata?.interpreter &&
+                    typeof notebookMetadata?.interpreter === 'object' &&
+                    'hash' in notebookMetadata?.interpreter &&
+                    (metadata.kind === 'startUsingKernelSpec' || metadata.kind === 'startUsingPythonInterpreter') &&
+                    metadata.interpreter &&
+                    getInterpreterHash(metadata.interpreter) === notebookMetadata?.interpreter.hash
+                ) {
+                    // This is a perfect match.
+                    score += 100;
+                }
+
                 // See if the path matches.
                 if (
                     spec &&
