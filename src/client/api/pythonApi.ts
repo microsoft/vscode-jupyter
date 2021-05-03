@@ -272,7 +272,7 @@ export class PythonInstaller implements IPythonInstaller {
         try {
             const api = await this.apiProvider.getApi();
             const result = await api.install(ProductMapping[product], resource, cancel, reInstallUpdate);
-            trackPackageInstalledIntoInterpreter(this.memento, product, resource);
+            trackPackageInstalledIntoInterpreter(this.memento, product, resource).catch(noop);
             if (result === InstallerResponse.Installed) {
                 this._onInstalled.fire({ product, resource });
             }

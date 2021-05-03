@@ -12,6 +12,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { IApplicationShell, IWorkspaceService } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceError } from '../logger';
@@ -54,15 +55,15 @@ export async function isModulePresentInEnvironment(memento: Memento, product: Pr
     if (memento.get(key, false)) {
         return true;
     }
-    const packagesPromise = InterpreterPackages.getPackageVersions(interpreter).catch((ex) =>
-        traceError('Failed to get interpreter packages', ex)
-    );
+    const packageName = translateProductToModule(product);
+    const packageVersionPromise = InterpreterPackages.getPackageVersion(interpreter, packageName)
+        .then((version) => (typeof version === 'string' ? 'found' : 'notfound'))
+        .catch((ex) => traceError('Failed to get interpreter package version', ex));
     try {
         // Dont wait for too long we don't want to delay installation prompt.
-        const packages = await Promise.race([sleep(500), packagesPromise]);
-        const packageName = translateProductToModule(product).toLowerCase();
-        if (typeof packages === 'object' && packages.has(packageName)) {
-            return true;
+        const version = await Promise.race([sleep(500), packageVersionPromise]);
+        if (typeof version === 'string') {
+            return version === 'found';
         }
     } catch (ex) {
         traceError(`Failed to check if package exists ${ProductNames.get(product)}`);
