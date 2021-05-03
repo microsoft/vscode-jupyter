@@ -146,6 +146,8 @@ export class JupyterKernelService {
             };
         }
 
+        traceInfo(`RegisterKernel for ${kernel.id}`);
+
         // Write out the contents into the new spec file
         try {
             await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
