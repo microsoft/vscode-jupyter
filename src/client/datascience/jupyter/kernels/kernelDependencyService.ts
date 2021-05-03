@@ -101,17 +101,18 @@ export class KernelDependencyService implements IKernelDependencyService {
             action: 'displayed',
             moduleName: ProductNames.get(Product.ipykernel)!
         });
+        const installPrompt = isModulePresent ? Common.reInstall() : Common.install();
         const selection = this.isCodeSpace
-            ? Common.install()
+            ? installPrompt
             : await Promise.race([
-                  this.appShell.showErrorMessage(message, Common.install()),
+                  this.appShell.showErrorMessage(message, installPrompt),
                   promptCancellationPromise
               ]);
         if (installerToken.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }
 
-        if (selection === Common.install()) {
+        if (selection === installPrompt) {
             const cancellationPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,

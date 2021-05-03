@@ -12,7 +12,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { sendTelemetryEvent } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { IApplicationShell, IWorkspaceService } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceError } from '../logger';
