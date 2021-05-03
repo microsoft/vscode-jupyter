@@ -29,6 +29,7 @@ import { IPythonExtensionChecker } from '../../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { arePathsSame } from '../../common';
 import { Uri } from 'vscode';
+import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -306,15 +307,9 @@ import { Uri } from 'vscode';
 
             const kernels = await kernelFinder.listKernels(undefined);
 
-            // All the python3 kernels should have the intepreter
+            // All the python3 kernels should not be listed
             const python3Kernels = kernels.filter((k) => k.kernelSpec && k.kernelSpec.name === defaultPython3Name);
-            const interpreterKernels = python3Kernels.filter((k) => k.interpreter);
-            assert.ok(python3Kernels.length > 0, 'No python 3 kernels');
-            assert.equal(interpreterKernels.length, python3Kernels.length, 'Interpreter kernels not found');
-            assert.notOk(
-                interpreterKernels.find((k) => k.interpreter !== python3Interpreter),
-                'Interpreter kernels should all be python 3 interpreter'
-            );
+            assert.equal(python3Kernels.length, 0, 'python 3 kernels should not be displayed');
 
             // No other kernels should have the python 3 inteprreter
             const nonPython3Kernels = kernels.filter((k) => k.kernelSpec && k.kernelSpec.name !== defaultPython3Name);
@@ -525,7 +520,7 @@ import { Uri } from 'vscode';
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
             // Generic python 3
-            const kernel = await kernelFinder.findKernel(Uri.file('test.ipynb'), {
+            let kernel = await kernelFinder.findKernel(Uri.file('test.ipynb'), {
                 kernelspec: {
                     display_name: pyEnvPython3spec.display_name,
                     // Use a kernelspec name that we generate.
@@ -537,6 +532,24 @@ import { Uri } from 'vscode';
             assert.equal(kernel?.kernelSpec?.language, 'python', 'No kernel found matching default notebook metadata');
             assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
             assert.deepEqual(kernel?.interpreter, pyEnvInterpreter, 'Should start using PyEnv');
+
+            // Find based on interpreter hash in metadata
+            kernel = await kernelFinder.findKernel(Uri.file('test.ipynb'), {
+                kernelspec: {
+                    display_name: 'Something',
+                    name: 'python3'
+                },
+                metadata: {
+                    interpreter: {
+                        hash: getInterpreterHash({ path: condaEnvironmentBase.path })
+                    }
+                },
+                language_info: { name: PYTHON_LANGUAGE },
+                orig_nbformat: 4
+            });
+            assert.equal(kernel?.kernelSpec?.language, 'python', 'No kernel found matching default notebook metadata');
+            assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
+            assert.deepEqual(kernel?.interpreter, condaEnvironmentBase, 'Should start using PyEnv');
         });
         test('Can match (exactly) based on notebook metadata (metadata contains kernelspec name that we generated using the new algorightm)', async () => {
             when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
