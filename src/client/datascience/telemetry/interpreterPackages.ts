@@ -65,7 +65,7 @@ export class InterpreterPackages {
     public trackPackages(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
         this.trackPackagesInternal(interpreterUri, ignoreCache).catch(noop);
     }
-    public async trackPackagesInternal(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
+    private async trackPackagesInternal(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
         if (!this.pythonExtensionChecker.isPythonExtensionActive) {
             this.pendingInterpreterBeforeActivation.add(interpreterUri);
             return;

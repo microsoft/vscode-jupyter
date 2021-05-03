@@ -5,6 +5,7 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { Memento } from 'vscode';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
@@ -14,15 +15,23 @@ import { createPythonInterpreter } from '../../../utils/interpreters';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // eslint-disable-next-line
-suite('DataScience - Kernel Dependency Service', () => {
+suite.only('DataScience - Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
+    let memento: Memento;
     const interpreter = createPythonInterpreter();
     setup(() => {
         appShell = mock<IApplicationShell>();
         installer = mock<IInstaller>();
-        dependencyService = new KernelDependencyService(instance(appShell), instance(installer), false);
+        memento = mock<Memento>();
+        when(memento.get(anything(), anything())).thenReturn(false);
+        dependencyService = new KernelDependencyService(
+            instance(appShell),
+            instance(installer),
+            instance(memento),
+            false
+        );
     });
     test('Check if ipykernel is installed', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);

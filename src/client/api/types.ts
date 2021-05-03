@@ -89,7 +89,8 @@ export type PythonApi = {
     install(
         product: JupyterProductToInstall,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
+        reInstallUpdate?: boolean
     ): Promise<InstallerResponse>;
     /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
@@ -113,7 +114,12 @@ export type PythonApi = {
 export const IPythonInstaller = Symbol('IPythonInstaller');
 export interface IPythonInstaller {
     readonly onInstalled: Event<{ product: Product; resource?: InterpreterUri }>;
-    install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
+    install(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken,
+        reInstallUpdate?: boolean
+    ): Promise<InstallerResponse>;
 }
 
 export const IPythonDebuggerPathProvider = Symbol('IPythonDebuggerPathProvider');

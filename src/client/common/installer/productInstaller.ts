@@ -1,33 +1,73 @@
 /* eslint-disable max-classes-per-file */
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, OutputChannel, Uri } from 'vscode';
+import { CancellationToken, Memento, OutputChannel, Uri } from 'vscode';
 import { IPythonInstaller } from '../../api/types';
 import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
 import { Telemetry } from '../../datascience/constants';
+import { InterpreterPackages } from '../../datascience/telemetry/interpreterPackages';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IApplicationShell, IWorkspaceService } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { traceError } from '../logger';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import {
+    GLOBAL_MEMENTO,
     IConfigurationService,
     IInstaller,
+    IMemento,
     InstallerResponse,
     IOutputChannel,
     IsCodeSpace,
     ModuleNamePurpose,
     Product
 } from '../types';
+import { sleep } from '../utils/async';
 import { isResource } from '../utils/misc';
 import { StopWatch } from '../utils/stopWatch';
 import { ProductNames } from './productNames';
 import { InterpreterUri, IProductPathService } from './types';
 
 export { Product } from '../types';
+
+export async function trackPackageInstalledIntoInterpreter(
+    memento: Memento,
+    product: Product,
+    interpreter: InterpreterUri
+) {
+    if (isResource(interpreter)) {
+        return;
+    }
+    const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
+    await memento.update(key, true);
+}
+export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter?: InterpreterUri) {
+    if (isResource(interpreter)) {
+        return;
+    }
+    const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
+    if (memento.get(key, false)) {
+        return true;
+    }
+    const packagesPromise = InterpreterPackages.getPackageVersions(interpreter).catch((ex) =>
+        traceError('Failed to get interpreter packages', ex)
+    );
+    try {
+        // Dont wait for too long we don't want to delay installation prompt.
+        const packages = await Promise.race([sleep(500), packagesPromise]);
+        const packageName = translateProductToModule(product).toLowerCase();
+        if (typeof packages === 'object' && packages.has(packageName)) {
+            return true;
+        }
+    } catch (ex) {
+        traceError(`Failed to check if package exists ${ProductNames.get(product)}`);
+    }
+}
 
 export abstract class BaseInstaller {
     private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
@@ -66,9 +106,12 @@ export abstract class BaseInstaller {
     public async install(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
+        reInstallUpdate?: boolean
     ): Promise<InstallerResponse> {
-        return this.serviceContainer.get<IPythonInstaller>(IPythonInstaller).install(product, resource, cancel);
+        return this.serviceContainer
+            .get<IPythonInstaller>(IPythonInstaller)
+            .install(product, resource, cancel, reInstallUpdate);
     }
 
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
@@ -112,7 +155,8 @@ export class DataScienceInstaller extends BaseInstaller {
     public async install(
         product: Product,
         interpreterUri?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
+        reInstallUpdate?: boolean
     ): Promise<InstallerResponse> {
         // Precondition
         if (isResource(interpreterUri)) {
@@ -122,7 +166,7 @@ export class DataScienceInstaller extends BaseInstaller {
 
         // At this point we know that `interpreterUri` is of type PythonInterpreter
         const interpreter = interpreterUri as PythonEnvironment;
-        const result = await installer.install(product, interpreter, cancel);
+        const result = await installer.install(product, interpreter, cancel, reInstallUpdate);
 
         if (result === InstallerResponse.Disabled || result === InstallerResponse.Ignore) {
             return result;
@@ -138,14 +182,24 @@ export class DataScienceInstaller extends BaseInstaller {
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
+        const isModulePresent = await isModulePresentInEnvironment(
+            this.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO),
+            product,
+            resource
+        );
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action: 'displayed',
+            isModulePresent: isModulePresent ? 'true' : undefined,
             moduleName: productName
         });
+
+        const message = isModulePresent
+            ? localize.DataScience.libraryNotInstalledCorrectlyOrOutdated().format(productName)
+            : localize.DataScience.libraryNotInstalled().format(productName);
         const item = this.serviceContainer.get<boolean>(IsCodeSpace)
             ? localize.Common.bannerLabelYes()
             : await this.appShell.showErrorMessage(
-                  localize.DataScience.libraryNotInstalled().format(productName),
+                  message,
                   localize.Common.bannerLabelYes(),
                   localize.Common.bannerLabelNo()
               );
@@ -159,13 +213,14 @@ export class DataScienceInstaller extends BaseInstaller {
 
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action,
+            isModulePresent: isModulePresent ? 'true' : undefined,
             moduleName: productName
         });
 
         if (item === localize.Common.bannerLabelYes()) {
             const stopWatch = new StopWatch();
             try {
-                const response = await this.install(product, resource, cancel);
+                const response = await this.install(product, resource, cancel, isModulePresent === true);
                 const event =
                     product === Product.jupyter ? Telemetry.UserInstalledJupyter : Telemetry.UserInstalledModule;
                 sendTelemetryEvent(event, stopWatch.elapsedTime, { product: productName });
@@ -210,9 +265,10 @@ export class ProductInstaller implements IInstaller {
     public async install(
         product: Product,
         resource: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
+        reInstallUpdate?: boolean
     ): Promise<InstallerResponse> {
-        return this.createInstaller().install(product, resource, cancel);
+        return this.createInstaller().install(product, resource, cancel, reInstallUpdate);
     }
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
         return this.createInstaller().isInstalled(product, resource);

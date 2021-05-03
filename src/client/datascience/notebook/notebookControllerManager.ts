@@ -38,6 +38,7 @@ import { INotebookControllerManager } from './types';
 import { JupyterNotebookView } from './constants';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
+import { InterpreterPackages } from '../telemetry/interpreterPackages';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -75,7 +76,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator
+        @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
+        @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -421,6 +423,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         editor
                     )
                 );
+        }
+        if (selectedKernelConnectionMetadata.interpreter) {
+            this.interpreterPackages.trackPackages(selectedKernelConnectionMetadata.interpreter);
         }
 
         trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);

@@ -736,6 +736,11 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
     [Telemetry.PythonModuleInstal]: {
         moduleName: string;
+        /**
+         * Whether the module was already (once before) installed into the python environment or
+         * whether this already exists (detected via `pip list`)
+         */
+        isModulePresent?: 'true' | undefined;
         action:
             | 'displayed' // Install prompt displayed.
             | 'installed' // Installation disabled (this is what python extension returns).
