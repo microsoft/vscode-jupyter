@@ -106,12 +106,16 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         const serverOptions = await this.getNotebookServerOptions(options);
         traceInfo(`Checking for server existence.`);
 
+        traceInfo('IANHU startServer start');
+
         // If the URI is 'remote' then the encrypted storage is not working. Ask user again for server URI
         if (serverOptions.uri === Settings.JupyterServerRemoteLaunch) {
             await this.serverSelector.selectJupyterURI(true);
             // Should have been saved
             serverOptions.uri = await this.serverUriStorage.getUri();
         }
+
+        traceInfo('IANHU startServer uri selected');
 
         // Status depends upon if we're about to connect to existing server or not.
         const progressReporter = this.allowingUI
@@ -120,9 +124,11 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter())
             : undefined;
 
+        traceInfo('IANHU startServer progress reported created');
+
         // Check to see if we support ipykernel or not
         try {
-            traceInfo(`Checking for server usability.`);
+            traceInfo(`IANHU Checking for server usability.`);
 
             const usable = await this.checkUsable(serverOptions);
             if (!usable) {
