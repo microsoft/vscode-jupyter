@@ -221,7 +221,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         if (targetController) {
-            traceInfo('IANHU targetController found, setting affinity');
+            traceInfo(
+                `IANHU TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`
+            );
             targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
 
             // When we set the target controller we don't actually get a selected event from our controllers
