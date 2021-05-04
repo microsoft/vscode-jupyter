@@ -16,7 +16,6 @@ import {
     IPathUtils,
     Resource
 } from '../../common/types';
-import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
