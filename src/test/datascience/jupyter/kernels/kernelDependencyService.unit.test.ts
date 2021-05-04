@@ -61,7 +61,9 @@ suite('DataScience - Kernel Dependency Service', () => {
     });
     test('Install ipykernel', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-        when(installer.install(Product.ipykernel, interpreter, anything(), anything())).thenResolve(InstallerResponse.Installed);
+        when(installer.install(Product.ipykernel, interpreter, anything(), anything())).thenResolve(
+            InstallerResponse.Installed
+        );
         when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
 
         await dependencyService.installMissingDependencies(interpreter);
@@ -69,7 +71,9 @@ suite('DataScience - Kernel Dependency Service', () => {
     test('Install ipykernel second time should result in a re-install', async () => {
         when(memento.get(anything(), anything())).thenReturn(true);
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-        when(installer.install(Product.ipykernel, interpreter, anything(), true)).thenResolve(InstallerResponse.Installed);
+        when(installer.install(Product.ipykernel, interpreter, anything(), true)).thenResolve(
+            InstallerResponse.Installed
+        );
         when(appShell.showErrorMessage(anything(), Common.reInstall())).thenResolve(Common.reInstall() as any);
 
         await dependencyService.installMissingDependencies(interpreter);
