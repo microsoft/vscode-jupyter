@@ -438,8 +438,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
 
         // Auto start the local kernels.
-        if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
-            await newKernel.start({ disableUI: true, document }).catch(noop);
-        }
+        // if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
+        //     await newKernel.start({ disableUI: true, document }).catch(noop);
+        // }
     }
 }
