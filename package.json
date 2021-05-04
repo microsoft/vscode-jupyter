@@ -741,8 +741,9 @@
             },
             {
                 "command": "jupyter.refreshDataViewer",
-                "title": "%DataScience.refreshDataViewer%",
-                "category": "Jupyter"
+                "title": "%DataScience.refreshDataViewerCommandPalette%",
+                "category": "Jupyter",
+                "enablement": "jupyter.dataViewerActive"
             }
         ],
         "menus": {
