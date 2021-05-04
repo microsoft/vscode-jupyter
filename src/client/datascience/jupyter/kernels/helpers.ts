@@ -516,7 +516,7 @@ export async function sendTelemetryForPythonKernelExecutable(
             return;
         }
         const sysExecutable = concatMultilineString(output.text).trim().toLowerCase();
-        const match = kernelConnection.interpreter.path.toLowerCase() === sysExecutable.toLowerCase();
+        const match = kernelConnection.interpreter.path.toLowerCase() === sysExecutable;
         if (match) {
             sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
                 match: match ? 'true' : 'false',
@@ -535,7 +535,7 @@ export async function sendTelemetryForPythonKernelExecutable(
         });
         const execOutput = await execService.exec(['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: false });
         if (execOutput.stdout.trim().length > 0) {
-            const match = execOutput.stdout.trim().toLowerCase() === sysExecutable.toLowerCase();
+            const match = execOutput.stdout.trim().toLowerCase() === sysExecutable;
             sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
                 match: match ? 'true' : 'false',
                 kernelConnectionType: kernelConnection.kind
