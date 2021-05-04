@@ -1284,6 +1284,19 @@ export interface IEventNamePropertyMapping {
         type: 'added' | 'removed';
     } & Partial<TelemetryErrorProperties>;
     /*
+     * Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
+     */
+    [Telemetry.FailedToCreateNotebookController]: {
+        /**
+         * What kind of kernel spec did we fail to create.
+         */
+        kind:
+            | 'startUsingPythonInterpreter'
+            | 'startUsingDefaultKernel'
+            | 'startUsingKernelSpec'
+            | 'connectToLiveKernel';
+    } & Partial<TelemetryErrorProperties>;
+    /*
      * Telemetry sent when we recommend installing an extension.
      */
     [Telemetry.RecommendExtension]: {
