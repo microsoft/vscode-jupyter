@@ -13,6 +13,7 @@ import { ProcessService } from '../../../client/common/process/proc';
 import { IDisposable } from '../../../client/common/types';
 import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';
@@ -122,6 +123,14 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         await trustAllNotebooks();
         nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables, venvNoKernelDisplayName);
+        // Update hash in notebook metadata.
+        fs.writeFileSync(
+            nbFile1,
+            fs
+                .readFileSync(nbFile1)
+                .toString('utf8')
+                .replace('<hash>', getInterpreterHash({ path: venvNoKernelPythonPath }))
+        );
         await closeActiveWindows();
         sinon.restore();
         console.log(`Start Test completed ${this.currentTest?.title}`);
