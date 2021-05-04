@@ -1905,6 +1905,7 @@
         "@jupyterlab/services": "^4.2.0",
         "@loadable/component": "^5.12.0",
         "@nteract/messaging": "^7.0.0",
+        "@nteract/presentational-components": "^3.4.10",
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
