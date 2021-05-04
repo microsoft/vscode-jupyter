@@ -3,6 +3,7 @@
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, EventEmitter, Memento } from 'vscode';
 import { IApplicationEnvironment, IEncryptedStorage, IWorkspaceService } from '../../common/application/types';
+import { traceInfo } from '../../common/logger';
 import { GLOBAL_MEMENTO, IConfigurationService, ICryptoUtils, IMemento } from '../../common/types';
 import { Settings } from '../constants';
 import { IJupyterServerUriStorage } from '../types';
@@ -148,6 +149,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     }
 
     private async getUriInternal(): Promise<string> {
+        traceInfo('IANHU getUriInternal start');
         const uri = this.configService.getSettings(undefined).jupyterServerType;
         if (uri === Settings.JupyterServerLocalLaunch || uri.length === 0) {
             return Settings.JupyterServerLocalLaunch;
@@ -158,8 +160,10 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             }
 
             // Should be stored in encrypted storage based on the workspace
+            traceInfo('IANHU getUriInternal getting uri');
             const key = this.getUriAccountKey();
             const storedUri = await this.encryptedStorage.retrieve(Settings.JupyterServerRemoteLaunchService, key);
+            traceInfo('IANHU getUriInternal got uri');
 
             return storedUri || uri;
         }
