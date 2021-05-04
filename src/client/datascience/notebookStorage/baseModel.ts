@@ -98,10 +98,8 @@ export function updateNotebookMetadata(
                 // We'll leave the kernel spec name as `python3`, this way it will work even in Jupyter or the like.
                 // Else if user opens a notebook that works in jupter,
                 // then in ours they cannot go back to jupyter as `python<hash>` is not necessarily a valid kernel in jupter.
-                metadata.metadata = {
-                    interpreter: {
-                        hash: getInterpreterHash(kernelConnection.interpreter)
-                    }
+                metadata.interpreter = {
+                    hash: getInterpreterHash(kernelConnection.interpreter)
                 };
             }
         }

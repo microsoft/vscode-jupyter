@@ -399,15 +399,14 @@ export function findPreferredKernel(
                 // If the user has kernelspec in metadata & the interpreter hash is stored in metadata, then its a perfect match.
                 // This is the preferred approach https://github.com/microsoft/vscode-jupyter/issues/5612
                 if (
-                    notebookMetadata?.metadata &&
-                    typeof notebookMetadata?.metadata === 'object' &&
-                    'interpreter' in notebookMetadata?.metadata &&
-                    notebookMetadata?.metadata.interpreter &&
-                    typeof notebookMetadata?.metadata.interpreter === 'object' &&
-                    'hash' in notebookMetadata?.metadata.interpreter &&
+                    typeof notebookMetadata === 'object' &&
+                    'interpreter' in notebookMetadata &&
+                    notebookMetadata.interpreter &&
+                    typeof notebookMetadata.interpreter === 'object' &&
+                    'hash' in notebookMetadata.interpreter &&
                     (metadata.kind === 'startUsingKernelSpec' || metadata.kind === 'startUsingPythonInterpreter') &&
                     metadata.interpreter &&
-                    getInterpreterHash(metadata.interpreter) === notebookMetadata?.metadata.interpreter.hash
+                    getInterpreterHash(metadata.interpreter) === notebookMetadata.interpreter.hash
                 ) {
                     // This is a perfect match.
                     score += 100;
