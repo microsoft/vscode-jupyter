@@ -539,10 +539,8 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
                     display_name: 'Something',
                     name: 'python3'
                 },
-                metadata: {
-                    interpreter: {
-                        hash: getInterpreterHash({ path: condaEnvironmentBase.path })
-                    }
+                interpreter: {
+                    hash: getInterpreterHash({ path: condaEnvironmentBase.path })
                 },
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
