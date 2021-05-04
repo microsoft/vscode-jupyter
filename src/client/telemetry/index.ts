@@ -736,6 +736,11 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
     [Telemetry.PythonModuleInstal]: {
         moduleName: string;
+        /**
+         * Whether the module was already (once before) installed into the python environment or
+         * whether this already exists (detected via `pip list`)
+         */
+        isModulePresent?: 'true' | undefined;
         action:
             | 'displayed' // Install prompt displayed.
             | 'installed' // Installation disabled (this is what python extension returns).
@@ -1277,6 +1282,19 @@ export interface IEventNamePropertyMapping {
          * 'removed' means we custom editor is not enabled for the user and ensured ipynb doesn't open with custom editor.
          */
         type: 'added' | 'removed';
+    } & Partial<TelemetryErrorProperties>;
+    /*
+     * Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
+     */
+    [Telemetry.FailedToCreateNotebookController]: {
+        /**
+         * What kind of kernel spec did we fail to create.
+         */
+        kind:
+            | 'startUsingPythonInterpreter'
+            | 'startUsingDefaultKernel'
+            | 'startUsingKernelSpec'
+            | 'connectToLiveKernel';
     } & Partial<TelemetryErrorProperties>;
     /*
      * Telemetry sent when we recommend installing an extension.
