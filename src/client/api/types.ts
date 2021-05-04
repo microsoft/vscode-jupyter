@@ -90,7 +90,7 @@ export type PythonApi = {
         product: JupyterProductToInstall,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallUpdate?: boolean
+        reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse>;
     /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
@@ -118,7 +118,7 @@ export interface IPythonInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallUpdate?: boolean
+        reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse>;
 }
 

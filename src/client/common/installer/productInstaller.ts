@@ -115,11 +115,11 @@ export abstract class BaseInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallUpdate?: boolean
+        reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse> {
         return this.serviceContainer
             .get<IPythonInstaller>(IPythonInstaller)
-            .install(product, resource, cancel, reInstallUpdate);
+            .install(product, resource, cancel, reInstallAndUpdate);
     }
 
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
@@ -164,7 +164,7 @@ export class DataScienceInstaller extends BaseInstaller {
         product: Product,
         interpreterUri?: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallUpdate?: boolean
+        reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse> {
         // Precondition
         if (isResource(interpreterUri)) {
@@ -174,7 +174,7 @@ export class DataScienceInstaller extends BaseInstaller {
 
         // At this point we know that `interpreterUri` is of type PythonInterpreter
         const interpreter = interpreterUri as PythonEnvironment;
-        const result = await installer.install(product, interpreter, cancel, reInstallUpdate);
+        const result = await installer.install(product, interpreter, cancel, reInstallAndUpdate);
 
         if (result === InstallerResponse.Disabled || result === InstallerResponse.Ignore) {
             return result;
@@ -274,9 +274,9 @@ export class ProductInstaller implements IInstaller {
         product: Product,
         resource: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallUpdate?: boolean
+        reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse> {
-        return this.createInstaller().install(product, resource, cancel, reInstallUpdate);
+        return this.createInstaller().install(product, resource, cancel, reInstallAndUpdate);
     }
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
         return this.createInstaller().isInstalled(product, resource);
