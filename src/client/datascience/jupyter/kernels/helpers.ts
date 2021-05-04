@@ -371,6 +371,7 @@ export function findPreferredKernel(
 
             if (spec) {
                 // Check if the kernel spec name matches the hash of the generated kernel spec name.
+                // This approach of storing our generated kernelspec name in metadadata is not longer practiced.
                 if (
                     !notebookMetadata && // If we don't have metadata, only then should we compare against the interpreter.
                     isKernelRegisteredByUs(spec) === 'newVersion' &&
@@ -385,10 +386,27 @@ export function findPreferredKernel(
                 // If the user has kernelspec in metadata & this is a kernelspec we generated & names match, then use that kernelspec.
                 // Reason we are only interested kernelspecs we generate is because user can have kernelspecs named `python`.
                 // Such kernelspecs are ambiguous (we have no idea what `python` kernel means, its not necessarily tied to a specific interpreter).
+                // This approach of storing our generated kernelspec name in metadadata is not longer practiced.
                 if (
                     notebookMetadata?.kernelspec?.name &&
                     isKernelRegisteredByUs(spec) &&
                     notebookMetadata.kernelspec.name === spec.name
+                ) {
+                    // This is a perfect match.
+                    score += 100;
+                }
+
+                // If the user has kernelspec in metadata & the interpreter hash is stored in metadata, then its a perfect match.
+                // This is the preferred approach https://github.com/microsoft/vscode-jupyter/issues/5612
+                if (
+                    typeof notebookMetadata === 'object' &&
+                    'interpreter' in notebookMetadata &&
+                    notebookMetadata.interpreter &&
+                    typeof notebookMetadata.interpreter === 'object' &&
+                    'hash' in notebookMetadata.interpreter &&
+                    (metadata.kind === 'startUsingKernelSpec' || metadata.kind === 'startUsingPythonInterpreter') &&
+                    metadata.interpreter &&
+                    getInterpreterHash(metadata.interpreter) === notebookMetadata.interpreter.hash
                 ) {
                     // This is a perfect match.
                     score += 100;

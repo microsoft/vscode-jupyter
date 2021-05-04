@@ -39,6 +39,7 @@ const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
 const macJupyterPath = path.join('Library', 'Jupyter', 'kernels');
 const baseKernelPath = path.join('share', 'jupyter', 'kernels');
+const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
 
@@ -188,59 +189,76 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         // which have matched one or more kernelspecs
         let filteredInterpreters = [...interpreters];
 
+        // If the user has intepreters, then don't display the default kernel specs such as `python`, `python3`.
+        // Such kernel specs are ambiguous, and we have absolutely no idea what interpreters they point to.
+        // If a user wants to select a kernel they can pick an interpreter (this way we know exactly what interpreter needs to be started).
+        // Else if you have `python3`, depending on the active/default interpreter we could start different interpreters (different for the same notebook opened from different workspace folders).
+        const hideDefaultKernelSpecs = interpreters.length > 0 || activeInterpreter ? true : false;
+
         // Then go through all of the kernels and generate their metadata
         const kernelMetadata = await Promise.all(
-            kernelSpecs.map(async (k) => {
-                // Find the interpreter that matches. If we find one, we want to use
-                // this to start the kernel.
-                const matchingInterpreter = this.findMatchingInterpreter(k, interpreters);
-                if (matchingInterpreter) {
-                    const result: PythonKernelConnectionMetadata = {
-                        kind: 'startUsingPythonInterpreter',
-                        kernelSpec: k,
-                        interpreter: matchingInterpreter,
-                        id: getKernelId(k, matchingInterpreter)
-                    };
-
-                    // If interpreters were found, remove them from the interpreter list we'll eventually
-                    // return as interpreter only items
-                    filteredInterpreters = filteredInterpreters.filter((i) => matchingInterpreter !== i);
-
-                    // Return our metadata that uses an interpreter to start
-                    return result;
-                } else {
-                    let interpreter = k.language === PYTHON_LANGUAGE ? activeInterpreter : undefined;
-                    // If the interpreter information is stored in kernelspec.json then use that to determine the interpreter.
-                    // This can happen under the following circumstances:
-                    // 1. Open workspace folder XYZ, and create a virtual environment named venvA
-                    // 2. Now assume we don't have raw kernels, and a kernel gets registered for venvA in kernelspecs folder.
-                    // 3. The kernel spec will contain metadata pointing to venvA.
-                    // 4. Now open a different folder (e.g. a sub directory of XYZ or a completely different folder).
-                    // 5. Now venvA will not be listed as an interpreter as Python will not discover this.
-                    // 6. However the kernel we registered against venvA will be in global kernels folder
-                    // In such an instance the interpreter information is stored in the kernelspec.json file.
+            kernelSpecs
+                .filter((kernelspec) => {
                     if (
-                        k.language === PYTHON_LANGUAGE &&
-                        this.extensionChecker.isPythonExtensionInstalled &&
-                        k.metadata?.interpreter?.path &&
-                        k.metadata?.interpreter?.path !== activeInterpreter?.path
+                        kernelspec.language === PYTHON_LANGUAGE &&
+                        hideDefaultKernelSpecs &&
+                        kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName)
                     ) {
-                        interpreter = await this.interpreterService
-                            .getInterpreterDetails(k.metadata?.interpreter?.path)
-                            .catch((ex) => {
-                                traceError(`Failed to get interpreter details for Kernel Spec ${k.specFile}`, ex);
-                                return interpreter;
-                            });
+                        return false;
                     }
-                    const result: KernelSpecConnectionMetadata = {
-                        kind: 'startUsingKernelSpec',
-                        kernelSpec: k,
-                        interpreter,
-                        id: getKernelId(k, interpreter)
-                    };
-                    return result;
-                }
-            })
+                    return true;
+                })
+                .map(async (k) => {
+                    // Find the interpreter that matches. If we find one, we want to use
+                    // this to start the kernel.
+                    const matchingInterpreter = this.findMatchingInterpreter(k, interpreters);
+                    if (matchingInterpreter) {
+                        const result: PythonKernelConnectionMetadata = {
+                            kind: 'startUsingPythonInterpreter',
+                            kernelSpec: k,
+                            interpreter: matchingInterpreter,
+                            id: getKernelId(k, matchingInterpreter)
+                        };
+
+                        // If interpreters were found, remove them from the interpreter list we'll eventually
+                        // return as interpreter only items
+                        filteredInterpreters = filteredInterpreters.filter((i) => matchingInterpreter !== i);
+
+                        // Return our metadata that uses an interpreter to start
+                        return result;
+                    } else {
+                        let interpreter = k.language === PYTHON_LANGUAGE ? activeInterpreter : undefined;
+                        // If the interpreter information is stored in kernelspec.json then use that to determine the interpreter.
+                        // This can happen under the following circumstances:
+                        // 1. Open workspace folder XYZ, and create a virtual environment named venvA
+                        // 2. Now assume we don't have raw kernels, and a kernel gets registered for venvA in kernelspecs folder.
+                        // 3. The kernel spec will contain metadata pointing to venvA.
+                        // 4. Now open a different folder (e.g. a sub directory of XYZ or a completely different folder).
+                        // 5. Now venvA will not be listed as an interpreter as Python will not discover this.
+                        // 6. However the kernel we registered against venvA will be in global kernels folder
+                        // In such an instance the interpreter information is stored in the kernelspec.json file.
+                        if (
+                            k.language === PYTHON_LANGUAGE &&
+                            this.extensionChecker.isPythonExtensionInstalled &&
+                            k.metadata?.interpreter?.path &&
+                            k.metadata?.interpreter?.path !== activeInterpreter?.path
+                        ) {
+                            interpreter = await this.interpreterService
+                                .getInterpreterDetails(k.metadata?.interpreter?.path)
+                                .catch((ex) => {
+                                    traceError(`Failed to get interpreter details for Kernel Spec ${k.specFile}`, ex);
+                                    return interpreter;
+                                });
+                        }
+                        const result: KernelSpecConnectionMetadata = {
+                            kind: 'startUsingKernelSpec',
+                            kernelSpec: k,
+                            interpreter,
+                            id: getKernelId(k, interpreter)
+                        };
+                        return result;
+                    }
+                })
         );
 
         // Combine the two into our list
