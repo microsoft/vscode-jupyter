@@ -37,6 +37,7 @@ import { INotebookControllerManager } from './types';
 import { JupyterNotebookView } from './constants';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
+import { noop } from '../../common/utils/misc';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -437,8 +438,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
 
         // Auto start the local kernels.
-        // if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
-        //     await newKernel.start({ disableUI: true, document }).catch(noop);
-        // }
+        if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
+            await newKernel.start({ disableUI: true, document }).catch(noop);
+        }
     }
 }
