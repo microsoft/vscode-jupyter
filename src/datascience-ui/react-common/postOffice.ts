@@ -24,17 +24,117 @@ export interface IMessageHandler {
     dispose?(): void;
 }
 
+interface IMessageApi {
+    register(msgCallback: (msg: WebviewMessage) => Promise<void>): void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sendMessage(type: string, payload?: any): void;
+    dispose(): void;
+}
+
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
+// Provides support for messaging when using the vscode webview messaging api
+class VsCodeMessageApi implements IMessageApi {
+    private messageCallback: ((msg: WebviewMessage) => Promise<void>) | undefined;
+    private vscodeApi: IVsCodeApi | undefined;
+    private registered: boolean = false;
+    private baseHandler = this.handleVSCodeApiMessages.bind(this);
+
+    public register(msgCallback: (msg: WebviewMessage) => Promise<void>) {
+        this.messageCallback = msgCallback;
+
+        // Only do this once as it crashes if we ask more than once
+        // eslint-disable-next-line
+        if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
+            this.vscodeApi = acquireVsCodeApi(); // NOSONAR
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any,
+        } else if (!this.vscodeApi && typeof (window as any).acquireVsCodeApi !== 'undefined') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            this.vscodeApi = (window as any).acquireVsCodeApi();
+        }
+        if (!this.registered) {
+            this.registered = true;
+            window.addEventListener('message', this.baseHandler);
+
+            try {
+                // For testing, we might use a  browser to load  the stuff.
+                // In such instances the `acquireVSCodeApi` will return the event handler to get messages from extension.
+                // See ./src/datascience-ui/native-editor/index.html
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const api = (this.vscodeApi as any) as undefined | { handleMessage?: Function };
+                if (api && api.handleMessage) {
+                    api.handleMessage(this.handleVSCodeApiMessages.bind(this));
+                }
+            } catch {
+                // Ignore.
+            }
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public sendMessage(type: string, payload?: any) {
+        if (this.vscodeApi) {
+            logMessage(`UI PostOffice Sent ${type}`);
+            this.vscodeApi.postMessage({ type: type, payload });
+        } else {
+            logMessage(`No vscode API to post message ${type}`);
+        }
+    }
+
+    public dispose() {
+        if (this.registered) {
+            this.registered = false;
+            window.removeEventListener('message', this.baseHandler);
+        }
+    }
+
+    private async handleVSCodeApiMessages(ev: MessageEvent) {
+        const msg = ev.data as WebviewMessage;
+        if (msg && this.messageCallback) {
+            await this.messageCallback(msg);
+        }
+    }
+}
+
+// Provides support for messaging when hosted via a native notebook preload
+class KernelMessageApi implements IMessageApi {
+    private messageCallback: ((msg: WebviewMessage) => Promise<void>) | undefined;
+    private kernelHandler: IDisposable | undefined;
+
+    public register(msgCallback: (msg: WebviewMessage) => Promise<void>) {
+        this.messageCallback = msgCallback;
+        if (!this.kernelHandler) {
+            this.kernelHandler = onDidReceiveKernelMessage(this.handleKernelMessage.bind(this));
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public sendMessage(type: string, payload?: any) {
+        postKernelMessage({ type: type, payload });
+    }
+
+    public dispose() {
+        if (this.kernelHandler) {
+            this.kernelHandler.dispose();
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private async handleKernelMessage(ev: VSCodeEvent<any>) {
+        const msg = (ev as unknown) as WebviewMessage;
+        if (msg && this.messageCallback) {
+            await this.messageCallback(msg);
+        }
+    }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PostOfficeMessage = { type: string; payload?: any };
+
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class PostOffice implements IDisposable {
-    private registeredVsCode: boolean = false;
-    private kernelHandler: IDisposable | undefined;
-    private vscodeApi: IVsCodeApi | undefined;
+    private messageApi: IMessageApi | undefined;
     private handlers: IMessageHandler[] = [];
-    private baseHandler = this.handleVSCodeApiMessages.bind(this);
     private readonly subject = new Subject<PostOfficeMessage>();
     private readonly observable: Observable<PostOfficeMessage>;
     constructor() {
@@ -44,13 +144,8 @@ export class PostOffice implements IDisposable {
         return this.observable;
     }
     public dispose() {
-        if (this.registeredVsCode) {
-            this.registeredVsCode = false;
-            window.removeEventListener('message', this.baseHandler);
-        }
-
-        if (this.kernelHandler) {
-            this.kernelHandler.dispose();
+        if (this.messageApi) {
+            this.messageApi.dispose();
         }
     }
 
@@ -60,16 +155,10 @@ export class PostOffice implements IDisposable {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sendUnsafeMessage(type: string, payload?: any) {
-        const api = this.acquireApi();
-        if (this.useKernelMessageApi()) {
-            postKernelMessage({ type: type, payload });
+        if (this.messageApi) {
+            this.messageApi.sendMessage(type, payload);
         } else {
-            if (api) {
-                logMessage(`UI PostOffice Sent ${type}`);
-                api.postMessage({ type: type, payload });
-            } else {
-                logMessage(`No vscode API to post message ${type}`);
-            }
+            logMessage(`No message API to post message ${type}`);
         }
     }
 
@@ -83,42 +172,20 @@ export class PostOffice implements IDisposable {
         this.handlers = this.handlers.filter((f) => f !== handler);
     }
 
-    public acquireApi(): IVsCodeApi | undefined {
-        if (!this.useKernelMessageApi()) {
-            // Only do this once as it crashes if we ask more than once
-            // eslint-disable-next-line
-            if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
-                this.vscodeApi = acquireVsCodeApi(); // NOSONAR
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any,
-            } else if (!this.vscodeApi && typeof (window as any).acquireVsCodeApi !== 'undefined') {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                this.vscodeApi = (window as any).acquireVsCodeApi();
-            }
-            if (!this.registeredVsCode) {
-                this.registeredVsCode = true;
-                window.addEventListener('message', this.baseHandler);
-
-                try {
-                    // For testing, we might use a  browser to load  the stuff.
-                    // In such instances the `acquireVSCodeApi` will return the event handler to get messages from extension.
-                    // See ./src/datascience-ui/native-editor/index.html
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const api = (this.vscodeApi as any) as undefined | { handleMessage?: Function };
-                    if (api && api.handleMessage) {
-                        api.handleMessage(this.handleVSCodeApiMessages.bind(this));
-                    }
-                } catch {
-                    // Ignore.
-                }
-            }
-        } else {
-            // Hook up to incoming kernel messages
-            if (!this.kernelHandler) {
-                this.kernelHandler = onDidReceiveKernelMessage(this.handleKernelMessage.bind(this));
-            }
+    // Hook up to our messaging API
+    public acquireApi() {
+        if (this.messageApi) {
+            return;
         }
 
-        return this.vscodeApi;
+        // If the kernel message API is available use that if not use the VS Code webview messaging API
+        if (this.useKernelMessageApi()) {
+            this.messageApi = new KernelMessageApi();
+        } else {
+            this.messageApi = new VsCodeMessageApi();
+        }
+
+        this.messageApi.register(this.handleMessage.bind(this));
     }
 
     // Check to see if global kernel message API is supported, if so use that
@@ -129,21 +196,6 @@ export class PostOffice implements IDisposable {
         }
 
         return false;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleKernelMessage(ev: VSCodeEvent<any>) {
-        const msg = (ev as unknown) as WebviewMessage;
-        if (msg) {
-            await this.handleMessage(msg);
-        }
-    }
-
-    private async handleVSCodeApiMessages(ev: MessageEvent) {
-        const msg = ev.data as WebviewMessage;
-        if (msg) {
-            await this.handleMessage(msg);
-        }
     }
 
     private async handleMessage(msg: WebviewMessage) {
