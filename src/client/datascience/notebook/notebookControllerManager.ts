@@ -16,7 +16,6 @@ import {
     IPathUtils,
     Resource
 } from '../../common/types';
-import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
@@ -461,8 +460,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
 
         // Auto start the local kernels.
-        if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
-            await newKernel.start({ disableUI: true, document }).catch(noop);
-        }
+        // if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
+        //     await newKernel.start({ disableUI: true, document }).catch(noop);
+        // }
     }
 }

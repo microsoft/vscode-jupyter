@@ -842,13 +842,13 @@
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
                     "group": "inline/cell@0",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                    "when": "notebookViewType == 'jupyter-notebookxxx' && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
                     "group": "inline/cell@0",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                    "when": "notebookViewType == 'jupyter-notebookxxx' && jupyter.isnotebooktrusted"
                 }
             ],
             "explorer/context": [

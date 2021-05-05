@@ -15,8 +15,6 @@
 
 ### Fixes
 
-1. Move the run cells above and below buttons from the notebook toolbar to the cell toolbar.
-   ([#4644](https://github.com/Microsoft/vscode-jupyter/issues/4644))
 1. Restore the Intellisense documentation on custom editor notebook.
    ([#5124](https://github.com/Microsoft/vscode-jupyter/issues/5124))
 1. Upgrade vega-transforms and support vegalite v4.
