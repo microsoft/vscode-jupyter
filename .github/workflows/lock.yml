@@ -20,4 +20,4 @@ jobs:
 
       - name: Print locked issues
         run: |
-          echo steps.lock.outputs.issues
+          echo "Locked issues: ${{ steps.lock.outputs.issues }}"
