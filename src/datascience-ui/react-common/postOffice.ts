@@ -4,6 +4,7 @@
 
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
+import { VSCodeEvent } from 'vscode-notebook-renderer';
 import { WebviewMessage } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
 import { logMessage } from './logger';
@@ -54,12 +55,16 @@ export class PostOffice implements IDisposable {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sendUnsafeMessage(type: string, payload?: any) {
-        const api = this.acquireApi();
-        if (api) {
-            logMessage(`UI PostOffice Sent ${type}`);
-            api.postMessage({ type: type, payload });
+        if (this.useKernelMessageApi()) {
+            postKernelMessage({ type: type, payload });
         } else {
-            logMessage(`No vscode API to post message ${type}`);
+            const api = this.acquireApi();
+            if (api) {
+                logMessage(`UI PostOffice Sent ${type}`);
+                api.postMessage({ type: type, payload });
+            } else {
+                logMessage(`No vscode API to post message ${type}`);
+            }
         }
     }
 
@@ -74,35 +79,81 @@ export class PostOffice implements IDisposable {
     }
 
     public acquireApi(): IVsCodeApi | undefined {
-        // Only do this once as it crashes if we ask more than once
-        // eslint-disable-next-line
-        if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
-            this.vscodeApi = acquireVsCodeApi(); // NOSONAR
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any,
-        } else if (!this.vscodeApi && typeof (window as any).acquireVsCodeApi !== 'undefined') {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            this.vscodeApi = (window as any).acquireVsCodeApi();
-        }
-        if (!this.registered) {
-            this.registered = true;
-            window.addEventListener('message', this.baseHandler);
+        console.log('IANHU acquire vscode API');
 
-            try {
-                // For testing, we might use a  browser to load  the stuff.
-                // In such instances the `acquireVSCodeApi` will return the event handler to get messages from extension.
-                // See ./src/datascience-ui/native-editor/index.html
+        if (!this.useKernelMessageApi()) {
+            // Only do this once as it crashes if we ask more than once
+            // eslint-disable-next-line
+            if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
+                console.log('IANHU found typeof acquireVsCodeApi');
+                this.vscodeApi = acquireVsCodeApi(); // NOSONAR
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any,
+            } else if (!this.vscodeApi && typeof (window as any).acquireVsCodeApi !== 'undefined') {
+                console.log('IANHU found acquireVsCodeApi on window');
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const api = (this.vscodeApi as any) as undefined | { handleMessage?: Function };
-                if (api && api.handleMessage) {
-                    api.handleMessage(this.handleMessages.bind(this));
+                this.vscodeApi = (window as any).acquireVsCodeApi();
+            }
+            if (!this.registered) {
+                this.registered = true;
+                window.addEventListener('message', this.baseHandler);
+
+                try {
+                    // For testing, we might use a  browser to load  the stuff.
+                    // In such instances the `acquireVSCodeApi` will return the event handler to get messages from extension.
+                    // See ./src/datascience-ui/native-editor/index.html
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const api = (this.vscodeApi as any) as undefined | { handleMessage?: Function };
+                    if (api && api.handleMessage) {
+                        api.handleMessage(this.handleMessages.bind(this));
+                    }
+                } catch {
+                    // Ignore.
                 }
-            } catch {
-                // Ignore.
+            }
+        } else {
+            // Hook up to incoming kernel messages
+            if (!this.registered) {
+                console.log('IANHU register kernel message handler');
+                this.registered = true;
+                onDidReceiveKernelMessage(this.handleKernelMessage.bind(this));
             }
         }
 
         return this.vscodeApi;
     }
+    private useKernelMessageApi(): boolean {
+        console.log('IANHU checking kernel message api');
+        // Check to see if global postKernelMessage api is there
+        if (typeof postKernelMessage !== 'undefined') {
+            console.log('IANHU global postKernelMessage found');
+            return true;
+        }
+
+        return false;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private async handleKernelMessage(ev: VSCodeEvent<any>) {
+        console.log('IANHU got incoming kernel message');
+
+        if (this.handlers) {
+            console.log('IANHU incoming kernel message handling');
+            console.log(`IANHU ${JSON.stringify(ev)}`);
+            const msg = (ev as unknown) as WebviewMessage;
+            if (msg) {
+                if ('type' in msg && typeof msg.type === 'string') {
+                    logMessage(`UI PostOffice Received ${msg.type}`);
+                }
+                this.subject.next({ type: msg.type, payload: msg.payload });
+                this.handlers.forEach((h: IMessageHandler | null) => {
+                    if (h) {
+                        h.handleMessage(msg.type, msg.payload);
+                    }
+                });
+            }
+        }
+    }
+
     private async handleMessages(ev: MessageEvent) {
         if (this.handlers) {
             const msg = ev.data as WebviewMessage;
