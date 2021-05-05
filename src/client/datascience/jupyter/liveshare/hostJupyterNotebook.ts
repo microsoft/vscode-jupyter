@@ -35,6 +35,7 @@ import { IExecuteObservableResponse, IResponseMapping, IServerResponse, ServerRe
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { IFileSystem } from '../../../common/platform/types';
+import { IPythonExecutionFactory } from '../../../common/process/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -60,7 +61,8 @@ export class HostJupyterNotebook
         workspace: IWorkspaceService,
         appService: IApplicationShell,
         fs: IFileSystem,
-        vscNotebook: IVSCodeNotebook
+        vscNotebook: IVSCodeNotebook,
+        executionFactory: IPythonExecutionFactory
     ) {
         super(
             liveShare,
@@ -75,7 +77,8 @@ export class HostJupyterNotebook
             workspace,
             appService,
             fs,
-            vscNotebook
+            vscNotebook,
+            executionFactory
         );
     }
 
