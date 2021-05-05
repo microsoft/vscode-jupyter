@@ -30,7 +30,8 @@ export declare function acquireVsCodeApi(): IVsCodeApi;
 export type PostOfficeMessage = { type: string; payload?: any };
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class PostOffice implements IDisposable {
-    private registered: boolean = false;
+    private registeredVsCode: boolean = false;
+    private kernelHandler: IDisposable | undefined;
     private vscodeApi: IVsCodeApi | undefined;
     private handlers: IMessageHandler[] = [];
     private baseHandler = this.handleVSCodeApiMessages.bind(this);
@@ -43,9 +44,13 @@ export class PostOffice implements IDisposable {
         return this.observable;
     }
     public dispose() {
-        if (this.registered) {
-            this.registered = false;
+        if (this.registeredVsCode) {
+            this.registeredVsCode = false;
             window.removeEventListener('message', this.baseHandler);
+        }
+
+        if (this.kernelHandler) {
+            this.kernelHandler.dispose();
         }
     }
 
@@ -55,10 +60,10 @@ export class PostOffice implements IDisposable {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sendUnsafeMessage(type: string, payload?: any) {
+        const api = this.acquireApi();
         if (this.useKernelMessageApi()) {
             postKernelMessage({ type: type, payload });
         } else {
-            const api = this.acquireApi();
             if (api) {
                 logMessage(`UI PostOffice Sent ${type}`);
                 api.postMessage({ type: type, payload });
@@ -79,22 +84,18 @@ export class PostOffice implements IDisposable {
     }
 
     public acquireApi(): IVsCodeApi | undefined {
-        console.log('IANHU acquire vscode API');
-
         if (!this.useKernelMessageApi()) {
             // Only do this once as it crashes if we ask more than once
             // eslint-disable-next-line
             if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
-                console.log('IANHU found typeof acquireVsCodeApi');
                 this.vscodeApi = acquireVsCodeApi(); // NOSONAR
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any,
             } else if (!this.vscodeApi && typeof (window as any).acquireVsCodeApi !== 'undefined') {
-                console.log('IANHU found acquireVsCodeApi on window');
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.vscodeApi = (window as any).acquireVsCodeApi();
             }
-            if (!this.registered) {
-                this.registered = true;
+            if (!this.registeredVsCode) {
+                this.registeredVsCode = true;
                 window.addEventListener('message', this.baseHandler);
 
                 try {
@@ -112,20 +113,18 @@ export class PostOffice implements IDisposable {
             }
         } else {
             // Hook up to incoming kernel messages
-            if (!this.registered) {
-                console.log('IANHU register kernel message handler');
-                this.registered = true;
-                onDidReceiveKernelMessage(this.handleKernelMessage.bind(this));
+            if (!this.kernelHandler) {
+                this.kernelHandler = onDidReceiveKernelMessage(this.handleKernelMessage.bind(this));
             }
         }
 
         return this.vscodeApi;
     }
+
+    // Check to see if global kernel message API is supported, if so use that
+    // instead of the VSCodeAPI which is not available in NativeNotebooks
     private useKernelMessageApi(): boolean {
-        console.log('IANHU checking kernel message api');
-        // Check to see if global postKernelMessage api is there
         if (typeof postKernelMessage !== 'undefined') {
-            console.log('IANHU global postKernelMessage found');
             return true;
         }
 
