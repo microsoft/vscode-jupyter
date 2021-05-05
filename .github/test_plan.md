@@ -9,6 +9,7 @@
     -   Version: XXX (2.7, latest 3.x)
 -   VS Code: XXX (Insiders)
 -   Python Extension: XXX (Insiders)
+-   Local/Remote: XXX (Local, Remote-SSH, Remote-WSL, Remote-Docker, Remote-Codespaces)
 
 ## Tests
 
@@ -20,14 +21,9 @@
 -   Consider running the tests in a multi-folder workspace
 -   Focus on in-development features (i.e. native notebooks, gather)
 
-<details>
-  <summary>Scenarios</summary>
+### P0 Test Scenarios
 
-### [Environment](https://code.visualstudio.com/docs/python/environments)
-
-### [Data Science](https://code.visualstudio.com/docs/python/jupyter-support)
-
-#### P0 Test Scenarios
+#### Interactive Window
 
 -   [ ] Start and connect to local Jupyter server
     1. Open the file src/test/datascience/manualTestFiles/manualTestFile.py in VSCode
@@ -36,22 +32,6 @@
     1. On the first cell click `Run Below`
     1. Interactive Window should open, show connection information, and execute cells
     1. The first thing in the window should have a line like this: `Jupyter Server URI: http://localhost:[port number]/?token=[token value]`
--   [ ] Verify Basic Notebook Editor
-    1. Create a new file in VS code with the extension .ipynb
-    1. Open the file
-    1. The Notebook Editor should open
-    1. Verify that there is a single cell in the notebook editor
-    1. Add `print('bar')` to that cell
-    1. Run the cell
-    1. Verify that `bar` shows up below the input
-    1. Add a cell with the topmost hover bar
-    1. Verify the cell appears above all others
-    1. Add a cell at the bottom with the bottom most hover bar
-    1. Verify the cell appears below all cells
-    1. Select a cell
-    1. Add a cell with the plus button on the cell
-    1. Verify cell appears below
-    1. Repeat with the topmost toolbar
 -   [ ] Verify basic outputs
     1. Run all the cells in manualTestFile.py
     1. Check to make sure that no outputs have errors
@@ -99,13 +79,43 @@
         1. In the 'd' filter box input '== inf'. Verify that this just the row with 'inf' in the 'd' column.
     1. Open the myList variable in the explorer
     1. Make sure that you can scroll all the way to the end of the entries
-       [ ] Verify notebook outputs
-    1. Open the src/test/datascience/manualTestFiles/manualTestFile.py in VSCode.
-    1. Run all of the cells in the file.
-    1. Interactive Window should open
-    1. Export the cells in the interactive window and open the notebook editor
-    1. Run all the cells in the notebook editor and verify the same outputs appear as in the interactive window
--   [ ] Verify Notebook Editor Intellisense
+-   [ ] Verify debugging
+    1. Open the file src/test/datascience/manualTestFiles/manualTestFile.py in VSCode
+    1. On the first cell click `Run Below`
+    1. Interactive Window should open, show connection information, and execute cells
+    1. Go back to the first cell and click `Debug Cell`
+    1. Debugger should start and have an ip indicator on the first line of the cell
+    1. Step through the debugger.
+    1. Verify the variables tab of the debugger shows variables.
+    1. Verify the variables explorer window shows output not available while debugging
+    1. When you get to the end of the cell, the debugger should stop
+    1. Output from the cell should show up in the Interactive Window (sometimes you have to finish debugging the cell first)
+
+
+#### Notebook Editor
+
+Please run through the scenarios below for:
+1. Native Editor (default in VS Code Insiders)
+2. Custom Editor (please follow [these instructions](https://stackoverflow.com/questions/67142271/visual-studio-jupyter-notebook/67145446#67145446) to enable Custom Editor in VS Code Insiders)
+
+- [ ] Open notebook and run cells
+  1. Create a brand new folder on your machine.
+  1. Create a new venv in that folder via command line / terminal `python3 -m venv .newEnv`.
+  1. Open VS Code with that folder selected as the current workspace.
+  1. Open command palette with Ctrl+Shift+P and select 'Jupyter: Create New Blank Notebook'. Notebook UI should open. Verify there is a single cell in the notebook.
+     1. (Native notebook only) The cell language should be Python. ~The selected kernel in the bottom right corner should be a Python kernel.~ The cell toolbar should be on the left.
+  1. Click on the kernel picker in the bottom right of VS Code and select `.newEnv` from the quickpick that appears.
+  1. Add the following code to the empty notebook cell.
+   ```
+   import sys
+   print(sys.executable)
+   ```
+  1. Click the run button on the cell. You should be prompted to install ipykernel in `.newEnv`. Click the 'Install' button on the prompt to install ipykernel.
+  1.  After ipykernel is installed the cell should execute successfully and display the current Python interpreter path in the cell output.
+  1. Verify that the Python interpreter path in the cell output matches the selected Python environment in the kernel picker.
+  1. Click on the kernel picker in the bottom right of VS Code and select a different Python environment.
+  1. Rerun the first cell and verify that the path in the cell output matches the selected Python environment in the kernel picker.
+-   [ ] Verify notebook editor IntelliSense
     1. Open the src/test/datascience/manualTestFiles/manualTestFile.py in VSCode.
     1. Run all of the cells in the file.
     1. Interactive Window should open
@@ -116,9 +126,8 @@
     1. Move the cell around and verify intellisense hover still works on the `import sys`
     1. Delete and readd the cell and verify intellisense hover still works.
 -   [ ] Verify Notebook Keyboard Shortcuts
-    1. Using the notebook generated from the manualTestFile.py, do the following
-    1. Select a cell by clicking on it
-    1. Move selection up and down with j,k and arrow keys.
+    1. Select a notebook cell by clicking on it
+    1. Move selection up and down with `j`, `k` and arrow keys.
     1. Focus a cell by double clicking on it or hitting the enter key when selected
     1. Move selection through the code with the arrow keys.
     1. Verify selection travels between focused cells
@@ -134,33 +143,15 @@
     1. Hit `shift+enter` and verify a cell runs and selection moves to the next cell
     1. Hit `alt+enter` and verify a cell runs and a new cell is added below
     1. Hit `ctrl+enter` and verify a cell runs and selection does not change
--   [ ] Verify debugging
-    1. Open the file src/test/datascience/manualTestFiles/manualTestFile.py in VSCode
-    1. On the first cell click `Run Below`
-    1. Interactive Window should open, show connection information, and execute cells
-    1. Go back to the first cell and click `Debug Cell`
-    1. Debugger should start and have an ip indicator on the first line of the cell
-    1. Step through the debugger.
-    1. Verify the variables tab of the debugger shows variables.
-    1. Verify the variables explorer window shows output not available while debugging
-    1. When you get to the end of the cell, the debugger should stop
-    1. Output from the cell should show up in the Interactive Window (sometimes you have to finish debugging the cell first)
--   [ ] Verify ability to open data viewer from debugger
-    1. Open the file src/test/datascience/manualTestFiles/manualTestFileDebugger.py in VS Code
-    1. Set a breakpoint on the last line
-    1. Open the debug panel in the left sidebar of VS Code and run 'Python: Current File' debug configuration
-    1. All the variables defined in the file should appear in the debug variables window in the sidebar
-    1. Right click on each of the following variables and select the 'View Variable in Data Viewer' option from the context menu: myNparray, myDataFrame, mySeries, myList, myString, myTensor. Verify that the data viewer opens and displays them
-    1. Expand the tree view for the variable `x`. Right click on its instance member `b` and select 'View Variable in Data Viewer' from the context menu. Verify that this opens `x.b` and not `b` in the data viewer.
--   [ ] Verify installing ipykernel in a new environment
-    1. Create a brand new folder on your machine
-    1. Create a new venv in that folder via command line / terminal `python3 -m venv .newEnv`
-    1. Open that folder in VS Code and copy the manual test file there
-    1. Select the newly created venv by running Ctrl+Shift+P, typing 'Python: Select Interpreter' into the VS Code command palette, and selecting the new venv from the dropdown. If the new venv doesn't appear in the quickpick you may need to reload VS Code and reattempt this step.
-    1. Execute the manual test file, you should be prompted to install ipykernel in `.newEnv`
-    1. After ipykernel is installed execution of the file should continue successfully
+-  [ ] Verify notebook outputs
+    1. Open the src/test/datascience/manualTestFiles/manualTestFile.py in VSCode.
+    1. Run all of the cells in the file.
+    1. Interactive window should open
+    1. Export the cells in the interactive window and open the notebook editor
+    1. Run all the cells in the notebook editor and verify the same outputs appear as in the interactive window
 
-#### P1 Test Scenarios
+### P1 Test Scenarios
+
 
 -   [ ] Connect to a `remote` server
     1. Open up a valid python command prompt that can run `jupyter notebook` (a default Anaconda prompt works well)
@@ -279,8 +270,18 @@
     1. Reload VS code and reopen this folder.
     1. Run a cell in a python file.
        [ ] Verify results 1. Verify you are asked first for a user name and then a password. 1. Verify a cell runs once you enter the user name and password 1. Verify that the python that is running in the interactive window is from the docker container (if on windows it should show a linux path)
+-   [ ] Verify ability to open data viewer from debugger
+    1. Open the file src/test/datascience/manualTestFiles/manualTestFileDebugger.py in VS Code
+    1. Set a breakpoint on the last line
+    1. Open the debug panel in the left sidebar of VS Code and run 'Python: Current File' debug configuration
+    1. All the variables defined in the file should appear in the debug variables window in the sidebar
+    1. Right click on each of the following variables and select the 'View Variable in Data Viewer' option from the context menu: myNparray, myDataFrame, mySeries, myList, myString, myTensor. Verify that the data viewer opens and displays them
+    1. Expand the tree view for the variable `x`. Right click on its instance member `b` and select 'View Variable in Data Viewer' from the context menu. Verify that this opens `x.b` and not `b` in the data viewer.
+-   [ ] TODO Gather
+-   [ ] TODO Run by line
+-   [ ] TODO Data viewer slice and refresh
 
-#### P2 Test Scenarios
+### P2 Test Scenarios
 
 -   [ ] Directory change
     -   [ ] Verify directory change in export
@@ -294,4 +295,3 @@
     1. Input several lines into the Interactive Window terminal
     1. Press up to verify that those previously entered lines show in the Interactive Window terminal history
 -   [ ] Extra themes 1. Try several of the themes that come with VSCode that are not the default Dark+ and Light+
-</details>
