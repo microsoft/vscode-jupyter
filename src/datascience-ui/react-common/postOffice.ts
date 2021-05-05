@@ -33,7 +33,7 @@ export class PostOffice implements IDisposable {
     private registered: boolean = false;
     private vscodeApi: IVsCodeApi | undefined;
     private handlers: IMessageHandler[] = [];
-    private baseHandler = this.handleMessages.bind(this);
+    private baseHandler = this.handleVSCodeApiMessages.bind(this);
     private readonly subject = new Subject<PostOfficeMessage>();
     private readonly observable: Observable<PostOfficeMessage>;
     constructor() {
@@ -104,7 +104,7 @@ export class PostOffice implements IDisposable {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const api = (this.vscodeApi as any) as undefined | { handleMessage?: Function };
                     if (api && api.handleMessage) {
-                        api.handleMessage(this.handleMessages.bind(this));
+                        api.handleMessage(this.handleVSCodeApiMessages.bind(this));
                     }
                 } catch {
                     // Ignore.
@@ -134,29 +134,21 @@ export class PostOffice implements IDisposable {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleKernelMessage(ev: VSCodeEvent<any>) {
-        console.log('IANHU got incoming kernel message');
-
-        if (this.handlers) {
-            console.log('IANHU incoming kernel message handling');
-            console.log(`IANHU ${JSON.stringify(ev)}`);
-            const msg = (ev as unknown) as WebviewMessage;
-            if (msg) {
-                if ('type' in msg && typeof msg.type === 'string') {
-                    logMessage(`UI PostOffice Received ${msg.type}`);
-                }
-                this.subject.next({ type: msg.type, payload: msg.payload });
-                this.handlers.forEach((h: IMessageHandler | null) => {
-                    if (h) {
-                        h.handleMessage(msg.type, msg.payload);
-                    }
-                });
-            }
+        const msg = (ev as unknown) as WebviewMessage;
+        if (msg) {
+            await this.handleMessage(msg);
         }
     }
 
-    private async handleMessages(ev: MessageEvent) {
+    private async handleVSCodeApiMessages(ev: MessageEvent) {
+        const msg = ev.data as WebviewMessage;
+        if (msg) {
+            await this.handleMessage(msg);
+        }
+    }
+
+    private async handleMessage(msg: WebviewMessage) {
         if (this.handlers) {
-            const msg = ev.data as WebviewMessage;
             if (msg) {
                 if ('type' in msg && typeof msg.type === 'string') {
                     logMessage(`UI PostOffice Received ${msg.type}`);
