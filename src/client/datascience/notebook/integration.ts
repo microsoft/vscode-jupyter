@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, languages, NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
+import { inject, injectable, named } from 'inversify';
+import { ConfigurationTarget, languages, Memento, NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationEnvironment,
@@ -12,12 +12,14 @@ import {
 } from '../../common/application/types';
 import { NotebookCellScheme, PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IDisposableRegistry } from '../../common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { isJupyterNotebook, NotebookCellStateTracker } from './helpers/helpers';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
 import { INotebookContentProvider } from './types';
+
+export const HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING = 'CELL_TOOLBAR_SETTING_MEMENTO_KEY';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
@@ -33,7 +35,8 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider
+        @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento
     ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
@@ -91,7 +94,37 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
     }
     private async enableNotebooks() {
         await this.enableDisableEditorAssociation(true);
+        await this.moveCellToolbarToLeft();
     }
+
+    // By default we want Jupyter extension native notebook users to get the cell toolbar
+    // on the left, unless the user has already customized it before we get to update it.
+    private async moveCellToolbarToLeft() {
+        const extensionHasUpdatedSetting = this.globalState.get<boolean | undefined>(
+            HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING
+        );
+        if (extensionHasUpdatedSetting) {
+            // Jupyter extension has already customized setting. Don't customize it again
+            return;
+        }
+        await this.globalState.update(HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING, true);
+
+        // Jupyter extension hasn't customized this setting yet, but it's possible the user
+        // already changed it on their own.
+        // Make sure we don't overwrite the user's existing customization for this setting
+        const settings = this.workspace.getConfiguration('notebook', undefined);
+        const toolbarSettings = settings.get('cellToolbarLocation') as {
+            [key: string]: 'left' | 'right' | 'hidden';
+        };
+        const userCustomizedSetting = JupyterNotebookView in toolbarSettings;
+        if (userCustomizedSetting) {
+            // Regardless of what the user set this to, we should honor it
+            return;
+        }
+        toolbarSettings[JupyterNotebookView] = 'left';
+        await settings.update('cellToolbarLocation', toolbarSettings, ConfigurationTarget.Global);
+    }
+
     private async enableDisableEditorAssociation(enable: boolean) {
         // This code is temporary.
         const settings = this.workspace.getConfiguration('workbench', undefined);
