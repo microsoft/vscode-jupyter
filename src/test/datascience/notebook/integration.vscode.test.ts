@@ -63,6 +63,7 @@ suite('VS Code notebook integration', () => {
     });
 
     suiteTeardown(async () => {
+        api = await initialize();
         const memento = api.serviceManager.get<Memento>(IMemento, GLOBAL_MEMENTO);
         await memento.update(HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING, false);
         await closeNotebooksAndCleanUpAfterTests();
