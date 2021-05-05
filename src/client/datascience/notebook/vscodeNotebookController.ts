@@ -160,27 +160,32 @@ export class VSCodeNotebookController implements Disposable {
         const codeSpaceScripts =
             env.uiKind === UIKind.Web
                 ? [
-                    new NotebookKernelPreload(Uri.file(
-                        join(
-                            this.context.extensionPath,
-                            'out',
-                            'datascience-ui',
-                            'ipywidgetsKernel',
-                            'require.js'
-                        )
-                    )
-                    )
-                ]
+                      new NotebookKernelPreload(
+                          Uri.file(
+                              join(
+                                  this.context.extensionPath,
+                                  'out',
+                                  'datascience-ui',
+                                  'ipywidgetsKernel',
+                                  'require.js'
+                              )
+                          )
+                      )
+                  ]
                 : [];
         return [
             ...codeSpaceScripts,
-            new NotebookKernelPreload(Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'))),
-            new NotebookKernelPreload(Uri.file(
-                join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
-            )),
-            new NotebookKernelPreload(Uri.file(
-                join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')
-            ))
+            new NotebookKernelPreload(
+                Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'))
+            ),
+            new NotebookKernelPreload(
+                Uri.file(
+                    join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
+                )
+            ),
+            new NotebookKernelPreload(
+                Uri.file(join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js'))
+            )
         ];
     }
 
