@@ -78,7 +78,7 @@ import { IPythonExtensionChecker } from '../../api/types';
 import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { translateKernelLanguageToMonaco } from '../common';
+import { sendNotebookOrKernelLanguageTelemetry, translateKernelLanguageToMonaco } from '../common';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -387,6 +387,23 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     public async updateNotebookOptions(kernelConnection: KernelConnectionMetadata): Promise<void> {
         if (this.model) {
+            if (this.file.fsPath.toLowerCase().endsWith('.ipynb')) {
+                let language: string | undefined;
+                switch (kernelConnection.kind) {
+                    case 'connectToLiveKernel':
+                        language = kernelConnection.kernelModel.language;
+                        break;
+                    case 'startUsingKernelSpec':
+                        language = kernelConnection.kernelSpec.language;
+                        break;
+                    case 'startUsingPythonInterpreter':
+                        language = PYTHON_LANGUAGE;
+                        break;
+                    default:
+                        break;
+                }
+                sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, language);
+            }
             const change: NotebookModelChange = {
                 kind: 'version',
                 kernelConnection,

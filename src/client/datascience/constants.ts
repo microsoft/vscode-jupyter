@@ -26,6 +26,10 @@ export const KnownKernelLanguageAliases = new Map<string, string>([
     ['c++12', 'c++'],
     ['c++14', 'c++']
 ]);
+/**
+ * This will get updated with the list of VS Code languages.
+ * This way, we can send those via telemetry, instead of having to hardcode the languages.
+ */
 export const KnownNotebookLanguages: string[] = [
     'python',
     'r',
@@ -278,6 +282,7 @@ export enum Telemetry {
      * An export to a specific format failed
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
+    FailedToCreateNotebookController = 'DATASCIENCE.FAILED_TO_CREATE_CONTROLLER',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',

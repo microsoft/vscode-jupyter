@@ -11,7 +11,6 @@ import { IExtensionContext } from './common/types';
 import { VSCodeNotebookProvider } from './datascience/constants';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
 import { NotebookCellRunState } from './datascience/jupyter/kernels/types';
-import { CreationOptionService } from './datascience/notebook/creation/creationOptionsService';
 import { KernelStateEventArgs } from './datascience/notebookExtensibility';
 import {
     IJupyterUriProvider,
@@ -60,19 +59,6 @@ export interface IExtensionApi {
     registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
     registerPythonApi(pythonApi: PythonApi): void;
     /**
-     * When called by other extensions we will display these extensions in a dropdown list when creating a new notebook.
-     */
-    registerNewNotebookContent(options: {
-        /**
-         * Use this language as the language of cells for new notebooks created (when user picks this extension).
-         */
-        defaultCellLanguage: string;
-        /**
-         * Value in the quickpick (if not provided, will use the displayName of the extension).
-         */
-        label: string;
-    }): Promise<void>;
-    /**
      * Creates a blank notebook and defaults the empty cell to the language provided.
      */
     createBlankNotebook(options: { defaultCellLanguage: string }): Promise<void>;
@@ -112,11 +98,6 @@ export function buildApi(
         },
         onKernelStateChange: notebookExtensibility.onKernelStateChange.bind(notebookExtensibility),
         registerCellToolbarButton: webviewExtensibility.registerCellToolbarButton.bind(webviewExtensibility),
-        registerNewNotebookContent(options: { defaultCellLanguage: string; label?: string }) {
-            return serviceContainer
-                .get<CreationOptionService>(CreationOptionService)
-                .registerNewNotebookContent(options);
-        },
         createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
             const service = serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
             await service.createNew(options);

@@ -5,6 +5,7 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { Memento } from 'vscode';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
@@ -18,11 +19,19 @@ suite('DataScience - Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
+    let memento: Memento;
     const interpreter = createPythonInterpreter();
     setup(() => {
         appShell = mock<IApplicationShell>();
         installer = mock<IInstaller>();
-        dependencyService = new KernelDependencyService(instance(appShell), instance(installer), false);
+        memento = mock<Memento>();
+        when(memento.get(anything(), anything())).thenReturn(false);
+        dependencyService = new KernelDependencyService(
+            instance(appShell),
+            instance(installer),
+            instance(memento),
+            false
+        );
     });
     test('Check if ipykernel is installed', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
@@ -52,14 +61,26 @@ suite('DataScience - Kernel Dependency Service', () => {
     });
     test('Install ipykernel', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-        when(installer.install(Product.ipykernel, interpreter, anything())).thenResolve(InstallerResponse.Installed);
+        when(installer.install(Product.ipykernel, interpreter, anything(), anything())).thenResolve(
+            InstallerResponse.Installed
+        );
         when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
+
+        await dependencyService.installMissingDependencies(interpreter);
+    });
+    test('Install ipykernel second time should result in a re-install', async () => {
+        when(memento.get(anything(), anything())).thenReturn(true);
+        when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+        when(installer.install(Product.ipykernel, interpreter, anything(), true)).thenResolve(
+            InstallerResponse.Installed
+        );
+        when(appShell.showErrorMessage(anything(), Common.reInstall())).thenResolve(Common.reInstall() as any);
 
         await dependencyService.installMissingDependencies(interpreter);
     });
     test('Bubble installation errors', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-        when(installer.install(Product.ipykernel, interpreter, anything())).thenReject(
+        when(installer.install(Product.ipykernel, interpreter, anything(), anything())).thenReject(
             new Error('Install failed - kaboom')
         );
         when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);

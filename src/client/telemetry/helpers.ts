@@ -9,7 +9,7 @@ export function getTelemetrySafeLanguage(language: string = 'unknown') {
     language = (language || 'unknown').toLowerCase();
     language = KnownKernelLanguageAliases.get(language) || language;
     if (!KnownNotebookLanguages.includes(language)) {
-        language = 'unknown';
+        language = getTelemetrySafeHashedString(language);
     }
     return language;
 }

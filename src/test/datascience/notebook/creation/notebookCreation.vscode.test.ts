@@ -54,7 +54,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         );
     }
     test('With 3rd party integration, display quick pick when selecting create blank notebook command', async function () {
-        await creationOptions.registerNewNotebookContent({ defaultCellLanguage: 'julia' });
+        await creationOptions.registerNewNotebookContent('julia');
         assert.equal(creationOptions.registrations.length, 1);
         assert.isUndefined(vscodeNotebook.activeNotebookEditor);
 

@@ -35,6 +35,7 @@ import { IS_CI_SERVER } from '../../../../test/ciConstants';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { Uri } from 'vscode';
 import { getResourceType } from '../../common';
+import { IPythonExecutionFactory } from '../../../common/process/types';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -63,7 +64,7 @@ export function kernelConnectionMetadataHasKernelModel(
 export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnvironment) {
     // Non-Python kernels cannot contain an interpreter (even in their id).
     interpreter = isPythonKernelSpec(spec) ? interpreter : undefined;
-    return `${spec.id || ''}.${spec.name}.${spec.path}.${interpreter?.path || ''}.${
+    return `${spec.id || ''}.${spec.name}.${spec.interpreterPath || spec.path}.${interpreter?.path || ''}.${
         spec.display_name || interpreter?.displayName || ''
     }`;
 }
@@ -371,6 +372,7 @@ export function findPreferredKernel(
 
             if (spec) {
                 // Check if the kernel spec name matches the hash of the generated kernel spec name.
+                // This approach of storing our generated kernelspec name in metadadata is not longer practiced.
                 if (
                     !notebookMetadata && // If we don't have metadata, only then should we compare against the interpreter.
                     isKernelRegisteredByUs(spec) === 'newVersion' &&
@@ -385,10 +387,27 @@ export function findPreferredKernel(
                 // If the user has kernelspec in metadata & this is a kernelspec we generated & names match, then use that kernelspec.
                 // Reason we are only interested kernelspecs we generate is because user can have kernelspecs named `python`.
                 // Such kernelspecs are ambiguous (we have no idea what `python` kernel means, its not necessarily tied to a specific interpreter).
+                // This approach of storing our generated kernelspec name in metadadata is not longer practiced.
                 if (
                     notebookMetadata?.kernelspec?.name &&
                     isKernelRegisteredByUs(spec) &&
                     notebookMetadata.kernelspec.name === spec.name
+                ) {
+                    // This is a perfect match.
+                    score += 100;
+                }
+
+                // If the user has kernelspec in metadata & the interpreter hash is stored in metadata, then its a perfect match.
+                // This is the preferred approach https://github.com/microsoft/vscode-jupyter/issues/5612
+                if (
+                    typeof notebookMetadata === 'object' &&
+                    'interpreter' in notebookMetadata &&
+                    notebookMetadata.interpreter &&
+                    typeof notebookMetadata.interpreter === 'object' &&
+                    'hash' in notebookMetadata.interpreter &&
+                    (metadata.kind === 'startUsingKernelSpec' || metadata.kind === 'startUsingPythonInterpreter') &&
+                    metadata.interpreter &&
+                    getInterpreterHash(metadata.interpreter) === notebookMetadata.interpreter.hash
                 ) {
                     // This is a perfect match.
                     score += 100;
@@ -476,7 +495,8 @@ export function findPreferredKernel(
 export async function sendTelemetryForPythonKernelExecutable(
     notebook: INotebook,
     file: string,
-    kernelConnection: KernelConnectionMetadata
+    kernelConnection: KernelConnectionMetadata,
+    executionService: IPythonExecutionFactory
 ) {
     if (!kernelConnection.interpreter || !isPythonKernelConnection(kernelConnection)) {
         return;
@@ -497,11 +517,31 @@ export async function sendTelemetryForPythonKernelExecutable(
         }
         const sysExecutable = concatMultilineString(output.text).trim().toLowerCase();
         const match = kernelConnection.interpreter.path.toLowerCase() === sysExecutable;
-        sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
-            match: match ? 'true' : 'false',
-            kernelConnectionType: kernelConnection.kind
+        if (match) {
+            sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
+                match: match ? 'true' : 'false',
+                kernelConnectionType: kernelConnection.kind
+            });
+            trackKernelResourceInformation(Uri.file(file), { interpreterMatchesKernel: match });
+            return;
+        }
+
+        // The interpreter paths don't match, possible we have a synlink or similar.
+        // Lets try to get the path from the interpreter using the exact same code we send to the kernel.
+        const execService = await executionService.createActivatedEnvironment({
+            interpreter: kernelConnection.interpreter,
+            allowEnvironmentFetchExceptions: true,
+            bypassCondaExecution: true
         });
-        trackKernelResourceInformation(Uri.file(file), { interpreterMatchesKernel: match });
+        const execOutput = await execService.exec(['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: false });
+        if (execOutput.stdout.trim().length > 0) {
+            const match = execOutput.stdout.trim().toLowerCase() === sysExecutable;
+            sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
+                match: match ? 'true' : 'false',
+                kernelConnectionType: kernelConnection.kind
+            });
+            trackKernelResourceInformation(Uri.file(file), { interpreterMatchesKernel: match });
+        }
     } catch (ex) {
         // Noop.
     }
