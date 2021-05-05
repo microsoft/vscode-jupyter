@@ -38,6 +38,7 @@ import { IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
+import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
 import { KernelConnectionMetadata, NotebookCellRunState } from './jupyter/kernels/types';
 import { KernelStateEventArgs } from './notebookExtensibility';
 
@@ -1088,6 +1089,14 @@ export interface IJupyterSubCommandExecutionService {
      * @memberof IJupyterSubCommandExecutionService
      */
     openNotebook(notebookFile: string): Promise<void>;
+    /**
+     * Gets the kernelspecs.
+     *
+     * @param {CancellationToken} [token]
+     * @returns {Promise<JupyterKernelSpec[]>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
+    getKernelSpecs(token?: CancellationToken): Promise<JupyterKernelSpec[]>;
 }
 
 export const IJupyterInterpreterDependencyManager = Symbol('IJupyterInterpreterDependencyManager');
