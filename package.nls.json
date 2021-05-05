@@ -479,6 +479,7 @@
     "DataScience.kernelTipMessage": "Tip: Change kernels using the status bar below.",
     "DataScience.notebookCreationPickerPlaceHolder": "Select an option to create a blank notebook",
     "DataScience.refreshDataViewer": "Refresh data viewer",
+    "DataScience.refreshDataViewerCommandPalette": "Refresh Data Viewer",
     "DataScience.sliceDropdownAxisLabel": "Axis",
     "DataScience.sliceDropdownIndexLabel": "Index",
     "DataScience.sliceSubmitButton": "Apply",

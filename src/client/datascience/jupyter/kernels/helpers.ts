@@ -35,6 +35,7 @@ import { IS_CI_SERVER } from '../../../../test/ciConstants';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { Uri } from 'vscode';
 import { getResourceType } from '../../common';
+import { IPythonExecutionFactory } from '../../../common/process/types';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -494,7 +495,8 @@ export function findPreferredKernel(
 export async function sendTelemetryForPythonKernelExecutable(
     notebook: INotebook,
     file: string,
-    kernelConnection: KernelConnectionMetadata
+    kernelConnection: KernelConnectionMetadata,
+    executionService: IPythonExecutionFactory
 ) {
     if (!kernelConnection.interpreter || !isPythonKernelConnection(kernelConnection)) {
         return;
@@ -515,11 +517,31 @@ export async function sendTelemetryForPythonKernelExecutable(
         }
         const sysExecutable = concatMultilineString(output.text).trim().toLowerCase();
         const match = kernelConnection.interpreter.path.toLowerCase() === sysExecutable;
-        sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
-            match: match ? 'true' : 'false',
-            kernelConnectionType: kernelConnection.kind
+        if (match) {
+            sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
+                match: match ? 'true' : 'false',
+                kernelConnectionType: kernelConnection.kind
+            });
+            trackKernelResourceInformation(Uri.file(file), { interpreterMatchesKernel: match });
+            return;
+        }
+
+        // The interpreter paths don't match, possible we have a synlink or similar.
+        // Lets try to get the path from the interpreter using the exact same code we send to the kernel.
+        const execService = await executionService.createActivatedEnvironment({
+            interpreter: kernelConnection.interpreter,
+            allowEnvironmentFetchExceptions: true,
+            bypassCondaExecution: true
         });
-        trackKernelResourceInformation(Uri.file(file), { interpreterMatchesKernel: match });
+        const execOutput = await execService.exec(['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: false });
+        if (execOutput.stdout.trim().length > 0) {
+            const match = execOutput.stdout.trim().toLowerCase() === sysExecutable;
+            sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
+                match: match ? 'true' : 'false',
+                kernelConnectionType: kernelConnection.kind
+            });
+            trackKernelResourceInformation(Uri.file(file), { interpreterMatchesKernel: match });
+        }
     } catch (ex) {
         // Noop.
     }
