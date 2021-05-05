@@ -245,7 +245,6 @@ module.exports = {
         'src/test/datascience/editor-integration/cellhashprovider.unit.test.ts',
         'src/test/datascience/editor-integration/codelensprovider.unit.test.ts',
         'src/test/datascience/jupyterPasswordConnect.unit.test.ts',
-        'src/test/datascience/testHelpers.tsx',
         'src/test/datascience/mockLanguageClient.ts',
         'src/test/datascience/errorHandler.functional.test.tsx',
         'src/test/datascience/notebook/notebookTrust.native.vscode.test.ts',

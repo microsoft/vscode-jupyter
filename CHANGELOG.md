@@ -1,5 +1,12 @@
 # Changelog
 
+## 2021.6.1 (10 May 2021)
+
+### Code Health
+
+1. Better comparisons of the interpreter paths when starting kernels.
+   ([#5754](https://github.com/microsoft/vscode-jupyter/pull/5754))
+
 ## 2021.6.0 (05 May 2021)
 
 ### Enhancements
