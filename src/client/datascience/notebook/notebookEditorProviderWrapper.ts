@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import '../../common/extensions';
+import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { OurNotebookProvider, VSCodeNotebookProvider } from '../constants';
@@ -42,8 +43,14 @@ export class NotebookEditorProviderWrapper implements INotebookEditorProvider {
     }
     public get activeEditor(): INotebookEditor | undefined {
         if (this.useVSCodeNotebookEditorApi) {
+            traceInfo(
+                `this.vscodeNotebookEditorProvider.activeEditor; ${this.vscodeNotebookEditorProvider.activeEditor}`
+            );
             return this.vscodeNotebookEditorProvider.activeEditor;
         }
+        traceInfo(
+            `!this.useVSCodeNotebookEditorApi - this.vscodeNotebookEditorProvider.activeEditor; ${this.vscodeNotebookEditorProvider.activeEditor}`
+        );
         return (
             this.vscodeNotebookEditorProvider.activeEditor || this.ourCustomOrOldNotebookEditorProvider?.activeEditor
         );

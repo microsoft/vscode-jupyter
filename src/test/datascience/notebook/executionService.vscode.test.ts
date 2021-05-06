@@ -286,7 +286,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         );
 
         // Interrupt the kernel).
-        traceInfo(`Interrupt requested for ${vscodeNotebook.activeNotebookEditor?.document?.uri} in test`);
+        traceInfo(`Interrupt requested for ${vscodeNotebook.activeNotebookEditor?.document?.uri.toString()} in test`);
         await commands.executeCommand(
             'jupyter.notebookeditor.interruptkernel',
             vscodeNotebook.activeNotebookEditor?.document

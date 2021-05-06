@@ -103,6 +103,8 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         // `document` may be undefined if this command is invoked from the command palette.
         if (document) {
             traceInfo(`Interrupt requested for ${document.toString()} in nativeEditorCommandListener`);
+            traceInfo(`this.provider.activeEditor?.file.toString() = ${this.provider.activeEditor?.file.toString()}`);
+            traceInfo(`this.provider.editors = ${this.provider.editors.map((item) => item.file.toString())}`);
             const target =
                 this.provider.activeEditor?.file.toString() === document.toString()
                     ? this.provider.activeEditor
