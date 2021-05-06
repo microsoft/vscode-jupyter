@@ -96,24 +96,24 @@
 
 Please run through the scenarios below for:
 1. Native Editor (default in VS Code Insiders)
-2. Custom Editor (please follow [these instructions](https://stackoverflow.com/questions/67142271/visual-studio-jupyter-notebook/67145446#67145446) to enable Custom Editor in VS Code Insiders)
+1. Custom Editor (please follow [these instructions](https://stackoverflow.com/questions/67142271/visual-studio-jupyter-notebook/67145446#67145446) to enable Custom Editor in VS Code Insiders)
 
 - [ ] Open notebook and run cells
   1. Create a brand new folder on your machine.
   1. Create a new venv in that folder via command line / terminal `python3 -m venv .newEnv`.
   1. Open VS Code with that folder selected as the current workspace.
   1. Open command palette with Ctrl+Shift+P and select 'Jupyter: Create New Blank Notebook'. Notebook UI should open. Verify there is a single cell in the notebook.
-     1. (Native notebook only) The cell language should be Python. ~The selected kernel in the bottom right corner should be a Python kernel.~ The cell toolbar should be on the left.
-  1. Click on the kernel picker in the bottom right of VS Code and select `.newEnv` from the quickpick that appears.
+     1. (Native notebook only) The cell language (bottom right corner of the notebook cell) should be Python. The cell toolbar should be on the left.
+  1. Click on the kernel picker (for native editor: in the bottom right corner; for custom editor: in the top right corner) and select `.newEnv` from the quickpick that appears.
   1. Add the following code to the empty notebook cell.
    ```
    import sys
    print(sys.executable)
    ```
   1. Click the run button on the cell. You should be prompted to install ipykernel in `.newEnv`. Click the 'Install' button on the prompt to install ipykernel.
-  1.  After ipykernel is installed the cell should execute successfully and display the current Python interpreter path in the cell output.
+  1. After ipykernel is installed the cell should execute successfully and display the current Python interpreter path in the cell output.
   1. Verify that the Python interpreter path in the cell output matches the selected Python environment in the kernel picker.
-  1. Click on the kernel picker in the bottom right of VS Code and select a different Python environment.
+  1. Click on the kernel picker (for native editor: in the bottom right corner; for custom editor: in the top right corner) and select a different Python environment.
   1. Rerun the first cell and verify that the path in the cell output matches the selected Python environment in the kernel picker.
 -   [ ] Verify notebook editor IntelliSense
     1. Open the src/test/datascience/manualTestFiles/manualTestFile.py in VSCode.
@@ -292,7 +292,7 @@ Please run through the scenarios below for:
         foo()
         print('Done')
         ```
-    1. Press F10 to step through the code in the cell line-by-line. Verify that it first steps over function definitions for `foo()` and `bar()`, then steps into the function definitions after `foo()` is called, then steps back out when the loop in `bar()` finishes and prints 'Done'. 
+    1. Press F10 to step through the code in the cell line-by-line. Verify that it first steps over function definitions for `foo()` and `bar()`, then steps into the function definitions after `foo()` is called, then steps back out when the loop in `bar()` finishes and prints 'Done'.
 
 ### P2 Test Scenarios
 
