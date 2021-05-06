@@ -3,7 +3,6 @@
 
 import './styles.css';
 import { NotebookOutputEventParams, NotebookRendererApi } from 'vscode-notebook-renderer';
-const JupyterIPyWidgetNotebookRenderer = 'jupyter-ipywidget-renderer';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console */
 function renderOutput(e: NotebookOutputEventParams) {
@@ -30,4 +29,4 @@ function initialize(api: NotebookRendererApi<any>) {
     api.onWillDestroyOutput(disposeOutput);
 }
 
-initialize(acquireNotebookRendererApi(JupyterIPyWidgetNotebookRenderer));
+initialize(acquireNotebookRendererApi());

@@ -30,6 +30,7 @@ const interestedPackages = new Set(
     ].map((item) => item.toLowerCase())
 );
 
+const notInstalled = 'NOT INSTALLED';
 @injectable()
 export class InterpreterPackages {
     private static interpreterInformation = new Map<string, Deferred<Map<string, string>>>();
@@ -62,10 +63,25 @@ export class InterpreterPackages {
         }
         return deferred.promise;
     }
+    public static async getPackageVersion(
+        interpreter: PythonEnvironment,
+        packageName: string
+    ): Promise<string | undefined> {
+        const packages = await InterpreterPackages.getPackageVersions(interpreter);
+        const telemetrySafeString = getTelemetrySafeHashedString(packageName.toLocaleLowerCase());
+        if (!packages.has(telemetrySafeString)) {
+            return;
+        }
+        const version = packages.get(telemetrySafeString);
+        if (!version) {
+            return;
+        }
+        return version === notInstalled ? undefined : version;
+    }
     public trackPackages(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
         this.trackPackagesInternal(interpreterUri, ignoreCache).catch(noop);
     }
-    public async trackPackagesInternal(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
+    private async trackPackagesInternal(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
         if (!this.pythonExtensionChecker.isPythonExtensionActive) {
             this.pendingInterpreterBeforeActivation.add(interpreterUri);
             return;
@@ -110,7 +126,7 @@ export class InterpreterPackages {
         const packageAndVersions = new Map<string, string>();
         // Add defaults.
         interestedPackages.forEach((item) => {
-            packageAndVersions.set(getTelemetrySafeHashedString(item), 'NOT INSTALLED');
+            packageAndVersions.set(getTelemetrySafeHashedString(item), notInstalled);
         });
         output.stdout
             .split('\n')

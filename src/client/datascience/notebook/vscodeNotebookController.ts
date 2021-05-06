@@ -7,6 +7,7 @@ import {
     env,
     EventEmitter,
     NotebookCell,
+    NotebookCellExecutionTask,
     NotebookController,
     NotebookControllerAffinity,
     NotebookDocument,
@@ -16,6 +17,7 @@ import {
     Uri
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { JVSC_EXTENSION_ID } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
@@ -42,7 +44,7 @@ export class VSCodeNotebookController implements Disposable {
     }>;
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
-    private controller: NotebookController;
+    public readonly controller: NotebookController;
     private isDisposed = false;
     get id() {
         return this.controller.id;
@@ -117,8 +119,12 @@ export class VSCodeNotebookController implements Disposable {
         disposeAllDisposables(this.disposables);
     }
 
-    public updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
+    public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         this.controller.updateNotebookAffinity(notebook, affinity);
+        await this.commandManager.executeCommand('notebook.selectKernel', {
+            id: this.id,
+            extension: JVSC_EXTENSION_ID
+        });
     }
 
     // Handle the execution of notebook cell
@@ -140,7 +146,9 @@ export class VSCodeNotebookController implements Disposable {
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
         await Promise.all(cells.map((cell) => this.executeCell(targetNotebook, cell)));
     }
-
+    public createNotebookCellExecutionTask(cell: NotebookCell): NotebookCellExecutionTask {
+        return this.controller.createNotebookCellExecutionTask(cell);
+    }
     private onDidChangeNotebookAssociation(event: { notebook: NotebookDocument; selected: boolean }) {
         // If this NotebookController was selected, fire off the event
         if (event.selected) {
@@ -159,34 +167,15 @@ export class VSCodeNotebookController implements Disposable {
         // Work around for known issue with CodeSpaces
         const codeSpaceScripts =
             env.uiKind === UIKind.Web
-                ? [
-                      {
-                          uri: Uri.file(
-                              join(
-                                  this.context.extensionPath,
-                                  'out',
-                                  'datascience-ui',
-                                  'ipywidgetsKernel',
-                                  'require.js'
-                              )
-                          )
-                      }
-                  ]
+                ? [join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js')]
                 : [];
         return [
             ...codeSpaceScripts,
-            { uri: Uri.file(join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js')) },
-            {
-                uri: Uri.file(
-                    join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js')
-                )
-            },
-            {
-                uri: Uri.file(
-                    join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')
-                )
-            }
-        ];
+            join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
+
+            join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
+            join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')
+        ].map((uri) => new NotebookKernelPreload(Uri.file(uri)));
     }
 
     private handleInterrupt(notebook: NotebookDocument) {
@@ -198,7 +187,10 @@ export class VSCodeNotebookController implements Disposable {
 
     private executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${cell.notebook.uri.toString()}`);
-        const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, { metadata: this.kernelConnection });
+        const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, {
+            metadata: this.kernelConnection,
+            controller: this.controller
+        });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
             return kernel.executeCell(cell);

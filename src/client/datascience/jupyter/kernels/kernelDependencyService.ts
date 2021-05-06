@@ -3,13 +3,14 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
-import { CancellationToken } from 'vscode';
+import { inject, injectable, named } from 'inversify';
+import { CancellationToken, Memento } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
+import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceInfo } from '../../../common/logger';
-import { IInstaller, InstallerResponse, IsCodeSpace, Product } from '../../../common/types';
+import { GLOBAL_MEMENTO, IInstaller, IMemento, InstallerResponse, IsCodeSpace, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -28,6 +29,7 @@ export class KernelDependencyService implements IKernelDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean
     ) {}
     /**
@@ -82,7 +84,11 @@ export class KernelDependencyService implements IKernelDependencyService {
             defaultValue: undefined,
             token
         });
-        const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter().format(
+        const isModulePresent = await isModulePresentInEnvironment(this.memento, Product.ipykernel, interpreter);
+        const messageFormat = isModulePresent
+            ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
+            : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
+        const message = messageFormat.format(
             interpreter.displayName || interpreter.path,
             ProductNames.get(Product.ipykernel)!
         );
@@ -95,17 +101,15 @@ export class KernelDependencyService implements IKernelDependencyService {
             action: 'displayed',
             moduleName: ProductNames.get(Product.ipykernel)!
         });
+        const installPrompt = isModulePresent ? Common.reInstall() : Common.install();
         const selection = this.isCodeSpace
-            ? Common.install()
-            : await Promise.race([
-                  this.appShell.showErrorMessage(message, Common.install()),
-                  promptCancellationPromise
-              ]);
+            ? installPrompt
+            : await Promise.race([this.appShell.showErrorMessage(message, installPrompt), promptCancellationPromise]);
         if (installerToken.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }
 
-        if (selection === Common.install()) {
+        if (selection === installPrompt) {
             const cancellationPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,
@@ -113,7 +117,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             });
             // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
             const response = await Promise.race([
-                this.installer.install(Product.ipykernel, interpreter, installerToken),
+                this.installer.install(Product.ipykernel, interpreter, installerToken, isModulePresent === true),
                 cancellationPromise
             ]);
             if (response === InstallerResponse.Installed) {

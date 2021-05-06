@@ -37,7 +37,6 @@ import {
 } from '../types';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
-import { INotebookControllerManager } from './types';
 
 export class NotebookEditor implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
@@ -87,8 +86,7 @@ export class NotebookEditor implements INotebookEditor {
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
-        private readonly cellLanguageService: NotebookCellLanguageService,
-        private readonly controllerManager: INotebookControllerManager
+        private readonly cellLanguageService: NotebookCellLanguageService
     ) {
         disposables.push(model.onDidEdit(() => this._modified.fire(this)));
         disposables.push(
@@ -298,36 +296,26 @@ export class NotebookEditor implements INotebookEditor {
 
     public runAbove(cell: NotebookCell | undefined): void {
         if (cell && cell.index > 0) {
-            // Get all cellIds until `index`.
-            //const cells = this.document.cells.slice(0, cell.index);
-            const cells = this.document.getCells(new NotebookRange(0, cell.index));
-            this.runCellRange([...cells]);
+            void this.commandManager.executeCommand(
+                'notebook.cell.execute',
+                { start: 0, end: cell.index },
+                cell.notebook.uri
+            );
         }
     }
     public runCellAndBelow(cell: NotebookCell | undefined): void {
         if (cell && cell.index >= 0) {
-            // Get all cellIds starting from `index`.
-            const cells = this.document.getCells(new NotebookRange(cell.index, this.document.cellCount));
-            this.runCellRange([...cells]);
+            void this.commandManager.executeCommand(
+                'notebook.cell.execute',
+                { start: cell.index, end: cell.notebook.cellCount },
+                cell.notebook.uri
+            );
         }
     }
     private onClosedDocument(e?: NotebookDocument) {
         if (this.document === e) {
             this._closed.fire(this);
         }
-    }
-
-    private runCellRange(cells: NotebookCell[]) {
-        if (cells.length === 0) {
-            return;
-        }
-        const controller = this.controllerManager.getSelectedNotebookController(cells[0].notebook);
-        if (!controller || this.restartingKernel) {
-            return;
-        }
-        controller
-            .handleExecution(cells.filter((cell) => cell.kind === NotebookCellKind.Code))
-            .catch((ex) => traceError('Failed to run cellRange', ex));
     }
 
     private async restartKernelInternal(kernel: IKernel): Promise<void> {
