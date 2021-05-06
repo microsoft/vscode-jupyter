@@ -102,6 +102,11 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     private interruptKernel(document: Uri | undefined) {
         // `document` may be undefined if this command is invoked from the command palette.
         if (document) {
+            traceInfo(
+                `interruptKernel(document) for ${document.toString()} ${typeof document} ${Object.keys(document).map(
+                    (item) => item
+                )} in nativeEditorCommandListener`
+            );
             traceInfo(`Interrupt requested for ${document.toString()} in nativeEditorCommandListener`);
             traceInfo(`this.provider.activeEditor?.file.toString() = ${this.provider.activeEditor?.file.toString()}`);
             traceInfo(`this.provider.editors = ${this.provider.editors.map((item) => item.file.toString())}`);

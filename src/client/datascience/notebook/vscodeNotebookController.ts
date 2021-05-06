@@ -179,6 +179,7 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     private handleInterrupt(notebook: NotebookDocument) {
+        traceInfo(`.handleInterrupt ${notebook.uri.toString()}`);
         notebook.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         this.commandManager
             .executeCommand(Commands.NotebookEditorInterruptKernel, notebook.uri)
