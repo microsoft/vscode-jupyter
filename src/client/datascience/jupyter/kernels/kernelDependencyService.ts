@@ -85,9 +85,10 @@ export class KernelDependencyService implements IKernelDependencyService {
             token
         });
         const isModulePresent = await isModulePresentInEnvironment(this.memento, Product.ipykernel, interpreter);
-        const messageFormat = isModulePresent
-            ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
-            : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
+        const messageFormat =
+            isModulePresent && false
+                ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
+                : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
         const message = messageFormat.format(
             interpreter.displayName || interpreter.path,
             ProductNames.get(Product.ipykernel)!
@@ -104,7 +105,10 @@ export class KernelDependencyService implements IKernelDependencyService {
         const installPrompt = isModulePresent ? Common.reInstall() : Common.install();
         const selection = this.isCodeSpace
             ? installPrompt
-            : await Promise.race([this.appShell.showErrorMessage(message, installPrompt), promptCancellationPromise]);
+            : await Promise.race([
+                  this.appShell.showErrorMessage(message, { modal: true }, installPrompt),
+                  promptCancellationPromise
+              ]);
         if (installerToken.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }
