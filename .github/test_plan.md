@@ -277,9 +277,22 @@ Please run through the scenarios below for:
     1. All the variables defined in the file should appear in the debug variables window in the sidebar
     1. Right click on each of the following variables and select the 'View Variable in Data Viewer' option from the context menu: myNparray, myDataFrame, mySeries, myList, myString, myTensor. Verify that the data viewer opens and displays them
     1. Expand the tree view for the variable `x`. Right click on its instance member `b` and select 'View Variable in Data Viewer' from the context menu. Verify that this opens `x.b` and not `b` in the data viewer.
--   [ ] TODO Gather
--   [ ] TODO Run by line
--   [ ] TODO Data viewer slice and refresh
+-   [ ] Run by line
+    1. Opt into the custom editor experiment (not yet supported in native notebooks)
+    1. Open a new blank Jupyter notebook.
+    1. Add the following code to a cell:
+        ```python
+        def bar():
+            for i in range(5):
+                print(i)
+
+        def foo():
+            bar()
+
+        foo()
+        print('Done')
+        ```
+    1. Press F10 to step through the code in the cell line-by-line. Verify that it first steps over function definitions for `foo()` and `bar()`, then steps into the function definitions after `foo()` is called, then steps back out when the loop in `bar()` finishes and prints 'Done'. 
 
 ### P2 Test Scenarios
 
