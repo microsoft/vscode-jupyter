@@ -17,6 +17,7 @@ import {
     Uri
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { JVSC_EXTENSION_ID } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
@@ -118,8 +119,12 @@ export class VSCodeNotebookController implements Disposable {
         disposeAllDisposables(this.disposables);
     }
 
-    public updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
+    public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         this.controller.updateNotebookAffinity(notebook, affinity);
+        await this.commandManager.executeCommand('notebook.selectKernel', {
+            id: this.id,
+            extension: JVSC_EXTENSION_ID
+        });
     }
 
     // Handle the execution of notebook cell
