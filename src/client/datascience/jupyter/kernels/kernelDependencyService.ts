@@ -85,10 +85,9 @@ export class KernelDependencyService implements IKernelDependencyService {
             token
         });
         const isModulePresent = await isModulePresentInEnvironment(this.memento, Product.ipykernel, interpreter);
-        const messageFormat =
-            isModulePresent && false
-                ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
-                : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
+        const messageFormat = isModulePresent
+            ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
+            : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
         const message = messageFormat.format(
             interpreter.displayName || interpreter.path,
             ProductNames.get(Product.ipykernel)!
