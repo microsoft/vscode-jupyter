@@ -34,8 +34,8 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, (document: Uri | undefined) =>
-                this.interruptKernel(document)
+            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, (notebookUri: Uri | undefined) =>
+                this.interruptKernel(notebookUri)
             )
         );
         this.disposableRegistry.push(
@@ -99,19 +99,21 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         }
     }
 
-    private interruptKernel(document: Uri | undefined) {
+    private interruptKernel(notebookUri: Uri | undefined) {
         // `document` may be undefined if this command is invoked from the command palette.
-        if (document) {
-            traceInfo(`Interrupt requested for ${document.toString()} in nativeEditorCommandListener`);
+        if (notebookUri) {
+            traceInfo(`Interrupt requested for ${notebookUri.toString()} in nativeEditorCommandListener`);
+            traceInfo(`this.provider.activeEditor?.file.toString() = ${this.provider.activeEditor?.file.toString()}`);
+            traceInfo(`this.provider.editors = ${this.provider.editors.map((item) => item.file.toString())}`);
             const target =
-                this.provider.activeEditor?.file.toString() === document.toString()
+                this.provider.activeEditor?.file.toString() === notebookUri.toString()
                     ? this.provider.activeEditor
-                    : this.provider.editors.find((editor) => editor.file.toString() === document.toString());
+                    : this.provider.editors.find((editor) => editor.file.toString() === notebookUri.toString());
             if (target) {
                 target.interruptKernel().ignoreErrors();
             } else {
                 traceInfo(
-                    `Interrupt requested for ${document.toString()} in nativeEditorCommandListener & editor not found`
+                    `Interrupt requested for ${notebookUri.toString()} in nativeEditorCommandListener & editor not found`
                 );
             }
         } else {
