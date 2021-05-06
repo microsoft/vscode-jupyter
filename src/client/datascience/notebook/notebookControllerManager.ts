@@ -452,7 +452,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // This way other parts of extension have access to this kernel immediately after event is handled.
         // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
         const newKernel = this.kernelProvider.getOrCreate(document.uri, {
-            metadata: selectedKernelConnectionMetadata
+            metadata: selectedKernelConnectionMetadata,
+            controller: controller.controller
         });
         traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}}`);
 
