@@ -23,7 +23,6 @@ import { JupyterNotebookView } from './constants';
 import { NotebookCellLanguageService } from './defaultCellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
-import { INotebookControllerManager } from './types';
 
 /**
  * Notebook Editor provider used by other parts of DS code.
@@ -171,7 +170,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!editor) {
             const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
             const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
-            const controllerManager = this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
             editor = new NotebookEditor(
                 model,
                 doc,
@@ -183,8 +181,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 this.appShell,
                 this.configurationService,
                 this.disposables,
-                this.cellLanguageService,
-                controllerManager
+                this.cellLanguageService
             );
             this.onEditorOpened(editor);
         }
