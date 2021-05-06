@@ -729,7 +729,7 @@ jobs:
             Pkg.add("IJulia")'
 
       - name: Install Dot.net
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v1.8.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
         if: (matrix.test-suite == 'integration' || matrix.test-suite == 'notebook')
