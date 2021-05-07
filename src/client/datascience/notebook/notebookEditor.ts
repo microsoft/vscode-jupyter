@@ -14,7 +14,8 @@ import {
     NotebookDocument,
     ProgressLocation,
     Uri,
-    WebviewPanel
+    WebviewPanel,
+    NotebookCellData
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
@@ -327,6 +328,7 @@ export class NotebookEditor implements INotebookEditor {
         const stopWatch = new StopWatch();
         try {
             await kernel.restart();
+            this.resetExecutionState();
             sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
@@ -378,6 +380,30 @@ export class NotebookEditor implements INotebookEditor {
             this.configurationService
                 .updateSetting('askForKernelRestart', false, undefined, ConfigurationTarget.Global)
                 .ignoreErrors();
+        }
+    }
+
+    private resetExecutionState() {
+        // After kernel restart, clear timer and check mark for VS Code notebooks only.
+        // This is intended to provide a clearer visual indication that the kernel has
+        // been restarted
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            chainWithPendingUpdates(editor.document, (edit) => {
+                const newCells = this.document.getCells().map((cell) => {
+                    const outputs = [...cell.outputs];
+                    return new NotebookCellData(
+                        cell.kind,
+                        cell.document.getText(),
+                        cell.document.languageId,
+                        outputs,
+                        cell.metadata,
+                        // Retain execution order to match Jupyter behavior
+                        { executionOrder: cell.latestExecutionSummary?.executionOrder }
+                    );
+                });
+                edit.replaceNotebookCells(editor.document.uri, new NotebookRange(0, this.document.cellCount), newCells);
+            }).then(noop, noop);
         }
     }
 }
