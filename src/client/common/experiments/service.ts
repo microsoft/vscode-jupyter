@@ -6,6 +6,8 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
+import { JupyterNotebookView } from '../../datascience/notebook/constants';
+import { NewEditorAssociationSetting } from '../../datascience/notebook/integration';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
@@ -63,11 +65,13 @@ export class ExperimentService implements IExperimentService {
 
         // Custom settings just for native notebook support.
         const settings = workspaceService.getConfiguration('workbench', undefined);
-        const editorAssociations = settings.get('editorAssociations') as {
-            viewType: string;
-            filenamePattern: string;
-        }[];
-        if (editorAssociations.find((a) => a.viewType && a.viewType.includes('jupyter-notebook'))) {
+        const editorAssociations = settings.get('editorAssociations');
+        if (
+            (Array.isArray(editorAssociations) &&
+                editorAssociations.find((a) => a.viewType && a.viewType.includes(JupyterNotebookView))) ||
+            (!Array.isArray(editorAssociations) &&
+                (editorAssociations as NewEditorAssociationSetting['*.ipynb']) === JupyterNotebookView)
+        ) {
             this._optInto.push(`__${ExperimentGroups.NativeNotebook}__`);
         }
 
