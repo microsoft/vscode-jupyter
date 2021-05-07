@@ -196,7 +196,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         const hideDefaultKernelSpecs = interpreters.length > 0 || activeInterpreter ? true : false;
 
         // Then go through all of the kernels and generate their metadata
-        const kernelMetadata = await Promise.all(
+        const distinctKernelMetadat = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
+        await Promise.all(
             kernelSpecs
                 .filter((kernelspec) => {
                     if (
@@ -204,6 +205,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                         hideDefaultKernelSpecs &&
                         kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName)
                     ) {
+                        return false;
+                    }
+                    // Disable xeus python for now.
+                    if (kernelspec.argv[0].toLowerCase().endsWith('xpython')) {
                         return false;
                     }
                     return true;
@@ -259,11 +264,18 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                         return result;
                     }
                 })
+                .map(async (item) => {
+                    const kernelSpec: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata = await item;
+                    // Check if we have already seen this.
+                    if (!distinctKernelMetadat.has(kernelSpec.id)) {
+                        distinctKernelMetadat.set(kernelSpec.id, kernelSpec);
+                    }
+                })
         );
 
         // Combine the two into our list
         const results = [
-            ...kernelMetadata,
+            ...Array.from(distinctKernelMetadat.values()),
             ...filteredInterpreters.map((i) => {
                 // Update spec to have a default spec file
                 const spec = createInterpreterKernelSpec(i, rootSpecPath);
