@@ -144,6 +144,7 @@ export class JupyterInterpreterDependencyService {
         sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
         const selection = await this.applicationShell.showErrorMessage(
             message,
+            { modal: true },
             DataScience.jupyterInstall(),
             DataScience.selectDifferentJupyterInterpreter(),
             DataScience.pythonInteractiveHelpLink()
