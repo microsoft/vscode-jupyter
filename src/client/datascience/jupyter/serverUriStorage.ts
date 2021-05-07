@@ -116,6 +116,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         );
     }
     public getUri(): Promise<string> {
+        traceInfo('IANHU getUri');
         if (!this.currentUriPromise) {
             this.currentUriPromise = this.getUriInternal();
         }
@@ -163,7 +164,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             traceInfo('IANHU getUriInternal getting uri');
             const key = this.getUriAccountKey();
             const storedUri = await this.encryptedStorage.retrieve(Settings.JupyterServerRemoteLaunchService, key);
-            traceInfo('IANHU getUriInternal got uri');
+            traceInfo(`IANHU getUriInternal got uri ${storedUri}`);
 
             return storedUri || uri;
         }
@@ -174,12 +175,15 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
      */
     private getUriAccountKey(): string {
         if (this.workspaceService.rootPath) {
+            traceInfo('IANHU getUriAccountKey folder situation');
             // Folder situation
             return this.crypto.createHash(this.workspaceService.rootPath, 'string', 'SHA512');
         } else if (this.workspaceService.workspaceFile) {
+            traceInfo('IANHU getUriAccountKey workspace situation');
             // Workspace situation
             return this.crypto.createHash(this.workspaceService.workspaceFile.fsPath, 'string', 'SHA512');
         }
+        traceInfo('IANHU getUriAccountKey global situation');
         return this.appEnv.machineId; // Global key when no folder or workspace file
     }
 }

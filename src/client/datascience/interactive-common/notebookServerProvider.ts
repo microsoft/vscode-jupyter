@@ -234,6 +234,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         metadata?: nbformat.INotebookMetadata;
         kernelConnection?: KernelConnectionMetadata;
     }): Promise<INotebookServerOptions> {
+        traceInfo('IANHU getNotebookServerOptions start');
         // Since there's one server per session, don't use a resource to figure out these settings
         let serverURI: string | undefined = await this.serverUriStorage.getUri();
         const useDefaultConfig: boolean | undefined = this.configuration.getSettings(undefined)
