@@ -25,7 +25,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+    ) { }
 
     public async activate(): Promise<void> {
         // Look through the file system for ipynb files to see how many we have in the workspace. Don't wait
@@ -35,7 +35,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
             findFilesPromise.then((r) => (this.notebookCount += r.length), noop);
         }
         this.editorProvider.onDidOpenNotebookEditor(this.onEditorOpened, this, this.disposables);
-        notebook.onDidChangeCellExecutionState(this.onDidChangeCellExecutionState, this, this.disposables);
+        notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, this.disposables);
     }
     public dispose() {
         // Send a bunch of telemetry
@@ -60,7 +60,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
             editor.executed((e) => this.executedNotebooksIndexedByUri.add(e.file.fsPath), this, this.disposables);
         }
     }
-    private onDidChangeCellExecutionState(e: NotebookCellExecutionStateChangeEvent): void {
+    private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): void {
         this.executedNotebooksIndexedByUri.add(e.cell.notebook.uri.fsPath);
     }
 }

@@ -69,11 +69,11 @@ export class NotebookWatcher implements INotebookWatcher {
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
         this.notebookEditorProvider.onDidCloseNotebookEditor(this.notebookEditorClosed, this, this.disposables);
-        notebook.onDidChangeCellExecutionState(this.onDidChangeCellExecutionState, this, this.disposables);
+        notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, this.disposables);
     }
 
     // Handle when a cell finishes execution
-    private onDidChangeCellExecutionState(cellStateChange: NotebookCellExecutionStateChangeEvent): void {
+    private onDidChangeNotebookCellExecutionState(cellStateChange: NotebookCellExecutionStateChangeEvent): void {
         // If a cell has moved to idle, update our state
         if (cellStateChange.executionState === NotebookCellExecutionState.Idle) {
             // Convert to the old KernelStateEventArgs format
