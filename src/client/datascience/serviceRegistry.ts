@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as vscode from 'vscode';
-import { IExtensionSingleActivationService } from '../activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
 import { IPythonExtensionChecker } from '../api/types';
 import { JVSC_EXTENSION_ID, UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { FileSystemPathUtils } from '../common/platform/fs-paths';
@@ -196,6 +196,7 @@ import { WebviewExtensibility } from './webviewExtensibility';
 import { RemoteKernelFinder } from './kernel-launcher/remoteKernelFinder';
 import { IApplicationEnvironment } from '../common/application/types';
 import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
+import { ExtensionRecommendationService } from './extensionRecommendation';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -354,6 +355,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addBinding(INotebookExtensibility, INotebookExecutionLogger);
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ExtensionRecommendationService);
 
     registerNotebookTypes(serviceManager);
     registerContextTypes(serviceManager);

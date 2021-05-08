@@ -16,7 +16,6 @@ import {
     IPathUtils,
     Resource
 } from '../../common/types';
-import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
@@ -35,8 +34,11 @@ import { INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
+import { JupyterNotebookView } from './constants';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
+import { InterpreterPackages } from '../telemetry/interpreterPackages';
+import { sendTelemetryEvent } from '../../telemetry';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -74,7 +76,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator
+        @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
+        @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -153,6 +156,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // When a document is opened we need to look for a perferred kernel for it
     private onDidOpenNotebookDocument(document: NotebookDocument) {
+        // Restrict to only our notebook documents
+        if (document.viewType !== JupyterNotebookView) {
+            return;
+        }
+
         // Prep so that we can track the selected controller for this document
         this.controllerMapping.set(document, undefined);
 
@@ -200,7 +208,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         if (targetController) {
-            targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+            traceInfo(`TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`);
+            await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+
+            // When we set the target controller we don't actually get a selected event from our controllers
+            // to get around that when we see affinity here 'force' an event as if a user selected it
+            this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController }).catch(
+                traceError
+            );
         }
     }
 
@@ -260,8 +275,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         // Map KernelConnectionMetadata => NotebookController
-        const controllers = connectionsWithLabel.map((value) => {
-            return this.createNotebookController(value.connection, value.label);
+        const controllers: VSCodeNotebookController[] = [];
+        connectionsWithLabel.forEach((value) => {
+            const controller = this.createNotebookController(value.connection, value.label);
+            if (controller) {
+                controllers.push(controller);
+            }
         });
 
         return controllers;
@@ -270,28 +289,40 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private createNotebookController(
         kernelConnection: KernelConnectionMetadata,
         label: string
-    ): VSCodeNotebookController {
-        // Create notebook selector
-        const controller = new VSCodeNotebookController(
-            kernelConnection,
-            label,
-            this.notebook,
-            this.commandManager,
-            this.kernelProvider,
-            this.preferredRemoteKernelIdProvider,
-            this.context,
-            this,
-            this.pathUtils,
-            this.disposables
-        );
+    ): VSCodeNotebookController | undefined {
+        try {
+            // Create notebook selector
+            const controller = new VSCodeNotebookController(
+                kernelConnection,
+                label,
+                this.notebook,
+                this.commandManager,
+                this.kernelProvider,
+                this.preferredRemoteKernelIdProvider,
+                this.context,
+                this,
+                this.pathUtils,
+                this.disposables
+            );
 
-        // Hook up to if this NotebookController is selected or de-selected
-        controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);
+            // Hook up to if this NotebookController is selected or de-selected
+            controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);
 
-        // We are disposing as documents are closed, but do this as well
-        this.disposables.push(controller);
+            // We are disposing as documents are closed, but do this as well
+            this.disposables.push(controller);
 
-        return controller;
+            return controller;
+        } catch (ex) {
+            // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
+            sendTelemetryEvent(
+                Telemetry.FailedToCreateNotebookController,
+                undefined,
+                { kind: kernelConnection.kind },
+                ex,
+                true
+            );
+            traceError(`Failed to create notebbook controller for ${kernelConnection.id}`, ex);
+        }
     }
 
     // A new NotebookController has been selected, find the associated notebook document and update it
@@ -409,6 +440,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     )
                 );
         }
+        if (selectedKernelConnectionMetadata.interpreter) {
+            this.interpreterPackages.trackPackages(selectedKernelConnectionMetadata.interpreter);
+        }
 
         trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
 
@@ -418,7 +452,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // This way other parts of extension have access to this kernel immediately after event is handled.
         // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
         const newKernel = this.kernelProvider.getOrCreate(document.uri, {
-            metadata: selectedKernelConnectionMetadata
+            metadata: selectedKernelConnectionMetadata,
+            controller: controller.controller
         });
         traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}}`);
 
@@ -426,8 +461,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
 
         // Auto start the local kernels.
-        if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
-            await newKernel.start({ disableUI: true, document }).catch(noop);
-        }
+        // if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
+        //     await newKernel.start({ disableUI: true, document }).catch(noop);
+        // }
     }
 }

@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.56.0-insider"
+        "vscode": "1.57.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -385,7 +385,7 @@
             {
                 "command": "jupyter.notebookeditor.keybind.toggleOutput",
                 "title": "%DataScience.toggleCellOutput%",
-                "category": "Jupyter"
+                "category": "Notebook"
             },
             {
                 "command": "jupyter.selectCell",
@@ -758,8 +758,9 @@
             },
             {
                 "command": "jupyter.refreshDataViewer",
-                "title": "%DataScience.refreshDataViewer%",
-                "category": "Jupyter"
+                "title": "%DataScience.refreshDataViewerCommandPalette%",
+                "category": "Jupyter",
+                "enablement": "jupyter.dataViewerActive"
             }
         ],
         "menus": {
@@ -1946,6 +1947,7 @@
         "@jupyterlab/services": "^4.2.0",
         "@loadable/component": "^5.12.0",
         "@nteract/messaging": "^7.0.0",
+        "@nteract/presentational-components": "^3.4.10",
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
@@ -2017,6 +2019,7 @@
         "tmp": "^0.0.29",
         "typescript-char": "^0.0.0",
         "uint64be": "^1.0.1",
+        "underscore": "^1.12.1",
         "unicode": "^10.0.0",
         "untildify": "^3.0.2",
         "uuid": "^3.3.2",
@@ -2099,7 +2102,7 @@
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
         "@types/vscode": "^1.53.0",
-        "@types/vscode-notebook-renderer": "^1.55.0",
+        "@types/vscode-notebook-renderer": "^1.57.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",

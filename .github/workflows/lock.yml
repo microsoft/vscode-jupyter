@@ -1,0 +1,23 @@
+# https://github.com/marketplace/actions/lock-threads
+name: 'Lock Threads'
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dessant/lock-threads@v2
+        id: lock
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # github-token: ${{ github.token }}
+          issue-lock-inactive-days: '7'
+          issue-lock-reason: 'resolved'
+          process-only: 'issues'
+
+      - name: Print locked issues
+        run: |
+          echo "Locked issues: ${{ steps.lock.outputs.issues }}"

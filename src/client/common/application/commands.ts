@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, NotebookCell, NotebookDocument, Position, TextDocument, Uri } from 'vscode';
+import { CancellationToken, NotebookCell, Position, TextDocument, Uri } from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
@@ -76,7 +76,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
     ['vscode.open']: [Uri];
     ['notebook.execute']: [];
-    ['notebook.cell.execute']: [];
+    ['notebook.cell.execute']: [] | [{ start: number; end: number }, Uri];
     ['notebook.cell.insertCodeCellBelow']: [];
     ['notebook.cell.executeAndInsertBelow']: [];
     ['notebook.cell.executeAndSelectBelow']: [];
@@ -85,9 +85,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
+    ['notebook.selectKernel']: [{ id: string; extension: string }];
     ['undo']: [];
     [DSCommands.UpdateOrCreateDataViewer]: [];
-    [DSCommands.NotebookEditorInterruptKernel]: [NotebookDocument];
+    [DSCommands.NotebookEditorInterruptKernel]: [Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];

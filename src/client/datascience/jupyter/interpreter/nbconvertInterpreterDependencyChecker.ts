@@ -26,11 +26,11 @@ export class NbConvertInterpreterDependencyChecker implements INbConvertInterpre
         if (this.nbconvertInstalledInInterpreter.has(interpreter.path)) {
             return true;
         }
-        const installed = this.installer.isInstalled(Product.nbconvert, interpreter).then((result) => result === true);
-        if (installed) {
+        const isInstalled: boolean = !!(await this.installer.isInstalled(Product.nbconvert, interpreter));
+        if (isInstalled === true) {
             this.nbconvertInstalledInInterpreter.add(interpreter.path);
         }
-        return installed;
+        return isInstalled;
     }
 
     // Get the specific version of nbconvert installed in the given interpreter

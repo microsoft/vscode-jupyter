@@ -8,13 +8,13 @@ import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
 import {
     ExtensionMode,
-    notebook,
     NotebookCell,
     NotebookCellExecutionTask,
     NotebookCellKind,
     NotebookCellExecutionSummary,
     NotebookDocument,
-    workspace
+    workspace,
+    NotebookController
 } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
@@ -59,12 +59,21 @@ export class CellExecutionFactory {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly appShell: IApplicationShell,
         private readonly context: IExtensionContext,
-        private readonly disposables: IDisposableRegistry
+        private readonly disposables: IDisposableRegistry,
+        private readonly controller: NotebookController
     ) {}
 
     public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        return CellExecution.fromCell(cell, this.errorHandler, this.appShell, metadata, this.context, this.disposables);
+        return CellExecution.fromCell(
+            cell,
+            this.errorHandler,
+            this.appShell,
+            metadata,
+            this.context,
+            this.disposables,
+            this.controller
+        );
     }
 }
 
@@ -118,7 +127,8 @@ export class CellExecution {
         private readonly applicationService: IApplicationShell,
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
         disposables: IDisposableRegistry,
-        extensionContext: IExtensionContext
+        extensionContext: IExtensionContext,
+        private readonly controller: NotebookController
     ) {
         // These are only used in the tests.
         // See where this is used to understand its purpose.
@@ -151,11 +161,7 @@ export class CellExecution {
             disposables
         );
         if (this.canExecuteCell()) {
-            this.task = notebook.createNotebookCellExecutionTask(
-                this.cell.notebook.uri,
-                this.cell.index,
-                this.kernelConnection.id
-            );
+            this.task = controller.createNotebookCellExecutionTask(this.cell);
             this.initPromise = this.enqueue();
         }
     }
@@ -166,9 +172,10 @@ export class CellExecution {
         appService: IApplicationShell,
         metadata: Readonly<KernelConnectionMetadata>,
         context: IExtensionContext,
-        disposables: IDisposableRegistry
+        disposables: IDisposableRegistry,
+        controller: NotebookController
     ) {
-        return new CellExecution(cell, errorHandler, appService, metadata, disposables, context);
+        return new CellExecution(cell, errorHandler, appService, metadata, disposables, context, controller);
     }
     public async start(notebook: INotebook) {
         if (this.cancelHandled) {
@@ -318,11 +325,7 @@ export class CellExecution {
 
         // Create a temporary task.
         this.previousResultsToRestore = { ...(this.cell.latestExecutionSummary || {}) };
-        this.temporaryTask = notebook.createNotebookCellExecutionTask(
-            this.cell.notebook.uri,
-            this.cell.index,
-            this.kernelConnection.id
-        );
+        this.temporaryTask = this.controller.createNotebookCellExecutionTask(this.cell);
         this.temporaryTask?.start({});
         if (this.previousResultsToRestore?.executionOrder && this.task) {
             this.task.executionOrder = this.previousResultsToRestore.executionOrder;

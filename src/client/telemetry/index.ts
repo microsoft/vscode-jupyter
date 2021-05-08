@@ -736,6 +736,11 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
     [Telemetry.PythonModuleInstal]: {
         moduleName: string;
+        /**
+         * Whether the module was already (once before) installed into the python environment or
+         * whether this already exists (detected via `pip list`)
+         */
+        isModulePresent?: 'true' | undefined;
         action:
             | 'displayed' // Install prompt displayed.
             | 'installed' // Installation disabled (this is what python extension returns).
@@ -1278,4 +1283,34 @@ export interface IEventNamePropertyMapping {
          */
         type: 'added' | 'removed';
     } & Partial<TelemetryErrorProperties>;
+    /*
+     * Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
+     */
+    [Telemetry.FailedToCreateNotebookController]: {
+        /**
+         * What kind of kernel spec did we fail to create.
+         */
+        kind:
+            | 'startUsingPythonInterpreter'
+            | 'startUsingDefaultKernel'
+            | 'startUsingKernelSpec'
+            | 'connectToLiveKernel';
+    } & Partial<TelemetryErrorProperties>;
+    /*
+     * Telemetry sent when we recommend installing an extension.
+     */
+    [Telemetry.RecommendExtension]: {
+        /**
+         * Extension we recommended the user to install.
+         */
+        extensionId: string;
+        /**
+         * `displayed` - If prompt was displayed
+         * `dismissed` - If prompt was displayed & dismissed by the user
+         * `ok` - If prompt was displayed & ok clicked by the user
+         * `cancel` - If prompt was displayed & cancel clicked by the user
+         * `doNotShowAgain` - If prompt was displayed & doNotShowAgain clicked by the user
+         */
+        action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
+    };
 }

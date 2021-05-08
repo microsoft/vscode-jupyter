@@ -64,6 +64,7 @@ import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
+import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 
 // Running in Conda environments, things can be a little slower.
 const defaultTimeout = IS_CONDA_TEST ? 30_000 : 15_000;
@@ -265,17 +266,7 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'Active editor not a notebook');
 
     // Wait for the notebookControllerManager to have results for this given document
-    await waitForCondition(
-        async () => {
-            return (
-                notebookControllerManager.getSelectedNotebookController(
-                    vscodeNotebook.activeNotebookEditor?.document!
-                ) !== undefined
-            );
-        },
-        10_000,
-        'Failed to set notebook controllers'
-    );
+    await waitForKernelToGetAutoSelected(undefined, 10_000);
 
     // Get the list of NotebookControllers for this document
     const notebookControllers = await notebookControllerManager.getNotebookControllers();
@@ -338,29 +329,23 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     // await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor?.kernel, time, 'Kernel not auto selected');
 
     // Wait for the notebookControllerManager to have results for this given document
+    let selectedController: VSCodeNotebookController;
     await waitForCondition(
         async () => {
-            return (
-                notebookControllerManager.getSelectedNotebookController(
-                    vscodeNotebook.activeNotebookEditor?.document!
-                ) !== undefined
+            const controller = notebookControllerManager.getSelectedNotebookController(
+                vscodeNotebook.activeNotebookEditor?.document!
             );
+            if (controller) {
+                selectedController = controller;
+            }
+            return controller !== undefined;
         },
         time,
         'Failed to set notebook controllers'
     );
-
     let kernelInfo = '';
     const isRightKernel = () => {
         if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
-            return false;
-        }
-
-        const selectedController = notebookControllerManager.getSelectedNotebookController(
-            vscodeNotebook.activeNotebookEditor.document
-        );
-
-        if (!selectedController) {
             return false;
         }
 
@@ -529,7 +514,10 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
 export async function waitForExecutionInProgress(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () => {
-            return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing;
+            return (
+                NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing &&
+                (cell.latestExecutionSummary?.executionOrder || 0) > 0 // If execution count > 0, then jupyter has started running this cell.
+            );
         },
         timeout,
         `Cell ${cell.index + 1} did not start`
@@ -622,6 +610,8 @@ export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string,
 }
 export function assertVSCCellIsRunning(cell: NotebookCell) {
     assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Executing);
+    // If execution count > 0, then jupyter has started running this cell.
+    assert.isAtLeast(cell.latestExecutionSummary?.executionOrder || 0, 1);
     return true;
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {
@@ -687,64 +677,27 @@ export function createNotebookModel(
 export async function runCell(cell: NotebookCell) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    const notebookControllerManager = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
-    await waitForCondition(
-        async () => {
-            return (
-                notebookControllerManager.getSelectedNotebookController(
-                    vscodeNotebook.activeNotebookEditor?.document!
-                ) !== undefined
-            );
-        },
-        60_000,
-        'Failed to set notebook controllers'
-    );
+    await waitForKernelToGetAutoSelected(undefined, 60_000);
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
         throw new Error('No notebook or document');
     }
 
-    // Get the active notebook controller
-    const notebookController = notebookControllerManager.getSelectedNotebookController(
-        vscodeNotebook.activeNotebookEditor.document
-    );
-
-    if (!notebookController) {
-        throw new Error('No notebook controller');
-    }
-
-    void notebookController.handleExecution(
-        vscodeNotebook.activeNotebookEditor.document.getCells(new NotebookRange(cell.index, cell.index + 1))
+    void commands.executeCommand(
+        'notebook.cell.execute',
+        { start: cell.index, end: cell.index + 1 },
+        vscodeNotebook.activeNotebookEditor.document.uri
     );
 }
 export async function runAllCellsInActiveNotebook() {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    const notebookControllerManager = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
-    await waitForCondition(
-        async () => {
-            return (
-                notebookControllerManager.getSelectedNotebookController(
-                    vscodeNotebook.activeNotebookEditor?.document!
-                ) !== undefined
-            );
-        },
-        60_000,
-        'Failed to set notebook controllers'
-    );
+    await waitForKernelToGetAutoSelected(undefined, 60_000);
 
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
         throw new Error('No editor or document');
     }
 
-    const notebookController = notebookControllerManager.getSelectedNotebookController(
-        vscodeNotebook.activeNotebookEditor.document
-    );
-
-    if (!notebookController) {
-        throw new Error('No notebook controller');
-    }
-
-    void notebookController.handleExecution(vscodeNotebook.activeNotebookEditor.document.getCells());
+    void commands.executeCommand('notebook.execute', vscodeNotebook.activeNotebookEditor.document.uri);
 }
 
 /**
