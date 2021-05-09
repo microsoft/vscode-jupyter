@@ -97,11 +97,7 @@ export class JupyterVariables implements IJupyterVariables {
         columnName: string,
         notebook?: INotebook
     ): Promise<JSONObject> {
-        return (await this.getVariableHandler(notebook)).getDataFrameColumn!(
-            targetVariable,
-            columnName,
-            notebook
-        );
+        return (await this.getVariableHandler(notebook)).getDataFrameColumn!(targetVariable, columnName, notebook);
     }
 
     private async getVariableHandler(notebook?: INotebook): Promise<IJupyterVariables> {

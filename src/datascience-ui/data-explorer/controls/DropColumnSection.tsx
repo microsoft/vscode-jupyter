@@ -31,48 +31,48 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
             //     <summary className="slice-summary">
             //         <span className="slice-summary-detail">{'DROP COLUMNS'}</span>
             //     </summary>
-                <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
-                    <Dropdown
-                        responsiveMode={ResponsiveMode.xxxLarge}
-                        label={'Column(s) to drop:'}
-                        style={{ marginRight: '10px', width: '150px' }}
-                        styles={dropdownStyles}
-                        multiSelect
-                        selectedKeys={this.state.columnsToDrop}
-                        options={this.generateOptions()}
-                        className="dropdownTitleOverrides"
-                        onChange={this.updateDropTarget}
-                    />
-                    <button
-                        onClick={() => {
-                            this.props.submitCommand({
-                                command: 'drop',
-                                args: {
-                                    targets: this.state.columnsToDrop
-                                        .filter((v) => v !== -1)
-                                        .map((v) => this.props.headers[v as number])
-                                        .filter((v) => !!v)
-                                }
-                            });
-                            // Clear ourselves after dropping columns
-                            this.setState({ columnsToDrop: [] });
-                        }}
-                        style={{
-                            // width: '50px',
-                            backgroundColor: 'var(--vscode-button-background)',
-                            color: 'var(--vscode-button-foreground)',
-                            margin: '4px',
-                            padding: '8px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            height: '26px',
-                            marginTop: '22px',
-                            marginLeft: '0px'
-                        }}
-                    >
-                        Drop
-                    </button>
-                </div>
+            <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
+                <Dropdown
+                    responsiveMode={ResponsiveMode.xxxLarge}
+                    label={'Column(s) to drop:'}
+                    style={{ marginRight: '10px', width: '150px' }}
+                    styles={dropdownStyles}
+                    multiSelect
+                    selectedKeys={this.state.columnsToDrop}
+                    options={this.generateOptions()}
+                    className="dropdownTitleOverrides"
+                    onChange={this.updateDropTarget}
+                />
+                <button
+                    onClick={() => {
+                        this.props.submitCommand({
+                            command: 'drop',
+                            args: {
+                                targets: this.state.columnsToDrop
+                                    .filter((v) => v !== -1)
+                                    .map((v) => this.props.headers[v as number])
+                                    .filter((v) => !!v)
+                            }
+                        });
+                        // Clear ourselves after dropping columns
+                        this.setState({ columnsToDrop: [] });
+                    }}
+                    style={{
+                        // width: '50px',
+                        backgroundColor: 'var(--vscode-button-background)',
+                        color: 'var(--vscode-button-foreground)',
+                        margin: '4px',
+                        padding: '8px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        height: '26px',
+                        marginTop: '22px',
+                        marginLeft: '0px'
+                    }}
+                >
+                    Drop
+                </button>
+            </div>
             // </details>
         );
     }
@@ -84,7 +84,8 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
 
     private updateDropTarget = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
         if (item) {
-            if (item.key === -1) { // User toggled Select All
+            if (item.key === -1) {
+                // User toggled Select All
                 if (item.selected) {
                     // Mark all options as selected
                     this.setState({ columnsToDrop: this.generateOptions().map((option) => option.key as number) });
@@ -96,8 +97,8 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
                 this.setState({
                     columnsToDrop: item.selected
                         ? [...this.state.columnsToDrop, item.key as number]
-                        // If the user unselected some other item, unselect Select All too
-                        : this.state.columnsToDrop.filter((key) => key !== item.key && key !== -1)
+                        : // If the user unselected some other item, unselect Select All too
+                          this.state.columnsToDrop.filter((key) => key !== item.key && key !== -1)
                 });
             }
         }

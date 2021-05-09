@@ -63,7 +63,7 @@ export class KernelVariables implements IJupyterVariables {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IExperimentService) private experimentService: IExperimentService
-    ) { }
+    ) {}
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;
@@ -339,7 +339,12 @@ export class KernelVariables implements IJupyterVariables {
 
     private deserializeJupyterResultColumn<T>(cells: ICell[]): T {
         const text = this.extractJupyterResultText(cells);
-        return text[0].substring(0, text[0].length - 2).split(',').map(e => { return isNaN(parseFloat(e)) ? e.substring(2, e.length - 1) : parseFloat(e) }) as unknown as T;
+        return (text[0]
+            .substring(0, text[0].length - 2)
+            .split(',')
+            .map((e) => {
+                return isNaN(parseFloat(e)) ? e.substring(2, e.length - 1) : parseFloat(e);
+            }) as unknown) as T;
     }
 
     private getParser(notebook: INotebook) {
@@ -430,7 +435,7 @@ export class KernelVariables implements IJupyterVariables {
             result.pageStartIndex = startPos;
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
-            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length;) {
+            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
                 const fullVariable = list.variables[i].value
                     ? list.variables[i]
                     : await this.getVariableValueFromKernel(list.variables[i], notebook);

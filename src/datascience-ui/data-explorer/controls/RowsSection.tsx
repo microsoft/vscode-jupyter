@@ -12,12 +12,12 @@ interface IProps {
 
 interface IState {
     columnsToDrop: number[]; // Indices
-	operationType: RowTransformation
+    operationType: RowTransformation;
 }
 
 export enum RowTransformation {
-	DropNA = "Drop NA",
-    DropDuplicates = "Drop Duplicates"
+    DropNA = 'Drop NA',
+    DropDuplicates = 'Drop Duplicates'
 }
 
 export class RowsSection extends React.Component<IProps, IState> {
@@ -48,7 +48,7 @@ export class RowsSection extends React.Component<IProps, IState> {
                         options={this.generateTransformOperations()}
                         className="dropdownTitleOverrides"
                         onChange={this.updateTransformType}
-						selectedKey={this.state.operationType}
+                        selectedKey={this.state.operationType}
                     />
                     {this.renderOperationControls()}
                 </div>
@@ -56,33 +56,45 @@ export class RowsSection extends React.Component<IProps, IState> {
         );
     }
 
-	private renderOperationControls = () => {
-		switch (this.state.operationType) {
-			case RowTransformation.DropNA:
-				return <DropMissingRowsSection headers={this.props.headers} options={this.props.options} submitCommand={this.props.submitCommand} />
+    private renderOperationControls = () => {
+        switch (this.state.operationType) {
+            case RowTransformation.DropNA:
+                return (
+                    <DropMissingRowsSection
+                        headers={this.props.headers}
+                        options={this.props.options}
+                        submitCommand={this.props.submitCommand}
+                    />
+                );
             case RowTransformation.DropDuplicates:
-                return <DropDuplicateRowsSection headers={this.props.headers} options={this.props.options} submitCommand={this.props.submitCommand} />
-		}
-	}
+                return (
+                    <DropDuplicateRowsSection
+                        headers={this.props.headers}
+                        options={this.props.options}
+                        submitCommand={this.props.submitCommand}
+                    />
+                );
+        }
+    };
 
-	private generateTransformOperations = () => {
-		return [
-			{
-				text: RowTransformation.DropDuplicates,
-				key: RowTransformation.DropDuplicates,
-			},
-			{
-				text: RowTransformation.DropNA,
-				key: RowTransformation.DropNA,
-			}
-		];
-	}
+    private generateTransformOperations = () => {
+        return [
+            {
+                text: RowTransformation.DropDuplicates,
+                key: RowTransformation.DropDuplicates
+            },
+            {
+                text: RowTransformation.DropNA,
+                key: RowTransformation.DropNA
+            }
+        ];
+    };
 
     private updateTransformType = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
-		if (item) {
-			this.setState({
-				operationType: item.text as RowTransformation
-			});
-		}
-	}
+        if (item) {
+            this.setState({
+                operationType: item.text as RowTransformation
+            });
+        }
+    };
 }

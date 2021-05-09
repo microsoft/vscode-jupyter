@@ -229,7 +229,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
 
     serviceManager.addSingleton<IDataWranglerProvider>(IDataWranglerProvider, DataWranglerProvider);
     serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, DataWranglerProvider);
-    
+
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
     serviceManager.addSingleton<INotebookEditorProvider>(OurNotebookProvider, NativeEditorProvider);

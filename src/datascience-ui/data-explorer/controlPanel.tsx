@@ -44,7 +44,8 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                     histogramData={this.props.histogramData}
                     submitCommand={this.props.submitCommand}
                     resizeEvent={this.props.resizeEvent}
-                    headers={this.props.headers}/>
+                    headers={this.props.headers}
+                />
                 <ColumnsSection
                     submitCommand={this.props.submitCommand}
                     options={columnDropdownOptions}

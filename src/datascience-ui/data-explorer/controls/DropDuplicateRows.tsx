@@ -7,7 +7,7 @@ interface IProps {
     submitCommand(data: { command: string; args: any }): void;
 }
 
-interface IState { }
+interface IState {}
 
 export class DropDuplicateRowsSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
@@ -16,26 +16,26 @@ export class DropDuplicateRowsSection extends React.Component<IProps, IState> {
 
     render() {
         return (
-                    <button
-                        onClick={() =>
-                            this.props.submitCommand({
-                                command: 'drop_duplicates',
-                                args: undefined
-                            })
-                        }
-                        style={{
-                            width: '50px',
-                            backgroundColor: 'var(--vscode-button-background)',
-                            color: 'var(--vscode-button-foreground)',
-                            margin: '0px',
-                            padding: '4px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            height: '26px',
-                        }}
-                    >
-                        Drop
-                    </button>
+            <button
+                onClick={() =>
+                    this.props.submitCommand({
+                        command: 'drop_duplicates',
+                        args: undefined
+                    })
+                }
+                style={{
+                    width: '50px',
+                    backgroundColor: 'var(--vscode-button-background)',
+                    color: 'var(--vscode-button-foreground)',
+                    margin: '0px',
+                    padding: '4px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    height: '26px'
+                }}
+            >
+                Drop
+            </button>
         );
     }
 }

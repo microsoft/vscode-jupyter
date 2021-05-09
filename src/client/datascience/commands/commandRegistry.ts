@@ -5,7 +5,17 @@
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
 import * as path from 'path';
-import { CodeLens, ConfigurationTarget, env, NotebookCell, Range, Uri, ProgressLocation, ProgressOptions, QuickPickOptions } from 'vscode';
+import {
+    CodeLens,
+    ConfigurationTarget,
+    env,
+    NotebookCell,
+    Range,
+    Uri,
+    ProgressLocation,
+    ProgressOptions,
+    QuickPickOptions
+} from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
@@ -155,7 +165,7 @@ export class CommandRegistry implements IDisposable {
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);
@@ -546,27 +556,47 @@ export class CommandRegistry implements IDisposable {
                         picked: true
                     },
                     {
-                        label: 'Open with Jupyter Notebook',
+                        label: 'Open with Jupyter Notebook'
                     }
                 ];
 
                 const selection = await this.appShell.showQuickPick(qpitems, qpoptions);
                 switch (selection?.label) {
                     case 'Open just the Data Viewer':
-                        dataCleaningMode = 'standalone'
-                        await this.configService.updateSetting('dataCleaningMode', 'standalone', undefined, ConfigurationTarget.Global);
+                        dataCleaningMode = 'standalone';
+                        await this.configService.updateSetting(
+                            'dataCleaningMode',
+                            'standalone',
+                            undefined,
+                            ConfigurationTarget.Global
+                        );
                         break;
                     case 'Open with Jupyter Notebook':
-                        dataCleaningMode = 'jupyter_notebook'
-                        await this.configService.updateSetting('dataCleaningMode', 'jupyter_notebook', undefined, ConfigurationTarget.Global);
+                        dataCleaningMode = 'jupyter_notebook';
+                        await this.configService.updateSetting(
+                            'dataCleaningMode',
+                            'jupyter_notebook',
+                            undefined,
+                            ConfigurationTarget.Global
+                        );
                         break;
                     case 'Open with Python file':
-                        dataCleaningMode = 'python_file'
-                        await this.configService.updateSetting('dataCleaningMode', 'python_file', undefined, ConfigurationTarget.Global);
+                        dataCleaningMode = 'python_file';
+                        await this.configService.updateSetting(
+                            'dataCleaningMode',
+                            'python_file',
+                            undefined,
+                            ConfigurationTarget.Global
+                        );
                         break;
                     case 'Open with an Interactive Python session':
-                        dataCleaningMode = 'interactive_window'
-                        await this.configService.updateSetting('dataCleaningMode', 'interactive_window', undefined, ConfigurationTarget.Global);
+                        dataCleaningMode = 'interactive_window';
+                        await this.configService.updateSetting(
+                            'dataCleaningMode',
+                            'interactive_window',
+                            undefined,
+                            ConfigurationTarget.Global
+                        );
                         break;
                 }
             }
@@ -576,40 +606,48 @@ export class CommandRegistry implements IDisposable {
                     let options: ProgressOptions = {
                         location: ProgressLocation.Notification,
                         cancellable: true,
-                        title: "Importing Data and Launching Data Viewer...",
-                    }
+                        title: 'Importing Data and Launching Data Viewer...'
+                    };
 
-                    await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataViewer(file, OpenDataViewerSetting.STANDALONE));
+                    await this.appShell.withProgress(options, async (_, __) =>
+                        this.importAndLaunchDataViewer(file, OpenDataViewerSetting.STANDALONE)
+                    );
                     break;
                 }
                 case 'jupyter_notebook': {
                     let options: ProgressOptions = {
                         location: ProgressLocation.Notification,
                         cancellable: true,
-                        title: "Importing Data and Launching Data Viewer with a Jupyter Notebook..."
+                        title: 'Importing Data and Launching Data Viewer with a Jupyter Notebook...'
                     };
 
-                    await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataViewer(file, OpenDataViewerSetting.WITH_JUPYTER_NOTEBOOK));
+                    await this.appShell.withProgress(options, async (_, __) =>
+                        this.importAndLaunchDataViewer(file, OpenDataViewerSetting.WITH_JUPYTER_NOTEBOOK)
+                    );
                     break;
                 }
                 case 'python_file': {
                     let options: ProgressOptions = {
                         location: ProgressLocation.Notification,
                         cancellable: true,
-                        title: "Importing Data and Launching Data Viewer with a Python file..."
+                        title: 'Importing Data and Launching Data Viewer with a Python file...'
                     };
 
-                    await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataViewer(file, OpenDataViewerSetting.WITH_PYTHON_FILE));
+                    await this.appShell.withProgress(options, async (_, __) =>
+                        this.importAndLaunchDataViewer(file, OpenDataViewerSetting.WITH_PYTHON_FILE)
+                    );
                     break;
                 }
                 case 'interactive_window': {
                     let options: ProgressOptions = {
                         location: ProgressLocation.Notification,
                         cancellable: true,
-                        title: "Importing Data and Launching Data Viewer with an Interactive Window..."
+                        title: 'Importing Data and Launching Data Viewer with an Interactive Window...'
                     };
 
-                    await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataViewer(file, OpenDataViewerSetting.WITH_INTERACTIVE_WINDOW));
+                    await this.appShell.withProgress(options, async (_, __) =>
+                        this.importAndLaunchDataViewer(file, OpenDataViewerSetting.WITH_INTERACTIVE_WINDOW)
+                    );
                     break;
                 }
             }
@@ -618,7 +656,11 @@ export class CommandRegistry implements IDisposable {
 
     private async importAndLaunchDataViewer(file?: Uri, setting?: OpenDataViewerSetting) {
         if (setting == OpenDataViewerSetting.STANDALONE) {
-            const notebook = await this.notebookProvider.getOrCreateNotebook({ resource: file, identity: file!, disableUI: true });
+            const notebook = await this.notebookProvider.getOrCreateNotebook({
+                resource: file,
+                identity: file!,
+                disableUI: true
+            });
             const code = getImportCodeForFileType(file!.fsPath);
             notebook?.execute(code, '', 0, uuid(), undefined, true).then(async () => {
                 await this.commandManager.executeCommand('jupyter.openVariableView');
@@ -690,7 +732,8 @@ export class CommandRegistry implements IDisposable {
             });
         } else if (setting == OpenDataViewerSetting.WITH_PYTHON_FILE) {
             //TODO
-        } else { //interactive window
+        } else {
+            //interactive window
             //TODO
         }
     }

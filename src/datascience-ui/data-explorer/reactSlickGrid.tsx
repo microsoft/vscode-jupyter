@@ -9,7 +9,7 @@ import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import './globalJQueryImports';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
-import { Resizable } from "re-resizable"; 
+import { Resizable } from 're-resizable';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -49,18 +49,18 @@ Slick grid MUST be imported after we load jQuery and other stuff from `./globalJ
 */
 
 enum RowContextMenuItem {
-    DropRow = "Drop Row",
-    NormalizeRow = "Normalize Row",
-    DropNA = "Drop NA",
-    CopyData = "Copy Cell Data",
+    DropRow = 'Drop Row',
+    NormalizeRow = 'Normalize Row',
+    DropNA = 'Drop NA',
+    CopyData = 'Copy Cell Data'
 }
 
 enum ColumnContextMenuItem {
-    GetColumnStats= "Get Column Stats",
-    DropColumns = "Drop Column",
-    NormalizeColumn = "Normalize Column",
-    DropNA = "Drop NA",
-    DropDuplicates = "Drop Duplicates On Column"
+    GetColumnStats = 'Get Column Stats',
+    DropColumns = 'Drop Column',
+    NormalizeColumn = 'Normalize Column',
+    DropNA = 'Drop NA',
+    DropDuplicates = 'Drop Duplicates On Column'
 }
 
 export interface ISlickRow extends Slick.SlickData {
@@ -293,11 +293,13 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             grid.onContextMenu.subscribe(this.maybeDropRows);
 
             // Data row context menu
-            slickgridJQ("#contextMenu").click((e: any) => {
-                if (!slickgridJQ(e.target).is("li") ||
+            slickgridJQ('#contextMenu').click((e: any) => {
+                if (
+                    !slickgridJQ(e.target).is('li') ||
                     !this.state.grid?.getEditorLock().commitCurrentEdit() ||
-                    this.contextMenuCellId === undefined||
-                    this.contextMenuRowId === undefined) {
+                    this.contextMenuCellId === undefined ||
+                    this.contextMenuRowId === undefined
+                ) {
                     return;
                 }
                 const contextMenuItem = e.target.id;
@@ -305,7 +307,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 const cellData = (this.dataView.getItemById(this.contextMenuRowId) as any)[columnName!];
                 switch (contextMenuItem) {
                     case RowContextMenuItem.DropRow:
-                        return this.props.submitCommand({ command: 'drop', args: { targets: [this.contextMenuRowId], mode: 'row' } });
+                        return this.props.submitCommand({
+                            command: 'drop',
+                            args: { targets: [this.contextMenuRowId], mode: 'row' }
+                        });
                     case RowContextMenuItem.CopyData:
                         void navigator.clipboard.writeText(cellData);
                         return;
@@ -315,24 +320,38 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             });
 
             // Header row context menu
-            slickgridJQ("#headerContextMenu").click((e: any) => {
-                if (!slickgridJQ(e?.currentTarget).is("ul") ||
-                    !this.state.grid?.getEditorLock().commitCurrentEdit()) {
+            slickgridJQ('#headerContextMenu').click((e: any) => {
+                if (!slickgridJQ(e?.currentTarget).is('ul') || !this.state.grid?.getEditorLock().commitCurrentEdit()) {
                     return;
                 }
                 // Submit a drop column request
                 const contextMenuItem = e?.target?.id;
                 switch (contextMenuItem) {
                     case ColumnContextMenuItem.GetColumnStats:
-                        return this.props.submitCommand({ command: 'describe', args: { columnName: this.contextMenuColumnName} });
+                        return this.props.submitCommand({
+                            command: 'describe',
+                            args: { columnName: this.contextMenuColumnName }
+                        });
                     case ColumnContextMenuItem.DropColumns:
-                        return this.props.submitCommand({ command: 'drop', args: { targets: [this.contextMenuColumnName]} });
+                        return this.props.submitCommand({
+                            command: 'drop',
+                            args: { targets: [this.contextMenuColumnName] }
+                        });
                     case ColumnContextMenuItem.NormalizeColumn:
-                        return this.props.submitCommand({ command: 'normalize', args: { start: 0, end: 1, target: this.contextMenuColumnName }});
+                        return this.props.submitCommand({
+                            command: 'normalize',
+                            args: { start: 0, end: 1, target: this.contextMenuColumnName }
+                        });
                     case ColumnContextMenuItem.DropNA:
-                        return this.props.submitCommand({ command: 'dropna', args: { subset: this.contextMenuColumnName, target: 0 } });
+                        return this.props.submitCommand({
+                            command: 'dropna',
+                            args: { subset: this.contextMenuColumnName, target: 0 }
+                        });
                     case ColumnContextMenuItem.DropDuplicates:
-                        return this.props.submitCommand({ command: 'drop_duplicates', args: { subset: [this.contextMenuColumnName] } });
+                        return this.props.submitCommand({
+                            command: 'drop_duplicates',
+                            args: { subset: [this.contextMenuColumnName] }
+                        });
                 }
             });
 
@@ -384,9 +403,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
               }
             : {};
 
-        const height = this.measureRef?.current && this.containerRef?.current 
-            ? this.measureRef.current.offsetTop - this.containerRef.current.offsetTop
-            : '1200px';
+        const height =
+            this.measureRef?.current && this.containerRef?.current
+                ? this.measureRef.current.offsetTop - this.containerRef.current.offsetTop
+                : '1200px';
         return (
             <div className="outer-container">
                 <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden' }}>
@@ -396,15 +416,32 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                         defaultSize={{ width: '60%', height }}
                         enable={{ left:false, top:false, right:true, bottom:false, topRight:false, bottomRight:false, bottomLeft:false, topLeft:false }}
                         > */}
-                        <div className="react-grid-container" style={style} ref={this.containerRef}></div>
-                        <div className="react-grid-measure" ref={this.measureRef} />
+                    <div className="react-grid-container" style={style} ref={this.containerRef}></div>
+                    <div className="react-grid-measure" ref={this.measureRef} />
                     {/* </Resizable> */}
                     <Resizable
-                        style={{display: "flex", alignItems: "top", justifyContent: "right", flexDirection: "column", zIndex: 99998 }}
-                        handleClasses={{ left: "resizable-span" }}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'top',
+                            justifyContent: 'right',
+                            flexDirection: 'column',
+                            zIndex: 99998
+                        }}
+                        handleClasses={{ left: 'resizable-span' }}
                         defaultSize={{ width: '40%', height }}
-                        onResize={() => { this.props.resizeGridEvent.notify(); }}
-                        enable={{ left:true, top:false, right:false, bottom:false, topRight:false, bottomRight:false, bottomLeft:false, topLeft:false }}
+                        onResize={() => {
+                            this.props.resizeGridEvent.notify();
+                        }}
+                        enable={{
+                            left: true,
+                            top: false,
+                            right: false,
+                            bottom: false,
+                            topRight: false,
+                            bottomRight: false,
+                            bottomLeft: false,
+                            topLeft: false
+                        }}
                     >
                         <ControlPanel
                             historyList={this.props.historyList}
@@ -441,23 +478,20 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private maybeDropColumns = (e: any, data: Slick.OnHeaderContextMenuEventArgs<ISlickRow>) => {
         this.contextMenuColumnName = data.column.name;
         // Don't show context menu for the row numbering column or index column
-        if (data.column.field === "No." || data.column.field === "index") {
+        if (data.column.field === 'No.' || data.column.field === 'index') {
             return;
         }
         e.preventDefault();
         e.stopPropagation();
         // Show our context menu
-        slickgridJQ("#headerContextMenu")
-            .css("top", e.pageY)
-            .css("left", e.pageX)
-            .show();
+        slickgridJQ('#headerContextMenu').css('top', e.pageY).css('left', e.pageX).show();
 
         // If user clicks away from the context menu, hide it
-        slickgridJQ("body").one("click", () => {
-            slickgridJQ("#headerContextMenu").hide();
+        slickgridJQ('body').one('click', () => {
+            slickgridJQ('#headerContextMenu').hide();
             this.contextMenuColumnName = undefined;
         });
-    }
+    };
 
     private maybeDropRows = (e: any) => {
         const cell = this.state.grid?.getCellFromEvent(e);
@@ -469,17 +503,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         e.preventDefault();
         e.stopPropagation();
         // Show our context menu
-        slickgridJQ("#contextMenu")
-            .css("top", e.pageY)
-            .css("left", e.pageX)
-            .show();
+        slickgridJQ('#contextMenu').css('top', e.pageY).css('left', e.pageX).show();
 
         // If user clicks away from the context menu, hide it
-        slickgridJQ("body").one("click", () => {
-            slickgridJQ("#contextMenu").hide();
+        slickgridJQ('body').one('click', () => {
+            slickgridJQ('#contextMenu').hide();
             this.contextMenuRowId = undefined;
         });
-    }
+    };
 
     // public for testing
     public sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {
@@ -729,16 +760,16 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
-            const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
-            ReactDOM.render(
-                <ReactSlickGridFilterBox
-                    filter={filter ?? ''}
-                    column={args.column}
-                    onChange={this.filterChanged}
-                    fontSize={this.state.fontSize}
-                />,
-                args.node
-            );
+        const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
+        ReactDOM.render(
+            <ReactSlickGridFilterBox
+                filter={filter ?? ''}
+                column={args.column}
+                onChange={this.filterChanged}
+                fontSize={this.state.fontSize}
+            />,
+            args.node
+        );
         // }
     };
 

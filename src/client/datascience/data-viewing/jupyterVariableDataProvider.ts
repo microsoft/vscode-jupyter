@@ -20,7 +20,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableManager: IJupyterVariables,
         @inject(DataViewerDependencyService) private dependencyService: DataViewerDependencyService
-    ) { }
+    ) {}
 
     /**
      * Normalizes column types to the types the UI component understands.
@@ -28,7 +28,9 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
      * @param columns
      * @returns Array of columns with normalized type
      */
-    private static getNormalizedColumns(columns: { key: string; type: string; describe: string }[]): { key: string; type: ColumnType; describe: string }[] {
+    private static getNormalizedColumns(
+        columns: { key: string; type: string; describe: string }[]
+    ): { key: string; type: ColumnType; describe: string }[] {
         return columns.map((column: { key: string; type: string; describe: string }) => {
             let normalizedType: ColumnType;
             switch (column.type) {
@@ -154,8 +156,8 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 this.variable,
                 columnName,
                 this.notebook
-            )
-            columns = dataFrameColumnData as any as IColsResponse;
+            );
+            columns = (dataFrameColumnData as any) as IColsResponse;
         }
         return columns;
     }

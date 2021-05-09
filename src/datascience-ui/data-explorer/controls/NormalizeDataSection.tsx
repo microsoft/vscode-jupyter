@@ -37,63 +37,63 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
             //     <summary className="slice-summary">
             //         <span className="slice-summary-detail">{'NORMALIZE'}</span>
             //     </summary>
-                <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '100px', /* paddingTop: '6px' */ }}>
-                        <Dropdown
-                            responsiveMode={ResponsiveMode.xxxLarge}
-                            label={'Target column:'}
-                            style={{ marginRight: '10px', width: '150px', marginBottom: '16px' }}
-                            styles={dropdownStyles}
-                            options={this.props.options}
-                            className="dropdownTitleOverrides"
-                            onChange={this.updateNormalizeColumnTarget}
-                        />
-                        <span>{'New start range:'}</span>
-                        <input
-                            value={this.state.normalizeRangeStart}
-                            onChange={this.handleNormalizeStartChange}
-                            className={'slice-data'}
-                            style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
-                            autoComplete="on"
-                        />
-                        <span>{'New end range:'}</span>
-                        <input
-                            value={this.state.normalizeRangeEnd}
-                            onChange={this.handleNormalizeEndChange}
-                            className={'slice-data'}
-                            style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
-                            autoComplete="on"
-                        />
-                        <button
-                            onClick={() => {
-                                if (this.state.normalizeTargetText) {
-                                    const target = this.state.normalizeTargetText;
-                                    this.props.submitCommand({
-                                        command: 'normalize',
-                                        args: {
-                                            start: this.state.normalizeRangeStart,
-                                            end: this.state.normalizeRangeEnd,
-                                            target
-                                        }
-                                    });
-                                    this.setState({ normalizeTargetText: '' });
-                                }
-                            }}
-                            style={{
-                                backgroundColor: 'var(--vscode-button-background)',
-                                color: 'var(--vscode-button-foreground)',
-                                margin: '4px',
-                                padding: '8px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                height: '26px',
-                                marginLeft: '0px'
-                            }}
-                        >
-                            Normalize
-                        </button>
-                    </div>
+            <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', width: '100px' /* paddingTop: '6px' */ }}>
+                    <Dropdown
+                        responsiveMode={ResponsiveMode.xxxLarge}
+                        label={'Target column:'}
+                        style={{ marginRight: '10px', width: '150px', marginBottom: '16px' }}
+                        styles={dropdownStyles}
+                        options={this.props.options}
+                        className="dropdownTitleOverrides"
+                        onChange={this.updateNormalizeColumnTarget}
+                    />
+                    <span>{'New start range:'}</span>
+                    <input
+                        value={this.state.normalizeRangeStart}
+                        onChange={this.handleNormalizeStartChange}
+                        className={'slice-data'}
+                        style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
+                        autoComplete="on"
+                    />
+                    <span>{'New end range:'}</span>
+                    <input
+                        value={this.state.normalizeRangeEnd}
+                        onChange={this.handleNormalizeEndChange}
+                        className={'slice-data'}
+                        style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
+                        autoComplete="on"
+                    />
+                    <button
+                        onClick={() => {
+                            if (this.state.normalizeTargetText) {
+                                const target = this.state.normalizeTargetText;
+                                this.props.submitCommand({
+                                    command: 'normalize',
+                                    args: {
+                                        start: this.state.normalizeRangeStart,
+                                        end: this.state.normalizeRangeEnd,
+                                        target
+                                    }
+                                });
+                                this.setState({ normalizeTargetText: '' });
+                            }
+                        }}
+                        style={{
+                            backgroundColor: 'var(--vscode-button-background)',
+                            color: 'var(--vscode-button-foreground)',
+                            margin: '4px',
+                            padding: '8px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            height: '26px',
+                            marginLeft: '0px'
+                        }}
+                    >
+                        Normalize
+                    </button>
                 </div>
+            </div>
             // </details>
         );
     }

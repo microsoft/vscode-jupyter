@@ -43,7 +43,7 @@ import { createDeferred } from '../../client/common/utils/async';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
-const RowNumberColumnName = "No."; // Unique key for our column containing row numbers
+const RowNumberColumnName = 'No.'; // Unique key for our column containing row numbers
 const onigasmPromise = createDeferred<boolean>();
 const monacoPromise = createDeferred();
 
@@ -150,7 +150,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Tell the dataviewer code we have started.
         this.postOffice.sendMessage<IDataViewerMapping>(InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
         this.postOffice.sendMessage<IDataViewerMapping>(InteractiveWindowMessages.LoadTmLanguageRequest);
-        this.postOffice.sendMessage<IDataViewerMapping>(CssMessages.GetMonacoThemeRequest, { isDark: this.props.baseTheme !== 'vscode-light' });
+        this.postOffice.sendMessage<IDataViewerMapping>(CssMessages.GetMonacoThemeRequest, {
+            isDark: this.props.baseTheme !== 'vscode-light'
+        });
         // await monacoPromise.promise;
         this.postOffice.sendMessage<IDataViewerMapping>(DataViewerMessages.Started);
     }
@@ -185,7 +187,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 {progressBar}
                 {/* {this.renderBreadcrumb()} */}
                 <Toolbar
-                    handleRefreshRequest={this.handleRefreshRequest} 
+                    handleRefreshRequest={this.handleRefreshRequest}
                     submitCommand={this.submitCommand}
                     onToggleFilter={() => this.toggleFilterEvent.notify()}
                 />
@@ -252,8 +254,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             case DataViewerMessages.GetHistogramResponse:
                 this.handleGetHistogram(payload);
-                break; 
-            
+                break;
+
             case DataViewerMessages.UpdateHistoryList:
                 this.handleUpdateHistoryList(payload);
                 break;
@@ -273,7 +275,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     let typedArray = new Uint8Array(payload.data);
                     if (typedArray.length <= 0 && payload.data) {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        typedArray = new Uint8Array((payload.data as any));
+                        typedArray = new Uint8Array(payload.data as any);
                     }
                     Tokenizer.loadOnigasm(typedArray.buffer);
                     onigasmPromise.resolve(payload.data ? true : false);
@@ -283,24 +285,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 break;
 
             case InteractiveWindowMessages.LoadTmLanguageResponse:
-                onigasmPromise.promise
-                    .then(async (success) => {
-                        console.log('tmLanguage success:', success)
-                        console.log('payload', payload);
-                        // Then load the language data
-                        if (success && !Tokenizer.hasLanguage(payload.languageId)) {
-                            await Tokenizer.loadLanguage(
-                                payload.languageId,
-                                payload.extensions,
-                                payload.scopeName,
-                                deserializeLanguageConfiguration(payload.languageConfiguration),
-                                payload.languageJSON
-                            );
-                            monacoPromise.resolve();
-                        }
-                    });
+                onigasmPromise.promise.then(async (success) => {
+                    console.log('tmLanguage success:', success);
+                    console.log('payload', payload);
+                    // Then load the language data
+                    if (success && !Tokenizer.hasLanguage(payload.languageId)) {
+                        await Tokenizer.loadLanguage(
+                            payload.languageId,
+                            payload.extensions,
+                            payload.scopeName,
+                            deserializeLanguageConfiguration(payload.languageConfiguration),
+                            payload.languageJSON
+                        );
+                        monacoPromise.resolve();
+                    }
+                });
                 break;
-            
+
             case CssMessages.GetMonacoThemeResponse:
                 console.log('Theme response payload', payload);
                 this.setState({ monacoTheme: payload.theme });
@@ -487,7 +488,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             };
             const columns = [rowNumberColumn].concat(variable.columns);
             return columns.reduce(
-                (accum: Slick.Column<Slick.SlickData>[], c: { key: string; type: ColumnType; describe?: string}, i: number) => {
+                (
+                    accum: Slick.Column<Slick.SlickData>[],
+                    c: { key: string; type: ColumnType; describe?: string },
+                    i: number
+                ) => {
                     // Only show index column for pandas DataFrame and Series
                     if (
                         variable?.type === 'DataFrame' ||

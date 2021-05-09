@@ -42,7 +42,11 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
     }
 
     @captureTelemetry(Telemetry.StartShowDataViewer)
-    public async create(dataProvider: IDataViewerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<IDataViewer> {
+    public async create(
+        dataProvider: IDataViewerDataProvider,
+        title: string,
+        webviewPanel?: WebviewPanel
+    ): Promise<IDataViewer> {
         let result: IDataViewer | undefined;
 
         // Create the data explorer

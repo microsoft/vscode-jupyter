@@ -11,46 +11,46 @@ interface IProps {
 }
 
 interface IState {
-  currentVariableIndex: number | undefined;
+    currentVariableIndex: number | undefined;
 }
 
 const theme = getTheme();
 export const styles = mergeStyleSets({
     container: {
-      overflow: 'auto',
-      maxHeight: 300,
-      marginTop: 4,
-      backgroundColor: "var(--vscode-sideBar-background) !important",
-      selectors: {
-        '.ms-List-cell:nth-child(odd)': {
-          backgroundColor: "var(--override-selection-background, var(--vscode-list-hoverBackground))",
-          color: "var(--vscode-list-hoverForeground)",
-        },
-        '.ms-List-cell:nth-child(even)': {
-          backgroundColor: "var(--vscode-sideBar-background)",
-          color: "var(--vscode-sideBar-foreground)"
-        },
-        '&:hover': { background: theme.palette.neutralLight },
-      },
+        overflow: 'auto',
+        maxHeight: 300,
+        marginTop: 4,
+        backgroundColor: 'var(--vscode-sideBar-background) !important',
+        selectors: {
+            '.ms-List-cell:nth-child(odd)': {
+                backgroundColor: 'var(--override-selection-background, var(--vscode-list-hoverBackground))',
+                color: 'var(--vscode-list-hoverForeground)'
+            },
+            '.ms-List-cell:nth-child(even)': {
+                backgroundColor: 'var(--vscode-sideBar-background)',
+                color: 'var(--vscode-sideBar-foreground)'
+            },
+            '&:hover': { background: theme.palette.neutralLight }
+        }
     },
     itemContent: [
-      theme.fonts.medium,
-      normalize,
-      {
-        position: 'relative',
-        boxSizing: 'border-box',
-        fontFamily: 'var(--vscode-font-family)',
-        fontSize: 'var(--vscode-font-size)',
-        fontWeight: 'var(--vscode-font-weight)',
-        display: 'inline-block',
-        paddingLeft: 10,
-        paddingRight: 15,
-      },
-    ],
-  });
+        theme.fonts.medium,
+        normalize,
+        {
+            position: 'relative',
+            boxSizing: 'border-box',
+            fontFamily: 'var(--vscode-font-family)',
+            fontSize: 'var(--vscode-font-size)',
+            fontWeight: 'var(--vscode-font-weight)',
+            display: 'inline-block',
+            paddingLeft: 10,
+            paddingRight: 15
+        }
+    ]
+});
 
 export class HistorySection extends React.Component<IProps, IState> {
-  private listRef = React.createRef<IList>();
+    private listRef = React.createRef<IList>();
     constructor(props: IProps) {
         super(props);
         this.state = { currentVariableIndex: 0 };
@@ -58,82 +58,89 @@ export class HistorySection extends React.Component<IProps, IState> {
     }
 
     componentDidUpdate(prevProps: IProps) {
-      if (prevProps.currentVariableName !== this.props.currentVariableName) {
-        // New transform applied, tell the list to rerender
-        const currentVariableIndex = this.props.currentVariableName!.slice(2) ? parseInt(this.props.currentVariableName!.slice(2)) : 0;
-        console.log('Current variable index', currentVariableIndex);
-        this.setState({ currentVariableIndex });
-        setTimeout(() => {
-          this.listRef.current?.forceUpdate();
-        })
-      }
+        if (prevProps.currentVariableName !== this.props.currentVariableName) {
+            // New transform applied, tell the list to rerender
+            const currentVariableIndex = this.props.currentVariableName!.slice(2)
+                ? parseInt(this.props.currentVariableName!.slice(2))
+                : 0;
+            console.log('Current variable index', currentVariableIndex);
+            this.setState({ currentVariableIndex });
+            setTimeout(() => {
+                this.listRef.current?.forceUpdate();
+            });
+        }
     }
 
-    handleDeleteHistoryItem( ) {
-
-    }
+    handleDeleteHistoryItem() {}
 
     viewHistoryItem(index: number | undefined) {
         if (index !== undefined) {
-          this.props.submitCommand({
-              command: 'get_history_item',
-              args: {
-                  index
-              }
-          });
-          this.setState({ currentVariableIndex: index });
-          setTimeout(() => {
-            this.listRef.current?.forceUpdate();
-          })
+            this.props.submitCommand({
+                command: 'get_history_item',
+                args: {
+                    index
+                }
+            });
+            this.setState({ currentVariableIndex: index });
+            setTimeout(() => {
+                this.listRef.current?.forceUpdate();
+            });
         }
     }
 
     onRenderCell = (item?: any, index?: number): JSX.Element => {
-      const isCurrentStep = (this.state.currentVariableIndex ?? 0) === (index!); // df1 corresponds to history item 0
-        const className = styles.itemContent + " history-item" + (isCurrentStep ? " selected-history-item" : "");
+        const isCurrentStep = (this.state.currentVariableIndex ?? 0) === index!; // df1 corresponds to history item 0
+        const className = styles.itemContent + ' history-item' + (isCurrentStep ? ' selected-history-item' : '');
         return (
-          <div data-is-focusable>
-            <div 
-                className={className}
-                style={{ paddingBottom: '4px', paddingTop: '2px' }}
-                onClick={() => this.viewHistoryItem(index)}>
-                {/* <div
+            <div data-is-focusable>
+                <div
+                    className={className}
+                    style={{ paddingBottom: '4px', paddingTop: '2px' }}
+                    onClick={() => this.viewHistoryItem(index)}
+                >
+                    {/* <div
                     className="codicon codicon-close codicon-button"
                     onClick={this.handleDeleteHistoryItem}
                     style={{ verticalAlign: 'middle' }}
                     title={"Remove step"}
                 /> */}
-                <span style={{ verticalAlign: 'middle' }} title={`Click to view intermediate state`} >{item.name}</span>
+                    <span style={{ verticalAlign: 'middle' }} title={`Click to view intermediate state`}>
+                        {item.name}
+                    </span>
+                </div>
             </div>
-          </div>
         );
-      };
+    };
 
     render() {
         return (
-          <details
-                open  
+            <details
+                open
                 className="slicing-control"
                 style={{
                     borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
                     paddingTop: '4px',
-                    paddingBottom: '4px',
+                    paddingBottom: '4px'
                 }}
             >
                 <summary className="slice-summary">
-                  <h3 className="slice-summary-detail">HISTORY</h3>
+                    <h3 className="slice-summary-detail">HISTORY</h3>
                 </summary>
-                  {this.props.historyList.length > 0 ? 
+                {this.props.historyList.length > 0 ? (
                     <div className={styles.container} style={{ paddingTop: '10px' }} data-is-scrollable>
-                      <List
-                          componentRef={this.listRef}
-                          items={this.props.historyList}
-                          style={{ marginLeft: '5px' }}
-                          className="historyList"
-                          onRenderCell={this.onRenderCell}
-                      /> 
+                        <List
+                            componentRef={this.listRef}
+                            items={this.props.historyList}
+                            style={{ marginLeft: '5px' }}
+                            className="historyList"
+                            onRenderCell={this.onRenderCell}
+                        />
                     </div>
-                    : <span style={{ paddingLeft: '19px', display: 'inline-block', paddingTop: '10px' }}>No transformations applied.</span>}
+                ) : (
+                    <span style={{ paddingLeft: '19px', display: 'inline-block', paddingTop: '10px' }}>
+                        No transformations applied.
+                    </span>
+                )}
             </details>
         );
     }

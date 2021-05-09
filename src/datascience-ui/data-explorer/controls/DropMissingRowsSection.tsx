@@ -50,27 +50,27 @@ export class DropMissingRowsSection extends React.Component<IProps, IState> {
             //                 onChange={this.updateDropNaTarget}
             //             />
             //         </div>
-                    <button
-                        onClick={() =>
-                            this.props.submitCommand({
-                                command: 'dropna',
-                                args: { target: 0 }
-                            })
-                        }
-                        style={{
-                            width: '50px',
-                            backgroundColor: 'var(--vscode-button-background)',
-                            color: 'var(--vscode-button-foreground)',
-                            margin: '0px',
-                            padding: '4px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            height: '26px',
-                            // marginTop: '28px'
-                        }}
-                    >
-                        Drop
-                    </button>
+            <button
+                onClick={() =>
+                    this.props.submitCommand({
+                        command: 'dropna',
+                        args: { target: 0 }
+                    })
+                }
+                style={{
+                    width: '50px',
+                    backgroundColor: 'var(--vscode-button-background)',
+                    color: 'var(--vscode-button-foreground)',
+                    margin: '0px',
+                    padding: '4px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    height: '26px'
+                    // marginTop: '28px'
+                }}
+            >
+                Drop
+            </button>
             //     </div>
             // </details>
         );

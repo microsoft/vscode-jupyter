@@ -7,7 +7,17 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import * as fsextra from 'fs-extra';
-import { Disposable, EventEmitter, Memento, notebook as vscNotebook, NotebookCell, NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, ViewColumn, WebviewPanel } from 'vscode';
+import {
+    Disposable,
+    EventEmitter,
+    Memento,
+    notebook as vscNotebook,
+    NotebookCell,
+    NotebookCellExecutionState,
+    NotebookCellExecutionStateChangeEvent,
+    ViewColumn,
+    WebviewPanel
+} from 'vscode';
 
 import {
     IApplicationShell,
@@ -123,7 +133,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         this.onDidDispose(this.dataViewerDisposed, this);
     }
 
-    public async showData(dataProvider: IDataViewerDataProvider, title: string, webviewPanel: WebviewPanel): Promise<void> {
+    public async showData(
+        dataProvider: IDataViewerDataProvider,
+        title: string,
+        webviewPanel: WebviewPanel
+    ): Promise<void> {
         if (!this.isDisposed) {
             // Save the data provider
             this.dataProvider = dataProvider;
@@ -179,9 +193,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             },
             notebook
         );
-        const jupyterVariableDataProvider = await this.dataProviderFactory.create(
-            jupyterVariable
-        );
+        const jupyterVariableDataProvider = await this.dataProviderFactory.create(jupyterVariable);
         // Set dependencies for jupyterVariableDataProvider
         jupyterVariableDataProvider.setDependencies(jupyterVariable, notebook);
         // Get variable info
@@ -285,7 +297,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             case CssMessages.GetMonacoThemeRequest:
                 this.handleMonacoThemeRequest(payload);
                 break;
-                
+
             default:
                 break;
         }
@@ -293,7 +305,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         super.onMessage(message, payload);
     }
 
-    private async requestTmLanguage(languageId: string= 'python') {
+    private async requestTmLanguage(languageId: string = 'python') {
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
         const languageJson = await this.themeFinder.findTmLanguage(languageId);
@@ -438,19 +450,21 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             name: transformation,
             variableName: variableName,
             code: code
-        }
+        };
         this.historyList.push(newHistItem);
         this.postMessage(DataViewerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
     }
 
     private getCode() {
-        return this.historyList.map(function (item) {
-            return item.code;
-        }).join("\n");
+        return this.historyList
+            .map(function (item) {
+                return item.code;
+            })
+            .join('\n');
     }
 
     private getImportCode() {
-        return 'import pandas as pd\ndf = pd.read_csv(r\'' + this.sourceFile + '\')\n';
+        return "import pandas as pd\ndf = pd.read_csv(r'" + this.sourceFile + "')\n";
     }
 
     private async generatePythonCode() {
@@ -504,7 +518,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.variableCounter += 1;
                 newVariableName = `df${this.variableCounter}`;
                 code = `${newVariableName} = ${currentVariableName}.rename(columns={ "${payload.args.old}": "${payload.args.new}" })\n`;
-                this.addToHistory(`Renamed column "${payload.args.old}" to "${payload.args.new}"`, newVariableName, code);
+                this.addToHistory(
+                    `Renamed column "${payload.args.old}" to "${payload.args.new}"`,
+                    newVariableName,
+                    code
+                );
                 break;
             case 'drop':
                 this.variableCounter += 1;
@@ -512,12 +530,24 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 const labels = payload.args.targets as string[];
                 if (payload.args.mode === 'row') {
                     // Drop rows by index
-                    code = `df${this.variableCounter} = ${currentVariableName}.drop(${'[' + labels.join(', ') + ']'})\n`;
-                    this.addToHistory("Dropped rows(s): " + labels.map((label) => `${label}`).join(','), newVariableName, code);
+                    code = `df${this.variableCounter} = ${currentVariableName}.drop(${
+                        '[' + labels.join(', ') + ']'
+                    })\n`;
+                    this.addToHistory(
+                        'Dropped rows(s): ' + labels.map((label) => `${label}`).join(','),
+                        newVariableName,
+                        code
+                    );
                 } else {
                     // Drop columns by column name
-                    code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(', ') + ']'})\n`;
-                    this.addToHistory("Dropped column(s): " + labels.map((label) => `"${label}"`).join(','), newVariableName, code);
+                    code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${
+                        '[' + labels.map((label) => `"${label}"`).join(', ') + ']'
+                    })\n`;
+                    this.addToHistory(
+                        'Dropped column(s): ' + labels.map((label) => `"${label}"`).join(','),
+                        newVariableName,
+                        code
+                    );
                 }
                 break;
             case 'drop_duplicates':
@@ -525,11 +555,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 newVariableName = `df${this.variableCounter}`;
                 if (payload.args?.subset !== undefined) {
                     const subset = payload.args.subset.map((col: string) => `"${col}"`).join(', ');
-                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates(subset=[${subset}])\n`
+                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates(subset=[${subset}])\n`;
                     this.addToHistory(`Removed duplicate rows on column(s): ${subset}`, newVariableName, code);
                 } else {
-                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates()\n`
-                    this.addToHistory("Removed duplicate rows", newVariableName, code);
+                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates()\n`;
+                    this.addToHistory('Removed duplicate rows', newVariableName, code);
                 }
                 break;
             case 'dropna':
@@ -538,10 +568,20 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 if (payload.args.subset !== undefined) {
                     // This assumes only one column/row at a time
                     code = `${newVariableName} = ${currentVariableName}.dropna(subset=["${payload.args.subset}"])\n`;
-                    this.addToHistory(`Dropped rows with missing data in column: "${payload.args.subset}"`, newVariableName, code);
+                    this.addToHistory(
+                        `Dropped rows with missing data in column: "${payload.args.subset}"`,
+                        newVariableName,
+                        code
+                    );
                 } else {
                     code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})\n`;
-                    this.addToHistory(payload.args.target == 0 ? "Dropped rows with missing data" : "Dropped columns with missing data", newVariableName, code);
+                    this.addToHistory(
+                        payload.args.target == 0
+                            ? 'Dropped rows with missing data'
+                            : 'Dropped columns with missing data',
+                        newVariableName,
+                        code
+                    );
                 }
                 break;
             case 'pyplot.hist':
@@ -578,7 +618,7 @@ ${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${tar
                     if (this.existingDisposable) {
                         this.existingDisposable.dispose();
                     }
-                    await this.updateWithNewVariable(newVariableName)
+                    await this.updateWithNewVariable(newVariableName);
                 });
             }
         } else if (dataCleaningMode === 'jupyter_notebook') {
@@ -590,12 +630,14 @@ ${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${tar
                 if (this.existingDisposable) {
                     this.existingDisposable.dispose();
                 }
-                this.existingDisposable = vscNotebook.onDidChangeCellExecutionState(async (e: NotebookCellExecutionStateChangeEvent) => {
-                    if (e.executionState === NotebookCellExecutionState.Idle && refreshRequired) {
-                        await this.updateWithNewVariable(newVariableName);
-                    };
-                });
-                await this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow')
+                this.existingDisposable = vscNotebook.onDidChangeCellExecutionState(
+                    async (e: NotebookCellExecutionStateChangeEvent) => {
+                        if (e.executionState === NotebookCellExecutionState.Idle && refreshRequired) {
+                            await this.updateWithNewVariable(newVariableName);
+                        }
+                    }
+                );
+                await this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow');
             }
         }
     }
