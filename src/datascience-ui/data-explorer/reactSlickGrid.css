@@ -1,6 +1,6 @@
 .resizable-span {
     cursor: ew-resize !important;
-    width: 9px !important;
+    width: 5px !important;
     z-index: 99999 !important;
 }
 

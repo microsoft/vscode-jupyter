@@ -7,11 +7,14 @@ import { ColumnsSection } from './controls/ColumnsSection';
 import { RowsSection } from './controls/RowsSection';
 import { HistogramSection } from './controls/HistogramSection';
 import { IGetColsResponse } from '../../client/datascience/data-viewing/types';
+import { CodeSection } from './controls/CodeSection';
 
 interface IControlPanelProps {
     data: ISlickRow[];
     headers: string[];
     historyList: any[];
+    resizeEvent: Slick.Event<void>;
+    monacoTheme: string;
     histogramData?: IGetColsResponse;
     currentVariableName: string;
     submitCommand(data: { command: string; args: any }): void;
@@ -29,6 +32,7 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
             <div
                 style={{
                     resize: 'horizontal',
+                    height: '100%',
                     width: '100%',
                     zIndex: 99999,
                     border: '1px solid var(--vscode-sideBar-border)',
@@ -39,6 +43,7 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                 <HistogramSection
                     histogramData={this.props.histogramData}
                     submitCommand={this.props.submitCommand}
+                    resizeEvent={this.props.resizeEvent}
                     headers={this.props.headers}/>
                 <ColumnsSection
                     submitCommand={this.props.submitCommand}
@@ -55,6 +60,12 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                     currentVariableName={this.props.currentVariableName}
                     submitCommand={this.props.submitCommand}
                     headers={this.props.headers}
+                />
+                <CodeSection
+                    code={this.props.historyList.map((item) => item.code).join('')}
+                    monacoTheme={this.props.monacoTheme}
+                    currentVariableName={this.props.currentVariableName}
+                    submitCommand={this.props.submitCommand}
                 />
                 {/* <details className="slicing-control" style={{ borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)', paddingTop: '4px', paddingBottom: '4px'}}>
                     <summary className="slice-summary">

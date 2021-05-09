@@ -194,9 +194,10 @@ import { VariableViewActivationService } from './variablesView/variableViewActiv
 import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { WebviewExtensibility } from './webviewExtensibility';
 import { RemoteKernelFinder } from './kernel-launcher/remoteKernelFinder';
-import { IApplicationEnvironment } from '../common/application/types';
+import { IApplicationEnvironment, IDataWranglerProvider } from '../common/application/types';
 import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
 import { ExtensionRecommendationService } from './extensionRecommendation';
+import { DataWranglerProvider } from './data-viewing/dataWranglerProvider';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -226,6 +227,9 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
         setSharedProperty('rawKernelSupported', rawService.supported() ? 'true' : 'false');
     }
 
+    serviceManager.addSingleton<IDataWranglerProvider>(IDataWranglerProvider, DataWranglerProvider);
+    serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, DataWranglerProvider);
+    
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
     serviceManager.addSingleton<INotebookEditorProvider>(OurNotebookProvider, NativeEditorProvider);

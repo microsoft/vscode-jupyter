@@ -92,6 +92,7 @@ export interface ISlickGridProps {
     histogramData?: IGetColsResponse;
     currentVariableName: string;
     forceHeight?: number;
+    monacoTheme: string;
     handleSliceRequest(args: IGetSliceRequest): void;
     submitCommand(args: { command: string; args: any }): void;
     handleRefreshRequest(): void;
@@ -385,32 +386,42 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         const height = this.measureRef?.current && this.containerRef?.current 
             ? this.measureRef.current.offsetTop - this.containerRef.current.offsetTop
-            : '800px';
+            : '1200px';
         return (
             <div className="outer-container">
-                <div style={{ display: 'flex', width: '100%', overflow: 'hidden' }}>
-                    <Resizable 
+                <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden' }}>
+                    {/* <Resizable 
                         style={{display: "flex", alignItems: "top", justifyContent: "left", flexDirection: "column", zIndex: 99998 }}
                         handleClasses={{ right: "resizable-span" }}
                         defaultSize={{ width: '60%', height }}
                         enable={{ left:false, top:false, right:true, bottom:false, topRight:false, bottomRight:false, bottomLeft:false, topLeft:false }}
-                        >
+                        > */}
                         <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                         <div className="react-grid-measure" ref={this.measureRef} />
+                    {/* </Resizable> */}
+                    <Resizable
+                        style={{display: "flex", alignItems: "top", justifyContent: "right", flexDirection: "column", zIndex: 99998 }}
+                        handleClasses={{ left: "resizable-span" }}
+                        defaultSize={{ width: '40%', height }}
+                        onResize={() => { this.props.resizeGridEvent.notify(); }}
+                        enable={{ left:true, top:false, right:false, bottom:false, topRight:false, bottomRight:false, bottomLeft:false, topLeft:false }}
+                    >
+                        <ControlPanel
+                            historyList={this.props.historyList}
+                            monacoTheme={this.props.monacoTheme}
+                            histogramData={this.props.histogramData}
+                            data={this.dataView.getItems()}
+                            resizeEvent={this.props.resizeGridEvent}
+                            headers={
+                                this.state.grid
+                                    ?.getColumns()
+                                    .map((c) => c.name)
+                                    .filter((c) => c !== undefined) as string[]
+                            }
+                            currentVariableName={this.props.currentVariableName}
+                            submitCommand={this.props.submitCommand}
+                        />
                     </Resizable>
-                    <ControlPanel
-                        historyList={this.props.historyList}
-                        histogramData={this.props.histogramData}
-                        data={this.dataView.getItems()}
-                        headers={
-                            this.state.grid
-                                ?.getColumns()
-                                .map((c) => c.name)
-                                .filter((c) => c !== undefined) as string[]
-                        }
-                        currentVariableName={this.props.currentVariableName}
-                        submitCommand={this.props.submitCommand}
-                    />
                 </div>
                 <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
                     <li id={ColumnContextMenuItem.GetColumnStats}>{ColumnContextMenuItem.GetColumnStats}</li>
@@ -433,6 +444,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         if (data.column.field === "No." || data.column.field === "index") {
             return;
         }
+        e.preventDefault();
+        e.stopPropagation();
         // Show our context menu
         slickgridJQ("#headerContextMenu")
             .css("top", e.pageY)
@@ -453,7 +466,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
         this.contextMenuRowId = cell.row;
         this.contextMenuCellId = cell.cell;
-
+        e.preventDefault();
+        e.stopPropagation();
         // Show our context menu
         slickgridJQ("#contextMenu")
             .css("top", e.pageY)
@@ -614,8 +628,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // We use a div at the bottom to figure out our expected height. Slickgrid isn't
             // so good without a specific height set in the style.
             const height = this.measureRef.current.offsetTop - this.containerRef.current.offsetTop;
-            console.log('Computed grid height is ', height);
-            console.log('this.props.forceHeight', this.props.forceHeight);
             this.containerRef.current.style.height = `${this.props.forceHeight ? this.props.forceHeight : height}px`;
             this.state.grid.resizeCanvas();
         }

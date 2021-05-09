@@ -58,7 +58,6 @@ export namespace Tokenizer {
 
             // add scope map
             languageMap.set(languageId, scopeName);
-
             // Wire everything together.
             await wireTmGrammars(monacoEditor, registry, languageMap);
         }

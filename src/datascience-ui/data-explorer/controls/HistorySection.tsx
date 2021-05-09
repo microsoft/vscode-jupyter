@@ -60,7 +60,9 @@ export class HistorySection extends React.Component<IProps, IState> {
     componentDidUpdate(prevProps: IProps) {
       if (prevProps.currentVariableName !== this.props.currentVariableName) {
         // New transform applied, tell the list to rerender
-        this.setState({ currentVariableIndex: parseInt(this.props.currentVariableName!.slice(2)) });
+        const currentVariableIndex = this.props.currentVariableName!.slice(2) ? parseInt(this.props.currentVariableName!.slice(2)) : 0;
+        console.log('Current variable index', currentVariableIndex);
+        this.setState({ currentVariableIndex });
         setTimeout(() => {
           this.listRef.current?.forceUpdate();
         })
@@ -76,10 +78,10 @@ export class HistorySection extends React.Component<IProps, IState> {
           this.props.submitCommand({
               command: 'get_history_item',
               args: {
-                  index: index
+                  index
               }
           });
-          this.setState({ currentVariableIndex: -1 });
+          this.setState({ currentVariableIndex: index });
           setTimeout(() => {
             this.listRef.current?.forceUpdate();
           })
@@ -87,7 +89,7 @@ export class HistorySection extends React.Component<IProps, IState> {
     }
 
     onRenderCell = (item?: any, index?: number): JSX.Element => {
-      const isCurrentStep = this.state.currentVariableIndex === (index! + 1); // df1 corresponds to history item 0
+      const isCurrentStep = (this.state.currentVariableIndex ?? 0) === (index!); // df1 corresponds to history item 0
         const className = styles.itemContent + " history-item" + (isCurrentStep ? " selected-history-item" : "");
         return (
           <div data-is-focusable>

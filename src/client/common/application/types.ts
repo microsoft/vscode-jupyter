@@ -1492,6 +1492,10 @@ export interface CustomEditorProvider<T extends CustomDocument = CustomDocument>
 
 // #endregion
 
+export const IDataWranglerProvider = Symbol('IDataWranglerProvider');
+export interface IDataWranglerProvider extends CustomReadonlyEditorProvider { }
+
+
 export const ICustomEditorService = Symbol('ICustomEditorService');
 export interface ICustomEditorService {
     /**

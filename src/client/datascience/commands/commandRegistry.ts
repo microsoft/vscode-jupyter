@@ -722,7 +722,7 @@ export class CommandRegistry implements IDisposable {
     }
 }
 
-function getImportCodeForFileType(filepath: string) {
+export function getImportCodeForFileType(filepath: string) {
     const fileExtension = path.extname(filepath);
     let code = 'import pandas as pd\n';
     switch (fileExtension) {

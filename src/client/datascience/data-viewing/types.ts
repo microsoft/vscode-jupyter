@@ -3,9 +3,10 @@
 'use strict';
 
 import { IDisposable } from '../../common/types';
-import { SharedMessages } from '../messages';
-import { Event } from 'vscode';
+import { CssMessages, SharedMessages } from '../messages';
+import { Event, WebviewPanel } from 'vscode';
 import { SliceOperationSource } from '../../telemetry/constants';
+import { InteractiveWindowMessages, ILoadTmLanguageResponse } from '../interactive-common/interactiveWindowTypes';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -75,6 +76,11 @@ export type IDataViewerMapping = {
     [DataViewerMessages.UpdateHistoryList]: any[] | undefined;
     [DataViewerMessages.GetHistoryItem]: number | undefined;
     [DataViewerMessages.GetHistogramResponse]: IGetColsResponse;
+    [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
+    [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
+    [InteractiveWindowMessages.LoadTmLanguageRequest]: string;
+    [InteractiveWindowMessages.LoadTmLanguageResponse]: ILoadTmLanguageResponse;
+    [CssMessages.GetMonacoThemeRequest]: { isDark: boolean };
 };
 
 export interface IDataFrameInfo {
@@ -116,7 +122,7 @@ export type IColsResponse = any[];
 
 export const IDataViewerFactory = Symbol('IDataViewerFactory');
 export interface IDataViewerFactory {
-    create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer>;
+    create(dataProvider: IDataViewerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<IDataViewer>;
 }
 
 export const IDataViewer = Symbol('IDataViewer');
@@ -124,7 +130,7 @@ export interface IDataViewer extends IDisposable {
     readonly visible: boolean;
     readonly onDidDisposeDataViewer: Event<IDataViewer>;
     readonly onDidChangeDataViewerViewState: Event<void>;
-    showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
+    showData(dataProvider: IDataViewerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<void>;
     refreshData(): Promise<void>;
     updateWithNewVariable(newVariableName: string): Promise<void>;
 }

@@ -6,7 +6,8 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Disposable, EventEmitter, Memento, notebook as vscNotebook, NotebookCell, NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, ViewColumn } from 'vscode';
+import * as fsextra from 'fs-extra';
+import { Disposable, EventEmitter, Memento, notebook as vscNotebook, NotebookCell, NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, ViewColumn, WebviewPanel } from 'vscode';
 
 import {
     IApplicationShell,
@@ -15,8 +16,8 @@ import {
     IWorkspaceService,
     IDocumentManager
 } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
-import { traceError, traceInfo } from '../../common/logger';
+import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { GLOBAL_MEMENTO, IConfigurationService, IDisposable, IMemento, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -48,6 +49,9 @@ import {
 import { isValidSliceExpression, preselectedSliceExpression } from '../../../datascience-ui/data-explorer/helpers';
 import { addNewCellAfter, updateCellCode } from '../notebook/helpers/executionHelpers';
 import { CheckboxState } from '../../telemetry/constants';
+import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { serializeLanguageConfiguration } from '../interactive-common/serialization';
+import { CssMessages } from '../messages';
 
 interface IHistoryItem {
     name: string;
@@ -119,13 +123,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         this.onDidDispose(this.dataViewerDisposed, this);
     }
 
-    public async showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
+    public async showData(dataProvider: IDataViewerDataProvider, title: string, webviewPanel: WebviewPanel): Promise<void> {
         if (!this.isDisposed) {
             // Save the data provider
             this.dataProvider = dataProvider;
 
             // Load the web panel using our current directory as we don't expect to load any other files
-            await super.loadWebview(process.cwd()).catch(traceError);
+            await super.loadWebview(process.cwd(), webviewPanel).catch(traceError);
 
             super.setTitle(title);
 
@@ -144,6 +148,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
             // Send a message with our data
             this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+
+            this.historyList.push({
+                name: 'Imported data',
+                code: this.getImportCode(),
+                variableName: 'df'
+            });
+            this.postMessage(DataViewerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
         }
     }
 
@@ -177,7 +188,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         this.dataFrameInfoPromise = jupyterVariableDataProvider.getDataFrameInfo();
         this.dataProvider = jupyterVariableDataProvider;
         const dataFrameInfo = await this.dataFrameInfoPromise;
-        super.setTitle(`Data Viewer - ${newVariableName}`);
+        super.setTitle(`Data Wrangler`);
 
         this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
     }
@@ -263,11 +274,62 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 });
                 break;
 
+            case InteractiveWindowMessages.LoadTmLanguageRequest:
+                this.requestTmLanguage(payload);
+                break;
+
+            case InteractiveWindowMessages.LoadOnigasmAssemblyRequest:
+                this.requestOnigasm();
+                break;
+
+            case CssMessages.GetMonacoThemeRequest:
+                this.handleMonacoThemeRequest(payload);
+                break;
+                
             default:
                 break;
         }
 
         super.onMessage(message, payload);
+    }
+
+    private async requestTmLanguage(languageId: string= 'python') {
+        // Get the contents of the appropriate tmLanguage file.
+        traceInfo('Request for tmlanguage file.');
+        const languageJson = await this.themeFinder.findTmLanguage(languageId);
+        const languageConfiguration = serializeLanguageConfiguration(
+            await this.themeFinder.findLanguageConfiguration(languageId)
+        );
+        const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
+        const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
+        this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, {
+            languageJSON: languageJson ?? '',
+            languageConfiguration,
+            extensions,
+            scopeName,
+            languageId
+        }).ignoreErrors();
+    }
+
+    private async requestOnigasm(): Promise<void> {
+        // Look for the file next or our current file (this is where it's installed in the vsix)
+        let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
+        traceInfo(`Request for onigasm file at ${filePath}`);
+        if (await fsextra.pathExists(filePath)) {
+            const contents = await fsextra.readFile(filePath);
+            this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
+        } else {
+            // During development it's actually in the node_modules folder
+            filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
+            traceInfo(`Backup request for onigasm file at ${filePath}`);
+            if (await fsextra.pathExists(filePath)) {
+                const contents = await fsextra.readFile(filePath);
+                this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
+            } else {
+                traceWarning('Onigasm file not found. Colorization will not be available.');
+                this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
+            }
+        }
     }
 
     private getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo> {
@@ -382,11 +444,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     }
 
     private getCode() {
-        var dataCleanCode = this.historyList.map(function (item) {
+        return this.historyList.map(function (item) {
             return item.code;
         }).join("\n");
+    }
 
-        return 'import pandas as pd\n\ndf = pd.read_csv(r\'' + this.sourceFile + '\')\n' + dataCleanCode;
+    private getImportCode() {
+        return 'import pandas as pd\ndf = pd.read_csv(r\'' + this.sourceFile + '\')\n';
     }
 
     private async generatePythonCode() {
@@ -408,7 +472,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     }
 
     private async getColumnStats(columnName: string) {
-        if (this.dataProvider) {
+        if (this.dataProvider && columnName !== undefined) {
             const columnData = await this.dataProvider.getCols(columnName);
             this.postMessage(DataViewerMessages.GetHistogramResponse, { cols: columnData, columnName: columnName });
         }
@@ -439,7 +503,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             case 'rename':
                 this.variableCounter += 1;
                 newVariableName = `df${this.variableCounter}`;
-                code = `${newVariableName} = ${currentVariableName}.rename(columns={ "${payload.args.old}": "${payload.args.new}" })`;
+                code = `${newVariableName} = ${currentVariableName}.rename(columns={ "${payload.args.old}": "${payload.args.new}" })\n`;
                 this.addToHistory(`Renamed column "${payload.args.old}" to "${payload.args.new}"`, newVariableName, code);
                 break;
             case 'drop':
@@ -448,11 +512,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 const labels = payload.args.targets as string[];
                 if (payload.args.mode === 'row') {
                     // Drop rows by index
-                    code = `df${this.variableCounter} = ${currentVariableName}.drop(${'[' + labels.join(', ') + ']'})`;
+                    code = `df${this.variableCounter} = ${currentVariableName}.drop(${'[' + labels.join(', ') + ']'})\n`;
                     this.addToHistory("Dropped rows(s): " + labels.map((label) => `${label}`).join(','), newVariableName, code);
                 } else {
                     // Drop columns by column name
-                    code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(', ') + ']'})`;
+                    code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${'[' + labels.map((label) => `"${label}"`).join(', ') + ']'})\n`;
                     this.addToHistory("Dropped column(s): " + labels.map((label) => `"${label}"`).join(','), newVariableName, code);
                 }
                 break;
@@ -461,10 +525,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 newVariableName = `df${this.variableCounter}`;
                 if (payload.args?.subset !== undefined) {
                     const subset = payload.args.subset.map((col: string) => `"${col}"`).join(', ');
-                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates(subset=[${subset}])`
+                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates(subset=[${subset}])\n`
                     this.addToHistory(`Removed duplicate rows on column(s): ${subset}`, newVariableName, code);
                 } else {
-                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates()`
+                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates()\n`
                     this.addToHistory("Removed duplicate rows", newVariableName, code);
                 }
                 break;
@@ -473,16 +537,16 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 newVariableName = `df${this.variableCounter}`;
                 if (payload.args.subset !== undefined) {
                     // This assumes only one column/row at a time
-                    code = `${newVariableName} = ${currentVariableName}.dropna(subset=["${payload.args.subset}"])`;
+                    code = `${newVariableName} = ${currentVariableName}.dropna(subset=["${payload.args.subset}"])\n`;
                     this.addToHistory(`Dropped rows with missing data in column: "${payload.args.subset}"`, newVariableName, code);
                 } else {
-                    code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})`;
+                    code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})\n`;
                     this.addToHistory(payload.args.target == 0 ? "Dropped rows with missing data" : "Dropped columns with missing data", newVariableName, code);
                 }
                 break;
             case 'pyplot.hist':
                 refreshRequired = false;
-                code = `import matplotlib.pyplot as plt\nplt.hist(${currentVariableName}["${payload.args.target}"])`;
+                code = `import matplotlib.pyplot as plt\nplt.hist(${currentVariableName}["${payload.args.target}"])\n`;
                 break;
             case 'normalize':
                 const { start, end, target } = payload.args;
@@ -491,14 +555,14 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 code = `from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler(feature_range=(${start}, ${end}))
 ${newVariableName} = ${currentVariableName}.copy()
-${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${target}"].values.reshape(-1, 1))`;
+${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${target}"].values.reshape(-1, 1))\n`;
                 this.addToHistory(`Normalized column: "${target}"`, newVariableName, code);
                 break;
             case 'fillna':
                 const { newValue } = payload.args;
                 this.variableCounter += 1;
                 newVariableName = `df${this.variableCounter}`;
-                code = `${newVariableName} = ${currentVariableName}.fillna(${newValue})`;
+                code = `${newVariableName} = ${currentVariableName}.fillna(${newValue})\n`;
                 break;
             case DataViewerMessages.GetHistoryItem:
                 this.getHistoryItem(payload.args.index).ignoreErrors();

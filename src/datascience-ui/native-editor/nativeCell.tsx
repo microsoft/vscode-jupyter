@@ -764,7 +764,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         cellVM={this.props.cellVM}
                         editorOptions={options}
                         history={undefined}
-                        codeTheme={this.props.codeTheme}
                         onCodeChange={this.onCodeChange}
                         onCodeCreated={this.onCodeCreated}
                         testMode={this.props.testMode ? true : false}

@@ -280,7 +280,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         testMode={this.props.testMode}
                         cellVM={this.props.editCellVM}
                         baseTheme={baseTheme}
-                        codeTheme={this.props.codeTheme}
                         showWatermark={true}
                         editExecutionCount={executionCount.toString()}
                         monacoTheme={this.props.monacoTheme}
@@ -373,7 +372,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                             testMode={this.props.testMode}
                             cellVM={cellVM}
                             baseTheme={this.props.baseTheme}
-                            codeTheme={this.props.codeTheme}
                             showWatermark={cellVM.cell.id === Identifiers.EditCellId}
                             editExecutionCount={this.getInputExecutionCount().toString()}
                             monacoTheme={this.props.monacoTheme}

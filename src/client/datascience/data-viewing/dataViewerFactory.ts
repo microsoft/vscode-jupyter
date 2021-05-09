@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import '../../common/extensions';
-import { window } from 'vscode';
+import { WebviewPanel, window } from 'vscode';
 import { inject, injectable } from 'inversify';
 
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
@@ -42,7 +42,7 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
     }
 
     @captureTelemetry(Telemetry.StartShowDataViewer)
-    public async create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer> {
+    public async create(dataProvider: IDataViewerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<IDataViewer> {
         let result: IDataViewer | undefined;
 
         // Create the data explorer
@@ -54,7 +54,7 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
             dataExplorer.onDidChangeDataViewerViewState(this.updateViewStateContext, this, this.disposables);
 
             // Show the window and the data
-            await dataExplorer.showData(dataProvider, title);
+            await dataExplorer.showData(dataProvider, title, webviewPanel);
             result = dataExplorer;
         } finally {
             if (!result) {

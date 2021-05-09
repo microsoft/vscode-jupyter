@@ -67,7 +67,8 @@
         "onCommand:jupyter.openVariableView",
         "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
         "onNotebook:jupyter-notebook",
-        "onCustomEditor:jupyter.notebook.ipynb"
+        "onCustomEditor:jupyter.notebook.ipynb",
+        "onCustomEditor:jupyter-data-wrangler"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -1874,6 +1875,16 @@
                     }
                 ],
                 "priority": "option"
+            },
+            {
+                "viewType": "jupyter-data-wrangler",
+                "displayName": "Data Wrangler",
+                "selector": [
+                    {
+                        "filenamePattern": "*.csv"
+                    }
+                ],
+                "priority": "default"
             }
         ],
         "viewsContainers": {
