@@ -22,7 +22,6 @@ export class MockKernelFinder implements ILocalKernelFinder {
             ? this.dummySpecs.get(option.path as string)
             : this.dummySpecs.get(((option?.path as string) || '').toString());
         if (spec) {
-            traceInfo(`Returning dummy spec`);
             return spec;
         }
         return this.realFinder.findKernel(resource, option);
