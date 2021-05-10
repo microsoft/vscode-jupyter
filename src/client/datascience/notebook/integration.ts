@@ -15,7 +15,7 @@ import { traceError } from '../../common/logger';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
-import { isJupyterNotebook, NotebookCellStateTracker } from './helpers/helpers';
+import { NotebookCellStateTracker } from './helpers/helpers';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
 import { INotebookContentProvider } from './types';
 
