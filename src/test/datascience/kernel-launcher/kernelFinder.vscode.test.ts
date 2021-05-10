@@ -12,7 +12,6 @@ import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
-import { traceInfo } from '../../../client/common/logger';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {
