@@ -2,14 +2,6 @@
 // Licensed under the MIT License.
 
 import {
-    Event,
-    CancellationToken,
-    NotebookCommunication,
-    NotebookDocument,
-    NotebookKernel,
-    NotebookKernelProvider
-} from 'vscode';
-import {
     IContextualHelp,
     IContextualHelpWebviewViewProvider,
     INotebook,
