@@ -3,7 +3,6 @@
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import { CancellationToken } from 'vscode';
-import { traceInfo } from '../../client/common/logger';
 import { Resource } from '../../client/common/types';
 import { LocalKernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
