@@ -511,7 +511,6 @@ export function findPreferredKernel(
     }
 
     // If still not found, try languages
-    traceInfo(`findPreferredKernel index2 = ${index}`);
     if (index < 0) {
         index = kernels.findIndex((kernelSpecConnection) => {
             if (kernelSpecConnection.kind === 'startUsingKernelSpec') {
@@ -523,7 +522,6 @@ export function findPreferredKernel(
             }
         });
     }
-    traceInfo(`findPreferredKernel index = ${index}`);
     return index >= 0 ? kernels[index] : undefined;
 }
 

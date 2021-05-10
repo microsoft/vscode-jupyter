@@ -26,12 +26,6 @@ suite('DataScience - Kernels Finder', () => {
         interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         resourceToUse = Uri.file(path.join(workspace.workspaceFolders![0].uri.fsPath, 'test.ipynb'));
     });
-    setup(function () {
-        traceInfo(`Start Test ${this.currentTest?.title} with ${resourceToUse.toString()}`);
-    });
-    teardown(function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
-    });
     test('Can list all kernels', async () => {
         const kernelSpecs = await kernelFinder.listKernels(resourceToUse);
         assert.isArray(kernelSpecs);
