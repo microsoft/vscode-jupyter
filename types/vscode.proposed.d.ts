@@ -1013,15 +1013,30 @@ declare module 'vscode' {
 
     //#region https://github.com/microsoft/vscode/issues/122922, Notebook, Finalization 1
 
+    /**
+     * A notebook cell kind.
+     */
     export enum NotebookCellKind {
-        // todo@API rename/rethink as "Markup" cell
-        Markdown = 1,
+        /**
+         * A markup-cell is formatted source that is used for display.
+         */
+        Markup = 1,
+
+        /**
+         * A code-cell is source that can be {@link NotebookController executed} and that
+         * produces {@link NotebookCellOutput output}.
+         */
         Code = 2
     }
 
+    /**
+     * Represents a cell of a {@link NotebookDocument notebook}, either a {@link NotebookCellKind.Code code}-cell
+     * or {@link NotebookCellKind.Markup markup}-cell.
+     *
+     * NotebookCell instances are immutable and are kept in sync for as long as they are part of their notebook.
+     */
     // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
     export interface NotebookCell {
-
         /**
          * The index of this cell in its {@link NotebookDocument.cellAt containing notebook}. The
          * index is updated when a cell is moved within its notebook. The index is `-1`
@@ -1257,37 +1272,100 @@ declare module 'vscode' {
         //todo@API string or Unit8Array?
         value: unknown;
 
-        metadata?: Record<string, any>;
+        metadata?: { [key: string]: any };
 
-        constructor(mime: string, value: unknown, metadata?: Record<string, any>);
+        constructor(mime: string, value: unknown, metadata?: { [key: string]: any });
     }
 
     // @jrieken transient
     export class NotebookCellOutput {
         id: string;
         outputs: NotebookCellOutputItem[];
-        metadata?: Record<string, any>;
-        constructor(outputs: NotebookCellOutputItem[], metadata?: Record<string, any>);
-        constructor(outputs: NotebookCellOutputItem[], id: string, metadata?: Record<string, any>);
+        metadata?: { [key: string]: any };
+        constructor(outputs: NotebookCellOutputItem[], metadata?: { [key: string]: any });
+        constructor(outputs: NotebookCellOutputItem[], id: string, metadata?: { [key: string]: any });
     }
 
+    /**
+     * NotebookCellData is the raw representation of notebook cells. Its is part of {@link NotebookData `NotebookData`}.
+     */
     // todo@API support ids https://github.com/jupyter/enhancement-proposals/blob/master/62-cell-id/cell-id.md
     export class NotebookCellData {
+        /**
+         * The {@link NotebookCellKind kind} of this cell data.
+         */
         kind: NotebookCellKind;
-        // todo@API better names: value? text?
-        source: string;
-        // todo@API languageId (as in TextDocument)
-        language: string;
+
+        /**
+         * The source value of this cell data - either source code or formatted text.
+         */
+        value: string;
+
+        /**
+         * The language identifier of the source value of this cell data. Any value from
+         * {@link languages.getLanguages `getLanguages`} is possible.
+         */
+        languageId: string;
+
+        /**
+         * The outputs of this cell data.
+         */
         outputs?: NotebookCellOutput[];
+
+        /**
+         * The metadata of this cell data.
+         */
         metadata?: NotebookCellMetadata;
+
         // todo@API just executionSummary or lastExecutionSummary
         latestExecutionSummary?: NotebookCellExecutionSummary;
-        constructor(kind: NotebookCellKind, source: string, language: string, outputs?: NotebookCellOutput[], metadata?: NotebookCellMetadata, latestExecutionSummary?: NotebookCellExecutionSummary);
+
+        /**
+         * Create new cell data. Minimal cell data specifies its kind, its source value, and the
+         * language identifier of its source.
+         *
+         * @param kind The kind.
+         * @param value The source value.
+         * @param languageId The language identifier of the source value.
+         * @param outputs //TODO@API remove ctor?
+         * @param metadata //TODO@API remove ctor?
+         * @param latestExecutionSummary //TODO@API remove ctor?
+         */
+        constructor(
+            kind: NotebookCellKind,
+            value: string,
+            languageId: string,
+            outputs?: NotebookCellOutput[],
+            metadata?: NotebookCellMetadata,
+            latestExecutionSummary?: NotebookCellExecutionSummary
+        );
     }
 
+    /**
+     * NotebookData is the raw representation of notebooks.
+     *
+     * Extensions are responsible to create {@link NotebookData `NotebookData`} so that the editor
+     * can create a {@link NotebookDocument `NotebookDocument`}.
+     *
+     * @see {@link NotebookSerializer}
+     */
     export class NotebookData {
+        /**
+         * The cell data of this notebook data.
+         */
         cells: NotebookCellData[];
+
+        /**
+         * The metadata of this notebook data.
+         */
         metadata: NotebookDocumentMetadata;
+
+        /**
+         * Create new notebook data.
+         *
+         * @param cells An array of cell data.
+         * @param metadata Notebook metadata.
+         */
         constructor(cells: NotebookCellData[], metadata?: NotebookDocumentMetadata);
     }
 
@@ -1403,6 +1481,7 @@ declare module 'vscode' {
         endTime?: number;
     }
 
+    // todo@API jsdoc slightly outdated: kernel, notebook.createNotebookCellExecutionTask
     /**
      * A NotebookCellExecutionTask is how the kernel modifies a notebook cell as it is executing. When
      * {@link notebook.createNotebookCellExecutionTask `createNotebookCellExecutionTask`} is called, the cell
@@ -1501,9 +1580,9 @@ declare module 'vscode' {
         dispose(): void;
 
         /**
-         * A kernel can apply to one or many notebook documents but a notebook has only one active
-         * kernel. This event fires whenever a notebook has been associated to a kernel or when
-         * that association has been removed.
+         * An event that fires whenever a controller has been selected for a notebook document. Selecting a controller
+         * for a notebook is a user gesture and happens either explicitly or implicitly when interacting while a
+         * controller was suggested.
          */
         readonly onDidChangeNotebookAssociation: Event<{ notebook: NotebookDocument, selected: boolean }>;
 
@@ -1635,7 +1714,10 @@ declare module 'vscode' {
         // todo@API qualify cell, ...NotebookCell...
         export const onDidChangeNotebookCellExecutionState: Event<NotebookCellExecutionStateChangeEvent>;
 
-        export function registerNotebookCellStatusBarItemProvider(notebookType: string, provider: NotebookCellStatusBarItemProvider): Disposable;
+        export function registerNotebookCellStatusBarItemProvider(
+            notebookType: string,
+            provider: NotebookCellStatusBarItemProvider
+        ): Disposable;
     }
 
     //#endregion
@@ -1904,7 +1986,7 @@ declare module 'vscode' {
      */
     export interface NotebookRegistrationData {
         displayName: string;
-        filenamePattern: (GlobPattern | { include: GlobPattern; exclude: GlobPattern; })[];
+        filenamePattern: (GlobPattern | { include: GlobPattern; exclude: GlobPattern })[];
         exclusive?: boolean;
     }
 
@@ -1912,13 +1994,27 @@ declare module 'vscode' {
 
         // TODO@api use NotebookDocumentFilter instead of just notebookType:string?
         // TODO@API options duplicates the more powerful variant on NotebookContentProvider
-        export function registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider, options?: NotebookDocumentContentOptions): Disposable;
+        export function registerNotebookContentProvider(
+            notebookType: string,
+            provider: NotebookContentProvider,
+            options?: NotebookDocumentContentOptions
+        ): Disposable;
 
         // SPECIAL overload with _NotebookRegistrationData
-        export function registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider, options?: NotebookDocumentContentOptions, registrationData?: NotebookRegistrationData): Disposable;
+        export function registerNotebookContentProvider(
+            notebookType: string,
+            provider: NotebookContentProvider,
+            options?: NotebookDocumentContentOptions,
+            registrationData?: NotebookRegistrationData
+        ): Disposable;
 
         // SPECIAL overload with _NotebookRegistrationData
-        export function registerNotebookSerializer(notebookType: string, serializer: NotebookSerializer, options?: NotebookDocumentContentOptions, registration?: NotebookRegistrationData): Disposable;
+        export function registerNotebookSerializer(
+            notebookType: string,
+            serializer: NotebookSerializer,
+            options?: NotebookDocumentContentOptions,
+            registration?: NotebookRegistrationData
+        ): Disposable;
     }
 
     //#endregion
@@ -3096,9 +3192,23 @@ declare module 'vscode' {
         Ignore = 5
     }
 
-    export interface PortAttributes {
+    export class PortAttributes {
+        /**
+         * The port number associated with this this set of attributes.
+         */
         port: number;
-        autoForwardAction: PortAutoForwardAction
+
+        /**
+         * The action to be taken when this port is detected for auto forwarding.
+         */
+        autoForwardAction: PortAutoForwardAction;
+
+        /**
+         * Creates a new PortAttributes object
+         * @param port the port number
+         * @param autoForwardAction the action to take when this port is detected
+         */
+        constructor(port: number, autoForwardAction: PortAutoForwardAction);
     }
 
     export interface PortAttributesProvider {
