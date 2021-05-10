@@ -16,6 +16,7 @@ import {
     UIKind,
     Uri
 } from 'vscode';
+import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { JVSC_EXTENSION_ID } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
