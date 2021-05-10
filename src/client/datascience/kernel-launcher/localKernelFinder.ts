@@ -201,9 +201,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                     if (
                         kernelspec.language === PYTHON_LANGUAGE &&
                         hideDefaultKernelSpecs &&
-                        (kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
-                            kernelspec.argv[0].toLowerCase() === 'python' ||
-                            kernelspec.argv[0].toLowerCase().startsWith('/usr/bin/python'))
+                        kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName)
                     ) {
                         traceInfo(`Hiding default kernel spec ${kernelspec.display_name}, ${kernelspec.argv[0]}`);
                         return false;
