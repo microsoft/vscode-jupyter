@@ -62,15 +62,15 @@ export class CustomEditorService implements ICustomEditorService, IExtensionSing
                 updatedSettings['*.ipynb'] = ViewType;
                 updateType = 'added';
                 await settings.update('editorAssociations', updatedSettings, vscode.ConfigurationTarget.Global);
-                sendTelemetryEvent(Telemetry.UpdateCustomEditorAssociation, undefined, { type: 'added' });
+                sendTelemetryEvent(Telemetry.UpdateCustomEditorAssociation, undefined, { type: updateType });
             }
 
             // Revert the settings.
             if (!this.useCustomEditorApi && updatedSettings['*.ipynb'] === ViewType) {
-                delete updatedSettings['*ipynb'];
+                updatedSettings['*ipynb'] = undefined;
                 updateType = 'removed';
                 await settings.update('editorAssociations', updatedSettings, vscode.ConfigurationTarget.Global);
-                sendTelemetryEvent(Telemetry.UpdateCustomEditorAssociation, undefined, { type: 'removed' });
+                sendTelemetryEvent(Telemetry.UpdateCustomEditorAssociation, undefined, { type: updateType });
             }
         } catch (ex) {
             sendTelemetryEvent(Telemetry.UpdateCustomEditorAssociation, undefined, { type: updateType! }, ex, true);

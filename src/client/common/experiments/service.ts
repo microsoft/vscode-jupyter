@@ -70,7 +70,7 @@ export class ExperimentService implements IExperimentService {
             (Array.isArray(editorAssociations) &&
                 editorAssociations.find((a) => a.viewType && a.viewType.includes(JupyterNotebookView))) ||
             (!Array.isArray(editorAssociations) &&
-                (editorAssociations as NewEditorAssociationSetting['*.ipynb']) === JupyterNotebookView)
+                (editorAssociations as NewEditorAssociationSetting)['*.ipynb'] === JupyterNotebookView)
         ) {
             this._optInto.push(`__${ExperimentGroups.NativeNotebook}__`);
         }

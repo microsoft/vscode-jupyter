@@ -132,17 +132,17 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         const updatedSettings = ensureUpdatedEditorAssociationSettingFormat(
             editorAssociations
         ) as NewEditorAssociationSetting;
-        const currentAssociation = editorAssociations as NewEditorAssociationSetting['*.ipynb'];
+        const currentAssociation = updatedSettings['*.ipynb'];
 
         // Update the settings
-        if (shouldEnableNativeNotebooksAssociation && !isJupyterNotebook(currentAssociation)) {
+        if (shouldEnableNativeNotebooksAssociation && currentAssociation !== JupyterNotebookView) {
             updatedSettings['*.ipynb'] = JupyterNotebookView;
             await settings.update('editorAssociations', updatedSettings, ConfigurationTarget.Global);
         }
 
         // Revert the settings.
-        if (!shouldEnableNativeNotebooksAssociation && isJupyterNotebook(currentAssociation)) {
-            delete updatedSettings['*.ipynb'];
+        if (!shouldEnableNativeNotebooksAssociation && currentAssociation === JupyterNotebookView) {
+            updatedSettings['*.ipynb'] = undefined;
             await settings.update('editorAssociations', updatedSettings, ConfigurationTarget.Global);
         }
     }
@@ -151,7 +151,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
     }
 }
 
-export type NewEditorAssociationSetting = { [glob: string]: string };
+export type NewEditorAssociationSetting = { [glob: string]: string | undefined };
 export type OldEditorAssociationSetting = {
     viewType: string;
     filenamePattern: string;
