@@ -471,7 +471,7 @@ export function findPreferredKernel(
                 }
 
                 // Find a kernel spec that matches the language in the notebook metadata.
-                if (score <= 0 && speclanguage === (nbMetadataLanguage || '')) {
+                if (score <= 0 && speclanguage && speclanguage === (nbMetadataLanguage || '')) {
                     traceInfo(
                         `findPreferredKernel score for speclanguage=${speclanguage}, ${getDisplayNameOrNameOfKernelConnection(
                             metadata
