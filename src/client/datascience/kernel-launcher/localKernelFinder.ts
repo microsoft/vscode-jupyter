@@ -11,7 +11,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IPathUtils, ReadWrite, Resource } from '../../common/types';
+import { IExtensions, IPathUtils, ReadWrite, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -75,7 +75,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {}
     @traceDecorators.verbose('Find kernel spec')
     @captureTelemetry(Telemetry.KernelFinderPerf)
@@ -200,14 +201,24 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                     if (
                         kernelspec.language === PYTHON_LANGUAGE &&
                         hideDefaultKernelSpecs &&
-                        kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName)
+                        (kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
+                            kernelspec.argv[0].toLowerCase() === 'python' ||
+                            kernelspec.argv[0].toLowerCase().startsWith('/usr/bin/python'))
                     ) {
+                        traceInfo(`Hiding default kernel spec ${kernelspec.display_name}, ${kernelspec.argv[0]}`);
                         return false;
                     }
                     // Disable xeus python for now.
                     if (kernelspec.argv[0].toLowerCase().endsWith('xpython')) {
+                        traceInfo(`Hiding xeus kernelspec`);
                         return false;
                     }
+                    const extensionId = kernelspec.metadata?.vscode?.extension_id;
+                    if (extensionId && this.extensions.getExtension(extensionId)) {
+                        traceInfo(`Hiding kernelspec ${kernelspec.display_name}, better support by ${extensionId}`);
+                        return false;
+                    }
+
                     return true;
                 })
                 .map(async (k) => {
