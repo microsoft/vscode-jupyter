@@ -472,6 +472,11 @@ export function findPreferredKernel(
 
                 // Find a kernel spec that matches the language in the notebook metadata.
                 if (score <= 0 && speclanguage === (nbMetadataLanguage || '')) {
+                    traceInfo(
+                        `findPreferredKernel score for speclanguage=${speclanguage}, ${getDisplayNameOrNameOfKernelConnection(
+                            metadata
+                        )} is ${score}`
+                    );
                     score = 1;
                 }
                 // Give python 3 environments a higher priority over others.
@@ -487,6 +492,11 @@ export function findPreferredKernel(
                         spec.argv[0].toLocaleLowerCase().includes('python3'))
                 ) {
                     score += 1;
+                    traceInfo(
+                        `findPreferredKernel score for Python3, ${getDisplayNameOrNameOfKernelConnection(
+                            metadata
+                        )} is ${score}`
+                    );
                 }
             }
 
@@ -501,6 +511,7 @@ export function findPreferredKernel(
     }
 
     // If still not found, try languages
+    traceInfo(`findPreferredKernel index2 = ${index}`);
     if (index < 0) {
         index = kernels.findIndex((kernelSpecConnection) => {
             if (kernelSpecConnection.kind === 'startUsingKernelSpec') {
