@@ -512,6 +512,7 @@ export function findPreferredKernel(
             }
         });
     }
+    traceInfo(`findPreferredKernel index = ${index}`);
     return index >= 0 ? kernels[index] : undefined;
 }
 

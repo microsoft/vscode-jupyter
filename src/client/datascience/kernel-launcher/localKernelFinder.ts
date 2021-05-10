@@ -109,10 +109,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 undefined
             );
             if (preferred) {
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`
-                );
+                traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
                 return preferred as LocalKernelConnectionMetadata;
             }
         } catch (e) {
