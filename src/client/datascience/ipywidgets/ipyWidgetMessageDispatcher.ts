@@ -45,7 +45,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private readonly disposables: IDisposable[] = [];
     private kernelRestartHandlerAttached?: boolean;
     private kernelSocketInfo?: KernelSocketInformation;
-    private sentKernelOptions = false;
     private kernelWasConnectedAtleastOnce?: boolean;
     private disposed = false;
     private pendingMessages: string[] = [];
@@ -159,6 +158,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.subscribeToKernelSocket(notebook);
             this.registerCommTargets(notebook);
         }
+        traceInfo('IPyWidgetMessageDispatcher.initialize');
     }
     protected raisePostMessage<M extends IInteractiveWindowMapping, T extends keyof IInteractiveWindowMapping>(
         message: IPyWidgetMessages,
@@ -183,7 +183,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 while (this.pendingMessages.length) {
                     this.pendingMessages.shift();
                 }
-                this.sentKernelOptions = false;
                 this.waitingMessageIds.forEach((d) => d.resultPromise.resolve());
                 this.waitingMessageIds.clear();
                 this.messageHookRequests.forEach((m) => m.resolve(false));
@@ -215,10 +214,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         if (!this.kernelSocketInfo) {
             return;
         }
-        if (!this.sentKernelOptions) {
-            this.sentKernelOptions = true;
-            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
-        }
+        this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
     }
     private async mirrorSend(data: any, _cb?: (err?: Error) => void): Promise<void> {
         // If this is shell control message, mirror to the other side. This is how

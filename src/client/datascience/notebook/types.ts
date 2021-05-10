@@ -16,25 +16,19 @@ import {
     IScratchPad,
     IScratchPadWebviewViewProvider
 } from '../types';
+import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
+import { VSCodeNotebookController } from './vscodeNotebookController';
 
 export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
-export const INotebookStatusBarProvider = Symbol('INotebookStatusBarProvider');
-
-export const INotebookKernelProvider = Symbol('INotebookKernelProvider');
-export interface INotebookKernelProvider extends NotebookKernelProvider {}
-
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 
-export interface INotebookKernelResolver {
-    resolveKernel(
-        kernel: NotebookKernel,
-        document: NotebookDocument,
-        webview: NotebookCommunication,
-        token: CancellationToken
-    ): Promise<void>;
+export const INotebookControllerManager = Symbol('INotebookControllerManager');
+export interface INotebookControllerManager {
+    readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: VSCodeNotebookController }>;
+    getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
+    getNotebookControllers(): Promise<VSCodeNotebookController[] | undefined>;
 }
-
 export enum CellOutputMimeTypes {
     error = 'application/x.notebook.error-traceback',
     stderr = 'application/x.notebook.stderr',
@@ -63,4 +57,16 @@ export interface IScratchPadProvider extends IScratchPadWebviewViewProvider {
 export const IContextualHelpProvider = Symbol('IContextualHelpProvider');
 export interface IContextualHelpProvider extends IContextualHelpWebviewViewProvider {
     readonly contextualHelp: IContextualHelp | undefined;
+}
+
+/**
+ * Handles communications between the WebView (used to render oututs in Notebooks) & extension host.
+ */
+export interface INotebookCommunication {
+    readonly editor: NotebookEditor;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    readonly onDidReceiveMessage: Event<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    postMessage(message: any): Thenable<boolean>;
+    asWebviewUri(localResource: Uri): Uri;
 }

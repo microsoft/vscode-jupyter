@@ -50,7 +50,12 @@ async function testInnerLoop(
     const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
     if (await jupyterExecution.isNotebookSupported()) {
         addMockData(ioc, 'a=1\na', 1);
-        await testFunc(type);
+        console.log(`Start test ${name}`);
+        try {
+            await testFunc(type);
+        } finally {
+            console.log(`End test ${name}`);
+        }
     } else {
         // eslint-disable-next-line no-console
         console.log(`${name} skipped, no Jupyter installed.`);

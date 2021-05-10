@@ -1,15 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { isTestExecution } from '../../client/common/constants';
 
-const enableLogger = !isTestExecution() || process.env.VSC_JUPYTER_FORCE_LOGGING || process.env.VSC_JUPYTER_LOG_FILE;
-
-// Might want to post this back to the other side too. This was
+const FgYellow = '\x1b[33m';
 export function logMessage(message: string) {
-    // put here to prevent having to disable the console log warning
-    if (enableLogger) {
-        // eslint-disable-next-line no-console
-        console.log(message);
-    }
+    // Change foreground color so its easy to pick messages from UI
+    // I.e. when looking at debugger console window (Toggle Dev Tools), it'll be easy to spot messages logged in UI vs extension.
+    console.log(`${FgYellow}${message}`);
 }

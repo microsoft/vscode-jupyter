@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as fastDeepEqual from 'fast-deep-equal';
 import { nbformat } from '@jupyterlab/coreutils';
 import {
     NotebookCellOutput,
@@ -12,7 +13,6 @@ import {
     NotebookCellMetadata,
     NotebookData,
     NotebookDocument,
-    NotebookKernel as VSCNotebookKernel,
     NotebookCellKind,
     NotebookDocumentMetadata,
     NotebookCellExecutionState,
@@ -37,7 +37,6 @@ import { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
-import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
 import { IDisposable, Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { CellOutputMimeTypes } from '../types';
@@ -56,13 +55,6 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     } else {
         return option.viewType === JupyterNotebookView;
     }
-}
-
-export function isJupyterKernel(kernel?: VSCNotebookKernel): kernel is VSCodeNotebookKernelMetadata {
-    if (!kernel) {
-        return false;
-    }
-    return kernel instanceof VSCodeNotebookKernelMetadata;
 }
 
 const kernelInformationForNotebooks = new WeakMap<
@@ -167,6 +159,41 @@ export function trackKernelInNotebookMetadata(
     kernelInformationForNotebooks.set(document, data);
 }
 /**
+ * Whether the kernel connection information tracked against the document is the same as the one provided.
+ */
+export function isSameAsTrackedKernelInNotebookMetadata(
+    document: NotebookDocument,
+    kernelConnection: KernelConnectionMetadata
+) {
+    const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
+    const expectedData: typeof data = { metadata: kernelConnection };
+    let language: string | undefined;
+    switch (kernelConnection?.kind) {
+        case 'connectToLiveKernel':
+            language = kernelConnection.kernelModel.language;
+            break;
+        case 'startUsingKernelSpec':
+            language = kernelConnection.kernelSpec.language;
+            break;
+        case 'startUsingPythonInterpreter':
+            language = PYTHON_LANGUAGE;
+            break;
+        default:
+            break;
+    }
+    if (language) {
+        expectedData.kernelInfo = {
+            language_info: {
+                name: language,
+                version: ''
+            }
+        };
+    } else {
+        expectedData.kernelInfo = undefined;
+    }
+    return fastDeepEqual(data, expectedData);
+}
+/**
  * Thus this method doesn't update it the notebook metadata, we merely keep track of the information.
  * When saving we retrieve the information from the tracked location (map).
  * @see {trackKernelInNotebookMetadata} That function does something similar.
@@ -215,8 +242,6 @@ export function notebookModelToVSCNotebookData(
         cells,
         new NotebookDocumentMetadata().with({
             custom: notebookContentWithoutCells, // Include metadata in VSC Model (so that VSC can display these if required)
-            cellEditable: isNotebookTrusted,
-            editable: isNotebookTrusted,
             trusted: isNotebookTrusted
         })
     );
@@ -293,7 +318,6 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
-        editable: true,
         custom: getNotebookCellMetadata(cell)
     });
     return new NotebookCellData(
@@ -318,7 +342,6 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
 }
 function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
     const notebookCellMetadata = new NotebookCellMetadata().with({
-        editable: true,
         custom: getNotebookCellMetadata(cell)
     });
     return new NotebookCellData(
@@ -333,27 +356,17 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
-    const hasErrors = outputs.some((output) => output.outputs.some((opit) => opit.mime === CellOutputMimeTypes.error));
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
-    let statusMessage: string | undefined;
-    if (hasExecutionCount && hasErrors) {
-        // Error details are stripped from the output, get raw output.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        statusMessage = getCellStatusMessageBasedOnFirstErrorOutput(cellOutputs);
-    }
 
     const notebookCellMetadata = new NotebookCellMetadata().with({
-        editable: true,
-        statusMessage,
         custom: getNotebookCellMetadata(cell)
     });
 
     const source = concatMultilineString(cell.source);
 
-    const executionSummary: NotebookCellExecutionSummary = {};
-    if (hasExecutionCount) {
-        executionSummary.executionOrder = cell.execution_count as number;
-    }
+    const executionSummary: NotebookCellExecutionSummary = hasExecutionCount
+        ? { executionOrder: cell.execution_count as number }
+        : {};
     return new NotebookCellData(
         NotebookCellKind.Code,
         source,
@@ -775,51 +788,12 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
         )?.value as any) || ''
     );
 }
-export function getCellStatusMessageBasedOnFirstErrorOutput(outputs?: nbformat.IOutput[]): string {
-    if (!Array.isArray(outputs)) {
-        return '';
-    }
-    const errorOutput = (outputs.find((output) => output.output_type === 'error') as unknown) as
-        | nbformat.IError
-        | undefined;
-    if (!errorOutput) {
-        return '';
-    }
-    return `${errorOutput.ename}${errorOutput.evalue ? ': ' : ''}${errorOutput.evalue}`;
-}
-
 export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
     const errorOutput = outputs.find(
         (op) => op.outputs.length && !op.outputs.some((opit) => opit.mime !== CellOutputMimeTypes.error)
     );
 
     return !!errorOutput;
-}
-
-export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: readonly NotebookCellOutput[]): string {
-    if (!Array.isArray(outputs)) {
-        return '';
-    }
-
-    const errorOutput = outputs.find(
-        (op) =>
-            op.outputs.length &&
-            !op.outputs.some((opit: NotebookCellOutputItem) => opit.mime !== CellOutputMimeTypes.error)
-    );
-
-    if (!errorOutput) {
-        return '';
-    }
-
-    const firstItem = errorOutput.outputs[0];
-
-    if (!firstItem) {
-        return '';
-    }
-
-    const errorValue = firstItem.value as nbformat.IError;
-
-    return `${errorValue.ename}${errorValue.evalue ? ': ' : ''}${errorValue.evalue}`;
 }
 
 export function findAssociatedNotebookDocument(cellUri: Uri, vscodeNotebook: IVSCodeNotebook, fs: IFileSystem) {

@@ -26,6 +26,10 @@ export const KnownKernelLanguageAliases = new Map<string, string>([
     ['c++12', 'c++'],
     ['c++14', 'c++']
 ]);
+/**
+ * This will get updated with the list of VS Code languages.
+ * This way, we can send those via telemetry, instead of having to hardcode the languages.
+ */
 export const KnownNotebookLanguages: string[] = [
     'python',
     'r',
@@ -140,6 +144,7 @@ export namespace Commands {
     export const OpenScratchPad = 'jupyter.notebookeditor.openScratchPad';
     export const OpenScratchPadInteractive = 'jupyter.notebookeditor.openInInteractive';
     export const OpenContextualHelp = 'jupyter.notebookeditor.openContextualHelp';
+    export const NotebookEditorToggleOutput = 'jupyter.notebookeditor.keybind.toggleOutput';
 }
 
 export namespace CodeLensCommands {
@@ -280,6 +285,7 @@ export enum Telemetry {
      * An export to a specific format failed
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
+    FailedToCreateNotebookController = 'DATASCIENCE.FAILED_TO_CREATE_CONTROLLER',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
@@ -346,6 +352,7 @@ export enum Telemetry {
     WebviewStyleUpdate = 'DS_INTERNAL.WEBVIEW_STYLE_UPDATE',
     WebviewMonacoStyleUpdate = 'DS_INTERNAL.WEBVIEW_MONACO_STYLE_UPDATE',
     FindJupyterKernelSpec = 'DS_INTERNAL.FIND_JUPYTER_KERNEL_SPEC',
+    FailedToUpdateKernelSpec = 'DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC',
     HashedCellOutputMimeType = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE',
     HashedCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE_PERF',
     HashedNotebookCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_NOTEBOOK_OUTPUT_MIME_TYPE_PERF',
@@ -475,6 +482,7 @@ export enum Telemetry {
      * to a sliceable Python variable in the data viewer.
      */
     DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
+    RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION',
     UpdateCustomEditorAssociation = 'DS_INTERNAL.UPDATE_CUSTOM_EDITOR_ASSOCIATION'
 }
 
@@ -567,10 +575,9 @@ export namespace DataFrameLoading {
     export const DataFrameRowFunc = '_VSCODE_getDataFrameRows';
 
     // Constants for the debugger which imports the script files
-    export const DataFrameImportName = '_VSCODE_DataFrameImport';
-    export const DataFrameImport = `import vscodeDataFrame as ${DataFrameImportName}`;
-    export const DataFrameInfoImportFunc = `${DataFrameImportName}._VSCODE_getDataFrameInfo`;
-    export const DataFrameRowImportFunc = `${DataFrameImportName}._VSCODE_getDataFrameRows`;
+    export const DataFrameImport = `__import__('vscodeDataFrame')`;
+    export const DataFrameInfoImportFunc = `${DataFrameImport}._VSCODE_getDataFrameInfo`;
+    export const DataFrameRowImportFunc = `${DataFrameImport}._VSCODE_getDataFrameRows`;
 }
 
 export namespace GetVariableInfo {
@@ -586,8 +593,7 @@ export namespace GetVariableInfo {
     export const VariablePropertiesFunc = '_VSCODE_getVariableProperties';
 
     // Constants for the debugger which imports the script files
-    export const VariableInfoImportName = '_VSCODE_VariableImport';
-    export const VariableInfoImport = `import vscodeGetVariableInfo as ${VariableInfoImportName}`;
+    export const VariableInfoImportName = `__import__('vscodeGetVariableInfo')`;
     export const VariableInfoImportFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
 }
 

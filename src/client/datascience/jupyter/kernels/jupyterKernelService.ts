@@ -146,8 +146,15 @@ export class JupyterKernelService {
             };
         }
 
+        traceInfo(`RegisterKernel for ${kernel.id}`);
+
         // Write out the contents into the new spec file
-        await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
+        try {
+            await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
+        } catch (ex) {
+            sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex, true);
+            throw ex;
+        }
         if (cancelToken?.isCancellationRequested) {
             return;
         }
@@ -234,7 +241,12 @@ export class JupyterKernelService {
 
             // Update the kernel.json with our new stuff.
             if (shouldUpdate) {
-                await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(specModel, undefined, 2));
+                try {
+                    await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(specModel, undefined, 2));
+                } catch (ex) {
+                    sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex, true);
+                    throw ex;
+                }
             }
 
             // Always update the metadata for the original kernel.

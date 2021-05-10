@@ -80,7 +80,8 @@ export class KernelProvider implements IKernelProvider {
             this.appShell,
             this.fs,
             this.context,
-            this.serverStorage
+            this.serverStorage,
+            options.controller
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });

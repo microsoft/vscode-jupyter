@@ -54,6 +54,7 @@ import {
 import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
 import { IS_CI_SERVER } from '../../../test/ciConstants';
+import { IPythonExecutionFactory } from '../../common/process/types';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -205,7 +206,8 @@ export class JupyterNotebookBase implements INotebook {
         private workspace: IWorkspaceService,
         private applicationService: IApplicationShell,
         private fs: IFileSystem,
-        private readonly vscNotebook: IVSCodeNotebook
+        private readonly vscNotebook: IVSCodeNotebook,
+        private readonly executionFactory: IPythonExecutionFactory
     ) {
         this.sessionStartTime = Date.now();
 
@@ -343,7 +345,8 @@ export class JupyterNotebookBase implements INotebook {
                 await sendTelemetryForPythonKernelExecutable(
                     this,
                     this._resource?.fsPath || this._identity.fsPath,
-                    this._executionInfo.kernelConnectionMetadata
+                    this._executionInfo.kernelConnectionMetadata,
+                    this.executionFactory
                 );
             }
             // Run any startup commands that we specified. Support the old form too

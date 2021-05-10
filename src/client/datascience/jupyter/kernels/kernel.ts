@@ -7,7 +7,15 @@ import { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
-import { CancellationTokenSource, Event, EventEmitter, NotebookCell, NotebookDocument, Uri } from 'vscode';
+import {
+    CancellationTokenSource,
+    Event,
+    EventEmitter,
+    NotebookCell,
+    NotebookController,
+    NotebookDocument,
+    Uri
+} from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
@@ -84,7 +92,8 @@ export class Kernel implements IKernel {
         appShell: IApplicationShell,
         private readonly fs: IFileSystem,
         context: IExtensionContext,
-        private readonly serverStorage: IJupyterServerUriStorage
+        private readonly serverStorage: IJupyterServerUriStorage,
+        controller: NotebookController
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -93,7 +102,8 @@ export class Kernel implements IKernel {
             kernelConnectionMetadata,
             context,
             interruptTimeout,
-            disposables
+            disposables,
+            controller
         );
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;

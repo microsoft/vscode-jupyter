@@ -50,6 +50,7 @@ import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { KernelSpecNotFoundError } from './kernelSpecNotFoundError';
+import { IPythonExecutionFactory } from '../../../common/process/types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -231,7 +232,8 @@ export class HostRawNotebookProvider
                         this.workspaceService,
                         this.appShell,
                         this.fs,
-                        this.vscodeNotebook
+                        this.vscodeNotebook,
+                        this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
                     );
 
                     // Run initial setup

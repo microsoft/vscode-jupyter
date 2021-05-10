@@ -1,13 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
-import {
-    ConfigurationTarget,
-    languages,
-    NotebookContentProvider as VSCNotebookContentProvider,
-    NotebookCellStatusBarItemProvider as VSCNotebookCellStatusBarItemProvider
-} from 'vscode';
+import { inject, injectable, named } from 'inversify';
+import { ConfigurationTarget, languages, Memento, NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationEnvironment,
@@ -17,19 +12,19 @@ import {
 } from '../../common/application/types';
 import { NotebookCellScheme, PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IDisposableRegistry } from '../../common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
-import { isJupyterNotebook, NotebookCellStateTracker } from './helpers/helpers';
+import { NotebookCellStateTracker } from './helpers/helpers';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
-import { VSCodeKernelPickerProvider } from './kernelProvider';
-import { INotebookContentProvider, INotebookKernelProvider, INotebookStatusBarProvider } from './types';
+import { INotebookContentProvider } from './types';
+
+export const HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING = 'CELL_TOOLBAR_SETTING_MEMENTO_KEY';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
  * I.e. this is where we integrate our stuff with VS Code via their extension endpoints.
  */
-
 @injectable()
 export class NotebookIntegration implements IExtensionSingleActivationService {
     constructor(
@@ -37,12 +32,11 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNb: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookContentProvider) private readonly notebookContentProvider: VSCNotebookContentProvider,
-        @inject(INotebookKernelProvider) private readonly kernelProvider: VSCodeKernelPickerProvider,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(INotebookStatusBarProvider) private readonly statusBarProvider: VSCNotebookCellStatusBarItemProvider,
-        @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider
+        @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento
     ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
@@ -71,26 +65,13 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                         this.notebookContentProvider,
                         {
                             transientOutputs: false,
-                            transientMetadata: {
+                            transientCellMetadata: {
                                 breakpointMargin: true,
-                                editable: true,
                                 inputCollapsed: true,
                                 outputCollapsed: true,
                                 custom: false
                             }
                         }
-                    )
-                );
-                this.disposables.push(
-                    this.vscNotebook.registerNotebookKernelProvider(
-                        { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
-                        this.kernelProvider
-                    )
-                );
-                this.disposables.push(
-                    this.vscNotebook.registerNotebookCellStatusBarItemProvider(
-                        { filenamePattern: '**/*.ipynb', viewType: JupyterNotebookView },
-                        this.statusBarProvider
                     )
                 );
             } catch (ex) {
@@ -113,40 +94,79 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
     }
     private async enableNotebooks() {
         await this.enableDisableEditorAssociation(true);
+        await this.moveCellToolbarToLeft();
     }
-    private async enableDisableEditorAssociation(enable: boolean) {
+
+    // By default we want Jupyter extension native notebook users to get the cell toolbar
+    // on the left, unless the user has already customized it before we get to update it.
+    private async moveCellToolbarToLeft() {
+        const extensionHasUpdatedSetting = this.globalState.get<boolean | undefined>(
+            HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING
+        );
+        if (extensionHasUpdatedSetting) {
+            // Jupyter extension has already customized setting. Don't customize it again
+            return;
+        }
+        await this.globalState.update(HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING, true);
+
+        // Jupyter extension hasn't customized this setting yet, but it's possible the user
+        // already changed it on their own.
+        // Make sure we don't overwrite the user's existing customization for this setting
+        const settings = this.workspace.getConfiguration('notebook', undefined);
+        const toolbarSettings = settings.get('cellToolbarLocation') as {
+            [key: string]: 'left' | 'right' | 'hidden';
+        };
+        const userCustomizedSetting = JupyterNotebookView in toolbarSettings;
+        if (userCustomizedSetting) {
+            // Regardless of what the user set this to, we should honor it
+            return;
+        }
+        toolbarSettings[JupyterNotebookView] = 'left';
+        await settings.update('cellToolbarLocation', toolbarSettings, ConfigurationTarget.Global);
+    }
+
+    private async enableDisableEditorAssociation(shouldEnableNativeNotebooksAssociation: boolean) {
         // This code is temporary.
         const settings = this.workspace.getConfiguration('workbench', undefined);
-        const editorAssociations = settings.get('editorAssociations') as {
-            viewType: string;
-            filenamePattern: string;
-        }[];
+        const editorAssociations = settings.get('editorAssociations'); // At this point we don't know if this is the old or new format
+        const updatedSettings = ensureUpdatedEditorAssociationSettingFormat(
+            editorAssociations
+        ) as NewEditorAssociationSetting;
+        const currentAssociation = updatedSettings['*.ipynb'];
 
-        // Update the settings.
-        if (
-            enable &&
-            (!Array.isArray(editorAssociations) ||
-                editorAssociations.length === 0 ||
-                !editorAssociations.find((item) => isJupyterNotebook(item.viewType)))
-        ) {
-            editorAssociations.push({
-                viewType: 'jupyter-notebook',
-                filenamePattern: '*.ipynb'
-            });
-            await settings.update('editorAssociations', editorAssociations, ConfigurationTarget.Global);
+        // Update the settings
+        if (shouldEnableNativeNotebooksAssociation && currentAssociation !== JupyterNotebookView) {
+            updatedSettings['*.ipynb'] = JupyterNotebookView;
+            await settings.update('editorAssociations', updatedSettings, ConfigurationTarget.Global);
         }
 
         // Revert the settings.
-        if (
-            !enable &&
-            Array.isArray(editorAssociations) &&
-            editorAssociations.find((item) => isJupyterNotebook(item.viewType))
-        ) {
-            const updatedSettings = editorAssociations.filter((item) => !isJupyterNotebook(item.viewType));
+        if (!shouldEnableNativeNotebooksAssociation && currentAssociation === JupyterNotebookView) {
+            updatedSettings['*.ipynb'] = undefined;
             await settings.update('editorAssociations', updatedSettings, ConfigurationTarget.Global);
         }
     }
     private async disableNotebooks() {
         await this.enableDisableEditorAssociation(false);
     }
+}
+
+export type NewEditorAssociationSetting = { [glob: string]: string | undefined };
+export type OldEditorAssociationSetting = {
+    viewType: string;
+    filenamePattern: string;
+}[];
+
+export function ensureUpdatedEditorAssociationSettingFormat(editorAssociations: unknown) {
+    // editorAssociations used to be an array. If we see an array here we should
+    // first update everything to the new format.
+    if (Array.isArray(editorAssociations)) {
+        const oldSettings = editorAssociations as OldEditorAssociationSetting;
+        const newSetting: NewEditorAssociationSetting = {};
+        oldSettings.forEach((setting) => {
+            newSetting[setting.filenamePattern] = setting.viewType;
+        });
+        editorAssociations = newSetting;
+    }
+    return editorAssociations;
 }

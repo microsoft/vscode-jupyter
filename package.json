@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.56.0-insider"
+        "vscode": "1.57.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -177,6 +177,14 @@
                 "key": "V",
                 "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.paste"
+            },
+            {
+                "mac": "O",
+                "win": "O",
+                "linux": "O",
+                "key": "O",
+                "when": "notebookEditorFocused && !inputFocus && notebookViewType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
+                "command": "jupyter.notebookeditor.keybind.toggleOutput"
             },
             {
                 "mac": "ctrl+shift+-",
@@ -366,6 +374,11 @@
                 "command": "jupyter.deleteCells",
                 "title": "%jupyter.command.jupyter.deleteCells.title%",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.notebookeditor.keybind.toggleOutput",
+                "title": "%DataScience.toggleCellOutput%",
+                "category": "Notebook"
             },
             {
                 "command": "jupyter.selectCell",
@@ -748,8 +761,9 @@
             },
             {
                 "command": "jupyter.refreshDataViewer",
-                "title": "%DataScience.refreshDataViewer%",
-                "category": "Jupyter"
+                "title": "%DataScience.refreshDataViewerCommandPalette%",
+                "category": "Jupyter",
+                "enablement": "jupyter.dataViewerActive"
             }
         ],
         "menus": {
@@ -886,6 +900,11 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.notebookeditor.keybind.toggleOutput",
+                    "title": "%DataScience.toggleCellOutput%",
+                    "when": "notebookViewType == jupyter-notebook"
+                },
                 {
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
@@ -1189,13 +1208,13 @@
                     "command": "jupyter.notebookeditor.expandallcells",
                     "title": "%jupyter.command.jupyter.expandallcells.title%",
                     "category": "Notebook",
-                    "when": "notebookEditorFocused"
+                    "when": "notebookEditorFocused && notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.collapseallcells",
                     "title": "%jupyter.command.jupyter.collapseallcells.title%",
                     "category": "Notebook",
-                    "when": "notebookEditorFocused"
+                    "when": "notebookEditorFocused && notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.keybind.undo",
@@ -1934,6 +1953,7 @@
         "@jupyterlab/services": "^4.2.0",
         "@loadable/component": "^5.12.0",
         "@nteract/messaging": "^7.0.0",
+        "@nteract/presentational-components": "^3.4.10",
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
@@ -1950,6 +1970,7 @@
         "bootstrap-less": "^3.3.8",
         "detect-indent": "^6.0.0",
         "diff-match-patch": "^1.0.0",
+        "download": "^8.0.0",
         "fast-deep-equal": "^2.0.1",
         "font-awesome": "^4.7.0",
         "fs-extra": "^4.0.3",
@@ -2000,6 +2021,7 @@
         "tmp": "^0.0.29",
         "typescript-char": "^0.0.0",
         "uint64be": "^1.0.1",
+        "underscore": "^1.12.1",
         "unicode": "^10.0.0",
         "untildify": "^3.0.2",
         "uuid": "^3.3.2",
@@ -2081,7 +2103,7 @@
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
         "@types/vscode": "^1.53.0",
-        "@types/vscode-notebook-renderer": "^1.55.0",
+        "@types/vscode-notebook-renderer": "^1.57.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",
@@ -2092,7 +2114,6 @@
         "acorn": "^6.4.1",
         "babel-polyfill": "^6.26.0",
         "cache-loader": "^4.1.0",
-        "canvas": "^2.6.0",
         "chai": "^4.3.0",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
@@ -2107,7 +2128,6 @@
         "dedent": "^0.7.0",
         "deemon": "^1.4.0",
         "del": "^3.0.0",
-        "download": "^7.0.0",
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
         "eslint": "^7.17.0",
@@ -2151,7 +2171,6 @@
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
-        "playwright-chromium": "^1.4.2",
         "postcss": "^7.0.27",
         "postcss-cssnext": "^3.1.0",
         "postcss-import": "^12.0.1",
@@ -2194,5 +2213,9 @@
         "why-is-node-running": "^2.0.3",
         "yargs": "^15.4.1",
         "yargs-parser": "^13.1.2"
+    },
+    "optionalDependencies": {
+        "canvas": "^2.7.0",
+        "playwright-chromium": "^1.10.0"
     }
 }

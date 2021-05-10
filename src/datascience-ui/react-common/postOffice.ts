@@ -4,6 +4,7 @@
 
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
+import { VSCodeEvent } from 'vscode-notebook-renderer';
 import { WebviewMessage } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
 import { logMessage } from './logger';
@@ -23,56 +24,25 @@ export interface IMessageHandler {
     dispose?(): void;
 }
 
+interface IMessageApi {
+    register(msgCallback: (msg: WebviewMessage) => Promise<void>): void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sendMessage(type: string, payload?: any): void;
+    dispose(): void;
+}
+
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type PostOfficeMessage = { type: string; payload?: any };
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-export class PostOffice implements IDisposable {
-    private registered: boolean = false;
+// Provides support for messaging when using the vscode webview messaging api
+class VsCodeMessageApi implements IMessageApi {
+    private messageCallback: ((msg: WebviewMessage) => Promise<void>) | undefined;
     private vscodeApi: IVsCodeApi | undefined;
-    private handlers: IMessageHandler[] = [];
-    private baseHandler = this.handleMessages.bind(this);
-    private readonly subject = new Subject<PostOfficeMessage>();
-    private readonly observable: Observable<PostOfficeMessage>;
-    constructor() {
-        this.observable = this.subject.asObservable();
-    }
-    public asObservable(): Observable<PostOfficeMessage> {
-        return this.observable;
-    }
-    public dispose() {
-        if (this.registered) {
-            this.registered = false;
-            window.removeEventListener('message', this.baseHandler);
-        }
-    }
+    private registered: boolean = false;
+    private baseHandler = this.handleVSCodeApiMessages.bind(this);
 
-    public sendMessage<M, T extends keyof M = keyof M>(type: T, payload?: M[T]) {
-        return this.sendUnsafeMessage(type.toString(), payload);
-    }
+    public register(msgCallback: (msg: WebviewMessage) => Promise<void>) {
+        this.messageCallback = msgCallback;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public sendUnsafeMessage(type: string, payload?: any) {
-        const api = this.acquireApi();
-        if (api) {
-            api.postMessage({ type: type, payload });
-        } else {
-            logMessage(`No vscode API to post message ${type}`);
-        }
-    }
-
-    public addHandler(handler: IMessageHandler) {
-        // Acquire here too so that the message handlers are setup during tests.
-        this.acquireApi();
-        this.handlers.push(handler);
-    }
-
-    public removeHandler(handler: IMessageHandler) {
-        this.handlers = this.handlers.filter((f) => f !== handler);
-    }
-
-    public acquireApi(): IVsCodeApi | undefined {
         // Only do this once as it crashes if we ask more than once
         // eslint-disable-next-line
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
@@ -93,20 +63,147 @@ export class PostOffice implements IDisposable {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const api = (this.vscodeApi as any) as undefined | { handleMessage?: Function };
                 if (api && api.handleMessage) {
-                    api.handleMessage(this.handleMessages.bind(this));
+                    api.handleMessage(this.handleVSCodeApiMessages.bind(this));
                 }
             } catch {
                 // Ignore.
             }
         }
-
-        return this.vscodeApi;
     }
-    private async handleMessages(ev: MessageEvent) {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public sendMessage(type: string, payload?: any) {
+        if (this.vscodeApi) {
+            logMessage(`UI PostOffice Sent ${type}`);
+            this.vscodeApi.postMessage({ type: type, payload });
+        } else {
+            logMessage(`No vscode API to post message ${type}`);
+        }
+    }
+
+    public dispose() {
+        if (this.registered) {
+            this.registered = false;
+            window.removeEventListener('message', this.baseHandler);
+        }
+    }
+
+    private async handleVSCodeApiMessages(ev: MessageEvent) {
+        const msg = ev.data as WebviewMessage;
+        if (msg && this.messageCallback) {
+            await this.messageCallback(msg);
+        }
+    }
+}
+
+// Provides support for messaging when hosted via a native notebook preload
+class KernelMessageApi implements IMessageApi {
+    private messageCallback: ((msg: WebviewMessage) => Promise<void>) | undefined;
+    private kernelHandler: IDisposable | undefined;
+
+    public register(msgCallback: (msg: WebviewMessage) => Promise<void>) {
+        this.messageCallback = msgCallback;
+        if (!this.kernelHandler) {
+            this.kernelHandler = onDidReceiveKernelMessage(this.handleKernelMessage.bind(this));
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public sendMessage(type: string, payload?: any) {
+        postKernelMessage({ type: type, payload });
+    }
+
+    public dispose() {
+        if (this.kernelHandler) {
+            this.kernelHandler.dispose();
+        }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private async handleKernelMessage(ev: VSCodeEvent<any>) {
+        const msg = (ev as unknown) as WebviewMessage;
+        if (msg && this.messageCallback) {
+            await this.messageCallback(msg);
+        }
+    }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type PostOfficeMessage = { type: string; payload?: any };
+
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+export class PostOffice implements IDisposable {
+    private messageApi: IMessageApi | undefined;
+    private handlers: IMessageHandler[] = [];
+    private readonly subject = new Subject<PostOfficeMessage>();
+    private readonly observable: Observable<PostOfficeMessage>;
+    constructor() {
+        this.observable = this.subject.asObservable();
+    }
+    public asObservable(): Observable<PostOfficeMessage> {
+        return this.observable;
+    }
+    public dispose() {
+        if (this.messageApi) {
+            this.messageApi.dispose();
+        }
+    }
+
+    public sendMessage<M, T extends keyof M = keyof M>(type: T, payload?: M[T]) {
+        return this.sendUnsafeMessage(type.toString(), payload);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public sendUnsafeMessage(type: string, payload?: any) {
+        if (this.messageApi) {
+            this.messageApi.sendMessage(type, payload);
+        } else {
+            logMessage(`No message API to post message ${type}`);
+        }
+    }
+
+    public addHandler(handler: IMessageHandler) {
+        // Acquire here too so that the message handlers are setup during tests.
+        this.acquireApi();
+        this.handlers.push(handler);
+    }
+
+    public removeHandler(handler: IMessageHandler) {
+        this.handlers = this.handlers.filter((f) => f !== handler);
+    }
+
+    // Hook up to our messaging API
+    public acquireApi() {
+        if (this.messageApi) {
+            return;
+        }
+
+        // If the kernel message API is available use that if not use the VS Code webview messaging API
+        if (this.useKernelMessageApi()) {
+            this.messageApi = new KernelMessageApi();
+        } else {
+            this.messageApi = new VsCodeMessageApi();
+        }
+
+        this.messageApi.register(this.handleMessage.bind(this));
+    }
+
+    // Check to see if global kernel message API is supported, if so use that
+    // instead of the VSCodeAPI which is not available in NativeNotebooks
+    private useKernelMessageApi(): boolean {
+        if (typeof postKernelMessage !== 'undefined') {
+            return true;
+        }
+
+        return false;
+    }
+
+    private async handleMessage(msg: WebviewMessage) {
         if (this.handlers) {
-            const msg = ev.data as WebviewMessage;
             if (msg) {
-                console.log(`+++ Message received: ${msg.type}`);
+                if ('type' in msg && typeof msg.type === 'string') {
+                    logMessage(`UI PostOffice Received ${msg.type}`);
+                }
                 this.subject.next({ type: msg.type, payload: msg.payload });
                 this.handlers.forEach((h: IMessageHandler | null) => {
                     if (h) {

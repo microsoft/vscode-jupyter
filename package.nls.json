@@ -190,6 +190,7 @@
     "Common.and": "and",
     "Common.ok": "Ok",
     "Common.install": "Install",
+    "Common.reInstall": "Re-Install",
     "Common.learnMore": "Learn more",
     "Common.reportThisIssue": "Report this issue",
     "CommonSurvey.remindMeLaterLabel": "Remind me later",
@@ -233,6 +234,7 @@
     "DataScience.copyToClipboardButtonTooltip": "Copy source to clipboard",
     "DataScience.plotOpen": "Expand image",
     "DataScience.libraryNotInstalled": "Data Science library {0} is not installed. Install?",
+    "DataScience.libraryNotInstalledCorrectlyOrOutdated": "Data Science library {0} is not installed correctly or is outdated. Re-Install?",
     "DataScience.libraryRequiredToLaunchJupyterNotInstalled": "Data Science library {0} is not installed.",
     "DataScience.librariesRequiredToLaunchJupyterNotInstalled": "Data Science libraries {0} are not installed.",
     "DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter": "Data Science library {1} is not installed in interpreter {0}.",
@@ -387,6 +389,7 @@
     "DataScience.runAll": "Run all cells",
     "DataScience.runAbove": "Run cells above",
     "DataScience.runBelow": "Run cell and below",
+    "DataScience.toggleCellOutput": "Toggle Cell Output",
     "DataScience.convertingToPythonFile": "Converting ipynb to python file",
     "DataScience.untitledNotebookMessage": "Your changes will be lost if you don't save them.",
     "DataScience.untitledNotebookYes": "Save",
@@ -446,6 +449,7 @@
     "DataScience.qgridWidgetScriptVersionCompatibilityWarning": "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1.",
     "DataScience.kernelStarted": "Started kernel {0}",
     "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "{0} requires {1} to be installed.",
+    "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate": "{1} in {0} is not correctly installed or requires an update.",
     "DataScience.runByLine": "Run by line (F10)",
     "DataScience.stopRunByLine": "Stop",
     "DataScience.couldNotInstallLibrary": "Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.",
@@ -478,6 +482,7 @@
     "DataScience.kernelTipMessage": "Tip: Change kernels using the status bar below.",
     "DataScience.notebookCreationPickerPlaceHolder": "Select an option to create a blank notebook",
     "DataScience.refreshDataViewer": "Refresh data viewer",
+    "DataScience.refreshDataViewerCommandPalette": "Refresh Data Viewer",
     "DataScience.sliceDropdownAxisLabel": "Axis",
     "DataScience.sliceDropdownIndexLabel": "Index",
     "DataScience.sliceSubmitButton": "Apply",
@@ -491,5 +496,6 @@
     "DataScience.defaultNotebookName": "default",
     "DataScience.scratchPadTitleFormat": "Notebook Scratch Pad -- {0}",
     "DataScience.scratchPadTitleEmpty": "Notebook Scratch Pad",
-    "DataScience.scratchPadEmpty": "Select a notebook to get a scratch pad"
+    "DataScience.scratchPadEmpty": "Select a notebook to get a scratch pad",
+    "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targetting the language '{1}'"
 }

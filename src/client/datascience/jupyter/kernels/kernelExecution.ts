@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { notebook, NotebookCell, NotebookCellKind, NotebookDocument } from 'vscode';
+import { notebook, NotebookCell, NotebookCellKind, NotebookController, NotebookDocument } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
@@ -35,13 +35,17 @@ export class KernelExecution implements IDisposable {
         readonly metadata: Readonly<KernelConnectionMetadata>,
         context: IExtensionContext,
         private readonly interruptTimeout: number,
-        disposables: IDisposableRegistry
+        disposables: IDisposableRegistry,
+        private readonly controller: NotebookController
     ) {
-        this.executionFactory = new CellExecutionFactory(errorHandler, appShell, context, disposables);
+        this.executionFactory = new CellExecutionFactory(errorHandler, appShell, context, disposables, controller);
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<void> {
+        if (cell.kind == NotebookCellKind.Markdown) {
+            return;
+        }
         sendKernelTelemetryEvent(cell.notebook.uri, Telemetry.ExecuteNativeCell);
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, notebookPromise);
         executionQueue.queueCell(cell);
@@ -241,7 +245,10 @@ export class KernelExecution implements IDisposable {
     private async getKernel(document: NotebookDocument): Promise<IKernel> {
         let kernel = this.kernelProvider.get(document.uri);
         if (!kernel) {
-            kernel = this.kernelProvider.getOrCreate(document.uri, { metadata: this.metadata });
+            kernel = this.kernelProvider.getOrCreate(document.uri, {
+                metadata: this.metadata,
+                controller: this.controller
+            });
         }
         if (!kernel) {
             throw new Error('Unable to create a Kernel to run cell');

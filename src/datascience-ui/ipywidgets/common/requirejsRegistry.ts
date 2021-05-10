@@ -4,6 +4,7 @@
 'use strict';
 
 import { WidgetScriptSource } from '../../../client/datascience/ipywidgets/types';
+import { logMessage } from '../../react-common/logger';
 
 type NonPartial<T> = {
     [P in keyof T]-?: T[P];
@@ -30,7 +31,7 @@ function getScriptsWithAValidScriptUriToBeRegistered(scripts: WidgetScriptSource
         .filter((source) => {
             if (source.scriptUri) {
                 // eslint-disable-next-line no-console
-                console.log(
+                logMessage(
                     `Source for IPyWidget ${source.moduleName} found in ${source.source} @ ${source.scriptUri}.`
                 );
                 return true;
@@ -54,6 +55,7 @@ function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
         paths: {}
     };
     scripts.forEach((script) => {
+        logMessage(`Registering IPyWidget ${script.moduleName} found in ${script.scriptUri}.`);
         scriptsAlreadyRegisteredInRequireJs.set(script.moduleName, script.scriptUri);
         // Drop the `.js` from the scriptUri.
         const scriptUri = script.scriptUri.toLowerCase().endsWith('.js')

@@ -11,14 +11,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { inject, injectable, named } from 'inversify';
+import { CancellationToken, Disposable, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
 import {
+    GLOBAL_MEMENTO,
     IDisposableRegistry,
     IExtensions,
+    IMemento,
     InstallerResponse,
     IPersistentStateFactory,
     Product,
@@ -26,8 +29,9 @@ import {
 } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
+import { isResource, noop } from '../common/utils/misc';
 import { PythonExtension, Telemetry } from '../datascience/constants';
+import { InterpreterPackages } from '../datascience/telemetry/interpreterPackages';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -249,17 +253,26 @@ export class PythonInstaller implements IPythonInstaller {
     public get onInstalled(): Event<{ product: Product; resource?: InterpreterUri }> {
         return this._onInstalled.event;
     }
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    constructor(
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(InterpreterPackages) private readonly interpreterPacakges: InterpreterPackages,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
+    ) {}
 
     public async install(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
+        reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse> {
+        if (resource && !isResource(resource)) {
+            this.interpreterPacakges.trackPackages(resource);
+        }
         let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
         try {
             const api = await this.apiProvider.getApi();
-            const result = await api.install(ProductMapping[product], resource, cancel);
+            const result = await api.install(ProductMapping[product], resource, cancel, reInstallAndUpdate);
+            trackPackageInstalledIntoInterpreter(this.memento, product, resource).catch(noop);
             if (result === InstallerResponse.Installed) {
                 this._onInstalled.fire({ product, resource });
             }

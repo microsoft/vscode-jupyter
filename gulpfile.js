@@ -196,6 +196,8 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in webpack performance recommendations:',
                 'WARNING in ./node_modules/vsls/vscode.js',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
+                'WARNING in ./node_modules/keyv/src/index.js',
+                'ERROR in ./node_modules/got/index.js',
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js',
@@ -211,6 +213,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
         case 'extension':
             return [
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
+                'WARNING in ./node_modules/keyv/src/index.js',
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js',
@@ -306,7 +309,7 @@ function hasNativeDependencies() {
         path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep)
     )
         .filter((item) => item.length > 0)
-        .filter((item) => !item.includes('zeromq') && !item.includes('keytar')) // Known native modules
+        .filter((item) => !item.includes('zeromq') && !item.includes('canvas') && !item.includes('keytar')) // Known native modules
         .filter(
             (item) =>
                 jsonProperties.findIndex((flattenedDependency) =>

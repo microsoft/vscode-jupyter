@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as vscode from 'vscode';
-import { IExtensionSingleActivationService } from '../activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
 import { IPythonExtensionChecker } from '../api/types';
 import { JVSC_EXTENSION_ID, UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../common/constants';
 import { FileSystemPathUtils } from '../common/platform/fs-paths';
@@ -200,6 +200,8 @@ import { ScratchPadProvider } from './notebook/scratchPad/scratchPadProvider';
 import { ScratchPadRegister } from './notebook/scratchPad/scratchPadRegister';
 import { ContextualHelpProvider } from './notebook/contextualHelp/contextualHelpProvider';
 import { ContextualHelpRegister } from './notebook/contextualHelp/contextualHelpRegister';
+import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
+import { ExtensionRecommendationService } from './extensionRecommendation';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -255,6 +257,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, WebviewIPyWidgetCoordinator);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, NativeEditorRunByLineListener);
+    serviceManager.addSingleton<NotebookIPyWidgetCoordinator>(NotebookIPyWidgetCoordinator, NotebookIPyWidgetCoordinator);
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
@@ -361,6 +364,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IScratchPadProvider>(IScratchPadProvider, ScratchPadProvider);
     serviceManager.addSingleton<IContextualHelpProvider>(IContextualHelpProvider, ContextualHelpProvider);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ExtensionRecommendationService);
 
     registerNotebookTypes(serviceManager);
     registerContextTypes(serviceManager);

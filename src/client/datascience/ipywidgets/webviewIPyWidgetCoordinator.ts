@@ -62,26 +62,14 @@ export class WebviewIPyWidgetCoordinator implements IInteractiveWindowListener {
         // There should be an instance of the WebviewMessageCoordinator per notebook webview or interactive window. Create
         // the message coordinator as soon as we're sure what notebook we're in.
         this.notebookIdentity = args.resource;
-        if (!this.messageCoordinator) {
-            const emitter = new EventEmitter<{
-                message: string;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                payload: any;
-            }>();
-            this.messageCoordinatorEvent = emitter.event((e) => {
-                // Special case a specific message. It must be posted to the internal class, not the webview
-                if (e.message === InteractiveWindowMessages.ConvertUriForUseInWebViewRequest) {
-                    this.postInternalMessageEmitter.fire(e);
-                } else {
-                    this.postEmitter.fire(e);
-                }
-            });
-            this.messageCoordinator = await CommonMessageCoordinator.create(
-                this.notebookIdentity,
-                this.serviceContainer,
-                emitter
-            );
-        }
-        // TODO: May have to update identity somehow.
+        this.messageCoordinator = await CommonMessageCoordinator.create(this.notebookIdentity, this.serviceContainer);
+        this.messageCoordinatorEvent = this.messageCoordinator.postMessage((e) => {
+            // Special case a specific message. It must be posted to the internal class, not the webview
+            if (e.message === InteractiveWindowMessages.ConvertUriForUseInWebViewRequest) {
+                this.postInternalMessageEmitter.fire(e);
+            } else {
+                this.postEmitter.fire(e);
+            }
+        });
     }
 }

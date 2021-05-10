@@ -13,7 +13,8 @@ import { IConfigurationService, IDisposableRegistry, Resource } from '../../comm
 import { swallowExceptions } from '../../common/utils/decorators';
 import { isUntitledFile } from '../../common/utils/misc';
 import { isPythonKernelConnection } from '../jupyter/kernels/helpers';
-import { getNotebookMetadata, isJupyterKernel, isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers';
+import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers';
+import { INotebookControllerManager } from '../notebook/types';
 import {
     IInteractiveWindowProvider,
     INotebookCreationTracker,
@@ -35,7 +36,8 @@ export class KernelDaemonPreWarmer {
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager
     ) {}
     public async activate(_resource: Resource): Promise<void> {
         // Check to see if raw notebooks are supported
@@ -91,8 +93,8 @@ export class KernelDaemonPreWarmer {
         if (isUntitledFile(doc.uri) || !isJupyterNotebook(doc)) {
             return;
         }
-        const kernel = this.vscodeNotebook.notebookEditors.find((item) => item.document === doc)?.kernel;
-        const isPythonKernel = isJupyterKernel(kernel) ? isPythonKernelConnection(kernel.selection) : false;
+        const kernelConnection = this.controllerManager.getSelectedNotebookController(doc)?.connection;
+        const isPythonKernel = kernelConnection ? isPythonKernelConnection(kernelConnection) : false;
         const notebookMetadata = isPythonNotebook(getNotebookMetadata(doc));
         if (
             isPythonKernel ||

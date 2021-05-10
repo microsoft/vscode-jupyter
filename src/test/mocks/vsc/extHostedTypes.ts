@@ -7,7 +7,6 @@
 // import * as crypto from 'crypto';
 
 /* eslint-disable  */
-
 import { relative } from 'path';
 import * as vscode from 'vscode';
 import { vscMockHtmlContent } from './htmlContent';
@@ -622,8 +621,7 @@ export namespace vscMockExtHostedTypes {
         }
         replaceNotebookCells(
             _uri: vscode.Uri,
-            _start: number,
-            _end: number,
+            _range: vscode.NotebookRange,
             _cells: vscode.NotebookCellData[],
             _metadata?: vscode.WorkspaceEditEntryMetadata
         ): void {
