@@ -2283,7 +2283,10 @@ declare module 'vscode' {
     }
 
     export namespace languages {
-        export function getTokenInformationAtPosition(document: TextDocument, position: Position): Thenable<TokenInformation>;
+        export function getTokenInformationAtPosition(
+            document: TextDocument,
+            position: Position
+        ): Thenable<TokenInformation>;
     }
 
     //#endregion
@@ -2308,7 +2311,10 @@ declare module 'vscode' {
          * @param provider An inlay hints provider.
          * @return A {@link Disposable} that unregisters this provider when being disposed.
          */
-        export function registerInlayHintsProvider(selector: DocumentSelector, provider: InlayHintsProvider): Disposable;
+        export function registerInlayHintsProvider(
+            selector: DocumentSelector,
+            provider: InlayHintsProvider
+        ): Disposable;
     }
 
     export enum InlayHintKind {
