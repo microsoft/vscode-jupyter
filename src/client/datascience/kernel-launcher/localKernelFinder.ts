@@ -196,7 +196,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         const hideDefaultKernelSpecs = interpreters.length > 0 || activeInterpreter ? true : false;
 
         // Then go through all of the kernels and generate their metadata
-        const distinctKernelMetadat = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
+        const distinctKernelMetadata = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
         await Promise.all(
             kernelSpecs
                 .filter((kernelspec) => {
@@ -267,15 +267,15 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 .map(async (item) => {
                     const kernelSpec: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata = await item;
                     // Check if we have already seen this.
-                    if (!distinctKernelMetadat.has(kernelSpec.id)) {
-                        distinctKernelMetadat.set(kernelSpec.id, kernelSpec);
+                    if (!distinctKernelMetadata.has(kernelSpec.id)) {
+                        distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
                     }
                 })
         );
 
         // Combine the two into our list
         const results = [
-            ...Array.from(distinctKernelMetadat.values()),
+            ...Array.from(distinctKernelMetadata.values()),
             ...filteredInterpreters.map((i) => {
                 // Update spec to have a default spec file
                 const spec = createInterpreterKernelSpec(i, rootSpecPath);
