@@ -109,14 +109,6 @@ gulp.task('webpack', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
 });
 
-gulp.task('updateLicense', async () => {
-    await updateLicense(argv);
-});
-
-async function updateLicense(args) {
-    await fs.copyFile('extension_license.txt', 'LICENSE.txt');
-}
-
 gulp.task('updateBuildNumber', async () => {
     await updateBuildNumber(argv);
 });
