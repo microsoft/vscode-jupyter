@@ -471,9 +471,9 @@ export function findPreferredKernel(
                 }
 
                 // Find a kernel spec that matches the language in the notebook metadata.
-                if (score <= 0 && speclanguage && speclanguage === (nbMetadataLanguage || '')) {
+                if (score <= 0 && nbMetadataLanguage && speclanguage === (nbMetadataLanguage || '')) {
                     traceInfo(
-                        `findPreferredKernel score for speclanguage=${speclanguage}, ${getDisplayNameOrNameOfKernelConnection(
+                        `findPreferredKernel score for speclanguage=${nbMetadataLanguage}, ${getDisplayNameOrNameOfKernelConnection(
                             metadata
                         )} is ${score}`
                     );
@@ -483,7 +483,7 @@ export function findPreferredKernel(
                 // E.g. if we end up just looking at the suppof ot ehe languages, then Python2 & Python3 will both get 1.
                 // But Python 3 is definitely preferred over Python 2.
                 if (
-                    speclanguage === PYTHON_LANGUAGE &&
+                    nbMetadataLanguage === PYTHON_LANGUAGE &&
                     (metadata.interpreter?.sysVersion?.startsWith('3') ||
                         metadata.interpreter?.version?.major === 3 ||
                         metadata.interpreter?.displayName?.toLowerCase().includes('python 3') ||
