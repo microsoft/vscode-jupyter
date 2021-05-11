@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { languages, NotebookCellKind, NotebookDocument } from 'vscode';
+import { NotebookCellKind, NotebookCellOutput, NotebookDocument, NotebookRange } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -89,12 +89,20 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         }
 
         const monacoLanguage = translateKernelLanguageToMonaco(language);
-        chainWithPendingUpdates(editor.document, async () => {
-            await emptyCodeCells.map(async (cell) => {
+        chainWithPendingUpdates(editor.document, (edit) => {
+            emptyCodeCells.forEach((cell) => {
                 if (monacoLanguage.toLowerCase() === cell.document.languageId) {
                     return;
                 }
-                return languages.setTextDocumentLanguage(cell.document, monacoLanguage).then(noop, noop);
+                edit.replaceNotebookCells(editor.document.uri, new NotebookRange(cell.index, cell.index + 1), [
+                    {
+                        kind: cell.kind,
+                        language: monacoLanguage,
+                        metadata: cell.metadata,
+                        outputs: cell.outputs.map((op) => new NotebookCellOutput(op.outputs)),
+                        source: cell.document.getText()
+                    }
+                ]);
             });
         }).then(noop, noop);
     }

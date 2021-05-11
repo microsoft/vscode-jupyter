@@ -15,8 +15,7 @@ import {
     NotebookDocumentBackupContext,
     NotebookDocumentOpenContext,
     NotebookDocumentMetadata,
-    NotebookCellMetadata,
-    NotebookCellData
+    NotebookCellMetadata
 } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
@@ -48,13 +47,13 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
             // We cannot, not display a notebook.
             return {
                 cells: [
-                    new NotebookCellData(
-                        NotebookCellKind.Markup,
-                        `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
-                        MARKDOWN_LANGUAGE,
-                        [],
-                        new NotebookCellMetadata()
-                    )
+                    {
+                        kind: NotebookCellKind.Markdown,
+                        language: MARKDOWN_LANGUAGE,
+                        source: `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
+                        metadata: new NotebookCellMetadata(),
+                        outputs: []
+                    }
                 ],
                 metadata: new NotebookDocumentMetadata()
             };
