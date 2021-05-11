@@ -493,7 +493,7 @@ jobs:
           retention-days: 1
 
   vscodeTests:
-    needs: pick_environment # This is not required, but added so that build-vsix will get preference over this (no idea how GitHub actions priortizes these, but assuming this make a difference).
+    needs: pick_environment # This is not required, but added so that build-vsix will get preference over this (no idea how GitHub actions priortizes these, but assuming this make a difference). This way vsix will be ready even if tests take 4 hours.
     name: VS Code Tests # These tests run with Python extension & real Jupyter
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
