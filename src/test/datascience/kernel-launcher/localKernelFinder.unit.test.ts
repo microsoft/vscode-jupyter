@@ -497,6 +497,20 @@ import { IExtensions } from '../../../client/common/types';
             });
             assert.equal(kernel?.kernelSpec?.language, 'python', 'No python kernel found matching notebook metadata');
         });
+        test('Return active interpreter for interactive window (without passing any metadata)', async () => {
+            when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+            when(interpreterService.getInterpreters(anything())).thenResolve([
+                python3Interpreter,
+                condaEnvironment,
+                python2Interpreter,
+                condaEnvironmentBase
+            ]);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+
+            // Try python
+            let kernel = await kernelFinder.findKernel(Uri.file('wow.py'));
+            assert.equal(kernel?.kernelSpec?.language, 'python', 'No python kernel found matching notebook metadata');
+        });
         test('Can match (exactly) based on notebook metadata (metadata contains kernelspec name that we generated)', async () => {
             when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
                 if (c.startsWith('python')) {

@@ -366,12 +366,18 @@ export function findPreferredKernel(
     // If still not found, look for a match based on notebook metadata and interpreter
     if (index < 0) {
         const hasLanguageInfo = notebookMetadata?.language_info?.name ? true : false;
-        const nbMetadataLanguage =
-            !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
-                ? PYTHON_LANGUAGE
-                : (
-                      (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
-                  )?.toLowerCase();
+        let nbMetadataLanguage: string | undefined;
+        // Interactive window always defaults to Python kernels.
+        if (getResourceType(resource) === 'interactive') {
+            nbMetadataLanguage = PYTHON_LANGUAGE;
+        } else {
+            nbMetadataLanguage =
+                !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
+                    ? PYTHON_LANGUAGE
+                    : (
+                          (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
+                      )?.toLowerCase();
+        }
         let bestScore = -1;
         for (let i = 0; kernels && i < kernels?.length; i = i + 1) {
             const metadata = kernels[i];
