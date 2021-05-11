@@ -52,6 +52,57 @@ gulp.task('checkNativeDependencies', (done) => {
     }
     done();
 });
+gulp.task('checkNpmDependencies', (done) => {
+    const packageLock = require('./package-lock.json');
+    const errors = [];
+
+    const expectedVersions = [
+        { name: 'lodash', version: '4.17.21' },
+        { name: 'node_modules/lodash', version: '4.17.21' },
+        { name: 'trim', version: '0.0.3' },
+        { name: 'node_modules/trim', version: '0.0.3' }
+    ];
+    function checkPackageVersions(packages, parent) {
+        expectedVersions.forEach((expectedVersion) => {
+            if (!packages[expectedVersion.name]) {
+                return;
+            }
+            const version = packages[expectedVersion.name].version || packages[expectedVersion.name];
+            if (!version){
+                return;
+            }
+            const requiredMajorVersion = expectedVersion.version.substring(0,1);
+            if (version.startsWith(`^${requiredMajorVersion}`)){
+                return;
+            }
+            if (!version.includes(expectedVersion.version)) {
+                errors.push(
+                    `${expectedVersion.name} version needs to be at least ${
+                        expectedVersion.version
+                    }, current ${version}, ${parent ? `(parent package ${parent})` : ''}`
+                );
+            }
+        });
+    }
+    function checkPackageDependencies(packages) {
+        Object.keys(packages).forEach((packageName) => {
+            const dependencies = packages[packageName]['dependencies'];
+            if (dependencies) {
+                checkPackageVersions(dependencies, packageName);
+            }
+        });
+    }
+
+    checkPackageVersions(packageLock['packages']);
+    checkPackageVersions(packageLock['dependencies']);
+    checkPackageDependencies(packageLock['packages']);
+
+    if (errors.length > 0) {
+        errors.forEach((ex) => console.error(ex));
+        throw new Error(errors.join(', '));
+    }
+    done();
+});
 
 gulp.task('compile-ipywidgets', () => buildIPyWidgets());
 
@@ -253,7 +304,7 @@ gulp.task('downloadRendererExtension', async () => {
 });
 
 gulp.task('prePublishBundle', gulp.series('includeBCryptGenRandomExe', 'downloadRendererExtension', 'webpack'));
-gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
+gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
