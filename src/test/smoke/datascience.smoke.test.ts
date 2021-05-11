@@ -33,7 +33,7 @@ suite('Smoke Tests', () => {
         traceInfo(`Start Test Completed ${this.currentTest?.title}`);
     });
     suiteTeardown(closeActiveWindows);
-    teardown(async function() {
+    teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
         await closeActiveWindows();
         traceInfo(`End Test Compelete ${this.currentTest?.title}`);
