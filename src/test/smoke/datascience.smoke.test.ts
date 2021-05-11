@@ -73,11 +73,15 @@ suite('Smoke Tests', () => {
         const textDocument = await openFile(file);
 
         // Wait for code lenses to get detected.
+        console.log('Step0');
         await sleep(1_000);
-
+        console.log('Step1');
         await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
+        console.log('Step2');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
+        console.log('Step3');
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
+        console.log('Step4');
     }).timeout(timeoutForCellToRun);
 
     test('Run Cell in native editor', async () => {
