@@ -24,7 +24,8 @@ import {
     NotebookCellMetadata,
     NotebookCellOutputItem,
     NotebookRange,
-    NotebookCellExecutionState
+    NotebookCellExecutionState,
+    NotebookCellData
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -95,13 +96,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
         edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-            {
-                kind: NotebookCellKind.Markdown,
-                language: MARKDOWN_LANGUAGE,
-                source,
-                metadata: new NotebookCellMetadata(),
-                outputs: []
-            }
+            new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE, [], new NotebookCellMetadata())
         ])
     );
     return activeEditor.document.cellAt(startNumber)!;
@@ -115,13 +110,13 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     const edit = new WorkspaceEdit();
     edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-        {
-            kind: NotebookCellKind.Code,
-            language: options?.language || PYTHON_LANGUAGE,
+        new NotebookCellData(
+            NotebookCellKind.Code,
             source,
-            metadata: new NotebookCellMetadata(),
-            outputs: []
-        }
+            options?.language || PYTHON_LANGUAGE,
+            [],
+            new NotebookCellMetadata()
+        )
     ]);
     await workspace.applyEdit(edit);
 

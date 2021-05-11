@@ -230,13 +230,7 @@ export function notebookModelToVSCNotebookData(
         .map((item) => item!);
 
     if (cells.length === 0 && (isUntitledFile(notebookUri) || Object.keys(originalJson).length === 0)) {
-        cells.push({
-            kind: NotebookCellKind.Code,
-            language: preferredLanguage,
-            metadata: new NotebookCellMetadata(),
-            outputs: [],
-            source: ''
-        });
+        cells.push(new NotebookCellData(NotebookCellKind.Code, '', preferredLanguage));
     }
     return new NotebookData(
         cells,
@@ -260,7 +254,7 @@ export function createJupyterCellFromVSCNotebookCell(
     vscCell: NotebookCell
 ): nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell {
     let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
-    if (vscCell.kind === NotebookCellKind.Markdown) {
+    if (vscCell.kind === NotebookCellKind.Markup) {
         cell = createMarkdownCellFromNotebookCell(vscCell);
     } else if (vscCell.document.languageId === 'raw' || vscCell.document.languageId === 'plaintext') {
         cell = createRawCellFromNotebookCell(vscCell);
@@ -345,7 +339,7 @@ function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): N
         custom: getNotebookCellMetadata(cell)
     });
     return new NotebookCellData(
-        NotebookCellKind.Markdown,
+        NotebookCellKind.Markup,
         concatMultilineString(cell.source),
         MARKDOWN_LANGUAGE,
         [],
