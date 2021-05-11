@@ -30,6 +30,7 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { arePathsSame } from '../../common';
 import { Uri } from 'vscode';
 import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
+import { IExtensions } from '../../../client/common/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -38,6 +39,7 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
         let platformService: IPlatformService;
         let fs: IFileSystem;
         let extensionChecker: IPythonExtensionChecker;
+        let extensions: IExtensions;
         const defaultPython3Name = 'python3';
         const pyEnvInterpreter: PythonEnvironment = {
             displayName: 'Python 3 Environment for PyEnv',
@@ -186,6 +188,8 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
             when(platformService.isWindows).thenReturn(isWindows);
             when(platformService.isLinux).thenReturn(!isWindows);
             when(platformService.isMac).thenReturn(false);
+            extensions = mock<IExtensions>();
+            when(extensions.getExtension(anything())).thenReturn();
             fs = mock(FileSystem);
             const pathUtils = new PathUtils(isWindows);
             const workspaceService = mock(WorkspaceService);
@@ -251,7 +255,8 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
                 pathUtils,
                 instance(workspaceService),
                 instance(envVarsProvider),
-                instance(extensionChecker)
+                instance(extensionChecker),
+                instance(extensions)
             );
         });
         teardown(() => {
@@ -490,6 +495,20 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             });
+            assert.equal(kernel?.kernelSpec?.language, 'python', 'No python kernel found matching notebook metadata');
+        });
+        test('Return active interpreter for interactive window (without passing any metadata)', async () => {
+            when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+            when(interpreterService.getInterpreters(anything())).thenResolve([
+                python3Interpreter,
+                condaEnvironment,
+                python2Interpreter,
+                condaEnvironmentBase
+            ]);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+
+            // Try python
+            let kernel = await kernelFinder.findKernel(Uri.file('wow.py'));
             assert.equal(kernel?.kernelSpec?.language, 'python', 'No python kernel found matching notebook metadata');
         });
         test('Can match (exactly) based on notebook metadata (metadata contains kernelspec name that we generated)', async () => {

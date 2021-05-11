@@ -350,19 +350,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         if (this.isLocalLaunch) {
             kernels = await this.localKernelFinder.listKernels(resource, token);
-
-            // We need to filter out those items that are for other extensions.
-            kernels = kernels.filter((r) => {
-                if (r.kind !== 'connectToLiveKernel' && r.kernelSpec) {
-                    if (
-                        r.kernelSpec.metadata?.vscode?.extension_id &&
-                        this.extensions.getExtension(r.kernelSpec.metadata?.vscode?.extension_id)
-                    ) {
-                        return false;
-                    }
-                }
-                return true;
-            });
         } else {
             const connection = await this.notebookProvider.connect({
                 getOnly: false,

@@ -366,12 +366,18 @@ export function findPreferredKernel(
     // If still not found, look for a match based on notebook metadata and interpreter
     if (index < 0) {
         const hasLanguageInfo = notebookMetadata?.language_info?.name ? true : false;
-        const nbMetadataLanguage =
-            !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
-                ? PYTHON_LANGUAGE
-                : (
-                      (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
-                  )?.toLowerCase();
+        let nbMetadataLanguage: string | undefined;
+        // Interactive window always defaults to Python kernels.
+        if (getResourceType(resource) === 'interactive') {
+            nbMetadataLanguage = PYTHON_LANGUAGE;
+        } else {
+            nbMetadataLanguage =
+                !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
+                    ? PYTHON_LANGUAGE
+                    : (
+                          (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
+                      )?.toLowerCase();
+        }
         let bestScore = -1;
         for (let i = 0; kernels && i < kernels?.length; i = i + 1) {
             const metadata = kernels[i];
@@ -471,14 +477,19 @@ export function findPreferredKernel(
                 }
 
                 // Find a kernel spec that matches the language in the notebook metadata.
-                if (score <= 0 && speclanguage === (nbMetadataLanguage || '')) {
+                if (score <= 0 && nbMetadataLanguage && speclanguage === (nbMetadataLanguage || '')) {
+                    traceInfo(
+                        `findPreferredKernel score for speclanguage=${nbMetadataLanguage}, ${getDisplayNameOrNameOfKernelConnection(
+                            metadata
+                        )} is ${score}`
+                    );
                     score = 1;
                 }
                 // Give python 3 environments a higher priority over others.
                 // E.g. if we end up just looking at the suppof ot ehe languages, then Python2 & Python3 will both get 1.
                 // But Python 3 is definitely preferred over Python 2.
                 if (
-                    speclanguage === PYTHON_LANGUAGE &&
+                    nbMetadataLanguage === PYTHON_LANGUAGE &&
                     (metadata.interpreter?.sysVersion?.startsWith('3') ||
                         metadata.interpreter?.version?.major === 3 ||
                         metadata.interpreter?.displayName?.toLowerCase().includes('python 3') ||
@@ -487,6 +498,11 @@ export function findPreferredKernel(
                         spec.argv[0].toLocaleLowerCase().includes('python3'))
                 ) {
                     score += 1;
+                    traceInfo(
+                        `findPreferredKernel score for Python3, ${getDisplayNameOrNameOfKernelConnection(
+                            metadata
+                        )} is ${score}`
+                    );
                 }
             }
 
