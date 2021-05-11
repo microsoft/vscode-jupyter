@@ -53,6 +53,10 @@ gulp.task('checkNativeDependencies', (done) => {
     done();
 });
 gulp.task('checkNpmDependencies', (done) => {
+    /**
+     * Sometimes we have to update the package-lock.json file to upload dependencies.
+     * Thisscript will ensure that even if the package-lock.json is re-generated the (minimum) version numbers are still as expected.
+     */
     const packageLock = require('./package-lock.json');
     const errors = [];
 
@@ -67,10 +71,6 @@ gulp.task('checkNpmDependencies', (done) => {
             }
             const version = packages[expectedVersion.name].version || packages[expectedVersion.name];
             if (!version){
-                return;
-            }
-            const requiredMajorVersion = expectedVersion.version.substring(0,1);
-            if (version.startsWith(`^${requiredMajorVersion}`)){
                 return;
             }
             if (!version.includes(expectedVersion.version)) {
