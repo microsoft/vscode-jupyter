@@ -6,7 +6,14 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert, use } from 'chai';
 import chaiExclude from 'chai-exclude';
-import { NotebookCellOutput, NotebookCellOutputItem, Uri, NotebookCellKind, NotebookCellMetadata } from 'vscode';
+import {
+    NotebookCellOutput,
+    NotebookCellOutputItem,
+    Uri,
+    NotebookCellKind,
+    NotebookCellMetadata,
+    NotebookCellData
+} from 'vscode';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
 import { CellOutputMimeTypes } from '../../../client/datascience/notebook/types';
@@ -33,28 +40,27 @@ suite('DataScience - VSCode Notebook - helpers', () => {
 
         assert.isOk(notebook);
         assert.deepEqual(notebook.cells, [
-            {
-                kind: NotebookCellKind.Code,
-                language: PYTHON_LANGUAGE,
-                outputs: [],
-                source: 'print(1)',
-                metadata: new NotebookCellMetadata().with({
+            new NotebookCellData(
+                NotebookCellKind.Code,
+                'print(1)',
+                PYTHON_LANGUAGE,
+                [],
+                new NotebookCellMetadata().with({
                     custom: { metadata: {} }
                 }),
-                latestExecutionSummary: {
+                {
                     executionOrder: 10
                 }
-            },
-            {
-                kind: NotebookCellKind.Markdown,
-                language: MARKDOWN_LANGUAGE,
-                outputs: [],
-                source: '# HEAD',
-                metadata: new NotebookCellMetadata().with({
+            ),
+            new NotebookCellData(
+                NotebookCellKind.Markup,
+                '# HEAD',
+                MARKDOWN_LANGUAGE,
+                [],
+                new NotebookCellMetadata().with({
                     custom: { metadata: {} }
-                }),
-                latestExecutionSummary: undefined
-            }
+                })
+            )
         ]);
     });
     suite('Outputs', () => {
