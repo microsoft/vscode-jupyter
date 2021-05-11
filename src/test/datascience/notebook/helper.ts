@@ -532,7 +532,25 @@ export async function waitForQueuedForExecution(cell: NotebookCell, timeout: num
             return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending;
         },
         timeout,
-        `Cell ${cell.index + 1} not queued for execution`
+        `Cell ${cell.index + 1} not queued for execution, current state is ${NotebookCellStateTracker.getCellState(
+            cell
+        )}`
+    );
+}
+export async function waitForQueuedForExecutionOrExecuting(cell: NotebookCell, timeout: number = defaultTimeout) {
+    await waitForCondition(
+        async () => {
+            return (
+                NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending ||
+                NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing
+            );
+        },
+        timeout,
+        `Cell ${
+            cell.index + 1
+        } not queued for execution nor already executing, current state is ${NotebookCellStateTracker.getCellState(
+            cell
+        )}`
     );
 }
 export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, timeout: number = defaultTimeout) {
