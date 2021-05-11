@@ -9,6 +9,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { traceInfo } from '../../client/common/logger';
 import { IInteractiveWindowProvider, ISystemPseudoRandomNumberGenerator } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IExtensionTestApi, openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
@@ -26,9 +27,17 @@ suite('Smoke Tests', () => {
         api = await initialize();
         await setAutoSaveDelayInWorkspaceRoot(1);
     });
-    setup(initializeTest);
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
+        await initializeTest();
+        traceInfo(`Start Test Completed ${this.currentTest?.title}`);
+    });
     suiteTeardown(closeActiveWindows);
-    teardown(closeActiveWindows);
+    teardown(async function() {
+        traceInfo(`End Test ${this.currentTest?.title}`);
+        await closeActiveWindows();
+        traceInfo(`End Test Compelete ${this.currentTest?.title}`);
+    });
 
     test('Random bytes generation', async function () {
         return this.skip(); // Failing on windows. Tracked by 4444
