@@ -410,6 +410,8 @@ export async function startJupyterServer(api?: IExtensionTestApi) {
         const uriString = decodeURIComponent(uri.toString());
         traceInfo(`Jupyter started and listening at ${uriString}`);
         await selector.setJupyterURIToRemote(uriString);
+        const notebookControllerManager = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
+        (notebookControllerManager as any).allowRemoteConnection.resolve();
     } else {
         traceInfo(`Jupyter not started and set to local`); // This is the default
     }
