@@ -35,11 +35,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
             findFilesPromise.then((r) => (this.notebookCount += r.length), noop);
         }
         this.editorProvider.onDidOpenNotebookEditor(this.onEditorOpened, this, this.disposables);
-        notebook.onDidChangeNotebookCellExecutionState(
-            this.onDidChangeNotebookCellExecutionState,
-            this,
-            this.disposables
-        );
+        notebook.onDidChangeCellExecutionState(this.onDidChangeCellExecutionState, this, this.disposables);
     }
     public dispose() {
         // Send a bunch of telemetry
@@ -64,7 +60,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
             editor.executed((e) => this.executedNotebooksIndexedByUri.add(e.file.fsPath), this, this.disposables);
         }
     }
-    private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): void {
+    private onDidChangeCellExecutionState(e: NotebookCellExecutionStateChangeEvent): void {
         this.executedNotebooksIndexedByUri.add(e.cell.notebook.uri.fsPath);
     }
 }

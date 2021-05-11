@@ -413,11 +413,7 @@ export class NotebookCellStateTracker implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     private static cellStates = new WeakMap<NotebookCell, NotebookCellExecutionState>();
     constructor() {
-        notebook.onDidChangeNotebookCellExecutionState(
-            this.onDidChangeNotebookCellExecutionState,
-            this,
-            this.disposables
-        );
+        notebook.onDidChangeCellExecutionState(this.onDidChangeCellExecutionState, this, this.disposables);
     }
     dispose() {
         disposeAllDisposables(this.disposables);
@@ -425,7 +421,7 @@ export class NotebookCellStateTracker implements IDisposable {
     public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
         return NotebookCellStateTracker.cellStates.get(cell);
     }
-    private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
+    private onDidChangeCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
         NotebookCellStateTracker.cellStates.set(e.cell, e.executionState);
     }
 }
