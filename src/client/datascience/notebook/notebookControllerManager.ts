@@ -134,14 +134,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private async loadNotebookControllers(): Promise<VSCodeNotebookController[]> {
         const stopWatch = new StopWatch();
 
-        traceInfo('IANHU start loadNotebookControllers');
-
         try {
             this.cancelToken = new CancellationTokenSource();
 
             const connections = await this.getKernelConnectionMetadata(this.cancelToken.token);
-
-            traceInfo(`IANHU connections found ${connections.length}`);
 
             if (this.cancelToken.token.isCancellationRequested) {
                 // Bail out on making the controllers if we are cancelling
@@ -160,13 +156,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
                 `Providing notebook controllers with length ${controllers.length}.`
             );
-
-            controllers.forEach((value) => {
-                traceInfo(`IANHU Controller label ${value.label}`);
-                traceInfo(`IANHU Controller id ${value.id}`);
-                traceInfo(`IANHU Connection kind ${value.connection.kind}`);
-                traceInfo(`IANHU Connection id ${value.connection.id}`);
-            });
 
             return controllers;
         } finally {
@@ -192,8 +181,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const preferredSearchToken = new CancellationTokenSource();
         this.findPreferredInProgress.set(document, preferredSearchToken);
 
-        traceInfo('IANHU starting preferred search');
-
         this.findPreferredKernel(document, preferredSearchToken.token)
             .then((preferredConnection) => {
                 if (preferredSearchToken.token.isCancellationRequested) {
@@ -204,7 +191,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredConnection) {
                     traceInfo(
-                        `IANHU PreferredConnection: ${
+                        `PreferredConnection: ${
                             preferredConnection.id
                         } found for NotebookDocument: ${document.uri.toString()}`
                     );
@@ -224,8 +211,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
-        traceInfo('IANHU start setPreferredController');
-
         // Wait for our controllers to be loaded before we try to set a preferred on
         // can happen if a document is opened quick and we have not yet loaded our controllers
         const controllers = await this.controllersPromise;
@@ -236,9 +221,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         if (targetController) {
-            traceInfo(
-                `IANHU TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`
-            );
+            traceInfo(`TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`);
             await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
 
             // When we set the target controller we don't actually get a selected event from our controllers
@@ -383,17 +366,16 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         } else {
             // In remote CI test we need to wait until we start up our server and input our URI before we
             // try to connect to the server to get kernel connection info
-            await this.allowRemoteConnection.promise;
+            if (IS_REMOTE_NATIVE_TEST) {
+                await this.allowRemoteConnection.promise;
+            }
 
-            traceInfo('IANHU about to connect notebook provider');
             const connection = await this.notebookProvider.connect({
                 getOnly: false,
                 resource: resource,
                 disableUI: false,
                 localOnly: false
             });
-
-            traceInfo('IANHU notebook provider connected');
 
             kernels = await this.remoteKernelFinder.listKernels(resource, connection, token);
         }

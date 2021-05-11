@@ -26,7 +26,7 @@ import {
 } from '../types';
 import { isInterpreter } from './localKernelFinder';
 import { IRemoteKernelFinder } from './types';
-import { traceInfo, traceInfoIf } from '../../common/logger';
+import { traceInfoIf } from '../../common/logger';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -82,8 +82,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         // Get a jupyter session manager to talk to
         let sessionManager: IJupyterSessionManager | undefined;
 
-        traceInfo('IANHU remoteKernelFinder listKernels start');
-
         // This should only be used when doing remote.
         if (connInfo && connInfo.type === 'jupyter') {
             try {
@@ -95,8 +93,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                     sessionManager.getKernelSpecs(),
                     sessionManager.getRunningSessions()
                 ]);
-
-                traceInfo('IANHU remoteKernelFinder listKernels');
 
                 // Turn them both into a combined list
                 const mappedSpecs = specs.map((s) => {

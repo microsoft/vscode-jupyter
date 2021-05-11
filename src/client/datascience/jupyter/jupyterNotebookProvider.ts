@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { traceInfo } from '../../common/logger';
 import * as localize from '../../common/utils/localize';
 import {
     ConnectNotebookProviderOptions,
@@ -27,7 +26,6 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     }
 
     public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined> {
-        traceInfo('IANHU connect in jupyterNotebookProvider');
         const server = await this.serverProvider.getOrCreateServer(options);
         return server?.getConnectionInfo();
     }

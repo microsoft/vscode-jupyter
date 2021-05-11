@@ -3,7 +3,6 @@
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, EventEmitter, Memento } from 'vscode';
 import { IApplicationEnvironment, IEncryptedStorage, IWorkspaceService } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
 import { GLOBAL_MEMENTO, IConfigurationService, ICryptoUtils, IMemento } from '../../common/types';
 import { Settings } from '../constants';
 import { IJupyterServerUriStorage } from '../types';
@@ -116,7 +115,6 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         );
     }
     public getUri(): Promise<string> {
-        traceInfo('IANHU getUri');
         if (!this.currentUriPromise) {
             this.currentUriPromise = this.getUriInternal();
         }
@@ -150,7 +148,6 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     }
 
     private async getUriInternal(): Promise<string> {
-        traceInfo('IANHU getUriInternal start');
         const uri = this.configService.getSettings(undefined).jupyterServerType;
         if (uri === Settings.JupyterServerLocalLaunch || uri.length === 0) {
             return Settings.JupyterServerLocalLaunch;
@@ -161,10 +158,8 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             }
 
             // Should be stored in encrypted storage based on the workspace
-            traceInfo('IANHU getUriInternal getting uri');
             const key = this.getUriAccountKey();
             const storedUri = await this.encryptedStorage.retrieve(Settings.JupyterServerRemoteLaunchService, key);
-            traceInfo(`IANHU getUriInternal got uri ${storedUri}`);
 
             return storedUri || uri;
         }
@@ -175,15 +170,12 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
      */
     private getUriAccountKey(): string {
         if (this.workspaceService.rootPath) {
-            traceInfo('IANHU getUriAccountKey folder situation');
             // Folder situation
             return this.crypto.createHash(this.workspaceService.rootPath, 'string', 'SHA512');
         } else if (this.workspaceService.workspaceFile) {
-            traceInfo('IANHU getUriAccountKey workspace situation');
             // Workspace situation
             return this.crypto.createHash(this.workspaceService.workspaceFile.fsPath, 'string', 'SHA512');
         }
-        traceInfo('IANHU getUriAccountKey global situation');
         return this.appEnv.machineId; // Global key when no folder or workspace file
     }
 }

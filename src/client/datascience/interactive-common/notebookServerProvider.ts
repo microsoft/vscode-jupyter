@@ -53,7 +53,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         options: GetServerOptions,
         token?: CancellationToken
     ): Promise<INotebookServer | undefined> {
-        traceInfo('IANHU getOrCreateServer start');
         const serverOptions = await this.getNotebookServerOptions(options);
 
         // If we are just fetching or only want to create for local, see if exists
@@ -76,7 +75,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         options: GetServerOptions,
         token?: CancellationToken
     ): Promise<INotebookServer | undefined> {
-        traceInfo('IANHU createServer start');
         // When we finally try to create a server, update our flag indicating if we're going to allow UI or not. This
         // allows the server to be attempted without a UI, but a future request can come in and use the same startup
         this.allowingUI = options.disableUI ? this.allowingUI : true;
@@ -106,22 +104,12 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         const serverOptions = await this.getNotebookServerOptions(options);
         traceInfo(`Checking for server existence.`);
 
-        traceInfo('IANHU startServer start');
-
-        traceInfo(`IANHU startServer options: ${JSON.stringify(options)}`);
-        traceInfo(`IANHU startServer serverOptions: ${JSON.stringify(serverOptions)}`);
-
         // If the URI is 'remote' then the encrypted storage is not working. Ask user again for server URI
         if (serverOptions.uri === Settings.JupyterServerRemoteLaunch) {
-            traceInfo('IANHU startServer selectJupyterURI start');
             await this.serverSelector.selectJupyterURI(true);
-            traceInfo('IANHU startServer selectJupyterURI done');
             // Should have been saved
             serverOptions.uri = await this.serverUriStorage.getUri();
-            traceInfo('IANHU startServer serverURIStorage done');
         }
-
-        traceInfo('IANHU startServer uri selected');
 
         // Status depends upon if we're about to connect to existing server or not.
         const progressReporter = this.allowingUI
@@ -130,12 +118,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter())
             : undefined;
 
-        traceInfo('IANHU startServer progress reported created');
-
         // Check to see if we support ipykernel or not
         try {
-            traceInfo(`IANHU Checking for server usability.`);
-
             const usable = await this.checkUsable(serverOptions);
             if (!usable) {
                 traceInfo('Server not usable (should ask for install now)');
@@ -234,7 +218,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         metadata?: nbformat.INotebookMetadata;
         kernelConnection?: KernelConnectionMetadata;
     }): Promise<INotebookServerOptions> {
-        traceInfo('IANHU getNotebookServerOptions start');
         // Since there's one server per session, don't use a resource to figure out these settings
         let serverURI: string | undefined = await this.serverUriStorage.getUri();
         const useDefaultConfig: boolean | undefined = this.configuration.getSettings(undefined)
