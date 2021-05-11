@@ -57,8 +57,6 @@ gulp.task('checkNpmDependencies', (done) => {
     const errors = [];
 
     const expectedVersions = [
-        { name: 'lodash', version: '4.17.21' },
-        { name: 'node_modules/lodash', version: '4.17.21' },
         { name: 'trim', version: '0.0.3' },
         { name: 'node_modules/trim', version: '0.0.3' }
     ];
