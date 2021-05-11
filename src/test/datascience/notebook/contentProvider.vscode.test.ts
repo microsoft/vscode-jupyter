@@ -89,7 +89,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
 
         // We must have a default empty cell
         assert.equal(notebookData.cells.length, 1);
-        assert.isEmpty(notebookData.cells[0].value);
+        assert.isEmpty(notebookData.cells[0].source);
     });
     test('Verify Notebook Json', async () => {
         const storageProvider = api.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider);
@@ -141,7 +141,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.deepEqual(notebook.cellAt(1).metadata.custom?.metadata.tags, ['WOW'], 'Cell2, metadata');
 
         // Cell 3.
-        assert.equal(notebook.cellAt(2).kind, NotebookCellKind.Markup, 'Cell3, type');
+        assert.equal(notebook.cellAt(2).kind, NotebookCellKind.Markdown, 'Cell3, type');
         assert.include(notebook.cellAt(2).document.getText(), '# HELLO WORLD', 'Cell3, source');
         assert.lengthOf(notebook.cellAt(2).outputs, 0, 'Cell3, outputs');
         assert.isUndefined(notebook.cellAt(2).latestExecutionSummary?.executionOrder, 'Cell3, execution count');

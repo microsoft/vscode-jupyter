@@ -16,7 +16,6 @@ import {
     UIKind,
     Uri
 } from 'vscode';
-import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { JVSC_EXTENSION_ID } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
@@ -122,13 +121,10 @@ export class VSCodeNotebookController implements Disposable {
 
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         this.controller.updateNotebookAffinity(notebook, affinity);
-        // Only on CI Server.
-        if (IS_CI_SERVER) {
-            await this.commandManager.executeCommand('notebook.selectKernel', {
-                id: this.id,
-                extension: JVSC_EXTENSION_ID
-            });
-        }
+        await this.commandManager.executeCommand('notebook.selectKernel', {
+            id: this.id,
+            extension: JVSC_EXTENSION_ID
+        });
     }
 
     // Handle the execution of notebook cell
