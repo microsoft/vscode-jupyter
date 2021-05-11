@@ -529,10 +529,7 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
 export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = defaultTimeout) {
     await waitForCondition(
         async () => {
-            return (
-                NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending ||
-                NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing
-            );
+            return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending;
         },
         timeout,
         `Cell ${cell.index + 1} not queued for execution, current state is ${NotebookCellStateTracker.getCellState(
