@@ -15,7 +15,7 @@ import { traceError } from '../../common/logger';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
-import { isJupyterNotebook, NotebookCellStateTracker } from './helpers/helpers';
+import { NotebookCellStateTracker } from './helpers/helpers';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
 import { INotebookContentProvider } from './types';
 
@@ -125,39 +125,48 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         await settings.update('cellToolbarLocation', toolbarSettings, ConfigurationTarget.Global);
     }
 
-    private async enableDisableEditorAssociation(enable: boolean) {
+    private async enableDisableEditorAssociation(shouldEnableNativeNotebooksAssociation: boolean) {
         // This code is temporary.
         const settings = this.workspace.getConfiguration('workbench', undefined);
-        const editorAssociations = settings.get('editorAssociations') as {
-            viewType: string;
-            filenamePattern: string;
-        }[];
+        const editorAssociations = settings.get('editorAssociations'); // At this point we don't know if this is the old or new format
+        const updatedSettings = ensureUpdatedEditorAssociationSettingFormat(
+            editorAssociations
+        ) as NewEditorAssociationSetting;
+        const currentAssociation = updatedSettings['*.ipynb'];
 
-        // Update the settings.
-        if (
-            enable &&
-            (!Array.isArray(editorAssociations) ||
-                editorAssociations.length === 0 ||
-                !editorAssociations.find((item) => isJupyterNotebook(item.viewType)))
-        ) {
-            editorAssociations.push({
-                viewType: 'jupyter-notebook',
-                filenamePattern: '*.ipynb'
-            });
-            await settings.update('editorAssociations', editorAssociations, ConfigurationTarget.Global);
+        // Update the settings
+        if (shouldEnableNativeNotebooksAssociation && currentAssociation !== JupyterNotebookView) {
+            updatedSettings['*.ipynb'] = JupyterNotebookView;
+            await settings.update('editorAssociations', updatedSettings, ConfigurationTarget.Global);
         }
 
         // Revert the settings.
-        if (
-            !enable &&
-            Array.isArray(editorAssociations) &&
-            editorAssociations.find((item) => isJupyterNotebook(item.viewType))
-        ) {
-            const updatedSettings = editorAssociations.filter((item) => !isJupyterNotebook(item.viewType));
+        if (!shouldEnableNativeNotebooksAssociation && currentAssociation === JupyterNotebookView) {
+            updatedSettings['*.ipynb'] = undefined;
             await settings.update('editorAssociations', updatedSettings, ConfigurationTarget.Global);
         }
     }
     private async disableNotebooks() {
         await this.enableDisableEditorAssociation(false);
     }
+}
+
+export type NewEditorAssociationSetting = { [glob: string]: string | undefined };
+export type OldEditorAssociationSetting = {
+    viewType: string;
+    filenamePattern: string;
+}[];
+
+export function ensureUpdatedEditorAssociationSettingFormat(editorAssociations: unknown) {
+    // editorAssociations used to be an array. If we see an array here we should
+    // first update everything to the new format.
+    if (Array.isArray(editorAssociations)) {
+        const oldSettings = editorAssociations as OldEditorAssociationSetting;
+        const newSetting: NewEditorAssociationSetting = {};
+        oldSettings.forEach((setting) => {
+            newSetting[setting.filenamePattern] = setting.viewType;
+        });
+        editorAssociations = newSetting;
+    }
+    return editorAssociations;
 }

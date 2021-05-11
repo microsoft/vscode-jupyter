@@ -380,19 +380,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         if (this.isLocalLaunch) {
             kernels = await this.localKernelFinder.listKernels(resource, token);
-
-            // We need to filter out those items that are for other extensions.
-            kernels = kernels.filter((r) => {
-                if (r.kind !== 'connectToLiveKernel' && r.kernelSpec) {
-                    if (
-                        r.kernelSpec.metadata?.vscode?.extension_id &&
-                        this.extensions.getExtension(r.kernelSpec.metadata?.vscode?.extension_id)
-                    ) {
-                        return false;
-                    }
-                }
-                return true;
-            });
         } else {
             // In remote CI test we need to wait until we start up our server and input our URI before we
             // try to connect to the server to get kernel connection info

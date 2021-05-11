@@ -11,7 +11,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IPathUtils, ReadWrite, Resource } from '../../common/types';
+import { IExtensions, IPathUtils, ReadWrite, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -75,7 +75,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {}
     @traceDecorators.verbose('Find kernel spec')
     @captureTelemetry(Telemetry.KernelFinderPerf)
@@ -109,10 +110,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 undefined
             );
             if (preferred) {
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`
-                );
+                traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
                 return preferred as LocalKernelConnectionMetadata;
             }
         } catch (e) {
@@ -196,7 +194,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         const hideDefaultKernelSpecs = interpreters.length > 0 || activeInterpreter ? true : false;
 
         // Then go through all of the kernels and generate their metadata
-        const kernelMetadata = await Promise.all(
+        const distinctKernelMetadata = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
+        await Promise.all(
             kernelSpecs
                 .filter((kernelspec) => {
                     if (
@@ -204,8 +203,20 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                         hideDefaultKernelSpecs &&
                         kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName)
                     ) {
+                        traceInfo(`Hiding default kernel spec ${kernelspec.display_name}, ${kernelspec.argv[0]}`);
                         return false;
                     }
+                    // Disable xeus python for now.
+                    if (kernelspec.argv[0].toLowerCase().endsWith('xpython')) {
+                        traceInfo(`Hiding xeus kernelspec`);
+                        return false;
+                    }
+                    const extensionId = kernelspec.metadata?.vscode?.extension_id;
+                    if (extensionId && this.extensions.getExtension(extensionId)) {
+                        traceInfo(`Hiding kernelspec ${kernelspec.display_name}, better support by ${extensionId}`);
+                        return false;
+                    }
+
                     return true;
                 })
                 .map(async (k) => {
@@ -259,11 +270,18 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                         return result;
                     }
                 })
+                .map(async (item) => {
+                    const kernelSpec: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata = await item;
+                    // Check if we have already seen this.
+                    if (!distinctKernelMetadata.has(kernelSpec.id)) {
+                        distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
+                    }
+                })
         );
 
         // Combine the two into our list
         const results = [
-            ...kernelMetadata,
+            ...Array.from(distinctKernelMetadata.values()),
             ...filteredInterpreters.map((i) => {
                 // Update spec to have a default spec file
                 const spec = createInterpreterKernelSpec(i, rootSpecPath);
