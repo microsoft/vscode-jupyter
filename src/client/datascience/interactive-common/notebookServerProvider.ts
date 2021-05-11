@@ -121,6 +121,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         // Check to see if we support ipykernel or not
         try {
             traceInfo(`Checking for server usability.`);
+
             const usable = await this.checkUsable(serverOptions);
             if (!usable) {
                 traceInfo('Server not usable (should ask for install now)');
