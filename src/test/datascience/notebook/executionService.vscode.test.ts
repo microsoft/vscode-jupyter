@@ -38,7 +38,8 @@ import {
     insertMarkdownCell,
     assertVSCCellIsNotRunning,
     createEmptyPythonNotebook,
-    assertNotHasTextOutputInVSCode
+    assertNotHasTextOutputInVSCode,
+    waitForQueuedForExecutionOrExecuting
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
@@ -744,7 +745,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     test('Run cells randomly & validate the order of execution', async () => {
         const cells = await insertRandomCells({ count: 15, addMarkdownCells: true });
         const codeCells = cells.filter((cell) => cell.cell.kind === NotebookCellKind.Code);
-
         // Run cells at random & keep track of the order in which they were run (to validate execution order later).
         const queuedCells: typeof cells = [];
         while (codeCells.length) {
@@ -755,7 +755,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         }
 
         // Verify all have been queued.
-        await Promise.all(queuedCells.map((item) => item.cell).map((cell) => waitForQueuedForExecution(cell)));
+        await Promise.all(
+            queuedCells.map((item) => item.cell).map((cell) => waitForQueuedForExecutionOrExecuting(cell))
+        );
 
         // let all cells run to completion & validate their execution orders match the order of the queue.
         queuedCells.forEach((item) => item.runToCompletion());
@@ -779,7 +781,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await runAllCellsInActiveNotebook();
 
         // Verify all have been queued.
-        await Promise.all(cells.map((item) => item.cell).map((cell) => waitForQueuedForExecution(cell)));
+        await Promise.all(cells.map((item) => item.cell).map((cell) => waitForQueuedForExecutionOrExecuting(cell)));
 
         // let all cells run to completion & validate their execution orders match the order of the queue.
         cells.forEach((item) => item.runToCompletion());
@@ -814,7 +816,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             if (cell.kind === NotebookCellKind.Code) {
                 queuedCells.push(cell);
                 await runCell(cell);
-                await waitForQueuedForExecution(cell);
+                await waitForQueuedForExecutionOrExecuting(cell);
             }
         }
 
@@ -828,7 +830,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await runAllCellsInActiveNotebook();
         const queuedCells = cells.filter((item) => item.cell.kind === NotebookCellKind.Code).map((item) => item.cell);
-        await Promise.all(queuedCells.map((cell) => waitForQueuedForExecution(cell)));
+        await Promise.all(queuedCells.map((cell) => waitForQueuedForExecutionOrExecuting(cell)));
 
         // Add a new cell to the document, this should not get executed.
         const [newCell] = await insertRandomCells({ count: 1, addMarkdownCells: false });
@@ -850,13 +852,13 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Run entire notebook & verify all cells are queued for execution.
         await runAllCellsInActiveNotebook();
         const queuedCells = codeCells.map((item) => item.cell);
-        await Promise.all(queuedCells.map((cell) => waitForQueuedForExecution(cell)));
+        await Promise.all(queuedCells.map((cell) => waitForQueuedForExecutionOrExecuting(cell)));
 
         // Insert new cell & run it, & verify that too is queued for execution.
         const [newCell] = await insertRandomCells({ count: 1, addMarkdownCells: false });
         queuedCells.push(newCell.cell);
         await runCell(newCell.cell);
-        await Promise.all(queuedCells.map((cell) => waitForQueuedForExecution(cell)));
+        await Promise.all(queuedCells.map((cell) => waitForQueuedForExecutionOrExecuting(cell)));
 
         // let all cells run to completion & validate their execution orders match the order in which they were run.
         // Also, the new cell should not have been executed.
