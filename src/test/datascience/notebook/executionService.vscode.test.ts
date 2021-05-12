@@ -187,10 +187,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // Verify execution count.
         assert.ok(cells[0].executionSummary?.executionOrder, 'Execution count should be > 0');
-        assert.equal(
-            cells[1].executionSummary?.executionOrder! - 1,
-            cells[0].executionSummary?.executionOrder!
-        );
+        assert.equal(cells[1].executionSummary?.executionOrder! - 1, cells[0].executionSummary?.executionOrder!);
     });
     test('Verify metadata for successfully executed cell', async () => {
         await insertCodeCell('print("Foo Bar")');
@@ -237,10 +234,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForExecutionCompletedSuccessfully(updateCell);
 
         assert.lengthOf(displayCell.outputs, 1, 'Incorrect output');
-        expect(displayCell.executionSummary?.executionOrder).to.be.greaterThan(
-            0,
-            'Execution count should be > 0'
-        );
+        expect(displayCell.executionSummary?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         assertHasTextOutputInVSCode(displayCell, 'foo', 0, true);
     });
     test('Clearing output while executing will ensure output is cleared', async function () {

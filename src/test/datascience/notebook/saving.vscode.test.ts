@@ -104,14 +104,8 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
                 cell1.executionSummary?.executionOrder!,
                 'Execution count > cell 1'
             );
-            assert.isUndefined(
-                cell3.executionSummary?.executionOrder,
-                'Execution count must be undefined for cell 3'
-            );
-            assert.isUndefined(
-                cell4.executionSummary?.executionOrder,
-                'Execution count must be undefined for cell 4'
-            );
+            assert.isUndefined(cell3.executionSummary?.executionOrder, 'Execution count must be undefined for cell 3');
+            assert.isUndefined(cell4.executionSummary?.executionOrder, 'Execution count must be undefined for cell 4');
         }
 
         verifyCelMetadata();
