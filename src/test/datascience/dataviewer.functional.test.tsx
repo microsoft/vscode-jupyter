@@ -360,7 +360,30 @@ suite('DataScience DataViewer tests', () => {
         verifyRows(wrapper.wrapper, [5, '-inf', 0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 6, 'nan']);
     });
 
-    runMountedTest('Filter', async (wrapper) => {
+    runMountedTest('Filter strings', async (wrapper) => {
+        await injectCode('import pandas as pd\r\ndata = ["stable", "unstable", "able", "barely stable"]\r\ndf = pd.DataFrame(data)');
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('df', 'DataFrame');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 'stable', 'unstable', 'able', 'barely stable']);
+
+        const filtersAndExpectedResults = {
+            'stable': [0, 'stable', 'barely stable'],
+            'unstable': [0, 'unstable'],
+            '*stable': [0, 'stable', 'unstable'],
+            '*tab*': [0, 'stable', 'unstable', 'able', 'barely stable'],
+            '*': [0, 'stable', 'unstable', 'able', 'barely stable'],
+            'asdf': [0, 'stable', 'unstable', 'able', 'barely stable'] // TODO: Remove this. Adding here because it should fail
+        };
+
+        for (const [filter, expectedResult] of Object.entries(filtersAndExpectedResults)) {
+            await filterRows(wrapper.wrapper, '0', filter);
+            verifyRows(wrapper.wrapper, expectedResult);
+        }
+    });
+
+    runMountedTest('Filter numerical', async (wrapper) => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3, np.inf, -np.inf, np.nan])');
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('x', 'ndarray');

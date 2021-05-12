@@ -96,7 +96,7 @@ class ColumnFilter {
             switch (columnType) {
                 case ColumnType.String:
                 default:
-                    this.matchFunc = (v: any) => !v || v.toString().includes(text);
+                    this.matchFunc = (v: any) => !v || this.matchStringWithWildcards(v, text);
                     break;
 
                 case ColumnType.Number:
@@ -110,6 +110,14 @@ class ColumnFilter {
 
     public matches(value: any): boolean {
         return this.matchFunc(value);
+    }
+
+    // Tries to match entire words instead of possibly trying to match substrings.
+    // Can use wildcards for substring matches.
+    // Resolves problems like filtering for male vs female.
+    private matchStringWithWildcards(v: any, text: string): boolean {
+        const matchExpr = new RegExp(`\\b${text.replace('*', '.*')}\\b`);
+        return matchExpr.test(v);
     }
 
     private extractDigits(text: string, regex: RegExp): number {
