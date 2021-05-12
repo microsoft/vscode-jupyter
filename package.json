@@ -882,12 +882,12 @@
                 {
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
-                    "when": "false"
+                    "when": "notebookEditorFocused && notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
-                    "when": "false"
+                    "when": "notebookEditorFocused && notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.exportAsPythonScript",

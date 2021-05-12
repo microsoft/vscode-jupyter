@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { NotebookCell, Uri } from 'vscode';
 
-import { ICommandManager } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
@@ -20,6 +20,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
+        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
     ) {}
 
@@ -149,13 +150,24 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
 
     private runAbove(cell: NotebookCell | undefined): void {
         const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
+        cell = cell || this.getActiveCell(); // When called from command palette, we don't have a cell as the first argument.
+        if (activeEditor && cell) {
             activeEditor.runAbove(cell);
         }
     }
+    private getActiveCell() {
+        const document = this.notebook.activeNotebookEditor?.document;
+        const selection = this.notebook.activeNotebookEditor?.selections;
+        if (!selection || !document) {
+            return;
+        }
+        const cells = document.getCells(selection[0]);
+        return cells.length ? cells[0] : undefined;
+    }
     private runCellAndBelow(cell: NotebookCell | undefined): void {
         const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
+        cell = cell || this.getActiveCell(); // When called from command palette, we don't have a cell as the first argument.
+        if (activeEditor && cell) {
             activeEditor.runCellAndBelow(cell);
         }
     }
