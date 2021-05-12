@@ -9,12 +9,12 @@ import {
     EventEmitter,
     NotebookCell,
     NotebookCellKind,
-    NotebookCellMetadata,
     NotebookRange,
     NotebookDocument,
     ProgressLocation,
     Uri,
-    WebviewPanel
+    WebviewPanel,
+    NotebookCellData
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
@@ -148,13 +148,7 @@ export class NotebookEditor implements INotebookEditor {
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) =>
                 edit.replaceNotebookCells(editor.document.uri, new NotebookRange(0, this.document.cellCount), [
-                    {
-                        kind: NotebookCellKind.Code,
-                        language: defaultLanguage,
-                        metadata: new NotebookCellMetadata(),
-                        outputs: [],
-                        source: ''
-                    }
+                    new NotebookCellData(NotebookCellKind.Code, '', defaultLanguage)
                 ])
             ).then(noop, noop);
         }
