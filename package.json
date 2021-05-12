@@ -1776,7 +1776,7 @@
                 ]
             }
         ],
-        "notebookProvider": [
+        "notebooks": [
             {
                 "viewType": "jupyter-notebook",
                 "displayName": "Jupyter Notebook (preview)",
