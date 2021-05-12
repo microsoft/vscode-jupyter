@@ -188,8 +188,7 @@ export async function canRunNotebookTests() {
         !process.env.VSC_JUPYTER_RUN_NB_TEST
     ) {
         console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
-                process.env.VSC_JUPYTER_RUN_NB_TEST
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST
             }`
         );
         return false;
@@ -473,14 +472,14 @@ export async function prewarmNotebooks() {
 
 function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
     return (
-        (cell.latestExecutionSummary?.executionOrder ?? 0) > 0 &&
+        (cell.executionSummary?.executionOrder ?? 0) > 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
         !hasErrorOutput(cell.outputs)
     );
 }
 function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
     return (
-        (cell.latestExecutionSummary?.executionOrder ?? 0) === 0 &&
+        (cell.executionSummary?.executionOrder ?? 0) === 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle
     );
 }
@@ -517,7 +516,7 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
         async () => {
             return (
                 NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing &&
-                (cell.latestExecutionSummary?.executionOrder || 0) > 0 // If execution count > 0, then jupyter has started running this cell.
+                (cell.executionSummary?.executionOrder || 0) > 0 // If execution count > 0, then jupyter has started running this cell.
             );
         },
         timeout,
@@ -547,8 +546,7 @@ export async function waitForQueuedForExecutionOrExecuting(cell: NotebookCell, t
             );
         },
         timeout,
-        `Cell ${
-            cell.index + 1
+        `Cell ${cell.index + 1
         } not queued for execution nor already executing, current state is ${NotebookCellStateTracker.getCellState(
             cell
         )}`
@@ -558,8 +556,7 @@ export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, tim
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
-        `Cell ${
-            cell.index + 1
+        `Cell ${cell.index + 1
         } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);
@@ -574,7 +571,7 @@ export async function waitForExecutionCompletedWithErrors(cell: NotebookCell, ti
 }
 function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     return (
-        (cell.latestExecutionSummary?.executionOrder ?? 0) > 0 &&
+        (cell.executionSummary?.executionOrder ?? 0) > 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
         hasErrorOutput(cell.outputs)
     );
@@ -630,7 +627,7 @@ export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string,
 export function assertVSCCellIsRunning(cell: NotebookCell) {
     assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Executing);
     // If execution count > 0, then jupyter has started running this cell.
-    assert.isAtLeast(cell.latestExecutionSummary?.executionOrder || 0, 1);
+    assert.isAtLeast(cell.executionSummary?.executionOrder || 0, 1);
     return true;
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {

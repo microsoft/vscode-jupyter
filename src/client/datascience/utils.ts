@@ -62,7 +62,7 @@ export function translateCellToNative(
         return {
             index: 0,
             metadata: new NotebookCellMetadata(),
-            latestExecutionSummary: {
+            executionSummary: {
                 executionOrder: cell.data.execution_count as number,
                 success: true,
                 endTime: 0
