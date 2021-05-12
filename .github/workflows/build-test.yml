@@ -757,7 +757,7 @@ jobs:
         run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
 
       - name: Run tests with VSCode & Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           run: ${{ env.xvfbCommand }} npm run testVSCode
         env:
@@ -776,7 +776,7 @@ jobs:
         if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
         env:
@@ -801,7 +801,7 @@ jobs:
         if: steps.test_notebook_vscode.outcome == 'failure' && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
         env:
@@ -823,7 +823,7 @@ jobs:
         # Run native notebook tests that also require webviews
         # note, Webview test middleware on, and webview build not skipped
       - name: Run Native Notebook and Webview tests with VSCode & Jupyter
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksAndWebviews
         env:
@@ -920,7 +920,7 @@ jobs:
       - name: Run smoke tests
         env:
           DISPLAY: 10
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           run: npm run testSmokeLogged
 
