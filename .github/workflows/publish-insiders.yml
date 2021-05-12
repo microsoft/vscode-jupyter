@@ -33,7 +33,7 @@ jobs:
           ref: main
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
