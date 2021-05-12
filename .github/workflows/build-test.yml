@@ -95,7 +95,7 @@ jobs:
     # if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.1.5
@@ -139,7 +139,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Cache pip files
         uses: actions/cache@v2.1.4
@@ -204,7 +204,7 @@ jobs:
         test-suite: [ts-unit]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v2.1.5
@@ -286,7 +286,7 @@ jobs:
         test-suite: [group1, group2, group3, group4]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Use conda for group1 and group3
         if: matrix.test-suite == 'group1' || matrix.test-suite == 'group3'
@@ -548,7 +548,7 @@ jobs:
         #     os: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v2
@@ -872,7 +872,7 @@ jobs:
         python: [3.8]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v2
@@ -970,7 +970,7 @@ jobs:
     needs: [ts_tests, vscodeTests, smoke-tests, tests]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Install Node
         uses: actions/setup-node@v2.1.5
@@ -1048,7 +1048,7 @@ jobs:
           echo "VSIX Name is ${{ needs.pick_environment.outputs.vsix_name }}"
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v2
