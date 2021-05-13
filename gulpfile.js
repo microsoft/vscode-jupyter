@@ -52,6 +52,55 @@ gulp.task('checkNativeDependencies', (done) => {
     }
     done();
 });
+gulp.task('checkNpmDependencies', (done) => {
+    /**
+     * Sometimes we have to update the package-lock.json file to upload dependencies.
+     * Thisscript will ensure that even if the package-lock.json is re-generated the (minimum) version numbers are still as expected.
+     */
+    const packageLock = require('./package-lock.json');
+    const errors = [];
+
+    const expectedVersions = [
+        { name: 'trim', version: '0.0.3' },
+        { name: 'node_modules/trim', version: '0.0.3' }
+    ];
+    function checkPackageVersions(packages, parent) {
+        expectedVersions.forEach((expectedVersion) => {
+            if (!packages[expectedVersion.name]) {
+                return;
+            }
+            const version = packages[expectedVersion.name].version || packages[expectedVersion.name];
+            if (!version){
+                return;
+            }
+            if (!version.includes(expectedVersion.version)) {
+                errors.push(
+                    `${expectedVersion.name} version needs to be at least ${
+                        expectedVersion.version
+                    }, current ${version}, ${parent ? `(parent package ${parent})` : ''}`
+                );
+            }
+        });
+    }
+    function checkPackageDependencies(packages) {
+        Object.keys(packages).forEach((packageName) => {
+            const dependencies = packages[packageName]['dependencies'];
+            if (dependencies) {
+                checkPackageVersions(dependencies, packageName);
+            }
+        });
+    }
+
+    checkPackageVersions(packageLock['packages']);
+    checkPackageVersions(packageLock['dependencies']);
+    checkPackageDependencies(packageLock['packages']);
+
+    if (errors.length > 0) {
+        errors.forEach((ex) => console.error(ex));
+        throw new Error(errors.join(', '));
+    }
+    done();
+});
 
 gulp.task('compile-ipywidgets', () => buildIPyWidgets());
 
@@ -108,14 +157,6 @@ gulp.task('webpack', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
 });
-
-gulp.task('updateLicense', async () => {
-    await updateLicense(argv);
-});
-
-async function updateLicense(args) {
-    await fs.copyFile('extension_license.txt', 'LICENSE.txt');
-}
 
 gulp.task('updateBuildNumber', async () => {
     await updateBuildNumber(argv);
@@ -253,7 +294,7 @@ gulp.task('downloadRendererExtension', async () => {
 });
 
 gulp.task('prePublishBundle', gulp.series('includeBCryptGenRandomExe', 'downloadRendererExtension', 'webpack'));
-gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
+gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {

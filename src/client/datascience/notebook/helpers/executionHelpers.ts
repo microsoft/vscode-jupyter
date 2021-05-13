@@ -4,7 +4,15 @@
 'use strict';
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import { workspace, Range, WorkspaceEdit, NotebookCellKind, NotebookCell, NotebookRange } from 'vscode';
+import {
+    workspace,
+    Range,
+    WorkspaceEdit,
+    NotebookCellKind,
+    NotebookCell,
+    NotebookRange,
+    NotebookCellData
+} from 'vscode';
 import { traceCellMessage } from './helpers';
 import { chainWithPendingUpdates } from './notebookUpdater';
 
@@ -41,13 +49,7 @@ export async function addNewCellAfter(cell: NotebookCell, text: string) {
     await chainWithPendingUpdates(cell.notebook, (edit) => {
         traceCellMessage(cell, 'Create new cell after current');
         edit.replaceNotebookCells(cell.notebook.uri, new NotebookRange(cell.index + 1, cell.index + 1), [
-            {
-                kind: NotebookCellKind.Code,
-                language: cell.document.languageId,
-                metadata: cell.metadata.with({}),
-                outputs: [],
-                source: text
-            }
+            new NotebookCellData(NotebookCellKind.Code, text, cell.document.languageId, [], cell.metadata.with({}))
         ]);
     });
 }

@@ -14,7 +14,8 @@ import {
     NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookDocument,
     NotebookCellMetadata,
-    CancellationTokenSource
+    CancellationTokenSource,
+    NotebookCellData
 } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -78,32 +79,31 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                 assert.isOk(notebook);
 
                 assert.deepEqual(notebook.cells, [
-                    {
-                        kind: NotebookCellKind.Code,
-                        language: PYTHON_LANGUAGE,
-                        outputs: [],
-                        source: 'print(1)',
-                        metadata: new NotebookCellMetadata().with({
+                    new NotebookCellData(
+                        NotebookCellKind.Code,
+                        'print(1)',
+                        PYTHON_LANGUAGE,
+                        [],
+                        new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
                             }
                         }),
-                        latestExecutionSummary: {
+                        {
                             executionOrder: 10
                         }
-                    },
-                    {
-                        kind: NotebookCellKind.Markdown,
-                        language: MARKDOWN_LANGUAGE,
-                        outputs: [],
-                        source: '# HEAD',
-                        metadata: new NotebookCellMetadata().with({
+                    ),
+                    new NotebookCellData(
+                        NotebookCellKind.Markup,
+                        '# HEAD',
+                        MARKDOWN_LANGUAGE,
+                        [],
+                        new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
                             }
-                        }),
-                        latestExecutionSummary: undefined
-                    }
+                        })
+                    )
                 ]);
             });
 
@@ -143,32 +143,31 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                 assert.isOk(notebook);
 
                 assert.deepEqual(notebook.cells, [
-                    {
-                        kind: NotebookCellKind.Code,
-                        language: 'csharp',
-                        outputs: [],
-                        source: 'Console.WriteLine("1")',
-                        metadata: new NotebookCellMetadata().with({
+                    new NotebookCellData(
+                        NotebookCellKind.Code,
+                        'Console.WriteLine("1")',
+                        'csharp',
+                        [],
+                        new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
                             }
                         }),
-                        latestExecutionSummary: {
+                        {
                             executionOrder: 10
                         }
-                    },
-                    {
-                        kind: NotebookCellKind.Markdown,
-                        language: MARKDOWN_LANGUAGE,
-                        outputs: [],
-                        source: '# HEAD',
-                        metadata: new NotebookCellMetadata().with({
+                    ),
+                    new NotebookCellData(
+                        NotebookCellKind.Markup,
+                        '# HEAD',
+                        MARKDOWN_LANGUAGE,
+                        [],
+                        new NotebookCellMetadata().with({
                             custom: {
                                 metadata: {}
                             }
-                        }),
-                        latestExecutionSummary: undefined
-                    }
+                        })
+                    )
                 ]);
             });
             test('Verify mime types and order', () => {

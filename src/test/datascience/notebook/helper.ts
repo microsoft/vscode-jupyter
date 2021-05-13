@@ -24,7 +24,8 @@ import {
     NotebookCellMetadata,
     NotebookCellOutputItem,
     NotebookRange,
-    NotebookCellExecutionState
+    NotebookCellExecutionState,
+    NotebookCellData
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -65,6 +66,7 @@ import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
+import { NotebookControllerManager } from '../../../client/datascience/notebook/notebookControllerManager';
 
 // Running in Conda environments, things can be a little slower.
 const defaultTimeout = IS_CONDA_TEST ? 30_000 : 15_000;
@@ -95,13 +97,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
         edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-            {
-                kind: NotebookCellKind.Markdown,
-                language: MARKDOWN_LANGUAGE,
-                source,
-                metadata: new NotebookCellMetadata(),
-                outputs: []
-            }
+            new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE, [], new NotebookCellMetadata())
         ])
     );
     return activeEditor.document.cellAt(startNumber)!;
@@ -115,13 +111,13 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     const edit = new WorkspaceEdit();
     edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-        {
-            kind: NotebookCellKind.Code,
-            language: options?.language || PYTHON_LANGUAGE,
+        new NotebookCellData(
+            NotebookCellKind.Code,
             source,
-            metadata: new NotebookCellMetadata(),
-            outputs: []
-        }
+            options?.language || PYTHON_LANGUAGE,
+            [],
+            new NotebookCellMetadata()
+        )
     ]);
     await workspace.applyEdit(edit);
 
@@ -410,6 +406,11 @@ export async function startJupyterServer(api?: IExtensionTestApi) {
         const uriString = decodeURIComponent(uri.toString());
         traceInfo(`Jupyter started and listening at ${uriString}`);
         await selector.setJupyterURIToRemote(uriString);
+
+        // Once we have set the URI allow kernel loading to continue, we don't want this to happen ealier
+        // as it will pop up a server selector if the URI is not set yet
+        const notebookControllerManager = serviceContainer.get<NotebookControllerManager>(INotebookControllerManager);
+        notebookControllerManager.allowRemoteConnection.resolve();
     } else {
         traceInfo(`Jupyter not started and set to local`); // This is the default
     }
@@ -532,7 +533,25 @@ export async function waitForQueuedForExecution(cell: NotebookCell, timeout: num
             return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending;
         },
         timeout,
-        `Cell ${cell.index + 1} not queued for execution`
+        `Cell ${cell.index + 1} not queued for execution, current state is ${NotebookCellStateTracker.getCellState(
+            cell
+        )}`
+    );
+}
+export async function waitForQueuedForExecutionOrExecuting(cell: NotebookCell, timeout: number = defaultTimeout) {
+    await waitForCondition(
+        async () => {
+            return (
+                NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending ||
+                NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing
+            );
+        },
+        timeout,
+        `Cell ${
+            cell.index + 1
+        } not queued for execution nor already executing, current state is ${NotebookCellStateTracker.getCellState(
+            cell
+        )}`
     );
 }
 export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, timeout: number = defaultTimeout) {
