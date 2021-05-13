@@ -12,6 +12,7 @@ import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
+import { traceInfo } from '../../../client/common/logger';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {
@@ -25,6 +26,13 @@ suite('DataScience - Kernels Finder', () => {
         interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         resourceToUse = Uri.file(path.join(workspace.workspaceFolders![0].uri.fsPath, 'test.ipynb'));
     });
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
+    });
+    teardown(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
+    });
+
     test('Can list all kernels', async () => {
         const kernelSpecs = await kernelFinder.listKernels(resourceToUse);
         assert.isArray(kernelSpecs);

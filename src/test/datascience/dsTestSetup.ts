@@ -31,7 +31,12 @@ function updateTestsForNativeNotebooks() {
     const content = JSON.parse(fs.readFileSync(packageJsonFile).toString());
 
     // This code is temporary.
-    delete content.contributes.notebookProvider[0].priority;
+    try {
+        delete content.contributes.notebookProvider[0].priority;
+    } catch {}
+    try {
+        delete content.contributes.notebooks[0].priority;
+    } catch {}
 
     fs.writeFileSync(packageJsonFile, JSON.stringify(content, undefined, 4));
     updateSettings(true);

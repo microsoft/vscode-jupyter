@@ -7,7 +7,6 @@ import {
     env,
     EventEmitter,
     NotebookCell,
-    NotebookCellExecutionTask,
     NotebookController,
     NotebookControllerAffinity,
     NotebookDocument,
@@ -149,9 +148,6 @@ export class VSCodeNotebookController implements Disposable {
         // Notebook is trusted. Continue to execute cells
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
         await Promise.all(cells.map((cell) => this.executeCell(targetNotebook, cell)));
-    }
-    public createNotebookCellExecutionTask(cell: NotebookCell): NotebookCellExecutionTask {
-        return this.controller.createNotebookCellExecutionTask(cell);
     }
     private onDidChangeNotebookAssociation(event: { notebook: NotebookDocument; selected: boolean }) {
         // If this NotebookController was selected, fire off the event
