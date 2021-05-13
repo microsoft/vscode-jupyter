@@ -510,7 +510,11 @@ export function findPreferredKernel(
                 // If ther'es no kernelspec in the metadata (e.g. blank notebooks),
                 // & its a python notebook (language in the notebook metatadata will be Python),
                 // Then give preference to the preferred (active) interpreter.
-                if (!notebookMetadata?.kernelspec && preferredInterpreter && spec.interpreterPath === preferredInterpreter?.path) {
+                if (
+                    !notebookMetadata?.kernelspec &&
+                    preferredInterpreter &&
+                    spec.interpreterPath === preferredInterpreter?.path
+                ) {
                     score += 10;
                 }
             }
