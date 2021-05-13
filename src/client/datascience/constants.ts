@@ -283,6 +283,7 @@ export enum Telemetry {
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
     FailedToCreateNotebookController = 'DATASCIENCE.FAILED_TO_CREATE_CONTROLLER',
+    FailedToFindKernelSpecInterpreterForInteractive = 'DATASCIENCE.FAILED_TO_FIND_INTERPRETER_KERNEL_CONNECTION_FOR_INTERACTIVE',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
