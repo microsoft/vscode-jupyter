@@ -324,7 +324,7 @@ export class CellExecution {
         }
 
         // Create a temporary task.
-        this.previousResultsToRestore = { ...(this.cell.latestExecutionSummary || {}) };
+        this.previousResultsToRestore = { ...(this.cell.executionSummary || {}) };
         this.temporaryTask = this.controller.createNotebookCellExecutionTask(this.cell);
         this.temporaryTask?.start({});
         if (this.previousResultsToRestore?.executionOrder && this.task) {

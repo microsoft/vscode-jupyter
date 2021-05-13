@@ -99,19 +99,13 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             assertHasTextOutputInVSCode(cell1, '1', 0);
             assertVSCCellHasErrorOutput(cell2);
 
-            expect(cell1.latestExecutionSummary?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
-            expect(cell2.latestExecutionSummary?.executionOrder).to.be.greaterThan(
-                cell1.latestExecutionSummary?.executionOrder!,
+            expect(cell1.executionSummary?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
+            expect(cell2.executionSummary?.executionOrder).to.be.greaterThan(
+                cell1.executionSummary?.executionOrder!,
                 'Execution count > cell 1'
             );
-            assert.isUndefined(
-                cell3.latestExecutionSummary?.executionOrder,
-                'Execution count must be undefined for cell 3'
-            );
-            assert.isUndefined(
-                cell4.latestExecutionSummary?.executionOrder,
-                'Execution count must be undefined for cell 4'
-            );
+            assert.isUndefined(cell3.executionSummary?.executionOrder, 'Execution count must be undefined for cell 3');
+            assert.isUndefined(cell4.executionSummary?.executionOrder, 'Execution count must be undefined for cell 4');
         }
 
         verifyCelMetadata();

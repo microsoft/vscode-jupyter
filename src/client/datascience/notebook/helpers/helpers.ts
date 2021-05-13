@@ -303,7 +303,7 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
     const code = cell.document.getText();
     return {
         cell_type: 'code',
-        execution_count: cell.latestExecutionSummary?.executionOrder ?? null,
+        execution_count: cell.executionSummary?.executionOrder ?? null,
         source: splitMultilineString(code),
         outputs: cell.outputs.map(translateCellDisplayOutput),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
@@ -427,7 +427,7 @@ export class NotebookCellStateTracker implements IDisposable {
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
         `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
-            cell.latestExecutionSummary?.executionOrder
+            cell.executionSummary?.executionOrder
         }. ${message}`
     );
 }

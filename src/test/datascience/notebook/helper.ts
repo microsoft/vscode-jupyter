@@ -473,14 +473,14 @@ export async function prewarmNotebooks() {
 
 function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
     return (
-        (cell.latestExecutionSummary?.executionOrder ?? 0) > 0 &&
+        (cell.executionSummary?.executionOrder ?? 0) > 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
         !hasErrorOutput(cell.outputs)
     );
 }
 function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
     return (
-        (cell.latestExecutionSummary?.executionOrder ?? 0) === 0 &&
+        (cell.executionSummary?.executionOrder ?? 0) === 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle
     );
 }
@@ -517,7 +517,7 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
         async () => {
             return (
                 NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing &&
-                (cell.latestExecutionSummary?.executionOrder || 0) > 0 // If execution count > 0, then jupyter has started running this cell.
+                (cell.executionSummary?.executionOrder || 0) > 0 // If execution count > 0, then jupyter has started running this cell.
             );
         },
         timeout,
@@ -574,7 +574,7 @@ export async function waitForExecutionCompletedWithErrors(cell: NotebookCell, ti
 }
 function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     return (
-        (cell.latestExecutionSummary?.executionOrder ?? 0) > 0 &&
+        (cell.executionSummary?.executionOrder ?? 0) > 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
         hasErrorOutput(cell.outputs)
     );
@@ -630,7 +630,7 @@ export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string,
 export function assertVSCCellIsRunning(cell: NotebookCell) {
     assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Executing);
     // If execution count > 0, then jupyter has started running this cell.
-    assert.isAtLeast(cell.latestExecutionSummary?.executionOrder || 0, 1);
+    assert.isAtLeast(cell.executionSummary?.executionOrder || 0, 1);
     return true;
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {
