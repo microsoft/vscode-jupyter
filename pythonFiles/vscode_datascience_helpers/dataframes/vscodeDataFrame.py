@@ -105,6 +105,8 @@ def _VSCODE_convertToDataFrame(df, start=None, end=None):
         df = _VSCODE_convertTensorToDataFrame(df, start, end)
     elif hasattr(vartype, "__name__") and vartype.__name__ == "ndarray":
         df = _VSCODE_convertNumpyArrayToDataFrame(df, start, end)
+    elif hasattr(df, "__array__") and hasattr(vartype, "__name__") and vartype.__name__ == "DataArray":
+        df = _VSCODE_convertNumpyArrayToDataFrame(df.__array__(), start, end)
     else:
         """Disabling bandit warning for try, except, pass. We want to swallow all exceptions here to not crash on
         variable fetching"""
