@@ -30,7 +30,7 @@ import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProv
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { sendNotebookControllerCreateTelemetry } from '../telemetry/kernelTelemetry';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
-import { INotebookProvider } from '../types';
+import { IDataScienceErrorHandler, INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
@@ -39,6 +39,8 @@ import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoo
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendTelemetryEvent } from '../../telemetry';
+import { canOtherExtensionsRunCellsInNotebook } from '../extensionRecommendation';
+import { NoKernelsNotebookController } from './noKernelsNotebookController';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -77,7 +79,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
-        @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages
+        @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -175,7 +178,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.findPreferredInProgress.set(document, preferredSearchToken);
 
         this.findPreferredKernel(document, preferredSearchToken.token)
-            .then((preferredConnection) => {
+            .then(async (preferredConnection) => {
                 if (preferredSearchToken.token.isCancellationRequested) {
                     traceInfo('Find preferred kernel cancelled');
                     return;
@@ -189,6 +192,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         } found for NotebookDocument: ${document.uri.toString()}`
                     );
                     this.setPreferredController(document, preferredConnection).catch(traceError);
+                } else {
+                    const controllers = await this.controllersPromise?.catch(() => []);
+                    if (controllers?.length === 0 && !canOtherExtensionsRunCellsInNotebook(document)) {
+                        // Add a dummy controller to indicate this notebook is not supported.
+                        this.getNoKernelNotebookController()
+                            .updateNotebookAffinity(document, NotebookControllerAffinity.Preferred)
+                            .catch(traceError);
+                    }
                 }
             })
             .finally(() => {
@@ -286,7 +297,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         return controllers;
     }
-
+    private noKernelNotebookController?: NoKernelsNotebookController;
+    private getNoKernelNotebookController() {
+        this.noKernelNotebookController =
+            this.noKernelNotebookController ||
+            new NoKernelsNotebookController(this.notebook, this.commandManager, this.disposables, this.errorHandler);
+        return this.noKernelNotebookController;
+    }
     private createNotebookController(
         kernelConnection: KernelConnectionMetadata,
         label: string

@@ -139,6 +139,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         resource: Resource,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
+        if (!process.env.ZXCZXCZXC){
+            return [];
+        }
         try {
             // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
             const workspaceFolderId =

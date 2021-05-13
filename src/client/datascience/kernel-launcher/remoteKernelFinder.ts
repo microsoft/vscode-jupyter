@@ -101,6 +101,9 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined
     ): Promise<KernelConnectionMetadata[]> {
+        if (!process.env.ZXCZXCZXC) {
+            return [];
+        }
         // Get a jupyter session manager to talk to
         let sessionManager: IJupyterSessionManager | undefined;
 

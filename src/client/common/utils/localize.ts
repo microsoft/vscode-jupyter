@@ -16,6 +16,7 @@ export namespace Common {
     export const canceled = localize('Common.canceled', 'Canceled');
     export const cancel = localize('Common.cancel', 'Cancel');
     export const ok = localize('Common.ok', 'Ok');
+    export const download = localize('Common.download', 'Download');
     export const gotIt = localize('Common.gotIt', 'Got it!');
     export const install = localize('Common.install', 'Install');
     export const reInstall = localize('Common.reInstall', 'Re-Install');
@@ -449,6 +450,14 @@ export namespace DataScience {
     export const jupyterSelectPasswordPrompt = localize(
         'DataScience.jupyterSelectPasswordPrompt',
         'Enter your password'
+    );
+    export const pythonNotInstalled = localize(
+        'DataScience.installPython',
+        'Python is not installed. \nPlease [download](https://www.python.org/downloads) and install Python in order to execute cells in this notebook.'
+    );
+    export const kernelNotInstalled = localize(
+        'DataScience.installKernel',
+        "The Jupyter Kernel '{0}' could not be found and needs to be installed in order to execute cells in this notebook."
     );
     export const jupyterNotebookFailure = localize(
         'DataScience.jupyterNotebookFailure',
