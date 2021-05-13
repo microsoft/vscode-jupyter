@@ -127,7 +127,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             dataExplorerDir,
             [path.join(dataExplorerDir, 'commons.initial.bundle.js'), path.join(dataExplorerDir, 'dataExplorer.js')],
             localize.DataScience.dataExplorerTitle(),
-            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One,
+            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.Beside,
             useCustomEditorApi
         );
         this.onDidDispose(this.dataViewerDisposed, this);
