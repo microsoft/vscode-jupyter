@@ -22,11 +22,13 @@ export class CodeSection extends React.Component<IProps, IState> {
     render() {
         return (
             <details
+                open
                 className="slicing-control"
                 style={{
                     borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
                     paddingTop: '4px',
-                    paddingBottom: '4px'
+                    paddingBottom: '4px',
+                    width: '100%'
                 }}
             >
                 <summary className="slice-summary">
@@ -37,7 +39,7 @@ export class CodeSection extends React.Component<IProps, IState> {
                         marginLeft: '20px',
                         marginTop: '10px',
                         marginRight: '20px',
-                        width: '300px',
+                        width: '100%',
                         backgroundColor: 'var(--vscode-editor-background) !important'
                     }}
                 >
