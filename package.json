@@ -841,13 +841,13 @@
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
                     "group": "inline/cell@0",
-                    "when": "notebookViewType == 'jupyter-notebookxxx' && jupyter.isnotebooktrusted"
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
                     "group": "inline/cell@0",
-                    "when": "notebookViewType == 'jupyter-notebookxxx' && jupyter.isnotebooktrusted"
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 }
             ],
             "explorer/context": [
