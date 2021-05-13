@@ -8,10 +8,9 @@ import { injectable, inject } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { traceDecorators } from '../../logging';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { findPreferredKernel, getKernelId } from '../jupyter/kernels/helpers';
+import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import {
     KernelConnectionMetadata,
     LiveKernelConnectionMetadata,
@@ -24,9 +23,10 @@ import {
     IJupyterSessionManagerFactory,
     INotebookProviderConnection
 } from '../types';
-import { isInterpreter } from './localKernelFinder';
 import { IRemoteKernelFinder } from './types';
-import { traceInfoIf } from '../../common/logger';
+import { traceError, traceInfoIf } from '../../common/logger';
+import { getResourceType } from '../common';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -55,22 +55,42 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     public async findKernel(
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined,
-        option?: nbformat.INotebookMetadata | PythonEnvironment,
+        notebookMetadata?: nbformat.INotebookMetadata,
         _cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
-        // Get list of all of the specs
-        const kernels = await this.listKernels(resource, connInfo);
+        const resourceType = getResourceType(resource);
+        const language =
+            resourceType === 'interactive' ? PYTHON_LANGUAGE : getLanguageInNotebookMetadata(notebookMetadata) || '';
+        try {
+            // Get list of all of the specs
+            const kernels = await this.listKernels(resource, connInfo);
 
-        // Find the preferred kernel index from the list.
-        const notebookMetadata = option && !isInterpreter(option) ? option : undefined;
-        return findPreferredKernel(
-            kernels,
-            resource,
-            [],
-            notebookMetadata,
-            undefined,
-            this.preferredRemoteKernelIdProvider
-        );
+            // Find the preferred kernel index from the list.
+            const preferred = findPreferredKernel(
+                kernels,
+                resource,
+                [],
+                notebookMetadata,
+                undefined,
+                this.preferredRemoteKernelIdProvider
+            );
+            sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
+                result: preferred ? 'found' : 'notfound',
+                resourceType,
+                language
+            });
+            return preferred;
+        } catch (ex) {
+            sendTelemetryEvent(
+                Telemetry.PreferredKernel,
+                undefined,
+                { result: 'failed', resourceType, language },
+                ex,
+                true
+            );
+            traceError(`findKernel crashed`, ex);
+            throw ex;
+        }
     }
 
     // Talk to the remote server to determine sessions
