@@ -973,6 +973,9 @@ export interface IEventNamePropertyMapping {
      * Total time taken to get the preferred kernel for notebook.
      */
     [Telemetry.GetPreferredKernelPerf]: undefined | never;
+    /**
+     * Telemetry sent when we have attempted to find the preferred kernel.
+     */
     [Telemetry.PreferredKernel]: {
         result: 'found' | 'notfound' | 'failed'; // Whether a preferred kernel was found or not.
         language: string; // Language of the associated notebook or interactive window.
