@@ -106,7 +106,6 @@ import { IExtensions } from '../../../client/common/types';
                 prerelease: ['0']
             }
         };
-        // const activeInterpreter = python3Interpreter;
         const condaEnvironment: PythonEnvironment = {
             displayName: 'Conda Environment',
             path: '/usr/bin/conda/python3',
