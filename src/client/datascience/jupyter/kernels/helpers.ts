@@ -361,6 +361,8 @@ export function findPreferredKernel(
         if (kernelMatchingPreferredInterpreter) {
             return kernelMatchingPreferredInterpreter;
         }
+        // Telemetry to see if this happens in the real world, this should not be possible.
+        sendTelemetryEvent(Telemetry.FailedToFindKernelSpecInterpreterForInteractive);
     }
 
     // If still not found, look for a match based on notebook metadata and interpreter
@@ -503,6 +505,13 @@ export function findPreferredKernel(
                             metadata
                         )} is ${score}`
                     );
+                }
+
+                // If ther'es no kernelspec in the metadata (e.g. blank notebooks),
+                // & its a python notebook (language in the notebook metatadata will be Python),
+                // Then give preference to the preferred (active) interpreter.
+                if (!notebookMetadata?.kernelspec && preferredInterpreter && spec.interpreterPath === preferredInterpreter?.path) {
+                    score += 10;
                 }
             }
 

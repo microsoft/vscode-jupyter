@@ -107,7 +107,7 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
     }
 
     // Valid notebooks will have a language information in the metadata.
-    return kernelSpec?.language === PYTHON_LANGUAGE;
+    return kernelSpec?.language === PYTHON_LANGUAGE || metadata?.language_info?.name === PYTHON_LANGUAGE;
 }
 /**
  * No need to update the notebook metadata just yet.
