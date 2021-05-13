@@ -82,25 +82,22 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernel(
         resource: Resource,
-        option?: nbformat.INotebookMetadata,
+        notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined> {
         try {
             // Get list of all of the specs
             const kernels = await this.listKernels(resource, cancelToken);
             const isPythonNbOrInteractiveWindow =
-                isPythonNotebook(option) || getResourceType(resource) === 'interactive';
+                isPythonNotebook(notebookMetadata) || getResourceType(resource) === 'interactive';
 
             // Always include the interpreter in the search if we can
             const preferredInterpreter =
-                option && isInterpreter(option)
-                    ? option
-                    : resource && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                resource && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                     ? await this.interpreterService.getActiveInterpreter(resource)
                     : undefined;
 
             // Find the preferred kernel index from the list.
-            const notebookMetadata = option && !isInterpreter(option) ? option : undefined;
             const preferred = findPreferredKernel(
                 kernels,
                 resource,
