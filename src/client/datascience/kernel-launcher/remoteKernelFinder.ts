@@ -27,6 +27,7 @@ import { IRemoteKernelFinder } from './types';
 import { traceError, traceInfoIf } from '../../common/logger';
 import { getResourceType } from '../common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -59,8 +60,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         _cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
         const resourceType = getResourceType(resource);
-        const language =
-            resourceType === 'interactive' ? PYTHON_LANGUAGE : getLanguageInNotebookMetadata(notebookMetadata) || '';
+        const telemetrySafeLanguage =
+            resourceType === 'interactive'
+                ? PYTHON_LANGUAGE
+                : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
         try {
             // Get list of all of the specs
             const kernels = await this.listKernels(resource, connInfo);
@@ -77,14 +80,14 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
             sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
                 result: preferred ? 'found' : 'notfound',
                 resourceType,
-                language
+                language: telemetrySafeLanguage
             });
             return preferred;
         } catch (ex) {
             sendTelemetryEvent(
                 Telemetry.PreferredKernel,
                 undefined,
-                { result: 'failed', resourceType, language },
+                { result: 'failed', resourceType, language: telemetrySafeLanguage },
                 ex,
                 true
             );

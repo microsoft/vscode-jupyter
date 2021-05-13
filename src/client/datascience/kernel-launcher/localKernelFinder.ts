@@ -35,6 +35,7 @@ import { IJupyterKernelSpec } from '../types';
 import { ILocalKernelFinder } from './types';
 import { getResourceType, tryGetRealPath } from '../common';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
+import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -87,8 +88,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined> {
         const resourceType = getResourceType(resource);
-        const language =
-            resourceType === 'interactive' ? PYTHON_LANGUAGE : getLanguageInNotebookMetadata(notebookMetadata) || '';
+        const telemetrySafeLanguage =
+            resourceType === 'interactive'
+                ? PYTHON_LANGUAGE
+                : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
         try {
             // Get list of all of the specs
             const kernels = await this.listKernels(resource, cancelToken);
@@ -111,7 +114,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
                 result: preferred ? 'found' : 'notfound',
                 resourceType,
-                language
+                language: telemetrySafeLanguage
             });
             if (preferred) {
                 traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
@@ -121,7 +124,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             sendTelemetryEvent(
                 Telemetry.PreferredKernel,
                 undefined,
-                { result: 'failed', resourceType, language },
+                { result: 'failed', resourceType, language: telemetrySafeLanguage },
                 ex,
                 true
             );
