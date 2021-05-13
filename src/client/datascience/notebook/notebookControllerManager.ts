@@ -39,8 +39,6 @@ import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoo
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendTelemetryEvent } from '../../telemetry';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import { IS_REMOTE_NATIVE_TEST } from '../../../test/constants';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -62,7 +60,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private controllersPromise?: Promise<VSCodeNotebookController[]>;
 
     private cancelToken: CancellationTokenSource | undefined;
-    private _allowRemoteConnection = createDeferred<void>();
     private readonly isLocalLaunch: boolean;
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
@@ -88,20 +85,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }>();
         this.disposables.push(this._onNotebookControllerSelected);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
-
-        // For remote tests, we need to wait until we start jupyter and assign the server URI
-        // so we wait on this connection, for non remote tests just run
-        if (!IS_REMOTE_NATIVE_TEST) {
-            this._allowRemoteConnection.resolve();
-        }
     }
 
     get onNotebookControllerSelected() {
         return this._onNotebookControllerSelected.event;
-    }
-
-    get allowRemoteConnection(): Deferred<void> {
-        return this._allowRemoteConnection;
     }
 
     public activate() {
@@ -365,12 +352,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (this.isLocalLaunch) {
             kernels = await this.localKernelFinder.listKernels(resource, token);
         } else {
-            // In remote CI test we need to wait until we start up our server and input our URI before we
-            // try to connect to the server to get kernel connection info
-            if (IS_REMOTE_NATIVE_TEST) {
-                await this.allowRemoteConnection.promise;
-            }
-
             const connection = await this.notebookProvider.connect({
                 getOnly: false,
                 resource: resource,
