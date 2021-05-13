@@ -17,8 +17,6 @@ import { Commands } from '../../../client/datascience/constants';
 import { DataViewerFactory } from '../../../client/datascience/data-viewing/dataViewerFactory';
 import { JupyterVariableDataProviderFactory } from '../../../client/datascience/data-viewing/jupyterVariableDataProviderFactory';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
-import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
-import { DebuggerVariables } from '../../../client/datascience/jupyter/debuggerVariables';
 import { JupyterVariables } from '../../../client/datascience/jupyter/jupyterVariables';
 import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
 import { NotebookCreator } from '../../../client/datascience/notebook/creation/notebookCreator';
@@ -50,8 +48,6 @@ suite('DataScience - Commands', () => {
         const fileSystem = mock(FileSystem);
         const serverUriStorage = mock(JupyterServerUriStorage);
         const jupyterVariables = mock(JupyterVariables);
-        const debuggerVariables = mock(DebuggerVariables);
-        const notebookProvider = mock(NotebookProvider);
 
         commandRegistry = new CommandRegistry(
             documentManager,
@@ -63,7 +59,6 @@ suite('DataScience - Commands', () => {
             instance(commandLineCommand),
             instance(notebookEditorProvider),
             instance(debugService),
-            instance(notebookProvider),
             instance(configService),
             instance(appShell),
             new MockOutputChannel('Jupyter'),
@@ -73,7 +68,6 @@ suite('DataScience - Commands', () => {
             instance(dataViewerFactory),
             instance(serverUriStorage),
             instance(jupyterVariables),
-            instance(debuggerVariables),
             false,
             instance(mock(NotebookCreator))
         );

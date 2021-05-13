@@ -22,7 +22,6 @@ export class CodeSection extends React.Component<IProps, IState> {
     render() {
         return (
             <details
-                open
                 className="slicing-control"
                 style={{
                     borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',

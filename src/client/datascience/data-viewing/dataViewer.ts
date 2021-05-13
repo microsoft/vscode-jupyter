@@ -623,21 +623,24 @@ ${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${tar
             }
         } else if (dataCleaningMode === 'jupyter_notebook') {
             if (code && matchingNotebookEditor !== undefined) {
-                const cells = (matchingNotebookEditor as any).document.getCells();
-                const lastCell = cells[cells.length - 1] as NotebookCell;
-                await updateCellCode(lastCell, code);
+                let cells = (matchingNotebookEditor as any).document.getCells();
+                let lastCell = cells[cells.length - 1] as NotebookCell;
                 await addNewCellAfter(lastCell, '');
+                cells = (matchingNotebookEditor as any).document.getCells();
+                lastCell = cells[cells.length - 1] as NotebookCell;
+                await updateCellCode(lastCell, code);
                 if (this.existingDisposable) {
                     this.existingDisposable.dispose();
                 }
-                this.existingDisposable = vscNotebook.onDidChangeCellExecutionState(
+                this.existingDisposable = vscNotebook.onDidChangeNotebookCellExecutionState(
                     async (e: NotebookCellExecutionStateChangeEvent) => {
                         if (e.executionState === NotebookCellExecutionState.Idle && refreshRequired) {
                             await this.updateWithNewVariable(newVariableName);
                         }
                     }
                 );
-                await this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow');
+
+                await this.commandManager.executeCommand('notebook.cell.execute', { start: lastCell.index, end: lastCell.notebook.cellCount }, lastCell.notebook.uri);
             }
         }
     }
