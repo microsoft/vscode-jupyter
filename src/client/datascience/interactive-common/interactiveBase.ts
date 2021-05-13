@@ -915,7 +915,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             try {
                 await this.ensureNotebook(providerConnection, disableUI);
             } catch (e) {
-                if (!disableUI){
+                if (!disableUI) {
                     this.errorHandler.handleError(e).ignoreErrors();
                 }
             }
