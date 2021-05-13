@@ -93,17 +93,17 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
 
             const qpitems = [
                 {
-                    label: 'Open just the Data Viewer',
+                    label: 'Open Just the Data Wrangler',
                     picked: true
                 },
                 {
-                    label: 'Open with Jupyter Notebook'
+                    label: 'Open Data Wrangler With Jupyter Notebook'
                 }
             ];
 
             const selection = await this.appShell.showQuickPick(qpitems, qpoptions);
             switch (selection?.label) {
-                case 'Open just the Data Viewer':
+                case 'Open Just the Data Wrangler':
                     dataCleaningMode = 'standalone';
                     await this.configService.updateSetting(
                         'dataCleaningMode',
@@ -112,7 +112,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                         ConfigurationTarget.Global
                     );
                     break;
-                case 'Open with Jupyter Notebook':
+                case 'Open Data Wrangler With Jupyter Notebook':
                     dataCleaningMode = 'jupyter_notebook';
                     await this.configService.updateSetting(
                         'dataCleaningMode',
@@ -150,7 +150,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                 options = {
                     location: ProgressLocation.Notification,
                     cancellable: true,
-                    title: 'Importing Data and Launching Data Viewer...'
+                    title: 'Importing Data and Launching Data Wrangler...'
                 };
                 setting = OpenDataViewerSetting.STANDALONE;
 
@@ -160,7 +160,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                 options = {
                     location: ProgressLocation.Notification,
                     cancellable: true,
-                    title: 'Importing Data and Launching Data Viewer with a Jupyter Notebook...'
+                    title: 'Importing Data and Launching Data Wrangler with a Jupyter Notebook...'
                 };
                 setting = OpenDataViewerSetting.WITH_JUPYTER_NOTEBOOK;
 
@@ -170,7 +170,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                 options = {
                     location: ProgressLocation.Notification,
                     cancellable: true,
-                    title: 'Importing Data and Launching Data Viewer with a Python file...'
+                    title: 'Importing Data and Launching Data Wrangler with a Python file...'
                 };
                 setting = OpenDataViewerSetting.WITH_PYTHON_FILE;
 
@@ -180,7 +180,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                 options = {
                     location: ProgressLocation.Notification,
                     cancellable: true,
-                    title: 'Importing Data and Launching Data Viewer with an Interactive Window...'
+                    title: 'Importing Data and Launching Data Wrangler with an Interactive Window...'
                 };
                 setting = OpenDataViewerSetting.WITH_INTERACTIVE_WINDOW;
 
@@ -204,7 +204,6 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
             });
             const code = getImportCodeForFileType(file!.fsPath);
             await notebook?.execute(code, '', 0, uuid(), undefined, true);
-            await this.commandManager.executeCommand('jupyter.openVariableView');
             const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
                 {
                     name: 'df',
@@ -239,7 +238,6 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
             await updateCellCode(blankCell, code);
             // Run the cells
             await this.commandManager.executeCommand('notebook.cell.execute');
-            await this.commandManager.executeCommand('jupyter.openVariableView');
             const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
                 {
                     name: 'df',
