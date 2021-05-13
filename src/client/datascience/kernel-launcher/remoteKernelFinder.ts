@@ -89,7 +89,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 true
             );
             traceError(`findKernel crashed`, ex);
-            throw ex;
         }
     }
 
