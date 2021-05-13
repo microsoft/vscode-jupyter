@@ -69,6 +69,7 @@ interface IGridRow {
 interface IVariableExplorerState {
     containerHeight: number;
     gridHeight: number;
+    variables: IJupyterVariable[];
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -102,12 +103,14 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         this.state = {
             containerHeight: this.props.containerHeight,
-            gridHeight: this.props.gridHeight
+            gridHeight: this.props.gridHeight,
+            variables: this.props.variables
         };
 
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
         this.setInitialHeight = this.setInitialHeight.bind(this);
         this.saveCurrentSize = this.saveCurrentSize.bind(this);
+        this.sortRows = this.sortRows.bind(this);
 
         this.gridColumns = [
             {
@@ -129,6 +132,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 name: getLocString('DataScience.variableExplorerNameColumn', 'Name'),
                 type: 'string',
                 width: 120,
+                sortable: true,
                 formatter: this.formatNameColumn,
                 headerRenderer: <VariableExplorerHeaderCellFormatter />
             },
@@ -137,6 +141,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 name: getLocString('DataScience.variableExplorerTypeColumn', 'Type'),
                 type: 'string',
                 width: 120,
+                sortable: true,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
                 headerRenderer: <VariableExplorerHeaderCellFormatter />
             },
@@ -169,13 +174,26 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
+    public componentWillReceiveProps(nextProps: IVariableExplorerProps) {
+        this.setState({
+              containerHeight: nextProps.containerHeight,
+              gridHeight: nextProps.gridHeight,
+              variables: nextProps.variables
+        });
+  }
+
     public shouldComponentUpdate(nextProps: IVariableExplorerProps, prevState: IVariableState): boolean {
         if (this.props.fontSize !== nextProps.fontSize) {
             // Size has changed, recompute page size
             this.pageSize = -1;
             return true;
         }
-        if (!fastDeepEqual(this.props.variables, nextProps.variables)) {
+        if (!fastDeepEqual(this.state.variables, nextProps.variables)) {
+            // Variables changed via redux
+            return true;
+        }
+        if (!fastDeepEqual(prevState.variables, this.state.variables)) {
+            // Variables changed via sorting a column
             return true;
         }
         if (
@@ -298,6 +316,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     onRowDoubleClick={this.rowDoubleClick}
                     emptyRowsView={VariableExplorerEmptyRowsView}
                     rowRenderer={VariableExplorerRowRenderer}
+                    onGridSort={this.sortRows}
                 />
             </div>
         );
@@ -381,8 +400,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     };
 
     private getRow = (index: number): IGridRow => {
-        if (index >= 0 && index < this.props.variables.length) {
-            const variable = this.props.variables[index];
+        if (index >= 0 && index < this.state.variables.length) {
+            const variable = this.state.variables[index];
             if (variable && variable.value) {
                 let newSize = '';
                 if (variable.shape && variable.shape !== '') {
@@ -407,7 +426,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 };
             }
         }
-
         return {
             buttons: { supportsDataExplorer: false, name: '', numberOfColumns: 0, variable: undefined },
             name: '',
@@ -498,4 +516,22 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             this.props.showDataExplorer(row.buttons.variable, row.buttons.numberOfColumns);
         }
     };
+
+    private sortRows(sortColumn: string, sortDirection: 'ASC' | 'DESC' | 'NONE') {
+        type SortableColumn = "name" | "type";
+        const sortByField = sortColumn as SortableColumn;
+        const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
+            if (sortDirection === 'ASC') {
+                return (a[sortByField] > b[sortByField]) ? 1 : -1;
+            } else if (sortDirection === 'DESC') {
+                return (a[sortByField] < b[sortByField]) ? 1 : -1;
+            }
+            return 0;
+        };
+
+        const originalRows = this.props.variables;
+        const sortRows = originalRows.slice(0);
+        const rows = sortDirection === 'NONE' ? originalRows : sortRows.sort(comparer);
+        this.setState({ variables: rows });
+    }
 }
