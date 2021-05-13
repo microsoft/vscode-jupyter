@@ -289,21 +289,35 @@ export class NotebookEditor implements INotebookEditor {
     }
 
     public runAbove(cell: NotebookCell | undefined): void {
-        if (cell && cell.index > 0) {
-            void this.commandManager.executeCommand(
-                'notebook.cell.execute',
-                { start: 0, end: cell.index },
-                cell.notebook.uri
-            );
+        const kernel = this.kernelProvider.get(this.file);
+
+        if (cell && cell.index > 0 && kernel) {
+            for (let i = 0; i < cell.index; i++) {
+                void kernel.executeCell(cell.notebook.cellAt(i));
+            }
+
+            // Uncomment and do this for the June release
+            // void this.commandManager.executeCommand(
+            //     'notebook.cell.execute',
+            //     { start: 0, end: cell.index },
+            //     cell.notebook.uri
+            // );
         }
     }
     public runCellAndBelow(cell: NotebookCell | undefined): void {
-        if (cell && cell.index >= 0) {
-            void this.commandManager.executeCommand(
-                'notebook.cell.execute',
-                { start: cell.index, end: cell.notebook.cellCount },
-                cell.notebook.uri
-            );
+        const kernel = this.kernelProvider.get(this.file);
+
+        if (cell && cell.index >= 0 && kernel) {
+            for (let i = cell.index; i < cell.notebook.cellCount; i++) {
+                void kernel.executeCell(cell.notebook.cellAt(i));
+            }
+
+            // Uncomment and do this for the June release
+            // void this.commandManager.executeCommand(
+            //     'notebook.cell.execute',
+            //     { start: cell.index, end: cell.notebook.cellCount },
+            //     cell.notebook.uri
+            // );
         }
     }
     private onClosedDocument(e?: NotebookDocument) {
