@@ -5,7 +5,7 @@ import { injectable } from 'inversify';
 import { languages } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { noop } from '../common/utils/misc';
-import { KnownNotebookLanguages } from '../datascience/constants';
+import { VSCodeKnownNotebookLanguages } from '../datascience/constants';
 
 /**
  * Initializes the list of known languages with whats registered in VS Code.
@@ -17,8 +17,8 @@ export class LanguageInitializer implements IExtensionSingleActivationService {
             languages
                 .map((language) => language.toLowerCase())
                 .forEach((language) => {
-                    if (!KnownNotebookLanguages.includes(language)) {
-                        KnownNotebookLanguages.push(language);
+                    if (!VSCodeKnownNotebookLanguages.includes(language)) {
+                        VSCodeKnownNotebookLanguages.push(language);
                     }
                 });
         }, noop);

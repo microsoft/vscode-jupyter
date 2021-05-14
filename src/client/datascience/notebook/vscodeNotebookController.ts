@@ -24,7 +24,7 @@ import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from 
 import { noop } from '../../common/utils/misc';
 import { ConsoleForegroundColors } from '../../logging/_global';
 import { translateKernelLanguageToMonaco } from '../common';
-import { Commands, LanguagesSupportedByPythonkernel } from '../constants';
+import { Commands, LanguagesSupportedByPythonkernel, VSCodeKnownNotebookLanguages } from '../constants';
 import {
     getDescriptionOfKernelConnection,
     getDetailOfKernelConnection,
@@ -105,7 +105,10 @@ export class VSCodeNotebookController implements Disposable {
             this.controller.supportedLanguages = LanguagesSupportedByPythonkernel;
         } else {
             const language = translateKernelLanguageToMonaco(getKernelConnectionLanguage(kernelConnection) || '');
-            if (language) {
+            // We should set `supportedLanguages` only if VS Code knows about them.
+            // Assume user has a kernel for `go` & VS Code doesn't know about `go` language, & we initailize `supportedLanguages` to [go]
+            // In such cases VS Code will not allow execution of this cell (because `supportedLanguages` by definition limits execution for those languages)
+            if (language && VSCodeKnownNotebookLanguages.includes(language)) {
                 this.controller.supportedLanguages = [language];
             }
         }

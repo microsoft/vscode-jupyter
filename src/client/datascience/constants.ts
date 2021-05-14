@@ -55,7 +55,7 @@ export const jupyterLanguageToMonacoLanguageMapping = new Map([
  * This will get updated with the list of VS Code languages.
  * This way, we can send those via telemetry, instead of having to hardcode the languages.
  */
-export const KnownNotebookLanguages: string[] = [
+export const VSCodeKnownNotebookLanguages: string[] = [
     'python',
     'r',
     'julia',
