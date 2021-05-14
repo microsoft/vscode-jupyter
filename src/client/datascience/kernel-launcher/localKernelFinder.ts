@@ -15,14 +15,15 @@ import { IExtensions, IPathUtils, ReadWrite, Resource } from '../../common/types
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import {
     findPreferredKernel,
     createInterpreterKernelSpec,
     getDisplayNameOrNameOfKernelConnection,
     getInterpreterKernelSpecName,
-    getKernelId
+    getKernelId,
+    getLanguageInNotebookMetadata
 } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import {
@@ -34,6 +35,7 @@ import { IJupyterKernelSpec } from '../types';
 import { ILocalKernelFinder } from './types';
 import { getResourceType, tryGetRealPath } from '../common';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
+import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -82,25 +84,25 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernel(
         resource: Resource,
-        option?: nbformat.INotebookMetadata,
+        notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined> {
+        const resourceType = getResourceType(resource);
+        const telemetrySafeLanguage =
+            resourceType === 'interactive'
+                ? PYTHON_LANGUAGE
+                : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
         try {
             // Get list of all of the specs
             const kernels = await this.listKernels(resource, cancelToken);
-            const isPythonNbOrInteractiveWindow =
-                isPythonNotebook(option) || getResourceType(resource) === 'interactive';
-
+            const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
             // Always include the interpreter in the search if we can
             const preferredInterpreter =
-                option && isInterpreter(option)
-                    ? option
-                    : resource && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                resource && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                     ? await this.interpreterService.getActiveInterpreter(resource)
                     : undefined;
 
             // Find the preferred kernel index from the list.
-            const notebookMetadata = option && !isInterpreter(option) ? option : undefined;
             const preferred = findPreferredKernel(
                 kernels,
                 resource,
@@ -109,12 +111,24 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 preferredInterpreter,
                 undefined
             );
+            sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
+                result: preferred ? 'found' : 'notfound',
+                resourceType,
+                language: telemetrySafeLanguage
+            });
             if (preferred) {
                 traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
                 return preferred as LocalKernelConnectionMetadata;
             }
-        } catch (e) {
-            traceError(`findKernel crashed: ${e} ${e.stack}`);
+        } catch (ex) {
+            sendTelemetryEvent(
+                Telemetry.PreferredKernel,
+                undefined,
+                { result: 'failed', resourceType, language: telemetrySafeLanguage },
+                ex,
+                true
+            );
+            traceError(`findKernel crashed`, ex);
             return undefined;
         }
     }

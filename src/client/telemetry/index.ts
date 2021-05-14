@@ -465,6 +465,11 @@ export interface IEventNamePropertyMapping {
         hashedName: string;
     };
     [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
+
+    /**
+     * Telemetry sent when we're unable to find a KernelSpec connection for Interactive window that can be started usig Python interpreter.
+     */
+    [Telemetry.FailedToFindKernelSpecInterpreterForInteractive]: never | undefined;
     /**
      * Telemetry sent for local Python Kernels.
      * Tracking whether we have managed to launch the kernel that matches the interpreter.
@@ -973,6 +978,14 @@ export interface IEventNamePropertyMapping {
      * Total time taken to get the preferred kernel for notebook.
      */
     [Telemetry.GetPreferredKernelPerf]: undefined | never;
+    /**
+     * Telemetry sent when we have attempted to find the preferred kernel.
+     */
+    [Telemetry.PreferredKernel]: {
+        result: 'found' | 'notfound' | 'failed'; // Whether a preferred kernel was found or not.
+        language: string; // Language of the associated notebook or interactive window.
+        resourceType: 'notebook' | 'interactive'; // Whether its a notebook or interactive window.
+    };
     /**
      * Telemetry event sent if there's an error installing a jupyter required dependency
      *

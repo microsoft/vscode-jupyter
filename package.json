@@ -1548,7 +1548,7 @@
                 },
                 "jupyter.variableExplorerExclude": {
                     "type": "string",
-                    "default": "module;function;builtin_function_or_method",
+                    "default": "module;function;builtin_function_or_method;ABCMeta;type",
                     "description": "Types to exclude from showing in the Interactive variable explorer",
                     "scope": "resource"
                 },
