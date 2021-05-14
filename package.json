@@ -68,6 +68,9 @@
         "onCustomEditor:jupyter.notebook.ipynb"
     ],
     "main": "./out/client/extension",
+    "capabilities": {
+        "virtualWorkspaces": true
+    },
     "contributes": {
         "keybindings": [
             {
