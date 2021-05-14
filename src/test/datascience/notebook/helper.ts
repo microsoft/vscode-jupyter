@@ -66,7 +66,6 @@ import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
-import { NotebookControllerManager } from '../../../client/datascience/notebook/notebookControllerManager';
 
 // Running in Conda environments, things can be a little slower.
 const defaultTimeout = IS_CONDA_TEST ? 30_000 : 15_000;
@@ -406,11 +405,6 @@ export async function startJupyterServer(api?: IExtensionTestApi) {
         const uriString = decodeURIComponent(uri.toString());
         traceInfo(`Jupyter started and listening at ${uriString}`);
         await selector.setJupyterURIToRemote(uriString);
-
-        // Once we have set the URI allow kernel loading to continue, we don't want this to happen ealier
-        // as it will pop up a server selector if the URI is not set yet
-        const notebookControllerManager = serviceContainer.get<NotebookControllerManager>(INotebookControllerManager);
-        notebookControllerManager.allowRemoteConnection.resolve();
     } else {
         traceInfo(`Jupyter not started and set to local`); // This is the default
     }
