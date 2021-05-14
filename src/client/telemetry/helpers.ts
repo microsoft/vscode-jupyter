@@ -3,12 +3,12 @@
 
 import * as hashjs from 'hash.js';
 import { traceError } from '../common/logger';
-import { KnownKernelLanguageAliases, KnownNotebookLanguages } from '../datascience/constants';
+import { KnownKernelLanguageAliases, VSCodeKnownNotebookLanguages } from '../datascience/constants';
 
 export function getTelemetrySafeLanguage(language: string = 'unknown') {
     language = (language || 'unknown').toLowerCase();
     language = KnownKernelLanguageAliases.get(language) || language;
-    if (!KnownNotebookLanguages.includes(language) && language != 'unknown') {
+    if (!VSCodeKnownNotebookLanguages.includes(language) && language != 'unknown') {
         language = getTelemetrySafeHashedString(language);
     }
     return language;

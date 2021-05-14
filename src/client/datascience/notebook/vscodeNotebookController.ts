@@ -23,8 +23,14 @@ import { traceInfo } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { ConsoleForegroundColors } from '../../logging/_global';
-import { Commands } from '../constants';
-import { getDescriptionOfKernelConnection, getDetailOfKernelConnection } from '../jupyter/kernels/helpers';
+import { translateKernelLanguageToMonaco } from '../common';
+import { Commands, LanguagesSupportedByPythonkernel, VSCodeKnownNotebookLanguages } from '../constants';
+import {
+    getDescriptionOfKernelConnection,
+    getDetailOfKernelConnection,
+    getKernelConnectionLanguage,
+    isPythonKernelConnection
+} from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
@@ -95,7 +101,17 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
         this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils);
         this.controller.hasExecutionOrder = true;
-
+        if (isPythonKernelConnection(kernelConnection)) {
+            this.controller.supportedLanguages = LanguagesSupportedByPythonkernel;
+        } else {
+            const language = translateKernelLanguageToMonaco(getKernelConnectionLanguage(kernelConnection) || '');
+            // We should set `supportedLanguages` only if VS Code knows about them.
+            // Assume user has a kernel for `go` & VS Code doesn't know about `go` language, & we initailize `supportedLanguages` to [go]
+            // In such cases VS Code will not allow execution of this cell (because `supportedLanguages` by definition limits execution to languages defined).
+            if (language && VSCodeKnownNotebookLanguages.includes(language)) {
+                this.controller.supportedLanguages = [language];
+            }
+        }
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposables);
     }

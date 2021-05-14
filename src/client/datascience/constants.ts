@@ -17,6 +17,23 @@ export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_lau
 
 export const PythonExtension = 'ms-python.python';
 
+export const LanguagesSupportedByPythonkernel = [
+    'python',
+    'html', // %%html
+    'xml', // %%svg as svg is same as `xml`
+    'javascript', // %%javascript, %%js
+    'markdown', // %%markdown, %%latex
+    'latex', // %%latex (some extensions register such languages)
+    'shellscript', // %%script, %%bash, %%sh
+    'bat', // %%script, %%bash, %%sh
+    'powershell', // %%script powershell, %%script pwsh
+    'kusto', // %%kqlmagic
+    'ruby', // %%ruby
+    'sql', // %%sql
+    'perl', // %%perl
+    'plaintext' // raw cells (no formatting)
+];
+
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
 export const KnownKernelLanguageAliases = new Map<string, string>([
     ['qsharp', 'q#'],
@@ -26,11 +43,19 @@ export const KnownKernelLanguageAliases = new Map<string, string>([
     ['c++12', 'c++'],
     ['c++14', 'c++']
 ]);
+export const jupyterLanguageToMonacoLanguageMapping = new Map([
+    ['c#', 'csharp'],
+    ['f#', 'fsharp'],
+    ['q#', 'qsharp'],
+    ['c++11', 'c++'],
+    ['c++12', 'c++'],
+    ['c++14', 'c++']
+]);
 /**
  * This will get updated with the list of VS Code languages.
  * This way, we can send those via telemetry, instead of having to hardcode the languages.
  */
-export const KnownNotebookLanguages: string[] = [
+export const VSCodeKnownNotebookLanguages: string[] = [
     'python',
     'r',
     'julia',
