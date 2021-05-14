@@ -418,6 +418,18 @@ export class KernelVariables implements IJupyterVariables {
                 }
             }
 
+            type SortableColumn = "name" | "type";
+            const sortColumn = request.sortColumn as SortableColumn;
+            const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
+                if (!request.sortAscending) {
+                    return (a[sortColumn] < b[sortColumn]) ? 1 : -1;
+                } else {
+                    return (a[sortColumn] > b[sortColumn]) ? 1 : -1;
+                }
+            };
+            result.pageResponse.sort(comparer);
+            list.variables.sort(comparer);
+
             // Save in our cache
             this.notebookState.set(notebook.identity, list);
 

@@ -24,7 +24,7 @@ export interface IVariablePanelProps {
     closeVariableExplorer(): void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): any;
-    pageIn(startIndex: number, pageSize: number): void;
+    pageIn(startIndex: number, pageSize: number, sortColumn: string, sortAscending: boolean): void;
     standaloneMode?: boolean;
     viewHeight: number;
 }

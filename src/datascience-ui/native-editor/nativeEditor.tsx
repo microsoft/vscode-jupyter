@@ -192,12 +192,14 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         };
     };
 
-    private pageInVariableData = (startIndex: number, pageSize: number) => {
+    private pageInVariableData = (startIndex: number, pageSize: number, sortColumn: string, sortAscending: boolean) => {
         this.props.getVariableData(
             this.props.currentExecutionCount,
             this.props.variableState.refreshCount,
             startIndex,
-            pageSize
+            pageSize,
+            sortColumn,
+            sortAscending
         );
     };
 

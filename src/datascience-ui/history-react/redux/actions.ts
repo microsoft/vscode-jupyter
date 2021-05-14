@@ -99,12 +99,14 @@ export const actionCreators = {
         newExecutionCount: number,
         refreshCount: number,
         startIndex: number = 0,
-        pageSize: number = 100
+        pageSize: number = 100,
+        sortColumn: string = 'name',
+        sortAscending: boolean = true
     ): CommonAction<IJupyterVariablesRequest> =>
         createIncomingActionWithPayload(CommonActionType.GET_VARIABLE_DATA, {
             executionCount: newExecutionCount,
-            sortColumn: 'name',
-            sortAscending: true,
+            sortColumn: sortColumn,
+            sortAscending: sortAscending,
             startIndex,
             pageSize,
             refreshCount

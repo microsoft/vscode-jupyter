@@ -39,7 +39,7 @@ interface IVariableExplorerProps {
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): void;
-    pageIn(startIndex: number, pageSize: number): void;
+    pageIn(startIndex: number, pageSize: number, sortColumn: string, sortAscending: boolean): void;
     standaloneMode?: boolean;
     viewHeight: number;
 }
@@ -69,6 +69,8 @@ interface IGridRow {
 interface IVariableExplorerState {
     containerHeight: number;
     gridHeight: number;
+    sortColumn: string;
+    sortAscending: boolean;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -102,12 +104,15 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         this.state = {
             containerHeight: this.props.containerHeight,
-            gridHeight: this.props.gridHeight
+            gridHeight: this.props.gridHeight,
+            sortColumn: 'name',
+            sortAscending: true,
         };
 
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
         this.setInitialHeight = this.setInitialHeight.bind(this);
         this.saveCurrentSize = this.saveCurrentSize.bind(this);
+        this.sortRows = this.sortRows.bind(this);
 
         this.gridColumns = [
             {
@@ -129,6 +134,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 name: getLocString('DataScience.variableExplorerNameColumn', 'Name'),
                 type: 'string',
                 width: 120,
+                sortable: true,
                 formatter: this.formatNameColumn,
                 headerRenderer: <VariableExplorerHeaderCellFormatter />
             },
@@ -136,6 +142,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 key: 'type',
                 name: getLocString('DataScience.variableExplorerTypeColumn', 'Type'),
                 type: 'string',
+                sortable: true,
                 width: 120,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
                 headerRenderer: <VariableExplorerHeaderCellFormatter />
@@ -176,6 +183,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             return true;
         }
         if (!fastDeepEqual(this.props.variables, nextProps.variables)) {
+            return true;
+        }
+        if (prevState.sortColumn !== this.state.sortColumn || prevState.sortAscending !== this.state.sortAscending) {
             return true;
         }
         if (
@@ -298,6 +308,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     onRowDoubleClick={this.rowDoubleClick}
                     emptyRowsView={VariableExplorerEmptyRowsView}
                     rowRenderer={VariableExplorerRowRenderer}
+                    onGridSort={this.sortRows}
                 />
             </div>
         );
@@ -471,7 +482,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             this.requestedRefreshCount = this.props.refreshCount;
 
             // Load this page.
-            this.props.pageIn(pageIndex + 1, pageSize);
+            this.props.pageIn(pageIndex + 1, pageSize, this.state.sortColumn, this.state.sortAscending);
         }
     };
 
@@ -498,4 +509,23 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             this.props.showDataExplorer(row.buttons.variable, row.buttons.numberOfColumns);
         }
     };
+
+    private sortRows(sortColumn: string, sortDirection: 'ASC' | 'DESC' | 'NONE') {
+        type SortableColumn = 'name' | 'type';
+        sortColumn = sortColumn as SortableColumn;
+        const sortAscending = sortDirection === 'DESC' ? false : true
+        if (sortDirection === 'NONE') {
+            this.setState({
+                sortColumn: 'name',
+                sortAscending: true
+            })
+        } else {
+            this.setState({
+                sortColumn: sortColumn,
+                sortAscending: sortAscending
+            })
+        }
+        const pageSize = this.computePageSize();
+        this.props.pageIn(0, pageSize, sortColumn, sortAscending);
+    }
 }
