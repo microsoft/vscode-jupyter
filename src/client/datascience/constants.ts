@@ -17,11 +17,37 @@ export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_lau
 
 export const PythonExtension = 'ms-python.python';
 
+export const LanguagesSupportedByPythonkernel = [
+    'python',
+    'kusto', // %%kqlmagic
+    'html', // %%html
+    'svg', // %%svg (some extensions have this language defined)
+    'xml', // %%svg (if `svg` is not defined, then support `xml`)
+    'javascript', // %%javascript, %%js
+    'markdown', // %%markdown
+    'perl', // %%perl
+    'shellscript', // %%script, %%bash, %%sh
+    'bat', // %%script, %%bash, %%sh
+    'powershell', // %%script powershell, %%script pwsh
+    'perl', // %%perl
+    'ruby', // %%ruby
+    'sql', // %%sql
+    'plaintext' // raw cells (no formatting)
+];
+
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
 export const KnownKernelLanguageAliases = new Map<string, string>([
     ['qsharp', 'q#'],
     ['csharp', 'c#'],
     ['fsharp', 'f#'],
+    ['c++11', 'c++'],
+    ['c++12', 'c++'],
+    ['c++14', 'c++']
+]);
+export const jupyterLanguageToMonacoLanguageMapping = new Map([
+    ['c#', 'csharp'],
+    ['f#', 'fsharp'],
+    ['q#', 'qsharp'],
     ['c++11', 'c++'],
     ['c++12', 'c++'],
     ['c++14', 'c++']
