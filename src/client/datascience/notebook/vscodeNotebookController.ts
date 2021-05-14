@@ -107,7 +107,7 @@ export class VSCodeNotebookController implements Disposable {
             const language = translateKernelLanguageToMonaco(getKernelConnectionLanguage(kernelConnection) || '');
             // We should set `supportedLanguages` only if VS Code knows about them.
             // Assume user has a kernel for `go` & VS Code doesn't know about `go` language, & we initailize `supportedLanguages` to [go]
-            // In such cases VS Code will not allow execution of this cell (because `supportedLanguages` by definition limits execution for those languages)
+            // In such cases VS Code will not allow execution of this cell (because `supportedLanguages` by definition limits execution to languages defined).
             if (language && VSCodeKnownNotebookLanguages.includes(language)) {
                 this.controller.supportedLanguages = [language];
             }
