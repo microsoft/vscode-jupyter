@@ -19,19 +19,18 @@ export const PythonExtension = 'ms-python.python';
 
 export const LanguagesSupportedByPythonkernel = [
     'python',
-    'kusto', // %%kqlmagic
     'html', // %%html
-    'svg', // %%svg (some extensions have this language defined)
-    'xml', // %%svg (if `svg` is not defined, then support `xml`)
+    'xml', // %%svg as svg is same as `xml`
     'javascript', // %%javascript, %%js
-    'markdown', // %%markdown
-    'perl', // %%perl
+    'markdown', // %%markdown, %%latex
+    'latex', // %%latex (some extensions register such languages)
     'shellscript', // %%script, %%bash, %%sh
     'bat', // %%script, %%bash, %%sh
     'powershell', // %%script powershell, %%script pwsh
-    'perl', // %%perl
+    'kusto', // %%kqlmagic
     'ruby', // %%ruby
     'sql', // %%sql
+    'perl', // %%perl
     'plaintext' // raw cells (no formatting)
 ];
 
