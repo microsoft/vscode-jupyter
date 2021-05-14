@@ -4,29 +4,40 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { IApplicationShell } from '../../client/common/application/types';
+import { IConfigurationService } from '../../client/common/types';
 import * as localize from '../../client/common/utils/localize';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { JupyterInstallError } from '../../client/datascience/jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../client/datascience/jupyter/jupyterSelfCertsError';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
+import { ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IJupyterInterpreterDependencyManager } from '../../client/datascience/types';
+import { IServiceContainer } from '../../client/ioc/types';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: typemoq.IMock<IApplicationShell>;
     let dataScienceErrorHandler: DataScienceErrorHandler;
     let dependencyManager: IJupyterInterpreterDependencyManager;
     let serverSelector: JupyterServerSelector;
+    let configService: IConfigurationService;
+    let localKernelFinder: ILocalKernelFinder;
 
     setup(() => {
         applicationShell = typemoq.Mock.ofType<IApplicationShell>();
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         serverSelector = mock(JupyterServerSelector);
+        configService = mock<IConfigurationService>();
+        localKernelFinder = mock<ILocalKernelFinder>();
+        const serviceContainre = mock<IServiceContainer>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
+        when(serviceContainre.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
+        when(serviceContainre.get<ILocalKernelFinder>(ILocalKernelFinder)).thenReturn(instance(localKernelFinder));
         dataScienceErrorHandler = new DataScienceErrorHandler(
             applicationShell.object,
             instance(dependencyManager),
-            instance(serverSelector)
+            instance(serverSelector),
+            instance(serviceContainre)
         );
     });
     const message = 'Test error message.';

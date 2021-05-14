@@ -139,7 +139,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
 
         await activeNotebookChanged.assertFired();
         assert.isUndefined(activeNotebookChanged.second, 'Active Editor should be undefined');
-        // assert.isTrue(notebookClosed.fired, 'Unpinned notebook should have been closed when opening another file');
     });
     test('Opening a non-notebook file and toggling between nb & non-notebook will fire necessary events', async function () {
         const notebookOpened = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);

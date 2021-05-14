@@ -915,7 +915,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             try {
                 await this.ensureNotebook(providerConnection, disableUI);
             } catch (e) {
-                this.errorHandler.handleError(e).ignoreErrors();
+                if (!disableUI) {
+                    this.errorHandler.handleError(e).ignoreErrors();
+                }
             }
         } else {
             // Just send a kernel update so it shows something

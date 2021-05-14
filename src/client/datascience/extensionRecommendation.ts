@@ -38,6 +38,16 @@ const extensionsThatSupportJupyterKernelLanguages = new Map<string, string>([
     ['fsharp', 'ms-dotnettools.dotnet-interactive-vscode'],
     ['powershell', 'ms-dotnettools.dotnet-interactive-vscode']
 ]);
+
+export function canOtherExtensionsRunCellsInNotebook(document: NotebookDocument) {
+    const language = getLanguageInNotebookMetadata(getNotebookMetadata(document));
+    const languages = language ? [language] : document.getCells().map((item) => item.document.languageId);
+    if (languages.length === 0) {
+        return false;
+    }
+    return languages.some((item) => extensionsThatSupportJupyterKernelLanguages.has(item));
+}
+
 @injectable()
 export class ExtensionRecommendationService implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
@@ -62,7 +72,7 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
         this.controllerManager.onNotebookControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
     }
 
-    public onDidOpenNotebookDocument(notebook: NotebookDocument) {
+    private onDidOpenNotebookDocument(notebook: NotebookDocument) {
         if (!isJupyterNotebook(notebook)) {
             return;
         }
@@ -72,7 +82,7 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
         }
     }
 
-    public onNotebookControllerSelected({ controller }: { controller: VSCodeNotebookController }) {
+    private onNotebookControllerSelected({ controller }: { controller: VSCodeNotebookController }) {
         if (controller.connection.kind !== 'startUsingKernelSpec') {
             return;
         }
@@ -84,7 +94,6 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
             this.recommendExtensionForLanguage(language).catch(noop);
         }
     }
-
     private async recommendExtensionForLanguage(language: string) {
         const extensionId = extensionsThatSupportJupyterKernelLanguages.get(language.toLowerCase());
         if (!extensionId || this.extensions.getExtension(extensionId)) {

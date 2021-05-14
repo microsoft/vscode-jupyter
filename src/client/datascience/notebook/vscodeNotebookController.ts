@@ -131,7 +131,7 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     // Handle the execution of notebook cell
-    public async handleExecution(cells: NotebookCell[]) {
+    private async handleExecution(cells: NotebookCell[]) {
         if (cells.length < 1) {
             traceInfo('No cells passed to handleExecution');
             return;

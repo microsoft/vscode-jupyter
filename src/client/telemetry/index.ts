@@ -739,6 +739,19 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
+    [Telemetry.PythonNotInstalled]: {
+        action:
+            | 'displayed' // Message displayed.
+            | 'dismissed' // user dismissed the message.
+            | 'download'; // User chose click the download link.
+    };
+    [Telemetry.KernelNotInstalled]: {
+        action: 'displayed'; // Message displayed.
+        /**
+         * Language found in the notebook if a known language. Otherwise 'unknown'
+         */
+        language: string;
+    };
     [Telemetry.PythonModuleInstal]: {
         moduleName: string;
         /**
