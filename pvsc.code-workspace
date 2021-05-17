@@ -163,5 +163,10 @@
 
         ],
         "compounds": []
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-toolsai.jupyter"
+        ]
     }
 }
