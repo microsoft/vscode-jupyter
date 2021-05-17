@@ -115,11 +115,11 @@ export abstract class BaseInstaller {
         product: Product,
         resource?: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean
+        options?: { reInstallAndUpdate?: boolean; modal?: boolean; message?: string }
     ): Promise<InstallerResponse> {
         return this.serviceContainer
             .get<IPythonInstaller>(IPythonInstaller)
-            .install(product, resource, cancel, reInstallAndUpdate);
+            .install(product, resource, cancel, options);
     }
 
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
@@ -164,7 +164,7 @@ export class DataScienceInstaller extends BaseInstaller {
         product: Product,
         interpreterUri?: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean
+        options?: { reInstallAndUpdate?: boolean; modal?: boolean; message?: string }
     ): Promise<InstallerResponse> {
         // Precondition
         if (isResource(interpreterUri)) {
@@ -174,7 +174,7 @@ export class DataScienceInstaller extends BaseInstaller {
 
         // At this point we know that `interpreterUri` is of type PythonInterpreter
         const interpreter = interpreterUri as PythonEnvironment;
-        const result = await installer.install(product, interpreter, cancel, reInstallAndUpdate);
+        const result = await installer.install(product, interpreter, cancel, options);
 
         if (result === InstallerResponse.Disabled || result === InstallerResponse.Ignore) {
             return result;
@@ -228,7 +228,10 @@ export class DataScienceInstaller extends BaseInstaller {
         if (item === localize.Common.bannerLabelYes()) {
             const stopWatch = new StopWatch();
             try {
-                const response = await this.install(product, resource, cancel, isModulePresent === true);
+                const response = await this.install(product, resource, cancel, {
+                    reInstallAndUpdate: isModulePresent === true,
+                    modal: true
+                });
                 const event =
                     product === Product.jupyter ? Telemetry.UserInstalledJupyter : Telemetry.UserInstalledModule;
                 sendTelemetryEvent(event, stopWatch.elapsedTime, { product: productName });
@@ -274,9 +277,9 @@ export class ProductInstaller implements IInstaller {
         product: Product,
         resource: InterpreterUri,
         cancel?: CancellationToken,
-        reInstallAndUpdate?: boolean
+        options?: { reInstallAndUpdate?: boolean; modal?: boolean; message?: string }
     ): Promise<InstallerResponse> {
-        return this.createInstaller().install(product, resource, cancel, reInstallAndUpdate);
+        return this.createInstaller().install(product, resource, cancel, options);
     }
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
         return this.createInstaller().isInstalled(product, resource);

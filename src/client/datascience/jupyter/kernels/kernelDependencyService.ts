@@ -5,13 +5,12 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import { IApplicationShell } from '../../../common/application/types';
-import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
+import { wrapCancellationTokens } from '../../../common/cancellation';
 import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceInfo } from '../../../common/logger';
 import { GLOBAL_MEMENTO, IInstaller, IMemento, InstallerResponse, IsCodeSpace, Product } from '../../../common/types';
-import { Common, DataScience } from '../../../common/utils/localize';
+import { DataScience } from '../../../common/utils/localize';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -27,7 +26,6 @@ import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '.
 export class KernelDependencyService implements IKernelDependencyService {
     private installPromises = new Map<string, Promise<KernelInterpreterDependencyResponse>>();
     constructor(
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean
@@ -79,11 +77,10 @@ export class KernelDependencyService implements IKernelDependencyService {
         token?: CancellationToken,
         disableUI?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
-        const promptCancellationPromise = createPromiseFromCancellation({
-            cancelAction: 'resolve',
-            defaultValue: undefined,
-            token
-        });
+        // If there's no UI, then cancel installation.
+        if (disableUI) {
+            return KernelInterpreterDependencyResponse.cancel;
+        }
         const isModulePresent = await isModulePresentInEnvironment(this.memento, Product.ipykernel, interpreter);
         const messageFormat = isModulePresent
             ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
@@ -92,40 +89,33 @@ export class KernelDependencyService implements IKernelDependencyService {
             interpreter.displayName || interpreter.path,
             ProductNames.get(Product.ipykernel)!
         );
-        const installerToken = wrapCancellationTokens(token);
-        // If there's no UI, then cancel installation.
-        if (disableUI) {
-            return KernelInterpreterDependencyResponse.cancel;
-        }
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action: 'displayed',
             moduleName: ProductNames.get(Product.ipykernel)!
         });
-        const installPrompt = isModulePresent ? Common.reInstall() : Common.install();
-        const selection = this.isCodeSpace
-            ? installPrompt
-            : await Promise.race([this.appShell.showErrorMessage(message, installPrompt), promptCancellationPromise]);
-        if (installerToken.isCancellationRequested) {
-            return KernelInterpreterDependencyResponse.cancel;
-        }
 
-        if (selection === installPrompt) {
-            const cancellationPromise = createPromiseFromCancellation({
-                cancelAction: 'resolve',
-                defaultValue: InstallerResponse.Ignore,
-                token
+        // Do not prompt in codespaces.
+        const showPrompt = !this.isCodeSpace;
+        // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
+        const installerToken = wrapCancellationTokens(token);
+        return this.installer
+            .install(Product.ipykernel, interpreter, installerToken, {
+                reInstallAndUpdate: isModulePresent === true,
+                modal: true,
+                message: showPrompt ? message : undefined
+            })
+            .then((result) => {
+                if (installerToken.isCancellationRequested) {
+                    return KernelInterpreterDependencyResponse.cancel;
+                }
+                switch (result) {
+                    case InstallerResponse.Installed:
+                        return KernelInterpreterDependencyResponse.ok;
+                    case InstallerResponse.Ignore:
+                        return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
+                    case InstallerResponse.Disabled:
+                        return KernelInterpreterDependencyResponse.cancel;
+                }
             });
-            // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
-            const response = await Promise.race([
-                this.installer.install(Product.ipykernel, interpreter, installerToken, isModulePresent === true),
-                cancellationPromise
-            ]);
-            if (response === InstallerResponse.Installed) {
-                return KernelInterpreterDependencyResponse.ok;
-            } else if (response === InstallerResponse.Ignore) {
-                return KernelInterpreterDependencyResponse.failed; // This happens when pip or conda can't be started
-            }
-        }
-        return KernelInterpreterDependencyResponse.cancel;
     }
 }
