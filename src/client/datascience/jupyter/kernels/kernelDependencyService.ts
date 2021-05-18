@@ -5,17 +5,28 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import { IApplicationShell } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
+import { UseVSCodeNotebookEditorApi } from '../../../common/constants';
 import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceInfo } from '../../../common/logger';
-import { GLOBAL_MEMENTO, IInstaller, IMemento, InstallerResponse, IsCodeSpace, Product } from '../../../common/types';
+import {
+    GLOBAL_MEMENTO,
+    IInstaller,
+    IMemento,
+    InstallerResponse,
+    IsCodeSpace,
+    Product,
+    Resource
+} from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
+import { noop } from '../../../common/utils/misc';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
+import { getResourceType } from '../../common';
+import { Commands, Telemetry } from '../../constants';
 import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
@@ -30,7 +41,9 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
-        @inject(IsCodeSpace) private readonly isCodeSpace: boolean
+        @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNb: boolean
     ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
@@ -38,6 +51,7 @@ export class KernelDependencyService implements IKernelDependencyService {
      */
     @traceDecorators.verbose('Install Missing Dependencies', TraceOptions.ReturnValue)
     public async installMissingDependencies(
+        resource: Resource,
         interpreter: PythonEnvironment,
         token?: CancellationToken,
         disableUI?: boolean
@@ -57,14 +71,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Get the result of the question
         try {
             const result = await promise;
-            if (result !== KernelInterpreterDependencyResponse.ok) {
-                throw new IpyKernelNotInstalledError(
-                    DataScience.ipykernelNotInstalled().format(
-                        `${interpreter.displayName || interpreter.path}:${interpreter.path}`
-                    ),
-                    result
-                );
-            }
+            this.handleKernelDependencyResponse(resource, result, interpreter);
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(interpreter.path);
@@ -73,17 +80,38 @@ export class KernelDependencyService implements IKernelDependencyService {
     public areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
         return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
     }
-
+    private handleKernelDependencyResponse(
+        resource: Resource,
+        response: KernelInterpreterDependencyResponse,
+        interpreter: PythonEnvironment
+    ) {
+        if (response === KernelInterpreterDependencyResponse.ok) {
+            return;
+        }
+        if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
+            const cmd =
+                getResourceType(resource) === 'notebook' && this.useNativeNb
+                    ? 'notebook.selectKernel'
+                    : Commands.SwitchJupyterKernel;
+            this.commandManager.executeCommand(cmd).then(noop, noop);
+        }
+        throw new IpyKernelNotInstalledError(
+            DataScience.ipykernelNotInstalled().format(
+                `${interpreter.displayName || interpreter.path}:${interpreter.path}`
+            ),
+            response
+        );
+    }
     private async runInstaller(
         interpreter: PythonEnvironment,
         token?: CancellationToken,
         disableUI?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
-        const promptCancellationPromise = createPromiseFromCancellation({
-            cancelAction: 'resolve',
-            defaultValue: undefined,
-            token
-        });
+        // If there's no UI, then cancel installation.
+        if (disableUI) {
+            return KernelInterpreterDependencyResponse.cancel;
+        }
+        const installerToken = wrapCancellationTokens(token);
         const isModulePresent = await isModulePresentInEnvironment(this.memento, Product.ipykernel, interpreter);
         const messageFormat = isModulePresent
             ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
@@ -92,24 +120,31 @@ export class KernelDependencyService implements IKernelDependencyService {
             interpreter.displayName || interpreter.path,
             ProductNames.get(Product.ipykernel)!
         );
-        const installerToken = wrapCancellationTokens(token);
-        // If there's no UI, then cancel installation.
-        if (disableUI) {
-            return KernelInterpreterDependencyResponse.cancel;
-        }
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action: 'displayed',
             moduleName: ProductNames.get(Product.ipykernel)!
         });
+        const promptCancellationPromise = createPromiseFromCancellation({
+            cancelAction: 'resolve',
+            defaultValue: undefined,
+            token
+        });
         const installPrompt = isModulePresent ? Common.reInstall() : Common.install();
+        const selectKernel = DataScience.selectKernel();
         const selection = this.isCodeSpace
             ? installPrompt
-            : await Promise.race([this.appShell.showErrorMessage(message, installPrompt), promptCancellationPromise]);
+            : await Promise.race([
+                  this.appShell.showErrorMessage(message, installPrompt, selectKernel),
+                  promptCancellationPromise
+              ]);
         if (installerToken.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }
 
-        if (selection === installPrompt) {
+        if (selection === selectKernel) {
+            this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
+            return KernelInterpreterDependencyResponse.selectDifferentKernel;
+        } else if (selection === installPrompt) {
             const cancellationPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,
@@ -127,5 +162,29 @@ export class KernelDependencyService implements IKernelDependencyService {
             }
         }
         return KernelInterpreterDependencyResponse.cancel;
+
+        // // Do not prompt in codespaces.
+        // const showPrompt = !this.isCodeSpace;
+        // // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
+        // const installerToken = wrapCancellationTokens(token);
+        // return this.installer
+        //     .install(Product.ipykernel, interpreter, installerToken, {
+        //         reInstallAndUpdate: isModulePresent === true,
+        //         modal: true,
+        //         message: showPrompt ? message : undefined
+        //     })
+        //     .then((result) => {
+        //         if (installerToken.isCancellationRequested) {
+        //             return KernelInterpreterDependencyResponse.cancel;
+        //         }
+        //         switch (result) {
+        //             case InstallerResponse.Installed:
+        //                 return KernelInterpreterDependencyResponse.ok;
+        //             case InstallerResponse.Ignore:
+        //                 return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
+        //             case InstallerResponse.Disabled:
+        //                 return KernelInterpreterDependencyResponse.cancel;
+        //         }
+        //     });
     }
 }

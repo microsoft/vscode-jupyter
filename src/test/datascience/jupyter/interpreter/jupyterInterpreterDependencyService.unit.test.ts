@@ -23,7 +23,7 @@ import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 
-suite('DataScience - Jupyter Interpreter Configuration', () => {
+suite.only('DataScience - Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
@@ -73,6 +73,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
         verify(
             appShell.showErrorMessage(
                 anything(),
+                anything(),
                 DataScience.jupyterInstall(),
                 DataScience.selectDifferentJupyterInterpreter(),
                 DataScience.pythonInteractiveHelpLink()
@@ -87,7 +88,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
     test('Reinstall Jupyter if jupyter and notebook are installed but kernelspec is not found', async () => {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(true);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+        when(appShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall() as any
         );
@@ -101,6 +102,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
         verify(installer.install(anything(), anything(), anything())).once();
         verify(
             appShell.showErrorMessage(
+                anything(),
                 anything(),
                 DataScience.jupyterInstall(),
                 DataScience.selectDifferentJupyterInterpreter(),
@@ -116,7 +118,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
     ): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+        when(appShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall() as any
         );
@@ -134,7 +136,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
     ): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(false);
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+        when(appShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall() as any
         );

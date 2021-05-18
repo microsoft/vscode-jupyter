@@ -83,7 +83,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
-    ['notebook.selectKernel']: [{ id: string; extension: string }];
+    ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
     ['undo']: [];
     [DSCommands.NotebookEditorInterruptKernel]: [Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];

@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Memento } from 'vscode';
-import { IApplicationShell } from '../../../../client/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../../../client/common/application/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
@@ -15,28 +15,32 @@ import { createPythonInterpreter } from '../../../utils/interpreters';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // eslint-disable-next-line
-suite('DataScience - Kernel Dependency Service', () => {
+suite.only('DataScience - Kernel Dependency Service', () => {
     let dependencyService: KernelDependencyService;
     let appShell: IApplicationShell;
+    let cmdManager: ICommandManager;
     let installer: IInstaller;
     let memento: Memento;
     const interpreter = createPythonInterpreter();
     setup(() => {
         appShell = mock<IApplicationShell>();
         installer = mock<IInstaller>();
+        cmdManager = mock<ICommandManager>();
         memento = mock<Memento>();
         when(memento.get(anything(), anything())).thenReturn(false);
         dependencyService = new KernelDependencyService(
             instance(appShell),
             instance(installer),
             instance(memento),
+            false,
+            instance(cmdManager),
             false
         );
     });
     test('Check if ipykernel is installed', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
 
-        await dependencyService.installMissingDependencies(interpreter);
+        await dependencyService.installMissingDependencies(undefined, interpreter);
 
         verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
         verify(installer.isInstalled(anything(), anything())).once();
@@ -44,7 +48,7 @@ suite('DataScience - Kernel Dependency Service', () => {
     test('Do not prompt if if ipykernel is installed', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
 
-        await dependencyService.installMissingDependencies(interpreter);
+        await dependencyService.installMissingDependencies(undefined, interpreter);
 
         verify(appShell.showErrorMessage(anything(), anything(), anything())).never();
     });
@@ -53,7 +57,7 @@ suite('DataScience - Kernel Dependency Service', () => {
         when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
 
         await assert.isRejected(
-            dependencyService.installMissingDependencies(interpreter),
+            dependencyService.installMissingDependencies(undefined, interpreter),
             'IPyKernel not installed into interpreter'
         );
 
@@ -66,7 +70,7 @@ suite('DataScience - Kernel Dependency Service', () => {
         );
         when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
 
-        await dependencyService.installMissingDependencies(interpreter);
+        await dependencyService.installMissingDependencies(undefined, interpreter);
     });
     test('Install ipykernel second time should result in a re-install', async () => {
         when(memento.get(anything(), anything())).thenReturn(true);
@@ -76,7 +80,7 @@ suite('DataScience - Kernel Dependency Service', () => {
         );
         when(appShell.showErrorMessage(anything(), Common.reInstall())).thenResolve(Common.reInstall() as any);
 
-        await dependencyService.installMissingDependencies(interpreter);
+        await dependencyService.installMissingDependencies(undefined, interpreter);
     });
     test('Bubble installation errors', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
@@ -85,7 +89,7 @@ suite('DataScience - Kernel Dependency Service', () => {
         );
         when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
 
-        const promise = dependencyService.installMissingDependencies(interpreter);
+        const promise = dependencyService.installMissingDependencies(undefined, interpreter);
 
         await assert.isRejected(promise, 'Install failed - kaboom');
     });

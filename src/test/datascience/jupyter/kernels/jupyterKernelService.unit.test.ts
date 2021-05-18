@@ -302,7 +302,7 @@ suite('DataScience - JupyterKernelService', () => {
     test('Dependencies checked on all kernels with interpreters', async () => {
         await Promise.all(
             kernels.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(k, undefined, true);
+                await kernelService.ensureKernelIsUsable(undefined, k, undefined, true);
             })
         );
         verify(kernelDependencyService.installMissingDependencies(anything(), anything(), anything())).times(
@@ -321,7 +321,7 @@ suite('DataScience - JupyterKernelService', () => {
             'kernel.json'
         );
         when(fs.localFileExists(anything())).thenResolve(false);
-        await kernelService.ensureKernelIsUsable(kernelsWithInvalidName[0], undefined, true);
+        await kernelService.ensureKernelIsUsable(undefined, kernelsWithInvalidName[0], undefined, true);
         verify(fs.writeLocalFile(kernelSpecPath, anything())).once();
     });
 
@@ -341,7 +341,7 @@ suite('DataScience - JupyterKernelService', () => {
         });
         await Promise.all(
             kernelsWithInterpreters.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(k, undefined, true);
+                await kernelService.ensureKernelIsUsable(undefined, k, undefined, true);
             })
         );
         assert.equal(updateCount, kernelsWithInterpreters.length, 'Updates to spec files did not occur');
@@ -362,7 +362,7 @@ suite('DataScience - JupyterKernelService', () => {
         });
         await Promise.all(
             kernelsWithoutInterpreters.map(async (k) => {
-                await kernelService.ensureKernelIsUsable(k, undefined, true);
+                await kernelService.ensureKernelIsUsable(undefined, k, undefined, true);
             })
         );
         assert.equal(updateCount, 0, 'Should not have updated spec files when no interpreter metadata');
