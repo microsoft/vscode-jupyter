@@ -3,14 +3,21 @@
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 import { assert } from 'chai';
-// import * as path from 'path';
 import { NotebookEditor as VSCNotebookEditor, commands, window, Position, Selection } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { IExtensionTestApi } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';
-import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests, createEmptyPythonNotebook, insertCodeCell, selectCell, startJupyterServer, trustAllNotebooks } from '../notebook/helper';
+import {
+    canRunNotebookTests,
+    closeNotebooksAndCleanUpAfterTests,
+    createEmptyPythonNotebook,
+    insertCodeCell,
+    selectCell,
+    startJupyterServer,
+    trustAllNotebooks
+} from '../notebook/helper';
 
 suite('DataScience - Go To Definition', function () {
     this.timeout(60_000);
