@@ -158,33 +158,9 @@ export class KernelDependencyService implements IKernelDependencyService {
             if (response === InstallerResponse.Installed) {
                 return KernelInterpreterDependencyResponse.ok;
             } else if (response === InstallerResponse.Ignore) {
-                return KernelInterpreterDependencyResponse.failed; // This happens when pip or conda can't be started
+                return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
             }
         }
         return KernelInterpreterDependencyResponse.cancel;
-
-        // // Do not prompt in codespaces.
-        // const showPrompt = !this.isCodeSpace;
-        // // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
-        // const installerToken = wrapCancellationTokens(token);
-        // return this.installer
-        //     .install(Product.ipykernel, interpreter, installerToken, {
-        //         reInstallAndUpdate: isModulePresent === true,
-        //         modal: true,
-        //         message: showPrompt ? message : undefined
-        //     })
-        //     .then((result) => {
-        //         if (installerToken.isCancellationRequested) {
-        //             return KernelInterpreterDependencyResponse.cancel;
-        //         }
-        //         switch (result) {
-        //             case InstallerResponse.Installed:
-        //                 return KernelInterpreterDependencyResponse.ok;
-        //             case InstallerResponse.Ignore:
-        //                 return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
-        //             case InstallerResponse.Disabled:
-        //                 return KernelInterpreterDependencyResponse.cancel;
-        //         }
-        //     });
     }
 }
