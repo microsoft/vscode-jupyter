@@ -7,6 +7,7 @@ import type { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceWarning } from '../../common/logger';
@@ -33,7 +34,8 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
     constructor(
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker
     ) {}
     /**
      * Gets the language to be used for the default cell in an empty notebook.
@@ -45,10 +47,10 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
             (metadata?.kernelspec as IJupyterKernelSpec | undefined)?.language ||
             this.lastSavedNotebookCellLanguage;
 
+        // Default to python language only if the Python extension is installed.
+        const defaultLanguage = this.pythonExtensionChecker.isPythonExtensionInstalled ? PYTHON_LANGUAGE : 'plaintext';
         // Note, what ever language is returned here, when the user selects a kernel, the cells (of blank documents) get updated based on that kernel selection.
-        // 99% of the users today are Python, hence lets default to python,
-        // Changing the kernel will change the languages of the cells.
-        return translateKernelLanguageToMonaco(jupyterLanguage || PYTHON_LANGUAGE);
+        return translateKernelLanguageToMonaco(jupyterLanguage || defaultLanguage);
     }
     public async activate() {
         this.vscNotebook.onDidSaveNotebookDocument(this.onDidSaveNotebookDocument, this, this.disposables);

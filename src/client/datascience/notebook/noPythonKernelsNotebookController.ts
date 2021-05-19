@@ -4,7 +4,6 @@
 import { Disposable, NotebookCell, NotebookController, NotebookControllerAffinity, NotebookDocument } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
@@ -26,14 +25,14 @@ export class NoPythonKernelsNotebookController implements Disposable {
     ) {
         disposableRegistry.push(this);
         this.controller = this.notebookApi.createNotebookController(
-            PYTHON_LANGUAGE,
+            'Python 3',
             JupyterNotebookView,
-            PYTHON_LANGUAGE,
+            'Python 3',
             this.handleExecution.bind(this)
         );
         this.disposables.push(this.controller);
         this.controller.description = '';
-        this.controller.detail = '';
+        this.controller.detail = 'python3';
     }
 
     public dispose() {
@@ -49,9 +48,8 @@ export class NoPythonKernelsNotebookController implements Disposable {
         if (!isPythonNotebook(metadata)) {
             return;
         }
-        this.controller.label = PYTHON_LANGUAGE;
-        this.controller.description =
-            metadata?.kernelspec?.display_name || metadata?.kernelspec?.name || PYTHON_LANGUAGE;
+        this.controller.label =
+            metadata?.kernelspec?.display_name || metadata?.kernelspec?.name || this.controller.label;
     }
     private async handleExecution(_cells: NotebookCell[]) {
         if (this.pythonExtensionChecker.isPythonExtensionInstalled) {
@@ -64,6 +62,7 @@ export class NoPythonKernelsNotebookController implements Disposable {
         sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
         const selection = await this.appShell.showErrorMessage(
             DataScience.pythonExtensionRequiredToRunNotebook(),
+            { modal: true },
             Common.install()
         );
         if (selection === Common.install()) {
@@ -75,7 +74,11 @@ export class NoPythonKernelsNotebookController implements Disposable {
     }
     private async handleExecutionWithoutPython() {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
-        const selection = await this.appShell.showErrorMessage(DataScience.pythonNotInstalled(), Common.install());
+        const selection = await this.appShell.showErrorMessage(
+            DataScience.pythonNotInstalled(),
+            { modal: true },
+            Common.install()
+        );
         if (selection === Common.install()) {
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
             this.appShell.openUrl('https://www.python.org/downloads');

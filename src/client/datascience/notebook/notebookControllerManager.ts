@@ -32,7 +32,12 @@ import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRem
 import { sendNotebookControllerCreateTelemetry } from '../telemetry/kernelTelemetry';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { IDataScienceErrorHandler, INotebookProvider } from '../types';
-import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
+import {
+    getNotebookMetadata,
+    isJupyterNotebook,
+    isPythonNotebook,
+    trackKernelInNotebookMetadata
+} from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
 import { JupyterNotebookView } from './constants';
@@ -190,6 +195,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     traceInfo('Find preferred kernel cancelled');
                     return;
                 }
+                await this.createOrDeletePlaceholderPythonKernel();
 
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredConnection) {
@@ -201,7 +207,16 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     this.setPreferredController(document, preferredConnection).catch(traceError);
                 } else {
                     const controllers = await this.controllersPromise?.catch(() => []);
-                    if (controllers?.length === 0 && !canOtherExtensionsRunCellsInNotebook(document)) {
+                    if (
+                        this.isLocalLaunch &&
+                        isPythonNotebook(getNotebookMetadata(document)) &&
+                        !controllers?.some((item) => isPythonKernelConnection(item.connection))
+                    ) {
+                        // Ensure the dummy Python kernel is selected as preferred.
+                        this.createNoPythonKernelNotebookController()
+                            .updateNotebookAffinity(document, NotebookControllerAffinity.Preferred)
+                            .catch(traceError);
+                    } else if (controllers?.length === 0 && !canOtherExtensionsRunCellsInNotebook(document)) {
                         // Add a dummy controller to indicate this notebook is not supported.
                         this.getNoKernelNotebookController()
                             .updateNotebookAffinity(document, NotebookControllerAffinity.Preferred)
@@ -235,10 +250,25 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController }).catch(
                 traceError
             );
-        } else if (this.isLocalLaunch && !controllers.some((item) => isPythonKernelConnection(item.connection))) {
+        }
+    }
+
+    private async createOrDeletePlaceholderPythonKernel() {
+        if (!this.isLocalLaunch) {
+            return;
+        }
+        // Wait for our controllers to be loaded before we try to set a preferred on
+        // can happen if a document is opened quick and we have not yet loaded our controllers
+        const controllers = await this.getNotebookControllers();
+        if (!controllers.some((item) => isPythonKernelConnection(item.connection))) {
+            // Ensure we always have a `Python` kernel.
             // If we're dealing with local launch and user doesn't have a Python kernel (controller in the list)
             // then add a dummy one where we'll prompt the user to either install Python extension or Python itself.
             this.createNoPythonKernelNotebookController();
+        } else if (this.noPythonKernelNotebookController) {
+            // If subsequently user installs the python extension.
+            this.noPythonKernelNotebookController.dispose();
+            this.noPythonKernelNotebookController = undefined;
         }
     }
 
