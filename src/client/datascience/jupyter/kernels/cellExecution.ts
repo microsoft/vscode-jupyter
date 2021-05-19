@@ -150,11 +150,11 @@ export class CellExecution {
                 // No point keeping it alive, just chewing resources.
                 if (e === this.cell.document) {
                     this.request?.dispose(); // NOSONAR
-                }
-                if (this.started && !this._completed) {
-                    this.completedDueToCancellation().catch((ex) =>
-                        traceInfo('Failures when cancelling due to cell removal', ex)
-                    );
+                    if (this.started && !this._completed) {
+                        this.completedDueToCancellation().catch((ex) =>
+                            traceInfo('Failures when cancelling due to cell removal', ex)
+                        );
+                    }
                 }
             },
             this,
