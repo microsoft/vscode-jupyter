@@ -152,7 +152,7 @@ export class CellExecution {
                     this.request?.dispose(); // NOSONAR
                     if (this.started && !this._completed) {
                         this.completedDueToCancellation().catch((ex) =>
-                        traceInfo('Failures when cancelling due to cell removal', ex)
+                            traceInfo('Failures when cancelling due to cell removal', ex)
                         );
                     }
                 }
