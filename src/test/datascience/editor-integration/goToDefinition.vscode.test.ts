@@ -14,9 +14,12 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
     insertCodeCell,
+    runAllCellsInActiveNotebook,
     selectCell,
     startJupyterServer,
-    trustAllNotebooks
+    trustAllNotebooks,
+    waitForExecutionCompletedSuccessfully,
+    waitForKernelToGetAutoSelected
 } from '../notebook/helper';
 
 suite('DataScience - Go To Definition', function () {
@@ -51,17 +54,19 @@ suite('DataScience - Go To Definition', function () {
         await insertCodeCell('def add(a,b):\n\treturn a+b', { index: 0 });
         await insertCodeCell('add(2,3)', { index: 1 });
 
+        await waitForKernelToGetAutoSelected();
+        const cell2 = vscodeNotebook.activeNotebookEditor!.document.cellAt(1)!;
+        await runAllCellsInActiveNotebook();
+        // Wait for Jupyter to start.
+        await waitForExecutionCompletedSuccessfully(cell2, 60_000);
+
         // put cursor on 'add'
         await selectCell(vscEditor.document, 1, 2);
         // const textEditors = window.visibleTextEditors;
         // textEditors[1].selection = new Selection(new Position(0, 0), new Position(0, 1));
 
         // Run the F12 command
-        try {
-            await commands.executeCommand('editor.action.revealDefinition');
-        } catch (e) {
-            console.log(e);
-        }
+        await commands.executeCommand('editor.action.revealDefinition');
 
         // Check that the first cell gets selected
         assert.equal(vscEditor.selections[0].start, 0);
