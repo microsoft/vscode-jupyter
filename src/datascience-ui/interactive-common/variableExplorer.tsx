@@ -504,7 +504,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     };
 
     private sortRows(sortColumn: string, sortDirection: 'ASC' | 'DESC' | 'NONE') {
-        const sortAscending = sortDirection === 'DESC' ? false : true
+        const sortAscending = sortDirection === 'ASC';
         if (sortDirection === 'NONE') {
             this.props.sort('name', true);
         } else {
