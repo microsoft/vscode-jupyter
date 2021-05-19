@@ -139,7 +139,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 key: 'type',
                 name: getLocString('DataScience.variableExplorerTypeColumn', 'Type'),
                 type: 'string',
-                sortable: true,
                 width: 120,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
                 headerRenderer: <VariableExplorerHeaderCellFormatter />
