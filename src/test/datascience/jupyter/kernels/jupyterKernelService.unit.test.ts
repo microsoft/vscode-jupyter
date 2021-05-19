@@ -305,7 +305,7 @@ suite('DataScience - JupyterKernelService', () => {
                 await kernelService.ensureKernelIsUsable(undefined, k, undefined, true);
             })
         );
-        verify(kernelDependencyService.installMissingDependencies(anything(), anything(), anything())).times(
+        verify(kernelDependencyService.installMissingDependencies(anything(), anything(), anything(), anything())).times(
             kernels.filter((k) => k.interpreter).length
         );
     });
