@@ -24,7 +24,6 @@ import {
 } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from './kernels/helpers';
-import { StreamTransportOptions } from 'winston/lib/winston/transports';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 
