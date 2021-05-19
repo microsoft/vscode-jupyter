@@ -9,7 +9,7 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
-import { PythonExtension, Telemetry } from '../constants';
+import { LanguagesSupportedByPythonkernel, PythonExtension, Telemetry } from '../constants';
 import { JupyterNotebookView } from './constants';
 import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
 
@@ -33,6 +33,7 @@ export class NoPythonKernelsNotebookController implements Disposable {
         this.disposables.push(this.controller);
         this.controller.description = '';
         this.controller.detail = 'python3';
+        this.controller.supportedLanguages = LanguagesSupportedByPythonkernel;
     }
 
     public dispose() {
