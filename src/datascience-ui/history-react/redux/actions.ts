@@ -77,7 +77,7 @@ export const actionCreators = {
         createIncomingActionWithPayload(CommonActionType.SUBMIT_INPUT, { code, cellId }),
     toggleVariableExplorer: (): CommonAction => createIncomingAction(CommonActionType.TOGGLE_VARIABLE_EXPLORER),
     sortVariables: (sortColumn: string, sortAscending: boolean): CommonAction<ISortVariablesRequest> =>
-    createIncomingActionWithPayload(CommonActionType.SORT_VARIABLES, { sortColumn, sortAscending }),
+        createIncomingActionWithPayload(CommonActionType.SORT_VARIABLES, { sortColumn, sortAscending }),
     setVariableExplorerHeight: (containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight> =>
         createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT, { containerHeight, gridHeight }),
     expandAll: (): CommonAction => createIncomingAction(InteractiveWindowMessages.ExpandAll),

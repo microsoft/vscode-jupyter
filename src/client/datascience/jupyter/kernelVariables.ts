@@ -24,7 +24,7 @@ import {
 } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from './kernels/helpers';
-// import { StreamTransportOptions } from 'winston/lib/winston/transports';
+import { StreamTransportOptions } from 'winston/lib/winston/transports';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 
@@ -409,7 +409,7 @@ export class KernelVariables implements IJupyterVariables {
             };
             list.variables.sort(comparer)
 
-            const startPos = request.startIndex && request.startIndex >= 0 ? request.startIndex : 0;
+            const startPos = request.startIndex ? request.startIndex : 0;
             const chunkSize = request.pageSize ? request.pageSize : 100;
             result.pageStartIndex = startPos;
 
