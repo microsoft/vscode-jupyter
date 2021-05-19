@@ -201,7 +201,6 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.ShowContinue]: MessageType.other,
     [InteractiveWindowMessages.ShowDataViewer]: MessageType.other,
     [InteractiveWindowMessages.ShowPlot]: MessageType.other,
-    [InteractiveWindowMessages.SortVariables]: MessageType.other,
     [InteractiveWindowMessages.StartCell]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.StartDebugging]: MessageType.other,
     [InteractiveWindowMessages.StartProgress]: MessageType.other,

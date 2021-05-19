@@ -11,7 +11,6 @@ import {
     CommonActionType,
     IAddCellAction,
     ILoadIPyWidgetClassFailureAction,
-    ISortVariablesRequest,
     IVariableExplorerHeight,
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
@@ -71,7 +70,6 @@ export enum InteractiveWindowMessages {
     RemoteReexecuteCode = 'remote_reexecute_code',
     Activate = 'activate',
     ShowDataViewer = 'show_data_explorer',
-    SortVariables = 'sort_variables',
     GetVariablesRequest = 'get_variables_request',
     GetVariablesResponse = 'get_variables_response',
     VariableExplorerToggle = 'variable_explorer_toggle',
@@ -635,7 +633,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.RemoteReexecuteCode]: IRemoteReexecuteCode;
     public [InteractiveWindowMessages.Activate]: never | undefined;
     public [InteractiveWindowMessages.ShowDataViewer]: IShowDataViewer;
-    public [InteractiveWindowMessages.SortVariables]: ISortVariablesRequest;
     public [InteractiveWindowMessages.GetVariablesRequest]: IJupyterVariablesRequest;
     public [InteractiveWindowMessages.GetVariablesResponse]: IJupyterVariablesResponse;
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
