@@ -44,6 +44,7 @@ import { canOtherExtensionsRunCellsInNotebook } from '../extensionRecommendation
 import { NoKernelsNotebookController } from './noKernelsNotebookController';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 import { IPythonExtensionChecker } from '../../api/types';
+import { NotebookCellLanguageService } from './cellLanguageService';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -85,7 +86,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -342,7 +344,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 this.context,
                 this,
                 this.pathUtils,
-                this.disposables
+                this.disposables,
+                this.languageService
             );
 
             // Hook up to if this NotebookController is selected or de-selected

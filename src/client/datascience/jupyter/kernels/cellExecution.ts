@@ -380,10 +380,7 @@ export class CellExecution {
     }
     private canExecuteCell() {
         // Raw cells cannot be executed.
-        if (
-            isPythonKernelConnection(this.kernelConnection) &&
-            (this.cell.document.languageId === 'raw' || this.cell.document.languageId === 'plaintext')
-        ) {
+        if (isPythonKernelConnection(this.kernelConnection) && this.cell.document.languageId === 'raw') {
             return false;
         }
 

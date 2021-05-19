@@ -7,14 +7,19 @@ import type { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceWarning } from '../../common/logger';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { translateKernelLanguageToMonaco } from '../common';
-import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
+import { LanguagesSupportedByPythonkernel, VSCodeKnownNotebookLanguages } from '../constants';
+import {
+    getKernelConnectionLanguage,
+    getLanguageInNotebookMetadata,
+    isPythonKernelConnection
+} from '../jupyter/kernels/helpers';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { getNotebookMetadata, isJupyterNotebook } from './helpers/helpers';
 
@@ -28,7 +33,6 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
     constructor(
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {}
     /**
@@ -41,13 +45,28 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
             (metadata?.kernelspec as IJupyterKernelSpec | undefined)?.language ||
             this.lastSavedNotebookCellLanguage;
 
-        // Default to python language only if the Python extension is installed.
-        const defaultLanguage = this.pythonExtensionChecker.isPythonExtensionInstalled ? PYTHON_LANGUAGE : 'plaintext';
         // Note, what ever language is returned here, when the user selects a kernel, the cells (of blank documents) get updated based on that kernel selection.
-        return translateKernelLanguageToMonaco(jupyterLanguage || defaultLanguage);
+        // 99% of the users today are Python, hence lets default to python,
+        // Changing the kernel will change the languages of the cells.
+        return translateKernelLanguageToMonaco(jupyterLanguage || PYTHON_LANGUAGE);
     }
     public async activate() {
         this.vscNotebook.onDidSaveNotebookDocument(this.onDidSaveNotebookDocument, this, this.disposables);
+    }
+    public getSupportedLanguages(kernelConnection: KernelConnectionMetadata): string[] {
+        if (isPythonKernelConnection(kernelConnection)) {
+            return LanguagesSupportedByPythonkernel;
+        } else {
+            const language = translateKernelLanguageToMonaco(getKernelConnectionLanguage(kernelConnection) || '');
+            // We should set `supportedLanguages` only if VS Code knows about them.
+            // Assume user has a kernel for `go` & VS Code doesn't know about `go` language, & we initailize `supportedLanguages` to [go]
+            // In such cases VS Code will not allow execution of this cell (because `supportedLanguages` by definition limits execution to languages defined).
+            if (language && VSCodeKnownNotebookLanguages.includes(language)) {
+                return [language];
+            }
+            // Support all languages
+            return [];
+        }
     }
     private get lastSavedNotebookCellLanguage(): string | undefined {
         return this.globalMemento.get<string | undefined>(LastSavedNotebookCellLanguage);
