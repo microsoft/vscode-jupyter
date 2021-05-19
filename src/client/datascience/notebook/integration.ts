@@ -113,9 +113,10 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         // already changed it on their own.
         // Make sure we don't overwrite the user's existing customization for this setting
         const settings = this.workspace.getConfiguration('notebook', undefined);
-        const toolbarSettings =
-            settings.get<{ [viewType: string]: 'left' | 'right' | 'hidden' }>('cellToolbarLocation') ?? {};
-        const userCustomizedSetting = Object.keys(toolbarSettings).includes(JupyterNotebookView);
+        const toolbarSettings = settings.get('cellToolbarLocation') as {
+            [key: string]: 'left' | 'right' | 'hidden';
+        };
+        const userCustomizedSetting = JupyterNotebookView in toolbarSettings;
         if (userCustomizedSetting) {
             // Regardless of what the user set this to, we should honor it
             return;

@@ -342,10 +342,6 @@
         <!-- Assumption is we'll be using a browser to load the UI, if this is the case we're debugging. Socket.io is used to push/pull messages to/from extension (post office) -->
         <script src="/socket.io/socket.io.js"></script>
         <script type="text/javascript">
-            function forceTestMiddleware() {
-                // Make sure we turn on middle ware for tests that use this
-                return true;
-            }
             function resolvePath(relativePath) {
                 if (relativePath && relativePath[0] == '.' && relativePath[1] != '.') {
                     return '<%= htmlWebpackPlugin.options.imageBaseUrl %>' + relativePath.substring(1);
