@@ -53,8 +53,8 @@ suite('DataScience - Go To Definition', function () {
 
         // put cursor on 'add'
         await selectCell(vscEditor.document, 1, 2);
-        const textEditors = window.visibleTextEditors;
-        textEditors[1].selection = new Selection(new Position(0, 0), new Position(0, 1));
+        // const textEditors = window.visibleTextEditors;
+        // textEditors[1].selection = new Selection(new Position(0, 0), new Position(0, 1));
 
         // Run the F12 command
         try {
