@@ -4,7 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { ProductInstaller } from '../../../../client/common/installer/productInstaller';
@@ -23,7 +23,7 @@ import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 
-suite.only('DataScience - Jupyter Interpreter Configuration', () => {
+suite('DataScience - Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
@@ -73,10 +73,9 @@ suite.only('DataScience - Jupyter Interpreter Configuration', () => {
         verify(
             appShell.showErrorMessage(
                 anything(),
-                anything(),
+                deepEqual({ modal: true }),
                 DataScience.jupyterInstall(),
-                DataScience.selectDifferentJupyterInterpreter(),
-                DataScience.pythonInteractiveHelpLink()
+                DataScience.selectDifferentJupyterInterpreter()
             )
         ).once();
         assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
@@ -88,7 +87,7 @@ suite.only('DataScience - Jupyter Interpreter Configuration', () => {
     test('Reinstall Jupyter if jupyter and notebook are installed but kernelspec is not found', async () => {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(true);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
+        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall() as any
         );
@@ -103,10 +102,9 @@ suite.only('DataScience - Jupyter Interpreter Configuration', () => {
         verify(
             appShell.showErrorMessage(
                 anything(),
-                anything(),
+                deepEqual({ modal: true }),
                 DataScience.jupyterInstall(),
-                DataScience.selectDifferentJupyterInterpreter(),
-                anything()
+                DataScience.selectDifferentJupyterInterpreter()
             )
         ).once();
         assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
@@ -118,7 +116,7 @@ suite.only('DataScience - Jupyter Interpreter Configuration', () => {
     ): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
+        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall() as any
         );
@@ -136,7 +134,7 @@ suite.only('DataScience - Jupyter Interpreter Configuration', () => {
     ): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(false);
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
+        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             DataScience.jupyterInstall() as any
         );

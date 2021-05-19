@@ -134,7 +134,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         const selection = this.isCodeSpace
             ? installPrompt
             : await Promise.race([
-                  this.appShell.showErrorMessage(message, installPrompt, selectKernel),
+                  this.appShell.showErrorMessage(message, { modal: true }, installPrompt, selectKernel),
                   promptCancellationPromise
               ]);
         if (installerToken.isCancellationRequested) {
@@ -142,7 +142,6 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         if (selection === selectKernel) {
-            this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
             return KernelInterpreterDependencyResponse.selectDifferentKernel;
         } else if (selection === installPrompt) {
             const cancellationPromise = createPromiseFromCancellation({
