@@ -113,11 +113,18 @@ class ColumnFilter {
     }
 
     // Tries to match entire words instead of possibly trying to match substrings.
-    // Can use wildcards for substring matches.
-    // Resolves problems like filtering for male vs female.
+    // Based off of https://support.microsoft.com/en-us/office/examples-of-wildcard-characters-939e153f-bd30-47e4-a763-61897c87b3f4.
     private matchStringWithWildcards(v: any, text: string): boolean {
-        const matchExpr = new RegExp(`\\b${text.replace('*', '.*')}\\b`);
-        return matchExpr.test(v);
+        const regEx = text.replace(/\*/g, '.*')
+                          .replace(/(\?|_)/g, '\\w')
+                          .replace(/(\[\!)(.*)(])/g, '[^$2]')
+                          .replace(/\#/g, '\\d');
+        try {
+            const matchExpr = new RegExp(`\\b${regEx}\\b`, 'i');
+            return matchExpr.test(v);
+        } catch (e) {
+            return false;
+        }
     }
 
     private extractDigits(text: string, regex: RegExp): number {
