@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import { coerce, SemVer } from 'semver';
-import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
+import { ConfigurationTarget, Event, extensions, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
 import { IDisposable, IJupyterSettings } from '../client/common/types';
@@ -723,4 +723,10 @@ export function arePathsSame(path1: string, path2: string) {
     } else {
         return path1 === path2;
     }
+}
+
+export async function verifyExtensionIsAvailable(extensionId: string): Promise<void> {
+    const extension = extensions.all.find((e) => e.id === extensionId);
+    assert.ok(extension, `Extension ${extensionId} not installed.`);
+    await extension.activate();
 }

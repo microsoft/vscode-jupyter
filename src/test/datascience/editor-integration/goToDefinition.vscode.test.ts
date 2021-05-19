@@ -3,11 +3,12 @@
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 import { assert } from 'chai';
-import { NotebookEditor as VSCNotebookEditor, commands, window, Position, Selection } from 'vscode';
+import { NotebookEditor as VSCNotebookEditor, commands, window, Position, Selection, workspace } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
-import { IExtensionTestApi } from '../../common';
+import { PylanceExtension, PythonExtension } from '../../../client/datascience/constants';
+import { IExtensionTestApi, verifyExtensionIsAvailable } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';
 import {
     canRunNotebookTests,
@@ -36,6 +37,12 @@ suite('DataScience - Go To Definition', function () {
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
+
+        await verifyExtensionIsAvailable(PylanceExtension);
+        await verifyExtensionIsAvailable(PythonExtension);
+        const pythonConfig = workspace.getConfiguration('python', null);
+        await pythonConfig.update('languageServer', 'Pylance', true);
+
         await startJupyterServer();
         await closeNotebooksAndCleanUpAfterTests();
 
