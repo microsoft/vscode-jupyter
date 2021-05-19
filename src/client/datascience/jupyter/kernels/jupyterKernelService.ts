@@ -60,7 +60,12 @@ export class JupyterKernelService {
 
         // If we have an interpreter, make sure it has the correct dependencies installed
         if (kernel.kind !== 'connectToLiveKernel' && kernel.interpreter) {
-            await this.kernelDependencyService.installMissingDependencies(resource, kernel.interpreter, token, disableUI);
+            await this.kernelDependencyService.installMissingDependencies(
+                resource,
+                kernel.interpreter,
+                token,
+                disableUI
+            );
         }
 
         // If the spec file doesn't exist or is not defined, we need to register this kernel
