@@ -80,22 +80,22 @@ suite('DataScience - Go To Definition', function () {
         assert.equal(vscEditor.selections[0].end, 1);
     });
 
-    test('Go To Definition of a python import', async () => {
-        await trustAllNotebooks();
-        await createEmptyPythonNotebook(disposables);
-        vscEditor = vscodeNotebook.activeNotebookEditor!;
+    // test('Go To Definition of a python import', async () => {
+    //     await trustAllNotebooks();
+    //     await createEmptyPythonNotebook(disposables);
+    //     vscEditor = vscodeNotebook.activeNotebookEditor!;
 
-        await insertCodeCell(`import os,sys\nsys.path.append(os.path.abspath('..'))`, { index: 0 });
+    //     await insertCodeCell(`import os,sys\nsys.path.append(os.path.abspath('..'))`, { index: 0 });
 
-        // put cursor on 'sys'
-        await selectCell(vscEditor.document, 0, 1);
-        const textEditors = window.visibleTextEditors;
-        textEditors[0].selection = new Selection(new Position(1, 0), new Position(1, 1));
+    //     // put cursor on 'sys'
+    //     await selectCell(vscEditor.document, 0, 1);
+    //     const textEditors = window.visibleTextEditors;
+    //     textEditors[0].selection = new Selection(new Position(1, 0), new Position(1, 1));
 
-        // Run the F12 command
-        await commands.executeCommand('editor.action.revealDefinition');
+    //     // Run the F12 command
+    //     await commands.executeCommand('editor.action.revealDefinition');
 
-        // Check that a python file opened
-        assert.equal(window.activeTextEditor?.document.languageId, 'python');
-    });
+    //     // Check that a python file opened
+    //     assert.equal(window.activeTextEditor?.document.languageId, 'python');
+    // });
 });
