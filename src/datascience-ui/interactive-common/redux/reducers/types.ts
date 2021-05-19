@@ -78,6 +78,7 @@ export enum CommonActionType {
     SET_VARIABLE_VIEW_HEIGHT = 'action.set_variable_view_height',
     SEND_COMMAND = 'action.send_command',
     SHOW_DATA_VIEWER = 'action.show_data_viewer',
+    SORT_VARIABLES = 'action.sort_variables',
     STEP = 'action.step',
     SUBMIT_INPUT = 'action.submit_input',
     TOGGLE_INPUT_BLOCK = 'action.toggle_input_block',
@@ -136,6 +137,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.SELECT_SERVER]: never | undefined;
     [CommonActionType.CODE_CREATED]: ICodeCreatedAction;
     [CommonActionType.GET_VARIABLE_DATA]: IJupyterVariablesRequest;
+    [CommonActionType.SORT_VARIABLES]: ISortVariablesRequest;
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: never | undefined;
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: IVariableExplorerHeight;
     [CommonActionType.SET_VARIABLE_VIEW_HEIGHT]: IVariableViewHeight;
@@ -267,3 +269,8 @@ export type NotifyIPyWidgeWidgetVersionNotSupportedAction = {
 };
 
 export type CommonAction<T = never | undefined> = ActionWithPayload<T, CommonActionType | InteractiveWindowMessages>;
+
+export type ISortVariablesRequest = {
+    sortColumn: string;
+    sortAscending: boolean;
+};

@@ -334,6 +334,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             setVariableExplorerHeight: this.props.setVariableExplorerHeight,
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
+            sort: this.props.sortVariables,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
@@ -342,14 +343,14 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         };
     };
 
-    private pageInVariableData = (startIndex: number, pageSize: number, sortColumn: string, sortAscending: boolean) => {
+    private pageInVariableData = (startIndex: number, pageSize: number) => {
         this.props.getVariableData(
             this.props.currentExecutionCount,
             this.props.variableState.refreshCount,
             startIndex,
             pageSize,
-            sortColumn,
-            sortAscending
+            this.props.variableState.sortColumn,
+            this.props.variableState.sortAscending
         );
     };
 

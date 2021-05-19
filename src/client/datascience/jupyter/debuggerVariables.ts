@@ -89,17 +89,6 @@ export class DebuggerVariables extends DebugLocationTracker
                 result.pageResponse.push(fullVariable);
             }
 
-            type SortableColumn = "name" | "type";
-            const sortColumn = request.sortColumn as SortableColumn;
-            const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
-                if (!request.sortAscending) {
-                    return (a[sortColumn] < b[sortColumn]) ? 1 : -1;
-                } else {
-                    return (a[sortColumn] > b[sortColumn]) ? 1 : -1;
-                }
-            };
-            result.pageResponse.sort(comparer);
-
             result.totalCount = this.lastKnownVariables.length;
         }
 

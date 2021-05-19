@@ -24,6 +24,7 @@ import {
 } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from './kernels/helpers';
+// import { StreamTransportOptions } from 'winston/lib/winston/transports';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 
@@ -397,7 +398,18 @@ export class KernelVariables implements IJupyterVariables {
 
         // Use the list of names to fetch the page of data
         if (list) {
-            const startPos = request.startIndex ? request.startIndex : 0;
+            type SortableColumn = "name" | "type";
+            const sortColumn = request.sortColumn as SortableColumn;
+            const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
+                if (!request.sortAscending) {
+                    return (a[sortColumn] < b[sortColumn]) ? 1 : -1;
+                } else {
+                    return (a[sortColumn] > b[sortColumn]) ? 1 : -1;
+                }
+            };
+            list.variables.sort(comparer)
+
+            const startPos = request.startIndex && request.startIndex >= 0 ? request.startIndex : 0;
             const chunkSize = request.pageSize ? request.pageSize : 100;
             result.pageStartIndex = startPos;
 
@@ -417,18 +429,6 @@ export class KernelVariables implements IJupyterVariables {
                     i += 1;
                 }
             }
-
-            type SortableColumn = "name" | "type";
-            const sortColumn = request.sortColumn as SortableColumn;
-            const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
-                if (!request.sortAscending) {
-                    return (a[sortColumn] < b[sortColumn]) ? 1 : -1;
-                } else {
-                    return (a[sortColumn] > b[sortColumn]) ? 1 : -1;
-                }
-            };
-            result.pageResponse.sort(comparer);
-            list.variables.sort(comparer);
 
             // Save in our cache
             this.notebookState.set(notebook.identity, list);

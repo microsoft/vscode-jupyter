@@ -13,6 +13,7 @@ import {
     CommonActionTypeMapping,
     ILinkClickAction,
     IShowDataViewerAction,
+    ISortVariablesRequest,
     IVariableExplorerHeight,
     IVariableViewHeight
 } from '../../interactive-common/redux/reducers/types';
@@ -35,6 +36,8 @@ export const actionCreators = {
     linkClick: (href: string): CommonAction<ILinkClickAction> =>
         createIncomingActionWithPayload(CommonActionType.LINK_CLICK, { href }),
     toggleVariableExplorer: (): CommonAction => createIncomingAction(CommonActionType.TOGGLE_VARIABLE_EXPLORER),
+    sort: (sortColumn: string, sortAscending: boolean): CommonAction<ISortVariablesRequest> =>
+        createIncomingActionWithPayload(CommonActionType.SORT_VARIABLES, { sortColumn, sortAscending }),
     setVariableExplorerHeight: (containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight> =>
         createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT, { containerHeight, gridHeight }),
     setVariableViewHeight: (viewHeight: number): CommonAction<IVariableViewHeight> =>

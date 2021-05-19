@@ -27,6 +27,7 @@ import {
     IOpenSettingsAction,
     ISendCommandAction,
     IShowDataViewerAction,
+    ISortVariablesRequest,
     IVariableExplorerHeight
 } from '../../interactive-common/redux/reducers/types';
 import { IMonacoModelContentChangeEvent } from '../../react-common/monacoHelpers';
@@ -141,6 +142,14 @@ export const actionCreators = {
             startIndex,
             pageSize,
             refreshCount
+        }),
+    sortVariables: (
+        sortColumn: string = 'name',
+        sortAscending: boolean = true
+    ): CommonAction<ISortVariablesRequest> =>
+        createIncomingActionWithPayload(CommonActionType.SORT_VARIABLES, {
+            sortColumn,
+            sortAscending,
         }),
     widgetFailed: (ex: Error): CommonAction<Error> =>
         createIncomingActionWithPayload(CommonActionType.IPYWIDGET_RENDER_FAILURE, ex),

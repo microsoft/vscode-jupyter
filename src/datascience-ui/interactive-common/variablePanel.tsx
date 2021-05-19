@@ -24,7 +24,8 @@ export interface IVariablePanelProps {
     closeVariableExplorer(): void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): any;
-    pageIn(startIndex: number, pageSize: number, sortColumn: string, sortAscending: boolean): void;
+    pageIn(startIndex: number, pageSize: number): void;
+    sort(sortColumn: string, sortAscending: boolean): void;
     standaloneMode?: boolean;
     viewHeight: number;
 }
@@ -45,6 +46,7 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                 closeVariableExplorer={this.props.closeVariableExplorer}
                 setVariableExplorerHeight={this.props.setVariableExplorerHeight}
                 pageIn={this.props.pageIn}
+                sort={this.props.sort}
                 executionCount={this.props.executionCount}
                 refreshCount={this.props.refreshCount}
                 standaloneMode={this.props.standaloneMode}
