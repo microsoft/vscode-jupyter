@@ -266,7 +266,6 @@ module.exports = {
         'src/test/datascience/markdownManipulation.unit.test.ts',
         'src/test/datascience/interactivePanel.functional.test.tsx',
         'src/test/datascience/testPersistentStateFactory.ts',
-        'src/test/datascience/jupyter/interpreter/jupyterInterpreterDependencyService.unit.test.ts',
         'src/test/datascience/jupyter/interpreter/jupyterInterpreterStateStore.unit.test.ts',
         'src/test/datascience/jupyter/interpreter/jupyterInterpreterService.unit.test.ts',
         'src/test/datascience/jupyter/interpreter/jupyterInterpreterSelectionCommand.unit.test.ts',

@@ -4,7 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { ProductInstaller } from '../../../../client/common/installer/productInstaller';
@@ -73,9 +73,9 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
         verify(
             appShell.showErrorMessage(
                 anything(),
+                deepEqual({ modal: true }),
                 DataScience.jupyterInstall(),
-                DataScience.selectDifferentJupyterInterpreter(),
-                DataScience.pythonInteractiveHelpLink()
+                DataScience.selectDifferentJupyterInterpreter()
             )
         ).once();
         assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
@@ -102,9 +102,9 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
         verify(
             appShell.showErrorMessage(
                 anything(),
+                deepEqual({ modal: true }),
                 DataScience.jupyterInstall(),
-                DataScience.selectDifferentJupyterInterpreter(),
-                anything()
+                DataScience.selectDifferentJupyterInterpreter()
             )
         ).once();
         assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
