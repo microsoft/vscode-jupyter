@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import {
@@ -22,7 +22,8 @@ import { Telemetry } from '../constants';
 import {
     areKernelConnectionsEqual,
     getDisplayNameOrNameOfKernelConnection,
-    isLocalLaunch
+    isLocalLaunch,
+    isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
 import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
@@ -41,6 +42,8 @@ import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendTelemetryEvent } from '../../telemetry';
 import { canOtherExtensionsRunCellsInNotebook } from '../extensionRecommendation';
 import { NoKernelsNotebookController } from './noKernelsNotebookController';
+import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
+import { IPythonExtensionChecker } from '../../api/types';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -80,7 +83,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
         @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
+        @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -228,6 +233,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController }).catch(
                 traceError
             );
+        } else if (this.isLocalLaunch && !controllers.some((item) => isPythonKernelConnection(item.connection))) {
+            // If we're dealing with local launch and user doesn't have a Python kernel (controller in the list)
+            // then add a dummy one where we'll prompt the user to either install Python extension or Python itself.
+            this.createNoPythonKernelNotebookController();
         }
     }
 
@@ -298,11 +307,24 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return controllers;
     }
     private noKernelNotebookController?: NoKernelsNotebookController;
+    private noPythonKernelNotebookController?: NoPythonKernelsNotebookController;
     private getNoKernelNotebookController() {
         this.noKernelNotebookController =
             this.noKernelNotebookController ||
             new NoKernelsNotebookController(this.notebook, this.commandManager, this.disposables, this.errorHandler);
         return this.noKernelNotebookController;
+    }
+    private createNoPythonKernelNotebookController() {
+        this.noPythonKernelNotebookController =
+            this.noPythonKernelNotebookController ||
+            new NoPythonKernelsNotebookController(
+                this.notebook,
+                this.commandManager,
+                this.disposables,
+                this.pythonExtensionChecker,
+                this.appShell
+            );
+        return this.noPythonKernelNotebookController;
     }
     private createNotebookController(
         kernelConnection: KernelConnectionMetadata,
