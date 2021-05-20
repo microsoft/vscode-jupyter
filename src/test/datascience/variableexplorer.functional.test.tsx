@@ -795,9 +795,7 @@ a = 1,2,3,4,5,6,7,8,9`;
                 // Sort by name ascending
                 const completeAsc = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete);
                 (viewPort.props as any).onGridSort('name', 'ASC');
-                // Wait for a variable complete
                 await completeAsc;
-
                 verifyVariables(wrapper, targetVariablesAscending);
 
                 // Sort by name descending
