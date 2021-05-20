@@ -59,14 +59,6 @@ export function verifyVariables(
     // Then search for results.
     const foundRows = wrapper.find('div.react-grid-Row');
 
-    foundRows.forEach((rowWrapper) => {
-        const rowCells = rowWrapper.find('div.react-grid-Cell');
-
-        const cellHTML = parse(rowCells.at(Name_Column).html()) as any;
-        const innerHTML = cellHTML.innerHTML;
-        console.log({'var name': innerHTML});
-    });
-
     expect(foundRows.length).to.be.equal(
         targetVariables.length,
         'Different number of variable explorer rows and target variables'
