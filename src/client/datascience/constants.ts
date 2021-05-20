@@ -31,7 +31,7 @@ export const LanguagesSupportedByPythonkernel = [
     'ruby', // %%ruby
     'sql', // %%sql
     'perl', // %%perl
-    'plaintext' // raw cells (no formatting)
+    'raw' // raw cells (no formatting)
 ];
 
 // List of 'language' names that we know about. All should be lower case as that's how we compare.

@@ -256,7 +256,7 @@ export function createJupyterCellFromVSCNotebookCell(
     let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
     if (vscCell.kind === NotebookCellKind.Markup) {
         cell = createMarkdownCellFromNotebookCell(vscCell);
-    } else if (vscCell.document.languageId === 'raw' || vscCell.document.languageId === 'plaintext') {
+    } else if (vscCell.document.languageId === 'raw') {
         cell = createRawCellFromNotebookCell(vscCell);
     } else {
         cell = createCodeCellFromNotebookCell(vscCell);

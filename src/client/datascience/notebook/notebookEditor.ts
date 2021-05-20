@@ -35,7 +35,7 @@ import {
     InterruptResult,
     IStatusProvider
 } from '../types';
-import { NotebookCellLanguageService } from './defaultCellLanguageService';
+import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 
 export class NotebookEditor implements INotebookEditor {
