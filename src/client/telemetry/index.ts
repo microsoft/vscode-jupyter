@@ -745,6 +745,12 @@ export interface IEventNamePropertyMapping {
             | 'dismissed' // user dismissed the message.
             | 'download'; // User chose click the download link.
     };
+    [Telemetry.PythonExtensionNotInstalled]: {
+        action:
+            | 'displayed' // Message displayed.
+            | 'dismissed' // user dismissed the message.
+            | 'download'; // User chose click the download link.
+    };
     [Telemetry.KernelNotInstalled]: {
         action: 'displayed'; // Message displayed.
         /**

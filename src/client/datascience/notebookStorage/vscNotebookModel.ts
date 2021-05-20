@@ -4,6 +4,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { Memento, NotebookDocument, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
@@ -88,7 +89,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             this.notebookContentWithoutCells,
             this.file,
             this.notebookJson.cells || [],
-            this.preferredLanguage || 'plaintext',
+            this.preferredLanguage || PYTHON_LANGUAGE,
             this.originalJson
         );
     }
