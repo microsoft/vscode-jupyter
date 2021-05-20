@@ -361,23 +361,41 @@ suite('DataScience DataViewer tests', () => {
     });
 
     runMountedTest('Filter strings', async (wrapper) => {
-        await injectCode('import pandas as pd\r\ndata = ["stable", "unstable", "able", "barely stable", "st4ble"]\r\ndf = pd.DataFrame(data)');
+        await injectCode(
+            'import pandas as pd\r\ndata = ["stable", "unstable", "able", "barely stable", "st4ble"]\r\ndf = pd.DataFrame(data)'
+        );
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('df', 'DataFrame');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, 0, 'stable', 1, 1, 'unstable', 2, 2, 'able', 3, 3, 'barely stable', 4, 4, 'st4ble']);
+        verifyRows(wrapper.wrapper, [
+            0,
+            0,
+            'stable',
+            1,
+            1,
+            'unstable',
+            2,
+            2,
+            'able',
+            3,
+            3,
+            'barely stable',
+            4,
+            4,
+            'st4ble'
+        ]);
 
         const filtersAndExpectedResults = {
-            'stable': [0, 0, 'stable', 3, 3, 'barely stable'],
-            'unstable': [1, 1, 'unstable'],
+            stable: [0, 0, 'stable', 3, 3, 'barely stable'],
+            unstable: [1, 1, 'unstable'],
             '*': [0, 0, 'stable', 1, 1, 'unstable', 2, 2, 'able', 3, 3, 'barely stable', 4, 4, 'st4ble'],
             '%': [0, 0, 'stable', 1, 1, 'unstable', 2, 2, 'able', 3, 3, 'barely stable', 4, 4, 'st4ble'],
             '*stable': [0, 0, 'stable', 1, 1, 'unstable', 3, 3, 'barely stable'],
             '%stable': [0, 0, 'stable', 1, 1, 'unstable', 3, 3, 'barely stable'],
             '*tab*': [0, 0, 'stable', 1, 1, 'unstable', 3, 3, 'barely stable'],
             'st?ble': [0, 0, 'stable', 3, 3, 'barely stable', 4, 4, 'st4ble'],
-            'st_ble': [0, 0, 'stable', 3, 3, 'barely stable', 4, 4, 'st4ble'],
+            st_ble: [0, 0, 'stable', 3, 3, 'barely stable', 4, 4, 'st4ble'],
             'st[!a]ble': [4, 4, 'st4ble'],
             'st[!a4]ble': [],
             'st[a4]ble': [0, 0, 'stable', 3, 3, 'barely stable', 4, 4, 'st4ble'],
