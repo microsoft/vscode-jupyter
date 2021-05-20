@@ -397,16 +397,16 @@ export class KernelVariables implements IJupyterVariables {
 
         // Use the list of names to fetch the page of data
         if (list) {
-            type SortableColumn = "name";
+            type SortableColumn = 'name';
             const sortColumn = request.sortColumn as SortableColumn;
             const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
                 if (!request.sortAscending) {
-                    return (a[sortColumn] < b[sortColumn]) ? 1 : -1;
+                    return a[sortColumn] < b[sortColumn] ? 1 : -1;
                 } else {
-                    return (a[sortColumn] > b[sortColumn]) ? 1 : -1;
+                    return a[sortColumn] > b[sortColumn] ? 1 : -1;
                 }
             };
-            list.variables.sort(comparer)
+            list.variables.sort(comparer);
 
             const startPos = request.startIndex ? request.startIndex : 0;
             const chunkSize = request.pageSize ? request.pageSize : 100;

@@ -801,13 +801,13 @@ a = 1,2,3,4,5,6,7,8,9`;
                 // Sort by name descending
                 const completeDesc = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete);
                 (viewPort.props as any).onGridSort('name', 'DESC');
-                await completeDesc
+                await completeDesc;
                 verifyVariables(wrapper, targetVariablesDescending);
 
                 // Sort by default order
                 const completeNone = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete);
                 (viewPort.props as any).onGridSort('', 'NONE');
-                await completeNone
+                await completeNone;
                 verifyVariables(wrapper, targetVariablesAscending);
             },
             () => {

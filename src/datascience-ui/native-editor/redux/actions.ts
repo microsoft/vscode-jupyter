@@ -143,13 +143,10 @@ export const actionCreators = {
             pageSize,
             refreshCount
         }),
-    sortVariables: (
-        sortColumn: string = 'name',
-        sortAscending: boolean = true
-    ): CommonAction<ISortVariablesRequest> =>
+    sortVariables: (sortColumn: string = 'name', sortAscending: boolean = true): CommonAction<ISortVariablesRequest> =>
         createIncomingActionWithPayload(CommonActionType.SORT_VARIABLES, {
             sortColumn,
-            sortAscending,
+            sortAscending
         }),
     widgetFailed: (ex: Error): CommonAction<Error> =>
         createIncomingActionWithPayload(CommonActionType.IPYWIDGET_RENDER_FAILURE, ex),
