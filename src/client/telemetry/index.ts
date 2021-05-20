@@ -1191,6 +1191,17 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStartNoIpykernel]: {
         reason: number;
     } & TelemetryErrorProperties;
+    [Telemetry.RawKernelProcessExitedUnhandled]: {
+        reason: string | undefined;
+        exitCode: number | undefined;
+    };
+    [Telemetry.RawKernelSessionKernelProcessExited]: {
+        reason: string | undefined;
+        exitCode: number | undefined;
+    };
+    [Telemetry.RawKernelSessionShutdown]: {
+        isRequestToShutdownRestartSession: boolean | undefined;
+    };
 
     // Run by line events
     [Telemetry.RunByLineStart]: never | undefined;

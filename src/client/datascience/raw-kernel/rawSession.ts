@@ -7,6 +7,8 @@ import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { ISessionWithSocket, KernelSocketInformation } from '../types';
@@ -160,6 +162,13 @@ export class RawSession implements ISessionWithSocket {
             return;
         }
         traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
+        // Send telemetry so we know why the kernel process exited,
+        // as this affects our kernel startup success
+        sendTelemetryEvent(Telemetry.RawKernelProcessExitedUnhandled, undefined, {
+            reason: e.reason,
+            exitCode: e.exitCode
+        });
+
         // Just kill the session.
         this.dispose().ignoreErrors();
     }
