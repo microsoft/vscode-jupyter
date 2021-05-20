@@ -3,13 +3,16 @@
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 import { assert } from 'chai';
-import { NotebookEditor as VSCNotebookEditor, commands, window, Position, Selection, workspace } from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs-extra';
+import { NotebookEditor as VSCNotebookEditor, commands, workspace } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
+import { sleep } from '../../../client/common/utils/async';
 import { PylanceExtension, PythonExtension } from '../../../client/datascience/constants';
-import { IExtensionTestApi, verifyExtensionIsAvailable } from '../../common';
-import { closeActiveWindows, initialize } from '../../initialize';
+import { IExtensionTestApi, openFile, verifyExtensionIsAvailable } from '../../common';
+import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
@@ -24,7 +27,7 @@ import {
 } from '../notebook/helper';
 
 suite('DataScience - Go To Definition', function () {
-    this.timeout(60_000);
+    this.timeout(120_000);
 
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -42,6 +45,9 @@ suite('DataScience - Go To Definition', function () {
         await verifyExtensionIsAvailable(PythonExtension);
         const pythonConfig = workspace.getConfiguration('python', null);
         await pythonConfig.update('languageServer', 'Pylance', true);
+        // await pythonConfig.update('trace.server', 'verbose', true);
+        // "python.trace.server": "verbose"
+        // await pythonConfig.update('languageServer', 'Microsoft', true);
 
         await startJupyterServer();
         await closeNotebooksAndCleanUpAfterTests();
@@ -54,6 +60,23 @@ suite('DataScience - Go To Definition', function () {
     suiteTeardown(closeActiveWindows);
 
     test('Go To Definition in the same notebook', async () => {
+        const file = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'pythonFiles',
+            'datascience',
+            'simple_note_book.py'
+        );
+        const outputFile = path.join(path.dirname(file), 'ds.log');
+        if (await fs.pathExists(outputFile)) {
+            await fs.unlink(outputFile);
+        }
+        await openFile(file);
+
+        // Wait for code lenses to get detected.
+        await sleep(1_000);
+
         await trustAllNotebooks();
         await createEmptyPythonNotebook(disposables);
         vscEditor = vscodeNotebook.activeNotebookEditor!;
@@ -69,11 +92,13 @@ suite('DataScience - Go To Definition', function () {
 
         // put cursor on 'add'
         await selectCell(vscEditor.document, 1, 2);
+        await sleep(40000);
         // const textEditors = window.visibleTextEditors;
         // textEditors[1].selection = new Selection(new Position(0, 0), new Position(0, 1));
 
         // Run the F12 command
         await commands.executeCommand('editor.action.revealDefinition');
+        await sleep(60000);
 
         // Check that the first cell gets selected
         assert.equal(vscEditor.selections[0].start, 0);
