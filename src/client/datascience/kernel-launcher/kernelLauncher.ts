@@ -102,6 +102,7 @@ export class KernelLauncher implements IKernelLauncher {
             // If this is a python interpreter, make sure it has ipykernel
             if (kernelConnectionMetadata.interpreter) {
                 await this.kernelDependencyService.installMissingDependencies(
+                    resource,
                     kernelConnectionMetadata.interpreter,
                     cancelToken,
                     disableUI

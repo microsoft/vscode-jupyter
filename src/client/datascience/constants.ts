@@ -31,7 +31,7 @@ export const LanguagesSupportedByPythonkernel = [
     'ruby', // %%ruby
     'sql', // %%sql
     'perl', // %%perl
-    'plaintext' // raw cells (no formatting)
+    'raw' // raw cells (no formatting)
 ];
 
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
@@ -429,6 +429,7 @@ export enum Telemetry {
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     PythonModuleInstal = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',
     PythonNotInstalled = 'DS_INTERNAL.PYTHON_NOT_INSTALLED',
+    PythonExtensionNotInstalled = 'DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED',
     KernelNotInstalled = 'DS_INTERNAL.KERNEL_NOT_INSTALLED',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',

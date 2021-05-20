@@ -48,7 +48,7 @@ import {
     hasErrorOutput,
     NotebookCellStateTracker
 } from '../../../client/datascience/notebook/helpers/helpers';
-import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/defaultCellLanguageService';
+import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/cellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import {

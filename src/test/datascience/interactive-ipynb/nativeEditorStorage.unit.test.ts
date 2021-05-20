@@ -35,7 +35,7 @@ import {
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
-import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
+import { NotebookCellLanguageService } from '../../../client/datascience/notebook/cellLanguageService';
 import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 import { NativeEditorStorage } from '../../../client/datascience/notebookStorage/nativeEditorStorage';
 import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';

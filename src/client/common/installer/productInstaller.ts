@@ -35,6 +35,10 @@ import { InterpreterUri, IProductPathService } from './types';
 
 export { Product } from '../types';
 
+/**
+ * Keep track of the fact that we attempted to install a package into an interpreter.
+ * (don't care whether it was successful or not).
+ */
 export async function trackPackageInstalledIntoInterpreter(
     memento: Memento,
     product: Product,
@@ -208,6 +212,7 @@ export class DataScienceInstaller extends BaseInstaller {
             ? localize.Common.bannerLabelYes()
             : await this.appShell.showErrorMessage(
                   message,
+                  { modal: true },
                   localize.Common.bannerLabelYes(),
                   localize.Common.bannerLabelNo()
               );

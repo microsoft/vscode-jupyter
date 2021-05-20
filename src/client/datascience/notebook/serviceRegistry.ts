@@ -12,7 +12,7 @@ import { IKernelProvider } from '../jupyter/kernels/types';
 import { NotebookContentProvider } from './contentProvider';
 import { CreationOptionService } from './creation/creationOptionsService';
 import { NotebookCreator } from './creation/notebookCreator';
-import { NotebookCellLanguageService } from './defaultCellLanguageService';
+import { NotebookCellLanguageService } from './cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { NotebookIntegration } from './integration';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
