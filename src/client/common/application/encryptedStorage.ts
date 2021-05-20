@@ -46,7 +46,7 @@ export class EncryptedStorage implements IEncryptedStorage {
         } catch (e) {
             // If we get an error trying to get a secret, it might be corrupted. So we delete it.
             try {
-                this.extensionContext.secrets.delete(`${service}.${key}`);
+                await this.extensionContext.secrets.delete(`${service}.${key}`);
                 return;
             } catch (e) {
                 traceError(e);
