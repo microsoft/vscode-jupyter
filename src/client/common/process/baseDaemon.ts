@@ -177,13 +177,13 @@ export abstract class BasePythonDaemon {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return Object.keys(options).every((item) => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
     }
-    protected sendRequestWithoutArgs<R, E, RO>(type: RequestType0<R, E, RO>): Thenable<R> {
+    protected sendRequestWithoutArgs<R, E>(type: RequestType0<R, E>): Thenable<R> {
         if (this.isAlive && this.proc && typeof this.proc.exitCode !== 'number') {
             return Promise.race([this.connection.sendRequest(type), this.connectionClosedDeferred.promise]);
         }
         return this.connectionClosedDeferred.promise;
     }
-    protected sendRequest<P, R, E, RO>(type: RequestType<P, R, E, RO>, params?: P): Thenable<R> {
+    protected sendRequest<P, R, E>(type: RequestType<P, R, E>, params?: P): Thenable<R> {
         if (!this.isAlive || typeof this.proc.exitCode === 'number') {
             traceError('Daemon is handling a request after death.');
         }
@@ -211,7 +211,6 @@ export abstract class BasePythonDaemon {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     { file_name: string; args: string[]; cwd?: string; env?: any },
                     ExecResponse,
-                    void,
                     void
                 >('exec_file_observable');
                 response = await this.sendRequest(request, {
@@ -225,7 +224,6 @@ export abstract class BasePythonDaemon {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     { module_name: string; args: string[]; cwd?: string; env?: any },
                     ExecResponse,
-                    void,
                     void
                 >('exec_module_observable');
                 response = await this.sendRequest(request, {
@@ -309,7 +307,6 @@ export abstract class BasePythonDaemon {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { file_name: string; args: string[]; cwd?: string; env?: any },
             ExecResponse,
-            void,
             void
         >('exec_file');
         const response = await this.sendRequest(request, {
@@ -330,7 +327,6 @@ export abstract class BasePythonDaemon {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             { module_name: string; args: string[]; cwd?: string; env?: any },
             ExecResponse,
-            void,
             void
         >('exec_module');
         const response = await this.sendRequest(request, {
@@ -360,12 +356,13 @@ export abstract class BasePythonDaemon {
         // this.proc.on('error', error => logConnectionStatus('Daemon Processed died with error', error));
         this.proc.on('exit', (code) => logConnectionStatus('Daemon Processed died with exit code', code));
         // Wire up stdout/stderr.
-        const OutputNotification = new NotificationType<Output<string>, void>('output');
+        const OutputNotification = new NotificationType<Output<string>>('output');
         this.connection.onNotification(OutputNotification, (output) => this.outputObservable.next(output));
-        const logNotification = new NotificationType<
-            { level: 'WARN' | 'WARNING' | 'INFO' | 'DEBUG' | 'NOTSET'; msg: string; pid?: string },
-            void
-        >('log');
+        const logNotification = new NotificationType<{
+            level: 'WARN' | 'WARNING' | 'INFO' | 'DEBUG' | 'NOTSET';
+            msg: string;
+            pid?: string;
+        }>('log');
         this.connection.onNotification(logNotification, (output) => {
             const pid = output.pid ? ` (pid: ${output.pid})` : '';
             const msg = `Python Daemon${pid}: ${output.msg}`;
