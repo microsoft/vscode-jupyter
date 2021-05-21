@@ -814,5 +814,206 @@ a = 1,2,3,4,5,6,7,8,9`;
                 return Promise.resolve(ioc);
             }
         );
+        runInteractiveTest(
+            'Variable explorer - Sort by type column',
+            async () => {
+                const basicCode: string = `B = set([42])
+    z = complex(1, 1)
+    C = {'c': 1}
+    A = [1, 2, 3]
+    a = 1,2,3,4,5,6,7,8,9`;
+
+                const { mount } = await getOrCreateInteractiveWindow(ioc);
+                const wrapper = mount.wrapper;
+                openVariableExplorer(wrapper);
+
+                // Wait for two variable completes so we get the visible list (should be about 16 items when finished)
+                await addCodeImpartial(wrapper, basicCode, true);
+
+                const targetVariablesDefault: IJupyterVariable[] = [
+                    {
+                        name: 'A',
+                        value: '[1, 2, 3]',
+                        supportsDataExplorer: true,
+                        type: 'list',
+                        size: 54,
+                        shape: '',
+                        count: 3,
+                        truncated: false
+                    },
+                    {
+                        name: 'B',
+                        value: undefined,
+                        supportsDataExplorer: false,
+                        type: 'set',
+                        size: 54,
+                        shape: '',
+                        count: 1,
+                        truncated: false
+                    },
+                    {
+                        name: 'C',
+                        value: "{'c': 1}",
+                        supportsDataExplorer: true,
+                        type: 'dict',
+                        size: 54,
+                        shape: '',
+                        count: 1,
+                        truncated: false
+                    },
+                    {
+                        name: 'a',
+                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
+                        supportsDataExplorer: false,
+                        type: 'tuple',
+                        size: 54,
+                        shape: '9',
+                        count: 0,
+                        truncated: false
+                    },
+                    {
+                        name: 'z',
+                        value: '(1+1j)',
+                        supportsDataExplorer: false,
+                        type: 'complex',
+                        size: 54,
+                        shape: '',
+                        count: 0,
+                        truncated: false
+                    }
+                ];
+
+                const targetVariablesTypeAscending: IJupyterVariable[] = [
+                    {
+                        name: 'z',
+                        value: '(1+1j)',
+                        supportsDataExplorer: false,
+                        type: 'complex',
+                        size: 54,
+                        shape: '',
+                        count: 0,
+                        truncated: false
+                    },
+                    {
+                        name: 'C',
+                        value: "{'c': 1}",
+                        supportsDataExplorer: true,
+                        type: 'dict',
+                        size: 54,
+                        shape: '',
+                        count: 1,
+                        truncated: false
+                    },
+                    {
+                        name: 'A',
+                        value: '[1, 2, 3]',
+                        supportsDataExplorer: true,
+                        type: 'list',
+                        size: 54,
+                        shape: '',
+                        count: 3,
+                        truncated: false
+                    },
+                    {
+                        name: 'B',
+                        value: undefined,
+                        supportsDataExplorer: false,
+                        type: 'set',
+                        size: 54,
+                        shape: '',
+                        count: 1,
+                        truncated: false
+                    },
+                    {
+                        name: 'a',
+                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
+                        supportsDataExplorer: false,
+                        type: 'tuple',
+                        size: 54,
+                        shape: '9',
+                        count: 0,
+                        truncated: false
+                    }
+                ];
+
+                const targetVariablesTypeDescending: IJupyterVariable[] = [
+                    {
+                        name: 'a',
+                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
+                        supportsDataExplorer: false,
+                        type: 'tuple',
+                        size: 54,
+                        shape: '9',
+                        count: 0,
+                        truncated: false
+                    },
+                    {
+                        name: 'B',
+                        value: undefined,
+                        supportsDataExplorer: false,
+                        type: 'set',
+                        size: 54,
+                        shape: '',
+                        count: 1,
+                        truncated: false
+                    },
+
+                    {
+                        name: 'A',
+                        value: '[1, 2, 3]',
+                        supportsDataExplorer: true,
+                        type: 'list',
+                        size: 54,
+                        shape: '',
+                        count: 3,
+                        truncated: false
+                    },
+                    {
+                        name: 'C',
+                        value: "{'c': 1}",
+                        supportsDataExplorer: true,
+                        type: 'dict',
+                        size: 54,
+                        shape: '',
+                        count: 1,
+                        truncated: false
+                    },
+                    {
+                        name: 'z',
+                        value: '(1+1j)',
+                        supportsDataExplorer: false,
+                        type: 'complex',
+                        size: 54,
+                        shape: '',
+                        count: 0,
+                        truncated: false
+                    }
+                ];
+
+                const grid = wrapper.find(AdazzleReactDataGrid);
+                const viewPort = grid.find('Viewport').instance();
+
+                // Sort by type ascending
+                const completeAsc = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+                (viewPort.props as any).onGridSort('type', 'ASC');
+                await completeAsc;
+                verifyVariables(wrapper, targetVariablesTypeAscending);
+
+                // Sort by type descending
+                const completeDesc = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+                (viewPort.props as any).onGridSort('type', 'DESC');
+                await completeDesc;
+                verifyVariables(wrapper, targetVariablesTypeDescending);
+
+                // Sort by default order
+                const completeNone = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+                (viewPort.props as any).onGridSort('', 'NONE');
+                await completeNone;
+                verifyVariables(wrapper, targetVariablesDefault);
+            },
+            () => {
+                return Promise.resolve(ioc);
+            }
+        );
     });
 });
