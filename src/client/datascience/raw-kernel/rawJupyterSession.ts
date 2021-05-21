@@ -211,8 +211,13 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.processExitHandler.dispose();
             this.processExitHandler = undefined;
         }
+        // We want to know why we got shut down
+        const stacktrace = new Error().stack;
         return super.shutdownSession(session, statusHandler, isRequestToShutdownRestartSession).then(() => {
-            sendTelemetryEvent(Telemetry.RawKernelSessionShutdown, undefined, { isRequestToShutdownRestartSession });
+            sendTelemetryEvent(Telemetry.RawKernelSessionShutdown, undefined, {
+                isRequestToShutdownRestartSession,
+                stacktrace
+            });
             if (session) {
                 return (session as RawSession).kernelProcess.dispose();
             }

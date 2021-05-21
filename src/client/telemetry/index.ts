@@ -1201,6 +1201,10 @@ export interface IEventNamePropertyMapping {
     };
     [Telemetry.RawKernelSessionShutdown]: {
         isRequestToShutdownRestartSession: boolean | undefined;
+        stacktrace: string | undefined;
+    };
+    [Telemetry.RawKernelSessionDisposed]: {
+        stacktrace: string | undefined;
     };
 
     // Run by line events

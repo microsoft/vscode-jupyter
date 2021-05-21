@@ -57,6 +57,11 @@ export class RawSession implements ISessionWithSocket {
     }
 
     public async dispose() {
+        // We want to know who called dispose on us
+        const stacktrace = new Error().stack;
+        sendTelemetryEvent(Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
+
+        // Now actually dispose ourselves
         this.isDisposing = true;
         if (!this.isDisposed) {
             this.exitHandler.dispose();
