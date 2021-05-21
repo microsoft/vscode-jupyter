@@ -672,7 +672,7 @@ d = tf.constant([[1.0, 2.0], [3.0, 4.0]])
             async () => {
                 const basicCode: string = `B = set([42])
 z = complex(1, 1)
-C = {'a': 1}
+C = {'c': 1}
 A = [1, 2, 3]
 a = 1,2,3,4,5,6,7,8,9`;
 
@@ -706,7 +706,7 @@ a = 1,2,3,4,5,6,7,8,9`;
                     },
                     {
                         name: 'C',
-                        value: "{'a': 1}",
+                        value: "{'c': 1}",
                         supportsDataExplorer: true,
                         type: 'dict',
                         size: 54,
@@ -759,7 +759,7 @@ a = 1,2,3,4,5,6,7,8,9`;
                     },
                     {
                         name: 'C',
-                        value: "{'a': 1}",
+                        value: "{'c': 1}",
                         supportsDataExplorer: true,
                         type: 'dict',
                         size: 54,
