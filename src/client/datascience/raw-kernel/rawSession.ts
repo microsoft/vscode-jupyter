@@ -169,7 +169,7 @@ export class RawSession implements ISessionWithSocket {
         traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
         // Send telemetry so we know why the kernel process exited,
         // as this affects our kernel startup success
-        sendTelemetryEvent(Telemetry.RawKernelProcessExitedUnhandled, undefined, {
+        sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
             reason: e.reason,
             exitCode: e.exitCode
         });
