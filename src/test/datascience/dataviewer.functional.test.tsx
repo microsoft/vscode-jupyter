@@ -402,7 +402,129 @@ suite('DataScience DataViewer tests', () => {
             'st[b-zB-Z]ble': [],
             'st[0-9]ble': [4, 4, 'st4ble'],
             'st#ble': [4, 4, 'st4ble'],
-            'st[!b-z]ble': [0, 0, 'stable', 3, 3, 'barely stable', 4, 4, 'st4ble'] // TODOV: Should work with st4ble
+            'st[!b-z]ble': [0, 0, 'stable', 3, 3, 'barely stable', 4, 4, 'st4ble']
+        };
+
+        for (const [filter, expectedResult] of Object.entries(filtersAndExpectedResults)) {
+            await filterRows(wrapper.wrapper, '0', filter);
+            verifyRows(wrapper.wrapper, expectedResult);
+        }
+    });
+
+    runMountedTest('Filter strings with special characters - Version A [. ( ) ! ?]', async (wrapper) => {
+        await injectCode(
+            'import pandas as pd\r\ndata = ["()", "(happy)", "(", "happy!", "happy?", "Mr. Person", "Mrs. Person", "...", "(1,3)", "happy person?"]\r\ndf = pd.DataFrame(data)'
+        );
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('df', 'DataFrame');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        const allRows = [
+            0,
+            0,
+            '()',
+            1,
+            1,
+            '(happy)',
+            2,
+            2,
+            '(',
+            3,
+            3,
+            'happy!',
+            4,
+            4,
+            'happy?',
+            5,
+            5,
+            'Mr. Person',
+            6,
+            6,
+            'Mrs. Person',
+            7,
+            7,
+            '...',
+            8,
+            8,
+            '(1,3)',
+            9,
+            9,
+            'happy person?'
+        ];
+        verifyRows(wrapper.wrapper, allRows);
+
+        const filtersAndExpectedResults = {
+            '(': [2, 2, '('],
+            '.': [],
+            '*.': [5, 5, 'Mr. Person', 6, 6, 'Mrs. Person', 7, 7, '...'],
+            '...': [7, 7, '...'],
+            '* person': [5, 5, 'Mr. Person', 6, 6, 'Mrs. Person'],
+            '!': [],
+            '?': [],
+            '*?': allRows, // Gets everything because it is a wildcard and then any character
+            '*!': [3, 3, 'happy!'],
+            happy_: [3, 3, 'happy!', 4, 4, 'happy?', 9, 9, 'happy person?'],
+            '(*)': [0, 0, '()', 1, 1, '(happy)', 8, 8, '(1,3)'],
+            '(#_#)': [8, 8, '(1,3)'],
+            '(#,#)': [8, 8, '(1,3)']
+        };
+
+        for (const [filter, expectedResult] of Object.entries(filtersAndExpectedResults)) {
+            await filterRows(wrapper.wrapper, '0', filter);
+            verifyRows(wrapper.wrapper, expectedResult);
+        }
+    });
+
+    runMountedTest('Filter strings with special characters - Version B [+ { } / ^]', async (wrapper) => {
+        await injectCode(
+            'import pandas as pd\r\ndata = ["1+2", "{1+2}", "1 + 2", "a", "^", "{}", "/", "\\\\a\\\\"]\r\ndf = pd.DataFrame(data)'
+        );
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('df', 'DataFrame');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        const allRows = [
+            0,
+            0,
+            '1+2',
+            1,
+            1,
+            '{1+2}',
+            2,
+            2,
+            '1 + 2',
+            3,
+            3,
+            'a',
+            4,
+            4,
+            '^',
+            5,
+            5,
+            '{}',
+            6,
+            6,
+            '/',
+            7,
+            7,
+            '\\a\\'
+        ];
+        verifyRows(wrapper.wrapper, allRows);
+
+        const filtersAndExpectedResults = {
+            '*': allRows,
+            '+': [2, 2, '1 + 2'],
+            '1+2': [0, 0, '1+2'],
+            '*+*': [0, 0, '1+2', 1, 1, '{1+2}', 2, 2, '1 + 2'],
+            // If the filter was exactly regex, you would expect a character that is not 'a' to pass
+            // Instead only '^' and 'a' pass
+            '[^a]': [3, 3, 'a', 4, 4, '^'],
+            '{}': [5, 5, '{}'],
+            '{*}': [1, 1, '{1+2}', 5, 5, '{}'],
+            _: [2, 2, '1 + 2', 3, 3, 'a', 4, 4, '^', 6, 6, '/'],
+            '?': [2, 2, '1 + 2', 3, 3, 'a', 4, 4, '^', 6, 6, '/'],
+            '/': [6, 6, '/'],
+            ___: [0, 0, '1+2', 2, 2, '1 + 2', 7, 7, '\\a\\']
         };
 
         for (const [filter, expectedResult] of Object.entries(filtersAndExpectedResults)) {
