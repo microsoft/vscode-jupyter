@@ -388,6 +388,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 resource: this.notebookIdentity,
                 getOnly: true
             });
+            this.notebook?.onDisposed(() => (this.notebook = undefined));
         }
         if (this.notebook && !this.kernelRestartHandlerAttached) {
             this.kernelRestartHandlerAttached = true;
