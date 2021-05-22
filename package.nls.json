@@ -108,7 +108,7 @@
     "jupyter.command.jupyter.showDataViewer.title": "View Value in Data Viewer",
     "jupyter.command.jupyter.viewOutput.title": "Show Output",
     "jupyter.command.jupyter.clearSavedJupyterUris.title": "Clear Jupyter server list",
-    "jupyter.command.jupyter.openVariableView.title": "Open Jupyter Variable View",
+    "jupyter.command.jupyter.openVariableView.title": "Open Variable View",
     "Datascience.currentlySelectedJupyterInterpreterForPlaceholder": "current: {0}",
     "jupyter.command.jupyter.analysis.clearCache.title": "Clear Module Analysis Cache",
     "jupyter.command.jupyter.analysis.restartLanguageServer.title": "Restart Language Server",

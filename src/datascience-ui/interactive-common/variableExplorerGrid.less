@@ -13,7 +13,7 @@
 }
 
 #variable-explorer-data-grid .react-grid-Main {
-    font-family: var(--code-font-family);
+    font-family: var(--vscode-font-family);
     background-color: var(--override-background, var(--vscode-editor-background));
     color: var(--override-foreground, var(--vscode-editor-foreground));
     outline: none;
@@ -31,30 +31,37 @@
 }
 
 #variable-explorer-data-grid .react-grid-Header {
-    background-color: var(--override-tabs-background, var(--vscode-notifications-background));
+    background-color: var(--vscode-editor-background);
 }
 
 #variable-explorer-data-grid .react-grid-HeaderCell {
-    background-color: var(--override-lineHighlightBorder, var(--vscode-editor-lineHighlightBorder));
-    color: var(--override-foreground, var(--vscode-editor-foreground));
-    border-style: solid;
-    border-color: var(--override-badge-background, var(--vscode-badge-background));
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
     padding: 2px;
+    font-family: var(--vscode-font-family);
+    border-right: 1px solid var(--vscode-menu-border);
 }
 
+.react-grid-Header {
+    box-shadow: none;
+}
+
+.react-grid-HeaderCell__draggable {
+    cursor: ew-resize;
+}
+
+.react-grid-HeaderCell {
+    border-bottom: none;
+}
 
 #variable-explorer-data-grid .react-grid-Row--even {
-    background-color: var(--override-background, var(--vscode-editor-background));
-    color: var(--override-foreground, var(--vscode-editor-foreground));
-    border-right-color: var(--override-badge-background, var(--vscode-badge-background));
-    border-bottom-color: var(--override-badge-background, var(--vscode-badge-background));
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
 }
 
 #variable-explorer-data-grid .react-grid-Row--odd {
-    background-color: var(--override-lineHighlightBorder, var(--vscode-editor-lineHighlightBorder));
-    color: var(--override-foreground, var(--vscode-editor-foreground));
-    border-right-color: var(--override-badge-background, var(--vscode-badge-background));
-    border-bottom-color: var(--override-badge-background, var(--vscode-badge-background));
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
 }
 
 #variable-explorer-data-grid .react-grid-Cell {
@@ -64,15 +71,18 @@
 }
 
 #variable-explorer-data-grid .react-grid-Cell:hover {
-    background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
+    background-color: var(--vscode-list-hoverBackground);
+    color: var(--vscode-list-hoverForeground);
 }
 
 #variable-explorer-data-grid .react-grid-Row:hover {
-    background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
+    background-color: var(--vscode-list-hoverBackground);
+    color: var(--vscode-list-hoverForeground);
 }
 
 #variable-explorer-data-grid .react-grid-Row:hover .react-grid-Cell {
-    background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
+    background-color: var(--vscode-list-hoverBackground);
+    color: var(--vscode-list-hoverForeground);
 }
 
 #variable-explorer-data-grid .rdg-selected {
@@ -89,7 +99,6 @@ body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Header {
 
 body.vscode-high-contrast #variable-explorer-data-grid .react-grid-HeaderCell {
     background-color: var(--override-background, var(--vscode-editor-background));
-    border-color: var(--override-foreground, var(--vscode-editor-foreground));
 }
 
 body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row--odd {

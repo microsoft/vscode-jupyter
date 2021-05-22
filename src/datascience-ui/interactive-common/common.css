@@ -312,8 +312,8 @@ html {
 .inputLabel {
     background-color: var(--override-background, var(--vscode-editor-background));
     color: var(--override-foreground, var(--vscode-editor-foreground));
-    font-family: var(--vscode-editor-font-family);
-    font-weight: var(--vscode-editor-font-weight);
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
     margin: 3px;
 }
 

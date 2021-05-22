@@ -18,3 +18,8 @@ html {
     height: 100%;
     margin: 0;
 }
+
+.variable-explorer-menu-bar {
+    visibility: hidden;
+    height: 0;
+}
