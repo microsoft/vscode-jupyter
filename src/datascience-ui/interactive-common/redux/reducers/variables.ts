@@ -19,6 +19,7 @@ import {
     CommonActionType,
     CommonActionTypeMapping,
     ICellAction,
+    ISortVariablesRequest,
     IVariableExplorerHeight,
     IVariableViewHeight
 } from './types';
@@ -63,6 +64,8 @@ function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVari
     });
     return {
         ...arg.prevState,
+        sortColumn: arg.payload.data.sortColumn,
+        sortAscending: arg.payload.data.sortAscending,
         pageSize: Math.max(arg.prevState.pageSize, arg.payload.data.pageSize)
     };
 }
@@ -85,8 +88,8 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
                 ...arg.payload,
                 data: {
                     executionCount: arg.prevState.currentExecutionCount,
-                    sortColumn: 'name',
-                    sortAscending: true,
+                    sortColumn: arg.prevState.sortColumn,
+                    sortAscending: arg.prevState.sortAscending,
                     startIndex: 0,
                     pageSize: arg.prevState.pageSize,
                     refreshCount: arg.prevState.refreshCount
@@ -96,6 +99,28 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
     } else {
         return newState;
     }
+}
+
+function handleSort(arg: VariableReducerArg<ISortVariablesRequest>): IVariableState {
+    const sortColumn = arg.payload.data.sortColumn;
+    const sortAscending = arg.payload.data.sortAscending;
+    const result = handleRequest({
+        ...arg,
+        payload: {
+            ...arg.payload,
+            data: {
+                executionCount: arg.prevState.currentExecutionCount,
+                sortColumn: sortColumn,
+                sortAscending: sortAscending,
+                startIndex: 0,
+                pageSize: arg.prevState.pageSize,
+                refreshCount: arg.prevState.refreshCount + 1
+            }
+        }
+    });
+    return {
+        ...result
+    };
 }
 
 function handleVariableExplorerHeightResponse(arg: VariableReducerArg<IVariableExplorerHeight>): IVariableState {
@@ -210,8 +235,8 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
             ...arg.payload,
             data: {
                 executionCount: 0,
-                sortColumn: 'name',
-                sortAscending: true,
+                sortColumn: arg.prevState.sortColumn,
+                sortAscending: arg.prevState.sortAscending,
                 startIndex: 0,
                 pageSize: arg.prevState.pageSize,
                 refreshCount: 0
@@ -242,8 +267,8 @@ function updateExecutionCount(arg: VariableReducerArg<{ executionCount: number }
             ...arg.payload,
             data: {
                 executionCount,
-                sortColumn: 'name',
-                sortAscending: true,
+                sortColumn: arg.prevState.sortColumn,
+                sortAscending: arg.prevState.sortAscending,
                 startIndex: 0,
                 pageSize: arg.prevState.pageSize,
                 refreshCount: arg.prevState.refreshCount + 1 // Also trigger a refresh
@@ -265,8 +290,8 @@ function handleFinishCell(arg: VariableReducerArg<IFinishCell>): IVariableState 
                 ...arg.payload,
                 data: {
                     executionCount,
-                    sortColumn: 'name',
-                    sortAscending: true,
+                    sortColumn: arg.prevState.sortColumn,
+                    sortAscending: arg.prevState.sortAscending,
                     startIndex: 0,
                     pageSize: arg.prevState.pageSize,
                     refreshCount: arg.prevState.refreshCount
@@ -289,8 +314,8 @@ function handleRefresh(arg: VariableReducerArg): IVariableState {
                 ...arg.payload,
                 data: {
                     executionCount: arg.prevState.currentExecutionCount,
-                    sortColumn: 'name',
-                    sortAscending: true,
+                    sortColumn: arg.prevState.sortColumn,
+                    sortAscending: arg.prevState.sortAscending,
                     startIndex: 0,
                     pageSize: arg.prevState.pageSize,
                     refreshCount: arg.prevState.refreshCount + 1
@@ -336,7 +361,8 @@ const reducerMap: Partial<VariableActionMapping> = {
     [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
     [InteractiveWindowMessages.GetVariablesResponse]: handleResponse,
     [CommonActionType.RUN_BY_LINE]: handleDebugStart,
-    [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: updateExecutionCount
+    [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: updateExecutionCount,
+    [CommonActionType.SORT_VARIABLES]: handleSort
 };
 
 export function generateVariableReducer(

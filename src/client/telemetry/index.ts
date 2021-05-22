@@ -745,6 +745,12 @@ export interface IEventNamePropertyMapping {
             | 'dismissed' // user dismissed the message.
             | 'download'; // User chose click the download link.
     };
+    [Telemetry.PythonExtensionNotInstalled]: {
+        action:
+            | 'displayed' // Message displayed.
+            | 'dismissed' // user dismissed the message.
+            | 'download'; // User chose click the download link.
+    };
     [Telemetry.KernelNotInstalled]: {
         action: 'displayed'; // Message displayed.
         /**
@@ -1191,6 +1197,49 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStartNoIpykernel]: {
         reason: number;
     } & TelemetryErrorProperties;
+    /**
+     * This event is sent when the underlying kernelProcess for a
+     * RawJupyterSession exits.
+     */
+    [Telemetry.RawKernelSessionKernelProcessExited]: {
+        /**
+         * The kernel process's exit reason, based on the error
+         * object's reason, message, or stacktrace.
+         */
+        reason: string | undefined;
+        /**
+         * The kernel process's exit code.
+         */
+        exitCode: number | undefined;
+    };
+    /**
+     * This event is sent when a RawJupyterSession's `shutdownSession`
+     * method is called.
+     */
+    [Telemetry.RawKernelSessionShutdown]: {
+        /**
+         * This indicates whether the session being shutdown
+         * is a restart session.
+         */
+        isRequestToShutdownRestartSession: boolean | undefined;
+        /**
+         * This is the callstack at the time that the `shutdownSession`
+         * method is called, intended for us to be ale to identify who
+         * tried to shutdown the session.
+         */
+        stacktrace: string | undefined;
+    };
+    /**
+     * This event is sent when a RawSession's `dispose` method is called.
+     */
+    [Telemetry.RawKernelSessionDisposed]: {
+        /**
+         * This is the callstack at the time that the `dispose` method
+         * is called, intended for us to be able to identify who called
+         * `dispose` on the RawSession.
+         */
+        stacktrace: string | undefined;
+    };
 
     // Run by line events
     [Telemetry.RunByLineStart]: never | undefined;

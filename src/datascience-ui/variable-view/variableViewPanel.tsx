@@ -110,6 +110,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             setVariableExplorerHeight: this.props.setVariableExplorerHeight,
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
+            sort: this.props.sort,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
@@ -124,7 +125,9 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             this.props.variableState.currentExecutionCount,
             this.props.variableState.refreshCount,
             startIndex,
-            pageSize
+            pageSize,
+            this.props.variableState.sortColumn,
+            this.props.variableState.sortAscending
         );
     };
 

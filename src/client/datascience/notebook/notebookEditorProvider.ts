@@ -20,7 +20,7 @@ import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProv
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { JupyterNotebookView } from './constants';
-import { NotebookCellLanguageService } from './defaultCellLanguageService';
+import { NotebookCellLanguageService } from './cellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
 
