@@ -287,6 +287,7 @@
             {
                 "command": "jupyter.notebookeditor.export",
                 "title": "%DataScience.notebookExportAs%",
+                "shortTitle": "%DataScience.notebookExportAs.shorttitle%",
                 "category": "Notebook",
                 "icon": {
                     "light": "resources/light/export_to_python.svg",
@@ -854,6 +855,28 @@
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 }
             ],
+            "notebook/toolbar": [
+                {
+                    "command": "jupyter.notebookeditor.restartkernel",
+                    "group": "navigation/execute@1",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.interruptkernel",
+                    "group": "navigation/execute@1",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.openVariableView",
+                    "group": "navigation@2",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.export",
+                    "group": "navigation@2",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                }
+            ],
             "explorer/context": [
                 {
                     "when": "resourceLangId == python && !notebookEditorFocused",
@@ -1112,12 +1135,14 @@
                 {
                     "command": "jupyter.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
+                    "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
                     "category": "Jupyter",
                     "when": "jupyter.haveinteractive && jupyter.ispythonorinteractiveeactive"
                 },
                 {
                     "command": "jupyter.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
+                    "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
                     "category": "Jupyter",
                     "when": "jupyter.haveinteractive && jupyter.ispythonorinteractiveeactive"
                 },
@@ -1326,6 +1351,7 @@
                 {
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
+                    "shortTitle": "%jupyter.command.jupyter.openVariableView.shorttitle%",
                     "category": "Jupyter",
                     "when": "notebookViewType == jupyter-notebook"
                 },
