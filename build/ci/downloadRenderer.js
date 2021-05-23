@@ -32,8 +32,15 @@ async function unzip(zipFile, targetFolder) {
 
 async function downloadRendererExtension() {
     console.log('Downloading Renderer extension...');
+
+    // Renderer constants
     const extensionName = 'ms-notebook-renderers.vsix';
     const uri = `https://pvsc.blob.core.windows.net/extension-builds-jupyter-public/ms-notebook-renderers.vsix`;
+
+    // Ipywidget Renderer constants
+    const widgetFileName = 'ipywidgetsRenderer.js';
+    const widgetUri = `https://pvsc.blob.core.windows.net/extension-builds-jupyter-public/ipywidgetsRenderer.js`;
+
     let cleanup;
     try {
         const downloadDir = await new Promise((resolve, reject) => {
@@ -46,6 +53,7 @@ async function downloadRendererExtension() {
             });
         });
 
+        // Download and extract the output renderer
         const downloadedFile = path.join(downloadDir, extensionName);
         if (fs.existsSync(downloadedFile)) {
             await fs.unlink(downloadedFile);
@@ -63,6 +71,20 @@ async function downloadRendererExtension() {
             path.join(ExtensionRootDir, 'out', 'client_renderer')
         );
         console.log('Copied Renderer extension output.');
+
+        // Download and extract ipywidget renderer js
+        const downloadedWidgetFile = path.join(downloadDir, widgetFileName);
+        if (fs.existsSync(downloadedWidgetFile)) {
+            await fs.unlink(downloadedWidgetFile);
+        }
+        await download(widgetUri, downloadDir, { filename: widgetFileName });
+        console.log('Downloaded Widget Renderer');
+
+        await fs.copy(
+            downloadedWidgetFile,
+            path.join(ExtensionRootDir, 'out', 'ipywidget_renderer')
+        );
+        console.log('Copied IPyWidget Renderer');
     } finally {
         if (typeof cleanup == 'function') {
             try {
