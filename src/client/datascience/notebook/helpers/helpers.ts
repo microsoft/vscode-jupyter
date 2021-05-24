@@ -284,7 +284,9 @@ export function getNotebookCellMetadata(cell: nbformat.IBaseCell): CellMetadata 
             custom[propertyToClone] = cloneDeep(cell[propertyToClone]) as any;
         }
     });
-    custom.id = 'id' in cell && typeof cell.id === 'string' ? cell.id : undefined;
+    if ('id' in cell && typeof cell.id === 'string'){
+        custom.id = cell.id;
+    }
     return custom;
 }
 
