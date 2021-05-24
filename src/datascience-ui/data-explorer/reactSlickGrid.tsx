@@ -59,7 +59,7 @@ enum ColumnContextMenuItem {
     GetColumnStats = 'Get Column Stats',
     DropColumns = 'Drop Column',
     NormalizeColumn = 'Normalize Column',
-    DropNA = 'Drop NA',
+    DropNA = 'Remove Missing Values',
     DropDuplicates = 'Drop Duplicates On Column'
 }
 
@@ -403,10 +403,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
               }
             : {};
 
-        const height =
-            this.measureRef?.current && this.containerRef?.current
-                ? this.measureRef.current.offsetTop - this.containerRef.current.offsetTop
-                : '1200px';
         return (
             <div className="outer-container">
                 <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden' }}>
@@ -428,7 +424,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                             zIndex: 99998
                         }}
                         handleClasses={{ left: 'resizable-span' }}
-                        defaultSize={{ width: '40%', height }}
+                        defaultSize={{ width: '40%', height: '95%' }}
                         onResize={() => {
                             this.props.resizeGridEvent.notify();
                         }}

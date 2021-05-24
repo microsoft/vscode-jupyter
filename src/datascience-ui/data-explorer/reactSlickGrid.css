@@ -13,7 +13,7 @@
 }
 
 ::-webkit-scrollbar {
-    width: 20px;
+    width: 10px;
 }
 
 .outer-container {
@@ -23,17 +23,13 @@
 
 .react-grid-container {
     border: none;
-    padding-left: 8px;
+    margin-left: 8px;
     width: 100%;
 }
 
 .react-grid-measure {
     position: absolute;
     bottom: 5px;
-}
-
-.slick-pane {
-    overflow: visible;
 }
 
 .react-grid-header-cell {
