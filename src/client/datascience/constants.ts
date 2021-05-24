@@ -17,6 +17,23 @@ export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_lau
 
 export const PythonExtension = 'ms-python.python';
 
+export const LanguagesSupportedByPythonkernel = [
+    'python',
+    'html', // %%html
+    'xml', // %%svg as svg is same as `xml`
+    'javascript', // %%javascript, %%js
+    'markdown', // %%markdown, %%latex
+    'latex', // %%latex (some extensions register such languages)
+    'shellscript', // %%script, %%bash, %%sh
+    'bat', // %%script, %%bash, %%sh
+    'powershell', // %%script powershell, %%script pwsh
+    'kusto', // %%kqlmagic
+    'ruby', // %%ruby
+    'sql', // %%sql
+    'perl', // %%perl
+    'raw' // raw cells (no formatting)
+];
+
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
 export const KnownKernelLanguageAliases = new Map<string, string>([
     ['qsharp', 'q#'],
@@ -26,11 +43,19 @@ export const KnownKernelLanguageAliases = new Map<string, string>([
     ['c++12', 'c++'],
     ['c++14', 'c++']
 ]);
+export const jupyterLanguageToMonacoLanguageMapping = new Map([
+    ['c#', 'csharp'],
+    ['f#', 'fsharp'],
+    ['q#', 'qsharp'],
+    ['c++11', 'c++'],
+    ['c++12', 'c++'],
+    ['c++14', 'c++']
+]);
 /**
  * This will get updated with the list of VS Code languages.
  * This way, we can send those via telemetry, instead of having to hardcode the languages.
  */
-export const KnownNotebookLanguages: string[] = [
+export const VSCodeKnownNotebookLanguages: string[] = [
     'python',
     'r',
     'julia',
@@ -286,6 +311,7 @@ export enum Telemetry {
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
     FailedToCreateNotebookController = 'DATASCIENCE.FAILED_TO_CREATE_CONTROLLER',
+    FailedToFindKernelSpecInterpreterForInteractive = 'DATASCIENCE.FAILED_TO_FIND_INTERPRETER_KERNEL_CONNECTION_FOR_INTERACTIVE',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
@@ -399,11 +425,15 @@ export enum Telemetry {
     KernelLauncherPerf = 'DS_INTERNAL.KERNEL_LAUNCHER_PERF',
     KernelProviderPerf = 'DS_INTERNAL.KERNEL_PROVIDER_PERF',
     GetPreferredKernelPerf = 'DS_INTERNAL.GET_PREFERRED_KERNEL_PERF',
+    PreferredKernel = 'DS_INTERNAL.PREFERRED_KERNEL',
     KernelFinderPerf = 'DS_INTERNAL.KERNEL_FINDER_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     PythonModuleInstal = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',
+    PythonNotInstalled = 'DS_INTERNAL.PYTHON_NOT_INSTALLED',
+    PythonExtensionNotInstalled = 'DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED',
+    KernelNotInstalled = 'DS_INTERNAL.KERNEL_NOT_INSTALLED',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
@@ -436,6 +466,9 @@ export enum Telemetry {
     RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
     RawKernelSessionStartNoIpykernel = 'DS_INTERNAL.RAWKERNEL_SESSION_NO_IPYKERNEL',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
+    RawKernelSessionShutdown = 'DS_INTERNAL.RAWKERNEL_SESSION_SHUTDOWN',
+    RawKernelSessionKernelProcessExited = 'DS_INTERNAL.RAWKERNEL_SESSION_KERNEL_PROCESS_EXITED',
+    RawKernelSessionDisposed = 'DS_INTERNAL.RAWKERNEL_SESSION_DISPOSED',
     AttemptedToLaunchRawKernelWithoutInterpreter = 'DS_INTERNAL.ERROR_START_RAWKERNEL_WITHOUT_INTERPRETER',
     RunByLineStart = 'DATASCIENCE.RUN_BY_LINE',
     RunByLineStep = 'DATASCIENCE.RUN_BY_LINE_STEP',

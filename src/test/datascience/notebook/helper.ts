@@ -48,7 +48,7 @@ import {
     hasErrorOutput,
     NotebookCellStateTracker
 } from '../../../client/datascience/notebook/helpers/helpers';
-import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/defaultCellLanguageService';
+import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/cellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import {
@@ -66,7 +66,6 @@ import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
-import { NotebookControllerManager } from '../../../client/datascience/notebook/notebookControllerManager';
 
 // Running in Conda environments, things can be a little slower.
 const defaultTimeout = IS_CONDA_TEST ? 30_000 : 15_000;
@@ -406,11 +405,6 @@ export async function startJupyterServer(api?: IExtensionTestApi) {
         const uriString = decodeURIComponent(uri.toString());
         traceInfo(`Jupyter started and listening at ${uriString}`);
         await selector.setJupyterURIToRemote(uriString);
-
-        // Once we have set the URI allow kernel loading to continue, we don't want this to happen ealier
-        // as it will pop up a server selector if the URI is not set yet
-        const notebookControllerManager = serviceContainer.get<NotebookControllerManager>(INotebookControllerManager);
-        notebookControllerManager.allowRemoteConnection.resolve();
     } else {
         traceInfo(`Jupyter not started and set to local`); // This is the default
     }
@@ -473,14 +467,14 @@ export async function prewarmNotebooks() {
 
 function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
     return (
-        (cell.latestExecutionSummary?.executionOrder ?? 0) > 0 &&
+        (cell.executionSummary?.executionOrder ?? 0) > 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
         !hasErrorOutput(cell.outputs)
     );
 }
 function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
     return (
-        (cell.latestExecutionSummary?.executionOrder ?? 0) === 0 &&
+        (cell.executionSummary?.executionOrder ?? 0) === 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle
     );
 }
@@ -517,7 +511,7 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
         async () => {
             return (
                 NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Executing &&
-                (cell.latestExecutionSummary?.executionOrder || 0) > 0 // If execution count > 0, then jupyter has started running this cell.
+                (cell.executionSummary?.executionOrder || 0) > 0 // If execution count > 0, then jupyter has started running this cell.
             );
         },
         timeout,
@@ -574,7 +568,7 @@ export async function waitForExecutionCompletedWithErrors(cell: NotebookCell, ti
 }
 function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     return (
-        (cell.latestExecutionSummary?.executionOrder ?? 0) > 0 &&
+        (cell.executionSummary?.executionOrder ?? 0) > 0 &&
         NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
         hasErrorOutput(cell.outputs)
     );
@@ -630,7 +624,7 @@ export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string,
 export function assertVSCCellIsRunning(cell: NotebookCell) {
     assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Executing);
     // If execution count > 0, then jupyter has started running this cell.
-    assert.isAtLeast(cell.latestExecutionSummary?.executionOrder || 0, 1);
+    assert.isAtLeast(cell.executionSummary?.executionOrder || 0, 1);
     return true;
 }
 export function assertVSCCellIsNotRunning(cell: NotebookCell) {

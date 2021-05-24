@@ -201,7 +201,7 @@ export class HostRawNotebookProvider
                 !kernelConnectionMetadata ||
                 (kernelConnectionMetadata?.kind === 'startUsingKernelSpec' && !kernelConnectionMetadata?.kernelSpec)
             ) {
-                notebookPromise.reject(new KernelSpecNotFoundError());
+                notebookPromise.reject(new KernelSpecNotFoundError(notebookMetadata));
             } else {
                 // If a kernel connection was not provided, then we set it up here.
                 if (!kernelConnectionProvided) {

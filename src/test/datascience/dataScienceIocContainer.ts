@@ -190,7 +190,7 @@ import {
     IKernelLauncher,
     IRemoteKernelFinder
 } from '../../client/datascience/kernel-launcher/types';
-import { NotebookCellLanguageService } from '../../client/datascience/notebook/defaultCellLanguageService';
+import { NotebookCellLanguageService } from '../../client/datascience/notebook/cellLanguageService';
 import { NotebookCreationTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 import { NotebookExtensibility } from '../../client/datascience/notebookExtensibility';
 import { NotebookModelFactory } from '../../client/datascience/notebookStorage/factory';

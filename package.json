@@ -71,6 +71,9 @@
         "onCustomEditor:jupyter-data-wrangler"
     ],
     "main": "./out/client/extension",
+    "capabilities": {
+        "virtualWorkspaces": true
+    },
     "contributes": {
         "keybindings": [
             {
@@ -292,6 +295,7 @@
             {
                 "command": "jupyter.notebookeditor.export",
                 "title": "%DataScience.notebookExportAs%",
+                "shortTitle": "%DataScience.notebookExportAs.shorttitle%",
                 "category": "Notebook",
                 "icon": {
                     "light": "resources/light/export_to_python.svg",
@@ -609,6 +613,7 @@
             {
                 "command": "jupyter.notebookeditor.interruptkernel",
                 "title": "%jupyter.command.jupyter.interruptkernel.title%",
+                "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
                 "category": "Notebook",
                 "icon": {
                     "light": "resources/light/interrupt.svg",
@@ -619,6 +624,7 @@
             {
                 "command": "jupyter.notebookeditor.restartkernel",
                 "title": "%jupyter.command.jupyter.restartkernel.title%",
+                "shortTitle": "%jupyter.command.jupyter.restartkernel.shorttitle%",
                 "category": "Notebook",
                 "icon": {
                     "light": "resources/light/restart-kernel.svg",
@@ -753,6 +759,7 @@
             {
                 "command": "jupyter.openVariableView",
                 "title": "%jupyter.command.jupyter.openVariableView.title%",
+                "shortTitle": "%jupyter.command.jupyter.openVariableView.shorttitle%",
                 "icon": "$(variable-group)",
                 "category": "Jupyter",
                 "enablement": "notebookViewType == jupyter-notebook && !jupyter.variableViewVisible"
@@ -765,20 +772,6 @@
             }
         ],
         "menus": {
-            "notebook/cell/title": [
-                {
-                    "command": "jupyter.notebookeditor.runallcellsabove",
-                    "title": "%DataScience.runAbove%",
-                    "group": "inline/cell@0",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.runcellandallbelow",
-                    "title": "%DataScience.runBelow%",
-                    "group": "inline/cell@0",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                }
-            ],
             "editor/context": [
                 {
                     "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused",
@@ -867,6 +860,42 @@
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "group": "overflow@1000",
                     "when": "notebookViewType == 'jupyter-notebook'"
+                }
+            ],
+            "notebook/cell/title": [
+                {
+                    "command": "jupyter.notebookeditor.runallcellsabove",
+                    "title": "%DataScience.runAbove%",
+                    "group": "inline/cell@0",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.runcellandallbelow",
+                    "title": "%DataScience.runBelow%",
+                    "group": "inline/cell@0",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                }
+            ],
+            "notebook/toolbar": [
+                {
+                    "command": "jupyter.notebookeditor.restartkernel",
+                    "group": "navigation/execute@1",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.interruptkernel",
+                    "group": "navigation/execute@2",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.openVariableView",
+                    "group": "navigation@1",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
+                },
+                {
+                    "command": "jupyter.notebookeditor.export",
+                    "group": "navigation@2",
+                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 }
             ],
             "explorer/context": [
@@ -1580,7 +1609,7 @@
                 },
                 "jupyter.variableExplorerExclude": {
                     "type": "string",
-                    "default": "module;function;builtin_function_or_method",
+                    "default": "module;function;builtin_function_or_method;ABCMeta;type",
                     "description": "Types to exclude from showing in the Interactive variable explorer",
                     "scope": "resource"
                 },
@@ -1808,6 +1837,9 @@
                 ]
             },
             {
+                "id": "raw"
+            },
+            {
                 "id": "julia",
                 "aliases": [
                     "Julia",
@@ -1833,7 +1865,7 @@
         "notebookOutputRenderer": [
             {
                 "id": "jupyter-ipywidget-renderer",
-                "entrypoint": "./out/datascience-ui/ipywidgetsRenderer/ipywidgetsRenderer.js",
+                "entrypoint": "./out/ipywidget_renderer/ipywidgetsRenderer.js",
                 "displayName": "Jupyter IPyWidget Renderer",
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
@@ -2112,7 +2144,7 @@
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
         "@types/vscode": "^1.53.0",
-        "@types/vscode-notebook-renderer": "^1.57.0",
+        "@types/vscode-notebook-renderer": "^1.57.1",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",

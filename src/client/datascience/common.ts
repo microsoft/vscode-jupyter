@@ -10,7 +10,7 @@ import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
 import { DataScience } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
-import { Telemetry } from './constants';
+import { jupyterLanguageToMonacoLanguageMapping, Telemetry } from './constants';
 import { ICell } from './types';
 import { getTelemetrySafeLanguage } from '../telemetry/helpers';
 
@@ -117,19 +117,12 @@ export function traceCellResults(prefix: string, results: ICell[]) {
     }
 }
 
-const jupyterLanguageToMonacoLanguageMapping = new Map([
-    ['c#', 'csharp'],
-    ['f#', 'fsharp'],
-    ['q#', 'qsharp'],
-    ['c++11', 'c++'],
-    ['c++12', 'c++'],
-    ['c++14', 'c++']
-]);
-export function translateKernelLanguageToMonaco(kernelLanguage: string): string {
-    // At the moment these are the only translations.
-    // python, julia, r, javascript, powershell, etc can be left as is.
-    kernelLanguage = kernelLanguage.toLowerCase();
-    return jupyterLanguageToMonacoLanguageMapping.get(kernelLanguage) || kernelLanguage;
+export function translateKernelLanguageToMonaco(language: string): string {
+    language = language.toLowerCase();
+    if (language.length === 2 && language.endsWith('#')) {
+        return `${language.substring(0, 1)}sharp`;
+    }
+    return jupyterLanguageToMonacoLanguageMapping.get(language) || language;
 }
 
 export function generateNewNotebookUri(

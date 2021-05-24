@@ -150,11 +150,11 @@ export class CellExecution {
                 // No point keeping it alive, just chewing resources.
                 if (e === this.cell.document) {
                     this.request?.dispose(); // NOSONAR
-                }
-                if (this.started && !this._completed) {
-                    this.completedDueToCancellation().catch((ex) =>
-                        traceInfo('Failures when cancelling due to cell removal', ex)
-                    );
+                    if (this.started && !this._completed) {
+                        this.completedDueToCancellation().catch((ex) =>
+                            traceInfo('Failures when cancelling due to cell removal', ex)
+                        );
+                    }
                 }
             },
             this,
@@ -324,7 +324,7 @@ export class CellExecution {
         }
 
         // Create a temporary task.
-        this.previousResultsToRestore = { ...(this.cell.latestExecutionSummary || {}) };
+        this.previousResultsToRestore = { ...(this.cell.executionSummary || {}) };
         this.temporaryTask = this.controller.createNotebookCellExecutionTask(this.cell);
         this.temporaryTask?.start({});
         if (this.previousResultsToRestore?.executionOrder && this.task) {
@@ -380,10 +380,7 @@ export class CellExecution {
     }
     private canExecuteCell() {
         // Raw cells cannot be executed.
-        if (
-            isPythonKernelConnection(this.kernelConnection) &&
-            (this.cell.document.languageId === 'raw' || this.cell.document.languageId === 'plaintext')
-        ) {
+        if (isPythonKernelConnection(this.kernelConnection) && this.cell.document.languageId === 'raw') {
             return false;
         }
 

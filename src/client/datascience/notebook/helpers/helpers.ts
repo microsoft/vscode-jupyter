@@ -107,7 +107,7 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
     }
 
     // Valid notebooks will have a language information in the metadata.
-    return kernelSpec?.language === PYTHON_LANGUAGE;
+    return kernelSpec?.language === PYTHON_LANGUAGE || metadata?.language_info?.name === PYTHON_LANGUAGE;
 }
 /**
  * No need to update the notebook metadata just yet.
@@ -256,7 +256,7 @@ export function createJupyterCellFromVSCNotebookCell(
     let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
     if (vscCell.kind === NotebookCellKind.Markup) {
         cell = createMarkdownCellFromNotebookCell(vscCell);
-    } else if (vscCell.document.languageId === 'raw' || vscCell.document.languageId === 'plaintext') {
+    } else if (vscCell.document.languageId === 'raw') {
         cell = createRawCellFromNotebookCell(vscCell);
     } else {
         cell = createCodeCellFromNotebookCell(vscCell);
@@ -303,7 +303,7 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
     const code = cell.document.getText();
     return {
         cell_type: 'code',
-        execution_count: cell.latestExecutionSummary?.executionOrder ?? null,
+        execution_count: cell.executionSummary?.executionOrder ?? null,
         source: splitMultilineString(code),
         outputs: cell.outputs.map(translateCellDisplayOutput),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
@@ -427,7 +427,7 @@ export class NotebookCellStateTracker implements IDisposable {
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
         `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
-            cell.latestExecutionSummary?.executionOrder
+            cell.executionSummary?.executionOrder
         }. ${message}`
     );
 }
