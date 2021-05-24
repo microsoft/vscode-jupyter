@@ -85,7 +85,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     public getNotebookData() {
         return notebookModelToVSCNotebookData(
             this.notebookContentWithoutCells,
-            this.file,
             this.notebookJson.cells || [],
             this.preferredLanguage || PYTHON_LANGUAGE,
             this.originalJson
@@ -118,7 +117,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     }
     protected getJupyterCells() {
         return this.document
-            ? this.document.getCells().map(createJupyterCellFromVSCNotebookCell.bind(undefined))
+            ? this.document.getCells().map((cell) => createJupyterCellFromVSCNotebookCell(cell))
             : this.notebookJson.cells || [];
     }
     protected getDefaultNotebookContent() {

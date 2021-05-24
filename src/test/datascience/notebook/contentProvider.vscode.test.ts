@@ -9,7 +9,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { NotebookCellKind, commands, Uri, NotebookContentProvider, CancellationTokenSource } from 'vscode';
+import { NotebookCellKind, commands, Uri, CancellationTokenSource, NotebookSerializer } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import {
@@ -18,7 +18,7 @@ import {
     hasErrorOutput,
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
-import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
+import { INotebookSerializer } from '../../../client/datascience/notebook/types';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
@@ -57,7 +57,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
     let testIPynb: Uri;
     let testIPynbWithOutput: Uri;
     let vscodeNotebook: IVSCodeNotebook;
-    let contentProvider: NotebookContentProvider;
+    let notebookSerializer: NotebookSerializer;
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         api = await initialize();
@@ -65,7 +65,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
             return this.skip();
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        contentProvider = api.serviceContainer.get<NotebookContentProvider>(INotebookContentProvider);
+        notebookSerializer = api.serviceContainer.get<NotebookSerializer>(INotebookSerializer);
     });
     setup(async () => {
         sinon.restore();
@@ -79,9 +79,8 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         const tmpFile = await createTemporaryFile('.ipynb');
         disposables.push({ dispose: () => tmpFile.cleanupCallback() });
 
-        const notebookData = await contentProvider.openNotebook(
-            Uri.file(tmpFile.filePath),
-            {},
+        const notebookData = await notebookSerializer.deserializeNotebook(
+            fs.readFileSync(tmpFile.filePath),
             new CancellationTokenSource().token
         );
 

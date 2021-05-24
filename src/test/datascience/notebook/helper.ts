@@ -18,7 +18,6 @@ import {
     window,
     workspace,
     NotebookCell,
-    NotebookContentProvider as VSCNotebookContentProvider,
     NotebookDocument,
     NotebookCellKind,
     NotebookCellMetadata,
@@ -45,11 +44,7 @@ import {
 import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/cellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
-import {
-    CellOutputMimeTypes,
-    INotebookContentProvider,
-    INotebookControllerManager
-} from '../../../client/datascience/notebook/types';
+import { CellOutputMimeTypes, INotebookControllerManager } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
@@ -67,7 +62,6 @@ const defaultTimeout = IS_CONDA_TEST ? 30_000 : 15_000;
 async function getServices() {
     const api = await initialize();
     return {
-        contentProvider: api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider),
         vscodeNotebook: api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
         editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider),
         notebookControllerManager: api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager),

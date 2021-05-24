@@ -7,16 +7,15 @@ import {
     Event,
     EventEmitter,
     notebook,
-    NotebookCellMetadata,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
-    NotebookContentProvider,
     NotebookController,
     NotebookDocument,
-    NotebookDocumentMetadata,
+    NotebookDocumentContentOptions,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookExecuteHandler,
     NotebookRendererScript,
+    NotebookSerializer,
     window
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
@@ -79,16 +78,12 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.onDidChangeNotebookDocument = this.createDisposableEventEmitter<NotebookCellChangedEvent>();
         }
     }
-    public registerNotebookContentProvider(
+    public registerNotebookSerializer(
         notebookType: string,
-        provider: NotebookContentProvider,
-        options?: {
-            transientOutputs: boolean;
-            transientCellMetadata?: { [K in keyof NotebookCellMetadata]?: boolean };
-            transientDocumentMetadata?: { [K in keyof NotebookDocumentMetadata]?: boolean };
-        }
+        serializer: NotebookSerializer,
+        options?: NotebookDocumentContentOptions
     ): Disposable {
-        return notebook.registerNotebookContentProvider(notebookType, provider, options);
+        return notebook.registerNotebookSerializer(notebookType, serializer, options);
     }
     public createNotebookController(
         id: string,

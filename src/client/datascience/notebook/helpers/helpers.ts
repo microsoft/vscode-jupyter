@@ -24,8 +24,7 @@ import { concatMultilineString, splitMultilineString } from '../../../../datasci
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
-import { isUntitledFile } from '../../../common/utils/misc';
+import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { KernelConnectionMetadata, NotebookCellRunState } from '../../jupyter/kernels/types';
@@ -57,8 +56,8 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     }
 }
 
-const kernelInformationForNotebooks = new WeakMap<
-    NotebookDocument,
+const kernelInformationForNotebooks = new Map<
+    string,
     { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']> }
 >();
 
@@ -68,7 +67,10 @@ export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeN
     }
     return notebooks.notebookDocuments.some((item) => fs.arePathsSame(item.uri, resource));
 }
-export function getNotebookMetadata(document: NotebookDocument): nbformat.INotebookMetadata | undefined {
+function getDocumentId(document: NotebookDocument | NotebookData) {
+    return document.metadata.__vsc_id || '';
+}
+export function getNotebookMetadata(document: NotebookDocument | NotebookData): nbformat.INotebookMetadata | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
 
@@ -82,15 +84,10 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
         notebookContent = { ...content, metadata: { ...metadata, language_info } } as any;
     }
     notebookContent = cloneDeep(notebookContent);
-    const data = kernelInformationForNotebooks.get(document);
+    const data = kernelInformationForNotebooks.get(getDocumentId(document));
     if (data && data.metadata) {
         updateNotebookMetadata(notebookContent.metadata, data.metadata, data.kernelInfo);
     }
-
-    traceInfoIf(
-        !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-        `Notebook metadata for ${document.uri.toString()} is ${data?.metadata?.id}`
-    );
 
     return notebookContent.metadata;
 }
@@ -129,7 +126,7 @@ export function trackKernelInNotebookMetadata(
     document: NotebookDocument,
     kernelConnection: KernelConnectionMetadata | undefined
 ) {
-    const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
+    const data = { ...(kernelInformationForNotebooks.get(getDocumentId(document)) || {}) };
     data.metadata = kernelConnection;
     let language: string | undefined;
     switch (kernelConnection?.kind) {
@@ -156,7 +153,7 @@ export function trackKernelInNotebookMetadata(
         data.kernelInfo = undefined;
     }
 
-    kernelInformationForNotebooks.set(document, data);
+    kernelInformationForNotebooks.set(getDocumentId(document), data);
 }
 /**
  * Whether the kernel connection information tracked against the document is the same as the one provided.
@@ -165,7 +162,7 @@ export function isSameAsTrackedKernelInNotebookMetadata(
     document: NotebookDocument,
     kernelConnection: KernelConnectionMetadata
 ) {
-    const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
+    const data = { ...(kernelInformationForNotebooks.get(getDocumentId(document)) || {}) };
     const expectedData: typeof data = { metadata: kernelConnection };
     let language: string | undefined;
     switch (kernelConnection?.kind) {
@@ -202,23 +199,22 @@ export function trackKernelInfoInNotebookMetadata(
     document: NotebookDocument,
     kernelInfo: KernelMessage.IInfoReplyMsg['content']
 ) {
-    if (kernelInformationForNotebooks.get(document)?.kernelInfo === kernelInfo) {
+    if (kernelInformationForNotebooks.get(getDocumentId(document))?.kernelInfo === kernelInfo) {
         return;
     }
-    const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
+    const data = { ...(kernelInformationForNotebooks.get(getDocumentId(document)) || {}) };
     data.kernelInfo = kernelInfo;
-    kernelInformationForNotebooks.set(document, data);
+    kernelInformationForNotebooks.set(getDocumentId(document), data);
 }
 
 export function deleteKernelMetadataForTests(document: NotebookDocument) {
-    kernelInformationForNotebooks.delete(document);
+    kernelInformationForNotebooks.delete(getDocumentId(document));
 }
 /**
  * Converts a NotebookModel into VSCode friendly format.
  */
 export function notebookModelToVSCNotebookData(
     notebookContentWithoutCells: Exclude<Partial<nbformat.INotebookContent>, 'cells'>,
-    notebookUri: Uri,
     nbCells: nbformat.IBaseCell[],
     preferredLanguage: string,
     originalJson: Partial<nbformat.INotebookContent>
@@ -228,7 +224,7 @@ export function notebookModelToVSCNotebookData(
         .filter((item) => !!item)
         .map((item) => item!);
 
-    if (cells.length === 0 && (isUntitledFile(notebookUri) || Object.keys(originalJson).length === 0)) {
+    if (cells.length === 0 && Object.keys(originalJson).length === 0) {
         cells.push(new NotebookCellData(NotebookCellKind.Code, '', preferredLanguage));
     }
     return new NotebookData(
@@ -249,12 +245,15 @@ export function cellRunStateToCellState(cellRunState?: NotebookCellRunState): Ce
     }
 }
 export function createJupyterCellFromVSCNotebookCell(
-    vscCell: NotebookCell
+    vscCell: NotebookCell | NotebookCellData
 ): nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell {
     let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
     if (vscCell.kind === NotebookCellKind.Markup) {
         cell = createMarkdownCellFromNotebookCell(vscCell);
-    } else if (vscCell.document.languageId === 'raw') {
+    } else if (
+        ('document' in vscCell && vscCell.document.languageId === 'raw') ||
+        ('languageId' in vscCell && vscCell.languageId === 'raw')
+    ) {
         cell = createRawCellFromNotebookCell(vscCell);
     } else {
         cell = createCodeCellFromNotebookCell(vscCell);
@@ -283,11 +282,11 @@ export function getNotebookCellMetadata(cell: nbformat.IBaseCell): CellMetadata 
     return custom;
 }
 
-function createRawCellFromNotebookCell(cell: NotebookCell): nbformat.IRawCell {
-    const cellMetadata = cell.metadata.custom as CellMetadata | undefined;
+function createRawCellFromNotebookCell(cell: NotebookCell | NotebookCellData): nbformat.IRawCell {
+    const cellMetadata = cell.metadata?.custom as CellMetadata | undefined;
     const rawCell: nbformat.IRawCell = {
         cell_type: 'raw',
-        source: splitMultilineString(cell.document.getText()),
+        source: splitMultilineString('document' in cell ? cell.document.getText() : cell.value),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
     };
     if (cellMetadata?.attachments) {
@@ -296,16 +295,17 @@ function createRawCellFromNotebookCell(cell: NotebookCell): nbformat.IRawCell {
     return rawCell;
 }
 
-function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell {
-    const cellMetadata = cell.metadata.custom as CellMetadata | undefined;
-    const code = cell.document.getText();
-    return {
+function createCodeCellFromNotebookCell(cell: NotebookCell | NotebookCellData): nbformat.ICodeCell {
+    const cellMetadata = cell.metadata?.custom as CellMetadata | undefined;
+    const code = 'document' in cell ? cell.document.getText() : cell.value;
+    const codeCell: nbformat.ICodeCell = {
         cell_type: 'code',
         execution_count: cell.executionSummary?.executionOrder ?? null,
         source: splitMultilineString(code),
-        outputs: cell.outputs.map(translateCellDisplayOutput),
+        outputs: (cell.outputs || []).map(translateCellDisplayOutput),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
     };
+    return codeCell;
 }
 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
@@ -320,11 +320,11 @@ function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCel
         notebookCellMetadata
     );
 }
-function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkdownCell {
-    const cellMetadata = cell.metadata.custom as CellMetadata | undefined;
+function createMarkdownCellFromNotebookCell(cell: NotebookCell | NotebookCellData): nbformat.IMarkdownCell {
+    const cellMetadata = cell.metadata?.custom as CellMetadata | undefined;
     const markdownCell: nbformat.IMarkdownCell = {
         cell_type: 'markdown',
-        source: splitMultilineString(cell.document.getText()),
+        source: splitMultilineString('document' in cell ? cell.document.getText() : cell.value),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
     };
     if (cellMetadata?.attachments) {
