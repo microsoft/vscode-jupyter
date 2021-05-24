@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 /* eslint-disable no-console */
 import type { nbformat } from '@jupyterlab/coreutils';
-import { NotebookOutputEventParams } from 'vscode-notebook-renderer';
+import { CellInfo } from 'vscode-notebook-renderer';
 import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
@@ -90,10 +90,10 @@ const renderedWidgets = new Set<string>();
  * This will be exposed as a public method on window for renderer to render output.
  */
 let stackOfWidgetsRenderStatusByOutputId: { outputId: string; container: HTMLElement; success?: boolean }[] = [];
-export function renderOutput(request: NotebookOutputEventParams) {
+export function renderOutput(outputId: string, cellInfo: CellInfo) {
     try {
-        stackOfWidgetsRenderStatusByOutputId.push({ outputId: request.outputId, container: request.element });
-        const output = convertVSCodeOutputToExecutResultOrDisplayData(request);
+        stackOfWidgetsRenderStatusByOutputId.push({ outputId: outputId, container: cellInfo.element });
+        const output = convertVSCodeOutputToExecutResultOrDisplayData(cellInfo);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const model = output.data['application/vnd.jupyter.widget-view+json'] as any;
@@ -102,7 +102,7 @@ export function renderOutput(request: NotebookOutputEventParams) {
             return console.error('Nothing to render');
         }
         /* eslint-disable no-console */
-        renderIPyWidget(request.outputId, model, request.element);
+        renderIPyWidget(outputId, model, cellInfo.element);
     } catch (ex) {
         console.error(`Failed to render ipywidget type`, ex);
         throw ex;
@@ -197,16 +197,19 @@ function initialize() {
 }
 
 function convertVSCodeOutputToExecutResultOrDisplayData(
-    request: NotebookOutputEventParams
+    cellInfo: CellInfo
 ): nbformat.IExecuteResult | nbformat.IDisplayData {
     // New API
     return {
         data: {
-            [request.mime]: request.value
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            [cellInfo.mime]: cellInfo.value as any
         },
-        metadata: request.metadata || {},
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        metadata: (cellInfo.metadata as any) || {},
         execution_count: null,
-        output_type: request.metadata?.outputType || 'execute_result'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        output_type: (cellInfo.metadata as any)?.outputType || 'execute_result'
     };
 }
 
