@@ -61,7 +61,6 @@ import {
     NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
-    NotebookContentProvider,
     NotebookDocument,
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
@@ -69,7 +68,8 @@ import {
     NotebookDocumentContentOptions,
     NotebookExecuteHandler,
     NotebookRendererScript,
-    NotebookController
+    NotebookController,
+    NotebookSerializer
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -1575,9 +1575,9 @@ export interface IVSCodeNotebook {
     readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
-    registerNotebookContentProvider(
+    registerNotebookSerializer(
         notebookType: string,
-        provider: NotebookContentProvider,
+        serializer: NotebookSerializer,
         options?: NotebookDocumentContentOptions
     ): Disposable;
 

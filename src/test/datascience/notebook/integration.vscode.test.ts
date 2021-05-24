@@ -18,7 +18,7 @@ import {
     NotebookIntegration
 } from '../../../client/datascience/notebook/integration';
 import { NotebookCompletionProvider } from '../../../client/datascience/notebook/intellisense/completionProvider';
-import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
+import { INotebookSerializer } from '../../../client/datascience/notebook/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
@@ -46,7 +46,7 @@ suite('VS Code notebook integration', () => {
             api.serviceManager.get(IVSCodeNotebook),
             api.serviceManager.get(UseVSCodeNotebookEditorApi),
             api.serviceManager.get(IDisposableRegistry),
-            api.serviceManager.get(INotebookContentProvider),
+            api.serviceManager.get(INotebookSerializer),
             api.serviceManager.get(IApplicationEnvironment),
             api.serviceManager.get(IWorkspaceService),
             api.serviceManager.get(ICommandManager),

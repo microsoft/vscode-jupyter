@@ -199,21 +199,6 @@ export class NativeEditorStorage implements INotebookStorage {
         return 3;
     }
 
-    private sendLanguageTelemetry(notebookJson: Partial<nbformat.INotebookContent>) {
-        try {
-            // See if we have a language
-            let language = '';
-            if (notebookJson.metadata?.language_info?.name) {
-                language = notebookJson.metadata?.language_info?.name;
-            } else if (notebookJson.metadata?.kernelspec?.language) {
-                language = notebookJson.metadata?.kernelspec?.language.toString();
-            }
-            sendNotebookOrKernelLanguageTelemetry(Telemetry.NotebookLanguage, language);
-        } catch {
-            // If this fails, doesn't really matter
-            noop();
-        }
-    }
     private async loadFromFile(options: IModelLoadOptions): Promise<INotebookModel> {
         try {
             // Attempt to read the contents if a viable file
@@ -315,7 +300,7 @@ export class NativeEditorStorage implements INotebookStorage {
         // Then save the contents. We'll stick our cells back into this format when we save
         if (json) {
             // Log language or kernel telemetry
-            this.sendLanguageTelemetry(json);
+            sendLanguageTelemetry(json);
         }
 
         // Extract cells from the json
@@ -475,5 +460,21 @@ export class NativeEditorStorage implements INotebookStorage {
     private getHashedFileName(key: string): string {
         const file = `${this.crypto.createHash(key, 'string')}.ipynb`;
         return path.join(this.context.globalStorageUri.fsPath, file);
+    }
+}
+
+export function sendLanguageTelemetry(notebookJson: Partial<nbformat.INotebookContent>) {
+    try {
+        // See if we have a language
+        let language = '';
+        if (notebookJson.metadata?.language_info?.name) {
+            language = notebookJson.metadata?.language_info?.name;
+        } else if (notebookJson.metadata?.kernelspec?.language) {
+            language = notebookJson.metadata?.kernelspec?.language.toString();
+        }
+        sendNotebookOrKernelLanguageTelemetry(Telemetry.NotebookLanguage, language);
+    } catch {
+        // If this fails, doesn't really matter
+        noop();
     }
 }

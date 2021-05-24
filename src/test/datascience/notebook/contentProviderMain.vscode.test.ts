@@ -11,40 +11,38 @@ import {
     Memento,
     NotebookCellKind,
     Uri,
-    NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookDocument,
     NotebookCellMetadata,
     CancellationTokenSource,
     NotebookCellData
 } from 'vscode';
+import * as fs from 'fs-extra';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { ICryptoUtils } from '../../../client/common/types';
-import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
+import { NotebookCellLanguageService } from '../../../client/datascience/notebook/cellLanguageService';
+import { NotebookSerializer } from '../../../client/datascience/notebook/contentProvider';
 import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
 import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
 import { createNotebookModel } from './helper';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;
-    let contentProvider: VSCodeNotebookContentProvider;
+    let contentProvider: NotebookSerializer;
     const fileUri = Uri.file('a.ipynb');
     const disposables: IDisposable[] = [];
     setup(async () => {
         storageProvider = mock<INotebookStorageProvider>();
         const compatSupport = mock(NotebookEditorCompatibilitySupport);
         when(compatSupport.canOpenWithOurNotebookEditor(anything())).thenReturn(true);
-        when(compatSupport.canOpenWithVSCodeNotebookEditor(anything())).thenReturn(true);
         const vscNotebooks = mock<IVSCodeNotebook>();
         when(vscNotebooks.onDidSaveNotebookDocument).thenReturn(new EventEmitter<NotebookDocument>().event);
         const memento = mock<Memento>();
         when(memento.get(anything())).thenReturn();
-        contentProvider = new NotebookContentProvider(
-            instance(storageProvider),
-            instance(compatSupport),
-            instance(vscNotebooks)
-        );
+        const languageService = mock<NotebookCellLanguageService>();
+        when(languageService.getPreferredLanguage(anything())).thenReturn(PYTHON_LANGUAGE);
+        contentProvider = new NotebookSerializer(instance(vscNotebooks), instance(languageService));
     });
     teardown(() => disposeAllDisposables(disposables));
     test('Return notebook with 2 cells', async () => {
@@ -66,8 +64,10 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
         });
         when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
 
-        const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
-
+        const notebook = await contentProvider.deserializeNotebook(
+            fs.readFileSync(fileUri.fsPath),
+            new CancellationTokenSource().token
+        );
         assert.isOk(notebook);
 
         assert.deepEqual(notebook.cells, [
@@ -123,8 +123,10 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
             ]
         });
         when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
-
-        const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
+        const notebook = await contentProvider.deserializeNotebook(
+            fs.readFileSync(fileUri.fsPath),
+            new CancellationTokenSource().token
+        );
 
         assert.isOk(notebook);
 
