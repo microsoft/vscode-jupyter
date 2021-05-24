@@ -25,11 +25,7 @@ export class MockMemento implements Memento {
         // noop.
         this._keys = keys;
     }
-    /**
-	 * The stored keys.
-	*/
     public get keys(): readonly string[] {
         return this._keys;
     }
-    // IANHU: Not sure if this is right. Just focusing on the notebook related BC
 }
