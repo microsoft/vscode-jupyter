@@ -836,7 +836,6 @@ module.exports = {
         'src/client/datascience/plotting/plotViewerProvider.ts',
         'src/client/datascience/monacoMessages.ts',
         'src/client/datascience/interactive-ipynb/nativeEditorRunByLineListener.ts',
-        'src/client/datascience/interactive-ipynb/nativeEditorViewTracker.ts',
         'src/client/datascience/interactive-ipynb/nativeEditorSynchronizer.ts',
         'src/client/datascience/interactive-ipynb/autoSaveService.ts',
         'src/client/datascience/editor-integration/decorator.ts',
