@@ -9,7 +9,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { NotebookCellKind, commands, Uri, CancellationTokenSource, NotebookSerializer } from 'vscode';
+import { commands, Uri, CancellationTokenSource, NotebookCellKind } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import {
@@ -18,10 +18,7 @@ import {
     hasErrorOutput,
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
-import { INotebookSerializer } from '../../../client/datascience/notebook/types';
-import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
-import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
+import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerliazer';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { IS_NON_RAW_NATIVE_TEST } from '../../constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
@@ -45,16 +42,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         'notebook',
         'test.ipynb'
     );
-    const templateIPynb = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'test',
-        'datascience',
-        'notebook',
-        'withOutput.ipynb'
-    );
     let api: IExtensionTestApi;
-    let testIPynb: Uri;
     let testIPynbWithOutput: Uri;
     let vscodeNotebook: IVSCodeNotebook;
     let notebookSerializer: NotebookSerializer;
@@ -65,13 +53,10 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
             return this.skip();
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        notebookSerializer = api.serviceContainer.get<NotebookSerializer>(INotebookSerializer);
+        notebookSerializer = api.serviceContainer.get<NotebookSerializer>(NotebookSerializer);
     });
     setup(async () => {
         sinon.restore();
-        // Don't use same file (due to dirty handling, we might save in dirty.)
-        // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
         testIPynbWithOutput = Uri.file(await createTemporaryNotebook(templateIPynbWithOutput, disposables));
     });
     teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
@@ -88,8 +73,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.equal(notebookData.cells.length, 1);
         assert.isEmpty(notebookData.cells[0].value);
     });
-    test('Verify Notebook Json', async () => {
-        const storageProvider = api.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider);
+    test('Verify generation of NotebookJson', async () => {
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
@@ -98,19 +82,18 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
             'notebook',
             'testJsonContents.ipynb'
         );
-        const model = await storageProvider.getOrCreateModel({ file: Uri.file(file) });
-        disposables.push(model);
+        const data = notebookSerializer.deserializeNotebook(fs.readFileSync(file), new CancellationTokenSource().token);
+        const generatedJson = Buffer.from(
+            notebookSerializer.serializeNotebook(data, new CancellationTokenSource().token)
+        ).toString();
         const jsonStr = fs.readFileSync(file, { encoding: 'utf8' });
 
-        assert.deepEqual(JSON.parse(jsonStr), JSON.parse(model.getContent()));
+        // JSON should be identical.
+        assert.deepEqual(JSON.parse(generatedJson), JSON.parse(jsonStr));
     });
     test('Verify cells (content, metadata & output)', async () => {
-        const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-        const model = (await editorProvider.open(testIPynb))!.model! as VSCodeNotebookModel;
+        const notebook = await vscodeNotebook.openNotebookDocument(testIPynbWithOutput);
 
-        const notebook = vscodeNotebook.activeNotebookEditor?.document!;
-
-        assert.equal(notebook.cellCount, model?.cellCount, 'Incorrect number of cells');
         assert.equal(notebook.cellCount, 6, 'Incorrect number of cells');
 
         // Cell 1.
@@ -184,23 +167,6 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         cellMetadata = notebook.cellAt(5).metadata.custom as CellMetadata;
         assert.lengthOf(Object.keys(cellMetadata || {}), 1, 'Cell6, metadata');
         assert.containsAllKeys(cellMetadata || {}, { metadata: '' }, 'Cell6, metadata');
-    });
-    test('Verify generation of NotebookJson', async function () {
-        return this.skip(); // Got a PR to fix this (notebook serializer).
-        const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-        const model = (await editorProvider.open(testIPynb))!.model!;
-
-        const originalJsonStr = (await fs.readFile(templateIPynb, { encoding: 'utf8' })).trim();
-        const originalJson: nbformat.INotebookContent = JSON.parse(originalJsonStr);
-
-        // , originalJson, 'Trusted notebook json content is invalid');
-        assert.deepEqual(
-            JSON.parse(model.getContent()).cells,
-            originalJson.cells,
-            'Trusted notebook json content is invalid'
-        );
-        // https://github.com/microsoft/vscode-python/issues/13155
-        // assert.equal(model.getContent(), originalJsonStr, 'Trusted notebook json not identical');
     });
     test('Saving after clearing should result in execution_count=null in ipynb file', async () => {
         const originalJson = JSON.parse(

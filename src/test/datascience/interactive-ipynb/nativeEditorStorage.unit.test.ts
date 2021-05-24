@@ -351,7 +351,7 @@ suite('DataScience - Native Editor Storage', () => {
             context.object,
             globalMemento,
             localMemento,
-            new NotebookModelFactory(false, instance(mockVSC), instance(workspace), instance(cellLanguageService))
+            new NotebookModelFactory(instance(workspace))
         );
         const container = mock<IServiceContainer>();
         when(container.tryGet(anything())).thenReturn(undefined);

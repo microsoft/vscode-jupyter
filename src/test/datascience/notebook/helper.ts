@@ -3,13 +3,11 @@
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 
-import { nbformat } from '@jupyterlab/coreutils';
 import { assert, expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
-import { instance, mock, when } from 'ts-mockito';
 import {
     WorkspaceEdit,
     commands,
@@ -30,7 +28,7 @@ import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { traceInfo } from '../../../client/common/logger';
-import { GLOBAL_MEMENTO, ICryptoUtils, IDisposable, IMemento } from '../../../client/common/types';
+import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
 import { CellExecution } from '../../../client/datascience/jupyter/kernels/cellExecution';
@@ -45,7 +43,6 @@ import { LastSavedNotebookCellLanguage } from '../../../client/datascience/noteb
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { CellOutputMimeTypes, INotebookControllerManager } from '../../../client/datascience/notebook/types';
-import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
 import { INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
@@ -634,37 +631,6 @@ export async function saveActiveNotebook(disposables: IDisposable[]) {
 
         await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
     }
-}
-export function createNotebookModel(
-    uri: Uri,
-    globalMemento: Memento,
-    crypto: ICryptoUtils,
-    nb?: Partial<nbformat.INotebookContent>
-) {
-    const nbJson: nbformat.INotebookContent = {
-        cells: [],
-        metadata: {
-            orig_nbformat: 4
-        },
-        nbformat: 4,
-        nbformat_minor: 4,
-        ...(nb || {})
-    };
-    const mockVSC = mock<IVSCodeNotebook>();
-    when(mockVSC.notebookEditors).thenReturn([]);
-    when(mockVSC.notebookDocuments).thenReturn([]);
-
-    return new VSCodeNotebookModel(
-        () => true,
-        uri,
-        globalMemento,
-        crypto,
-        nbJson,
-        ' ',
-        3,
-        instance(mockVSC),
-        nb?.metadata?.language_info?.name || PYTHON_LANGUAGE
-    );
 }
 export async function runCell(cell: NotebookCell) {
     const api = await initialize();

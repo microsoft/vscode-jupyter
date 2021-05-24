@@ -8,8 +8,7 @@ import detectIndent = require('detect-indent');
 import * as uuid from 'uuid/v4';
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
-import { CancellationToken, NotebookSerializer as VSCNotebookSerializer, NotebookData } from 'vscode';
-import { IVSCodeNotebook } from '../../common/application/types';
+import { CancellationToken, NotebookSerializer as VSCNotebookSerializer, NotebookData, NotebookDocument } from 'vscode';
 import { sendLanguageTelemetry } from '../notebookStorage/nativeEditorStorage';
 import { createJupyterCellFromVSCNotebookCell, notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookCellLanguageService } from './cellLanguageService';
@@ -23,11 +22,10 @@ import { pruneCell } from '../common';
 @injectable()
 export class NotebookSerializer implements VSCNotebookSerializer {
     constructor(
-        @inject(IVSCodeNotebook) readonly notebookProvider: IVSCodeNotebook,
         @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService
     ) {}
-    public async deserializeNotebook(content: Uint8Array, _token: CancellationToken): Promise<NotebookData> {
-        const contents = content.length > 0 ? Buffer.from(content).toString() : '';
+    public deserializeNotebook(content: Uint8Array, _token: CancellationToken): NotebookData {
+        const contents = Buffer.from(content).toString();
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
 
         // Double check json (if we have any)
@@ -44,6 +42,18 @@ export class NotebookSerializer implements VSCNotebookSerializer {
             sendLanguageTelemetry(json);
         }
         const preferredCellLanguage = this.cellLanguageService.getPreferredLanguage(json?.metadata);
+        // Ensure we always have a blank cell.
+        if (json?.cells?.length === 0) {
+            json.cells = [
+                {
+                    cell_type: 'code',
+                    execution_count: null,
+                    metadata: {},
+                    outputs: [],
+                    source: ''
+                }
+            ];
+        }
         const data = notebookModelToVSCNotebookData(
             { ...json, cells: [] },
             json?.cells || [],
@@ -57,9 +67,16 @@ export class NotebookSerializer implements VSCNotebookSerializer {
         if (json?.nbformat_minor) {
             data.metadata = data.metadata.with({ nbformat_minor: json.nbformat_minor });
         }
+
         return data;
     }
-    public async serializeNotebook(data: NotebookData, _token: CancellationToken): Promise<Uint8Array> {
+    public serializeNotebookDocument(data: NotebookDocument): string {
+        return this.serialize(data);
+    }
+    public serializeNotebook(data: NotebookData, _token: CancellationToken): Uint8Array {
+        return Buffer.from(this.serialize(data), 'utf-8');
+    }
+    private serialize(data: NotebookDocument | NotebookData): string {
         const json: nbformat.INotebookContent = {
             cells: [],
             metadata: { orig_nbformat: 4 },
@@ -76,9 +93,17 @@ export class NotebookSerializer implements VSCNotebookSerializer {
             'indentAmount' in data.metadata && typeof data.metadata.indentAmount === 'string'
                 ? data.metadata.indentAmount
                 : ' ';
-        json.cells = data.cells.map((cell) => createJupyterCellFromVSCNotebookCell(cell)).map(pruneCell);
 
-        return Buffer.from(JSON.stringify(json, undefined, indentAmount), 'utf-8');
+        if (data instanceof NotebookData) {
+            json.cells = data.cells.map((cell) => createJupyterCellFromVSCNotebookCell(cell)).map(pruneCell);
+        } else {
+            json.cells = data
+                .getCells()
+                .map((cell) => createJupyterCellFromVSCNotebookCell(cell))
+                .map(pruneCell);
+        }
+
+        return JSON.stringify(json, undefined, indentAmount);
     }
     // public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
     //     if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {

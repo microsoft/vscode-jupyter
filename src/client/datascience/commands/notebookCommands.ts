@@ -83,8 +83,8 @@ export class NotebookCommands implements IDisposable {
                       identity: this.notebookEditorProvider.activeEditor.file,
                       resource: this.notebookEditorProvider.activeEditor.file,
                       currentKernelDisplayName:
-                          this.notebookEditorProvider.activeEditor.model.metadata?.kernelspec?.display_name ||
-                          this.notebookEditorProvider.activeEditor.model.metadata?.kernelspec?.name
+                          this.notebookEditorProvider.activeEditor.notebookMetadata?.kernelspec?.display_name ||
+                          this.notebookEditorProvider.activeEditor.notebookMetadata?.kernelspec?.name
                   }
                 : {
                       identity: this.interactiveWindowProvider.activeWindow?.identity,

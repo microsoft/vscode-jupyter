@@ -3,13 +3,12 @@
 
 'use strict';
 
-import { NotebookSerializer as VSCNotebookContentProvider } from 'vscode';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
-import { NotebookSerializer } from './contentProvider';
+import { NotebookSerializer } from './notebookSerliazer';
 import { CreationOptionService } from './creation/creationOptionsService';
 import { NotebookCreator } from './creation/notebookCreator';
 import { NotebookCellLanguageService } from './cellLanguageService';
@@ -20,10 +19,10 @@ import { IntroduceNativeNotebookStartPage } from './introStartPage';
 import { NotebookControllerManager } from './notebookControllerManager';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
-import { INotebookSerializer, INotebookControllerManager } from './types';
+import { INotebookControllerManager } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<VSCNotebookContentProvider>(INotebookSerializer, NotebookSerializer);
+    serviceManager.addSingleton<NotebookSerializer>(NotebookSerializer, NotebookSerializer);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookIntegration

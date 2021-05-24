@@ -67,9 +67,9 @@ export class ExportCommands implements IDisposable {
     private async nativeNotebookExport(uri: Uri) {
         const editor = this.notebookProvider.editors.find((item) => this.fs.arePathsSame(item.file, uri));
 
-        if (editor && editor.model) {
+        if (editor) {
             const interpreter = editor.notebook?.getMatchingInterpreter();
-            return this.export(editor.model.getContent(), editor.model.file, undefined, undefined, interpreter);
+            return this.export(editor.getContent(), editor.file, undefined, undefined, interpreter);
         } else {
             return this.export(undefined, undefined, undefined, undefined);
         }
@@ -86,11 +86,11 @@ export class ExportCommands implements IDisposable {
             // if no contents was passed then this was called from the command palette,
             // so we need to get the active editor
             const activeEditor = this.notebookProvider.activeEditor;
-            if (!activeEditor || !activeEditor.model) {
+            if (!activeEditor) {
                 return;
             }
-            contents = contents ? contents : activeEditor.model.getContent();
-            source = source ? source : activeEditor.model.file;
+            contents = contents ? contents : activeEditor.getContent();
+            source = source ? source : activeEditor.file;
 
             // At this point also see if the active editor has a candidate interpreter to use
             if (!interpreter) {
