@@ -605,6 +605,7 @@
             {
                 "command": "jupyter.notebookeditor.interruptkernel",
                 "title": "%jupyter.command.jupyter.interruptkernel.title%",
+                "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
                 "category": "Notebook",
                 "icon": {
                     "light": "resources/light/interrupt.svg",
@@ -615,6 +616,7 @@
             {
                 "command": "jupyter.notebookeditor.restartkernel",
                 "title": "%jupyter.command.jupyter.restartkernel.title%",
+                "shortTitle": "%jupyter.command.jupyter.restartkernel.shorttitle%",
                 "category": "Notebook",
                 "icon": {
                     "light": "resources/light/restart-kernel.svg",
@@ -739,6 +741,7 @@
             {
                 "command": "jupyter.openVariableView",
                 "title": "%jupyter.command.jupyter.openVariableView.title%",
+                "shortTitle": "%jupyter.command.jupyter.openVariableView.shorttitle%",
                 "icon": "$(variable-group)",
                 "category": "Jupyter",
                 "enablement": "notebookViewType == jupyter-notebook && !jupyter.variableViewVisible"
@@ -863,12 +866,12 @@
                 },
                 {
                     "command": "jupyter.notebookeditor.interruptkernel",
-                    "group": "navigation/execute@1",
+                    "group": "navigation/execute@2",
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 },
                 {
                     "command": "jupyter.openVariableView",
-                    "group": "navigation@2",
+                    "group": "navigation@1",
                     "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
                 },
                 {
@@ -1135,14 +1138,12 @@
                 {
                     "command": "jupyter.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                    "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
                     "category": "Jupyter",
                     "when": "jupyter.haveinteractive && jupyter.ispythonorinteractiveeactive"
                 },
                 {
                     "command": "jupyter.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
-                    "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
                     "category": "Jupyter",
                     "when": "jupyter.haveinteractive && jupyter.ispythonorinteractiveeactive"
                 },
@@ -1351,7 +1352,6 @@
                 {
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
-                    "shortTitle": "%jupyter.command.jupyter.openVariableView.shorttitle%",
                     "category": "Jupyter",
                     "when": "notebookViewType == jupyter-notebook"
                 },
