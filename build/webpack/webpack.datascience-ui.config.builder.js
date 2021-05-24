@@ -16,7 +16,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const EsmWebpackPlugin = require("@purtuga/esm-webpack-plugin");
+const EsmWebpackPlugin = require('@purtuga/esm-webpack-plugin');
 
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
@@ -179,10 +179,13 @@ function buildConfiguration(bundle) {
             ]
         );
     }
-    let outputProps = bundle !== 'ipywidgetsRenderer' ? {} : {
-        library: 'LIB',
-        libraryTarget: 'var'
-    };
+    let outputProps =
+        bundle !== 'ipywidgetsRenderer'
+            ? {}
+            : {
+                  library: 'LIB',
+                  libraryTarget: 'var'
+              };
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'src/datascience-ui/ipywidgets/kernel/require.js'),
