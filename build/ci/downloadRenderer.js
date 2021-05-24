@@ -80,10 +80,7 @@ async function downloadRendererExtension() {
         await download(widgetUri, downloadDir, { filename: widgetFileName });
         console.log('Downloaded Widget Renderer');
 
-        await fs.copy(
-            downloadedWidgetFile,
-            path.join(ExtensionRootDir, 'out', 'ipywidget_renderer', widgetFileName)
-        );
+        await fs.copy(downloadedWidgetFile, path.join(ExtensionRootDir, 'out', 'ipywidget_renderer', widgetFileName));
         console.log('Copied IPyWidget Renderer');
     } finally {
         if (typeof cleanup == 'function') {
