@@ -119,7 +119,7 @@ export class NotebookProvider implements INotebookProvider {
         const notebook = rawKernel
             ? await this.rawNotebookProvider.getNotebook(options.identity, options.token)
             : await this.jupyterNotebookProvider.getNotebook(options);
-        if (notebook) {
+        if (notebook && !notebook.disposed) {
             this.cacheNotebookPromise(options.identity, Promise.resolve(notebook));
             return notebook;
         }
