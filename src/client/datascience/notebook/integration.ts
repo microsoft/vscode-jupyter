@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, languages, Memento, NotebookSerializer as VSCNotebookSerializer } from 'vscode';
+import { ConfigurationTarget, languages, Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationEnvironment,
@@ -15,9 +15,9 @@ import { traceError } from '../../common/logger';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
+import { NotebookSerializer } from './notebookSerliazer';
 import { NotebookCellStateTracker } from './helpers/helpers';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
-import { INotebookSerializer } from './types';
 
 export const HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING = 'CELL_TOOLBAR_SETTING_MEMENTO_KEY';
 
@@ -31,7 +31,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNb: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookSerializer) private readonly notebookSerializer: VSCNotebookSerializer,
+        @inject(NotebookSerializer) private readonly notebookSerializer: NotebookSerializer,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,

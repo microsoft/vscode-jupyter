@@ -4,8 +4,12 @@
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
+import { NotebookCellKind, NotebookDocument } from 'vscode';
 import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { IVSCodeNotebook } from '../../common/application/types';
+import { disposeAllDisposables } from '../../common/helpers';
+import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry } from '../constants';
@@ -14,15 +18,25 @@ import { CellState, ICell, INotebookEditor, INotebookEditorProvider, INotebookEx
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 @injectable()
-export class CellOutputMimeTypeTracker implements IExtensionSingleActivationService, INotebookExecutionLogger {
+export class CellOutputMimeTypeTracker
+    implements IExtensionSingleActivationService, INotebookExecutionLogger, IDisposable {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
     private sentMimeTypes: Set<string> = new Set<string>();
+    private readonly disposables: IDisposable[] = [];
 
-    constructor(@inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider) {
-        this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
+    constructor(
+        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
+        @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+    ) {
+        disposables.push(this);
+        this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t), this.disposables);
+        this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
+        this.vscNotebook.onDidCloseNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
     }
 
     public dispose() {
+        disposeAllDisposables(this.disposables);
         this.pendingChecks.clear();
     }
 
@@ -50,6 +64,13 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         if (e.file) {
             this.scheduleCheck(e.file.fsPath, this.checkNotebook.bind(this, e));
         }
+    }
+    private onDidOpenCloseDocument(doc: NotebookDocument) {
+        doc.getCells().forEach((cell) => {
+            if (cell.kind === NotebookCellKind.Code) {
+                cell.outputs.forEach((output) => output.outputs.forEach((item) => this.sendTelemetry(item.mime)));
+            }
+        });
     }
     private getCellOutputMimeTypes(cell: { data: nbformat.IBaseCell; id: string; state: CellState }): string[] {
         if (cell.data.cell_type === 'markdown') {

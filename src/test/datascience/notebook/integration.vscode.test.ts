@@ -13,12 +13,12 @@ import {
 } from '../../../client/common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../../client/common/constants';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../../client/common/types';
+import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerliazer';
 import {
     HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING,
     NotebookIntegration
 } from '../../../client/datascience/notebook/integration';
 import { NotebookCompletionProvider } from '../../../client/datascience/notebook/intellisense/completionProvider';
-import { INotebookSerializer } from '../../../client/datascience/notebook/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
@@ -46,7 +46,7 @@ suite('VS Code notebook integration', () => {
             api.serviceManager.get(IVSCodeNotebook),
             api.serviceManager.get(UseVSCodeNotebookEditorApi),
             api.serviceManager.get(IDisposableRegistry),
-            api.serviceManager.get(INotebookSerializer),
+            api.serviceManager.get(NotebookSerializer),
             api.serviceManager.get(IApplicationEnvironment),
             api.serviceManager.get(IWorkspaceService),
             api.serviceManager.get(ICommandManager),

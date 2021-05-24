@@ -9,6 +9,7 @@ import {
     notebook,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookController,
+    NotebookData,
     NotebookDocument,
     NotebookDocumentContentOptions,
     NotebookEditor,
@@ -16,6 +17,7 @@ import {
     NotebookExecuteHandler,
     NotebookRendererScript,
     NotebookSerializer,
+    Uri,
     window
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
@@ -78,6 +80,16 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.onDidChangeNotebookDocument = this.createDisposableEventEmitter<NotebookCellChangedEvent>();
         }
     }
+    public async openNotebookDocument(uri: Uri): Promise<NotebookDocument>;
+    public async openNotebookDocument(viewType: string, content?: NotebookData): Promise<NotebookDocument>;
+    public async openNotebookDocument(viewOrUri: Uri | string, content?: NotebookData): Promise<NotebookDocument> {
+        if (typeof viewOrUri === 'string') {
+            return notebook.openNotebookDocument(viewOrUri, content);
+        } else {
+            return notebook.openNotebookDocument(viewOrUri);
+        }
+    }
+
     public registerNotebookSerializer(
         notebookType: string,
         serializer: NotebookSerializer,

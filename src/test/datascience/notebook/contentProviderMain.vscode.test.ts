@@ -10,43 +10,38 @@ import {
     EventEmitter,
     Memento,
     NotebookCellKind,
-    Uri,
     NotebookDocument,
     NotebookCellMetadata,
     CancellationTokenSource,
     NotebookCellData
 } from 'vscode';
-import * as fs from 'fs-extra';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
-import { ICryptoUtils } from '../../../client/common/types';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/cellLanguageService';
-import { NotebookSerializer } from '../../../client/datascience/notebook/contentProvider';
-import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
-import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
-import { createNotebookModel } from './helper';
+import { nbformat } from '@jupyterlab/coreutils';
+import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerliazer';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook ContentProvider', () => {
-    let storageProvider: INotebookStorageProvider;
     let contentProvider: NotebookSerializer;
-    const fileUri = Uri.file('a.ipynb');
     const disposables: IDisposable[] = [];
     setup(async () => {
-        storageProvider = mock<INotebookStorageProvider>();
-        const compatSupport = mock(NotebookEditorCompatibilitySupport);
-        when(compatSupport.canOpenWithOurNotebookEditor(anything())).thenReturn(true);
         const vscNotebooks = mock<IVSCodeNotebook>();
         when(vscNotebooks.onDidSaveNotebookDocument).thenReturn(new EventEmitter<NotebookDocument>().event);
         const memento = mock<Memento>();
         when(memento.get(anything())).thenReturn();
         const languageService = mock<NotebookCellLanguageService>();
         when(languageService.getPreferredLanguage(anything())).thenReturn(PYTHON_LANGUAGE);
-        contentProvider = new NotebookSerializer(instance(vscNotebooks), instance(languageService));
+        contentProvider = new NotebookSerializer(instance(languageService));
     });
     teardown(() => disposeAllDisposables(disposables));
     test('Return notebook with 2 cells', async () => {
-        const model = createNotebookModel(Uri.file('any'), instance(mock<Memento>()), instance(mock<ICryptoUtils>()), {
+        const json: nbformat.INotebookContent = {
+            metadata: {
+                orig_nbformat: 4
+            },
+            nbformat: 4,
+            nbformat_minor: 2,
             cells: [
                 {
                     cell_type: 'code',
@@ -61,46 +56,20 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                     metadata: {}
                 }
             ]
-        });
-        when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
+        };
 
         const notebook = await contentProvider.deserializeNotebook(
-            fs.readFileSync(fileUri.fsPath),
+            Buffer.from(JSON.stringify(json), 'utf-8'),
             new CancellationTokenSource().token
         );
-        assert.isOk(notebook);
 
-        assert.deepEqual(notebook.cells, [
-            new NotebookCellData(
-                NotebookCellKind.Code,
-                'print(1)',
-                PYTHON_LANGUAGE,
-                [],
-                new NotebookCellMetadata().with({
-                    custom: {
-                        metadata: {}
-                    }
-                }),
-                {
-                    executionOrder: 10
-                }
-            ),
-            new NotebookCellData(
-                NotebookCellKind.Markup,
-                '# HEAD',
-                MARKDOWN_LANGUAGE,
-                [],
-                new NotebookCellMetadata().with({
-                    custom: {
-                        metadata: {}
-                    }
-                })
-            )
-        ]);
+        assert.isOk(notebook);
     });
 
     test('Return notebook with csharp language', async () => {
-        const model = createNotebookModel(Uri.file('any'), instance(mock<Memento>()), instance(mock<ICryptoUtils>()), {
+        const json: nbformat.INotebookContent = {
+            nbformat: 4,
+            nbformat_minor: 2,
             metadata: {
                 language_info: {
                     name: 'csharp'
@@ -121,10 +90,10 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                     metadata: {}
                 }
             ]
-        });
-        when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
+        };
+
         const notebook = await contentProvider.deserializeNotebook(
-            fs.readFileSync(fileUri.fsPath),
+            Buffer.from(JSON.stringify(json), 'utf-8'),
             new CancellationTokenSource().token
         );
 
