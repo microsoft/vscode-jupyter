@@ -244,11 +244,7 @@ export function cellRunStateToCellState(cellRunState?: NotebookCellRunState): Ce
     }
 }
 export function createJupyterCellFromVSCNotebookCell(
-    vscCell: NotebookCell,
-    nbformat?: {
-        nbformat?: number;
-        nbformat_minor?: number;
-    }
+    vscCell: NotebookCell
 ): nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell {
     let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
     if (vscCell.kind === NotebookCellKind.Markup) {
@@ -257,11 +253,6 @@ export function createJupyterCellFromVSCNotebookCell(
         cell = createRawCellFromNotebookCell(vscCell);
     } else {
         cell = createCodeCellFromNotebookCell(vscCell);
-    }
-    // Cell id is required for notebooks with version >= 4.5
-    // Today we don't create notebooks with nbformat 4.5 (this code ensures we support users bringing new versions).
-    if (!cell.id && (nbformat?.nbformat_minor || 0) >= 5 && (nbformat?.nbformat || 0) >= 4) {
-        cell.id = vscCell.document.uri.fragment;
     }
     return cell;
 }

@@ -117,11 +117,8 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         return JSON.stringify(this.notebookJson, null, this.indentAmount);
     }
     protected getJupyterCells() {
-        const nbformat = this.notebookJson.nbformat
-            ? { nbformat: this.notebookJson.nbformat, nbformat_minor: this.notebookJson.nbformat_minor }
-            : {};
         return this.document
-            ? this.document.getCells().map((cell) => createJupyterCellFromVSCNotebookCell(cell, nbformat))
+            ? this.document.getCells().map((cell) => createJupyterCellFromVSCNotebookCell(cell))
             : this.notebookJson.cells || [];
     }
     protected getDefaultNotebookContent() {
