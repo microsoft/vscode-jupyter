@@ -21,7 +21,7 @@ export enum ColumnTransformation {
     Drop = 'Drop',
     Rename = 'Rename',
     Normalize = 'Normalize',
-    DropNA = 'Drop NA'
+    DropNA = 'Remove Missing Values'
 }
 
 export class ColumnsSection extends React.Component<IProps, IState> {
