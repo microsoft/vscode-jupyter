@@ -4,7 +4,7 @@
 
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import { VSCodeEvent } from 'vscode-notebook-renderer';
+import { VSCodeEvent } from 'vscode-notebook-renderer/events';
 import { WebviewMessage } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
 import { logMessage } from './logger';
