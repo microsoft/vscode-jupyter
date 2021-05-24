@@ -2009,6 +2009,7 @@
         "@octokit/core": "^3.2.4",
         "@octokit/plugin-paginate-rest": "^2.7.0",
         "@octokit/webhooks": "^7.21.0",
+        "@purtuga/esm-webpack-plugin": "^1.5.0",
         "@sinonjs/fake-timers": "^6.0.1",
         "@testing-library/react": "^9.4.0",
         "@types/ansi-regex": "^4.0.0",

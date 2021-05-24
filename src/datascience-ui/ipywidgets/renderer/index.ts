@@ -5,7 +5,7 @@ import './styles.css';
 import { ActivationFunction, CellInfo } from 'vscode-notebook-renderer';
 
 export const activate: ActivationFunction = (_context) => {
-    console.log('Jupyter IPyWidget Renderer activated');
+    console.log('Jupyter IPyWidget Renderer Activated');
     return {
         renderCell(outputId, info: CellInfo) {
             const renderOutputFunc =
