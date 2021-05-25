@@ -598,7 +598,7 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     assert.isTrue(
         result,
         `${text} not found in outputs of cell ${cell.index} ${cell.outputs[index].outputs
-            .map((o) => Buffer.from(o.value as Uint8Array).toString('utf8'))
+            .map((o) => (o.value ? Buffer.from(o.value as Uint8Array).toString('utf8') : ''))
             .join(' ')}`
     );
     return result;
