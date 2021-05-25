@@ -582,8 +582,14 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
     ) {
         return false;
     }
-    const haystack = ((output.value || '') as string).toString().trim();
-    return isExactMatch ? haystack === value : haystack.includes(value);
+    try {
+        const haystack = Buffer.from(output.value as Uint8Array)
+            .toString('utf8')
+            .trim();
+        return isExactMatch ? haystack === value : haystack.includes(value);
+    } catch {
+        return false;
+    }
 }
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
@@ -592,7 +598,7 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     assert.isTrue(
         result,
         `${text} not found in outputs of cell ${cell.index} ${cell.outputs[index].outputs
-            .map((o) => o.value)
+            .map((o) => (o.value ? Buffer.from(o.value as Uint8Array).toString('utf8') : ''))
             .join(' ')}`
     );
     return result;

@@ -16,9 +16,10 @@ import {
 } from 'vscode';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
-import { CellOutputMimeTypes } from '../../../client/datascience/notebook/types';
 use(chaiExclude);
 suite('DataScience - VSCode Notebook - helpers', () => {
+    const base64EncodedImage =
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mOUlZL6DwAB/wFSU1jVmgAAAABJRU5ErkJggg==';
     test('Convert NotebookModel to VSCode NotebookData', async () => {
         const cells = [
             {
@@ -105,26 +106,12 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     }
                 ],
                 [
-                    new NotebookCellOutput(
-                        [
-                            new NotebookCellOutputItem(CellOutputMimeTypes.stderr, 'Error', {
-                                outputType: 'stream'
-                            })
-                        ],
-                        {
-                            outputType: 'stream'
-                        }
-                    ),
-                    new NotebookCellOutput(
-                        [
-                            new NotebookCellOutputItem(CellOutputMimeTypes.stdout, 'NoError', {
-                                outputType: 'stream'
-                            })
-                        ],
-                        {
-                            outputType: 'stream'
-                        }
-                    )
+                    new NotebookCellOutput([NotebookCellOutputItem.stderr('Error')], {
+                        outputType: 'stream'
+                    }),
+                    new NotebookCellOutput([NotebookCellOutputItem.stdout('NoError')], {
+                        outputType: 'stream'
+                    })
                 ]
             );
         });
@@ -139,15 +126,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 ],
                 [
                     new NotebookCellOutput(
-                        [
-                            new NotebookCellOutputItem(
-                                CellOutputMimeTypes.stderr,
-                                '\u001b[K\u001b[33m✅ \u001b[0m Loading\n',
-                                {
-                                    outputType: 'stream'
-                                }
-                            )
-                        ],
+                        [NotebookCellOutputItem.stderr('\u001b[K\u001b[33m✅ \u001b[0m Loading\n')],
                         {
                             outputType: 'stream'
                         }
@@ -165,16 +144,9 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     }
                 ],
                 [
-                    new NotebookCellOutput(
-                        [
-                            new NotebookCellOutputItem(CellOutputMimeTypes.stderr, '1 is < 2', {
-                                outputType: 'stream'
-                            })
-                        ],
-                        {
-                            outputType: 'stream'
-                        }
-                    )
+                    new NotebookCellOutput([NotebookCellOutputItem.stderr('1 is < 2')], {
+                        outputType: 'stream'
+                    })
                 ]
             );
         });
@@ -189,15 +161,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 ],
                 [
                     new NotebookCellOutput(
-                        [
-                            new NotebookCellOutputItem(
-                                CellOutputMimeTypes.stderr,
-                                '1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n',
-                                {
-                                    outputType: 'stream'
-                                }
-                            )
-                        ],
+                        [NotebookCellOutputItem.stderr('1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n')],
                         {
                             outputType: 'stream'
                         }
@@ -218,15 +182,11 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 [
                     new NotebookCellOutput(
                         [
-                            new NotebookCellOutputItem(
-                                CellOutputMimeTypes.error,
-                                {
-                                    ename: 'Error Name',
-                                    evalue: 'Error Value',
-                                    traceback: ['stack1', 'stack2', 'stack3']
-                                },
-                                { outputType: 'error' }
-                            )
+                            NotebookCellOutputItem.error({
+                                name: 'Error Name',
+                                message: 'Error Value',
+                                stack: ['stack1', 'stack2', 'stack3'].join('\n')
+                            })
                         ],
                         { outputType: 'error' }
                     )
@@ -261,7 +221,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('text/plain', 'Hello World!', {
+                                    new NotebookCellOutputItem('text/plain', Buffer.from('Hello World!', 'utf8'), {
                                         outputType: output_type,
                                         metadata: {}, // display_data & execute_result always have metadata.
                                         executionCount: 1
@@ -284,8 +244,8 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             {
                                 execution_count: 1,
                                 data: {
-                                    'image/png': 'base64PNG',
-                                    'image/jpeg': 'base64JPEG'
+                                    'image/png': base64EncodedImage,
+                                    'image/jpeg': base64EncodedImage
                                 },
                                 metadata: {},
                                 output_type
@@ -294,16 +254,20 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', 'base64PNG', {
+                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
                                         executionCount: 1,
                                         outputType: output_type,
                                         metadata: {} // display_data & execute_result always have metadata.
                                     }),
-                                    new NotebookCellOutputItem('image/jpeg', 'base64JPEG', {
-                                        executionCount: 1,
-                                        outputType: output_type,
-                                        metadata: {} // display_data & execute_result always have metadata.
-                                    })
+                                    new NotebookCellOutputItem(
+                                        'image/jpeg',
+                                        Buffer.from(base64EncodedImage, 'base64'),
+                                        {
+                                            executionCount: 1,
+                                            outputType: output_type,
+                                            metadata: {} // display_data & execute_result always have metadata.
+                                        }
+                                    )
                                 ],
                                 {
                                     executionCount: 1,
@@ -321,7 +285,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             {
                                 execution_count: 1,
                                 data: {
-                                    'image/png': 'base64PNG'
+                                    'image/png': base64EncodedImage
                                 },
                                 metadata: {
                                     needs_background: 'light'
@@ -332,7 +296,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', 'base64PNG', {
+                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
                                         executionCount: 1,
                                         metadata: {
                                             needs_background: 'light'
@@ -358,7 +322,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             {
                                 execution_count: 1,
                                 data: {
-                                    'image/png': 'base64PNG'
+                                    'image/png': base64EncodedImage
                                 },
                                 metadata: {
                                     needs_background: 'dark'
@@ -369,7 +333,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', 'base64PNG', {
+                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
                                         executionCount: 1,
                                         metadata: {
                                             needs_background: 'dark'
@@ -395,7 +359,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             {
                                 execution_count: 1,
                                 data: {
-                                    'image/png': 'base64PNG'
+                                    'image/png': base64EncodedImage
                                 },
                                 metadata: {
                                     'image/png': { height: '111px', width: '999px' }
@@ -406,7 +370,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', 'base64PNG', {
+                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
                                         executionCount: 1,
                                         metadata: {
                                             'image/png': { height: '111px', width: '999px' }
@@ -432,7 +396,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             {
                                 execution_count: 1,
                                 data: {
-                                    'image/png': 'base64PNG'
+                                    'image/png': base64EncodedImage
                                 },
                                 metadata: {
                                     unconfined: true,
@@ -444,7 +408,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', 'base64PNG', {
+                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
                                         executionCount: 1,
                                         metadata: {
                                             unconfined: true,
