@@ -1820,7 +1820,7 @@
                 "priority": "option"
             }
         ],
-        "notebookOutputRenderer": [
+        "notebookRenderer": [
             {
                 "id": "jupyter-ipywidget-renderer",
                 "entrypoint": "./out/datascience-ui/ipywidgetsRenderer/ipywidgetsRenderer.js",
