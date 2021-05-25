@@ -118,7 +118,7 @@ suite('DataScience - View tracker', () => {
         open(instance(untitled1));
         open(instance(editor2));
         await activate();
-        expect(openedList).to.not.include(untitledFile.toString(), 'First file should not open because not modified');
+        expect(openedList).to.include(untitledFile.toString(), 'First file should not open because not modified');
         expect(openedList).to.include(file2.toString(), 'Second file did not open');
         open(instance(untitled1));
         untitledChangeEvent.fire({ kind: 'clear', oldCells: [], oldDirty: false, newDirty: false, source: 'user' });
