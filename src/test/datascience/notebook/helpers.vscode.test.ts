@@ -18,7 +18,8 @@ import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/const
 import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
 use(chaiExclude);
 suite('DataScience - VSCode Notebook - helpers', () => {
-    const base64EncodedImage = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mOUlZL6DwAB/wFSU1jVmgAAAABJRU5ErkJggg==';
+    const base64EncodedImage =
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mOUlZL6DwAB/wFSU1jVmgAAAABJRU5ErkJggg==';
     test('Convert NotebookModel to VSCode NotebookData', async () => {
         const cells = [
             {
@@ -258,11 +259,15 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                                         outputType: output_type,
                                         metadata: {} // display_data & execute_result always have metadata.
                                     }),
-                                    new NotebookCellOutputItem('image/jpeg', Buffer.from(base64EncodedImage, 'base64'), {
-                                        executionCount: 1,
-                                        outputType: output_type,
-                                        metadata: {} // display_data & execute_result always have metadata.
-                                    })
+                                    new NotebookCellOutputItem(
+                                        'image/jpeg',
+                                        Buffer.from(base64EncodedImage, 'base64'),
+                                        {
+                                            executionCount: 1,
+                                            outputType: output_type,
+                                            metadata: {} // display_data & execute_result always have metadata.
+                                        }
+                                    )
                                 ],
                                 {
                                     executionCount: 1,
@@ -280,8 +285,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             {
                                 execution_count: 1,
                                 data: {
-                                    'image/png':
-                                    base64EncodedImage
+                                    'image/png': base64EncodedImage
                                 },
                                 metadata: {
                                     needs_background: 'light'
