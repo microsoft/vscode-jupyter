@@ -414,7 +414,13 @@ export function setUpDomEnvironment() {
             content += 'export function getCSSBasedConfiguration() { return CSSBasedConfiguration.INSTANCE; };\n';
             mod._compile(content, filename);
         } else {
-            _oldLoader(mod, filename);
+            try {
+                _oldLoader(mod, filename);
+            } catch (e) {
+                console.error(e);
+                console.error(mod);
+                console.error(filename);
+            }
         }
     };
 }
