@@ -40,6 +40,7 @@ interface IVariableExplorerProps {
     closeVariableExplorer(): void;
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): void;
     pageIn(startIndex: number, pageSize: number): void;
+    sort(sortColumn: string, sortAscending: boolean): void;
     standaloneMode?: boolean;
     viewHeight: number;
 }
@@ -108,6 +109,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
         this.setInitialHeight = this.setInitialHeight.bind(this);
         this.saveCurrentSize = this.saveCurrentSize.bind(this);
+        this.sortRows = this.sortRows.bind(this);
 
         this.gridColumns = [
             {
@@ -129,6 +131,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 name: getLocString('DataScience.variableExplorerNameColumn', 'Name'),
                 type: 'string',
                 width: 120,
+                sortable: true,
                 formatter: this.formatNameColumn,
                 headerRenderer: <VariableExplorerHeaderCellFormatter />
             },
@@ -298,6 +301,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     onRowDoubleClick={this.rowDoubleClick}
                     emptyRowsView={VariableExplorerEmptyRowsView}
                     rowRenderer={VariableExplorerRowRenderer}
+                    onGridSort={this.sortRows}
                 />
             </div>
         );
@@ -498,4 +502,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             this.props.showDataExplorer(row.buttons.variable, row.buttons.numberOfColumns);
         }
     };
+
+    private sortRows(sortColumn: string, sortDirection: 'ASC' | 'DESC' | 'NONE') {
+        const sortAscending = sortDirection === 'ASC';
+        if (sortDirection === 'NONE') {
+            this.props.sort('name', true);
+        } else {
+            this.props.sort(sortColumn, sortAscending);
+        }
+    }
 }
