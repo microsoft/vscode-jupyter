@@ -25,17 +25,18 @@ import { NotebookSerializer } from '../../../client/datascience/notebook/noteboo
 suite('DataScience - VSCode Notebook ContentProvider', () => {
     let contentProvider: NotebookSerializer;
     const disposables: IDisposable[] = [];
+    let languageService: NotebookCellLanguageService;
     setup(async () => {
         const vscNotebooks = mock<IVSCodeNotebook>();
         when(vscNotebooks.onDidSaveNotebookDocument).thenReturn(new EventEmitter<NotebookDocument>().event);
         const memento = mock<Memento>();
         when(memento.get(anything())).thenReturn();
-        const languageService = mock<NotebookCellLanguageService>();
-        when(languageService.getPreferredLanguage(anything())).thenReturn(PYTHON_LANGUAGE);
+        languageService = mock<NotebookCellLanguageService>();
         contentProvider = new NotebookSerializer(instance(languageService));
     });
     teardown(() => disposeAllDisposables(disposables));
     test('Return notebook with 2 cells', async () => {
+        when(languageService.getPreferredLanguage(anything())).thenReturn(PYTHON_LANGUAGE);
         const json: nbformat.INotebookContent = {
             metadata: {
                 orig_nbformat: 4
@@ -58,7 +59,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
             ]
         };
 
-        const notebook = await contentProvider.deserializeNotebook(
+        const notebook = contentProvider.deserializeNotebook(
             Buffer.from(JSON.stringify(json), 'utf-8'),
             new CancellationTokenSource().token
         );
@@ -67,6 +68,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
     });
 
     test('Return notebook with csharp language', async () => {
+        when(languageService.getPreferredLanguage(anything())).thenReturn('csharp');
         const json: nbformat.INotebookContent = {
             nbformat: 4,
             nbformat_minor: 2,
@@ -92,7 +94,7 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
             ]
         };
 
-        const notebook = await contentProvider.deserializeNotebook(
+        const notebook = contentProvider.deserializeNotebook(
             Buffer.from(JSON.stringify(json), 'utf-8'),
             new CancellationTokenSource().token
         );
