@@ -426,7 +426,8 @@ export class NotebookCellStateTracker implements IDisposable {
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
-        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${cell.executionSummary?.executionOrder
+        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
+            cell.executionSummary?.executionOrder
         }. ${message}`
     );
 }
@@ -645,12 +646,12 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
             traceback: []
         };
     }
-    const value: Error = JSON.parse(Buffer.from(firstItem.value as Uint8Array).toString('utf8'));
+    const value: nbformat.IError = JSON.parse(Buffer.from(firstItem.value as Uint8Array).toString('utf8'));
     return {
         output_type: 'error',
-        ename: value.name,
-        evalue: value.message,
-        traceback: splitMultilineString(value.stack || '')
+        ename: value.ename,
+        evalue: value.evalue,
+        traceback: value.traceback
     };
 }
 
@@ -665,11 +666,10 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
         return JSON.parse(stringValue);
     } else if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
         return stringValue;
-    } else if (mime.startsWith('image/') && stringValue.startsWith('data:image/') && stringValue.includes(';base64,')) {
+    } else if (mime.startsWith('image/')) {
         // Images in Jupyter are stored in base64 encoded format.
         // VS Code expects bytes when rendering images.
-        const base64String = mime.substring(mime.indexOf(';base64,') + ';base64,'.length);
-        return Buffer.from(base64String, 'base64');
+        return Buffer.from(stringValue, 'base64');
     } else if (mime.toLowerCase().includes('json')) {
         return JSON.parse(stringValue);
     } else {

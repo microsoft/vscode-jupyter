@@ -18,6 +18,7 @@ import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/const
 import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
 use(chaiExclude);
 suite('DataScience - VSCode Notebook - helpers', () => {
+    const base64EncodedImage = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mOUlZL6DwAB/wFSU1jVmgAAAABJRU5ErkJggg==';
     test('Convert NotebookModel to VSCode NotebookData', async () => {
         const cells = [
             {
@@ -242,8 +243,8 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             {
                                 execution_count: 1,
                                 data: {
-                                    'image/png': 'base64PNG',
-                                    'image/jpeg': 'base64JPEG'
+                                    'image/png': base64EncodedImage,
+                                    'image/jpeg': base64EncodedImage
                                 },
                                 metadata: {},
                                 output_type
@@ -252,12 +253,12 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', Buffer.from('base64PNG', 'utf8'), {
+                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
                                         executionCount: 1,
                                         outputType: output_type,
                                         metadata: {} // display_data & execute_result always have metadata.
                                     }),
-                                    new NotebookCellOutputItem('image/jpeg', Buffer.from('base64JPEG', 'utf8'), {
+                                    new NotebookCellOutputItem('image/jpeg', Buffer.from(base64EncodedImage, 'base64'), {
                                         executionCount: 1,
                                         outputType: output_type,
                                         metadata: {} // display_data & execute_result always have metadata.
@@ -279,7 +280,8 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             {
                                 execution_count: 1,
                                 data: {
-                                    'image/png': 'base64PNG'
+                                    'image/png':
+                                    base64EncodedImage
                                 },
                                 metadata: {
                                     needs_background: 'light'
@@ -290,7 +292,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', Buffer.from('base64PNG', 'utf8'), {
+                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
                                         executionCount: 1,
                                         metadata: {
                                             needs_background: 'light'
@@ -316,7 +318,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             {
                                 execution_count: 1,
                                 data: {
-                                    'image/png': 'base64PNG'
+                                    'image/png': base64EncodedImage
                                 },
                                 metadata: {
                                     needs_background: 'dark'
@@ -327,7 +329,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', Buffer.from('base64PNG', 'utf8'), {
+                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
                                         executionCount: 1,
                                         metadata: {
                                             needs_background: 'dark'
@@ -353,7 +355,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             {
                                 execution_count: 1,
                                 data: {
-                                    'image/png': 'base64PNG'
+                                    'image/png': base64EncodedImage
                                 },
                                 metadata: {
                                     'image/png': { height: '111px', width: '999px' }
@@ -364,7 +366,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', Buffer.from('base64PNG', 'utf8'), {
+                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
                                         executionCount: 1,
                                         metadata: {
                                             'image/png': { height: '111px', width: '999px' }
@@ -390,7 +392,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             {
                                 execution_count: 1,
                                 data: {
-                                    'image/png': 'base64PNG'
+                                    'image/png': base64EncodedImage
                                 },
                                 metadata: {
                                     unconfined: true,
@@ -402,7 +404,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', Buffer.from('base64PNG', 'utf8'), {
+                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
                                         executionCount: 1,
                                         metadata: {
                                             unconfined: true,
