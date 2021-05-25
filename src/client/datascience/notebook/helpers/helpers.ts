@@ -560,8 +560,7 @@ function translateDisplayDataOutput(
     for (const key in data) {
         // Add metadata to all (its the same)
         // We can optionally remove metadata that belongs to other mime types (feels like over optimization, hence not doing that).
-        const value = key.toLowerCase().includes('json') ? JSON.stringify(data[key]) : data[key];
-        items.push(new NotebookCellOutputItem(key, Buffer.from(value, 'utf8'), metadata));
+        items.push(new NotebookCellOutputItem(key, convertJupyterOutputToBuffer(key, data[key]), metadata));
     }
 
     return new NotebookCellOutput(sortOutputItemsBasedOnDisplayOrder(items), metadata);
@@ -638,6 +637,15 @@ export type CellOutputMetadata = {
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
     // it should have at least one output item
     const firstItem = output.outputs[0];
+    // Bug in VS Code.
+    if (!firstItem.value) {
+        return {
+            output_type: 'error',
+            ename: '',
+            evalue: '',
+            traceback: []
+        };
+    }
     const value: nbformat.IError = JSON.parse(Buffer.from(firstItem.value as Uint8Array).toString('utf8'));
     return {
         output_type: 'error',
@@ -647,6 +655,41 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
     };
 }
 
+const textMimeTypes = ['text/plain', 'text/markdown', CellOutputMimeTypes.stderr, CellOutputMimeTypes.stdout];
+function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
+    if (!value) {
+        return '';
+    }
+    const stringValue = Buffer.from(value as Uint8Array).toString('utf8');
+    if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
+        return stringValue;
+    } else if (mime.startsWith('image/') && stringValue.startsWith('data:image/') && stringValue.includes(';base64,')) {
+        // Images in Jupyter are stored in base64 encoded format.
+        // VS Code expects bytes when rendering images.
+        const base64String = mime.substring(mime.indexOf(';base64,') + ';base64,'.length);
+        return Buffer.from(base64String, 'base64');
+    } else if (mime.toLowerCase().includes('json')) {
+        return JSON.parse(stringValue);
+    } else {
+        return stringValue;
+    }
+}
+function convertJupyterOutputToBuffer(mime: string, value: unknown): Buffer {
+    if (!value) {
+        return Buffer.from('');
+    }
+    if ((mime.startsWith('text/') || textMimeTypes.includes(mime)) && typeof value === 'string') {
+        return Buffer.from(value);
+    } else if (mime.startsWith('image/') && typeof value === 'string') {
+        // Images in Jupyter are stored in base64 encoded format.
+        // VS Code expects bytes when rendering images.
+        return Buffer.from(value, 'base64');
+    } else if (mime.toLowerCase().includes('json')) {
+        return Buffer.from(JSON.stringify(value));
+    } else {
+        return Buffer.from(value as string);
+    }
+}
 export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
     const customMetadata = output.metadata as CellOutputMetadata | undefined;
     let result: JupyterOutput;
@@ -661,7 +704,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
         case 'stream': {
             const outputs = output.outputs
                 .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
-                .map((opit) => Buffer.from(opit.value as Uint8Array).toString('utf8'))
+                .map((opit) => convertOutputMimeToJupyterOutput(opit.mime, opit.value as Uint8Array) as string)
                 .reduceRight<string[]>(
                     (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
                     []
@@ -681,8 +724,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    const value = Buffer.from(curr.value as Uint8Array).toString('utf8');
-                    prev[curr.mime] = curr.mime.toLowerCase().includes('json') ? JSON.parse(value) : value;
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.value as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {} // This can never be undefined.
@@ -694,8 +736,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'execute_result',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    const value = Buffer.from(curr.value as Uint8Array).toString('utf8');
-                    prev[curr.mime] = curr.mime.toLowerCase().includes('json') ? JSON.parse(value) : value;
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.value as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {}, // This can never be undefined.
@@ -709,8 +750,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'update_display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    const value = Buffer.from(curr.value as Uint8Array).toString('utf8');
-                    prev[curr.mime] = curr.mime.toLowerCase().includes('json') ? JSON.parse(value) : value;
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.value as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {} // This can never be undefined.
@@ -731,8 +771,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             if (output.outputs.length > 0) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => {
-                    const value = Buffer.from(curr.value as Uint8Array).toString('utf8');
-                    prev[curr.mime] = curr.mime.toLowerCase().includes('json') ? JSON.parse(value) : value;
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.value as Uint8Array);
                     return prev;
                 }, {});
             }
@@ -778,7 +817,7 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
     );
 
     if (item) {
-        return Buffer.from(item.value as Uint8Array).toString('utf8');
+        return convertOutputMimeToJupyterOutput(item.mime, item.value as Uint8Array);
     }
     return '';
 }
