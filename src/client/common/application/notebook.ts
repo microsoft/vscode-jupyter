@@ -12,6 +12,7 @@ import {
     NotebookData,
     NotebookDocument,
     NotebookDocumentContentOptions,
+    NotebookDocumentShowOptions,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookExecuteHandler,
@@ -22,6 +23,7 @@ import {
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
 import { IDisposableRegistry } from '../types';
+import { isUri } from '../utils/misc';
 import { IApplicationEnvironment, IVSCodeNotebook, NotebookCellChangedEvent } from './types';
 
 @injectable()
@@ -87,6 +89,22 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             return notebook.openNotebookDocument(viewOrUri, content);
         } else {
             return notebook.openNotebookDocument(viewOrUri);
+        }
+    }
+
+    public async showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Promise<NotebookEditor>;
+    public async showNotebookDocument(
+        document: NotebookDocument,
+        options?: NotebookDocumentShowOptions
+    ): Promise<NotebookEditor>;
+    public async showNotebookDocument(
+        uriOrDocument: Uri | NotebookDocument,
+        options?: NotebookDocumentShowOptions
+    ): Promise<NotebookEditor> {
+        if (isUri(uriOrDocument)) {
+            return window.showNotebookDocument(uriOrDocument, options);
+        } else {
+            return window.showNotebookDocument(uriOrDocument, options);
         }
     }
 

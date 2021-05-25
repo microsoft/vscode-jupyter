@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { NotebookCell, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
@@ -26,7 +27,8 @@ import {
     insertCodeCell,
     saveActiveNotebook,
     waitForExecutionCompletedSuccessfully,
-    waitForExecutionCompletedWithErrors
+    waitForExecutionCompletedWithErrors,
+    waitForKernelToGetAutoSelected
 } from './helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -78,6 +80,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             cell4 = vscodeNotebook.activeNotebookEditor?.document.getCells()![3]!;
         }
         initializeCells();
+        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         await runAllCellsInActiveNotebook();
         // Wait till 1 & 2 finish & 3rd cell starts executing.
         await waitForExecutionCompletedSuccessfully(cell1!);

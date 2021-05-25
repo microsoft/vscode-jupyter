@@ -202,7 +202,6 @@ module.exports = {
         'src/test/datascience/intellisense.functional.test.tsx',
         'src/test/datascience/raw-kernel/rawKernelTestHelpers.ts',
         'src/test/datascience/color.test.ts',
-        'src/test/datascience/nativeEditorViewTracker.unit.test.ts',
         'src/test/datascience/mockFileSystem.ts',
         'src/test/datascience/interactive-common/',
         'src/test/datascience/interactive-common/trustCommandHandler.unit.test.ts',
