@@ -426,8 +426,7 @@ export class NotebookCellStateTracker implements IDisposable {
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
-        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
-            cell.executionSummary?.executionOrder
+        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${cell.executionSummary?.executionOrder
         }. ${message}`
     );
 }
@@ -646,12 +645,12 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
             traceback: []
         };
     }
-    const value: nbformat.IError = JSON.parse(Buffer.from(firstItem.value as Uint8Array).toString('utf8'));
+    const value: Error = JSON.parse(Buffer.from(firstItem.value as Uint8Array).toString('utf8'));
     return {
         output_type: 'error',
-        ename: value.ename,
-        evalue: value.evalue,
-        traceback: value.traceback
+        ename: value.name,
+        evalue: value.message,
+        traceback: splitMultilineString(value.stack || '')
     };
 }
 
@@ -661,7 +660,10 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
         return '';
     }
     const stringValue = Buffer.from(value as Uint8Array).toString('utf8');
-    if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
+    if (mime === CellOutputMimeTypes.error) {
+        traceInfo(`Concerting ${mime} from ${stringValue}`);
+        return JSON.parse(stringValue);
+    } else if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
         return stringValue;
     } else if (mime.startsWith('image/') && stringValue.startsWith('data:image/') && stringValue.includes(';base64,')) {
         // Images in Jupyter are stored in base64 encoded format.
