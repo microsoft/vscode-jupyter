@@ -115,6 +115,6 @@ suite('PythonProcessService', () => {
 
         const result = procs.execModule(moduleName, args, options);
 
-        expect(result).to.eventually.be.rejectedWith(`Module '${moduleName}' not installed`);
+        void expect(result).to.eventually.be.rejectedWith(`Module '${moduleName}' not installed`);
     });
 });
