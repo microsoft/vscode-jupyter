@@ -1,17 +1,17 @@
 .react-grid-variable-explorer-cell-variable {
-    color: var(--code-variable-color, var(--vscode-editor-foreground));
+    color: var(--vscode-editor-foreground);
 }
 
 .react-grid-variable-explorer-cell-type {
-    color: var(--code-type-color, var(--vscode-editor-foreground));
+    color: var(--vscode-editor-foreground);
 }
 
 .react-grid-variable-explorer-cell-string {
-    color: var(--code-string-color, var(--vscode-editor-foreground));
+    color: var(--vscode-editor-foreground);
 }
 
 .react-grid-variable-explorer-cell-numeric {
-    color: var(--code-numeric-color, var(--vscode-editor-foreground));
+    color: var(--vscode-editor-foreground);
 }
 
 /* High contrast uses an inverse for selection highlights, so just use foreground when hovering */
