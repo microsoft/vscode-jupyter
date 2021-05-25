@@ -560,23 +560,17 @@ function translateDisplayDataOutput(
     for (const key in data) {
         // Add metadata to all (its the same)
         // We can optionally remove metadata that belongs to other mime types (feels like over optimization, hence not doing that).
-        items.push(new NotebookCellOutputItem(key, data[key], metadata));
+        const value = key.toLowerCase().includes('json') ? JSON.stringify(data[key]) : data[key];
+        items.push(new NotebookCellOutputItem(key, Buffer.from(value, 'utf8'), metadata));
     }
 
     return new NotebookCellOutput(sortOutputItemsBasedOnDisplayOrder(items), metadata);
 }
 
 function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
-    return new NotebookCellOutput(
-        [
-            new NotebookCellOutputItem(
-                output.name === 'stderr' ? CellOutputMimeTypes.stderr : CellOutputMimeTypes.stdout,
-                concatMultilineString(output.text),
-                getOutputMetadata(output)
-            )
-        ],
-        getOutputMetadata(output)
-    );
+    const value = concatMultilineString(output.text);
+    const factoryFn = output.name === 'stderr' ? NotebookCellOutputItem.stderr : NotebookCellOutputItem.stdout;
+    return new NotebookCellOutput([factoryFn(value)], getOutputMetadata(output));
 }
 
 export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: string): boolean {
@@ -760,15 +754,11 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
 export function translateErrorOutput(output: nbformat.IError): NotebookCellOutput {
     return new NotebookCellOutput(
         [
-            new NotebookCellOutputItem(
-                CellOutputMimeTypes.error,
-                {
-                    ename: output.ename,
-                    evalue: output.evalue,
-                    traceback: output.traceback
-                },
-                getOutputMetadata(output)
-            )
+            NotebookCellOutputItem.error({
+                name: output.ename,
+                message: output.evalue,
+                stack: output.traceback.join('\n')
+            })
         ],
         getOutputMetadata(output)
     );
