@@ -638,12 +638,12 @@ export type CellOutputMetadata = {
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
     // it should have at least one output item
     const firstItem = output.outputs[0];
-
+    const value: nbformat.IError = JSON.parse(Buffer.from(firstItem.value as Uint8Array).toString('utf8'));
     return {
         output_type: 'error',
-        ename: (firstItem.value as nbformat.IError).ename,
-        evalue: (firstItem.value as nbformat.IError).evalue,
-        traceback: (firstItem.value as nbformat.IError).traceback
+        ename: value.ename,
+        evalue: value.evalue,
+        traceback: value.traceback
     };
 }
 
@@ -661,7 +661,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
         case 'stream': {
             const outputs = output.outputs
                 .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
-                .map((opit) => opit.value as string | string[])
+                .map((opit) => Buffer.from(opit.value as Uint8Array).toString('utf8'))
                 .reduceRight<string[]>(
                     (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
                     []
@@ -681,7 +681,8 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                    const value = Buffer.from(curr.value as Uint8Array).toString('utf8');
+                    prev[curr.mime] = curr.mime.toLowerCase().includes('json') ? JSON.parse(value) : value;
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {} // This can never be undefined.
@@ -693,7 +694,8 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'execute_result',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                    const value = Buffer.from(curr.value as Uint8Array).toString('utf8');
+                    prev[curr.mime] = curr.mime.toLowerCase().includes('json') ? JSON.parse(value) : value;
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {}, // This can never be undefined.
@@ -707,7 +709,8 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'update_display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                    const value = Buffer.from(curr.value as Uint8Array).toString('utf8');
+                    prev[curr.mime] = curr.mime.toLowerCase().includes('json') ? JSON.parse(value) : value;
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {} // This can never be undefined.
@@ -728,7 +731,8 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             if (output.outputs.length > 0) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                    const value = Buffer.from(curr.value as Uint8Array).toString('utf8');
+                    prev[curr.mime] = curr.mime.toLowerCase().includes('json') ? JSON.parse(value) : value;
                     return prev;
                 }, {});
             }
@@ -765,16 +769,18 @@ export function translateErrorOutput(output: nbformat.IError): NotebookCellOutpu
 }
 
 export function getTextOutputValue(output: NotebookCellOutput): string {
-    return (
-        (output.outputs.find(
-            (opit) =>
-                opit.mime === CellOutputMimeTypes.stdout ||
-                opit.mime === CellOutputMimeTypes.stderr ||
-                opit.mime === 'text/plain' ||
-                opit.mime === 'text/markdown'
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        )?.value as any) || ''
+    const item = output.outputs.find(
+        (opit) =>
+            opit.mime === CellOutputMimeTypes.stdout ||
+            opit.mime === CellOutputMimeTypes.stderr ||
+            opit.mime === 'text/plain' ||
+            opit.mime === 'text/markdown'
     );
+
+    if (item) {
+        return Buffer.from(item.value as Uint8Array).toString('utf8');
+    }
+    return '';
 }
 export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
     const errorOutput = outputs.find(
