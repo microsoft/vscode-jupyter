@@ -133,12 +133,14 @@ export class VSCodeNotebookController implements Disposable {
 
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         this.controller.updateNotebookAffinity(notebook, affinity);
-        // Only on CI Server.
+        // Only when running tests should we force the selection of the kernel.
+        // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
         if (this.context.extensionMode === ExtensionMode.Test) {
             await this.commandManager.executeCommand('notebook.selectKernel', {
                 id: this.id,
                 extension: JVSC_EXTENSION_ID
             });
+            // Used in tests to determine when the controller has been associated with a document.
             VSCodeNotebookController.kernelAssociatedWithDocument = true;
         }
     }

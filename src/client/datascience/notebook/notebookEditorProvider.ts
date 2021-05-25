@@ -154,6 +154,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const serializer = this.serviceContainer.get<NotebookSerializer>(NotebookSerializer);
         const data = serializer.deserializeNotebook(Buffer.from(json, 'utf8'), new CancellationTokenSource().token);
         const doc = await this.vscodeNotebook.openNotebookDocument(JupyterNotebookView, data);
+        await this.vscodeNotebook.showNotebookDocument(doc);
         return this.open(doc.uri);
     }
     private onEditorOpened(editor: INotebookEditor): void {

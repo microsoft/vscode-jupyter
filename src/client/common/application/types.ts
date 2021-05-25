@@ -70,7 +70,8 @@ import {
     NotebookRendererScript,
     NotebookController,
     NotebookSerializer,
-    NotebookData
+    NotebookData,
+    NotebookDocumentShowOptions
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -1591,6 +1592,8 @@ export interface IVSCodeNotebook {
     ): NotebookController;
     openNotebookDocument(uri: Uri): Thenable<NotebookDocument>;
     openNotebookDocument(viewType: string, content?: NotebookData): Promise<NotebookDocument>;
+    showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
+    showNotebookDocument(document: NotebookDocument, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
 }
 
 export const IEncryptedStorage = Symbol('IAuthenticationService');

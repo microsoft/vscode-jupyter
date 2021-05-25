@@ -94,13 +94,13 @@ export class NotebookSerializer implements VSCNotebookSerializer {
                 ? data.metadata.indentAmount
                 : ' ';
 
-        if (data instanceof NotebookData) {
-            json.cells = data.cells.map((cell) => createJupyterCellFromVSCNotebookCell(cell)).map(pruneCell);
-        } else {
+        if ('viewType' in data) {
             json.cells = data
                 .getCells()
                 .map((cell) => createJupyterCellFromVSCNotebookCell(cell))
                 .map(pruneCell);
+        } else {
+            json.cells = data.cells.map((cell) => createJupyterCellFromVSCNotebookCell(cell)).map(pruneCell);
         }
 
         return JSON.stringify(json, undefined, indentAmount);
