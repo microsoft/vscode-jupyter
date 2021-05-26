@@ -13,6 +13,7 @@ _VSCode_supportsDataExplorer = [
     "DataFrame",
     "Tensor",
     "EagerTensor",
+    "DataArray",
 ]
 
 # who_ls is a Jupyter line magic to fetch currently defined vars
