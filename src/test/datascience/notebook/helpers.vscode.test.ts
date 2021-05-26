@@ -221,7 +221,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('text/plain', Buffer.from('Hello World!', 'utf8'), {
+                                    new NotebookCellOutputItem(Buffer.from('Hello World!', 'utf8'), 'text/plain', {
                                         outputType: output_type,
                                         metadata: {}, // display_data & execute_result always have metadata.
                                         executionCount: 1
@@ -254,14 +254,14 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
+                                    new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png', {
                                         executionCount: 1,
                                         outputType: output_type,
                                         metadata: {} // display_data & execute_result always have metadata.
                                     }),
                                     new NotebookCellOutputItem(
-                                        'image/jpeg',
                                         Buffer.from(base64EncodedImage, 'base64'),
+                                        'image/jpeg',
                                         {
                                             executionCount: 1,
                                             outputType: output_type,
@@ -296,7 +296,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
+                                    new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png', {
                                         executionCount: 1,
                                         metadata: {
                                             needs_background: 'light'
@@ -333,7 +333,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
+                                    new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png', {
                                         executionCount: 1,
                                         metadata: {
                                             needs_background: 'dark'
@@ -370,7 +370,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
+                                    new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png', {
                                         executionCount: 1,
                                         metadata: {
                                             'image/png': { height: '111px', width: '999px' }
@@ -408,7 +408,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         [
                             new NotebookCellOutput(
                                 [
-                                    new NotebookCellOutputItem('image/png', Buffer.from(base64EncodedImage, 'base64'), {
+                                    new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png', {
                                         executionCount: 1,
                                         metadata: {
                                             unconfined: true,
