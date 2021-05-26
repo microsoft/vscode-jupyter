@@ -59,7 +59,8 @@ export class NotebookSerializer implements VSCNotebookSerializer {
             preferredCellLanguage,
             json || {}
         );
-        data.metadata = data.metadata.with({ indentAmount });
+        // Temporary fix to spread values (bug in VSCode).
+        data.metadata = data.metadata.with({ indentAmount, ...data.metadata });
 
         return data;
     }
