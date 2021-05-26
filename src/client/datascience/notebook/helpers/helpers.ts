@@ -646,12 +646,15 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
             traceback: []
         };
     }
-    const value: nbformat.IError = JSON.parse(Buffer.from(firstItem.data as Uint8Array).toString('utf8'));
+    const originalError: undefined | nbformat.IError = firstItem.metadata?.originalError;
+    const value: Error = JSON.parse(Buffer.from(firstItem.data as Uint8Array).toString('utf8'));
     return {
         output_type: 'error',
-        ename: value.ename,
-        evalue: value.evalue,
-        traceback: value.traceback
+        ename: value.name,
+        evalue: value.message,
+        // VS Code needs an `Error` object which requires a `stack` property as a string.
+        // Its possible the format could change when converting from `traceback` to `string` and back again to `string`
+        traceback: originalError?.traceback || splitMultilineString(value.stack || '')
     };
 }
 
@@ -799,11 +802,14 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
 export function translateErrorOutput(output: nbformat.IError): NotebookCellOutput {
     return new NotebookCellOutput(
         [
-            NotebookCellOutputItem.error({
-                name: output.ename,
-                message: output.evalue,
-                stack: output.traceback.join('\n')
-            })
+            NotebookCellOutputItem.error(
+                {
+                    name: output.ename,
+                    message: output.evalue,
+                    stack: output.traceback.join('\n')
+                },
+                { ...getOutputMetadata(output), originalError: output }
+            )
         ],
         getOutputMetadata(output)
     );
