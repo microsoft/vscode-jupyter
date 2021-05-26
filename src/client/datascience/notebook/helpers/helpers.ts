@@ -638,7 +638,7 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
     // it should have at least one output item
     const firstItem = output.outputs[0];
     // Bug in VS Code.
-    if (!firstItem.value) {
+    if (!firstItem.data) {
         return {
             output_type: 'error',
             ename: '',
@@ -646,7 +646,7 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
             traceback: []
         };
     }
-    const value: nbformat.IError = JSON.parse(Buffer.from(firstItem.value as Uint8Array).toString('utf8'));
+    const value: nbformat.IError = JSON.parse(Buffer.from(firstItem.data as Uint8Array).toString('utf8'));
     return {
         output_type: 'error',
         ename: value.ename,
@@ -706,7 +706,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
         case 'stream': {
             const outputs = output.outputs
                 .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
-                .map((opit) => convertOutputMimeToJupyterOutput(opit.mime, opit.value as Uint8Array) as string)
+                .map((opit) => convertOutputMimeToJupyterOutput(opit.mime, opit.data as Uint8Array) as string)
                 .reduceRight<string[]>(
                     (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
                     []
@@ -726,7 +726,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.value as Uint8Array);
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {} // This can never be undefined.
@@ -738,7 +738,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'execute_result',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.value as Uint8Array);
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {}, // This can never be undefined.
@@ -752,7 +752,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'update_display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.value as Uint8Array);
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {} // This can never be undefined.
@@ -773,7 +773,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             if (output.outputs.length > 0) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.value as Uint8Array);
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {});
             }
@@ -819,7 +819,7 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
     );
 
     if (item) {
-        return convertOutputMimeToJupyterOutput(item.mime, item.value as Uint8Array);
+        return convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
     }
     return '';
 }
