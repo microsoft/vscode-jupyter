@@ -646,12 +646,15 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
             traceback: []
         };
     }
+    const originalError: undefined | nbformat.IError = firstItem.metadata?.originalError;
     const value: Error = JSON.parse(Buffer.from(firstItem.data as Uint8Array).toString('utf8'));
     return {
         output_type: 'error',
         ename: value.name,
         evalue: value.message,
-        traceback: splitMultilineString(value.stack || '')
+        // VS Code needs an `Error` object which requires a `stack` property as a string.
+        // Its possible the format could change when converting from `traceback` to `string` and back again to `string`
+        traceback: originalError?.traceback || splitMultilineString(value.stack || '')
     };
 }
 
@@ -805,7 +808,7 @@ export function translateErrorOutput(output: nbformat.IError): NotebookCellOutpu
                     message: output.evalue,
                     stack: output.traceback.join('\n')
                 },
-                getOutputMetadata(output)
+                { ...getOutputMetadata(output), originalError: output }
             )
         ],
         getOutputMetadata(output)
