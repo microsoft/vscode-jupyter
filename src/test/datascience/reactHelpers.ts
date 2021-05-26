@@ -422,8 +422,9 @@ export function setUpDomEnvironment() {
                 // node_modules\\vscode-languageclient\\lib\\common\\protocolCallHierarchyItem.js
                 if (e.stack.includes('protocolDiagnostic.js') || e.stack.includes('protocolCallHierarchyItem.js')) {
                     console.error(`Failed to load module for tests ${mod} in ${filename}`, e);
+                } else {
+                    throw e;
                 }
-                throw e;
             }
         }
     };
