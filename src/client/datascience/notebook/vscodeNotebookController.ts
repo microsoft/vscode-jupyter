@@ -6,6 +6,7 @@ import {
     Disposable,
     env,
     EventEmitter,
+    ExtensionMode,
     languages,
     NotebookCell,
     NotebookController,
@@ -51,6 +52,10 @@ export class VSCodeNotebookController implements Disposable {
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     public readonly controller: NotebookController;
+    /**
+     * Used purely for testing purposes.
+     */
+    public static kernelAssociatedWithDocument?: boolean;
     private isDisposed = false;
     get id() {
         return this.controller.id;
@@ -129,11 +134,12 @@ export class VSCodeNotebookController implements Disposable {
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         this.controller.updateNotebookAffinity(notebook, affinity);
         // Only on CI Server.
-        if (IS_CI_SERVER) {
+        if (this.context.extensionMode === ExtensionMode.Test) {
             await this.commandManager.executeCommand('notebook.selectKernel', {
                 id: this.id,
                 extension: JVSC_EXTENSION_ID
             });
+            VSCodeNotebookController.kernelAssociatedWithDocument = true;
         }
     }
 

@@ -232,6 +232,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
         // Dispose any cached python settings (used only in test env).
         configSettings.JupyterSettings.dispose();
     }
+    VSCodeNotebookController.kernelAssociatedWithDocument = undefined;
     await closeActiveWindows();
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
@@ -250,6 +251,7 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     if (!isInsiders()) {
         return false;
     }
+    VSCodeNotebookController.kernelAssociatedWithDocument = undefined;
     await closeActiveWindows();
     disposeAllDisposables(disposables);
 }
@@ -378,6 +380,13 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     await waitForCondition(async () => isRightKernel(), defaultTimeout, errorMessage);
     // If it works, make sure kernel has enough time to actually switch the active notebook to this
     // kernel (kernel changes are async)
+    await waitForCondition(
+        // This is a hack, we force VS Code to select a kernel (as though the user selected it).
+        // Without the hack, when running cells we get a prompt to select a kernel.
+        async () => VSCodeNotebookController.kernelAssociatedWithDocument === true,
+        5_000,
+        'Kernel not selected'
+    );
     await sleep(500);
     traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
 }
