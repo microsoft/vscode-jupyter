@@ -383,6 +383,7 @@ export function findPreferredKernel(
         let bestScore = -1;
         for (let i = 0; kernels && i < kernels?.length; i = i + 1) {
             const metadata = kernels[i];
+            traceInfo(`Searching for ${i}: ${JSON.stringify(metadata)}`);
             const spec = metadata.kind !== 'connectToLiveKernel' ? metadata.kernelSpec : undefined;
             const speclanguage = getKernelConnectionLanguage(metadata);
             let score = -1;

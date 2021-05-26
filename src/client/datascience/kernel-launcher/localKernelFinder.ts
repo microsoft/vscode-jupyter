@@ -135,6 +135,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
     // Search all our local file system locations for installed kernel specs and return them
     @captureTelemetry(Telemetry.KernelListingPerf)
+    @traceDecorators.verbose('listKernels')
     public async listKernels(
         resource: Resource,
         cancelToken?: CancellationToken
@@ -196,7 +197,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             this.getKernelSpecRootPath(),
             this.getActiveInterpreter(resource)
         ]);
-
+        traceInfo(`findResourceKernelMetadata kernelSpecs = ${JSON.stringify(kernelSpecs)}`);
+        traceInfo(`findResourceKernelMetadata interpreters = ${JSON.stringify(interpreters)}`);
         // Copy the interpreter list. We need to filter out those items
         // which have matched one or more kernelspecs
         let filteredInterpreters = [...interpreters];
@@ -234,6 +236,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                     return true;
                 })
                 .map(async (k) => {
+                    traceInfo(`dealing with kernel ${JSON.stringify(k)}`);
                     // Find the interpreter that matches. If we find one, we want to use
                     // this to start the kernel.
                     const matchingInterpreter = this.findMatchingInterpreter(k, interpreters);
@@ -326,6 +329,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         });
     }
 
+    @traceDecorators.verbose('findMatchingInterpreter')
     private findMatchingInterpreter(
         kernelSpec: IJupyterKernelSpec,
         interpreters: PythonEnvironment[]
@@ -350,6 +354,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             return false;
         });
         if (exactMatch) {
+            traceInfo(`Kernel ${kernelSpec.name} exactly matches ${exactMatch.displayName}`);
             return exactMatch;
         }
         // 2. Check if we have a fully qualified path in `argv`
@@ -367,6 +372,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             return false;
         });
         if (exactMatchBasedOnArgv) {
+            traceInfo(`Kernel ${kernelSpec.name} matches as argv ${exactMatchBasedOnArgv.displayName}`);
             return exactMatchBasedOnArgv;
         }
         // 2. Check if `interpreterPath` is defined in kernel metadata.
@@ -379,6 +385,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 return false;
             });
             if (matchBasedOnInterpreterPath) {
+                traceInfo(`Kernel ${kernelSpec.name} matches as based on path ${matchBasedOnInterpreterPath.displayName}`);
                 return matchBasedOnInterpreterPath;
             }
         }
