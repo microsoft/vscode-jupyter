@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as fastDeepEqual from 'fast-deep-equal';
 import { nbformat } from '@jupyterlab/coreutils';
 import {
     NotebookCellOutput,
@@ -18,7 +17,8 @@ import {
     NotebookCellExecutionState,
     notebook,
     NotebookCellExecutionStateChangeEvent,
-    NotebookCellExecutionSummary
+    NotebookCellExecutionSummary,
+    WorkspaceEdit
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { IVSCodeNotebook } from '../../../common/application/types';
@@ -27,9 +27,9 @@ import '../../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { KernelConnectionMetadata, NotebookCellRunState } from '../../jupyter/kernels/types';
+import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
-import { CellState, IJupyterKernelSpec } from '../../types';
+import { IJupyterKernelSpec } from '../../types';
 import { JupyterNotebookView } from '../constants';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
@@ -56,40 +56,34 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     }
 }
 
-const kernelInformationForNotebooks = new Map<
-    string,
-    { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']> }
->();
-
 export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeNotebook, fs: IFileSystem) {
     if (!resource) {
         return false;
     }
     return notebooks.notebookDocuments.some((item) => fs.arePathsSame(item.uri, resource));
 }
-function getDocumentId(document: NotebookDocument | NotebookData) {
-    return document.metadata.__vsc_id || '';
-}
 export function getNotebookMetadata(document: NotebookDocument | NotebookData): nbformat.INotebookMetadata | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
-
-    // If language isn't specified in the metadata, at least specify that
-    if (!notebookContent?.metadata?.language_info?.name) {
-        const content = notebookContent || {};
-        const metadata = content.metadata || { orig_nbformat: 3, language_info: {} };
-        const language_info = { ...metadata.language_info };
-        // Fix nyc compiler not working.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        notebookContent = { ...content, metadata: { ...metadata, language_info } } as any;
-    }
-    notebookContent = cloneDeep(notebookContent);
-    const data = kernelInformationForNotebooks.get(getDocumentId(document));
-    if (data && data.metadata) {
-        updateNotebookMetadata(notebookContent.metadata, data.metadata, data.kernelInfo);
-    }
-
+    const notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
     return notebookContent.metadata;
+}
+
+export async function updateNotebookDocumentMetadata(
+    document: NotebookDocument,
+    kernelConnection?: KernelConnectionMetadata,
+    kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
+) {
+    let metadata = getNotebookMetadata(document);
+    const { changed } = updateNotebookMetadata(metadata, kernelConnection, kernelInfo);
+    if (changed) {
+        const edit = new WorkspaceEdit();
+        const docMetadata = (document.metadata as {
+            custom?: Exclude<Partial<nbformat.INotebookContent>, 'cells'>;
+        }) || { custom: {} };
+
+        docMetadata.custom = docMetadata.custom || {};
+        docMetadata.custom.metadata = metadata;
+        await edit.replaceNotebookMetadata(document.uri, document.metadata.with({ custom: docMetadata.custom }));
+    }
 }
 
 export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
@@ -105,110 +99,6 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
 
     // Valid notebooks will have a language information in the metadata.
     return kernelSpec?.language === PYTHON_LANGUAGE || metadata?.language_info?.name === PYTHON_LANGUAGE;
-}
-/**
- * No need to update the notebook metadata just yet.
- * When users open a blank notebook and a kernel is auto selected, document is marked as dirty. Hence as soon as you create a blank notebook it is dr ity.
- * Similarly, if you open an existing notebook, it is marked as dirty.
- *
- * Solution: Store the metadata in some place, when saving, take the metadata & store in the file.
- * Thus this method doesn't update it, we merely keep track of the kernel information, and when saving we retrieve the information from the tracked location (map).
- *
- * If `kernelConnection` is empty, then when saving the notebook we will not update the
- * metadata in the notebook with any kernel information (we can't as its empty).
- *
- * @param {(KernelConnectionMetadata | undefined)} kernelConnection
- * This can be undefined when a kernels contributed by other VSC extensions is selected.
- * E.g. .NET extension can contribute their own extension. At this point they could
- * end up updating the notebook metadata themselves. We should not blow this metadata away. The way we achieve that is by clearing this stored kernel information & not updating the metadata.
- */
-export function trackKernelInNotebookMetadata(
-    document: NotebookDocument,
-    kernelConnection: KernelConnectionMetadata | undefined
-) {
-    const data = { ...(kernelInformationForNotebooks.get(getDocumentId(document)) || {}) };
-    data.metadata = kernelConnection;
-    let language: string | undefined;
-    switch (kernelConnection?.kind) {
-        case 'connectToLiveKernel':
-            language = kernelConnection.kernelModel.language;
-            break;
-        case 'startUsingKernelSpec':
-            language = kernelConnection.kernelSpec.language;
-            break;
-        case 'startUsingPythonInterpreter':
-            language = PYTHON_LANGUAGE;
-            break;
-        default:
-            break;
-    }
-    if (language) {
-        data.kernelInfo = {
-            language_info: {
-                name: language,
-                version: ''
-            }
-        };
-    } else {
-        data.kernelInfo = undefined;
-    }
-
-    kernelInformationForNotebooks.set(getDocumentId(document), data);
-}
-/**
- * Whether the kernel connection information tracked against the document is the same as the one provided.
- */
-export function isSameAsTrackedKernelInNotebookMetadata(
-    document: NotebookDocument,
-    kernelConnection: KernelConnectionMetadata
-) {
-    const data = { ...(kernelInformationForNotebooks.get(getDocumentId(document)) || {}) };
-    const expectedData: typeof data = { metadata: kernelConnection };
-    let language: string | undefined;
-    switch (kernelConnection?.kind) {
-        case 'connectToLiveKernel':
-            language = kernelConnection.kernelModel.language;
-            break;
-        case 'startUsingKernelSpec':
-            language = kernelConnection.kernelSpec.language;
-            break;
-        case 'startUsingPythonInterpreter':
-            language = PYTHON_LANGUAGE;
-            break;
-        default:
-            break;
-    }
-    if (language) {
-        expectedData.kernelInfo = {
-            language_info: {
-                name: language,
-                version: ''
-            }
-        };
-    } else {
-        expectedData.kernelInfo = undefined;
-    }
-    return fastDeepEqual(data, expectedData);
-}
-/**
- * Thus this method doesn't update it the notebook metadata, we merely keep track of the information.
- * When saving we retrieve the information from the tracked location (map).
- * @see {trackKernelInNotebookMetadata} That function does something similar.
- */
-export function trackKernelInfoInNotebookMetadata(
-    document: NotebookDocument,
-    kernelInfo: KernelMessage.IInfoReplyMsg['content']
-) {
-    if (kernelInformationForNotebooks.get(getDocumentId(document))?.kernelInfo === kernelInfo) {
-        return;
-    }
-    const data = { ...(kernelInformationForNotebooks.get(getDocumentId(document)) || {}) };
-    data.kernelInfo = kernelInfo;
-    kernelInformationForNotebooks.set(getDocumentId(document), data);
-}
-
-export function deleteKernelMetadataForTests(document: NotebookDocument) {
-    kernelInformationForNotebooks.delete(getDocumentId(document));
 }
 /**
  * Converts a NotebookModel into VSCode friendly format.
@@ -234,16 +124,7 @@ export function notebookModelToVSCNotebookData(
         })
     );
 }
-export function cellRunStateToCellState(cellRunState?: NotebookCellRunState): CellState {
-    switch (cellRunState) {
-        case NotebookCellRunState.Running:
-            return CellState.executing;
-        case NotebookCellRunState.Error:
-            return CellState.error;
-        default:
-            return CellState.init;
-    }
-}
+
 export function createJupyterCellFromVSCNotebookCell(
     vscCell: NotebookCell | NotebookCellData
 ): nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell {
