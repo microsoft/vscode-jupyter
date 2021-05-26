@@ -14,9 +14,9 @@ export interface INotebookControllerManager {
     getNotebookControllers(): Promise<VSCodeNotebookController[] | undefined>;
 }
 export enum CellOutputMimeTypes {
-    error = 'application/x.notebook.error-traceback',
-    stderr = 'application/x.notebook.stderr',
-    stdout = 'application/x.notebook.stdout'
+    error = 'application/vnd.code.notebook.error',
+    stderr = 'application/vnd.code.notebook.stderr',
+    stdout = 'application/vnd.code.notebook.stdout'
 }
 
 /**

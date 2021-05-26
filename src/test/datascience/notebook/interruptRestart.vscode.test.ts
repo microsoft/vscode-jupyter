@@ -255,18 +255,14 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             waitForCondition(async () => assertVSCCellIsNotRunning(cell3), 15_000, 'Cell 3 did not get dequeued')
         ]);
 
-        const cell1ExecutionCount = cell1.latestExecutionSummary?.executionOrder!;
+        const cell1ExecutionCount = cell1.executionSummary?.executionOrder!;
         await runCell(cell2);
 
         // Confirm 2 is in progress & 3 is queued.
         await waitForExecutionInProgress(cell2);
         assertVSCCellIsNotRunning(cell1);
         assertVSCCellIsNotRunning(cell3);
-        assert.equal(
-            cell1.latestExecutionSummary?.executionOrder,
-            cell1ExecutionCount,
-            'Execution order of cell 1 changed'
-        );
+        assert.equal(cell1.executionSummary?.executionOrder, cell1ExecutionCount, 'Execution order of cell 1 changed');
 
         // Interrupt the kernel & wait for 2.
         commandManager.executeCommand(Commands.NotebookEditorInterruptKernel, vscEditor.document.uri).then(noop, noop);
@@ -282,7 +278,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             waitForQueuedForExecution(cell3)
         ]);
         assert.isAbove(
-            cell1.latestExecutionSummary?.executionOrder || 0,
+            cell1.executionSummary?.executionOrder || 0,
             cell1ExecutionCount,
             'Execution order of cell 1 should be greater than previous execution count'
         );

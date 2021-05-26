@@ -14,7 +14,13 @@ import { traceWarning } from '../../common/logger';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { translateKernelLanguageToMonaco } from '../common';
-import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
+import { LanguagesSupportedByPythonkernel, VSCodeKnownNotebookLanguages } from '../constants';
+import {
+    getKernelConnectionLanguage,
+    getLanguageInNotebookMetadata,
+    isPythonKernelConnection
+} from '../jupyter/kernels/helpers';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { getNotebookMetadata, isJupyterNotebook } from './helpers/helpers';
 
@@ -28,8 +34,8 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
     constructor(
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker
     ) {}
     /**
      * Gets the language to be used for the default cell in an empty notebook.
@@ -48,6 +54,21 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
     }
     public async activate() {
         this.vscNotebook.onDidSaveNotebookDocument(this.onDidSaveNotebookDocument, this, this.disposables);
+    }
+    public getSupportedLanguages(kernelConnection: KernelConnectionMetadata): string[] {
+        if (isPythonKernelConnection(kernelConnection)) {
+            return LanguagesSupportedByPythonkernel;
+        } else {
+            const language = translateKernelLanguageToMonaco(getKernelConnectionLanguage(kernelConnection) || '');
+            // We should set `supportedLanguages` only if VS Code knows about them.
+            // Assume user has a kernel for `go` & VS Code doesn't know about `go` language, & we initailize `supportedLanguages` to [go]
+            // In such cases VS Code will not allow execution of this cell (because `supportedLanguages` by definition limits execution to languages defined).
+            if (language && VSCodeKnownNotebookLanguages.includes(language)) {
+                return [language];
+            }
+            // Support all languages
+            return [];
+        }
     }
     private get lastSavedNotebookCellLanguage(): string | undefined {
         return this.globalMemento.get<string | undefined>(LastSavedNotebookCellLanguage);

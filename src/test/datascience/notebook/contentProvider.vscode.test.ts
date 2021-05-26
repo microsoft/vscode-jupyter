@@ -127,7 +127,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.equal(notebook.cellAt(0).kind, NotebookCellKind.Code, 'Cell1, type');
         assert.lengthOf(notebook.cellAt(0).outputs, 0, 'Cell1, outputs');
         assert.include(notebook.cellAt(0).document.getText(), 'a=1', 'Cell1, source');
-        assert.isUndefined(notebook.cellAt(0).latestExecutionSummary?.executionOrder, 'Cell1, execution count');
+        assert.isUndefined(notebook.cellAt(0).executionSummary?.executionOrder, 'Cell1, execution count');
         assert.lengthOf(Object.keys(notebook.cellAt(0).metadata.custom || {}), 1, 'Cell1, metadata');
         assert.containsAllKeys(notebook.cellAt(0).metadata.custom || {}, { metadata: '' }, 'Cell1, metadata');
 
@@ -136,7 +136,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.include(notebook.cellAt(1).document.getText(), 'pip list', 'Cell1, source');
         assert.lengthOf(notebook.cellAt(1).outputs, 1, 'Cell2, outputs');
         // assert.equal(notebook.cells[1].outputs[0].outputKind, CellOutputKind.Rich, 'Cell2, output');
-        assert.equal(notebook.cellAt(1).latestExecutionSummary?.executionOrder, 3, 'Cell2, execution count');
+        assert.equal(notebook.cellAt(1).executionSummary?.executionOrder, 3, 'Cell2, execution count');
         assert.lengthOf(Object.keys(notebook.cellAt(1).metadata.custom || {}), 1, 'Cell2, metadata');
         assert.deepEqual(notebook.cellAt(1).metadata.custom?.metadata.tags, ['WOW'], 'Cell2, metadata');
 
@@ -144,7 +144,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.equal(notebook.cellAt(2).kind, NotebookCellKind.Markup, 'Cell3, type');
         assert.include(notebook.cellAt(2).document.getText(), '# HELLO WORLD', 'Cell3, source');
         assert.lengthOf(notebook.cellAt(2).outputs, 0, 'Cell3, outputs');
-        assert.isUndefined(notebook.cellAt(2).latestExecutionSummary?.executionOrder, 'Cell3, execution count');
+        assert.isUndefined(notebook.cellAt(2).executionSummary?.executionOrder, 'Cell3, execution count');
         assert.lengthOf(Object.keys(notebook.cellAt(2).metadata.custom || {}), 1, 'Cell3, metadata');
         assert.isEmpty(notebook.cellAt(2).metadata.custom?.metadata, 'Cell3, metadata');
 
@@ -158,7 +158,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.equal(nbError.evalue, 'invalid syntax (<ipython-input-1-8b7c24be1ec9>, line 1)', 'Cell3, output');
         assert.lengthOf(nbError.traceback, 1, 'Incorrect traceback items');
         assert.include(nbError.traceback[0], 'invalid syntax', 'Cell4, output');
-        assert.equal(notebook.cellAt(3).latestExecutionSummary?.executionOrder, 1, 'Cell4, execution count');
+        assert.equal(notebook.cellAt(3).executionSummary?.executionOrder, 1, 'Cell4, execution count');
         let cellMetadata = notebook.cellAt(3).metadata.custom as CellMetadata;
         assert.lengthOf(Object.keys(cellMetadata || {}), 1, 'Cell4, metadata');
         assert.isObject(cellMetadata.metadata, 'Cell4, metadata');
@@ -190,7 +190,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.equal(notebook.cellAt(5).kind, NotebookCellKind.Code, 'Cell6, type');
         assert.lengthOf(notebook.cellAt(5).outputs, 0, 'Cell6, outputs');
         assert.lengthOf(notebook.cellAt(5).document.getText(), 0, 'Cell6, source');
-        assert.isUndefined(notebook.cellAt(5).latestExecutionSummary?.executionOrder, 'Cell6, execution count');
+        assert.isUndefined(notebook.cellAt(5).executionSummary?.executionOrder, 'Cell6, execution count');
         cellMetadata = notebook.cellAt(5).metadata.custom as CellMetadata;
         assert.lengthOf(Object.keys(cellMetadata || {}), 1, 'Cell6, metadata');
         assert.containsAllKeys(cellMetadata || {}, { metadata: '' }, 'Cell6, metadata');

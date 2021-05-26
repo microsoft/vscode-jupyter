@@ -7,7 +7,7 @@ import { Memento, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { ICryptoUtils } from '../../common/types';
-import { NotebookCellLanguageService } from '../notebook/defaultCellLanguageService';
+import { NotebookCellLanguageService } from '../notebook/cellLanguageService';
 import { ICell, INotebookModel } from '../types';
 import { NativeEditorNotebookModel } from './notebookModel';
 import { INotebookModelFactory } from './types';

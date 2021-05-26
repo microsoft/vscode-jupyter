@@ -82,15 +82,12 @@ class PythonDaemon(JupyterDaemon):
     def m_prewarm_kernel(self):
         """Starts the kernel process with the module"""
         self.log.info("Pre-Warm DS Kernel in DS Kernel Launcher Daemon")
-        isolated_runner = os.path.join(
-            os.path.dirname(__file__), "..", "pyvsc-run-isolated.py"
-        )
         kernel_prewarm_starter = os.path.join(
             os.path.dirname(__file__), "kernel_prewarm_starter.py"
         )
 
         def prewarm_kernel():
-            cmd = [sys.executable, isolated_runner, kernel_prewarm_starter]
+            cmd = [sys.executable, kernel_prewarm_starter]
             self._start_kernel_observable_in_background(cmd)
             self.log.info("Kernel launched, with PID as a daemon %s", self.kernel.pid)
 

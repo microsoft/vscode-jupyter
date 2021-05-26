@@ -16,6 +16,7 @@ export namespace Common {
     export const canceled = localize('Common.canceled', 'Canceled');
     export const cancel = localize('Common.cancel', 'Cancel');
     export const ok = localize('Common.ok', 'Ok');
+    export const download = localize('Common.download', 'Download');
     export const gotIt = localize('Common.gotIt', 'Got it!');
     export const install = localize('Common.install', 'Install');
     export const reInstall = localize('Common.reInstall', 'Re-Install');
@@ -145,6 +146,10 @@ export namespace ExtensionSurveyBanner {
 }
 
 export namespace DataScience {
+    export const pythonExtensionRequiredToRunNotebook = localize(
+        'DataScience.pythonExtensionRequiredToRunNotebook',
+        'Python Extension required to run Python notebooks.'
+    );
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
         'The Python extension is required to perform that task. Click Yes to open Python extension installation page.'
@@ -263,27 +268,27 @@ export namespace DataScience {
     );
     export const libraryRequiredToLaunchJupyterNotInstalled = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalled',
-        'Data Science library {0} is not installed.'
+        'Running cells requires {0}.'
     );
     export const librariesRequiredToLaunchJupyterNotInstalled = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalled',
-        'Data Science libraries {0} are not installed.'
+        'Running cells requires {0}.'
     );
     export const libraryRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter',
-        '{0} requires {1} to be installed.'
+        "Running cells with '{0}' requires {1}."
     );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter',
-        '{0} requires {1} to be installed.'
+        "Running cells with '{0}' requires {1}."
     );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate = localize(
         'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate',
-        '{1} in {0} is not correctly installed or requires an update.'
+        "Running cells with '{0}' requires {1} installed or requires an update."
     );
     export const librariesRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter',
-        '{0} requires {1} to be installed.'
+        "Running cells with '{0}' requires {1}."
     );
     export const selectJupyterInterpreter = localize(
         'DataScience.selectJupyterInterpreter',
@@ -450,6 +455,14 @@ export namespace DataScience {
         'DataScience.jupyterSelectPasswordPrompt',
         'Enter your password'
     );
+    export const pythonNotInstalled = localize(
+        'DataScience.installPython',
+        'Python is not installed. \nPlease [download](https://www.python.org/downloads) and install Python in order to execute cells in this notebook.'
+    );
+    export const kernelNotInstalled = localize(
+        'DataScience.installKernel',
+        "The Jupyter Kernel '{0}' could not be found and needs to be installed in order to execute cells in this notebook."
+    );
     export const jupyterNotebookFailure = localize(
         'DataScience.jupyterNotebookFailure',
         'Jupyter notebook failed to launch. \r\n{0}'
@@ -558,11 +571,11 @@ export namespace DataScience {
     export const notebookIsNotTrusted = localize('DataScience.notebookIsNotTrusted', 'Not Trusted');
     export const noKernel = localize('DataScience.noKernel', 'No Kernel');
     export const serverNotStarted = localize('DataScience.serverNotStarted', 'Not Started');
-    export const selectKernel = localize('DataScience.selectKernel', 'Select a Kernel');
+    export const selectKernel = localize('DataScience.selectKernel', 'Change Kernel');
     export const selectDifferentKernel = localize('DataScience.selectDifferentKernel', 'Select a different Kernel');
     export const selectDifferentJupyterInterpreter = localize(
         'DataScience.selectDifferentJupyterInterpreter',
-        'Select a different Interpreter'
+        'Change Interpreter'
     );
     export const localJupyterServer = localize('DataScience.localJupyterServer', 'local');
     export const pandasTooOldForViewingFormat = localize(

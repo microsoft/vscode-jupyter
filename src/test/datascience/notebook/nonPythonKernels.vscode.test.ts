@@ -12,7 +12,7 @@ import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
-import { NotebookCellLanguageService } from '../../../client/datascience/notebook/defaultCellLanguageService';
+import { NotebookCellLanguageService } from '../../../client/datascience/notebook/cellLanguageService';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_NON_RAW_NATIVE_TEST } from '../../constants';

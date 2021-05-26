@@ -107,7 +107,7 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
     }
 
     // Valid notebooks will have a language information in the metadata.
-    return kernelSpec?.language === PYTHON_LANGUAGE;
+    return kernelSpec?.language === PYTHON_LANGUAGE || metadata?.language_info?.name === PYTHON_LANGUAGE;
 }
 /**
  * No need to update the notebook metadata just yet.
@@ -256,7 +256,7 @@ export function createJupyterCellFromVSCNotebookCell(
     let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
     if (vscCell.kind === NotebookCellKind.Markup) {
         cell = createMarkdownCellFromNotebookCell(vscCell);
-    } else if (vscCell.document.languageId === 'raw' || vscCell.document.languageId === 'plaintext') {
+    } else if (vscCell.document.languageId === 'raw') {
         cell = createRawCellFromNotebookCell(vscCell);
     } else {
         cell = createCodeCellFromNotebookCell(vscCell);
@@ -303,7 +303,7 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
     const code = cell.document.getText();
     return {
         cell_type: 'code',
-        execution_count: cell.latestExecutionSummary?.executionOrder ?? null,
+        execution_count: cell.executionSummary?.executionOrder ?? null,
         source: splitMultilineString(code),
         outputs: cell.outputs.map(translateCellDisplayOutput),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
@@ -427,7 +427,7 @@ export class NotebookCellStateTracker implements IDisposable {
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
         `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
-            cell.latestExecutionSummary?.executionOrder
+            cell.executionSummary?.executionOrder
         }. ${message}`
     );
 }
@@ -560,23 +560,16 @@ function translateDisplayDataOutput(
     for (const key in data) {
         // Add metadata to all (its the same)
         // We can optionally remove metadata that belongs to other mime types (feels like over optimization, hence not doing that).
-        items.push(new NotebookCellOutputItem(key, data[key], metadata));
+        items.push(new NotebookCellOutputItem(convertJupyterOutputToBuffer(key, data[key]), key, metadata));
     }
 
     return new NotebookCellOutput(sortOutputItemsBasedOnDisplayOrder(items), metadata);
 }
 
 function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
-    return new NotebookCellOutput(
-        [
-            new NotebookCellOutputItem(
-                output.name === 'stderr' ? CellOutputMimeTypes.stderr : CellOutputMimeTypes.stdout,
-                concatMultilineString(output.text),
-                getOutputMetadata(output)
-            )
-        ],
-        getOutputMetadata(output)
-    );
+    const value = concatMultilineString(output.text);
+    const factoryFn = output.name === 'stderr' ? NotebookCellOutputItem.stderr : NotebookCellOutputItem.stdout;
+    return new NotebookCellOutput([factoryFn(value)], getOutputMetadata(output));
 }
 
 export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: string): boolean {
@@ -644,15 +637,61 @@ export type CellOutputMetadata = {
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
     // it should have at least one output item
     const firstItem = output.outputs[0];
-
+    // Bug in VS Code.
+    if (!firstItem.data) {
+        return {
+            output_type: 'error',
+            ename: '',
+            evalue: '',
+            traceback: []
+        };
+    }
+    const value: nbformat.IError = JSON.parse(Buffer.from(firstItem.data as Uint8Array).toString('utf8'));
     return {
         output_type: 'error',
-        ename: (firstItem.value as nbformat.IError).ename,
-        evalue: (firstItem.value as nbformat.IError).evalue,
-        traceback: (firstItem.value as nbformat.IError).traceback
+        ename: value.ename,
+        evalue: value.evalue,
+        traceback: value.traceback
     };
 }
 
+const textMimeTypes = ['text/plain', 'text/markdown', CellOutputMimeTypes.stderr, CellOutputMimeTypes.stdout];
+function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
+    if (!value) {
+        return '';
+    }
+    const stringValue = Buffer.from(value as Uint8Array).toString('utf8');
+    if (mime === CellOutputMimeTypes.error) {
+        traceInfo(`Concerting ${mime} from ${stringValue}`);
+        return JSON.parse(stringValue);
+    } else if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
+        return stringValue;
+    } else if (mime.startsWith('image/')) {
+        // Images in Jupyter are stored in base64 encoded format.
+        // VS Code expects bytes when rendering images.
+        return Buffer.from(stringValue, 'base64');
+    } else if (mime.toLowerCase().includes('json')) {
+        return JSON.parse(stringValue);
+    } else {
+        return stringValue;
+    }
+}
+function convertJupyterOutputToBuffer(mime: string, value: unknown): Buffer {
+    if (!value) {
+        return Buffer.from('');
+    }
+    if ((mime.startsWith('text/') || textMimeTypes.includes(mime)) && typeof value === 'string') {
+        return Buffer.from(value);
+    } else if (mime.startsWith('image/') && typeof value === 'string') {
+        // Images in Jupyter are stored in base64 encoded format.
+        // VS Code expects bytes when rendering images.
+        return Buffer.from(value, 'base64');
+    } else if (mime.toLowerCase().includes('json')) {
+        return Buffer.from(JSON.stringify(value));
+    } else {
+        return Buffer.from(value as string);
+    }
+}
 export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
     const customMetadata = output.metadata as CellOutputMetadata | undefined;
     let result: JupyterOutput;
@@ -667,7 +706,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
         case 'stream': {
             const outputs = output.outputs
                 .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
-                .map((opit) => opit.value as string | string[])
+                .map((opit) => convertOutputMimeToJupyterOutput(opit.mime, opit.data as Uint8Array) as string)
                 .reduceRight<string[]>(
                     (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
                     []
@@ -687,7 +726,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {} // This can never be undefined.
@@ -699,7 +738,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'execute_result',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {}, // This can never be undefined.
@@ -713,7 +752,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 output_type: 'update_display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {} // This can never be undefined.
@@ -734,7 +773,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             if (output.outputs.length > 0) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {});
             }
@@ -760,31 +799,29 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
 export function translateErrorOutput(output: nbformat.IError): NotebookCellOutput {
     return new NotebookCellOutput(
         [
-            new NotebookCellOutputItem(
-                CellOutputMimeTypes.error,
-                {
-                    ename: output.ename,
-                    evalue: output.evalue,
-                    traceback: output.traceback
-                },
-                getOutputMetadata(output)
-            )
+            NotebookCellOutputItem.error({
+                name: output.ename,
+                message: output.evalue,
+                stack: output.traceback.join('\n')
+            })
         ],
         getOutputMetadata(output)
     );
 }
 
 export function getTextOutputValue(output: NotebookCellOutput): string {
-    return (
-        (output.outputs.find(
-            (opit) =>
-                opit.mime === CellOutputMimeTypes.stdout ||
-                opit.mime === CellOutputMimeTypes.stderr ||
-                opit.mime === 'text/plain' ||
-                opit.mime === 'text/markdown'
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        )?.value as any) || ''
+    const item = output.outputs.find(
+        (opit) =>
+            opit.mime === CellOutputMimeTypes.stdout ||
+            opit.mime === CellOutputMimeTypes.stderr ||
+            opit.mime === 'text/plain' ||
+            opit.mime === 'text/markdown'
     );
+
+    if (item) {
+        return convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
+    }
+    return '';
 }
 export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
     const errorOutput = outputs.find(

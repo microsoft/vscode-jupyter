@@ -240,7 +240,7 @@ export class JupyterSession extends BaseJupyterSession {
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (kernelConnection?.interpreter && this.connInfo.localLaunch) {
             // Make sure the kernel actually exists and is up to date.
-            await this.kernelService.ensureKernelIsUsable(kernelConnection, cancelToken, disableUI);
+            await this.kernelService.ensureKernelIsUsable(resource, kernelConnection, cancelToken, disableUI);
         }
 
         // If kernelName is empty this can cause problems for servers that don't

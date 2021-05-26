@@ -1323,15 +1323,21 @@ export type KernelSocketInformation = {
     readonly options: KernelSocketOptions;
 };
 
+/**
+ * Response for installation of kernel dependencies such as ipykernel.
+ * (these values are used in telemetry)
+ */
 export enum KernelInterpreterDependencyResponse {
-    ok,
-    cancel,
-    failed
+    ok = 0, // Used in telemetry.
+    cancel = 1, // Used in telemetry.
+    failed = 2, // Used in telemetry.
+    selectDifferentKernel = 3 // Used in telemetry.
 }
 
 export const IKernelDependencyService = Symbol('IKernelDependencyService');
 export interface IKernelDependencyService {
     installMissingDependencies(
+        resource: Resource,
         interpreter: PythonEnvironment,
         token?: CancellationToken,
         disableUI?: boolean

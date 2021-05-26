@@ -6,8 +6,9 @@ import {
     Disposable,
     env,
     EventEmitter,
+    ExtensionMode,
+    languages,
     NotebookCell,
-    NotebookCellExecutionTask,
     NotebookController,
     NotebookControllerAffinity,
     NotebookDocument,
@@ -16,19 +17,23 @@ import {
     UIKind,
     Uri
 } from 'vscode';
-import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { JVSC_EXTENSION_ID } from '../../common/constants';
+import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { ConsoleForegroundColors } from '../../logging/_global';
 import { Commands } from '../constants';
-import { getDescriptionOfKernelConnection, getDetailOfKernelConnection } from '../jupyter/kernels/helpers';
+import {
+    getDescriptionOfKernelConnection,
+    getDetailOfKernelConnection,
+    isPythonKernelConnection
+} from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
+import { NotebookCellLanguageService } from './cellLanguageService';
 import { JupyterNotebookView } from './constants';
 import {
     isSameAsTrackedKernelInNotebookMetadata,
@@ -46,6 +51,10 @@ export class VSCodeNotebookController implements Disposable {
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     public readonly controller: NotebookController;
+    /**
+     * Used purely for testing purposes.
+     */
+    public static kernelAssociatedWithDocument?: boolean;
     private isDisposed = false;
     get id() {
         return this.controller.id;
@@ -75,7 +84,8 @@ export class VSCodeNotebookController implements Disposable {
         private readonly context: IExtensionContext,
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly pathUtils: IPathUtils,
-        disposableRegistry: IDisposableRegistry
+        disposableRegistry: IDisposableRegistry,
+        private readonly languageService: NotebookCellLanguageService
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -96,7 +106,7 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
         this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils);
         this.controller.hasExecutionOrder = true;
-
+        this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposables);
     }
@@ -123,16 +133,17 @@ export class VSCodeNotebookController implements Disposable {
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         this.controller.updateNotebookAffinity(notebook, affinity);
         // Only on CI Server.
-        if (IS_CI_SERVER) {
+        if (this.context.extensionMode === ExtensionMode.Test) {
             await this.commandManager.executeCommand('notebook.selectKernel', {
                 id: this.id,
                 extension: JVSC_EXTENSION_ID
             });
+            VSCodeNotebookController.kernelAssociatedWithDocument = true;
         }
     }
 
     // Handle the execution of notebook cell
-    public async handleExecution(cells: NotebookCell[]) {
+    private async handleExecution(cells: NotebookCell[]) {
         if (cells.length < 1) {
             traceInfo('No cells passed to handleExecution');
             return;
@@ -150,12 +161,10 @@ export class VSCodeNotebookController implements Disposable {
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
         await Promise.all(cells.map((cell) => this.executeCell(targetNotebook, cell)));
     }
-    public createNotebookCellExecutionTask(cell: NotebookCell): NotebookCellExecutionTask {
-        return this.controller.createNotebookCellExecutionTask(cell);
-    }
-    private onDidChangeNotebookAssociation(event: { notebook: NotebookDocument; selected: boolean }) {
+    private async onDidChangeNotebookAssociation(event: { notebook: NotebookDocument; selected: boolean }) {
         // If this NotebookController was selected, fire off the event
         if (event.selected) {
+            await this.updateCellLanguages(event.notebook);
             this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
         } else {
             // If this controller was what was previously selected, then wipe that information out.
@@ -166,7 +175,39 @@ export class VSCodeNotebookController implements Disposable {
             }
         }
     }
-
+    /**
+     * Scenario 1:
+     * Assume user opens a notebook and language is C++ or .NET Interactive, they start writing python code.
+     * Next users hits the run button, next user will be promtped to select a kernel.
+     * User now selects a Python kernel.
+     * Nothing happens, that's right nothing happens.
+     * This is because C++ is not a lanaugage supported by the python kernel.
+     * Hence VS Code will not send the execution call to the extension.
+     *
+     * Solution, go through the cells and change the languges to something that's supported.
+     *
+     * Scenario 2:
+     * User has .NET extension installed.
+     * User opens a Python notebook and runs a cell with a .NET kernel (accidentally or deliberately).
+     * User gets errors in output & realizes mistake & changes the kernel.
+     * Now user runs a cell & nothing happens again.
+     */
+    private async updateCellLanguages(notebook: NotebookDocument) {
+        const supportedLanguages = this.controller.supportedLanguages;
+        // If the controller doesn't have any preferred languages, then get out.
+        if (!supportedLanguages || supportedLanguages?.length === 0) {
+            return;
+        }
+        const isPythonKernel = isPythonKernelConnection(this.kernelConnection);
+        const preferredLanguage = isPythonKernel ? PYTHON_LANGUAGE : supportedLanguages[0];
+        await Promise.all(
+            notebook.getCells().map(async (cell) => {
+                if (!supportedLanguages.includes(cell.document.languageId)) {
+                    await languages.setTextDocumentLanguage(cell.document, preferredLanguage).then(noop, noop);
+                }
+            })
+        );
+    }
     private getPreloads(): NotebookKernelPreload[] {
         // Work around for known issue with CodeSpaces
         const codeSpaceScripts =

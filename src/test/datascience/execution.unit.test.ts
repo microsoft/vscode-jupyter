@@ -1038,7 +1038,7 @@ suite('Jupyter Execution', async () => {
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters(anything())).thenResolve([missingNotebookPython]);
-        await assert.isRejected(execution.connectToNotebookServer(), 'Data Science library jupyter is not installed.');
+        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires jupyter.');
     }).timeout(10000);
 
     test('Missing kernel python still finds interpreter', async () => {
