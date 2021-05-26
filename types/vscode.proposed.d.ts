@@ -1313,11 +1313,6 @@
 		 */
 		data: Uint8Array;
 
-		/**
-		 * @deprecated
-		 */
-		value: unknown;
-
 		//todo@API
 		metadata?: { [key: string]: any };
 
