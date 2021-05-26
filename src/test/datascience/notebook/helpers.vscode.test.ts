@@ -182,11 +182,14 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 [
                     new NotebookCellOutput(
                         [
-                            NotebookCellOutputItem.error({
-                                name: 'Error Name',
-                                message: 'Error Value',
-                                stack: ['stack1', 'stack2', 'stack3'].join('\n')
-                            })
+                            NotebookCellOutputItem.error(
+                                {
+                                    name: 'Error Name',
+                                    message: 'Error Value',
+                                    stack: ['stack1', 'stack2', 'stack3'].join('\n')
+                                },
+                                { outputType: 'error' }
+                            )
                         ],
                         { outputType: 'error' }
                     )
