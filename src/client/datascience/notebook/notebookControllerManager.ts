@@ -448,7 +448,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             metadata: selectedKernelConnectionMetadata,
             controller: controller.controller
         });
-        traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}}`);
+        traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}`);
 
         // Auto start the local kernels.
         // if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
