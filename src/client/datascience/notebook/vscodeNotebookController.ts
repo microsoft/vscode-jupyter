@@ -35,12 +35,7 @@ import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRem
 import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { JupyterNotebookView } from './constants';
-import {
-    isSameAsTrackedKernelInNotebookMetadata,
-    traceCellMessage,
-    trackKernelInfoInNotebookMetadata,
-    trackKernelInNotebookMetadata
-} from './helpers/helpers';
+import { traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
 import { INotebookControllerManager } from './types';
 
 export class VSCodeNotebookController implements Disposable {
@@ -168,13 +163,6 @@ export class VSCodeNotebookController implements Disposable {
         if (event.selected) {
             await this.updateCellLanguages(event.notebook);
             this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
-        } else {
-            // If this controller was what was previously selected, then wipe that information out.
-            // This happens when user selects our controller & then selects another controller e.g. (.NET Extension).
-            // If the user selects one of our controllers (kernels), then this gets initialized elsewhere.
-            if (isSameAsTrackedKernelInNotebookMetadata(event.notebook, this.connection)) {
-                trackKernelInNotebookMetadata(event.notebook, undefined);
-            }
         }
     }
     /**
@@ -275,7 +263,7 @@ export class VSCodeNotebookController implements Disposable {
             kernelSocket = item;
             saveKernelInfo();
         });
-        const statusChangeDisposable = kernel.onStatusChanged(() => {
+        const statusChangeDisposable = kernel.onStatusChanged(async () => {
             if (kernel.disposed || !kernel.info) {
                 return;
             }
@@ -285,7 +273,7 @@ export class VSCodeNotebookController implements Disposable {
                 // Disregard if we've changed kernels
                 return;
             }
-            trackKernelInfoInNotebookMetadata(doc, kernel.info);
+            await updateNotebookDocumentMetadata(doc, kernel.kernelConnectionMetadata, kernel.info);
             if (this.kernelConnection.kind === 'startUsingKernelSpec') {
                 if (kernel.info.status === 'ok') {
                     saveKernelInfo();
