@@ -188,7 +188,15 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                                     message: 'Error Value',
                                     stack: ['stack1', 'stack2', 'stack3'].join('\n')
                                 },
-                                { outputType: 'error' }
+                                {
+                                    outputType: 'error',
+                                    originalError: {
+                                        ename: 'Error Name',
+                                        evalue: 'Error Value',
+                                        traceback: ['stack1', 'stack2', 'stack3'],
+                                        output_type: 'error'
+                                    }
+                                }
                             )
                         ],
                         { outputType: 'error' }
