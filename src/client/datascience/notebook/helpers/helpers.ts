@@ -63,8 +63,10 @@ export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeN
     return notebooks.notebookDocuments.some((item) => fs.arePathsSame(item.uri, resource));
 }
 export function getNotebookMetadata(document: NotebookDocument | NotebookData): nbformat.INotebookMetadata | undefined {
-    const notebookContent: Partial<nbformat.INotebookContent> = document.metadata.custom as any;
-    return notebookContent.metadata;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata.custom as any;
+    // Create a clone.
+    return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
 }
 
 export async function updateNotebookDocumentMetadata(
@@ -72,13 +74,18 @@ export async function updateNotebookDocumentMetadata(
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
-    let metadata = getNotebookMetadata(document);
+    let metadata = getNotebookMetadata(document) || { orig_nbformat: 3 };
     const { changed } = updateNotebookMetadata(metadata, kernelConnection, kernelInfo);
     if (changed) {
         const edit = new WorkspaceEdit();
-        const docMetadata = (document.metadata as {
-            custom?: Exclude<Partial<nbformat.INotebookContent>, 'cells'>;
-        }) || { custom: {} };
+        // Create a clone.
+        const docMetadata = JSON.parse(
+            JSON.stringify(
+                (document.metadata as {
+                    custom?: Exclude<Partial<nbformat.INotebookContent>, 'cells'>;
+                }) || { custom: {} }
+            )
+        );
 
         docMetadata.custom = docMetadata.custom || {};
         docMetadata.custom.metadata = metadata;
