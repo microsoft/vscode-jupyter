@@ -9,7 +9,6 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    ILiveShareApi,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -51,7 +50,6 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IInteractiveWindowLoadable,
-    IInteractiveWindowProvider,
     IJupyterDebugger,
     IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
@@ -104,7 +102,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
     constructor(
         listeners: IInteractiveWindowListener[],
-        liveShare: ILiveShareApi,
         applicationShell: IApplicationShell,
         documentManager: IDocumentManager,
         statusProvider: IStatusProvider,
@@ -117,7 +114,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         commandManager: ICommandManager,
         jupyterExporter: INotebookExporter,
         workspaceService: IWorkspaceService,
-        private interactiveWindowProvider: IInteractiveWindowProvider,
         dataExplorerFactory: IDataViewerFactory,
         jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         jupyterVariables: IJupyterVariables,
@@ -138,7 +134,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     ) {
         super(
             listeners,
-            liveShare,
             applicationShell,
             documentManager,
             provider,
@@ -368,21 +363,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         if (info && info.code && info.id) {
             // Send to ourselves.
             this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id).ignoreErrors();
-
-            // Activate the other side, and send as if came from a file
-            this.interactiveWindowProvider
-                .synchronize(this)
-                .then((_v) => {
-                    this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
-                        code: info.code,
-                        file: Identifiers.EmptyFileName,
-                        line: 0,
-                        id: info.id,
-                        originator: this.id,
-                        debug: false
-                    });
-                })
-                .ignoreErrors();
         }
     }
 
@@ -409,7 +389,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
         // extension contexts
-        if (this.commandManager && this.commandManager.executeCommand) {
+        if (this.commandManager) {
             const interactiveContext = new ContextKey(EditorContexts.HaveInteractive, this.commandManager);
             interactiveContext.set(!this.isDisposed).catch();
             const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);

@@ -10,7 +10,6 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { getKernelNotInstalledErrorMessage } from '../errorHandler/errorHandler';
 import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
-import { KernelSpecNotFoundError } from '../raw-kernel/liveshare/kernelSpecNotFoundError';
 import { IDataScienceErrorHandler } from '../types';
 import { JupyterNotebookView } from './constants';
 import { getNotebookMetadata, translateErrorOutput } from './helpers/helpers';
@@ -80,6 +79,6 @@ export class NoKernelsNotebookController implements Disposable {
         });
         task.appendOutput(errorOutput).then(noop, noop);
         task.end();
-        this.errorHandler.handleError(new KernelSpecNotFoundError(getNotebookMetadata(notebook))).catch(noop);
+        this.errorHandler.handleError(new Error()).catch(noop);
     }
 }

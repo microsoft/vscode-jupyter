@@ -71,7 +71,6 @@ import {
     NotebookKernelPreload,
     NotebookController
 } from 'vscode';
-import * as vsls from 'vsls/vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
@@ -1159,22 +1158,6 @@ export interface IWebviewViewOptions extends IWebviewOptions {
 export const IWebviewViewProvider = Symbol('IWebviewViewProvider');
 export interface IWebviewViewProvider {
     create(options: IWebviewViewOptions): Promise<IWebviewView>;
-}
-
-// Wraps the vsls liveshare API
-export const ILiveShareApi = Symbol('ILiveShareApi');
-export interface ILiveShareApi {
-    getApi(): Promise<vsls.LiveShare | null>;
-}
-
-// Wraps the liveshare api for testing
-export const ILiveShareTestingApi = Symbol('ILiveShareTestingApi');
-export interface ILiveShareTestingApi extends ILiveShareApi {
-    isSessionStarted: boolean;
-    forceRole(role: vsls.Role): void;
-    startSession(): Promise<void>;
-    stopSession(): Promise<void>;
-    disableGuestChecker(): void;
 }
 
 export const ILanguageService = Symbol('ILanguageService');

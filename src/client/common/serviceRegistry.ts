@@ -3,7 +3,6 @@
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient } from '../common/types';
 import { AmlComputeContext } from './amlContext';
-import { LiveShareApi } from '../datascience/liveshare/liveshare';
 import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
@@ -28,7 +27,6 @@ import {
     IDocumentManager,
     IEncryptedStorage,
     ILanguageService,
-    ILiveShareApi,
     IVSCodeNotebook
 } from './application/types';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
@@ -82,7 +80,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IFileDownloader>(IFileDownloader, FileDownloader);
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
-    serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 

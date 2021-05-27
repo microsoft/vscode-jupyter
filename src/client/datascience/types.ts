@@ -485,11 +485,6 @@ export interface IInteractiveWindowProvider {
      * @param owner file that started this interactive window
      */
     getOrCreate(owner: Resource): Promise<IInteractiveWindow>;
-    /**
-     * Synchronizes with the other peers in a live share connection to make sure it has the same window open
-     * @param window window on this side
-     */
-    synchronize(window: IInteractiveWindow): Promise<void>;
 }
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');

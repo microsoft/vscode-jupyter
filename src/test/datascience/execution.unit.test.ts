@@ -50,7 +50,6 @@ import { LocalKernelConnectionMetadata } from '../../client/datascience/jupyter/
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { LocalKernelFinder } from '../../client/datascience/kernel-launcher/localKernelFinder';
 import { ILocalKernelFinder } from '../../client/datascience/kernel-launcher/types';
-import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
 import {
     IJupyterKernelSpec,
     IJupyterSubCommandExecutionService,
@@ -91,7 +90,6 @@ suite('Jupyter Execution', async () => {
     const interpreterService = mock<IInterpreterService>();
     const jupyterOutputChannel = new MockOutputChannel('');
     const executionFactory = mock(PythonExecutionFactory);
-    const liveShare = mock(LiveShareApi);
     const configService = mock(ConfigurationService);
     const application = mock(ApplicationShell);
     const processServiceFactory = mock(ProcessServiceFactory);
@@ -848,8 +846,6 @@ suite('Jupyter Execution', async () => {
         ).thenResolve(missingNotebookService2.object);
         when(processServiceFactory.create()).thenResolve(processService.object);
 
-        when(liveShare.getApi()).thenResolve(null);
-
         // Service container needs logger, file system, and config service
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
@@ -996,11 +992,9 @@ suite('Jupyter Execution', async () => {
         return {
             executionService: activeService.object,
             jupyterExecutionFactory: new JupyterExecutionFactory(
-                instance(liveShare),
                 instance(interpreterService),
                 (disposableRegistry as unknown) as any[],
                 disposableRegistry,
-                instance(fileSystem),
                 instance(workspaceService),
                 instance(configService),
                 instance(kernelSelector),

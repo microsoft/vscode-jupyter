@@ -10,7 +10,6 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    ILiveShareApi,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -67,7 +66,6 @@ export class NativeEditorOldWebView extends NativeEditor {
 
     constructor(
         listeners: IInteractiveWindowListener[],
-        liveShare: ILiveShareApi,
         applicationShell: IApplicationShell,
         documentManager: IDocumentManager,
         provider: IWebviewPanelProvider,
@@ -104,7 +102,6 @@ export class NativeEditorOldWebView extends NativeEditor {
     ) {
         super(
             listeners,
-            liveShare,
             applicationShell,
             documentManager,
             provider,

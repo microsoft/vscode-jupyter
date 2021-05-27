@@ -36,8 +36,7 @@ suite('DataScience Error Handler Unit Tests', () => {
         dataScienceErrorHandler = new DataScienceErrorHandler(
             applicationShell.object,
             instance(dependencyManager),
-            instance(serverSelector),
-            instance(serviceContainre)
+            instance(serverSelector)
         );
     });
     const message = 'Test error message.';

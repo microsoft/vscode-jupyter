@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
@@ -51,7 +51,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
     private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
     constructor(
-        _liveShare: ILiveShareApi,
         private readonly interpreterService: IInterpreterService,
         private readonly disposableRegistry: IDisposableRegistry,
         private readonly workspace: IWorkspaceService,

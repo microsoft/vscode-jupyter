@@ -5,7 +5,6 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { DebugConfiguration, Disposable } from 'vscode';
-import * as vsls from 'vsls/vscode';
 import { concatMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IPythonDebuggerPathProvider } from '../../api/types';
@@ -28,7 +27,6 @@ import {
 } from '../types';
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
-import { ILiveShareHasRole } from './liveshare/types';
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
@@ -136,19 +134,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         const config = await this.connect(notebook, runByLine, extraConfig);
         if (config) {
             traceInfo('connected to notebook during debugging');
+            await startCommand(config);
 
-            // First check if this is a live share session. Skip debugging attach on the guest
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const hasRole = (notebook as any) as ILiveShareHasRole;
-            if (hasRole && hasRole.role && hasRole.role === vsls.Role.Guest) {
-                traceInfo('guest mode attach skipped');
-            } else {
-                await startCommand(config);
-
-                // Force the debugger to update its list of breakpoints. This is used
-                // to make sure the breakpoint list is up to date when we do code file hashes
-                this.debugService.removeBreakpoints([]);
-            }
+            // Force the debugger to update its list of breakpoints. This is used
+            // to make sure the breakpoint list is up to date when we do code file hashes
+            this.debugService.removeBreakpoints([]);
 
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
             const importResults = await this.executeSilently(notebook, this.waitForDebugClientCode);

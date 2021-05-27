@@ -21,7 +21,6 @@ import {
     WorkspaceFolder,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
-import * as vsls from 'vsls/vscode';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
 import { IExtensionSingleActivationService } from '../../client/activation/types';
@@ -38,8 +37,6 @@ import {
     IDebugService,
     IDocumentManager,
     IEncryptedStorage,
-    ILiveShareApi,
-    ILiveShareTestingApi,
     IVSCodeNotebook,
     IWebviewPanelOptions,
     IWebviewPanelProvider,
@@ -291,7 +288,6 @@ import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 import { MockJupyterSettings } from './mockJupyterSettings';
 import { MockLanguageServerProvider } from './mockLanguageServerProvider';
-import { MockLiveShareApi } from './mockLiveShare';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
 import { IMountedWebView } from './mountedWebView';
@@ -563,7 +559,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
-        this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
         const mockExtension = mock(Extensions);
         when(mockExtension.all).thenReturn([]);
         when(mockExtension.getExtension(anything())).thenReturn();
@@ -1024,17 +1019,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     /* eslint-disable */
-    public createWebView(
-        mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
-        id: string,
-        role: vsls.Role = vsls.Role.None
-    ) {
-        // Force the container to mock actual live share if necessary
-        if (role !== vsls.Role.None) {
-            const liveShareTest = this.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
-            liveShareTest.forceRole(role);
-        }
-
+    public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, id: string) {
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.pendingWebPanel = this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(id, mount);
         return this.pendingWebPanel;

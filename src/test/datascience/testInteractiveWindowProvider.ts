@@ -4,11 +4,10 @@
 import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Memento, Uri } from 'vscode';
-import { IApplicationShell, ILiveShareApi } from '../../client/common/application/types';
+import { IApplicationShell } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import {
     GLOBAL_MEMENTO,
-    IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
     IMemento,
@@ -41,16 +40,14 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
     }[] = [];
 
     constructor(
-        @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private readonly container: IServiceContainer,
-        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
         @inject(IApplicationShell) appShell: IApplicationShell
     ) {
-        super(liveShare, container, asyncRegistry, disposables, fileSystem, configService, globalMemento, appShell);
+        super(container, disposables, fileSystem, configService, globalMemento, appShell);
 
         // Reset our identity IDs when we create a new TestInteractiveWindowProvider
         resetIdentity();

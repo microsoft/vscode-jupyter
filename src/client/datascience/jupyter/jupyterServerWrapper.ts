@@ -6,12 +6,8 @@ import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import * as vsls from 'vsls/vscode';
-import { IPythonExtensionChecker } from '../../api/types';
-import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
 
 import {
     IAsyncDisposableRegistry,
@@ -20,11 +16,7 @@ import {
     IOutputChannel,
     Resource
 } from '../../common/types';
-import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { DataScienceStartupTime } from '../constants';
-import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
-import { ProgressReporter } from '../progress/progressReporter';
 import {
     IJupyterConnection,
     IJupyterSessionManagerFactory,
@@ -32,94 +24,36 @@ import {
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../types';
+import { JupyterServerBase } from './jupyterServer';
 import { KernelConnectionMetadata } from './kernels/types';
-import { GuestJupyterServer } from './liveshare/guestJupyterServer';
-import { HostJupyterServer } from './liveshare/hostJupyterServer';
-import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
-import { ILiveShareHasRole } from './liveshare/types';
-
-interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
-
-/* eslint-disable @typescript-eslint/prefer-function-type */
-type JupyterServerClassType = {
-    new (
-        liveShare: ILiveShareApi,
-        startupTime: number,
-        asyncRegistry: IAsyncDisposableRegistry,
-        disposableRegistry: IDisposableRegistry,
-        configService: IConfigurationService,
-        sessionManager: IJupyterSessionManagerFactory,
-        workspaceService: IWorkspaceService,
-        serviceContainer: IServiceContainer,
-        appShell: IApplicationShell,
-        fs: IFileSystem,
-        localKernelFinder: ILocalKernelFinder,
-        remoteKernelFinder: IRemoteKernelFinder,
-        interpreterService: IInterpreterService,
-        outputChannel: IOutputChannel,
-        progressReporter: ProgressReporter,
-        extensionChecker: IPythonExtensionChecker,
-        vscodeNotebook: IVSCodeNotebook
-    ): IJupyterServerInterface;
-};
-/* eslint-enable @typescript-eslint/prefer-function-type */
 
 // This class wraps either a HostJupyterServer or a GuestJupyterServer based on the liveshare state. It abstracts
 // out the live share specific parts.
 @injectable()
-export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole {
-    private serverFactory: RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>;
+export class JupyterServerWrapper implements INotebookServer {
+    private serverFactory: JupyterServerBase;
 
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private _id: string = uuid();
 
     constructor(
-        @inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(DataScienceStartupTime) startupTime: number,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IFileSystem) fs: IFileSystem,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
-        @inject(ILocalKernelFinder) localKernelFinder: ILocalKernelFinder,
-        @inject(IRemoteKernelFinder) remoteKernelFinder: IRemoteKernelFinder,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(ProgressReporter) progressReporter: ProgressReporter,
-        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
-        @inject(IVSCodeNotebook) vscodeNotebook: IVSCodeNotebook
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         // The server factory will create the appropriate HostJupyterServer or GuestJupyterServer based on
         // the liveshare state.
-        this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
-            liveShare,
-            HostJupyterServer,
-            GuestJupyterServer,
-            liveShare,
-            startupTime,
+        this.serverFactory = new JupyterServerBase(
             asyncRegistry,
             disposableRegistry,
             configService,
             sessionManager,
-            workspaceService,
             serviceContainer,
-            appShell,
-            fs,
-            localKernelFinder,
-            remoteKernelFinder,
-            interpreterService,
-            jupyterOutput,
-            progressReporter,
-            extensionChecker,
-            vscodeNotebook
+            jupyterOutput
         );
-    }
-
-    public get role(): vsls.Role {
-        return this.serverFactory.role;
     }
 
     public get id(): string {
@@ -128,8 +62,7 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
         this.launchInfo = launchInfo;
-        const server = await this.serverFactory.get();
-        return server.connect(launchInfo, cancelToken);
+        return this.serverFactory.connect(launchInfo, cancelToken);
     }
 
     public async createNotebook(
@@ -139,18 +72,15 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
-        const server = await this.serverFactory.get();
-        return server.createNotebook(resource, identity, notebookMetadata, kernelConnection, cancelToken);
+        return this.serverFactory.createNotebook(resource, identity, notebookMetadata, kernelConnection, cancelToken);
     }
 
     public async shutdown(): Promise<void> {
-        const server = await this.serverFactory.get();
-        return server.shutdown();
+        return this.serverFactory.shutdown();
     }
 
     public async dispose(): Promise<void> {
-        const server = await this.serverFactory.get();
-        return server.dispose();
+        return this.serverFactory.dispose();
     }
 
     // Return a copy of the connection information that this server used to connect with
@@ -161,13 +91,11 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         return undefined;
     }
 
-    public async getNotebook(resource: Uri, token?: CancellationToken): Promise<INotebook | undefined> {
-        const server = await this.serverFactory.get();
-        return server.getNotebook(resource, token);
+    public async getNotebook(resource: Uri): Promise<INotebook | undefined> {
+        return this.serverFactory.getNotebook(resource);
     }
 
     public async waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
-        const server = await this.serverFactory.get();
-        return server.waitForConnect();
+        return this.serverFactory.waitForConnect();
     }
 }
