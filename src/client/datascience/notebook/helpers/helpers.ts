@@ -689,7 +689,10 @@ function convertJupyterOutputToBuffer(mime: string, value: unknown): Buffer {
         return Buffer.from('');
     }
     try {
-        if ((mime.startsWith('text/') || textMimeTypes.includes(mime)) && typeof value === 'string') {
+        if (
+            (mime.startsWith('text/') || textMimeTypes.includes(mime)) &&
+            (Array.isArray(value) || typeof value === 'string')
+        ) {
             const stringValue = Array.isArray(value) ? concatMultilineString(value) : value;
             return Buffer.from(stringValue);
         } else if (mime.startsWith('image/') && typeof value === 'string') {
