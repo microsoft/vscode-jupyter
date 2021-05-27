@@ -119,7 +119,7 @@ export class PythonDaemonFactory {
         // At this point there should be some information logged in stderr of the daemon process.
         const fail = createDeferred<{ pong: string }>();
         const timer = setTimeout(() => fail.reject(new Error('Timeout waiting for daemon to start')), 5_000);
-        const request = new RequestType<{ data: string }, { pong: string }, void, void>('ping');
+        const request = new RequestType<{ data: string }, { pong: string }, void>('ping');
         // Check whether the daemon has started correctly, by sending a ping.
         const result = await Promise.race([fail.promise, connection.sendRequest(request, { data: 'hello' })]);
         clearTimeout(timer);
