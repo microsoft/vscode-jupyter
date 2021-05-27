@@ -836,7 +836,8 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
     );
 
     if (item) {
-        return convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
+        const value = convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
+        return Array.isArray(value) ? value.join('') : value;
     }
     return '';
 }
