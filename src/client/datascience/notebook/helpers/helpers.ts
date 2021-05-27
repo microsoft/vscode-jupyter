@@ -690,7 +690,8 @@ function convertJupyterOutputToBuffer(mime: string, value: unknown): Buffer {
     }
     try {
         if ((mime.startsWith('text/') || textMimeTypes.includes(mime)) && typeof value === 'string') {
-            return Buffer.from(value);
+            const stringValue = Array.isArray(value) ? concatMultilineString(value) : value;
+            return Buffer.from(stringValue);
         } else if (mime.startsWith('image/') && typeof value === 'string') {
             // Images in Jupyter are stored in base64 encoded format.
             // VS Code expects bytes when rendering images.
