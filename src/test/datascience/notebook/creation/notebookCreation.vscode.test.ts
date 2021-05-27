@@ -40,11 +40,17 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         creationOptions.clear();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
-    setup(async () => {
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
+    teardown(async function () {
+        traceInfo(`End Test ${this.currentTest?.title}`);
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+    });
     async function createNotebookAndValidateLanguageOfFirstCell(expectedLanguage: string) {
         await commands.executeCommand(Commands.CreateNewNotebook);
         await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
