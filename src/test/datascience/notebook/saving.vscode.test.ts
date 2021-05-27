@@ -10,6 +10,7 @@ import * as sinon from 'sinon';
 import { NotebookCell, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
@@ -53,13 +54,19 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });
-    setup(async () => {
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testEmptyIPynb = Uri.file(await createTemporaryNotebook(templateIPynbEmpty, disposables));
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(() => closeNotebooks(disposables));
+    teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        await closeNotebooks(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+    });
     suiteTeardown(closeNotebooksAndCleanUpAfterTests);
     test('Verify output & metadata when re-opening (slow)', async () => {
         await openNotebook(api.serviceContainer, testEmptyIPynb.fsPath);
