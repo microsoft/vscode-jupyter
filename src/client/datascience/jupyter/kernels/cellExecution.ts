@@ -9,7 +9,7 @@ import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
 import {
     ExtensionMode,
     NotebookCell,
-    NotebookCellExecutionTask,
+    NotebookCellExecution,
     NotebookCellKind,
     NotebookCellExecutionSummary,
     NotebookDocument,
@@ -98,9 +98,9 @@ export class CellExecution {
      * At any given point in time, we can only have one cell actively running.
      * This will keep track of that task.
      */
-    private static activeNotebookCellExecutionTask = new WeakMap<
+    private static activeNotebookCellExecution = new WeakMap<
         NotebookDocument,
-        NotebookCellExecutionTask | undefined
+        NotebookCellExecution | undefined
     >();
 
     private static sentExecuteCellTelemetry?: boolean;
@@ -115,8 +115,8 @@ export class CellExecution {
     private startTime?: number;
     private endTime?: number;
     private readonly initPromise?: Promise<void>;
-    private task?: NotebookCellExecutionTask;
-    private temporaryTask?: NotebookCellExecutionTask;
+    private task?: NotebookCellExecution;
+    private temporaryTask?: NotebookCellExecution;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
     private cancelHandled = false;
     private requestHandlerChain = Promise.resolve();
@@ -161,7 +161,7 @@ export class CellExecution {
             disposables
         );
         if (this.canExecuteCell()) {
-            this.task = controller.createNotebookCellExecutionTask(this.cell);
+            this.task = controller.createNotebookCellExecution(this.cell);
             this.initPromise = this.enqueue();
         }
     }
@@ -201,7 +201,7 @@ export class CellExecution {
         this.started = true;
 
         this.startTime = new Date().getTime();
-        CellExecution.activeNotebookCellExecutionTask.set(this.cell.notebook, this.task);
+        CellExecution.activeNotebookCellExecution.set(this.cell.notebook, this.task);
         this.task?.start({ startTime: this.startTime });
         await Promise.all([this.initPromise, this.task?.clearOutput()]);
         this.stopWatch.reset();
@@ -300,8 +300,8 @@ export class CellExecution {
             // Cell was cancelled.
             this.task?.end({});
         }
-        if (CellExecution.activeNotebookCellExecutionTask.get(this.cell.notebook) === this.task) {
-            CellExecution.activeNotebookCellExecutionTask.set(this.cell.notebook, undefined);
+        if (CellExecution.activeNotebookCellExecution.get(this.cell.notebook) === this.task) {
+            CellExecution.activeNotebookCellExecution.set(this.cell.notebook, undefined);
         }
         this.task = undefined;
     }
@@ -318,14 +318,14 @@ export class CellExecution {
             return;
         }
         // If we have an active task, use that instead of creating a new task.
-        const existingTask = CellExecution.activeNotebookCellExecutionTask.get(this.cell.notebook);
+        const existingTask = CellExecution.activeNotebookCellExecution.get(this.cell.notebook);
         if (existingTask) {
             return existingTask;
         }
 
         // Create a temporary task.
         this.previousResultsToRestore = { ...(this.cell.executionSummary || {}) };
-        this.temporaryTask = this.controller.createNotebookCellExecutionTask(this.cell);
+        this.temporaryTask = this.controller.createNotebookCellExecution(this.cell);
         this.temporaryTask?.start({});
         if (this.previousResultsToRestore?.executionOrder && this.task) {
             this.task.executionOrder = this.previousResultsToRestore.executionOrder;
