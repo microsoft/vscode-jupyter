@@ -21,7 +21,7 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
  */
 export class LanguageServerWrapper implements Disposable {
     private code2ProtocolConverter = c2p.createConverter();
-    private protocol2CodeConverter = p2c.createConverter();
+    private protocol2CodeConverter = p2c.createConverter(undefined, undefined);
     private connection: ILanguageServerConnection;
     private capabilities: lsp.ServerCapabilities;
     private disposeConnection: () => void;
