@@ -98,10 +98,7 @@ export class CellExecution {
      * At any given point in time, we can only have one cell actively running.
      * This will keep track of that task.
      */
-    private static activeNotebookCellExecution = new WeakMap<
-        NotebookDocument,
-        NotebookCellExecution | undefined
-    >();
+    private static activeNotebookCellExecution = new WeakMap<NotebookDocument, NotebookCellExecution | undefined>();
 
     private static sentExecuteCellTelemetry?: boolean;
 
