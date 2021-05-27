@@ -1577,7 +1577,7 @@ export interface IVSCodeNotebook {
         viewType: string,
         label: string,
         handler?: NotebookExecuteHandler,
-        preloads?: NotebookRendererScript[]
+        rendererScripts?: NotebookRendererScript[]
     ): NotebookController;
 }
 

@@ -98,7 +98,7 @@ export class VSCodeNotebookController implements Disposable {
             JupyterNotebookView,
             label,
             this.handleExecution.bind(this),
-            this.getPreloads()
+            this.getRendererScripts()
         );
 
         // Fill in extended info for our controller
@@ -208,7 +208,7 @@ export class VSCodeNotebookController implements Disposable {
             })
         );
     }
-    private getPreloads(): NotebookRendererScript[] {
+    private getRendererScripts(): NotebookRendererScript[] {
         // Work around for known issue with CodeSpaces
         const codeSpaceScripts =
             env.uiKind === UIKind.Web
