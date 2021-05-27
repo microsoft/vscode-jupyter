@@ -16,7 +16,7 @@ import {
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookExecuteHandler,
-    NotebookKernelPreload,
+    NotebookRendererScript,
     window
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
@@ -95,7 +95,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         viewType: string,
         label: string,
         handler?: NotebookExecuteHandler,
-        preloads?: NotebookKernelPreload[]
+        preloads?: NotebookRendererScript[]
     ): NotebookController {
         return notebook.createNotebookController(id, viewType, label, handler, preloads);
     }
