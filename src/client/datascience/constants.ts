@@ -75,6 +75,7 @@ export const VSCodeKnownNotebookLanguages: string[] = [
 ];
 
 export namespace Commands {
+    export const UpdateOrCreateDataViewer = 'jupyter.openDataFrameInDataViewer';
     export const RunAllCells = 'jupyter.runallcells';
     export const RunAllCellsAbove = 'jupyter.runallcellsabove';
     export const RunCellAndAllBelow = 'jupyter.runcellandallbelow';
@@ -92,6 +93,8 @@ export namespace Commands {
     export const CreateNewInteractive = 'jupyter.createnewinteractive';
     export const ImportNotebook = 'jupyter.importnotebook';
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
+    export const ImportAsDataFrame = 'jupyter.importFileAsDataFrame';
+    export const ImportAsDataFrameFromUrl = 'jupyter.importFileAsDataFrameFromUrl';
     export const OpenNotebook = 'jupyter.opennotebook';
     export const OpenNotebookInPreviewEditor = 'jupyter.opennotebookInPreviewEditor';
     export const SelectJupyterURI = 'jupyter.selectjupyteruri';
@@ -603,6 +606,7 @@ export namespace DataFrameLoading {
 
     export const DataFrameInfoFunc = '_VSCODE_getDataFrameInfo';
     export const DataFrameRowFunc = '_VSCODE_getDataFrameRows';
+    export const DataFrameColFunc = '_VSCODE_getDataFrameColumn';
 
     // Constants for the debugger which imports the script files
     export const DataFrameImport = `__import__('vscodeDataFrame')`;

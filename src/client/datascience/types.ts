@@ -484,7 +484,7 @@ export interface IInteractiveWindowProvider {
      * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
      * @param owner file that started this interactive window
      */
-    getOrCreate(owner: Resource): Promise<IInteractiveWindow>;
+    getOrCreate(owner: Resource, notebook?: INotebook): Promise<IInteractiveWindow>;
     /**
      * Synchronizes with the other peers in a live share connection to make sure it has the same window open
      * @param window window on this side
@@ -887,15 +887,17 @@ export interface IJupyterVariable {
     dataDimensionality?: number;
     count: number;
     truncated: boolean;
-    columns?: { key: string; type: string }[];
+    columns?: { key: string; type: string; describe: string }[];
     rowCount?: number;
     indexColumn?: string;
     maximumRowChunkSize?: number;
     fileName?: string;
+    sourceFile?: string;
 }
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
 export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
+    notebook: INotebook | undefined;
     setDependencies(variable: IJupyterVariable, notebook?: INotebook): void;
 }
 
@@ -925,6 +927,11 @@ export interface IJupyterVariables {
         end: number,
         notebook?: INotebook,
         sliceExpression?: string
+    ): Promise<JSONObject>;
+    getDataFrameColumn?(
+        targetVariable: IJupyterVariable,
+        columnName: string,
+        notebook?: INotebook
     ): Promise<JSONObject>;
     getMatchingVariable(
         name: string,

@@ -1,0 +1,26 @@
+#contextMenu, #headerContextMenu {
+	background-color: var(--vscode-menu-background);
+	color: var(--vscode-menu-foreground);
+	outline-color: var(--vscode-list-focusOutline);
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+	padding: 4px 0px;
+	display: inline-block;
+	min-width: 130px;
+	z-index: 99999;
+	animation: fadeIn 0.083s linear;
+	border: 0;
+}
+
+#contextMenu li, #headerContextMenu li {
+	padding: 4px 26px;
+	margin: 0px;
+	list-style: none;
+	cursor: pointer;
+}
+
+#contextMenu li:hover, #headerContextMenu li:hover {
+	background-color: var(--vscode-list-activeSelectionBackground);
+	color: var(--vscode-list-activeSelectionForeground);
+}

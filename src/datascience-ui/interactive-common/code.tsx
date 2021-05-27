@@ -16,7 +16,6 @@ export interface ICodeProps {
     code: string;
     language: string | undefined;
     version: number;
-    codeTheme: string;
     testMode: boolean;
     readOnly: boolean;
     history: InputHistory | undefined;
@@ -68,7 +67,6 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         return (
             <div className={classes}>
                 <Editor
-                    codeTheme={this.props.codeTheme}
                     readOnly={readOnly}
                     history={this.props.history}
                     onCreated={this.props.onCreated}
@@ -95,7 +93,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     ipLocation={this.props.ipLocation}
                 />
                 <div className={waterMarkClass} role="textbox" onClick={this.clickWatermark}>
-                    {this.getWatermarkString()}
+                    {this.props.showWatermark ? this.getWatermarkString() : undefined}
                 </div>
             </div>
         );

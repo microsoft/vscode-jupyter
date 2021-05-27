@@ -8,13 +8,13 @@ import { inject, injectable, named } from 'inversify';
 import { Identifiers } from '../constants';
 import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables, INotebook } from '../types';
 import { DataViewerDependencyService } from './dataViewerDependencyService';
-import { ColumnType, IDataFrameInfo, IRowsResponse } from './types';
+import { ColumnType, IDataFrameInfo, IRowsResponse, IColsResponse } from './types';
 import { traceError } from '../../common/logger';
 
 @injectable()
 export class JupyterVariableDataProvider implements IJupyterVariableDataProvider {
     private initialized: boolean = false;
-    private notebook: INotebook | undefined;
+    public notebook: INotebook | undefined;
     private variable: IJupyterVariable | undefined;
 
     constructor(
@@ -28,8 +28,10 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
      * @param columns
      * @returns Array of columns with normalized type
      */
-    private static getNormalizedColumns(columns: { key: string; type: string }[]): { key: string; type: ColumnType }[] {
-        return columns.map((column: { key: string; type: string }) => {
+    private static getNormalizedColumns(
+        columns: { key: string; type: string; describe: string }[]
+    ): { key: string; type: ColumnType; describe: string }[] {
+        return columns.map((column: { key: string; type: string; describe: string }) => {
             let normalizedType: ColumnType;
             switch (column.type) {
                 case 'bool':
@@ -49,7 +51,8 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
             }
             return {
                 key: column.key,
-                type: normalizedType
+                type: normalizedType,
+                describe: column.describe
             };
         });
     }
@@ -103,7 +106,8 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 type: variable.type,
                 maximumRowChunkSize: variable.maximumRowChunkSize,
                 name: variable.name,
-                fileName: variable.fileName
+                fileName: variable.fileName,
+                sourceFile: variable.sourceFile
             };
         }
         if (isRefresh) {
@@ -144,6 +148,20 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         return rows;
     }
 
+    public async getCols(columnName: string) {
+        let columns: IColsResponse = [];
+        await this.ensureInitialized();
+        if (this.variable) {
+            const dataFrameColumnData = await this.variableManager.getDataFrameColumn!(
+                this.variable,
+                columnName,
+                this.notebook
+            );
+            columns = (dataFrameColumnData as any) as IColsResponse;
+        }
+        return columns;
+    }
+
     private async ensureInitialized(): Promise<void> {
         // Postpone pre-req and variable initialization until data is requested.
         if (!this.initialized && this.variable) {
@@ -152,4 +170,14 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
             this.variable = await this.variableManager.getDataFrameInfo(this.variable, this.notebook);
         }
     }
+
+    // // Apply an operation and return the updated variable value to the UI
+    // public async applyOperation() {
+    //     const code = this.generateCodeSnippetForOperation();
+    //     await this.notebook!.execute(code, this.notebook!.identity.fsPath, 0, '', undefined, true);
+    // }
+
+    // private generateCodeSnippetForOperation(): string {
+
+    // }
 }

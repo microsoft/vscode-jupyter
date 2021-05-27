@@ -6,7 +6,7 @@
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
-    height: 26px;
+    height: 24px;
     margin: 0px;
     border: 1px solid var(--vscode-settings-textInputBorder);
 }
@@ -22,6 +22,8 @@
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
+    padding-left: 4px;
+    padding-top: 6px !important;
 }
 
 .checkbox-label {
@@ -40,7 +42,8 @@
 }
 
 .slice-summary-detail {
-    padding-bottom: 2px;
+    font-size: 11px;
+    margin: 0;
     padding-left: 2px;
 }
 
@@ -67,7 +70,7 @@
 }
 
 .slice-form-container {
-    margin-left: 30px;
+    margin-left: 20px;
 }
 
 .slice-control-column {
@@ -159,6 +162,7 @@ details[open] > summary::before {
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
+    padding-top: 0;
 }
 
 /* This needs to match VS Code settings dropdowns */
@@ -176,6 +180,7 @@ details[open] > summary::before {
     border-radius: 0px;
     height: 26px;
     line-height: 26px;
+    width: 150px;
 }
 
 [class*='dropdown'] {

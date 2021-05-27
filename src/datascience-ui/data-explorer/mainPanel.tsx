@@ -14,11 +14,12 @@ import {
     DataViewerMessages,
     IDataFrameInfo,
     IDataViewerMapping,
+    IGetColsResponse,
     IGetRowsResponse,
     IGetSliceRequest,
     IRowsResponse
 } from '../../client/datascience/data-viewing/types';
-import { SharedMessages } from '../../client/datascience/messages';
+import { CssMessages, SharedMessages } from '../../client/datascience/messages';
 import { IJupyterExtraSettings } from '../../client/datascience/types';
 import { getLocString, storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -32,13 +33,19 @@ import '../react-common/codicon/codicon.css';
 import '../react-common/seti/seti.less';
 import { SliceControl } from './sliceControl';
 import { debounce } from 'lodash';
-import * as uuid from 'uuid/v4';
 
 import { initializeIcons } from '@fluentui/react';
+import { Toolbar } from './controls/toolbar';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { deserializeLanguageConfiguration } from '../../client/datascience/interactive-common/serialization';
+import { Tokenizer } from '../interactive-common/tokenizer';
+import { createDeferred } from '../../client/common/utils/async';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
-const RowNumberColumnName = uuid(); // Unique key for our column containing row numbers
+const RowNumberColumnName = 'No.'; // Unique key for our column containing row numbers
+const onigasmPromise = createDeferred<boolean>();
+const monacoPromise = createDeferred();
 
 // Our css has to come after in order to override body styles
 export interface IMainPanelProps {
@@ -64,12 +71,16 @@ interface IMainPanelState {
     variableName?: string;
     fileName?: string;
     sliceExpression?: string;
+    historyList: [];
+    histogramData?: IGetColsResponse;
+    monacoTheme: string;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private container: React.Ref<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
+    private toggleFilterEvent: Slick.Event<void> = new Slick.Event<void>();
     private resetGridEvent: Slick.Event<ISlickGridSlice> = new Slick.Event<ISlickGridSlice>();
     private resizeGridEvent: Slick.Event<void> = new Slick.Event<void>();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
@@ -83,6 +94,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private grid: React.RefObject<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
     private updateTimeout?: NodeJS.Timer | number;
     private columnsContainingInfOrNaN = new Set<string>();
+    private lastDescribeRequestColumnName: string | undefined;
 
     // eslint-disable-next-line
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -103,7 +115,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 dataDimensionality: data.dataDimensionality ?? 2,
                 originalVariableShape: data.originalVariableShape,
                 isSliceDataEnabled: false,
-                originalVariableType: undefined
+                originalVariableType: undefined,
+                historyList: [],
+                histogramData: undefined,
+                monacoTheme: 'vs-dark'
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -120,16 +135,25 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 dataDimensionality: 2,
                 originalVariableShape: undefined,
                 isSliceDataEnabled: false,
-                originalVariableType: undefined
+                originalVariableType: undefined,
+                historyList: [],
+                histogramData: undefined,
+                monacoTheme: 'vs-dark'
             };
         }
     }
 
-    public componentWillMount() {
+    public async componentWillMount() {
         // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
 
         // Tell the dataviewer code we have started.
+        this.postOffice.sendMessage<IDataViewerMapping>(InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
+        this.postOffice.sendMessage<IDataViewerMapping>(InteractiveWindowMessages.LoadTmLanguageRequest);
+        this.postOffice.sendMessage<IDataViewerMapping>(CssMessages.GetMonacoThemeRequest, {
+            isDark: this.props.baseTheme !== 'vscode-light'
+        });
+        // await monacoPromise.promise;
         this.postOffice.sendMessage<IDataViewerMapping>(DataViewerMessages.Started);
     }
 
@@ -161,7 +185,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     postOffice={this.postOffice}
                 />
                 {progressBar}
-                {this.renderBreadcrumb()}
+                {/* {this.renderBreadcrumb()} */}
+                <Toolbar
+                    handleRefreshRequest={this.handleRefreshRequest}
+                    submitCommand={this.submitCommand}
+                    onToggleFilter={() => this.toggleFilterEvent.notify()}
+                />
                 {this.renderSliceControls()}
                 {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
             </div>
@@ -187,26 +216,26 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     };
 
-    private renderBreadcrumb() {
-        let breadcrumbText = this.state.variableName;
-        if (this.state.originalVariableShape) {
-            breadcrumbText += ' (' + this.state.originalVariableShape?.join(', ') + ')';
-        }
-        if (breadcrumbText) {
-            return (
-                <div className="breadcrumb-container control-container">
-                    <div className="breadcrumb">
-                        <div className="icon-python breadcrumb-file-icon" />
-                        <span>{this.state.fileName}</span>
-                        {this.state.fileName ? (
-                            <div className="codicon codicon-chevron-right breadcrumb-codicon" />
-                        ) : undefined}
-                        <span>{breadcrumbText}</span>
-                    </div>
-                </div>
-            );
-        }
-    }
+    // private renderBreadcrumb() {
+    //     let breadcrumbText = this.state.variableName;
+    //     if (this.state.originalVariableShape) {
+    //         breadcrumbText += ' (' + this.state.originalVariableShape?.join(', ') + ')';
+    //     }
+    //     if (breadcrumbText) {
+    //         return (
+    //             <div className="breadcrumb-container control-container">
+    //                 <div className="breadcrumb">
+    //                     <div className="icon-python breadcrumb-file-icon" />
+    //                     <span>{this.state.fileName}</span>
+    //                     {this.state.fileName ? (
+    //                         <div className="codicon codicon-chevron-right breadcrumb-codicon" />
+    //                     ) : undefined}
+    //                     <span>{breadcrumbText}</span>
+    //                 </div>
+    //             </div>
+    //         );
+    //     }
+    // }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public handleMessage = (msg: string, payload?: any) => {
@@ -223,12 +252,59 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
 
+            case DataViewerMessages.GetHistogramResponse:
+                this.handleGetHistogram(payload);
+                break;
+
+            case DataViewerMessages.UpdateHistoryList:
+                this.handleUpdateHistoryList(payload);
+                break;
+
             case SharedMessages.UpdateSettings:
                 this.updateSettings(payload);
                 break;
 
             case SharedMessages.LocInit:
                 this.initializeLoc(payload);
+                break;
+
+            case InteractiveWindowMessages.LoadOnigasmAssemblyResponse:
+                if (!Tokenizer.hasOnigasm()) {
+                    console.log('No onigasm', payload);
+                    // Have to convert the buffer into an ArrayBuffer for the tokenizer to load it.
+                    let typedArray = new Uint8Array(payload.data);
+                    if (typedArray.length <= 0 && payload.data) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        typedArray = new Uint8Array(payload.data as any);
+                    }
+                    Tokenizer.loadOnigasm(typedArray.buffer);
+                    onigasmPromise.resolve(payload.data ? true : false);
+                } else {
+                    console.log('Has onigasm');
+                }
+                break;
+
+            case InteractiveWindowMessages.LoadTmLanguageResponse:
+                onigasmPromise.promise.then(async (success) => {
+                    console.log('tmLanguage success:', success);
+                    console.log('payload', payload);
+                    // Then load the language data
+                    if (success && !Tokenizer.hasLanguage(payload.languageId)) {
+                        await Tokenizer.loadLanguage(
+                            payload.languageId,
+                            payload.extensions,
+                            payload.scopeName,
+                            deserializeLanguageConfiguration(payload.languageConfiguration),
+                            payload.languageJSON
+                        );
+                        monacoPromise.resolve();
+                    }
+                });
+                break;
+
+            case CssMessages.GetMonacoThemeResponse:
+                console.log('Theme response payload', payload);
+                this.setState({ monacoTheme: payload.theme });
                 break;
 
             default:
@@ -264,15 +340,21 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 idProperty={RowNumberColumnName}
                 rowsAdded={this.gridAddEvent}
                 resetGridEvent={this.resetGridEvent}
+                toggleFilterEvent={this.toggleFilterEvent}
                 resizeGridEvent={this.resizeGridEvent}
                 columnsUpdated={this.gridColumnUpdateEvent}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
                 dataDimensionality={this.state.dataDimensionality}
+                monacoTheme={this.state.monacoTheme}
                 originalVariableShape={this.state.originalVariableShape}
                 isSliceDataEnabled={this.state.isSliceDataEnabled}
+                historyList={this.state.historyList}
+                histogramData={this.state.histogramData}
                 handleSliceRequest={this.handleSliceRequest}
+                submitCommand={this.submitCommand}
                 handleRefreshRequest={this.handleRefreshRequest}
+                currentVariableName={this.state.variableName!}
             />
         );
     }
@@ -288,7 +370,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const indexColumn = variable.indexColumn ?? 'index';
                 const originalVariableType = variable.type ?? this.state.originalVariableType;
                 const originalVariableShape = variable.shape ?? this.state.originalVariableShape;
-                const variableName = this.state.variableName ?? variable.name;
+                const variableName = variable.name ?? this.state.variableName;
                 const fileName = this.state.fileName ?? variable.fileName;
                 const isSliceDataEnabled = SliceableTypes.has(originalVariableType || '');
                 const sliceExpression = variable.sliceExpression;
@@ -341,6 +423,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd, sliceExpression });
     }
 
+    private handleGetHistogram(response: IGetColsResponse) {
+        this.setState({ histogramData: response });
+    }
+
+    private handleUpdateHistoryList(response: []) {
+        this.setState({ historyList: response });
+    }
+
     private handleGetAllRowsResponse(response: IRowsResponse) {
         const rows = response ? (response as JSONArray) : [];
         const normalized = this.normalizeData(rows);
@@ -384,6 +474,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 end: chunkEnd,
                 sliceExpression: this.state.sliceExpression
             });
+        } else {
+            this.submitCommand({ command: 'describe', args: { columnName: this.lastDescribeRequestColumnName } });
         }
     }
 
@@ -396,7 +488,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             };
             const columns = [rowNumberColumn].concat(variable.columns);
             return columns.reduce(
-                (accum: Slick.Column<Slick.SlickData>[], c: { key: string; type: ColumnType }, i: number) => {
+                (
+                    accum: Slick.Column<Slick.SlickData>[],
+                    c: { key: string; type: ColumnType; describe?: string },
+                    i: number
+                ) => {
                     // Only show index column for pandas DataFrame and Series
                     if (
                         variable?.type === 'DataFrame' ||
@@ -407,8 +503,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                             type: c.type,
                             field: c.key.toString(),
                             id: `${i}`,
-                            name: c.key.toString(),
+                            name: c.key === RowNumberColumnName ? '' : c.key.toString(),
                             sortable: true,
+                            toolTip: c.describe,
                             formatter: cellFormatterFunc
                         } as Slick.Column<Slick.SlickData>);
                     }
@@ -512,4 +609,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // so we need to tell it to update itself with an event
         this.gridColumnUpdateEvent.notify(newColumns);
     }
+
+    private submitCommand = (arg: { command: string; args: any }) => {
+        if (arg.command === 'describe') {
+            console.log('Describe', arg);
+            this.lastDescribeRequestColumnName = (arg.args as any).columnName;
+        }
+        this.sendMessage(DataViewerMessages.SubmitCommand, arg);
+    };
 }

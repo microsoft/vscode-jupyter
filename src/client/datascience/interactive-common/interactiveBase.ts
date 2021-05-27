@@ -176,7 +176,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         private readonly notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private selector: KernelSelector,
-        private serverStorage: IJupyterServerUriStorage
+        private serverStorage: IJupyterServerUriStorage,
+        notebook?: INotebook
     ) {
         super(
             configuration,
@@ -191,6 +192,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             viewColumn,
             useCustomEditorApi
         );
+        this._notebook = notebook;
 
         // Create our unique id. We use this to skip messages we send to other interactive windows
         this._id = uuid();

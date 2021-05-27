@@ -181,6 +181,29 @@ export class KernelVariables implements IJupyterVariables {
         return this.deserializeJupyterResult(results);
     }
 
+    public async getDataFrameColumn(
+        targetVariable: IJupyterVariable,
+        columnName: string,
+        notebook: INotebook
+    ): Promise<{}> {
+        // Import the data frame script directory if we haven't already
+        await this.importDataFrameScripts(notebook);
+
+        let expression = targetVariable.name;
+
+        // Then execute a call to get the rows and turn it into JSON
+        const results = await notebook.execute(
+            `print(${DataFrameLoading.DataFrameColFunc}(${expression}, '${columnName}'))`,
+            Identifiers.EmptyFileName,
+            0,
+            uuid(),
+            undefined,
+            true
+        );
+
+        return this.deserializeJupyterResultColumn(results);
+    }
+
     private async importDataFrameScripts(notebook: INotebook, token?: CancellationToken): Promise<void> {
         const key = notebook.identity.toString();
         if (!this.importedDataFrameScripts.get(key)) {
@@ -312,6 +335,16 @@ export class KernelVariables implements IJupyterVariables {
     private deserializeJupyterResult<T>(cells: ICell[]): T {
         const text = this.extractJupyterResultText(cells);
         return JSON.parse(text) as T;
+    }
+
+    private deserializeJupyterResultColumn<T>(cells: ICell[]): T {
+        const text = this.extractJupyterResultText(cells);
+        return (text[0]
+            .substring(0, text[0].length - 2)
+            .split(',')
+            .map((e) => {
+                return isNaN(parseFloat(e)) ? e.substring(2, e.length - 1) : parseFloat(e);
+            }) as unknown) as T;
     }
 
     private getParser(notebook: INotebook) {

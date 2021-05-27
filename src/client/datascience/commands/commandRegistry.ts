@@ -4,7 +4,13 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
+import * as path from 'path';
+import {
+    CodeLens,
+    ConfigurationTarget,
+    env,
+    Range,
+    Uri} from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
@@ -31,12 +37,14 @@ import {
     IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
+    INotebookEditor,
     INotebookEditorProvider
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { ExportCommands } from './exportCommands';
 import { NotebookCommands } from './notebookCommands';
 import { JupyterServerSelectorCommand } from './serverSelector';
+
 
 @injectable()
 export class CommandRegistry implements IDisposable {
@@ -134,6 +142,7 @@ export class CommandRegistry implements IDisposable {
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
+
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
@@ -461,11 +470,11 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async createNewNotebook(): Promise<void> {
+    private async createNewNotebook(): Promise<INotebookEditor | undefined> {
         if (this.useNativeNotebook) {
-            await this.nativeNotebookCreator.createNewNotebook();
+            return await this.nativeNotebookCreator.createNewNotebook();
         } else {
-            await this.notebookEditorProvider.createNew();
+            return await this.notebookEditorProvider.createNew();
         }
     }
 
@@ -510,6 +519,7 @@ export class CommandRegistry implements IDisposable {
         // It's the given way to focus a single view so using that here, note that it needs to match the view ID
         return this.commandManager.executeCommand('jupyterViewVariables.focus');
     }
+
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
         if (this.debugService.activeDebugSession) {
@@ -535,4 +545,27 @@ export class CommandRegistry implements IDisposable {
             }
         }
     }
+}
+
+export function getImportCodeForFileType(filepath: string) {
+    const fileExtension = path.extname(filepath);
+    let code = 'import pandas as pd\n';
+    switch (fileExtension) {
+        case '.csv':
+            code += `df = pd.read_csv(r"${filepath}")`;
+            break;
+        case '.xlsx': // TODO dependency check for openpyxl
+            code += `df = pd.read_excel(r"${filepath}")`;
+            break;
+        case '.parquet':
+            code += `df = pd.read_parquet(r"${filepath}")`;
+            break;
+        case '.sql': // TODO UI for remote data sources
+            code += `df = pd.read_sql(r"${filepath}")`;
+            break;
+        case '.feather': // TODO UI for remote data sources
+            code += `df = pd.read_feather(r"${filepath}")`;
+            break;
+    }
+    return code;
 }

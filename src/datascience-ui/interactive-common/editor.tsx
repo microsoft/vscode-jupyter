@@ -28,7 +28,6 @@ const TOP_STACK_FRAME_DECORATION: monacoEditor.editor.IModelDecorationOptions = 
 export interface IEditorProps {
     content: string;
     version: number;
-    codeTheme: string;
     readOnly: boolean;
     testMode: boolean;
     monacoTheme: string | undefined;

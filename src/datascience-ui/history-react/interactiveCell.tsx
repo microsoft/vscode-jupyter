@@ -30,7 +30,6 @@ interface IInteractiveCellBaseProps {
     cellVM: ICellViewModel;
     language: string;
     baseTheme: string;
-    codeTheme: string;
     testMode?: boolean;
     autoFocus: boolean;
     maxTextSize?: number;
@@ -299,7 +298,6 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     cellVM={this.props.cellVM}
                     editorOptions={this.props.editorOptions}
                     history={this.inputHistory}
-                    codeTheme={this.props.codeTheme}
                     onCodeChange={this.onCodeChange}
                     onCodeCreated={this.onCodeCreated}
                     unfocused={this.onUnfocused}

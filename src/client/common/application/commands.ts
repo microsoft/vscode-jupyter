@@ -78,6 +78,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['notebook.execute']: [];
     ['notebook.cell.execute']: [] | [{ start: number; end: number }, Uri];
     ['notebook.cell.insertCodeCellBelow']: [];
+    ['notebook.cell.executeAndInsertBelow']: [];
+    ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.undo']: [];
     ['notebook.redo']: [];
     ['vscode.open']: [Uri];
@@ -85,6 +87,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.save']: [Uri];
     ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
     ['undo']: [];
+    [DSCommands.UpdateOrCreateDataViewer]: [];
     [DSCommands.NotebookEditorInterruptKernel]: [Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
@@ -100,6 +103,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunFromLine]: [Uri, number, number];
     [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ImportNotebookFile]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.ImportAsDataFrame]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.ImportAsDataFrameFromUrl]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.OpenNotebook]: [undefined | Uri, undefined | string, undefined | CommandSource];
     [DSCommands.OpenNotebookInPreviewEditor]: [undefined | Uri];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];

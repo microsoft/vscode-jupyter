@@ -337,7 +337,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     }
 
     @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
-    private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
+    protected async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
         const settings = await this.generateDataScienceExtraSettings();
         const isDark = settings.ignoreVscodeTheme ? false : request?.isDark;
         this.setTheme(isDark);

@@ -150,6 +150,23 @@ def _VSCODE_getDataFrameRows(df, start, end):
     return _VSCODE_pd_json.to_json(None, df, orient="table", date_format="iso")
 
 
+# Function to retrieve a set of rows for a data frame
+def _VSCODE_getDataFrameColumn(df, columnName):
+    df = _VSCODE_convertToDataFrame(df)
+    # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
+    try:
+        df = df.replace(
+            {
+                _VSCODE_np.inf: "inf",
+                -_VSCODE_np.inf: "-inf",
+                _VSCODE_np.nan: "nan",
+            }
+        )
+    except:
+        pass
+    return df[columnName].values.tolist()
+
+
 # Function to get info on the passed in data frame
 def _VSCODE_getDataFrameInfo(df):
     df = _VSCODE_convertToDataFrame(df)
@@ -182,6 +199,7 @@ def _VSCODE_getDataFrameInfo(df):
         columnTypes.insert(0, "int64")
 
     # Then loop and generate our output json
+    # TODO check to see if column is numeric type?
     columns = []
     for n in _VSCODE_builtins.range(0, _VSCODE_builtins.len(columnNames)):
         column_type = columnTypes[n]
@@ -190,6 +208,21 @@ def _VSCODE_getDataFrameInfo(df):
         colobj["key"] = column_name
         colobj["name"] = column_name
         colobj["type"] = str(column_type)
+        length = len(df)
+        if column_name != 'index':
+            describe = df[column_name].describe().to_string(header=False)
+            isna = df[column_name].isna().sum()
+            describe += "\n# null\t" + str(isna)
+            describe += "\n% null\t" + str(isna / length) + "%"
+            isduplicate = df[column_name].duplicated().sum()
+            describe += "\n# repeated\t" + str(isduplicate) + "\n"
+            describe += "% repeated\t" + str(isduplicate / length * 100)[:4] + "%"
+        else:
+            describe = df.describe().to_string()
+            isduplicate = df.duplicated().sum()
+            describe += "\n# repeated\t" + str(isduplicate) + "\n"
+            describe += "% repeated\t" + str(isduplicate / length * 100)[:4] + "%"
+        colobj["describe"] = describe
         columns.append(colobj)
 
     # Save this in our target

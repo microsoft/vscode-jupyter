@@ -55,6 +55,8 @@
         "onCommand:jupyter.createnewinteractive",
         "onCommand:jupyter.importnotebook",
         "onCommand:jupyter.importnotebookfile",
+        "onCommand:jupyter.importFileAsDataFrame",
+        "onCommand:jupyter.importFileAsDataFrameFromUrl",
         "onCommand:jupyter.opennotebook",
         "onCommand:jupyter.opennotebookInPreviewEditor",
         "onCommand:jupyter.selectjupyteruri",
@@ -65,7 +67,8 @@
         "onCommand:jupyter.openVariableView",
         "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
         "onNotebook:jupyter-notebook",
-        "onCustomEditor:jupyter.notebook.ipynb"
+        "onCustomEditor:jupyter.notebook.ipynb",
+        "onCustomEditor:jupyter-data-wrangler"
     ],
     "main": "./out/client/extension",
     "capabilities": {
@@ -279,6 +282,11 @@
             }
         ],
         "commands": [
+            {
+                "title": "Open DataFrame in Data Viewer",
+                "command": "jupyter.openDataFrameInDataViewer",
+                "category": "Jupyter"
+            },
             {
                 "command": "jupyter.viewOutput",
                 "title": "%jupyter.command.jupyter.viewOutput.title%",
@@ -734,6 +742,16 @@
                 "category": "Jupyter"
             },
             {
+                "command": "jupyter.importFileAsDataFrame",
+                "title": "Import File as DataFrame",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.importFileAsDataFrameFromUrl",
+                "title": "Import File as DataFrame From Url",
+                "category": "Jupyter"
+            },
+            {
                 "command": "jupyter.clearSavedJupyterUris",
                 "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
                 "category": "Jupyter"
@@ -899,6 +917,11 @@
                 {
                     "when": "resourceLangId == jupyter",
                     "command": "jupyter.importnotebookfile",
+                    "group": "Jupyter"
+                },
+                {
+                    "when": "resourceLangId == datafile",
+                    "command": "jupyter.importFileAsDataFrame",
                     "group": "Jupyter"
                 }
             ],
@@ -1373,6 +1396,15 @@
             "type": "object",
             "title": "Jupyter",
             "properties": {
+                "jupyter.dataCleaningMode": {
+                    "type": "string",
+                    "enum": [
+                        "standalone",
+                        "jupyter_notebook",
+                        "python_file",
+                        "interactive_window"
+                    ]
+                },
                 "jupyter.experiments.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -1785,6 +1817,16 @@
         },
         "languages": [
             {
+                "id": "datafile",
+                "extensions": [
+                    ".csv",
+                    ".parquet",
+                    ".sql",
+                    ".feather",
+                    ".xlsx"
+                ]
+            },
+            {
                 "id": "jupyter",
                 "aliases": [
                     "Jupyter",
@@ -1865,6 +1907,16 @@
                     }
                 ],
                 "priority": "option"
+            },
+            {
+                "viewType": "jupyter-data-wrangler",
+                "displayName": "Data Wrangler",
+                "selector": [
+                    {
+                        "filenamePattern": "*.csv"
+                    }
+                ],
+                "priority": "default"
             }
         ],
         "viewsContainers": {
@@ -1973,13 +2025,17 @@
         "node-stream-zip": "^1.6.0",
         "onigasm": "^2.2.2",
         "pdfkit": "^0.11.0",
+        "plotly.js": "^1.58.4",
         "plotly.js-dist": "^1.58.4",
         "portfinder": "^1.0.25",
-        "re-resizable": "~6.5.5",
+        "re-resizable": "^6.5.5",
         "react": "^16.5.2",
+        "react-chartjs-2": "^2.11.1",
         "react-data-grid": "^6.0.2-0",
         "react-dom": "^16.5.2",
         "react-draggable": "^4.4.2",
+        "react-google-charts": "^3.0.15",
+        "react-plotly.js": "^2.5.1",
         "react-redux": "^7.1.1",
         "react-svg-pan-zoom": "^3.1.0",
         "react-svgmt": "^1.1.8",
@@ -2072,6 +2128,7 @@
         "@types/react": "^16.4.14",
         "@types/react-dom": "^16.0.8",
         "@types/react-json-tree": "^0.6.8",
+        "@types/react-plotly.js": "^2.2.4",
         "@types/react-redux": "^7.1.5",
         "@types/react-virtualized": "^9.21.2",
         "@types/redux-logger": "^3.0.7",
