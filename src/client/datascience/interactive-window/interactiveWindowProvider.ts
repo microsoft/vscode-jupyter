@@ -177,7 +177,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider {
             // See if the first window was tied to a file or not.
             const firstWindow = this._windows.find((w) => w.owner);
             if (firstWindow) {
-                this.globalMemento.update(AskedForPerFileSettingKey, true);
+                void this.globalMemento.update(AskedForPerFileSettingKey, true);
                 const questions = [
                     localize.DataScience.interactiveWindowModeBannerSwitchYes(),
                     localize.DataScience.interactiveWindowModeBannerSwitchNo()

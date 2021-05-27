@@ -391,18 +391,18 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // extension contexts
         if (this.commandManager) {
             const interactiveContext = new ContextKey(EditorContexts.HaveInteractive, this.commandManager);
-            interactiveContext.set(!this.isDisposed).catch();
+            void interactiveContext.set(!this.isDisposed).catch();
             const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);
             const redoableContext = new ContextKey(EditorContexts.HaveRedoableCells, this.commandManager);
             const hasCellSelectedContext = new ContextKey(EditorContexts.HaveCellSelected, this.commandManager);
             if (info) {
-                interactiveCellsContext.set(info.cellCount > 0).catch();
-                redoableContext.set(info.redoCount > 0).catch();
-                hasCellSelectedContext.set(info.selectedCell ? true : false).catch();
+                void interactiveCellsContext.set(info.cellCount > 0).catch();
+                void redoableContext.set(info.redoCount > 0).catch();
+                void hasCellSelectedContext.set(info.selectedCell ? true : false).catch();
             } else {
-                interactiveCellsContext.set(false).catch();
-                redoableContext.set(false).catch();
-                hasCellSelectedContext.set(false).catch();
+                void interactiveCellsContext.set(false).catch();
+                void redoableContext.set(false).catch();
+                void hasCellSelectedContext.set(false).catch();
             }
         }
     }
@@ -531,7 +531,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
 
         // Then run the export command with these contents
-        this.commandManager.executeCommand(
+        void this.commandManager.executeCommand(
             Commands.Export,
             contents,
             this.owningResource,
