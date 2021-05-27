@@ -591,8 +591,8 @@ export namespace Settings {
     export const RemoteDebuggerPortEnd = 9000;
     export const DefaultVariableQuery: IVariableQuery = {
         language: PYTHON_LANGUAGE,
-        query: '_rwho_ls = %who_ls\nprint(_rwho_ls)',
-        parseExpr: "'(\\w+)'"
+        query: '%whos',
+        parseExpr: "(\\n\\w+\\s+\\w+)"
     };
 }
 

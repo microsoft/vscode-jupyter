@@ -93,16 +93,16 @@ export class KernelVariables implements IJupyterVariables {
             return match;
         } else {
             // No items in the cache yet, just ask for the names
-            const names = await this.getVariableNamesFromKernel(notebook, token);
-            if (names) {
-                const matchName = names.find((n) => n === name);
+            const variables = await this.getVariableNamesAndTypesFromKernel(notebook, token);
+            if (variables) {
+                const matchName = variables.find((v) => v.name === name);
                 if (matchName) {
                     return this.getVariableValueFromKernel(
                         {
                             name,
                             value: undefined,
                             supportsDataExplorer: false,
-                            type: '',
+                            type: matchName.type,
                             size: 0,
                             count: 0,
                             shape: '',
@@ -368,12 +368,12 @@ export class KernelVariables implements IJupyterVariables {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
                 currentExecutionCount: request.executionCount,
-                variables: (await this.getVariableNamesFromKernel(notebook)).map((n) => {
+                variables: (await this.getVariableNamesAndTypesFromKernel(notebook)).map((v) => {
                     return {
-                        name: n,
+                        name: v.name,
                         value: undefined,
                         supportsDataExplorer: false,
-                        type: '',
+                        type: v.type,
                         size: 0,
                         shape: '',
                         count: 0,
@@ -397,7 +397,7 @@ export class KernelVariables implements IJupyterVariables {
 
         // Use the list of names to fetch the page of data
         if (list) {
-            type SortableColumn = 'name';
+            type SortableColumn = 'name' | 'type';
             const sortColumn = request.sortColumn as SortableColumn;
             const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
                 if (!request.sortAscending) {
@@ -471,22 +471,68 @@ export class KernelVariables implements IJupyterVariables {
         return result;
     }
 
-    private async getVariableNamesFromKernel(notebook: INotebook, token?: CancellationToken): Promise<string[]> {
+    private async getVariableNamesAndTypesFromKernel(notebook: INotebook, token?: CancellationToken): Promise<IJupyterVariable[]> {
         // Get our query and parser
         const query = this.getParser(notebook);
 
         // Now execute the query
         if (notebook && query) {
-            const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), token, true);
-            const text = this.extractJupyterResultText(cells);
+            const delCells = await notebook.execute("%whos", Identifiers.EmptyFileName, 0, uuid(), token, true);
+            console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+            console.log("Amount of cells is " + String(delCells.length));
+            const delText = this.extractJupyterResultText(delCells)[0];
+            console.log("CeLL OUT PUTABBBBBBBBBBBBB");
+            console.log(delText);
+            console.log("CeLL OUT DDDDDDDDDDDDDD");
+            console.log("BEFORE MATCHES");
+            const rx = RegExp("(\\n\\w+\\s+\\w+)", 'g');
+            const matches = this.getAllMatches(rx, delText);
+            console.log("MATCHES");
+            console.log(matches);
 
-            // Apply the expression to it
-            const matches = this.getAllMatches(query.parser, text);
-
-            // Turn each match into a value
             if (matches) {
-                return matches;
+                return matches.map((v) => {
+                    const nt = v.substr(1).split(/\s+/);
+                    console.log("NAME TYPE PAIR");
+                    console.log(nt);
+                    return {
+                        name: nt[0],
+                        value: undefined,
+                        supportsDataExplorer: false,
+                        type: nt[1],
+                        size: 0,
+                        shape: '',
+                        count: 0,
+                        truncated: true
+                    };
+                })
             }
+
+            // const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), token, true);
+            // const text = this.extractJupyterResultText(cells);
+            // console.log("CeLL OUT PUT REAAAAAAAAL");
+            // console.log(text);
+
+            // // Apply the expression to it
+            // const matches = this.getAllMatches(query.parser, text);
+
+            // // Turn each match into a value
+            // if (matches) {
+            //     return matches.map((v) => {
+            //         console.log("NAME TYPE PAIR");
+            //         console.log(v);
+            //         return {
+            //             name: v,
+            //             value: undefined,
+            //             supportsDataExplorer: false,
+            //             type: '',
+            //             size: 0,
+            //             shape: '',
+            //             count: 0,
+            //             truncated: true
+            //         };
+            //     })
+            // }
         }
 
         return [];
