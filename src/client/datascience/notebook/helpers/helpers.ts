@@ -663,36 +663,50 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
     if (!value) {
         return '';
     }
-    const stringValue = Buffer.from(value as Uint8Array).toString('utf8');
-    if (mime === CellOutputMimeTypes.error) {
-        traceInfo(`Concerting ${mime} from ${stringValue}`);
-        return JSON.parse(stringValue);
-    } else if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
-        return stringValue;
-    } else if (mime.startsWith('image/')) {
-        // Images in Jupyter are stored in base64 encoded format.
-        // VS Code expects bytes when rendering images.
-        return Buffer.from(stringValue, 'base64');
-    } else if (mime.toLowerCase().includes('json')) {
-        return JSON.parse(stringValue);
-    } else {
-        return stringValue;
+    try {
+        const stringValue = Buffer.from(value as Uint8Array).toString('utf8');
+        if (mime === CellOutputMimeTypes.error) {
+            traceInfo(`Concerting ${mime} from ${stringValue}`);
+            return JSON.parse(stringValue);
+        } else if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
+            return splitMultilineString(stringValue);
+        } else if (mime.startsWith('image/')) {
+            // Images in Jupyter are stored in base64 encoded format.
+            // VS Code expects bytes when rendering images.
+            return Buffer.from(value).toString('base64');
+        } else if (mime.toLowerCase().includes('json')) {
+            return JSON.parse(stringValue);
+        } else {
+            return stringValue;
+        }
+    } catch (ex) {
+        traceError(`Failed to convert ${mime} output from a buffer ${typeof value}, ${value}`, ex);
+        return '';
     }
 }
 function convertJupyterOutputToBuffer(mime: string, value: unknown): Buffer {
     if (!value) {
         return Buffer.from('');
     }
-    if ((mime.startsWith('text/') || textMimeTypes.includes(mime)) && typeof value === 'string') {
-        return Buffer.from(value);
-    } else if (mime.startsWith('image/') && typeof value === 'string') {
-        // Images in Jupyter are stored in base64 encoded format.
-        // VS Code expects bytes when rendering images.
-        return Buffer.from(value, 'base64');
-    } else if (mime.toLowerCase().includes('json')) {
-        return Buffer.from(JSON.stringify(value));
-    } else {
-        return Buffer.from(value as string);
+    try {
+        if (
+            (mime.startsWith('text/') || textMimeTypes.includes(mime)) &&
+            (Array.isArray(value) || typeof value === 'string')
+        ) {
+            const stringValue = Array.isArray(value) ? concatMultilineString(value) : value;
+            return Buffer.from(stringValue);
+        } else if (mime.startsWith('image/') && typeof value === 'string') {
+            // Images in Jupyter are stored in base64 encoded format.
+            // VS Code expects bytes when rendering images.
+            return Buffer.from(value, 'base64');
+        } else if (mime.toLowerCase().includes('json')) {
+            return Buffer.from(JSON.stringify(value));
+        } else {
+            return Buffer.from(value as string);
+        }
+    } catch (ex) {
+        traceError(`Failed to convert ${mime} output to a buffer ${typeof value}, ${value}`, ex);
+        return Buffer.from('');
     }
 }
 export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
@@ -826,7 +840,8 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
     );
 
     if (item) {
-        return convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
+        const value = convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
+        return Array.isArray(value) ? value.join('') : value;
     }
     return '';
 }
