@@ -11,6 +11,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands, Uri, CancellationTokenSource, NotebookCellKind } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import {
     CellMetadata,
@@ -55,11 +56,17 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         notebookSerializer = api.serviceContainer.get<NotebookSerializer>(NotebookSerializer);
     });
-    setup(async () => {
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         testIPynbWithOutput = Uri.file(await createTemporaryNotebook(templateIPynbWithOutput, disposables));
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
+    teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+    });
     test('Opening a 0 byte ipynb file will have an empty cell', async () => {
         const tmpFile = await createTemporaryFile('.ipynb');
         disposables.push({ dispose: () => tmpFile.cleanupCallback() });
