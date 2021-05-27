@@ -799,14 +799,15 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
  * As we're displaying the error in the statusbar, we don't want this dup error in output.
  * Hence remove this.
  */
-export function translateErrorOutput(output: nbformat.IError): NotebookCellOutput {
+export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutput {
+    output = output || { output_type: 'error', ename: '', evalue: '', traceback: [] };
     return new NotebookCellOutput(
         [
             NotebookCellOutputItem.error(
                 {
-                    name: output.ename,
-                    message: output.evalue,
-                    stack: output.traceback.join('\n')
+                    name: output?.ename || '',
+                    message: output?.evalue || '',
+                    stack: (output?.traceback || []).join('\n')
                 },
                 { ...getOutputMetadata(output), originalError: output }
             )
