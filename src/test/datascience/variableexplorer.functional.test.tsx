@@ -818,10 +818,10 @@ a = 1,2,3,4,5,6,7,8,9`;
             'Variable explorer - Sort by type column',
             async () => {
                 const basicCode: string = `B = set([42])
-    z = complex(1, 1)
-    C = {'c': 1}
-    A = [1, 2, 3]
-    a = 1,2,3,4,5,6,7,8,9`;
+z = complex(1, 1)
+C = {'c': 1}
+A = [1, 2, 3]
+a = 1,2,3,4,5,6,7,8,9`;
 
                 const { mount } = await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
