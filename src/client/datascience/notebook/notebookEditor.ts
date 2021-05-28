@@ -288,24 +288,6 @@ export class NotebookEditor implements INotebookEditor {
         this._closed.fire(this);
     }
 
-    public runAbove(cell: NotebookCell | undefined): void {
-        if (cell && cell.index > 0) {
-            void this.commandManager.executeCommand(
-                'notebook.cell.execute',
-                { start: 0, end: cell.index },
-                cell.notebook.uri
-            );
-        }
-    }
-    public runCellAndBelow(cell: NotebookCell | undefined): void {
-        if (cell && cell.index >= 0) {
-            void this.commandManager.executeCommand(
-                'notebook.cell.execute',
-                { start: cell.index, end: cell.notebook.cellCount },
-                cell.notebook.uri
-            );
-        }
-    }
     private onClosedDocument(e?: NotebookDocument) {
         if (this.document === e) {
             this._closed.fire(this);

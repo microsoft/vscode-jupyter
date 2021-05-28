@@ -91,8 +91,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunCell]: [Uri, number, number, number, number];
     [DSCommands.RunAllCellsAbove]: [Uri, number, number];
     [DSCommands.RunCellAndAllBelow]: [Uri, number, number];
-    [DSCommands.NativeNotebookRunAllCellsAbove]: [NotebookCell];
-    [DSCommands.NativeNotebookRunCellAndAllBelow]: [NotebookCell];
     [DSCommands.RunAllCellsAbovePalette]: [];
     [DSCommands.RunCellAndAllBelowPalette]: [];
     [DSCommands.DebugCurrentCellPalette]: [];

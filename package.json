@@ -296,20 +296,6 @@
                 "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
             },
             {
-                "command": "jupyter.notebookeditor.runallcellsabove",
-                "title": "%DataScience.runAbove%",
-                "category": "Notebook",
-                "icon": "$(run-above)",
-                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
-            },
-            {
-                "command": "jupyter.notebookeditor.runcellandallbelow",
-                "title": "%DataScience.runBelow%",
-                "category": "Notebook",
-                "icon": "$(run-below)",
-                "enablement": "notebookViewType == jupyter-notebook && jupyter.isnotebooktrusted"
-            },
-            {
                 "command": "jupyter.export",
                 "title": "%DataScience.notebookExportAs%",
                 "category": "Jupyter"
@@ -844,20 +830,6 @@
                     "when": "notebookViewType == 'jupyter-notebook'"
                 }
             ],
-            "notebook/cell/title": [
-                {
-                    "command": "jupyter.notebookeditor.runallcellsabove",
-                    "title": "%DataScience.runAbove%",
-                    "group": "inline/cell@0",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.runcellandallbelow",
-                    "title": "%DataScience.runBelow%",
-                    "group": "inline/cell@0",
-                    "when": "notebookViewType == 'jupyter-notebook' && jupyter.isnotebooktrusted"
-                }
-            ],
             "notebook/toolbar": [
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
@@ -907,16 +879,6 @@
                     "command": "jupyter.notebookeditor.keybind.toggleOutput",
                     "title": "%DataScience.toggleCellOutput%",
                     "when": "notebookViewType == jupyter-notebook"
-                },
-                {
-                    "command": "jupyter.notebookeditor.runallcellsabove",
-                    "title": "%DataScience.runAbove%",
-                    "when": "notebookEditorFocused && notebookViewType == 'jupyter-notebook'"
-                },
-                {
-                    "command": "jupyter.notebookeditor.runcellandallbelow",
-                    "title": "%DataScience.runBelow%",
-                    "when": "notebookEditorFocused && notebookViewType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.exportAsPythonScript",

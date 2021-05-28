@@ -22,7 +22,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
-    ) {}
+    ) { }
 
     public register(commandManager: ICommandManager): void {
         this.disposableRegistry.push(
@@ -54,14 +54,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NativeNotebookRunAllCellsAbove, (cell) => this.runAbove(cell))
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NativeNotebookRunCellAndAllBelow, (cell) =>
-                this.runCellAndBelow(cell)
-            )
         );
     }
 
@@ -145,30 +137,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             } catch (e) {
                 await this.dataScienceErrorHandler.handleError(e);
             }
-        }
-    }
-
-    private runAbove(cell: NotebookCell | undefined): void {
-        const activeEditor = this.provider.activeEditor;
-        cell = cell || this.getActiveCell(); // When called from command palette, we don't have a cell as the first argument.
-        if (activeEditor && cell) {
-            activeEditor.runAbove(cell);
-        }
-    }
-    private getActiveCell() {
-        const document = this.notebook.activeNotebookEditor?.document;
-        const selection = this.notebook.activeNotebookEditor?.selections;
-        if (!selection || !document) {
-            return;
-        }
-        const cells = document.getCells(selection[0]);
-        return cells.length ? cells[0] : undefined;
-    }
-    private runCellAndBelow(cell: NotebookCell | undefined): void {
-        const activeEditor = this.provider.activeEditor;
-        cell = cell || this.getActiveCell(); // When called from command palette, we don't have a cell as the first argument.
-        if (activeEditor && cell) {
-            activeEditor.runCellAndBelow(cell);
         }
     }
 }
