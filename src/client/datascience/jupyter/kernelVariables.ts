@@ -311,6 +311,8 @@ export class KernelVariables implements IJupyterVariables {
     // Pull our text result out of the Jupyter cell
     private deserializeJupyterResult<T>(cells: ICell[]): T {
         const text = this.extractJupyterResultText(cells);
+        console.log("JUPYTER TEXT FROM PYTHON");
+        console.log(text);
         return JSON.parse(text) as T;
     }
 
@@ -477,50 +479,52 @@ export class KernelVariables implements IJupyterVariables {
 
         // Now execute the query
         if (notebook && query) {
-            const delCells = await notebook.execute("%whos", Identifiers.EmptyFileName, 0, uuid(), token, true);
-            console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-            console.log("Amount of cells is " + String(delCells.length));
-            const delText = this.extractJupyterResultText(delCells)[0];
-            console.log("CeLL OUT PUTABBBBBBBBBBBBB");
-            console.log(delText);
-            console.log("CeLL OUT DDDDDDDDDDDDDD");
-            console.log("BEFORE MATCHES");
-            const rx = RegExp("(\\n\\w+\\s+\\w+)", 'g');
-            const matches = this.getAllMatches(rx, delText);
-            console.log("MATCHES");
+            console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+            const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), token, true);
+            const text = this.extractJupyterResultText(cells);
+            console.log("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
+            const matches = this.getAllMatches(query.parser, text);
+            const matchesAsStr = matches.map(v => `'${v}'`);
+            console.log("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
+            console.log("matches and then matches as str");
             console.log(matches);
+            console.log(matchesAsStr);
+            await this.importGetVariableInfoScripts(notebook, token);
 
-            if (matches) {
-                return matches.map((v) => {
-                    const nt = v.substr(1).split(/\s+/);
-                    console.log("NAME TYPE PAIR");
-                    console.log(nt);
-                    return {
-                        name: nt[0],
-                        value: undefined,
-                        supportsDataExplorer: false,
-                        type: nt[1],
-                        size: 0,
-                        shape: '',
-                        count: 0,
-                        truncated: true
-                    };
-                })
+            const results = await notebook.execute(
+                `print(${GetVariableInfo.VariableTypesFunc}([${matches}], [${matchesAsStr}]))`,
+                Identifiers.EmptyFileName,
+                0,
+                uuid(),
+                token,
+                true
+            );
+            console.log("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
+
+            // Apply the expression to it
+            const x = this.deserializeJupyterResult(results) as any;
+            console.log(x);
+            console.log("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
+
+            const vars = [];
+            for (const name in x as Object) {
+                const v: IJupyterVariable = {
+                    name: name,
+                    value: undefined,
+                    supportsDataExplorer: false,
+                    type: x[name] || '',
+                    size: 0,
+                    shape: '',
+                    count: 0,
+                    truncated: true
+                }
+                vars.push(v);
             }
+            return vars;
 
-            // const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), token, true);
-            // const text = this.extractJupyterResultText(cells);
-            // console.log("CeLL OUT PUT REAAAAAAAAL");
-            // console.log(text);
-
-            // // Apply the expression to it
-            // const matches = this.getAllMatches(query.parser, text);
-
-            // // Turn each match into a value
+            // Turn each match into a value
             // if (matches) {
             //     return matches.map((v) => {
-            //         console.log("NAME TYPE PAIR");
-            //         console.log(v);
             //         return {
             //             name: v,
             //             value: undefined,

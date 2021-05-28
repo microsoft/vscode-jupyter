@@ -591,8 +591,8 @@ export namespace Settings {
     export const RemoteDebuggerPortEnd = 9000;
     export const DefaultVariableQuery: IVariableQuery = {
         language: PYTHON_LANGUAGE,
-        query: '%whos',
-        parseExpr: "(\\n\\w+\\s+\\w+)"
+        query: '_rwho_ls = %who_ls\nprint(_rwho_ls)',
+        parseExpr: "'(\\w+)'"
     };
 }
 
@@ -621,6 +621,7 @@ export namespace GetVariableInfo {
     export const ScriptPath = path.join(SysPath, 'vscodeGetVariableInfo.py');
     export const VariableInfoFunc = '_VSCODE_getVariableInfo';
     export const VariablePropertiesFunc = '_VSCODE_getVariableProperties';
+    export const VariableTypesFunc = '_VSCODE_getVariableTypes';
 
     // Constants for the debugger which imports the script files
     export const VariableInfoImportName = `__import__('vscodeGetVariableInfo')`;
