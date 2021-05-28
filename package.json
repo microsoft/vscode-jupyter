@@ -936,7 +936,7 @@
                     "command": "jupyter.exportAsPythonScript",
                     "title": "%jupyter.command.jupyter.exportAsPythonScript.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.isnativeactive && isWorkspaceTrusted && jupyter.ispythonnotebook && isWorkspaceTrusted"
+                    "when": "jupyter.isnativeactive && isWorkspaceTrusted && jupyter.ispythonnotebook"
                 },
                 {
                     "command": "jupyter.refreshDataViewer",
