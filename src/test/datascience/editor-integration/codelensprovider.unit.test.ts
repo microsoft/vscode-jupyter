@@ -72,7 +72,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         );
     });
 
-    test('Initialize Code Lenses one document', () => {
+    test('Initialize Code Lenses one document', async () => {
         // Create our document
         const document = TypeMoq.Mock.ofType<TextDocument>();
         document.setup((d) => d.fileName).returns(() => 'test.py');
@@ -89,13 +89,13 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .verifiable(TypeMoq.Times.once());
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
 
-        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
 
         targetCodeWatcher.verifyAll();
         serviceContainer.verifyAll();
     });
 
-    test('Initialize Code Lenses same doc called', () => {
+    test('Initialize Code Lenses same doc called', async () => {
         // Create our document
         const document = TypeMoq.Mock.ofType<TextDocument>();
         const uri = Uri.file('test.py');
@@ -117,14 +117,14 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .verifiable(TypeMoq.Times.once());
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
 
-        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
-        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
 
         // getCodeLenses should be called twice, but getting the code watcher only once due to same doc
         targetCodeWatcher.verifyAll();
         serviceContainer.verifyAll();
     });
-    test('Should not Initialize Code Lenses when a Native Notebook is open', () => {
+    test('Should not Initialize Code Lenses when a Native Notebook is open', async () => {
         // Create our document
         const document = TypeMoq.Mock.ofType<TextDocument>();
         document.setup((d) => d.fileName).returns(() => 'test.py');
@@ -144,15 +144,15 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .verifiable(TypeMoq.Times.never());
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
 
-        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
-        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
 
         // getCodeLenses should be called twice, but getting the code watcher only once due to same doc
         targetCodeWatcher.verifyAll();
         serviceContainer.verifyAll();
     });
 
-    test('Initialize Code Lenses new name / version', () => {
+    test('Initialize Code Lenses new name / version', async () => {
         // Create our document
         const document = TypeMoq.Mock.ofType<TextDocument>();
         document.setup((d) => d.fileName).returns(() => 'test.py');
@@ -181,9 +181,9 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .setup((d) => d.textDocuments)
             .returns(() => [document.object, document2.object, document3.object]);
 
-        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
-        codeLensProvider.provideCodeLenses(document2.object, tokenSource.token);
-        codeLensProvider.provideCodeLenses(document3.object, tokenSource.token);
+        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        await codeLensProvider.provideCodeLenses(document2.object, tokenSource.token);
+        await codeLensProvider.provideCodeLenses(document3.object, tokenSource.token);
 
         // service container get should be called three times as the names and versions don't match
         targetCodeWatcher.verifyAll();
