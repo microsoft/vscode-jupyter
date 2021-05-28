@@ -12,7 +12,8 @@ import {
     ICommandManager,
     IDebugService,
     IDocumentManager,
-    IVSCodeNotebook
+    IVSCodeNotebook,
+    IWorkspaceService
 } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService } from '../../../client/common/types';
@@ -139,12 +140,15 @@ suite('DataScience Code Watcher Unit Tests', () => {
         const notebookProvider = mock(NotebookProvider);
         when((notebookProvider as any).then).thenReturn(undefined);
         when(notebookProvider.onNotebookCreated).thenReturn(dummyEvent.event);
-
+        const workspace = mock<IWorkspaceService>();
+        when(workspace.isTrusted).thenReturn(true);
+        when(workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
         const codeLensFactory = new CodeLensFactory(
             configService.object,
             instance(notebookProvider),
             fileSystem.object,
-            documentManager.object
+            documentManager.object,
+            instance(workspace)
         );
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
@@ -959,6 +963,9 @@ testing2`;
         const document = createDocument(inputText, fileName.fsPath, version, TypeMoq.Times.atLeastOnce());
         document.setup((doc) => doc.getText()).returns(() => inputText);
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
+        const workspace = mock<IWorkspaceService>();
+        when(workspace.isTrusted).thenReturn(true);
+        when(workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
 
         const codeLensProvider = new DataScienceCodeLensProvider(
             serviceContainer.object,
@@ -969,7 +976,8 @@ testing2`;
             disposables,
             debugService.object,
             fileSystem.object,
-            vscodeNotebook.object
+            vscodeNotebook.object,
+            instance(workspace)
         );
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);

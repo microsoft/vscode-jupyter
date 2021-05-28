@@ -4,7 +4,13 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
-import { ICommandManager, IDebugService, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
+import {
+    ICommandManager,
+    IDebugService,
+    IDocumentManager,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -30,9 +36,11 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IVSCodeNotebook) private readonly vsCodeNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vsCodeNotebook: IVSCodeNotebook,
+        @inject(IWorkspaceService) workspace: IWorkspaceService
     ) {
         disposableRegistry.push(this);
+        disposableRegistry.push(workspace.onDidGrantWorkspaceTrust(() => this.didChangeCodeLenses.fire()));
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
         disposableRegistry.push(this.documentManager.onDidCloseTextDocument(this.onDidCloseTextDocument.bind(this)));
         disposableRegistry.push(this.debugLocationTracker.updated(this.onDebugLocationUpdated.bind(this)));
