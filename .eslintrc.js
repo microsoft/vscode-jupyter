@@ -234,7 +234,6 @@ module.exports = {
         'src/test/datascience/plotViewer.functional.test.tsx',
         'src/test/datascience/editor-integration/helpers.ts',
         'src/test/datascience/editor-integration/cellhashprovider.unit.test.ts',
-        'src/test/datascience/editor-integration/codelensprovider.unit.test.ts',
         'src/test/datascience/jupyterPasswordConnect.unit.test.ts',
         'src/test/datascience/mockLanguageClient.ts',
         'src/test/datascience/errorHandler.functional.test.tsx',
