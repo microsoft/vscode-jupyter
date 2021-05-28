@@ -333,6 +333,11 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                 Commands.RunFileInInteractiveWindows,
                 Commands.InterruptKernel,
                 Commands.RunToLine,
+                Commands.RunCell,
+                Commands.DebugCell,
+                Commands.DebugContinue,
+                Commands.DebugStepOver,
+                Commands.DebugStop,
                 Commands.RunCellAndAllBelowPalette
             ];
             fullCommandList = fullCommandList.filter((item) => !commandsToBeDisabledIfNotTrusted.includes(item));

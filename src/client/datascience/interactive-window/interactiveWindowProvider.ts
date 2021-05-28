@@ -94,7 +94,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         asyncRegistry.push(this);
 
@@ -118,6 +119,11 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     }
 
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
+        if (!this.workspace.isTrusted){
+            // This should not happen, but if it does, then just throw an error.
+            // The commands the like should be disabled.
+            throw new Error('Worksapce not trusted');
+        }
         // Ask for a configuration change if appropriate
         const mode = await this.getInteractiveMode(resource);
 

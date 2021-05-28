@@ -125,13 +125,13 @@ export class PythonApiProvider implements IPythonApiProvider {
 @injectable()
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
-    private pythonExtensionId = PythonExtension;
     private waitingOnInstallPrompt?: Promise<void>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         // If the python extension is not installed listen to see if anything does install it
         if (!this.isPythonExtensionInstalled) {
@@ -140,10 +140,10 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     public get isPythonExtensionInstalled() {
-        return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
+        return this.extensions.getExtension(PythonExtension) !== undefined;
     }
     public get isPythonExtensionActive() {
-        return this.extensions.getExtension(this.pythonExtensionId)?.isActive === true;
+        return this.extensions.getExtension(PythonExtension)?.isActive === true;
     }
 
     public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
@@ -164,6 +164,10 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     public async showPythonExtensionInstallRecommendedPrompt() {
+        // If installed but disabled & workspace is not trusted, then don't show prompt
+        if (this.extensions.getExtension(PythonExtension)?.isActive === false && !this.workspace.isTrusted) {
+            return;
+        }
         const key = 'ShouldShowPythonExtensionInstallRecommendedPrompt';
         const surveyPrompt = this.persistentStateFactory.createGlobalPersistentState(key, true);
         if (surveyPrompt.value) {
