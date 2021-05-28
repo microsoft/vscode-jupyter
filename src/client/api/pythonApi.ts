@@ -64,7 +64,8 @@ export class PythonApiProvider implements IPythonApiProvider {
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
+        @inject(IWorkspaceService) private workspace: IWorkspaceService
     ) {
         const previouslyInstalled = this.extensionChecker.isPythonExtensionInstalled;
         if (!previouslyInstalled) {
@@ -87,7 +88,9 @@ export class PythonApiProvider implements IPythonApiProvider {
     }
 
     public setApi(api: PythonApi): void {
-        if (this.api.resolved) {
+        // Never allow accessing python API (we dont want to ever use the API and run code in untrusted API).
+        // Don't assume Python API will always be disabled in untrusted worksapces.
+        if (this.api.resolved || !this.workspace.isTrusted) {
             return;
         }
         this.api.resolve(api);
@@ -147,6 +150,10 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
+        // If workspace is not trusted, then don't show prompt
+        if (!this.workspace.isTrusted) {
+            return;
+        }
         if (this.waitingOnInstallPrompt) {
             return this.waitingOnInstallPrompt;
         }

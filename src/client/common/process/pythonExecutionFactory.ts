@@ -8,6 +8,7 @@ import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { IWorkspaceService } from '../application/types';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { IDisposable, IDisposableRegistry, Resource } from '../types';
@@ -46,7 +47,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IWindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -152,6 +154,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async createActivatedEnvironment(
         options: ExecutionFactoryCreateWithEnvironmentOptions
     ): Promise<IPythonExecutionService> {
+        // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
+        if (this.workspace.isTrusted) {
+            throw new Error('Workspace not trusted');
+        }
         const envVars = await this.activationHelper.getActivatedEnvironmentVariables(
             options.resource,
             options.interpreter,
