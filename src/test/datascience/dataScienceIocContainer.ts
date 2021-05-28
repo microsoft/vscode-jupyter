@@ -1270,6 +1270,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         const workspaceService = mock(WorkspaceService);
+        when(workspaceService.isTrusted).thenReturn(true);
+        when(workspaceService.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
         this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
         when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
         when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
