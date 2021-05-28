@@ -236,8 +236,11 @@ export abstract class BaseNotebookModel implements INotebookModel {
     protected _editEventEmitter = new EventEmitter<NotebookModelChange>();
     protected _kernelConnection?: KernelConnectionMetadata;
     private readonly preferredRemoteKernelIdStorage: PreferredRemoteKernelIdProvider;
+    public get isTrusted() {
+        return this._isTrusted();
+    }
     constructor(
-        public readonly isTrusted: boolean,
+        private _isTrusted: () => boolean,
         protected _file: Uri,
         protected globalMemento: Memento,
         crypto: ICryptoUtils,

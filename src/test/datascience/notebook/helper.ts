@@ -661,6 +661,7 @@ export function createNotebookModel(
     when(mockVSC.notebookDocuments).thenReturn([]);
 
     return new VSCodeNotebookModel(
+        () => true,
         uri,
         globalMemento,
         crypto,
