@@ -33,6 +33,7 @@ import {
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
@@ -119,7 +120,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     }
 
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
-        if (!this.workspace.isTrusted){
+        if (!this.workspace.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
             // The commands the like should be disabled.
             throw new Error('Worksapce not trusted');
@@ -243,7 +244,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             // See if the first window was tied to a file or not.
             const firstWindow = this._windows.find((w) => w.owner);
             if (firstWindow) {
-                this.globalMemento.update(AskedForPerFileSettingKey, true);
+                this.globalMemento.update(AskedForPerFileSettingKey, true).then(noop, noop);
                 const questions = [
                     localize.DataScience.interactiveWindowModeBannerSwitchYes(),
                     localize.DataScience.interactiveWindowModeBannerSwitchNo()
