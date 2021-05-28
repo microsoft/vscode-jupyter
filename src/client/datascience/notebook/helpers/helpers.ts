@@ -217,7 +217,6 @@ export function deleteKernelMetadataForTests(document: NotebookDocument) {
  * Converts a NotebookModel into VSCode friendly format.
  */
 export function notebookModelToVSCNotebookData(
-    isNotebookTrusted: boolean,
     notebookContentWithoutCells: Exclude<Partial<nbformat.INotebookContent>, 'cells'>,
     notebookUri: Uri,
     nbCells: nbformat.IBaseCell[],
@@ -235,8 +234,7 @@ export function notebookModelToVSCNotebookData(
     return new NotebookData(
         cells,
         new NotebookDocumentMetadata().with({
-            custom: notebookContentWithoutCells, // Include metadata in VSC Model (so that VSC can display these if required)
-            trusted: isNotebookTrusted
+            custom: notebookContentWithoutCells // Include metadata in VSC Model (so that VSC can display these if required)
         })
     );
 }

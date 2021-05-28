@@ -96,7 +96,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup default settings
         jupyterSettings.assign({
             allowImportFromNotebook: true,
-            alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 20000,
             jupyterLaunchRetries: 3,
             jupyterServerType: 'local',

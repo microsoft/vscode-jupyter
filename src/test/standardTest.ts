@@ -83,10 +83,6 @@ async function createSettings(): Promise<string> {
         'python.showStartPage': false
     };
 
-    // if smoke tests, then trust everything.
-    if (isRunningSmokeTests) {
-        defaultSettings['jupyter.alwaysTrustNotebooks'] = true;
-    }
     if (channel !== 'insiders') {
         // When in Stable, ensure we don't end up using Native Notebooks in CI tests.
         // I.e. ensure we have predictable state/experiments.

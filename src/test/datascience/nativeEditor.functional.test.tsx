@@ -36,7 +36,6 @@ import {
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExporter,
-    ITrustService
 } from '../../client/datascience/types';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
@@ -171,16 +170,6 @@ suite('DataScience Native Editor', () => {
                         .returns(() => Promise.resolve(Uri.file('foo.ipynb')));
                     ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
                     tempNotebookFile = await createTemporaryFile('.ipynb');
-                    // Stub trustService.isNotebookTrusted. Some tests do not write to storage,
-                    // so explicitly calling trustNotebook on the tempNotebookFile doesn't work
-                    try {
-                        sinon
-                            .stub(ioc.serviceContainer.get<ITrustService>(ITrustService), 'isNotebookTrusted')
-                            .resolves(true);
-                    } catch (e) {
-                        // eslint-disable-next-line no-console
-                        console.log(`Stub failure ${e}`);
-                    }
                     console.log(`Start Test completed ${this.currentTest?.title}`);
                 });
 

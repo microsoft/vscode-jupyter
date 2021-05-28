@@ -10,7 +10,7 @@ import { traceInfo } from '../../../client/common/logger';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { openNotebook } from '../helpers';
-import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests, trustAllNotebooks } from './helper';
+import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
 import { window } from 'vscode';
 import { initialize } from '../../initialize';
 
@@ -30,7 +30,6 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
             return this.skip();
         }
         api = await initialize();
-        await trustAllNotebooks();
     });
     setup(async function () {
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);

@@ -227,9 +227,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return this.notebookJson.metadata as any;
     }
-    public get isTrusted() {
-        return this._isTrusted;
-    }
     public get cellCount(): number {
         return this.getCellCount();
     }
@@ -240,7 +237,7 @@ export abstract class BaseNotebookModel implements INotebookModel {
     protected _kernelConnection?: KernelConnectionMetadata;
     private readonly preferredRemoteKernelIdStorage: PreferredRemoteKernelIdProvider;
     constructor(
-        protected _isTrusted: boolean,
+        public readonly isTrusted: boolean,
         protected _file: Uri,
         protected globalMemento: Memento,
         crypto: ICryptoUtils,
@@ -265,9 +262,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public abstract getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
     public getContent(): string {
         return this.generateNotebookContent();
-    }
-    public trust() {
-        this._isTrusted = true;
     }
     protected abstract getCellCount(): number;
     protected handleUndo(_change: NotebookModelChange): boolean {

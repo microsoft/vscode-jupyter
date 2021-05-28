@@ -120,7 +120,6 @@ suite('Interactive window command listener', async () => {
         // Setup default settings
         pythonSettings.assign({
             allowImportFromNotebook: true,
-            alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 10,
             jupyterLaunchRetries: 3,
             jupyterServerType: 'local',

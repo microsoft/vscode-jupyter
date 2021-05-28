@@ -1143,10 +1143,6 @@ export interface INotebookModel {
      * all editors associated with the document have been closed.)
      */
     dispose(): void;
-    /**
-     * Trusts a notebook document.
-     */
-    trust(): void;
 }
 
 export interface IModelLoadOptions {
@@ -1411,19 +1407,6 @@ export interface IJupyterUriProviderRegistration {
     registerProvider(picker: IJupyterUriProvider): void;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
-export const IDigestStorage = Symbol('IDigestStorage');
-export interface IDigestStorage {
-    readonly key: Promise<string | undefined>;
-    saveDigest(uri: Uri, digest: string): Promise<void>;
-    containsDigest(uri: Uri, digest: string): Promise<boolean>;
-}
-
-export const ITrustService = Symbol('ITrustService');
-export interface ITrustService {
-    readonly onDidSetNotebookTrust: Event<void>;
-    isNotebookTrusted(uri: Uri, notebookContents: string): Promise<boolean>;
-    trustNotebook(uri: Uri, notebookContents: string): Promise<void>;
-}
 
 export interface ISwitchKernelOptions {
     identity: Resource;
@@ -1461,14 +1444,6 @@ export interface IExternalWebviewCellButtonWithCallback extends IExternalWebview
 export interface IExternalCommandFromWebview {
     buttonId: string;
     cell: ICell;
-}
-
-// Smoke tests compile the tests but exercise the VSIX, so Symbols are not shared
-// Ensure we reuse Symbols created for existing keys so that we can retrieve the
-// Symbol matching this key from the extension API serviceManager
-export const ISystemPseudoRandomNumberGenerator = Symbol.for('ISystemPseudoRandomNumberGenerator');
-export interface ISystemPseudoRandomNumberGenerator {
-    generateRandomKey(numBytes: number): Promise<string>;
 }
 
 export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchronization');
