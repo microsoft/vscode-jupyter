@@ -37,6 +37,7 @@ export class NotebookModelFactory implements INotebookModelFactory {
     ): INotebookModel {
         if (forVSCodeNotebook || this.useVSCodeNotebookEditorApi) {
             return new VSCodeNotebookModel(
+                () => this.workspace.isTrusted,
                 options.file,
                 options.globalMemento,
                 options.crypto,
@@ -49,7 +50,7 @@ export class NotebookModelFactory implements INotebookModelFactory {
             );
         }
         return new NativeEditorNotebookModel(
-            this.workspace.isTrusted,
+            () => this.workspace.isTrusted,
             options.file,
             options.cells,
             options.globalMemento,

@@ -64,6 +64,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     private document?: NotebookDocument;
 
     constructor(
+        _isTrusted: () => boolean,
         file: Uri,
         globalMemento: Memento,
         crypto: ICryptoUtils,
@@ -73,7 +74,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         private readonly vscodeNotebook: IVSCodeNotebook,
         private readonly preferredLanguage: string
     ) {
-        super(true, file, globalMemento, crypto, originalJson, indentAmount, pythonNumber, false);
+        super(_isTrusted, file, globalMemento, crypto, originalJson, indentAmount, pythonNumber, false);
         // Do not change this code without changing code in base class.
         // We cannot invoke this in base class as `cellLanguageService` is not available in base class.
         this.ensureNotebookJson();
