@@ -5,7 +5,7 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { NotebookCell, Uri } from 'vscode';
+import { Uri } from 'vscode';
 
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
@@ -20,7 +20,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
     ) { }
 

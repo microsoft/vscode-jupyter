@@ -4,12 +4,10 @@
 'use strict';
 
 import { assert } from 'chai';
-import { NotebookCellExecutionState } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
-import { hasErrorOutput, NotebookCellStateTracker } from '../../../client/datascience/notebook/helpers/helpers';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';
 import {
