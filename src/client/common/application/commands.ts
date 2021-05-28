@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, NotebookCell, Position, TextDocument, Uri } from 'vscode';
+import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
