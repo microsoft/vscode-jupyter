@@ -13,7 +13,7 @@ import {
     NotebookControllerAffinity,
     NotebookDocument,
     NotebookEditor,
-    NotebookKernelPreload,
+    NotebookRendererScript,
     UIKind,
     Uri
 } from 'vscode';
@@ -98,7 +98,7 @@ export class VSCodeNotebookController implements Disposable {
             JupyterNotebookView,
             label,
             this.handleExecution.bind(this),
-            this.getPreloads()
+            this.getRendererScripts()
         );
 
         // Fill in extended info for our controller
@@ -208,7 +208,7 @@ export class VSCodeNotebookController implements Disposable {
             })
         );
     }
-    private getPreloads(): NotebookKernelPreload[] {
+    private getRendererScripts(): NotebookRendererScript[] {
         // Work around for known issue with CodeSpaces
         const codeSpaceScripts =
             env.uiKind === UIKind.Web
@@ -220,7 +220,7 @@ export class VSCodeNotebookController implements Disposable {
 
             join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
             join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')
-        ].map((uri) => new NotebookKernelPreload(Uri.file(uri)));
+        ].map((uri) => new NotebookRendererScript(Uri.file(uri)));
     }
 
     private handleInterrupt(notebook: NotebookDocument) {

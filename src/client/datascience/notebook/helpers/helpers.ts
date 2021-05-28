@@ -560,7 +560,17 @@ function translateDisplayDataOutput(
     for (const key in data) {
         // Add metadata to all (its the same)
         // We can optionally remove metadata that belongs to other mime types (feels like over optimization, hence not doing that).
-        items.push(new NotebookCellOutputItem(convertJupyterOutputToBuffer(key, data[key]), key, metadata));
+        const value = data[key];
+        let itemMetadata = metadata;
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            // Clone the metadata and update it (so that each output item gets its own copy of the metadata object)
+            itemMetadata = JSON.parse(JSON.stringify(metadata));
+            // Add a custom metadata that we know of (used for renderering purposes)
+            // When rendering we know the data is actually JSON and needs to be deserialized as such (from bytes).
+            // This is because we just send bytes to the renderer.
+            itemMetadata.__isJson = true;
+        }
+        items.push(new NotebookCellOutputItem(convertJupyterOutputToBuffer(key, data[key]), key, itemMetadata));
     }
 
     return new NotebookCellOutput(sortOutputItemsBasedOnDisplayOrder(items), metadata);
@@ -632,6 +642,12 @@ export type CellOutputMetadata = {
      */
     outputType: nbformat.OutputType | string;
     executionCount?: nbformat.IExecuteResult['ExecutionCount'];
+    /**
+     * Whether the original Mime data is JSON or not.
+     * This properly only exists in metadata for NotebookCellOutputItems
+     * (this is something we have added)
+     */
+    __isJson?: boolean;
 };
 
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
@@ -646,12 +662,15 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
             traceback: []
         };
     }
-    const value: nbformat.IError = JSON.parse(Buffer.from(firstItem.data as Uint8Array).toString('utf8'));
+    const originalError: undefined | nbformat.IError = firstItem.metadata?.originalError;
+    const value: Error = JSON.parse(Buffer.from(firstItem.data as Uint8Array).toString('utf8'));
     return {
         output_type: 'error',
-        ename: value.ename,
-        evalue: value.evalue,
-        traceback: value.traceback
+        ename: value.name,
+        evalue: value.message,
+        // VS Code needs an `Error` object which requires a `stack` property as a string.
+        // Its possible the format could change when converting from `traceback` to `string` and back again to `string`
+        traceback: originalError?.traceback || splitMultilineString(value.stack || '')
     };
 }
 
@@ -660,36 +679,52 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
     if (!value) {
         return '';
     }
-    const stringValue = Buffer.from(value as Uint8Array).toString('utf8');
-    if (mime === CellOutputMimeTypes.error) {
-        traceInfo(`Concerting ${mime} from ${stringValue}`);
-        return JSON.parse(stringValue);
-    } else if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
-        return stringValue;
-    } else if (mime.startsWith('image/')) {
-        // Images in Jupyter are stored in base64 encoded format.
-        // VS Code expects bytes when rendering images.
-        return Buffer.from(stringValue, 'base64');
-    } else if (mime.toLowerCase().includes('json')) {
-        return JSON.parse(stringValue);
-    } else {
-        return stringValue;
+    try {
+        const stringValue = Buffer.from(value as Uint8Array).toString('utf8');
+        if (mime === CellOutputMimeTypes.error) {
+            traceInfo(`Concerting ${mime} from ${stringValue}`);
+            return JSON.parse(stringValue);
+        } else if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
+            return splitMultilineString(stringValue);
+        } else if (mime.startsWith('image/') && mime !== 'image/svg+xml') {
+            // Images in Jupyter are stored in base64 encoded format.
+            // VS Code expects bytes when rendering images.
+            return Buffer.from(value).toString('base64');
+        } else if (mime.toLowerCase().includes('json')) {
+            return JSON.parse(stringValue);
+        } else {
+            return stringValue;
+        }
+    } catch (ex) {
+        traceError(`Failed to convert ${mime} output from a buffer ${typeof value}, ${value}`, ex);
+        return '';
     }
 }
 function convertJupyterOutputToBuffer(mime: string, value: unknown): Buffer {
     if (!value) {
         return Buffer.from('');
     }
-    if ((mime.startsWith('text/') || textMimeTypes.includes(mime)) && typeof value === 'string') {
-        return Buffer.from(value);
-    } else if (mime.startsWith('image/') && typeof value === 'string') {
-        // Images in Jupyter are stored in base64 encoded format.
-        // VS Code expects bytes when rendering images.
-        return Buffer.from(value, 'base64');
-    } else if (mime.toLowerCase().includes('json')) {
-        return Buffer.from(JSON.stringify(value));
-    } else {
-        return Buffer.from(value as string);
+    try {
+        if (
+            (mime.startsWith('text/') || textMimeTypes.includes(mime)) &&
+            (Array.isArray(value) || typeof value === 'string')
+        ) {
+            const stringValue = Array.isArray(value) ? concatMultilineString(value) : value;
+            return Buffer.from(stringValue);
+        } else if (mime.startsWith('image/') && typeof value === 'string' && mime !== 'image/svg+xml') {
+            // Images in Jupyter are stored in base64 encoded format.
+            // VS Code expects bytes when rendering images.
+            return Buffer.from(value, 'base64');
+        } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            return Buffer.from(JSON.stringify(value));
+        } else {
+            // For everything else, treat the data as strings (or multi-line strings).
+            value = Array.isArray(value) ? concatMultilineString(value) : value;
+            return Buffer.from(value as string);
+        }
+    } catch (ex) {
+        traceError(`Failed to convert ${mime} output to a buffer ${typeof value}, ${value}`, ex);
+        return Buffer.from('');
     }
 }
 export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
@@ -796,14 +831,18 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
  * As we're displaying the error in the statusbar, we don't want this dup error in output.
  * Hence remove this.
  */
-export function translateErrorOutput(output: nbformat.IError): NotebookCellOutput {
+export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutput {
+    output = output || { output_type: 'error', ename: '', evalue: '', traceback: [] };
     return new NotebookCellOutput(
         [
-            NotebookCellOutputItem.error({
-                name: output.ename,
-                message: output.evalue,
-                stack: output.traceback.join('\n')
-            })
+            NotebookCellOutputItem.error(
+                {
+                    name: output?.ename || '',
+                    message: output?.evalue || '',
+                    stack: (output?.traceback || []).join('\n')
+                },
+                { ...getOutputMetadata(output), originalError: output }
+            )
         ],
         getOutputMetadata(output)
     );
@@ -819,7 +858,8 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
     );
 
     if (item) {
-        return convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
+        const value = convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
+        return Array.isArray(value) ? value.join('') : value;
     }
     return '';
 }

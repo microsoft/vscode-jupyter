@@ -360,7 +360,47 @@ suite('DataScience DataViewer tests', () => {
         verifyRows(wrapper.wrapper, [5, '-inf', 0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 6, 'nan']);
     });
 
-    runMountedTest('Filter', async (wrapper) => {
+    runMountedTest('Filter strings with wildcards', async (wrapper) => {
+        await injectCode(
+            'import pandas as pd\r\ndata = ["stable", "unstable", "able", "barely stable", "st4ble"]\r\ndf = pd.DataFrame(data)'
+        );
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('df', 'DataFrame');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [
+            0,
+            0,
+            'stable',
+            1,
+            1,
+            'unstable',
+            2,
+            2,
+            'able',
+            3,
+            3,
+            'barely stable',
+            4,
+            4,
+            'st4ble'
+        ]);
+
+        const filtersAndExpectedResults = {
+            stable: [0, 0, 'stable', 3, 3, 'barely stable'],
+            unstable: [1, 1, 'unstable'],
+            '*': [0, 0, 'stable', 1, 1, 'unstable', 2, 2, 'able', 3, 3, 'barely stable', 4, 4, 'st4ble'],
+            '*stable': [0, 0, 'stable', 1, 1, 'unstable', 3, 3, 'barely stable'],
+            '*tab*': [0, 0, 'stable', 1, 1, 'unstable', 3, 3, 'barely stable']
+        };
+
+        for (const [filter, expectedResult] of Object.entries(filtersAndExpectedResults)) {
+            await filterRows(wrapper.wrapper, '0', filter);
+            verifyRows(wrapper.wrapper, expectedResult);
+        }
+    });
+
+    runMountedTest('Filter numerical', async (wrapper) => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3, np.inf, -np.inf, np.nan])');
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('x', 'ndarray');

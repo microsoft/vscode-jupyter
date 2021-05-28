@@ -68,7 +68,7 @@ import {
     NotebookEditorSelectionChangeEvent,
     NotebookDocumentContentOptions,
     NotebookExecuteHandler,
-    NotebookKernelPreload,
+    NotebookRendererScript,
     NotebookController
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
@@ -1577,7 +1577,7 @@ export interface IVSCodeNotebook {
         viewType: string,
         label: string,
         handler?: NotebookExecuteHandler,
-        preloads?: NotebookKernelPreload[]
+        rendererScripts?: NotebookRendererScript[]
     ): NotebookController;
 }
 

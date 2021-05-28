@@ -14,7 +14,7 @@
  * - Copy this file to your project.
  */
 
- declare module 'vscode' {
+declare module 'vscode' {
 
 	//#region auth provider: https://github.com/microsoft/vscode/issues/88309
 
@@ -1238,6 +1238,9 @@
 		with(change: { start?: number, end?: number }): NotebookRange;
 	}
 
+	/**
+	 * One representation of a {@link NotebookCellOutput notebook output}, defined by MIME type and data.
+	 */
 	// todo@API document which mime types are supported out of the box and
 	// which are considered secure
 	export class NotebookCellOutputItem {
@@ -1326,12 +1329,41 @@
 		constructor(data: Uint8Array, mime: string, metadata?: { [key: string]: any });
 	}
 
-	// @jrieken transient
+	/**
+	 * Notebook cell output represents a result of executing a cell. It is a container type for multiple
+	 * {@link NotebookCellOutputItem output items} where contained items represent the same result but
+	 * use different MIME types.
+	 */
+	//todo@API - add sugar function to add more outputs
 	export class NotebookCellOutput {
+
+		/**
+		 * Identifier for this output. Using the identifier allows a subsequent execution to modify
+		 * existing output. Defaults to a fresh UUID.
+		 */
 		id: string;
+
+		/**
+		 * The output items of this output. Each item must represent the same result. _Note_ that repeated
+		 * MIME types per output is invalid and that the editor will just pick one of them.
+		 *
+		 * ```ts
+		 * new vscode.NotebookCellOutput([
+		 * 	vscode.NotebookCellOutputItem.text('Hello', 'text/plain'),
+		 * 	vscode.NotebookCellOutputItem.text('<i>Hello</i>', 'text/html'),
+		 * 	vscode.NotebookCellOutputItem.text('_Hello_', 'text/markdown'),
+		 * 	vscode.NotebookCellOutputItem.text('Hey', 'text/plain'), // INVALID: repeated type, editor will pick just one
+		 * ])
+		 * ```
+		 */
+		//todo@API rename to items
 		outputs: NotebookCellOutputItem[];
+
+		//todo@API
 		metadata?: { [key: string]: any };
+
 		constructor(outputs: NotebookCellOutputItem[], metadata?: { [key: string]: any });
+
 		constructor(outputs: NotebookCellOutputItem[], id: string, metadata?: { [key: string]: any });
 	}
 
@@ -1471,31 +1503,25 @@
 		(this: NotebookController, cells: NotebookCell[], notebook: NotebookDocument, controller: NotebookController): void | Thenable<void>
 	}
 
-	export interface NotebookInterruptHandler {
-		/**
-		 * @param notebook The notebook for which the interrupt handler is being called.
-		 */
-		(this: NotebookController, notebook: NotebookDocument): void | Thenable<void>;
-	}
-
 	export enum NotebookControllerAffinity {
 		Default = 1,
 		Preferred = 2
 	}
 
-	// todo@API this is called Controller
-	export class NotebookKernelPreload {
+
+	export class NotebookRendererScript {
+
 		/**
 		 * APIs that the preload provides to the renderer. These are matched
 		 * against the `dependencies` and `optionalDependencies` arrays in the
 		 * notebook renderer contribution point.
 		 */
-		readonly provides: string[];
+		provides: string[];
 
 		/**
 		 * URI for the file to preload
 		 */
-		readonly uri: Uri;
+		uri: Uri;
 
 		/**
 		 * @param uri URI for the file to preload
@@ -1525,31 +1551,53 @@
 		endTime?: number;
 	}
 
-	// todo@API jsdoc slightly outdated: kernel, notebook.createNotebookCellExecutionTask
+	// todo@API jsdoc slightly outdated: kernel, notebook.createNotebookCellExecution
 	/**
-	 * A NotebookCellExecutionTask is how the kernel modifies a notebook cell as it is executing. When
-	 * {@link notebook.createNotebookCellExecutionTask `createNotebookCellExecutionTask`} is called, the cell
+	 * A NotebookCellExecution is how the kernel modifies a notebook cell as it is executing. When
+	 * {@link notebook.createNotebookCellExecution `createNotebookCellExecution`} is called, the cell
 	 * enters the Pending state. When `start()` is called on the execution task, it enters the Executing state. When
 	 * `end()` is called, it enters the Idle state. While in the Executing state, cell outputs can be
 	 * modified with the methods on the run task.
 	 *
-	 * All outputs methods operate on this NotebookCellExecutionTask's cell by default. They optionally take
+	 * All outputs methods operate on this NotebookCellExecution's cell by default. They optionally take
 	 * a cellIndex parameter that allows them to modify the outputs of other cells. `appendOutputItems` and
 	 * `replaceOutputItems` operate on the output with the given ID, which can be an output on any cell. They
 	 * all resolve once the output edit has been applied.
 	 */
-	export interface NotebookCellExecutionTask {
-		readonly document: NotebookDocument;
+	export interface NotebookCellExecution {
+
+		/**
+		 * The {@link NotebookCell cell} for which this execution has been created.
+		 */
 		readonly cell: NotebookCell;
+
+		/**
+		 * A cancellation token which will be triggered when the cell execution is canceled
+		 * from the UI.
+		 *
+		 * _Note_ that the cancellation token will not be triggered when the {@link NotebookController controller}
+		 * that created this execution uses an {@link NotebookController.interruptHandler interrupt-handler}.
+		 */
 		readonly token: CancellationToken;
 
-		start(context?: NotebookCellExecuteStartContext): void;
+		//todo@API remove? use cell.notebook instead?
+		readonly document: NotebookDocument;
+
+		/**
+		 * Set and unset the order of this cell execution.
+		 */
 		executionOrder: number | undefined;
+
+		// todo@API inline context object?
+		start(context?: NotebookCellExecuteStartContext): void;
+		// todo@API inline context object?
 		end(result?: NotebookCellExecuteEndContext): void;
 
+		// todo@API use object instead of index? FF
 		clearOutput(cellIndex?: number): Thenable<void>;
 		appendOutput(out: NotebookCellOutput | NotebookCellOutput[], cellIndex?: number): Thenable<void>;
 		replaceOutput(out: NotebookCellOutput | NotebookCellOutput[], cellIndex?: number): Thenable<void>;
+		// todo@API use object instead of index?
 		appendOutputItems(items: NotebookCellOutputItem | NotebookCellOutputItem[], outputId: string): Thenable<void>;
 		replaceOutputItems(items: NotebookCellOutputItem | NotebookCellOutputItem[], outputId: string): Thenable<void>;
 	}
@@ -1610,16 +1658,23 @@
 
 		/**
 		 * The execute handler is invoked when the run gestures in the UI are selected, e.g Run Cell, Run All,
-		 * Run Selection etc.
+		 * Run Selection etc. The execute handler is responsible for creating and managing {@link NotebookCellExecution execution}-objects.
 		 */
 		executeHandler: NotebookExecuteHandler;
 
 		/**
-		 * The interrupt handler is invoked the interrupt all execution. This is contrary to cancellation (available via
-		 * [`NotebookCellExecutionTask#token`](NotebookCellExecutionTask#token)) and should only be used when
-		 * execution-level cancellation is supported
+		 * Optional interrupt handler.
+		 *
+		 * By default cell execution is canceled via {@link NotebookCellExecution.token tokens}. Cancellation
+		 * tokens require that a controller can keep track of its execution so that it can cancel a specific execution at a later
+		 * point. Not all scenarios allow for that, eg. REPL-style controllers often work by interrupting whatever is currently
+		 * running. For those cases the {@link NotebookInterruptHandler interrupt handler} exists - it can be thought of as the
+		 * equivalent of `SIGINT` or `Control+C` in terminals.
+		 *
+		 * _Note_ that supporting {@link NotebookCellExecution.token cancellation tokens} is preferred and that interrupt handlers should
+		 * only be used when tokens cannot be supported.
 		 */
-		interruptHandler?: NotebookInterruptHandler
+		interruptHandler?: (this: NotebookController, notebook: NotebookDocument) => void | Thenable<void>;
 
 		/**
 		 * Dispose and free associated resources.
@@ -1652,13 +1707,10 @@
 		 * @param cell The notebook cell for which to create the execution.
 		 * @returns A notebook cell execution.
 		 */
-		// todo@API rename to NotebookCellExecution
-		createNotebookCellExecutionTask(cell: NotebookCell): NotebookCellExecutionTask;
+		createNotebookCellExecution(cell: NotebookCell): NotebookCellExecution;
 
-		// todo@API find a better name than "preloads"
 		// todo@API allow add, not remove
-		// ipc
-		readonly preloads: NotebookKernelPreload[];
+		readonly rendererScripts: NotebookRendererScript[];
 
 		/**
 		 * An event that fires when a renderer (see `preloads`) has send a message to the controller.
@@ -1803,9 +1855,9 @@
 		 * @param viewType A notebook view type for which this controller is for.
 		 * @param label The label of the controller
 		 * @param handler
-		 * @param preloads
+		 * @param rendererScripts
 		 */
-		export function createNotebookController(id: string, viewType: string, label: string, handler?: NotebookExecuteHandler, preloads?: NotebookKernelPreload[]): NotebookController;
+		export function createNotebookController(id: string, viewType: string, label: string, handler?: NotebookExecuteHandler, rendererScripts?: NotebookRendererScript[]): NotebookController;
 
 		// todo@API what is this used for?
 		// todo@API qualify cell, ...NotebookCell...
@@ -2521,182 +2573,6 @@
 	}
 	//#endregion
 
-	// //#region https://github.com/microsoft/vscode/issues/107467
-	// export namespace test {
-	// 	/**
-	// 	 * Returns an observer that retrieves tests in the given workspace folder.
-	// 	 * @stability experimental
-	// 	 */
-	// 	export function createWorkspaceTestObserver(workspaceFolder: WorkspaceFolder): TestObserver;
-
-	// 	/**
-	// 	 * Returns an observer that retrieves tests in the given text document.
-	// 	 * @stability experimental
-	// 	 */
-	// 	export function createDocumentTestObserver(document: TextDocument): TestObserver;
-
-	// 	/**
-	// 	 * List of test results stored by VS Code, sorted in descnding
-	// 	 * order by their `completedAt` time.
-	// 	 * @stability experimental
-	// 	 */
-	// 	export const testResults: ReadonlyArray<TestRunResult>;
-
-	// 	/**
-	// 	 * Event that fires when the {@link testResults} array is updated.
-	// 	 * @stability experimental
-	// 	 */
-	// 	export const onDidChangeTestResults: Event<void>;
-	// }
-
-	// /**
-	//  * @stability experimental
-	//  */
-	// export interface TestObserver {
-	// 	/**
-	// 	 * List of tests returned by test provider for files in the workspace.
-	// 	 */
-	// 	readonly tests: ReadonlyArray<TestItem<never>>;
-
-	// 	/**
-	// 	 * An event that fires when an existing test in the collection changes, or
-	// 	 * null if a top-level test was added or removed. When fired, the consumer
-	// 	 * should check the test item and all its children for changes.
-	// 	 */
-	// 	readonly onDidChangeTest: Event<TestsChangeEvent>;
-
-	// 	/**
-	// 	 * An event that fires when all test providers have signalled that the tests
-	// 	 * the observer references have been discovered. Providers may continue to
-	// 	 * watch for changes and cause {@link onDidChangeTest} to fire as files
-	// 	 * change, until the observer is disposed.
-	// 	 *
-	// 	 * @todo as below
-	// 	 */
-	// 	readonly onDidDiscoverInitialTests: Event<void>;
-
-	// 	/**
-	// 	 * Dispose of the observer, allowing VS Code to eventually tell test
-	// 	 * providers that they no longer need to update tests.
-	// 	 */
-	// 	dispose(): void;
-	// }
-
-	// /**
-	//  * @stability experimental
-	//  */
-	// export interface TestsChangeEvent {
-	// 	/**
-	// 	 * List of all tests that are newly added.
-	// 	 */
-	// 	readonly added: ReadonlyArray<TestItem<never>>;
-
-	// 	/**
-	// 	 * List of existing tests that have updated.
-	// 	 */
-	// 	readonly updated: ReadonlyArray<TestItem<never>>;
-
-	// 	/**
-	// 	 * List of existing tests that have been removed.
-	// 	 */
-	// 	readonly removed: ReadonlyArray<TestItem<never>>;
-	// }
-
-	// /**
-	//  * TestResults can be provided to VS Code in {@link test.publishTestResult},
-	//  * or read from it in {@link test.testResults}.
-	//  *
-	//  * The results contain a 'snapshot' of the tests at the point when the test
-	//  * run is complete. Therefore, information such as its {@link Range} may be
-	//  * out of date. If the test still exists in the workspace, consumers can use
-	//  * its `id` to correlate the result instance with the living test.
-	//  *
-	//  * @todo coverage and other info may eventually be provided here
-	//  */
-	// export interface TestRunResult {
-	// 	/**
-	// 	 * Unix milliseconds timestamp at which the test run was completed.
-	// 	 */
-	// 	completedAt: number;
-
-	// 	/**
-	// 	 * Optional raw output from the test run.
-	// 	 */
-	// 	output?: string;
-
-	// 	/**
-	// 	 * List of test results. The items in this array are the items that
-	// 	 * were passed in the {@link test.runTests} method.
-	// 	 */
-	// 	results: ReadonlyArray<Readonly<TestResultSnapshot>>;
-	// }
-
-	// /**
-	//  * A {@link TestItem}-like interface with an associated result, which appear
-	//  * or can be provided in {@link TestResult} interfaces.
-	//  */
-	// export interface TestResultSnapshot {
-	// 	/**
-	// 	 * Unique identifier that matches that of the associated TestItem.
-	// 	 * This is used to correlate test results and tests in the document with
-	// 	 * those in the workspace (test explorer).
-	// 	 */
-	// 	readonly id: string;
-
-	// 	/**
-	// 	 * URI this TestItem is associated with. May be a file or file.
-	// 	 */
-	// 	readonly uri?: Uri;
-
-	// 	/**
-	// 	 * Display name describing the test case.
-	// 	 */
-	// 	readonly label: string;
-
-	// 	/**
-	// 	 * Optional description that appears next to the label.
-	// 	 */
-	// 	readonly description?: string;
-
-	// 	/**
-	// 	 * Location of the test item in its `uri`. This is only meaningful if the
-	// 	 * `uri` points to a file.
-	// 	 */
-	// 	readonly range?: Range;
-
-	// 	/**
-	// 	 * State of the test in each task. In the common case, a test will only
-	// 	 * be executed in a single task and the length of this array will be 1.
-	// 	 */
-	// 	readonly taskStates: ReadonlyArray<TestSnapshoptTaskState>;
-
-	// 	/**
-	// 	 * Optional list of nested tests for this item.
-	// 	 */
-	// 	readonly children: Readonly<TestResultSnapshot>[];
-	// }
-
-	// export interface TestSnapshoptTaskState {
-	// 	/**
-	// 	 * Current result of the test.
-	// 	 */
-	// 	readonly state: TestResultState;
-
-	// 	/**
-	// 	 * The number of milliseconds the test took to run. This is set once the
-	// 	 * `state` is `Passed`, `Failed`, or `Errored`.
-	// 	 */
-	// 	readonly duration?: number;
-
-	// 	/**
-	// 	 * Associated test run message. Can, for example, contain assertion
-	// 	 * failure information if the test fails.
-	// 	 */
-	// 	readonly messages: ReadonlyArray<TestMessage>;
-	// }
-
-	// //#endregion
-
 	//#region Opener service (https://github.com/microsoft/vscode/issues/109277)
 
 	/**
@@ -3028,27 +2904,19 @@
 
 	//#region https://github.com/microsoft/vscode/issues/124024 @hediet @alexdima
 
-	export class InlineCompletionItem {
-		/**
-		 * The text to insert.
-		 * If the text contains a line break, the range must end at the end of a line.
-		 * If existing text should be replaced, the existing text must be a prefix of the text to insert.
-		*/
-		text: string;
-
-		/**
-		 * The range to replace.
-		 * Must begin and end on the same line.
-		*/
-		range?: Range;
-
-		constructor(text: string);
+	export namespace languages {
+		export function registerInlineCompletionItemProvider(selector: DocumentSelector, provider: InlineCompletionItemProvider): Disposable;
 	}
 
-	export class InlineCompletionList {
-		items: InlineCompletionItem[];
+	export interface InlineCompletionItemProvider<T extends InlineCompletionItem = InlineCompletionItem> {
+		provideInlineCompletionItems(document: TextDocument, position: Position, context: InlineCompletionContext, token: CancellationToken): ProviderResult<InlineCompletionList<T>>;
+	}
 
-		constructor(items: InlineCompletionItem[]);
+	export interface InlineCompletionContext {
+		/**
+		 * How the completion was triggered.
+		 */
+		readonly triggerKind: InlineCompletionTriggerKind;
 	}
 
 	/**
@@ -3067,19 +2935,56 @@
 		 */
 		Explicit = 1,
 	}
-	export interface InlineCompletionContext {
+
+	export class InlineCompletionList<T extends InlineCompletionItem = InlineCompletionItem> {
+		items: T[];
+
+		constructor(items: T[]);
+	}
+
+	export class InlineCompletionItem {
 		/**
-		 * How the completion was triggered.
+		 * The text to insert.
+		 * If the text contains a line break, the range must end at the end of a line.
+		 * If existing text should be replaced, the existing text must be a prefix of the text to insert.
+		*/
+		text: string;
+
+		/**
+		 * The range to replace.
+		 * Must begin and end on the same line.
+		*/
+		range?: Range;
+
+		/**
+		 * An optional {@link Command} that is executed *after* inserting this completion.
 		 */
-		readonly triggerKind: InlineCompletionTriggerKind;
+		command?: Command;
+
+		constructor(text: string, range?: Range, command?: Command);
 	}
 
-	export interface InlineCompletionItemProvider {
-		provideInlineCompletionItems(document: TextDocument, position: Position, context: InlineCompletionContext, token: CancellationToken): ProviderResult<InlineCompletionList>;
+
+	/**
+	 * Be aware that this API will not ever be finalized.
+	 */
+	export namespace window {
+		export function getInlineCompletionItemController<T extends InlineCompletionItem>(provider: InlineCompletionItemProvider<T>): InlineCompletionController<T>;
 	}
 
-	export namespace languages {
-		export function registerInlineCompletionItemProvider(selector: DocumentSelector, provider: InlineCompletionItemProvider): Disposable;
+	/**
+	 * Be aware that this API will not ever be finalized.
+	 */
+	export interface InlineCompletionController<T extends InlineCompletionItem> {
+		// eslint-disable-next-line vscode-dts-event-naming
+		readonly onDidShowCompletionItem: Event<InlineCompletionItemDidShowEvent<T>>;
+	}
+
+	/**
+	 * Be aware that this API will not ever be finalized.
+	 */
+	export interface InlineCompletionItemDidShowEvent<T extends InlineCompletionItem> {
+		completionItem: T;
 	}
 
 	//#endregion
