@@ -181,7 +181,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
         private extensionChecker: IPythonExtensionChecker,
-        serverStorage: IJupyterServerUriStorage,
+        serverStorage: IJupyterServerUriStorage
     ) {
         super(
             listeners,
@@ -222,7 +222,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         );
         asyncRegistry.push(this);
         this.synchronizer.subscribeToUserActions(this, this.postMessage.bind(this));
-        this._disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onDidChangeTrust, this));
+        this._disposables.push(this.workspaceService.onDidGrantWorkspaceTrust(this.onDidChangeTrust, this));
         traceInfo(`Loading web panel for ${this.model.file}`);
 
         // Load the web panel using our file path so it can find
