@@ -164,8 +164,8 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     public async showPythonExtensionInstallRecommendedPrompt() {
-        // If installed but disabled & workspace is not trusted, then don't show prompt
-        if (this.extensions.getExtension(PythonExtension)?.isActive === false && !this.workspace.isTrusted) {
+        // If workspace is not trusted, then don't show prompt
+        if (!this.workspace.isTrusted) {
             return;
         }
         const key = 'ShouldShowPythonExtensionInstallRecommendedPrompt';
