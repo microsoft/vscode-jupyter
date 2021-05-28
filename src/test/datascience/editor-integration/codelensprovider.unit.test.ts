@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, Disposable, TextDocument, Uri } from 'vscode';
+import { CancellationTokenSource, Disposable, EventEmitter, TextDocument, Uri } from 'vscode';
 
 import {
     ICommandManager,
     IDebugService,
     IDocumentManager,
-    IVSCodeNotebook
+    IVSCodeNotebook,
+    IWorkspaceService
 } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
@@ -42,6 +44,9 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         pythonSettings = TypeMoq.Mock.ofType<IWatchableJupyterSettings>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
+        const workspace = mock<IWorkspaceService>();
+        when(workspace.isTrusted).thenReturn(true);
+        when(workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         vscodeNotebook.setup((c) => c.activeNotebookEditor).returns(() => undefined);
         commandManager
@@ -62,7 +67,8 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             disposables,
             debugService.object,
             fileSystem.object,
-            vscodeNotebook.object
+            vscodeNotebook.object,
+            instance(workspace)
         );
     });
 

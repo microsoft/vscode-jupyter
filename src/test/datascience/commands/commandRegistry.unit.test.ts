@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { anything, instance, mock, verify } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { DebugService } from '../../../client/common/application/debugService';
 import { DocumentManager } from '../../../client/common/application/documentManager';
-import { ICommandManager } from '../../../client/common/application/types';
+import { ICommandManager, IWorkspaceService } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
@@ -48,7 +49,9 @@ suite('DataScience - Commands', () => {
         const fileSystem = mock(FileSystem);
         const serverUriStorage = mock(JupyterServerUriStorage);
         const jupyterVariables = mock(JupyterVariables);
-
+        const workspace = mock<IWorkspaceService>();
+        when(workspace.isTrusted).thenReturn(true);
+        when(workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
         commandRegistry = new CommandRegistry(
             documentManager,
             instance(codeLensProvider),
@@ -69,7 +72,8 @@ suite('DataScience - Commands', () => {
             instance(serverUriStorage),
             instance(jupyterVariables),
             false,
-            instance(mock(NotebookCreator))
+            instance(mock(NotebookCreator)),
+            instance(workspace)
         );
     });
 

@@ -107,6 +107,10 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         this._workspace = workspace || new WorkspaceService();
         this._workspaceRoot = workspaceFolder;
         this.initialize();
+        // Disable auto start in untrusted workspaces.
+        if (workspace && workspace.isTrusted === false){
+            this.disableJupyterAutoStart = false;
+        }
     }
     // eslint-disable-next-line
     public static getInstance(resource: Uri | undefined, workspace?: IWorkspaceService): JupyterSettings {
