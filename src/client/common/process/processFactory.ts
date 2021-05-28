@@ -22,7 +22,7 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
     ) {}
     public async create(resource?: Uri): Promise<IProcessService> {
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
-        if (this.workspace.isTrusted){
+        if (!this.workspace.isTrusted){
             throw new Error('Workspace not trusted');
         }
         const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);

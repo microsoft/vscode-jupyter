@@ -155,7 +155,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         options: ExecutionFactoryCreateWithEnvironmentOptions
     ): Promise<IPythonExecutionService> {
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
-        if (this.workspace.isTrusted) {
+        if (!this.workspace.isTrusted) {
             throw new Error('Workspace not trusted');
         }
         const envVars = await this.activationHelper.getActivatedEnvironmentVariables(
