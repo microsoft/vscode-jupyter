@@ -21,7 +21,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
-    ) { }
+    ) {}
 
     public register(commandManager: ICommandManager): void {
         this.disposableRegistry.push(
