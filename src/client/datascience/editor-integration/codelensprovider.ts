@@ -12,6 +12,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import { disposeAllDisposables } from '../../common/helpers';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposable, IDisposableRegistry, IJupyterSettings } from '../../common/types';
@@ -41,7 +42,13 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         @inject(IWorkspaceService) workspace: IWorkspaceService
     ) {
         disposableRegistry.push(this);
-        disposableRegistry.push(workspace.onDidGrantWorkspaceTrust(() => this.didChangeCodeLenses.fire()));
+        disposableRegistry.push(
+            workspace.onDidGrantWorkspaceTrust(() => {
+                disposeAllDisposables(this.activeCodeWatchers);
+                this.activeCodeWatchers = [];
+                this.didChangeCodeLenses.fire();
+            })
+        );
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
         disposableRegistry.push(this.documentManager.onDidCloseTextDocument(this.onDidCloseTextDocument.bind(this)));
         disposableRegistry.push(this.debugLocationTracker.updated(this.onDebugLocationUpdated.bind(this)));

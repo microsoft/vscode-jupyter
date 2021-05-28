@@ -60,9 +60,10 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IWorkspaceService) private readonly worspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument.bind(this));
+        this.workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear());
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings.bind(this));
         this.notebookProvider.onNotebookCreated(this.onNotebookCreated.bind(this));
     }
@@ -319,7 +320,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         }
 
         // If workspace is not trusted, then exclude execution related commands.
-        if (!this.worspace.isTrusted) {
+        if (!this.workspace.isTrusted) {
             const commandsToBeDisabledIfNotTrusted = [
                 ...CodeLensCommands.DebuggerCommands,
                 ...CodeLensCommands.DebuggerCommands,

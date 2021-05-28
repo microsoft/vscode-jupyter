@@ -688,7 +688,7 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
-export interface ICodeWatcher {
+export interface ICodeWatcher extends IDisposable {
     readonly uri: Uri | undefined;
     codeLensUpdated: Event<void>;
     setDocument(document: TextDocument): void;
