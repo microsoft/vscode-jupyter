@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 
-import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { ICommandManager } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
