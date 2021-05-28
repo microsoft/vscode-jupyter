@@ -4,6 +4,7 @@
 import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';
+import { IWorkspaceService } from '../../../client/common/application/types';
 
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessLogger } from '../../../client/common/process/logger';
@@ -34,11 +35,14 @@ suite('Process - ProcessServiceFactory', () => {
             })
         ).thenReturn(processService);
         disposableRegistry = [];
+        const workspace = mock<IWorkspaceService>();
+        when(workspace.isTrusted).thenReturn(true);
         factory = new ProcessServiceFactory(
             instance(envVariablesProvider),
             instance(processLogger),
             instance(bufferDecoder),
-            disposableRegistry
+            disposableRegistry,
+            instance(workspace)
         );
     });
 
