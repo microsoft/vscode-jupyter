@@ -16,7 +16,6 @@ import {
     runCell,
     insertCodeCell,
     prewarmNotebooks,
-    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully
 } from '../notebook/helper';
 import { OnMessageListener } from '../vscodeTestHelpers';
@@ -46,7 +45,6 @@ suite('DataScience - VariableView', () => {
         if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
-        await trustAllNotebooks();
         await prewarmNotebooks();
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);

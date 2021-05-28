@@ -41,7 +41,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public logging: ILoggingSettings = { level: LogLevel.Error };
     public allowImportFromNotebook: boolean = false;
     public allowUnauthorizedRemoteConnection: boolean = false;
-    public alwaysTrustNotebooks: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;
     public jupyterLaunchRetries: number = 3;

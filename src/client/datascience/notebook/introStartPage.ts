@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import * as fs from 'fs-extra';
 import { inject, injectable, named } from 'inversify';
 import { Memento, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
@@ -12,7 +11,6 @@ import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../common/types'
 import { noop } from '../../common/utils/misc';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands } from '../constants';
-import { ITrustService } from '../types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { InsidersNotebookSurveyStateKeys } from '../dataScienceSurveyBanner';
 
@@ -27,7 +25,6 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
     constructor(
         @inject(UseVSCodeNotebookEditorApi) private readonly useVSCNotebook: boolean,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(ITrustService) private readonly trustService: ITrustService,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
@@ -48,17 +45,15 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
             this.doNotShowStartPageAgain().then(noop, noop);
             return;
         }
-        this.trustAndOpenIntroNotebook().catch(noop);
+        this.openIntroNotebook().catch(noop);
     }
     private async doNotShowStartPageAgain() {
         await this.memento.update(IntroduceNativeNotebookDisplayed, true);
     }
     @swallowExceptions('Open Intro Native Notebook')
-    private async trustAndOpenIntroNotebook() {
-        // Ensure we display once & it is trusted.
+    private async openIntroNotebook() {
+        // Ensure we display once.
         await this.doNotShowStartPageAgain();
-        const contents = await fs.readFile(this.introNotebook.fsPath, 'utf8');
-        await this.trustService.trustNotebook(this.introNotebook, contents);
         await this.commandManager.executeCommand(
             Commands.OpenNotebook,
             this.introNotebook,
