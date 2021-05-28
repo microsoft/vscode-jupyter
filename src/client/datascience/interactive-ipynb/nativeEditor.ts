@@ -181,7 +181,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
         private extensionChecker: IPythonExtensionChecker,
-        serverStorage: IJupyterServerUriStorage
+        serverStorage: IJupyterServerUriStorage,
     ) {
         super(
             listeners,

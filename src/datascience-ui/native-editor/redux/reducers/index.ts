@@ -75,6 +75,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [InteractiveWindowMessages.NotebookDirty]: CommonEffects.notebookDirty,
     [InteractiveWindowMessages.NotebookClean]: CommonEffects.notebookClean,
     [InteractiveWindowMessages.LoadAllCells]: Creation.loadAllCells,
+    [InteractiveWindowMessages.TrustNotebookComplete]: CommonEffects.trustNotebook,
     [InteractiveWindowMessages.NotebookRunAllCells]: Execution.executeAllCells,
     [InteractiveWindowMessages.NotebookRunSelectedCell]: Execution.executeSelectedCell,
     [InteractiveWindowMessages.NotebookAddCellBelow]: Creation.addAndFocusCell,
