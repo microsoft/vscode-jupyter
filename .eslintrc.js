@@ -216,7 +216,6 @@ module.exports = {
         'src/test/datascience/testexecutionLogger.ts',
         'src/test/datascience/mockLanguageServer.ts',
         'src/test/datascience/debugger.functional.test.tsx',
-        'src/test/datascience/testInteractiveWindowProvider.ts',
         'src/test/datascience/jupyterUtils.unit.test.ts',
         'src/test/datascience/remoteTestHelpers.ts',
         'src/test/datascience/mockWorkspaceFolder.ts',
