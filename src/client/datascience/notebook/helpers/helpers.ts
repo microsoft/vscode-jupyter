@@ -563,6 +563,7 @@ function translateDisplayDataOutput(
         const value = data[key];
         let itemMetadata = metadata;
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            // Clone the metadata and update it (so that each output item gets its own copy of the metadata object)
             itemMetadata = JSON.parse(JSON.stringify(metadata));
             // Add a custom metadata that we know of (used for renderering purposes)
             // When rendering we know the data is actually JSON and needs to be deserialized as such (from bytes).
