@@ -809,7 +809,6 @@ module.exports = {
         'src/client/datascience/multiplexingDebugService.ts',
         'src/client/datascience/interactive-window/identity.ts',
         'src/client/datascience/interactive-window/interactiveWindow.ts',
-        'src/client/datascience/interactive-window/interactiveWindowProvider.ts',
         'src/client/datascience/datascience.ts',
         'src/client/datascience/liveshare/liveshare.ts',
         'src/client/datascience/liveshare/serviceProxy.ts',
