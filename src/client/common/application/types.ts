@@ -824,7 +824,7 @@ export interface IWorkspaceService {
      * Event that fires when the current workspace has been trusted.
      */
     readonly onDidGrantWorkspaceTrust: Event<void>;
- }
+}
 
 export const ITerminalManager = Symbol('ITerminalManager');
 

@@ -31,12 +31,7 @@ import { NativeEditor as NativeEditorWebView } from '../../client/datascience/in
 import { IKernelSpecQuickPickItem, KernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { KeyPrefix } from '../../client/datascience/notebookStorage/nativeEditorStorage';
 import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
-import {
-    ICell,
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookExporter,
-} from '../../client/datascience/types';
+import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { ExecutionCount } from '../../datascience-ui/interactive-common/executionCount';
