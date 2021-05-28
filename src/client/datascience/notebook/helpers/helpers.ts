@@ -560,7 +560,17 @@ function translateDisplayDataOutput(
     for (const key in data) {
         // Add metadata to all (its the same)
         // We can optionally remove metadata that belongs to other mime types (feels like over optimization, hence not doing that).
-        items.push(new NotebookCellOutputItem(convertJupyterOutputToBuffer(key, data[key]), key, metadata));
+        const value = data[key];
+        let itemMetadata = metadata;
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            // Clone the metadata and update it (so that each output item gets its own copy of the metadata object)
+            itemMetadata = JSON.parse(JSON.stringify(metadata));
+            // Add a custom metadata that we know of (used for renderering purposes)
+            // When rendering we know the data is actually JSON and needs to be deserialized as such (from bytes).
+            // This is because we just send bytes to the renderer.
+            itemMetadata.__isJson = true;
+        }
+        items.push(new NotebookCellOutputItem(convertJupyterOutputToBuffer(key, data[key]), key, itemMetadata));
     }
 
     return new NotebookCellOutput(sortOutputItemsBasedOnDisplayOrder(items), metadata);
@@ -632,6 +642,12 @@ export type CellOutputMetadata = {
      */
     outputType: nbformat.OutputType | string;
     executionCount?: nbformat.IExecuteResult['ExecutionCount'];
+    /**
+     * Whether the original Mime data is JSON or not.
+     * This properly only exists in metadata for NotebookCellOutputItems
+     * (this is something we have added)
+     */
+    __isJson?: boolean;
 };
 
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
@@ -670,7 +686,7 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
             return JSON.parse(stringValue);
         } else if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
             return splitMultilineString(stringValue);
-        } else if (mime.startsWith('image/')) {
+        } else if (mime.startsWith('image/') && mime !== 'image/svg+xml') {
             // Images in Jupyter are stored in base64 encoded format.
             // VS Code expects bytes when rendering images.
             return Buffer.from(value).toString('base64');
@@ -695,13 +711,15 @@ function convertJupyterOutputToBuffer(mime: string, value: unknown): Buffer {
         ) {
             const stringValue = Array.isArray(value) ? concatMultilineString(value) : value;
             return Buffer.from(stringValue);
-        } else if (mime.startsWith('image/') && typeof value === 'string') {
+        } else if (mime.startsWith('image/') && typeof value === 'string' && mime !== 'image/svg+xml') {
             // Images in Jupyter are stored in base64 encoded format.
             // VS Code expects bytes when rendering images.
             return Buffer.from(value, 'base64');
-        } else if (mime.toLowerCase().includes('json')) {
+        } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
             return Buffer.from(JSON.stringify(value));
         } else {
+            // For everything else, treat the data as strings (or multi-line strings).
+            value = Array.isArray(value) ? concatMultilineString(value) : value;
             return Buffer.from(value as string);
         }
     } catch (ex) {
