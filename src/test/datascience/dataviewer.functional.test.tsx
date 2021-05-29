@@ -481,7 +481,9 @@ suite('DataScience DataViewer tests', () => {
     });
 
     runMountedTest('Filter 2D xarray DataArrays', async (wrapper) => {
-        await injectCode('import xarray as xr\r\nfoo = xr.DataArray([[1,2,3],[4,5,6],[7,8,9]], dims=list("ab"), coords=dict(a=["x","y","z"], b=["m","n","o"]))');
+        await injectCode(
+            'import xarray as xr\r\nfoo = xr.DataArray([[1,2,3],[4,5,6],[7,8,9]], dims=list("ab"), coords=dict(a=["x","y","z"], b=["m","n","o"]))'
+        );
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('foo', 'DataArray');
         assert.ok(dv, 'DataViewer not created');
@@ -492,7 +494,9 @@ suite('DataScience DataViewer tests', () => {
     });
 
     runMountedTest('2D xarray DataArrays', async (wrapper) => {
-        await injectCode('import xarray as xr\r\nfoo = xr.DataArray([[1,2,3],[4,5,6]], dims=list("ab"), coords=dict(a=["x","y"], b=["m","n","o"]))');
+        await injectCode(
+            'import xarray as xr\r\nfoo = xr.DataArray([[1,2,3],[4,5,6]], dims=list("ab"), coords=dict(a=["x","y"], b=["m","n","o"]))'
+        );
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('foo', 'DataArray');
         assert.ok(dv, 'DataViewer not created');
