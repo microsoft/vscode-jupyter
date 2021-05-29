@@ -311,8 +311,6 @@ export class KernelVariables implements IJupyterVariables {
     // Pull our text result out of the Jupyter cell
     private deserializeJupyterResult<T>(cells: ICell[]): T {
         const text = this.extractJupyterResultText(cells);
-        console.log("JUPYTER TEXT FROM PYTHON");
-        console.log(text);
         return JSON.parse(text) as T;
     }
 
@@ -473,24 +471,24 @@ export class KernelVariables implements IJupyterVariables {
         return result;
     }
 
-    private async getVariableNamesAndTypesFromKernel(notebook: INotebook, token?: CancellationToken): Promise<IJupyterVariable[]> {
+    private async getVariableNamesAndTypesFromKernel(
+        notebook: INotebook,
+        token?: CancellationToken
+    ): Promise<IJupyterVariable[]> {
         // Get our query and parser
         const query = this.getParser(notebook);
 
         // Now execute the query
         if (notebook && query) {
-            console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-            const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), token, true);
-            const text = this.extractJupyterResultText(cells);
-            console.log("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
-            const matches = this.getAllMatches(query.parser, text);
-            const matchesAsStr = matches.map(v => `'${v}'`);
-            console.log("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
-            console.log("matches and then matches as str");
-            console.log(matches);
-            console.log(matchesAsStr);
+            // Add in our get variable info script to get types
             await this.importGetVariableInfoScripts(notebook, token);
 
+            const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), token, true);
+            const text = this.extractJupyterResultText(cells);
+            const matches = this.getAllMatches(query.parser, text);
+            const matchesAsStr = matches.map((v) => `'${v}'`);
+
+            // VariableTypesFunc takes in list of vars and the corresponding var names
             const results = await notebook.execute(
                 `print(${GetVariableInfo.VariableTypesFunc}([${matches}], [${matchesAsStr}]))`,
                 Identifiers.EmptyFileName,
@@ -499,44 +497,24 @@ export class KernelVariables implements IJupyterVariables {
                 token,
                 true
             );
-            console.log("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD")
 
-            // Apply the expression to it
-            const x = this.deserializeJupyterResult(results) as any;
-            console.log(x);
-            console.log("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
+            const varNameTypeMap = this.deserializeJupyterResult(results) as Map<String, String>;
 
             const vars = [];
-            for (const name in x as Object) {
+            for (const [name, type] of Object.entries(varNameTypeMap)) {
                 const v: IJupyterVariable = {
                     name: name,
                     value: undefined,
                     supportsDataExplorer: false,
-                    type: x[name] || '',
+                    type: type || '',
                     size: 0,
                     shape: '',
                     count: 0,
                     truncated: true
-                }
+                };
                 vars.push(v);
             }
             return vars;
-
-            // Turn each match into a value
-            // if (matches) {
-            //     return matches.map((v) => {
-            //         return {
-            //             name: v,
-            //             value: undefined,
-            //             supportsDataExplorer: false,
-            //             type: '',
-            //             size: 0,
-            //             shape: '',
-            //             count: 0,
-            //             truncated: true
-            //         };
-            //     })
-            // }
         }
 
         return [];

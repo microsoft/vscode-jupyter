@@ -60,26 +60,14 @@ def _VSCODE_getVariableProperties(var, listOfAttributes):
     return _VSCODE_json.dumps(result)
 
 
-# def _VSCODE_getVariableTypes(vars):
-#     v = []
-#     for var in vars:
-#         try:
-#             vartype = type(var)
-#             if hasattr(vartype, "__name__"):
-#                 v.append(vartype.__name__)
-#         except TypeError:
-#             pass
-#     return _VSCODE_json.dumps(v)
-# gives ["DataFrame", "module", "module", "module"]
-
-
 def _VSCODE_getVariableTypes(vars, varnames):
-    v = {}
+    # Map with key: varname and value: vartype
+    result = {}
     for var, name in zip(vars, varnames):
         try:
             vartype = type(var)
             if hasattr(vartype, "__name__"):
-                v[name] = vartype.__name__
+                result[name] = vartype.__name__
         except TypeError:
             pass
-    return _VSCODE_json.dumps(v)
+    return _VSCODE_json.dumps(result)
