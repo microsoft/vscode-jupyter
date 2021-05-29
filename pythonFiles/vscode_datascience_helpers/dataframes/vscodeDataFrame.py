@@ -105,8 +105,12 @@ def _VSCODE_convertToDataFrame(df, start=None, end=None):
         df = _VSCODE_convertTensorToDataFrame(df, start, end)
     elif hasattr(vartype, "__name__") and vartype.__name__ == "ndarray":
         df = _VSCODE_convertNumpyArrayToDataFrame(df, start, end)
-    elif hasattr(df, "__array__") and hasattr(vartype, "__name__") and vartype.__name__ == "DataArray":
-        df = _VSCODE_convertNumpyArrayToDataFrame(df.__array__(), start, end)
+    elif (
+        hasattr(df, "__array__")
+        and hasattr(vartype, "__name__")
+        and vartype.__name__ == "DataArray"
+    ):
+        df = _VSCODE_convertNumpyArrayToDataFrame(df[start:end].__array__(), start, end)
     else:
         """Disabling bandit warning for try, except, pass. We want to swallow all exceptions here to not crash on
         variable fetching"""
@@ -141,11 +145,7 @@ def _VSCODE_getDataFrameRows(df, start, end):
     # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
     try:
         df = df.replace(
-            {
-                _VSCODE_np.inf: "inf",
-                -_VSCODE_np.inf: "-inf",
-                _VSCODE_np.nan: "nan",
-            }
+            {_VSCODE_np.inf: "inf", -_VSCODE_np.inf: "-inf", _VSCODE_np.nan: "nan",}
         )
     except:
         pass
