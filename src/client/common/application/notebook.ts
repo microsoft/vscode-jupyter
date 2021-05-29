@@ -16,7 +16,7 @@ import {
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookExecuteHandler,
-    NotebookKernelPreload,
+    NotebookRendererScript,
     window
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
@@ -95,9 +95,9 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         viewType: string,
         label: string,
         handler?: NotebookExecuteHandler,
-        preloads?: NotebookKernelPreload[]
+        rendererScripts?: NotebookRendererScript[]
     ): NotebookController {
-        return notebook.createNotebookController(id, viewType, label, handler, preloads);
+        return notebook.createNotebookController(id, viewType, label, handler, rendererScripts);
     }
     private createDisposableEventEmitter<T>() {
         const eventEmitter = new EventEmitter<T>();
