@@ -68,7 +68,7 @@ export class CellOutputMimeTypeTracker
     private onDidOpenCloseDocument(doc: NotebookDocument) {
         doc.getCells().forEach((cell) => {
             if (cell.kind === NotebookCellKind.Code) {
-                cell.outputs.forEach((output) => output.outputs.forEach((item) => this.sendTelemetry(item.mime)));
+                cell.outputs.forEach((output) => output.items.forEach((item) => this.sendTelemetry(item.mime)));
             }
         });
     }
