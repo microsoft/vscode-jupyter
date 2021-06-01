@@ -79,6 +79,29 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     /**
      * We know widgets are being used, at this point prompt user if required.
      */
+    public async getWidgetScriptSources(): Promise<Readonly<WidgetScriptSource[]>> {
+        if (!this.scriptProviders) {
+            this.rebuildProviders();
+        }
+        if (!this.scriptProviders) {
+            return [];
+        }
+        const items: WidgetScriptSource[] = [];
+        await Promise.all(
+            this.scriptProviders?.map(async (item) => {
+                if (item.getWidgetScriptSources) {
+                    const result = await item.getWidgetScriptSources();
+                    if (result && Array.isArray(result)) {
+                        items.push(...result);
+                    }
+                }
+            })
+        );
+        return items;
+    }
+    /**
+     * We know widgets are being used, at this point prompt user if required.
+     */
     public async getWidgetScriptSource(
         moduleName: string,
         moduleVersion: string

@@ -202,6 +202,25 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         );
         this.initializeNotebook();
         traceInfo('IPyWidgetScriptSource.initialize');
+
+        this.scriptProvider
+            .getWidgetScriptSources()
+            .then((items) => {
+                items
+                    .filter((widgetSource) => widgetSource.moduleName.toLowerCase().startsWith('nbextensions'))
+                    .filter((widgetSource) => widgetSource.source === 'local')
+                    .forEach((widgetSource) => {
+                        traceInfo(
+                            `${ConsoleForegroundColors.Green}Pre-load script for ${widgetSource.moduleName}, is ${widgetSource.scriptUri} from ${widgetSource.source}`
+                        );
+                        // Send to UI (even if there's an error) continues instead of hanging while waiting for a response.
+                        this.postEmitter.fire({
+                            message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
+                            payload: widgetSource
+                        });
+                    });
+            })
+            .catch((ex) => traceError('Failed to get sources', ex));
     }
 
     /**
