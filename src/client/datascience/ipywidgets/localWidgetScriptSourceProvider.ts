@@ -7,6 +7,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
@@ -32,7 +33,8 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         private readonly notebook: INotebook,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
         private readonly fs: IFileSystem,
-        private readonly interpreterService: IInterpreterService
+        private readonly interpreterService: IInterpreterService,
+        private readonly factory: IPythonExecutionFactory
     ) {}
     public async getWidgetScriptSource(moduleName: string): Promise<Readonly<WidgetScriptSource>> {
         const sources = await this.getWidgetScriptSources();
@@ -69,17 +71,31 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
             return true;
         });
 
-        const mappedFiles = validFiles.map(async (file) => {
-            // Should be of the form `<widget module>/index.js`
-            const parts = file.split('/');
-            const moduleName = parts[0];
+        const mappedFiles = validFiles
+            .map(async (file) => {
+                // Should be of the form `<widget module>/index.js`
+                const parts = file.split('/');
+                const moduleName = `nbextensions/${parts[0]}/index`;
 
-            const fileUri = Uri.file(path.join(nbextensionsPath, file));
-            const scriptUri = (await this.localResourceUriConverter.asWebviewUri(fileUri)).toString();
-            // eslint-disable-next-line
-            const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };
-            return widgetScriptSource;
-        });
+                const fileUri = Uri.file(path.join(nbextensionsPath, file));
+                const scriptUri = (await this.localResourceUriConverter.asWebviewUri(fileUri)).toString();
+                // eslint-disable-next-line
+                const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };
+                return widgetScriptSource;
+            })
+            .concat(
+                validFiles.map(async (file) => {
+                    // Should be of the form `<widget module>/index.js`
+                    const parts = file.split('/');
+                    const moduleName = parts[0];
+
+                    const fileUri = Uri.file(path.join(nbextensionsPath, file));
+                    const scriptUri = (await this.localResourceUriConverter.asWebviewUri(fileUri)).toString();
+                    // eslint-disable-next-line
+                    const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };
+                    return widgetScriptSource;
+                })
+            );
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return Promise.all(mappedFiles as any);
     }
@@ -106,6 +122,11 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
                 traceError.bind(`Failed to get interpreter details for Kernel/Interpreter ${interpreterOrKernelPath}`)
             );
 
+        if (interpreterInfo && !interpreterInfo.sysPrefix) {
+            const pythonService = await this.factory.createActivatedEnvironment({ interpreter: interpreterInfo });
+            const info = await pythonService.getInterpreterInformation();
+            return info?.sysPrefix;
+        }
         if (interpreterInfo) {
             return interpreterInfo?.sysPrefix;
         }

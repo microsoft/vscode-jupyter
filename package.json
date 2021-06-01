@@ -1826,7 +1826,8 @@
                 "entrypoint": "./out/datascience-ui/ipywidgetsRenderer/ipywidgetsRenderer.js",
                 "displayName": "Jupyter IPyWidget Renderer",
                 "mimeTypes": [
-                    "application/vnd.jupyter.widget-view+json"
+                    "application/vnd.jupyter.widget-view+json",
+                    "application/javascript"
                 ]
             },
             {

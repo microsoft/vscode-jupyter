@@ -16,6 +16,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../com
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -224,7 +225,8 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IApplicationShell>(IApplicationShell),
                 this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
                 this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
-                this.serviceContainer.get<IExtensionContext>(IExtensionContext)
+                this.serviceContainer.get<IExtensionContext>(IExtensionContext),
+                this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
             );
             this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.cacheOrSend, this));
         }

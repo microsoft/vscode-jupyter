@@ -21,6 +21,11 @@ import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatib
 import { registerScripts } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
 import { logMessage } from '../../react-common/logger';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const globalWindow = window as any;
+const originalRequire = globalWindow.require;
+console.error(originalRequire);
+console.error('Loaded kernel preloads');
 
 export class ScriptManager extends EventEmitter {
     public readonly widgetsRegisteredInRequireJs = new Set<string>();
@@ -42,6 +47,7 @@ export class ScriptManager extends EventEmitter {
     // List of widgets that must always be loaded using requirejs instead of using a CDN or the like.
     constructor(private readonly postOffice: PostOffice) {
         super();
+        const nbscriptDepenencies = new Map<string, Deferred<void>>();
         postOffice.addHandler({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handleMessage: (type: string, payload?: any) => {
@@ -49,7 +55,9 @@ export class ScriptManager extends EventEmitter {
                     const settings = JSON.parse(payload) as IJupyterExtraSettings;
                     this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
                 } else if (type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse) {
-                    this.registerScriptSourceInRequirejs(payload as WidgetScriptSource);
+                    const resp = payload as WidgetScriptSource;
+                    this.registerScriptSourceInRequirejs(resp);
+                    nbscriptDepenencies.get(resp.moduleName)?.resolve();
                 } else if (type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
                     logMessage(`Received IPyWidgets_kernelOptions in ScriptManager`);
                     if (this.previousKernelOptions && !fastDeepEqual(this.previousKernelOptions, payload)) {
@@ -64,6 +72,45 @@ export class ScriptManager extends EventEmitter {
                 return true;
             }
         });
+        globalWindow.require = function (deps: string[], callback: Function, error: Function, optional: unknown) {
+            const args = arguments;
+            if (deps.some((item) => item.startsWith('nbextensions/'))) {
+                if (deps[0].startsWith('nbextensions/')) {
+                    let def = nbscriptDepenencies.get(deps[0]);
+                    console.error(`args = ${args}`);
+                    console.error(`args = ${Array.prototype.slice.call(arguments)}`);
+                    Array.prototype.slice.call(arguments).forEach((item) => console.error(item));
+                    console.error('1');
+                    if (def) {
+                        console.error('2');
+                        return def.promise.then(() => originalRequire(deps, callback, error, optional));
+                    }
+                    console.error('3');
+                    def = createDeferred<void>();
+                    nbscriptDepenencies.set(deps[0], def);
+                    const request = { moduleName: deps[0], moduleVersion: '' };
+                    console.error('4');
+                    postOffice.sendUnsafeMessage(IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest, request);
+                    console.error('5');
+                    def.promise
+                        .then(() => {
+                            console.error('6');
+                            try {
+                                originalRequire(deps, callback, error, optional);
+                                console.error('7');
+                            } catch (ex) {
+                                console.error('Failed to make original call', ex);
+                            }
+                            console.error('8');
+                        })
+                        .catch((ex) => console.error(`Failed to get it`, ex));
+                    return;
+                }
+                console.error(`Yay we found one ${deps.join(' ')}`);
+            }
+            return originalRequire(deps, callback, error, optional);
+        };
+        globalWindow.require.bind(originalRequire);
     }
     public getScriptLoader(): ScriptLoader {
         return {

@@ -42,12 +42,14 @@
                 "args": [
                     "--enable-proposed-api",
                     "--extensionDevelopmentPath=${workspaceFolder:vscode-python}",
-                    "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}"
+                    "--enable-proposed-api",
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",
+                    "--enable-proposed-api",
                 ],
                 "stopOnEntry": false,
                 "sourceMaps": true,
                 "outFiles": [
-                    "${workspaceFolder:vscode-python}/out/**/*.js",
+                    "${workspaceFolder:vscode-python}/out/**/*",
                     "!${workspaceFolder:vscode-python}/**/node_modules**/*",
                     "${workspaceFolder:vscode-jupyter}/out/**/*.js",
                     "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*"
