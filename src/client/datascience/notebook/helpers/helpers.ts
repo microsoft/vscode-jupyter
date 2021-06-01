@@ -16,7 +16,7 @@ import {
     NotebookCellKind,
     NotebookDocumentMetadata,
     NotebookCellExecutionState,
-    notebook,
+    notebooks,
     NotebookCellExecutionStateChangeEvent,
     NotebookCellExecutionSummary
 } from 'vscode';
@@ -407,7 +407,7 @@ export class NotebookCellStateTracker implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     private static cellStates = new WeakMap<NotebookCell, NotebookCellExecutionState>();
     constructor() {
-        notebook.onDidChangeNotebookCellExecutionState(
+        notebooks.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
             this.disposables

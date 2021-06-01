@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import {
     Event,
     EventEmitter,
-    notebook,
+    notebooks,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
     Uri
@@ -69,7 +69,7 @@ export class NotebookWatcher implements INotebookWatcher {
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
         this.notebookEditorProvider.onDidCloseNotebookEditor(this.notebookEditorClosed, this, this.disposables);
-        notebook.onDidChangeNotebookCellExecutionState(
+        notebooks.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
             this.disposables

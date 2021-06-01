@@ -6,7 +6,7 @@ import {
     Disposable,
     Event,
     EventEmitter,
-    notebook,
+    notebooks,
     NotebookCellMetadata,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
@@ -33,7 +33,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     public readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
-        return this.canUseNotebookApi ? notebook.notebookDocuments : [];
+        return this.canUseNotebookApi ? notebooks.notebookDocuments : [];
     }
     public get notebookEditors() {
         return this.canUseNotebookApi ? window.visibleNotebookEditors : [];
@@ -62,10 +62,10 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.canUseNotebookApi = true;
             this.onDidChangeNotebookEditorSelection = window.onDidChangeNotebookEditorSelection;
             this.onDidChangeActiveNotebookEditor = window.onDidChangeActiveNotebookEditor;
-            this.onDidOpenNotebookDocument = notebook.onDidOpenNotebookDocument;
-            this.onDidCloseNotebookDocument = notebook.onDidCloseNotebookDocument;
+            this.onDidOpenNotebookDocument = notebooks.onDidOpenNotebookDocument;
+            this.onDidCloseNotebookDocument = notebooks.onDidCloseNotebookDocument;
             this.onDidChangeVisibleNotebookEditors = window.onDidChangeVisibleNotebookEditors;
-            this.onDidSaveNotebookDocument = notebook.onDidSaveNotebookDocument;
+            this.onDidSaveNotebookDocument = notebooks.onDidSaveNotebookDocument;
             this.onDidChangeNotebookDocument = this._onDidChangeNotebookDocument.event;
         } else {
             this.onDidChangeNotebookEditorSelection = this.createDisposableEventEmitter<
@@ -88,7 +88,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             transientDocumentMetadata?: { [K in keyof NotebookDocumentMetadata]?: boolean };
         }
     ): Disposable {
-        return notebook.registerNotebookContentProvider(notebookType, provider, options);
+        return notebooks.registerNotebookContentProvider(notebookType, provider, options);
     }
     public createNotebookController(
         id: string,
@@ -97,7 +97,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         handler?: NotebookExecuteHandler,
         rendererScripts?: NotebookRendererScript[]
     ): NotebookController {
-        return notebook.createNotebookController(id, viewType, label, handler, rendererScripts);
+        return notebooks.createNotebookController(id, viewType, label, handler, rendererScripts);
     }
     private createDisposableEventEmitter<T>() {
         const eventEmitter = new EventEmitter<T>();
@@ -111,16 +111,16 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         this.addedEventHandlers = true;
         this.disposables.push(
             ...[
-                notebook.onDidChangeCellMetadata((e) =>
+                notebooks.onDidChangeCellMetadata((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellMetadata' })
                 ),
-                notebook.onDidChangeNotebookDocumentMetadata((e) =>
+                notebooks.onDidChangeNotebookDocumentMetadata((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeNotebookMetadata' })
                 ),
-                notebook.onDidChangeCellOutputs((e) =>
+                notebooks.onDidChangeCellOutputs((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellOutputs' })
                 ),
-                notebook.onDidChangeNotebookCells((e) => {
+                notebooks.onDidChangeNotebookCells((e) => {
                     if (this.handledCellChanges.has(e)) {
                         return;
                     }
