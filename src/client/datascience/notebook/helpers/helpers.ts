@@ -304,13 +304,9 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
 }
 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
-    return new NotebookCellData(
-        NotebookCellKind.Code,
-        concatMultilineString(cell.source),
-        'raw',
-        [],
-        { custom: getNotebookCellMetadata(cell)}
-    );
+    return new NotebookCellData(NotebookCellKind.Code, concatMultilineString(cell.source), 'raw', [], {
+        custom: getNotebookCellMetadata(cell)
+    });
 }
 function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkdownCell {
     const cellMetadata = cell.metadata.custom as CellMetadata | undefined;
@@ -325,13 +321,9 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
     return markdownCell;
 }
 function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
-    return new NotebookCellData(
-        NotebookCellKind.Markup,
-        concatMultilineString(cell.source),
-        MARKDOWN_LANGUAGE,
-        [],
-        { custom: getNotebookCellMetadata(cell)}
-    );
+    return new NotebookCellData(NotebookCellKind.Markup, concatMultilineString(cell.source), MARKDOWN_LANGUAGE, [], {
+        custom: getNotebookCellMetadata(cell)
+    });
 }
 function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLanguage: string): NotebookCellData {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -806,15 +798,13 @@ export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutp
     output = output || { output_type: 'error', ename: '', evalue: '', traceback: [] };
     return new NotebookCellOutput(
         [
-            NotebookCellOutputItem.error(
-                {
-                    name: output?.ename || '',
-                    message: output?.evalue || '',
-                    stack: (output?.traceback || []).join('\n')
-                },
-            )
+            NotebookCellOutputItem.error({
+                name: output?.ename || '',
+                message: output?.evalue || '',
+                stack: (output?.traceback || []).join('\n')
+            })
         ],
-        {...getOutputMetadata(output), originalError: output}
+        { ...getOutputMetadata(output), originalError: output }
     );
 }
 

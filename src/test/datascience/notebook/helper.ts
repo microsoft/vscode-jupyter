@@ -103,13 +103,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     const edit = new WorkspaceEdit();
     edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-        new NotebookCellData(
-            NotebookCellKind.Code,
-            source,
-            options?.language || PYTHON_LANGUAGE,
-            [],
-            {} 
-        )
+        new NotebookCellData(NotebookCellKind.Code, source, options?.language || PYTHON_LANGUAGE, [], {})
     ]);
     await workspace.applyEdit(edit);
 

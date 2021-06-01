@@ -6,13 +6,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert, use } from 'chai';
 import chaiExclude from 'chai-exclude';
-import {
-    NotebookCellOutput,
-    NotebookCellOutputItem,
-    Uri,
-    NotebookCellKind,
-    NotebookCellData
-} from 'vscode';
+import { NotebookCellOutput, NotebookCellOutputItem, Uri, NotebookCellKind, NotebookCellData } from 'vscode';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
 use(chaiExclude);
@@ -52,15 +46,9 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                     executionOrder: 10
                 }
             ),
-            new NotebookCellData(
-                NotebookCellKind.Markup,
-                '# HEAD',
-                MARKDOWN_LANGUAGE,
-                [],
-                {
-                    custom: { metadata: {} }
-                }
-            )
+            new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE, [], {
+                custom: { metadata: {} }
+            })
         ]);
     });
     suite('Outputs', () => {
@@ -181,20 +169,19 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                 [
                     new NotebookCellOutput(
                         [
-                            NotebookCellOutputItem.error(
-                                {
-                                    name: 'Error Name',
-                                    message: 'Error Value',
-                                    stack: ['stack1', 'stack2', 'stack3'].join('\n')
-                                },
-                            )
+                            NotebookCellOutputItem.error({
+                                name: 'Error Name',
+                                message: 'Error Value',
+                                stack: ['stack1', 'stack2', 'stack3'].join('\n')
+                            })
                         ],
-                        { outputType: 'error',
-                                    originalError: {
-                                        ename: 'Error Name',
-                                        evalue: 'Error Value',
-                                        traceback: ['stack1', 'stack2', 'stack3'],
-                                        output_type: 'error'
+                        {
+                            outputType: 'error',
+                            originalError: {
+                                ename: 'Error Name',
+                                evalue: 'Error Value',
+                                traceback: ['stack1', 'stack2', 'stack3'],
+                                output_type: 'error'
                             }
                         }
                     )
@@ -228,9 +215,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         ],
                         [
                             new NotebookCellOutput(
-                                [
-                                    new NotebookCellOutputItem(Buffer.from('Hello World!', 'utf8'), 'text/plain')
-                                ],
+                                [new NotebookCellOutputItem(Buffer.from('Hello World!', 'utf8'), 'text/plain')],
                                 {
                                     outputType: output_type,
                                     metadata: {}, // display_data & execute_result always have metadata.
@@ -259,10 +244,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             new NotebookCellOutput(
                                 [
                                     new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png'),
-                                    new NotebookCellOutputItem(
-                                        Buffer.from(base64EncodedImage, 'base64'),
-                                        'image/jpeg'
-                                    )
+                                    new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/jpeg')
                                 ],
                                 {
                                     executionCount: 1,
@@ -290,9 +272,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         ],
                         [
                             new NotebookCellOutput(
-                                [
-                                    new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')
-                                ],
+                                [new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
                                 {
                                     executionCount: 1,
                                     metadata: {
@@ -321,9 +301,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         ],
                         [
                             new NotebookCellOutput(
-                                [
-                                    new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')
-                                ],
+                                [new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
                                 {
                                     executionCount: 1,
                                     metadata: {
@@ -352,9 +330,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         ],
                         [
                             new NotebookCellOutput(
-                                [
-                                    new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')
-                                ],
+                                [new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
                                 {
                                     executionCount: 1,
                                     metadata: {
@@ -384,9 +360,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                         ],
                         [
                             new NotebookCellOutput(
-                                [
-                                    new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')
-                                ],
+                                [new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
                                 {
                                     executionCount: 1,
                                     metadata: {

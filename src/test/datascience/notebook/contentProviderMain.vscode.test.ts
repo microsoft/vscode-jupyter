@@ -84,17 +84,11 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                     executionOrder: 10
                 }
             ),
-            new NotebookCellData(
-                NotebookCellKind.Markup,
-                '# HEAD',
-                MARKDOWN_LANGUAGE,
-                [],
-                {
-                    custom: {
-                        metadata: {}
-                    }
+            new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE, [], {
+                custom: {
+                    metadata: {}
                 }
-            )
+            })
         ]);
     });
 
@@ -142,17 +136,11 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                     executionOrder: 10
                 }
             ),
-            new NotebookCellData(
-                NotebookCellKind.Markup,
-                '# HEAD',
-                MARKDOWN_LANGUAGE,
-                [],
-                {
-                    custom: {
-                        metadata: {}
-                    }
+            new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE, [], {
+                custom: {
+                    metadata: {}
                 }
-            )
+            })
         ]);
     });
     test('Verify mime types and order', () => {
