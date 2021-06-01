@@ -1900,7 +1900,7 @@
         "build-ipywidgets-compile": "tsc -p ./src/ipywidgets && rimraf ./out/tsconfig.tsbuildinfo && node ./src/ipywidgets/scripts/copyfiles.js",
         "build-ipywidgets-webpack": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./src/ipywidgets/webpack.config.js",
         "checkDependencies": "gulp checkDependencies",
-        "postinstall": "node ./build/ci/postInstall.js",
+        "postinstall": "npm run download-api && node ./build/ci/postInstall.js",
         "test:unittests": "mocha --config ./build/.mocha.unittests.js.json",
         "test:functional": "mocha --require source-map-support/register --config ./build/.mocha.functional.json",
         "test:functional:perf": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.perf.json",
