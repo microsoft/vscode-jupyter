@@ -64,7 +64,7 @@ export function initialize() {
     generateMock('env');
     generateMock('debug');
     generateMock('scm');
-    generateMock('notebook');
+    generateMock('notebooks');
     generateNotebookMocks();
 
     const commands = new MockCommands();
