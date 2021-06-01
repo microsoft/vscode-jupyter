@@ -167,7 +167,6 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
             'Cell5, output'
         );
 
-        // IANHU: needs_background key by mime type?
         const cellOutputMetadata = richOutput.metadata as CellOutputMetadata;
         assert.deepEqual(
             cellOutputMetadata.metadata,

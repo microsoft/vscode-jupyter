@@ -814,7 +814,6 @@ export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutp
                 },
             )
         ],
-        // IANHU: original error
         {...getOutputMetadata(output), originalError: output}
     );
 }
