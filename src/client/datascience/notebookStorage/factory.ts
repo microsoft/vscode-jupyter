@@ -4,7 +4,7 @@
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { inject, injectable } from 'inversify';
 import { Memento, Uri } from 'vscode';
-import { IVSCodeNotebook } from '../../common/application/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookCellLanguageService } from '../notebook/cellLanguageService';
@@ -18,11 +18,11 @@ export class NotebookModelFactory implements INotebookModelFactory {
     constructor(
         @inject(UseVSCodeNotebookEditorApi) private readonly useVSCodeNotebookEditorApi: boolean,
         @inject(IVSCodeNotebook) private vsCodeNotebook: IVSCodeNotebook,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService
     ) {}
     public createModel(
         options: {
-            trusted: boolean;
             file: Uri;
             cells: ICell[];
             notebookJson?: Partial<nbformat.INotebookContent>;
@@ -37,7 +37,7 @@ export class NotebookModelFactory implements INotebookModelFactory {
     ): INotebookModel {
         if (forVSCodeNotebook || this.useVSCodeNotebookEditorApi) {
             return new VSCodeNotebookModel(
-                options.trusted,
+                () => this.workspace.isTrusted,
                 options.file,
                 options.globalMemento,
                 options.crypto,
@@ -50,7 +50,7 @@ export class NotebookModelFactory implements INotebookModelFactory {
             );
         }
         return new NativeEditorNotebookModel(
-            options.trusted,
+            () => this.workspace.isTrusted,
             options.file,
             options.cells,
             options.globalMemento,

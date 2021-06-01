@@ -57,7 +57,6 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.LINK_CLICK]: Transfer.linkClick,
     [CommonActionType.EDITOR_LOADED]: Transfer.started,
     [CommonActionType.LOADED_ALL_CELLS]: Transfer.loadedAllCells,
-    [CommonActionType.LAUNCH_NOTEBOOK_TRUST_PROMPT]: Transfer.launchNotebookTrustPrompt,
     [CommonActionType.UNMOUNT]: Creation.unmount,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: CommonEffects.handleLoadIPyWidgetClassSuccess,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: CommonEffects.handleLoadIPyWidgetClassFailure,

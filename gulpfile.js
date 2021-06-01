@@ -41,7 +41,7 @@ gulp.task('output:clean', () => del(['coverage']));
 
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
-gulp.task('clean:out', () => del(['out/**', '!out', '!out/BCryptGenRandom/**', '!out/client_renderer/**']));
+gulp.task('clean:out', () => del(['out/**', '!out', '!out/client_renderer/**']));
 gulp.task('clean:ipywidgets', () => spawnAsync('npm', ['run', 'build-ipywidgets-clean'], webpackEnv));
 
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
@@ -70,7 +70,7 @@ gulp.task('checkNpmDependencies', (done) => {
                 return;
             }
             const version = packages[expectedVersion.name].version || packages[expectedVersion.name];
-            if (!version){
+            if (!version) {
                 return;
             }
             if (!version.includes(expectedVersion.version)) {
@@ -278,39 +278,20 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 
-gulp.task('includeBCryptGenRandomExe', async () => {
-    const src = path.join(ExtensionRootDir, 'src', 'BCryptGenRandom', 'BCryptGenRandom.exe');
-    const dest = path.join(ExtensionRootDir, 'out', 'BCryptGenRandom', 'BCryptGenRandom.exe');
-    if (fs.existsSync(dest)) {
-        return;
-    }
-    await fs.stat(src);
-    await fs.ensureDir(path.dirname(dest));
-    await fs.copyFile(src, dest);
-});
-
 gulp.task('downloadRendererExtension', async () => {
     await downloadRendererExtension();
 });
 
-gulp.task('prePublishBundle', gulp.series('includeBCryptGenRandomExe', 'downloadRendererExtension', 'webpack'));
+gulp.task('prePublishBundle', gulp.series('downloadRendererExtension', 'webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
-    gulp.task(
-        'prePublishNonBundle',
-        gulp.parallel('compile', 'includeBCryptGenRandomExe', 'downloadRendererExtension')
-    );
+    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'downloadRendererExtension'));
 } else {
     gulp.task(
         'prePublishNonBundle',
-        gulp.parallel(
-            'compile',
-            'includeBCryptGenRandomExe',
-            'downloadRendererExtension',
-            gulp.series('compile-webviews')
-        )
+        gulp.parallel('compile', 'downloadRendererExtension', gulp.series('compile-webviews'))
     );
 }
 

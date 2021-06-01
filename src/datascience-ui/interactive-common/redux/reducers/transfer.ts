@@ -81,11 +81,6 @@ export namespace Transfer {
         return arg.prevState;
     }
 
-    export function launchNotebookTrustPrompt(arg: CommonReducerArg) {
-        postActionToExtension(arg, InteractiveWindowMessages.LaunchNotebookTrustPrompt);
-        return arg.prevState;
-    }
-
     export function linkClick(arg: CommonReducerArg<CommonActionType, ILinkClickAction>): IMainState {
         if (arg.payload.data.href.startsWith('data:image/png')) {
             postActionToExtension(arg, InteractiveWindowMessages.SavePng, arg.payload.data.href);
@@ -333,10 +328,6 @@ export namespace Transfer {
         postActionToExtension(arg, InteractiveWindowMessages.LoadAllCellsComplete, {
             cells: arg.prevState.cellVMs.map((c) => c.cell)
         });
-        if (!arg.prevState.isNotebookTrusted) {
-            // As soon as an untrusted notebook is loaded, prompt the user to trust it
-            postActionToExtension(arg, InteractiveWindowMessages.LaunchNotebookTrustPrompt);
-        }
         return arg.prevState;
     }
 

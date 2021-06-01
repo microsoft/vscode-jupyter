@@ -17,7 +17,6 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,
     insertCodeCell,
-    trustAllNotebooks,
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
@@ -37,7 +36,6 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
-        await trustAllNotebooks();
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();
