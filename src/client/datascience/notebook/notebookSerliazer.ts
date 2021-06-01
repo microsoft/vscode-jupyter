@@ -12,6 +12,8 @@ import { sendLanguageTelemetry } from '../notebookStorage/nativeEditorStorage';
 import { createJupyterCellFromVSCNotebookCell, notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { pruneCell } from '../common';
+import { traceInfoIf } from '../../common/logger';
+import { IS_CI_SERVER } from '../../../test/ciConstants';
 
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
@@ -26,7 +28,7 @@ export class NotebookSerializer implements VSCNotebookSerializer {
     public deserializeNotebook(content: Uint8Array, _token: CancellationToken): NotebookData {
         const contents = Buffer.from(content).toString();
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
-
+        traceInfoIf(IS_CI_SERVER, `NotebookJSON ${json}`);
         // Double check json (if we have any)
         if (json && !json.cells) {
             return new NotebookData([]);
@@ -41,6 +43,7 @@ export class NotebookSerializer implements VSCNotebookSerializer {
             sendLanguageTelemetry(json);
         }
         const preferredCellLanguage = this.cellLanguageService.getPreferredLanguage(json?.metadata);
+        traceInfoIf(IS_CI_SERVER, `Preferred language in deserializer ${preferredCellLanguage}`);
         // Ensure we always have a blank cell.
         if (json?.cells?.length === 0) {
             json.cells = [
