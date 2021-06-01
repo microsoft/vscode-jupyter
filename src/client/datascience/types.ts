@@ -1345,6 +1345,12 @@ export interface IKernelDependencyService {
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }
 
+export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
+
+export interface IKernelVariableRequester {
+    getVariableNamesAndTypesFromKernel(notebook: INotebook, token?: CancellationToken): Promise<IJupyterVariable[]>;
+}
+
 export const INotebookCreationTracker = Symbol('INotebookCreationTracker');
 export interface INotebookCreationTracker {
     readonly lastPythonNotebookCreated?: Date;

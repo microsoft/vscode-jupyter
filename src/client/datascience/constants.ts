@@ -3,9 +3,8 @@
 'use strict';
 
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../common/constants';
+import { EXTENSION_ROOT_DIR, JVSC_EXTENSION_ID } from '../common/constants';
 import { IS_WINDOWS } from '../common/platform/constants';
-import { IVariableQuery } from '../common/types';
 
 export const DefaultTheme = 'Default Light+';
 // Identifier for the output panel that will display the output from the Jupyter Server.
@@ -589,11 +588,6 @@ export namespace Settings {
     export const MaxIntellisenseTimeout = 30_000;
     export const RemoteDebuggerPortBegin = 8889;
     export const RemoteDebuggerPortEnd = 9000;
-    export const DefaultVariableQuery: IVariableQuery = {
-        language: PYTHON_LANGUAGE,
-        query: '_rwho_ls = %who_ls\nprint(_rwho_ls)',
-        parseExpr: "'(\\w+)'"
-    };
 }
 
 export namespace DataFrameLoading {
@@ -643,6 +637,7 @@ export namespace Identifiers {
     export const ALL_VARIABLES = 'ALL_VARIABLES';
     export const KERNEL_VARIABLES = 'KERNEL_VARIABLES';
     export const DEBUGGER_VARIABLES = 'DEBUGGER_VARIABLES';
+    export const PYTHON_VARIABLES_REQUESTER = 'PYTHON_VARIABLES_REQUESTER';
     export const MULTIPLEXING_DEBUGSERVICE = 'MULTIPLEXING_DEBUGSERVICE';
     export const RUN_BY_LINE_DEBUGSERVICE = 'RUN_BY_LINE_DEBUGSERVICE';
     export const REMOTE_URI = 'https://remote/';

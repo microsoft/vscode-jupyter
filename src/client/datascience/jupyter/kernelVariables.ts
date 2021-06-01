@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
 import * as path from 'path';
@@ -13,13 +13,14 @@ import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable, IExperimentService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { DataFrameLoading, GetVariableInfo, Identifiers, Settings } from '../constants';
+import { DataFrameLoading, GetVariableInfo, Identifiers } from '../constants';
 import {
     ICell,
     IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
+    IKernelVariableRequester,
     INotebook
 } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
@@ -54,7 +55,7 @@ interface INotebookState {
 export class KernelVariables implements IJupyterVariables {
     private importedDataFrameScripts = new Map<string, boolean>();
     private importedGetVariableInfoScripts = new Map<string, boolean>();
-    private languageToQueryMap = new Map<string, { query: string; parser: RegExp }>();
+    private variableRequesters = new Map<string, IKernelVariableRequester>();
     private notebookState = new Map<Uri, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
     private enhancedTooltipsExperimentPromise: boolean | undefined;
@@ -62,8 +63,13 @@ export class KernelVariables implements IJupyterVariables {
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IExperimentService) private experimentService: IExperimentService
-    ) {}
+        @inject(IExperimentService) private experimentService: IExperimentService,
+        @inject(IKernelVariableRequester)
+        @named(Identifiers.PYTHON_VARIABLES_REQUESTER)
+        pythonVariableRequester: IKernelVariableRequester
+    ) {
+        this.variableRequesters.set(PYTHON_LANGUAGE, pythonVariableRequester);
+    }
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;
@@ -314,50 +320,6 @@ export class KernelVariables implements IJupyterVariables {
         return JSON.parse(text) as T;
     }
 
-    private getParser(notebook: INotebook) {
-        // Figure out kernel language
-        const language = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
-
-        // We may have cached this information
-        let result = this.languageToQueryMap.get(language);
-        if (!result) {
-            let query = this.configService
-                .getSettings(notebook.resource)
-                .variableQueries.find((v) => v.language === language);
-            if (!query && language === PYTHON_LANGUAGE) {
-                query = Settings.DefaultVariableQuery;
-            }
-
-            // Use the query to generate our regex
-            if (query) {
-                result = {
-                    query: query.query,
-                    parser: new RegExp(query.parseExpr, 'g')
-                };
-                this.languageToQueryMap.set(language, result);
-            }
-        }
-
-        return result;
-    }
-
-    private getAllMatches(regex: RegExp, text: string): string[] {
-        const result: string[] = [];
-        let m: RegExpExecArray | null = null;
-        // eslint-disable-next-line no-cond-assign
-        while ((m = regex.exec(text)) !== null) {
-            if (m.index === regex.lastIndex) {
-                regex.lastIndex += 1;
-            }
-            if (m.length > 1) {
-                result.push(m[1]);
-            }
-        }
-        // Rest after searching
-        regex.lastIndex = -1;
-        return result;
-    }
-
     private async getVariablesBasedOnKernel(
         notebook: INotebook,
         request: IJupyterVariablesRequest
@@ -476,47 +438,11 @@ export class KernelVariables implements IJupyterVariables {
         token?: CancellationToken
     ): Promise<IJupyterVariable[]> {
         // Get our query and parser
-        const query = this.getParser(notebook);
-
-        // Now execute the query
-        if (notebook && query) {
-            // Add in our get variable info script to get types
-            await this.importGetVariableInfoScripts(notebook, token);
-
-            const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), token, true);
-            const text = this.extractJupyterResultText(cells);
-            const matches = this.getAllMatches(query.parser, text);
-            const matchesAsStr = matches.map((v) => `'${v}'`);
-
-            // VariableTypesFunc takes in list of vars and the corresponding var names
-            const results = await notebook.execute(
-                `print(${GetVariableInfo.VariableTypesFunc}([${matches}], [${matchesAsStr}]))`,
-                Identifiers.EmptyFileName,
-                0,
-                uuid(),
-                token,
-                true
-            );
-
-            const varNameTypeMap = this.deserializeJupyterResult(results) as Map<String, String>;
-
-            const vars = [];
-            for (const [name, type] of Object.entries(varNameTypeMap)) {
-                const v: IJupyterVariable = {
-                    name: name,
-                    value: undefined,
-                    supportsDataExplorer: false,
-                    type: type || '',
-                    size: 0,
-                    shape: '',
-                    count: 0,
-                    truncated: true
-                };
-                vars.push(v);
-            }
-            return vars;
+        const language = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
+        const variableRequester = this.variableRequesters.get(language);
+        if (variableRequester) {
+            return variableRequester.getVariableNamesAndTypesFromKernel(notebook, token);
         }
-
         return [];
     }
 
