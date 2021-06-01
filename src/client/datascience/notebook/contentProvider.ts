@@ -14,8 +14,6 @@ import {
     NotebookDocumentBackup,
     NotebookDocumentBackupContext,
     NotebookDocumentOpenContext,
-    NotebookDocumentMetadata,
-    NotebookCellMetadata,
     NotebookCellData
 } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
@@ -53,10 +51,10 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
                         `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
                         MARKDOWN_LANGUAGE,
                         [],
-                        new NotebookCellMetadata()
+                        {}
                     )
                 ],
-                metadata: new NotebookDocumentMetadata()
+                metadata: {}
             };
         }
         // If there's no backup id, then skip loading dirty contents.

@@ -13,7 +13,6 @@ import {
     Uri,
     NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookDocument,
-    NotebookCellMetadata,
     CancellationTokenSource,
     NotebookCellData
 } from 'vscode';
@@ -84,11 +83,11 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         'print(1)',
                         PYTHON_LANGUAGE,
                         [],
-                        new NotebookCellMetadata().with({
+                        {
                             custom: {
                                 metadata: {}
                             }
-                        }),
+                        },
                         {
                             executionOrder: 10
                         }
@@ -98,11 +97,11 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         '# HEAD',
                         MARKDOWN_LANGUAGE,
                         [],
-                        new NotebookCellMetadata().with({
+                        {
                             custom: {
                                 metadata: {}
                             }
-                        })
+                        }
                     )
                 ]);
             });
@@ -148,11 +147,11 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         'Console.WriteLine("1")',
                         'csharp',
                         [],
-                        new NotebookCellMetadata().with({
+                        {
                             custom: {
                                 metadata: {}
                             }
-                        }),
+                        },
                         {
                             executionOrder: 10
                         }
@@ -162,11 +161,11 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                         '# HEAD',
                         MARKDOWN_LANGUAGE,
                         [],
-                        new NotebookCellMetadata().with({
+                        {
                             custom: {
                                 metadata: {}
                             }
-                        })
+                        }
                     )
                 ]);
             });

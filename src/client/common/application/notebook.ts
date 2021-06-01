@@ -7,12 +7,10 @@ import {
     Event,
     EventEmitter,
     notebooks,
-    NotebookCellMetadata,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookController,
     NotebookDocument,
-    NotebookDocumentMetadata,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookExecuteHandler,
@@ -84,8 +82,8 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         provider: NotebookContentProvider,
         options?: {
             transientOutputs: boolean;
-            transientCellMetadata?: { [K in keyof NotebookCellMetadata]?: boolean };
-            transientDocumentMetadata?: { [K in keyof NotebookDocumentMetadata]?: boolean };
+            transientCellMetadata?: { [x: string]: boolean | undefined } | undefined;
+            transientDocumentMetadata?: { [x: string]: boolean | undefined } | undefined;
         }
     ): Disposable {
         return notebooks.registerNotebookContentProvider(notebookType, provider, options);

@@ -10,11 +10,9 @@ import {
     NotebookCellOutputItem,
     NotebookCell,
     NotebookCellData,
-    NotebookCellMetadata,
     NotebookData,
     NotebookDocument,
     NotebookCellKind,
-    NotebookDocumentMetadata,
     NotebookCellExecutionState,
     notebooks,
     NotebookCellExecutionStateChangeEvent,
@@ -232,13 +230,9 @@ export function notebookModelToVSCNotebookData(
     if (cells.length === 0 && (isUntitledFile(notebookUri) || Object.keys(originalJson).length === 0)) {
         cells.push(new NotebookCellData(NotebookCellKind.Code, '', preferredLanguage));
     }
-    return new NotebookData(
-        cells,
-        new NotebookDocumentMetadata().with({
-            custom: notebookContentWithoutCells, // Include metadata in VSC Model (so that VSC can display these if required)
-            trusted: isNotebookTrusted
-        })
-    );
+    const notebookData = new NotebookData(cells);
+    notebookData.metadata = { custom: notebookContentWithoutCells, trusted: isNotebookTrusted };
+    return notebookData;
 }
 export function cellRunStateToCellState(cellRunState?: NotebookCellRunState): CellState {
     switch (cellRunState) {
@@ -311,15 +305,12 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
 }
 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
-    const notebookCellMetadata = new NotebookCellMetadata().with({
-        custom: getNotebookCellMetadata(cell)
-    });
     return new NotebookCellData(
         NotebookCellKind.Code,
         concatMultilineString(cell.source),
         'raw',
         [],
-        notebookCellMetadata
+        { custom: getNotebookCellMetadata(cell)}
     );
 }
 function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkdownCell {
@@ -335,15 +326,12 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
     return markdownCell;
 }
 function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
-    const notebookCellMetadata = new NotebookCellMetadata().with({
-        custom: getNotebookCellMetadata(cell)
-    });
     return new NotebookCellData(
         NotebookCellKind.Markup,
         concatMultilineString(cell.source),
         MARKDOWN_LANGUAGE,
         [],
-        notebookCellMetadata
+        { custom: getNotebookCellMetadata(cell)}
     );
 }
 function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLanguage: string): NotebookCellData {
@@ -351,10 +339,6 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
-
-    const notebookCellMetadata = new NotebookCellMetadata().with({
-        custom: getNotebookCellMetadata(cell)
-    });
 
     const source = concatMultilineString(cell.source);
 
@@ -366,7 +350,7 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
         source,
         cellLanguage,
         outputs,
-        notebookCellMetadata,
+        { custom: getNotebookCellMetadata },
         executionSummary
     );
 }
@@ -558,19 +542,7 @@ function translateDisplayDataOutput(
     const data: Record<string, any> = output.data || {};
     // eslint-disable-next-line
     for (const key in data) {
-        // Add metadata to all (its the same)
-        // We can optionally remove metadata that belongs to other mime types (feels like over optimization, hence not doing that).
-        const value = data[key];
-        let itemMetadata = metadata;
-        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-            // Clone the metadata and update it (so that each output item gets its own copy of the metadata object)
-            itemMetadata = JSON.parse(JSON.stringify(metadata));
-            // Add a custom metadata that we know of (used for renderering purposes)
-            // When rendering we know the data is actually JSON and needs to be deserialized as such (from bytes).
-            // This is because we just send bytes to the renderer.
-            itemMetadata.__isJson = true;
-        }
-        items.push(new NotebookCellOutputItem(convertJupyterOutputToBuffer(key, data[key]), key, itemMetadata));
+        items.push(new NotebookCellOutputItem(convertJupyterOutputToBuffer(key, data[key]), key));
     }
 
     return new NotebookCellOutput(sortOutputItemsBasedOnDisplayOrder(items), metadata);
@@ -662,7 +634,7 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
             traceback: []
         };
     }
-    const originalError: undefined | nbformat.IError = firstItem.metadata?.originalError;
+    const originalError: undefined | nbformat.IError = output.metadata?.originalError;
     const value: Error = JSON.parse(Buffer.from(firstItem.data as Uint8Array).toString('utf8'));
     return {
         output_type: 'error',
@@ -841,10 +813,10 @@ export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutp
                     message: output?.evalue || '',
                     stack: (output?.traceback || []).join('\n')
                 },
-                { ...getOutputMetadata(output), originalError: output }
             )
         ],
-        getOutputMetadata(output)
+        // IANHU: original error
+        {...getOutputMetadata(output), originalError: output}
     );
 }
 
