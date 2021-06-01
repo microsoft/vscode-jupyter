@@ -18,7 +18,6 @@ import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
-    trustAllNotebooks,
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
@@ -60,7 +59,6 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
-        await trustAllNotebooks();
         await startJupyterServer();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
@@ -88,7 +86,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     test('MRU and encrypted storage should be updated with remote Uri info', async () => {
         const previousList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
         const encryptedStorageSpiedStore = sinon.spy(encryptedStorage, 'store');
-        await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
+        await openNotebook(api.serviceContainer, ipynbFile.fsPath);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
         await insertCodeCell('print("123412341234")', { index: 0 });
@@ -104,7 +102,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     });
     test('Use same kernel when re-opening notebook', async function () {
         return this.skip(); // 5984 track this issue to re-enable
-        await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
+        await openNotebook(api.serviceContainer, ipynbFile.fsPath);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
@@ -133,7 +131,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // It should connect to the same live kernel
         // Second cell should display the value of existing variable from previous execution.
 
-        await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
+        await openNotebook(api.serviceContainer, ipynbFile.fsPath);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');

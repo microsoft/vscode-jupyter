@@ -1254,13 +1254,6 @@ export interface IEventNamePropertyMapping {
         kernelLiveCount: number; // Total number of live kernels in the kernel list.
     } & ResourceSpecificTelemetryProperties;
 
-    // Trusted notebooks events
-    [Telemetry.NotebookTrustPromptShown]: never | undefined;
-    [Telemetry.TrustNotebook]: never | undefined;
-    [Telemetry.TrustAllNotebooks]: never | undefined;
-    [Telemetry.DoNotTrustNotebook]: never | undefined;
-    [Telemetry.NativeRandomBytesGenerationFailed]: [never | undefined];
-
     // Native notebooks events
     [VSCodeNativeTelemetry.AddCell]: never | undefined;
     [VSCodeNativeTelemetry.DeleteCell]: never | undefined;

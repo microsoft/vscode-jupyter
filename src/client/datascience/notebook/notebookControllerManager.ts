@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import {
@@ -79,7 +79,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
         @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
-        @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService
+        @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -165,7 +166,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // When a document is opened we need to look for a perferred kernel for it
     private onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
-        if (document.viewType !== JupyterNotebookView) {
+        if (document.viewType !== JupyterNotebookView || !this.workspace.isTrusted) {
             return;
         }
 
@@ -306,7 +307,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 this,
                 this.pathUtils,
                 this.disposables,
-                this.languageService
+                this.languageService,
+                this.workspace
             );
 
             // Hook up to if this NotebookController is selected or de-selected

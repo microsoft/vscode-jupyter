@@ -28,7 +28,6 @@ import {
     runAllCellsInActiveNotebook,
     insertCodeCell,
     startJupyterServer,
-    trustAllNotebooks,
     waitForExecutionCompletedWithErrors,
     waitForTextOutputInVSCode,
     waitForExecutionInProgress,
@@ -76,7 +75,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await startJupyterServer();
-        await trustAllNotebooks();
         // Open a notebook and use this for all tests in this test suite.
         await createEmptyPythonNotebook(disposables);
         vscEditor = vscodeNotebook.activeNotebookEditor!;

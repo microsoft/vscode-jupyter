@@ -815,6 +815,15 @@ export interface IWorkspaceService {
      * @return The full configuration or a subset.
      */
     getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration;
+    /**
+     * When true, the user has explicitly trusted the contents of the workspace.
+     */
+    readonly isTrusted: boolean;
+
+    /**
+     * Event that fires when the current workspace has been trusted.
+     */
+    readonly onDidGrantWorkspaceTrust: Event<void>;
 }
 
 export const ITerminalManager = Symbol('ITerminalManager');

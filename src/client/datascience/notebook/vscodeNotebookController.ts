@@ -17,7 +17,7 @@ import {
     UIKind,
     Uri
 } from 'vscode';
-import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
@@ -85,7 +85,8 @@ export class VSCodeNotebookController implements Disposable {
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly pathUtils: IPathUtils,
         disposableRegistry: IDisposableRegistry,
-        private readonly languageService: NotebookCellLanguageService
+        private readonly languageService: NotebookCellLanguageService,
+        private readonly workspace: IWorkspaceService
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -153,8 +154,7 @@ export class VSCodeNotebookController implements Disposable {
 
         // When we receive a cell execute request, first ensure that the notebook is trusted.
         // If it isn't already trusted, block execution until the user trusts it.
-        const isTrusted = await this.commandManager.executeCommand(Commands.TrustNotebook, targetNotebook.uri);
-        if (!isTrusted) {
+        if (!this.workspace.isTrusted) {
             return;
         }
         // Notebook is trusted. Continue to execute cells

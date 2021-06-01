@@ -23,7 +23,6 @@ import {
     runAllCellsInActiveNotebook,
     runCell,
     insertCodeCell,
-    trustAllNotebooks,
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
@@ -83,7 +82,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             disposables
         );
 
-        await trustAllNotebooks();
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();
@@ -94,7 +92,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await startJupyterServer();
-        await trustAllNotebooks();
         await createEmptyPythonNotebook(disposables);
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);

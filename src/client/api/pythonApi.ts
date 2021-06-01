@@ -64,7 +64,8 @@ export class PythonApiProvider implements IPythonApiProvider {
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
+        @inject(IWorkspaceService) private workspace: IWorkspaceService
     ) {
         const previouslyInstalled = this.extensionChecker.isPythonExtensionInstalled;
         if (!previouslyInstalled) {
@@ -87,7 +88,9 @@ export class PythonApiProvider implements IPythonApiProvider {
     }
 
     public setApi(api: PythonApi): void {
-        if (this.api.resolved) {
+        // Never allow accessing python API (we dont want to ever use the API and run code in untrusted API).
+        // Don't assume Python API will always be disabled in untrusted worksapces.
+        if (this.api.resolved || !this.workspace.isTrusted) {
             return;
         }
         this.api.resolve(api);
@@ -125,13 +128,13 @@ export class PythonApiProvider implements IPythonApiProvider {
 @injectable()
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
-    private pythonExtensionId = PythonExtension;
     private waitingOnInstallPrompt?: Promise<void>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         // If the python extension is not installed listen to see if anything does install it
         if (!this.isPythonExtensionInstalled) {
@@ -140,13 +143,17 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     public get isPythonExtensionInstalled() {
-        return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
+        return this.extensions.getExtension(PythonExtension) !== undefined;
     }
     public get isPythonExtensionActive() {
-        return this.extensions.getExtension(this.pythonExtensionId)?.isActive === true;
+        return this.extensions.getExtension(PythonExtension)?.isActive === true;
     }
 
     public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
+        // If workspace is not trusted, then don't show prompt
+        if (!this.workspace.isTrusted) {
+            return;
+        }
         if (this.waitingOnInstallPrompt) {
             return this.waitingOnInstallPrompt;
         }
@@ -164,6 +171,10 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     public async showPythonExtensionInstallRecommendedPrompt() {
+        // If workspace is not trusted, then don't show prompt
+        if (!this.workspace.isTrusted) {
+            return;
+        }
         const key = 'ShouldShowPythonExtensionInstallRecommendedPrompt';
         const surveyPrompt = this.persistentStateFactory.createGlobalPersistentState(key, true);
         if (surveyPrompt.value) {

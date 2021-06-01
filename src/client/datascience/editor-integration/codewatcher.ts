@@ -126,7 +126,11 @@ export class CodeWatcher implements ICodeWatcher {
         // Run the cell that matches the current cursor position.
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, false, true);
     }
-
+    public dispose() {
+        this.codeLensUpdatedEvent.dispose();
+        this.closeDocumentDisposable?.dispose(); // NOSONAR
+        this.updateRequiredDisposable?.dispose(); // NOSONAR
+    }
     @captureTelemetry(Telemetry.RunAllCells)
     public async runAllCells() {
         const runCellCommands = this.codeLenses.filter(
