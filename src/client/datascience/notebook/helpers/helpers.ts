@@ -420,7 +420,7 @@ export class NotebookCellStateTracker implements IDisposable {
         return NotebookCellStateTracker.cellStates.get(cell);
     }
     private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
-        NotebookCellStateTracker.cellStates.set(e.cell, e.executionState);
+        NotebookCellStateTracker.cellStates.set(e.cell, e.state);
     }
 }
 
@@ -589,8 +589,8 @@ export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: s
 
 // Output stream can only have stderr or stdout so just check the first output. Undefined if no outputs
 export function getOutputStreamType(output: NotebookCellOutput): string | undefined {
-    if (output.outputs.length > 0) {
-        return output.outputs[0].mime === CellOutputMimeTypes.stderr ? 'stderr' : 'stdout';
+    if (output.items.length > 0) {
+        return output.items[0].mime === CellOutputMimeTypes.stderr ? 'stderr' : 'stdout';
     }
 }
 
@@ -652,7 +652,7 @@ export type CellOutputMetadata = {
 
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
     // it should have at least one output item
-    const firstItem = output.outputs[0];
+    const firstItem = output.items[0];
     // Bug in VS Code.
     if (!firstItem.data) {
         return {
@@ -739,7 +739,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             break;
         }
         case 'stream': {
-            const outputs = output.outputs
+            const outputs = output.items
                 .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
                 .map((opit) => convertOutputMimeToJupyterOutput(opit.mime, opit.data as Uint8Array) as string)
                 .reduceRight<string[]>(
@@ -760,7 +760,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             result = {
                 output_type: 'display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                data: output.outputs.reduceRight((prev: any, curr) => {
+                data: output.items.reduceRight((prev: any, curr) => {
                     prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
@@ -772,7 +772,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             result = {
                 output_type: 'execute_result',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                data: output.outputs.reduceRight((prev: any, curr) => {
+                data: output.items.reduceRight((prev: any, curr) => {
                     prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
@@ -786,7 +786,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             result = {
                 output_type: 'update_display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                data: output.outputs.reduceRight((prev: any, curr) => {
+                data: output.items.reduceRight((prev: any, curr) => {
                     prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
@@ -805,9 +805,9 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             if (customMetadata?.metadata) {
                 unknownOutput.metadata = customMetadata.metadata;
             }
-            if (output.outputs.length > 0) {
+            if (output.items.length > 0) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => {
+                unknownOutput.data = output.items.reduceRight((prev: any, curr) => {
                     prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {});
@@ -849,7 +849,7 @@ export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutp
 }
 
 export function getTextOutputValue(output: NotebookCellOutput): string {
-    const item = output.outputs.find(
+    const item = output.items.find(
         (opit) =>
             opit.mime === CellOutputMimeTypes.stdout ||
             opit.mime === CellOutputMimeTypes.stderr ||
@@ -865,7 +865,7 @@ export function getTextOutputValue(output: NotebookCellOutput): string {
 }
 export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
     const errorOutput = outputs.find(
-        (op) => op.outputs.length && !op.outputs.some((opit) => opit.mime !== CellOutputMimeTypes.error)
+        (op) => op.items.length && !op.items.some((opit) => opit.mime !== CellOutputMimeTypes.error)
     );
 
     return !!errorOutput;

@@ -603,10 +603,10 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs.length, 'No output');
-    const result = cell.outputs[index].outputs.some((item) => hasTextOutputValue(item, text, isExactMatch));
+    const result = cell.outputs[index].items.some((item) => hasTextOutputValue(item, text, isExactMatch));
     assert.isTrue(
         result,
-        `${text} not found in outputs of cell ${cell.index} ${cell.outputs[index].outputs
+        `${text} not found in outputs of cell ${cell.index} ${cell.outputs[index].items
             .map((o) => (o.data ? Buffer.from(o.data as Uint8Array).toString('utf8') : ''))
             .join(' ')}`
     );

@@ -1900,7 +1900,7 @@
         "build-ipywidgets-compile": "tsc -p ./src/ipywidgets && rimraf ./out/tsconfig.tsbuildinfo && node ./src/ipywidgets/scripts/copyfiles.js",
         "build-ipywidgets-webpack": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./src/ipywidgets/webpack.config.js",
         "checkDependencies": "gulp checkDependencies",
-        "postinstall": "node ./build/ci/postInstall.js",
+        "postinstall": "npm run download-api && node ./build/ci/postInstall.js",
         "test:unittests": "mocha --config ./build/.mocha.unittests.js.json",
         "test:functional": "mocha --require source-map-support/register --config ./build/.mocha.functional.json",
         "test:functional:perf": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --config ./build/.mocha.functional.perf.json",
@@ -1923,7 +1923,9 @@
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",
         "updateBuildNumber": "gulp updateBuildNumber",
-        "webpack": "webpack"
+        "webpack": "webpack",
+        "download-api": "vscode-dts dev",
+        "postdownload-api": "vscode-dts main"
     },
     "dependencies": {
         "@enonic/fnv-plus": "^1.3.0",
@@ -2057,6 +2059,7 @@
         "@types/glob": "^5.0.35",
         "@types/html-webpack-plugin": "^3.2.0",
         "@types/iconv-lite": "^0.0.1",
+        "@types/is-online": "^8.1.0",
         "@types/jsdom": "^11.12.0",
         "@types/loadable__component": "^5.10.0",
         "@types/loader-utils": "^1.1.3",
@@ -2087,7 +2090,6 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "^1.56.0",
         "@types/vscode-notebook-renderer": "^1.57.2",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
@@ -2190,6 +2192,7 @@
         "unicode-properties": "^1.3.1",
         "url-loader": "^1.1.2",
         "vsce": "^1.59.0",
+        "vscode-dts": "^0.3.1",
         "vscode-test": "^1.4.0",
         "webpack": "^4.37.0",
         "webpack-bundle-analyzer": "^3.6.0",

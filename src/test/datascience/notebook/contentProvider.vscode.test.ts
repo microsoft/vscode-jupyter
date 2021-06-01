@@ -171,12 +171,12 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.lengthOf(notebook.cellAt(4).outputs, 1, 'Cell5, outputs');
         const richOutput = notebook.cellAt(4).outputs[0];
         assert.deepEqual(
-            richOutput.outputs.map((op) => op.mime),
+            richOutput.items.map((op) => op.mime),
             ['image/svg+xml', 'image/png', 'text/plain'],
             'Cell5, output'
         );
 
-        const cellOutputMetadata = richOutput.outputs[0].metadata as CellOutputMetadata;
+        const cellOutputMetadata = richOutput.items[0].metadata as CellOutputMetadata;
         assert.deepEqual(
             cellOutputMetadata.metadata,
             {

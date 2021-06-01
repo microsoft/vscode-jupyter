@@ -63,13 +63,13 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
             assert.equal(cell.outputs.length, outputs.length, `Cell ${index} must have an output`);
             outputs.forEach((outputItems, outputIndex) => {
                 assert.equal(
-                    cell.outputs[outputIndex].outputs.length,
+                    cell.outputs[outputIndex].items.length,
                     outputItems.length,
                     `Cell ${index} output must have ${outputItems.length} output items`
                 );
                 outputItems.forEach((outputItemMimeType, outputItemIndex) => {
                     assert.equal(
-                        cell.outputs[outputIndex].outputs[outputItemIndex].mime,
+                        cell.outputs[outputIndex].items[outputItemIndex].mime,
                         outputItemMimeType,
                         `Cell ${index} output item ${outputItemIndex} not ${outputItemMimeType}`
                     );
