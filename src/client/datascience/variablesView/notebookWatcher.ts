@@ -79,10 +79,10 @@ export class NotebookWatcher implements INotebookWatcher {
     // Handle when a cell finishes execution
     private onDidChangeNotebookCellExecutionState(cellStateChange: NotebookCellExecutionStateChangeEvent): void {
         // If a cell has moved to idle, update our state
-        if (cellStateChange.executionState === NotebookCellExecutionState.Idle) {
+        if (cellStateChange.state === NotebookCellExecutionState.Idle) {
             // Convert to the old KernelStateEventArgs format
             this.handleExecute({
-                resource: cellStateChange.document.uri,
+                resource: cellStateChange.cell.notebook.uri,
                 state: KernelState.executed,
                 cell: cellStateChange.cell,
                 silent: false

@@ -719,7 +719,7 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(`${existingOutputText}${newContent}`))
                 });
-                promise = task?.replaceOutputItems(output.outputs, existingOutputToAppendTo.id);
+                promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo.id);
             } else if (clearOutput) {
                 // Replace the current outputs with a single new output.
                 const output = cellOutputToVSCCellOutput({
@@ -835,15 +835,15 @@ export class CellExecution {
                     metadata: msg.content.metadata
                 });
                 // If there was no output and still no output, then nothing to do.
-                if (outputToBeUpdated.outputs.length === 0 && newOutput.outputs.length === 0) {
+                if (outputToBeUpdated.items.length === 0 && newOutput.items.length === 0) {
                     return;
                 }
                 // Compare each output item (at the end of the day everything is serializable).
                 // Hence this is a safe comparison.
-                if (outputToBeUpdated.outputs.length === newOutput.outputs.length) {
+                if (outputToBeUpdated.items.length === newOutput.items.length) {
                     let allAllOutputItemsSame = true;
                     for (let index = 0; index < cell.outputs.length; index++) {
-                        if (!fastDeepEqual(outputToBeUpdated.outputs[index], newOutput.outputs[index])) {
+                        if (!fastDeepEqual(outputToBeUpdated.items[index], newOutput.items[index])) {
                             allAllOutputItemsSame = false;
                             break;
                         }
@@ -857,7 +857,7 @@ export class CellExecution {
                 // This message could have come from a background thread.
                 // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
                 const task = this.execution || this.createTemporaryTask();
-                const promise = task?.replaceOutputItems(newOutput.outputs, outputToBeUpdated.id);
+                const promise = task?.replaceOutputItems(newOutput.items, outputToBeUpdated.id);
                 this.endTemporaryTask();
                 // await on the promise at the end, we want to minimize UI flickers.
                 // The way we update output of other cells is to use an existing task or a temporary task.
