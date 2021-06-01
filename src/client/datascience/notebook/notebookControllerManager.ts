@@ -165,7 +165,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // When a document is opened we need to look for a perferred kernel for it
     private onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
-        if (document.viewType !== JupyterNotebookView) {
+        if (document.notebookType !== JupyterNotebookView) {
             return;
         }
 

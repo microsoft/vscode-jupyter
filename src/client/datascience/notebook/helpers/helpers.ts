@@ -53,7 +53,7 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     if (typeof option === 'string') {
         return option === JupyterNotebookView;
     } else {
-        return option.viewType === JupyterNotebookView;
+        return option.notebookType === JupyterNotebookView;
     }
 }
 

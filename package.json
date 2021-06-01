@@ -1810,7 +1810,7 @@
         ],
         "notebooks": [
             {
-                "viewType": "jupyter-notebook",
+                "type": "jupyter-notebook",
                 "displayName": "Jupyter Notebook (preview)",
                 "selector": [
                     {
