@@ -80,7 +80,8 @@ async function createSettings(): Promise<string> {
         'python.logging.level': 'debug',
         // Disable the start page in VS Code tests, else this UI pops up and has potential to break tests.
         // For instance if the start page UI opens up, then active editor, active notebook and the like are empty.
-        'python.showStartPage': false
+        'python.showStartPage': false,
+        'security.workspace.trust.enabled': false // Trust everything
     };
 
     if (channel !== 'insiders') {
