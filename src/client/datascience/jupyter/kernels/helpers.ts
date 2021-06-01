@@ -338,6 +338,11 @@ export function findPreferredKernel(
     preferredInterpreter: PythonEnvironment | undefined,
     remoteKernelPreferredProvider: PreferredRemoteKernelIdProvider | undefined
 ): KernelConnectionMetadata | undefined {
+    traceInfo(
+        `Find preferred kernel for ${resource?.toString()} with metadata ${JSON.stringify(
+            notebookMetadata || {}
+        )} & preferred interpreter ${preferredInterpreter || {}}`
+    );
     let index = -1;
 
     // First try remote
