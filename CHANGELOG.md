@@ -66,6 +66,8 @@
    ([#5931](https://github.com/Microsoft/vscode-jupyter/issues/5931))
 1. VSCode API naming changes for NotebookCellExecution, NotebookRendererScript.
    ([#6014](https://github.com/Microsoft/vscode-jupyter/issues/6014))
+1. API Changes viewType => notebookType and notebook namespace to notebooks.
+   ([#6046](https://github.com/microsoft/vscode-jupyter/issues/6046))
 
 ### Thanks
 
