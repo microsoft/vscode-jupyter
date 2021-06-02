@@ -242,11 +242,11 @@ jobs:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
-      - name: Install Stable + Proposed API
-        run: npm run download-api
-
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
+
+      - name: Install Stable + Proposed API
+        run: npm run download-api
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
