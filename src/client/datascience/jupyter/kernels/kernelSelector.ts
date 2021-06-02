@@ -87,7 +87,11 @@ export class KernelSelector {
             localize.DataScience.selectKernel() +
             (currentKernelDisplayName ? ` (current: ${currentKernelDisplayName})` : '');
         sendTelemetryEvent(telemetryEvent, stopWatch.elapsedTime);
-        sendKernelListTelemetry(resource, suggestions, stopWatch);
+        sendKernelListTelemetry(
+            resource,
+            suggestions.map((item) => item.selection),
+            stopWatch
+        );
         const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder }, cancelToken);
         if (!selection?.selection) {
             return;
