@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands } from 'vscode';
+import { commands, notebooks, window } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { traceInfo } from '../../../../client/common/logger';
@@ -57,7 +57,21 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
     });
     async function createNotebookAndValidateLanguageOfFirstCell(expectedLanguage: string) {
         await commands.executeCommand(Commands.CreateNewNotebook);
-        await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
+        try {
+            await waitForCondition(
+                async () => !!vscodeNotebook.activeNotebookEditor,
+                10_000,
+                'New Notebook not created'
+            );
+        } catch (ex) {
+            console.error('notebooks.notebookDocuments.length');
+            console.error(notebooks.notebookDocuments.length);
+            console.error('notebooks.visibleNotebookEditors.length');
+            console.error(window.visibleNotebookEditors.length);
+            console.error('window.activeNotebookEditor');
+            console.error(window.activeNotebookEditor);
+            throw ex;
+        }
         assert.strictEqual(
             vscodeNotebook.activeNotebookEditor!.document.cellAt(0).document.languageId.toLowerCase(),
             expectedLanguage
