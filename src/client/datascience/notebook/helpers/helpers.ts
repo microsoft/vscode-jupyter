@@ -25,7 +25,7 @@ import '../../../common/extensions';
 import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { isUntitledFile } from '../../../common/utils/misc';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
+import { originalNbFormat, Telemetry } from '../../constants';
 import { KernelConnectionMetadata, NotebookCellRunState } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { CellState, IJupyterKernelSpec } from '../../types';
@@ -73,7 +73,7 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
     // If language isn't specified in the metadata, at least specify that
     if (!notebookContent?.metadata?.language_info?.name) {
         const content = notebookContent || {};
-        const metadata = content.metadata || { orig_nbformat: 3, language_info: {} };
+        const metadata = content.metadata || { orig_nbformat: originalNbFormat, language_info: {} };
         const language_info = { ...metadata.language_info };
         // Fix nyc compiler not working.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

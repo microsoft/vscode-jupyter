@@ -711,3 +711,6 @@ export namespace LiveShareCommands {
 export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
 export const OurNotebookProvider = 'OurNotebookProvider';
 export const DataScienceStartupTime = Symbol('DataScienceStartupTime');
+
+// Default for notebook version (major & minor) used when creating notebooks.
+export const defaultNotebookFormat = { major: 4, minor: 2 };

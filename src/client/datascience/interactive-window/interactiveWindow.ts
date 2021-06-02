@@ -29,7 +29,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
+import { Commands, defaultNotebookFormat, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { ExportFormat, IExportDialog } from '../export/types';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -533,7 +533,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
 
         // Pull out the metadata from our active notebook
-        const metadata: nbformat.INotebookMetadata = { orig_nbformat: 3 };
+        const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
         if (this.notebook) {
             updateNotebookMetadata(metadata, this.notebook?.getKernelConnection());
         }
