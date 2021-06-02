@@ -105,11 +105,14 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
 
         assert.deepEqual(JSON.parse(jsonStr), JSON.parse(model.getContent()));
     });
-    test('Verify cells (content, metadata & output)', async () => {
+    test('IANHU Verify cells (content, metadata & output)', async () => {
         const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         const model = (await editorProvider.open(testIPynb))!.model! as VSCodeNotebookModel;
 
         const notebook = vscodeNotebook.activeNotebookEditor?.document!;
+
+        console.log(`IANHU model: ${model}`);
+        console.log(`IANHU notebook: ${notebook}`);
 
         assert.equal(notebook.cellCount, model?.cellCount, 'Incorrect number of cells');
         assert.equal(notebook.cellCount, 6, 'Incorrect number of cells');
