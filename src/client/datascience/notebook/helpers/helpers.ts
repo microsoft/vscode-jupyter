@@ -87,7 +87,7 @@ export async function updateNotebookDocumentMetadata(
 
         docMetadata.custom = docMetadata.custom || {};
         docMetadata.custom.metadata = metadata;
-        await edit.replaceNotebookMetadata(document.uri, document.metadata.with({ custom: docMetadata.custom }));
+        await edit.replaceNotebookMetadata(document.uri, { ...(document.metadata || {}), custom: docMetadata.custom });
     }
 }
 
