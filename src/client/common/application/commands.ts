@@ -53,6 +53,8 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.ResetLoggingLevel]: [];
     [DSCommands.OpenVariableView]: [];
     [DSCommands.NotebookEditorToggleOutput]: [];
+    ['notebook.cell.collapseCellOutput']: [];
+    ['notebook.cell.expandCellOutput']: [];
 }
 
 /**
