@@ -194,7 +194,7 @@ jobs:
 
   vsc_api_check:
     needs: pick_environment
-    name: Compile with latest Proposed API
+    name: VSC Stable & Proposed API
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
