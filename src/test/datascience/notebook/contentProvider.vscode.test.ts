@@ -9,7 +9,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { NotebookCellKind, commands, Uri, NotebookContentProvider, CancellationTokenSource } from 'vscode';
+import { NotebookCellKind, commands, Uri, NotebookContentProvider, CancellationTokenSource, window } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import {
@@ -111,6 +111,8 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         const model = (await editorProvider.open(testIPynb))!.model! as VSCodeNotebookModel;
 
+        assert.equal(vscodeNotebook.notebookEditors.length, 1, 'One document open');
+        await window.showNotebookDocument(vscodeNotebook.notebookEditors[0].document.uri);
         const notebook = vscodeNotebook.activeNotebookEditor?.document!;
 
         console.log(`IANHU model: ${model}`);
