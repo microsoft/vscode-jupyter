@@ -552,13 +552,15 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
 
         // Then run the export command with these contents
-        this.commandManager.executeCommand(
-            Commands.Export,
-            contents,
-            this.owningResource,
-            defaultFileName,
-            this.notebook?.getMatchingInterpreter()
-        ).then(noop, noop);
+        this.commandManager
+            .executeCommand(
+                Commands.Export,
+                contents,
+                this.owningResource,
+                defaultFileName,
+                this.notebook?.getMatchingInterpreter()
+            )
+            .then(noop, noop);
     }
 
     private handleModelChange(update: NotebookModelChange) {
