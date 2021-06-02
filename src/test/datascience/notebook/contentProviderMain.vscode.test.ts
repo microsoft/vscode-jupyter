@@ -13,7 +13,6 @@ import {
     Uri,
     NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookDocument,
-    NotebookCellMetadata,
     CancellationTokenSource,
     NotebookCellData
 } from 'vscode';
@@ -76,26 +75,20 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                 'print(1)',
                 PYTHON_LANGUAGE,
                 [],
-                new NotebookCellMetadata().with({
+                {
                     custom: {
                         metadata: {}
                     }
-                }),
+                },
                 {
                     executionOrder: 10
                 }
             ),
-            new NotebookCellData(
-                NotebookCellKind.Markup,
-                '# HEAD',
-                MARKDOWN_LANGUAGE,
-                [],
-                new NotebookCellMetadata().with({
-                    custom: {
-                        metadata: {}
-                    }
-                })
-            )
+            new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE, [], {
+                custom: {
+                    metadata: {}
+                }
+            })
         ]);
     });
 
@@ -134,26 +127,20 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                 'Console.WriteLine("1")',
                 'csharp',
                 [],
-                new NotebookCellMetadata().with({
+                {
                     custom: {
                         metadata: {}
                     }
-                }),
+                },
                 {
                     executionOrder: 10
                 }
             ),
-            new NotebookCellData(
-                NotebookCellKind.Markup,
-                '# HEAD',
-                MARKDOWN_LANGUAGE,
-                [],
-                new NotebookCellMetadata().with({
-                    custom: {
-                        metadata: {}
-                    }
-                })
-            )
+            new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE, [], {
+                custom: {
+                    metadata: {}
+                }
+            })
         ]);
     });
     test('Verify mime types and order', () => {

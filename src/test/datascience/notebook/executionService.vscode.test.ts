@@ -401,7 +401,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
 
         assertHasTextOutputInVSCode(cells[1], 'foo', 0, true);
-        const cellOutputMetadata = cells[1].outputs[0].items[0]?.metadata as CellOutputMetadata | undefined;
+        const cellOutputMetadata = cells[1].outputs[0]?.metadata as CellOutputMetadata | undefined;
         assert.ok(cellOutputMetadata?.transient?.display_id, 'Display id not present in metadata');
 
         await insertCodeCell(

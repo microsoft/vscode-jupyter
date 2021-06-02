@@ -83,7 +83,7 @@ suite('DataScience Extension Recommendation', () => {
                             }
                         }
                     };
-                    when(notebook.viewType).thenReturn(JupyterNotebookView);
+                    when(notebook.notebookType).thenReturn(JupyterNotebookView);
                     when(notebook.metadata).thenReturn({ custom: notebookContent } as any);
                     return instance(notebook);
                 }

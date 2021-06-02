@@ -64,13 +64,13 @@ export function initialize() {
     generateMock('env');
     generateMock('debug');
     generateMock('scm');
-    generateMock('notebook');
+    generateMock('notebooks');
     generateNotebookMocks();
 
     const commands = new MockCommands();
     (mockedVSCode as any).commands = commands;
     mockedVSCodeNamespaces.commands = commands as any;
-    mockedVSCodeNamespaces.notebook?.setup((nb) => nb.notebookDocuments).returns(() => []);
+    mockedVSCodeNamespaces.notebooks?.setup((nb) => nb.notebookDocuments).returns(() => []);
     mockedVSCodeNamespaces.window?.setup((w) => w.visibleNotebookEditors).returns(() => []);
     // Use mock clipboard fo testing purposes.
     const clipboard = new MockClipboard();
