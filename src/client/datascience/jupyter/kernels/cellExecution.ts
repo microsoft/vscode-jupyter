@@ -720,7 +720,7 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(`${existingOutputText}${newContent}`))
                 });
-                promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo.id);
+                promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo);
             } else if (clearOutput) {
                 // Replace the current outputs with a single new output.
                 const output = cellOutputToVSCCellOutput({
@@ -858,7 +858,7 @@ export class CellExecution {
                 // This message could have come from a background thread.
                 // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
                 const task = this.execution || this.createTemporaryTask();
-                const promise = task?.replaceOutputItems(newOutput.items, outputToBeUpdated.id);
+                const promise = task?.replaceOutputItems(newOutput.items, outputToBeUpdated);
                 this.endTemporaryTask();
                 // await on the promise at the end, we want to minimize UI flickers.
                 // The way we update output of other cells is to use an existing task or a temporary task.
