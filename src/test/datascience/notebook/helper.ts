@@ -21,7 +21,6 @@ import {
     NotebookContentProvider as VSCNotebookContentProvider,
     NotebookDocument,
     NotebookCellKind,
-    NotebookCellMetadata,
     NotebookCellOutputItem,
     NotebookRange,
     NotebookCellExecutionState,
@@ -31,13 +30,7 @@ import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { traceInfo } from '../../../client/common/logger';
-import {
-    GLOBAL_MEMENTO,
-    IConfigurationService,
-    ICryptoUtils,
-    IDisposable,
-    IMemento
-} from '../../../client/common/types';
+import { GLOBAL_MEMENTO, ICryptoUtils, IDisposable, IMemento } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
 import { CellExecution } from '../../../client/datascience/jupyter/kernels/cellExecution';
@@ -57,7 +50,7 @@ import {
     INotebookControllerManager
 } from '../../../client/datascience/notebook/types';
 import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
-import { INotebookEditorProvider, INotebookProvider, ITrustService } from '../../../client/datascience/types';
+import { INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
@@ -96,7 +89,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
         edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-            new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE, [], new NotebookCellMetadata())
+            new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE, [], {})
         ])
     );
     return activeEditor.document.cellAt(startNumber)!;
@@ -110,13 +103,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     const edit = new WorkspaceEdit();
     edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-        new NotebookCellData(
-            NotebookCellKind.Code,
-            source,
-            options?.language || PYTHON_LANGUAGE,
-            [],
-            new NotebookCellMetadata()
-        )
+        new NotebookCellData(NotebookCellKind.Code, source, options?.language || PYTHON_LANGUAGE, [], {})
     ]);
     await workspace.applyEdit(edit);
 
@@ -224,7 +211,6 @@ export async function ensureNewNotebooksHavePythonCells() {
         await globalMemento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE).then(noop, noop);
     }
 }
-let oldValueFor_alwaysTrustNotebooks: undefined | boolean;
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
@@ -237,13 +223,6 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
     await ensureNewNotebooksHavePythonCells();
-    if (typeof oldValueFor_alwaysTrustNotebooks === 'boolean') {
-        const api = await initialize();
-        const dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings();
-        (<any>dsSettings).alwaysTrustNotebooks = oldValueFor_alwaysTrustNotebooks;
-        oldValueFor_alwaysTrustNotebooks = undefined;
-    }
-
     sinon.restore();
 }
 
@@ -389,21 +368,6 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     );
     await sleep(500);
     traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
-}
-export async function trustNotebook(ipynbFile: string | Uri) {
-    traceInfo(`Trusting Notebook ${ipynbFile}`);
-    const api = await initialize();
-    const uri = typeof ipynbFile === 'string' ? Uri.file(ipynbFile) : ipynbFile;
-    const content = await fs.readFile(uri.fsPath, { encoding: 'utf8' });
-    await api.serviceContainer.get<ITrustService>(ITrustService).trustNotebook(uri, content);
-}
-export async function trustAllNotebooks() {
-    const api = await initialize();
-    const dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings();
-    if (oldValueFor_alwaysTrustNotebooks !== undefined) {
-        oldValueFor_alwaysTrustNotebooks = dsSettings.alwaysTrustNotebooks;
-    }
-    (<any>dsSettings).alwaysTrustNotebooks = true;
 }
 
 export async function startJupyterServer(api?: IExtensionTestApi) {
@@ -603,10 +567,10 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number = 0, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs.length, 'No output');
-    const result = cell.outputs[index].outputs.some((item) => hasTextOutputValue(item, text, isExactMatch));
+    const result = cell.outputs[index].items.some((item) => hasTextOutputValue(item, text, isExactMatch));
     assert.isTrue(
         result,
-        `${text} not found in outputs of cell ${cell.index} ${cell.outputs[index].outputs
+        `${text} not found in outputs of cell ${cell.index} ${cell.outputs[index].items
             .map((o) => (o.data ? Buffer.from(o.data as Uint8Array).toString('utf8') : ''))
             .join(' ')}`
     );
@@ -671,7 +635,6 @@ export async function saveActiveNotebook(disposables: IDisposable[]) {
     }
 }
 export function createNotebookModel(
-    trusted: boolean,
     uri: Uri,
     globalMemento: Memento,
     crypto: ICryptoUtils,
@@ -691,7 +654,7 @@ export function createNotebookModel(
     when(mockVSC.notebookDocuments).thenReturn([]);
 
     return new VSCodeNotebookModel(
-        trusted,
+        () => true,
         uri,
         globalMemento,
         crypto,

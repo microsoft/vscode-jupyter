@@ -13,7 +13,7 @@ import {
     IntroduceNativeNotebookDisplayed,
     IntroduceNativeNotebookStartPage
 } from '../../../client/datascience/notebook/introStartPage';
-import { INotebookEditorProvider, ITrustService } from '../../../client/datascience/types';
+import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
@@ -26,7 +26,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
     let api: IExtensionTestApi;
     let memento: Memento;
     const disposables: IDisposable[] = [];
-    let trustService: ITrustService;
     let commandManager: ICommandManager;
     let notebookEditorProvider: INotebookEditorProvider;
     let context: IExtensionContext;
@@ -45,7 +44,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         notebookEditorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         context = api.serviceContainer.get<IExtensionContext>(IExtensionContext);
-        trustService = api.serviceContainer.get<ITrustService>(ITrustService);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         previousExecutionCount = memento.get<number | undefined>(InsidersNotebookSurveyStateKeys.OpenNotebookCount);
         previousValueForStartPageDisplayed = memento.get<boolean | undefined>(IntroduceNativeNotebookDisplayed);
@@ -78,7 +76,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         const startPage = new IntroduceNativeNotebookStartPage(
             true,
             commandManager,
-            trustService,
             context,
             instance(appEnv),
             memento
@@ -98,7 +95,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         const startPage = new IntroduceNativeNotebookStartPage(
             false,
             commandManager,
-            trustService,
             context,
             instance(appEnv),
             memento
@@ -118,7 +114,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         const startPage = new IntroduceNativeNotebookStartPage(
             true,
             commandManager,
-            trustService,
             context,
             instance(appEnv),
             memento
@@ -143,7 +138,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         const startPage = new IntroduceNativeNotebookStartPage(
             true,
             commandManager,
-            trustService,
             context,
             instance(appEnv),
             memento
@@ -163,7 +157,6 @@ suite('DataScience - VSCode Notebook - Native Notebook Experiment', function () 
         const startPage = new IntroduceNativeNotebookStartPage(
             true,
             commandManager,
-            trustService,
             context,
             instance(appEnv),
             memento

@@ -10,7 +10,7 @@ import { traceInfo } from '../../../client/common/logger';
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { openNotebook } from '../helpers';
-import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests, trustAllNotebooks } from './helper';
+import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
 import { window } from 'vscode';
 import { initialize } from '../../initialize';
 
@@ -30,7 +30,6 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
             return this.skip();
         }
         api = await initialize();
-        await trustAllNotebooks();
     });
     setup(async function () {
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
@@ -63,13 +62,13 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
             assert.equal(cell.outputs.length, outputs.length, `Cell ${index} must have an output`);
             outputs.forEach((outputItems, outputIndex) => {
                 assert.equal(
-                    cell.outputs[outputIndex].outputs.length,
+                    cell.outputs[outputIndex].items.length,
                     outputItems.length,
                     `Cell ${index} output must have ${outputItems.length} output items`
                 );
                 outputItems.forEach((outputItemMimeType, outputItemIndex) => {
                     assert.equal(
-                        cell.outputs[outputIndex].outputs[outputItemIndex].mime,
+                        cell.outputs[outputIndex].items[outputItemIndex].mime,
                         outputItemMimeType,
                         `Cell ${index} output item ${outputItemIndex} not ${outputItemMimeType}`
                     );

@@ -1,7 +1,6 @@
 **/*.map
 **/*.analyzer.html
 !out/datascience-ui/common/node_modules/**/*
-!out/BCryptGenRandom/BCryptGenRandom.exe
 images/**
 docs/**
 *.vsix

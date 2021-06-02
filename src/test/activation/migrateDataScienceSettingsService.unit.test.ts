@@ -22,7 +22,6 @@ suite('Migrate data science settings', () => {
     const originalSettings = `{
     "python.dataScience.allowImportFromNotebook": true,
     "jupyter.allowImportFromNotebook": true,
-    "python.dataScience.alwaysTrustNotebooks": true,
     "python.dataScience.enabled": true,
     "python.dataScience.jupyterInterruptTimeout": 0,
     "python.dataScience.jupyterLaunchTimeout": 0,
@@ -87,7 +86,6 @@ suite('Migrate data science settings', () => {
     "python.experiments.optOutFrom": [
         "DeprecatePythonPath - experiment"
     ],
-    "jupyter.alwaysTrustNotebooks": true,
     "jupyter.enabled": true,
     "jupyter.jupyterInterruptTimeout": 0,
     "jupyter.jupyterLaunchTimeout": 0,

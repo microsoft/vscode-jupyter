@@ -31,7 +31,7 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
     private saveChangeCount: number = 0;
     private changeCount: number = 0;
     constructor(
-        isTrusted: boolean,
+        _isTrusted: () => boolean,
         file: Uri,
         private _cells: ICell[],
         globalMemento: Memento,
@@ -41,7 +41,7 @@ export class NativeEditorNotebookModel extends BaseNotebookModel {
         pythonNumber: number = 3,
         isInitiallyDirty: boolean = false
     ) {
-        super(isTrusted, file, globalMemento, crypto, json, indentAmount, pythonNumber);
+        super(_isTrusted, file, globalMemento, crypto, json, indentAmount, pythonNumber);
         if (isInitiallyDirty) {
             // This means we're dirty. Indicate dirty and load from this content
             this.saveChangeCount = -1;

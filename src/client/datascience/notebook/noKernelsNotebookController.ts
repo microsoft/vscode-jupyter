@@ -70,7 +70,7 @@ export class NoKernelsNotebookController implements Disposable {
         const notebook = cell.notebook;
         const task = this.controller.createNotebookCellExecution(cell);
         task.start();
-        task.clearOutput(cell.index).then(noop, noop);
+        task.clearOutput(cell).then(noop, noop);
         const errorMessage = getKernelNotInstalledErrorMessage(getNotebookMetadata(notebook));
         const errorOutput = translateErrorOutput({
             ename: '',
