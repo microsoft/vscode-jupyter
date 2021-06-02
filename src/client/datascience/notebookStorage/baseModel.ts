@@ -11,7 +11,7 @@ import { ICryptoUtils } from '../../common/types';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { pruneCell } from '../common';
-import { defaultNotebookFormat, originalNbFormat } from '../constants';
+import { defaultNotebookFormat } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
     getInterpreterFromKernelConnectionMetadata,
