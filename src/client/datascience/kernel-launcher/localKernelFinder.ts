@@ -114,7 +114,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
                 result: preferred ? 'found' : 'notfound',
                 resourceType,
-                language: telemetrySafeLanguage
+                language: telemetrySafeLanguage,
+                hasActiveInterpreter: !!preferredInterpreter
             });
             if (preferred) {
                 traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
@@ -124,7 +125,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             sendTelemetryEvent(
                 Telemetry.PreferredKernel,
                 undefined,
-                { result: 'failed', resourceType, language: telemetrySafeLanguage },
+                {
+                    result: 'failed',
+                    resourceType,
+                    language: telemetrySafeLanguage
+                },
                 ex,
                 true
             );
