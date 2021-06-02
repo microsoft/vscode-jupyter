@@ -69,26 +69,31 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
 
         assert.isOk(notebook);
 
-        assert.deepEqual(notebook.cells, [
-            new NotebookCellData(
+        const codeCellData = new NotebookCellData(
                 NotebookCellKind.Code,
                 'print(1)',
                 PYTHON_LANGUAGE,
-                [],
-                {
+            );
+        
+        codeCellData.outputs = [];
+        codeCellData.metadata = {
                     custom: {
                         metadata: {}
                     }
-                },
-                {
-                    executionOrder: 10
-                }
-            ),
-            new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE, [], {
+                };
+        codeCellData.executionSummary = { executionOrder: 10 };
+
+        const markdownCellData = new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE);
+        markdownCellData.outputs = [];
+        markdownCellData.metadata = {
                 custom: {
                     metadata: {}
                 }
-            })
+            };
+
+
+        assert.deepEqual(notebook.cells, [
+            codeCellData, markdownCellData
         ]);
     });
 
@@ -121,26 +126,34 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
 
         assert.isOk(notebook);
 
-        assert.deepEqual(notebook.cells, [
-            new NotebookCellData(
+        const codeCellData = new NotebookCellData(
                 NotebookCellKind.Code,
                 'Console.WriteLine("1")',
                 'csharp',
-                [],
-                {
+            );
+
+        codeCellData.outputs = [];
+        codeCellData.metadata = {
                     custom: {
                         metadata: {}
                     }
-                },
-                {
+                };
+
+        codeCellData.executionSummary = {
                     executionOrder: 10
-                }
-            ),
-            new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE, [], {
+                };
+
+        const markdownCellData = new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE);
+
+        markdownCellData.outputs = [];
+        markdownCellData.metadata = {
                 custom: {
                     metadata: {}
                 }
-            })
+            };
+
+        assert.deepEqual(notebook.cells, [
+            codeCellData, markdownCellData
         ]);
     });
     test('Verify mime types and order', () => {

@@ -304,9 +304,10 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
 }
 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
-    return new NotebookCellData(NotebookCellKind.Code, concatMultilineString(cell.source), 'raw', [], {
-        custom: getNotebookCellMetadata(cell)
-    });
+    const cellData = new NotebookCellData(NotebookCellKind.Code, concatMultilineString(cell.source), 'raw');
+    cellData.outputs = [];
+    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
+    return cellData;
 }
 function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkdownCell {
     const cellMetadata = cell.metadata.custom as CellMetadata | undefined;
@@ -321,9 +322,10 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
     return markdownCell;
 }
 function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
-    return new NotebookCellData(NotebookCellKind.Markup, concatMultilineString(cell.source), MARKDOWN_LANGUAGE, [], {
-        custom: getNotebookCellMetadata(cell)
-    });
+    const cellData = new NotebookCellData(NotebookCellKind.Markup, concatMultilineString(cell.source), MARKDOWN_LANGUAGE);
+    cellData.outputs = [];
+    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
+    return cellData;
 }
 function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLanguage: string): NotebookCellData {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -336,14 +338,16 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
     const executionSummary: NotebookCellExecutionSummary = hasExecutionCount
         ? { executionOrder: cell.execution_count as number }
         : {};
-    return new NotebookCellData(
+    
+    const cellData = new NotebookCellData(
         NotebookCellKind.Code,
         source,
-        cellLanguage,
-        outputs,
-        { custom: getNotebookCellMetadata(cell) },
-        executionSummary
-    );
+        cellLanguage);
+
+    cellData.outputs = outputs;
+    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
+    cellData.executionSummary = executionSummary;
+    return cellData;
 }
 const orderOfMimeTypes = [
     'application/vnd.*',
