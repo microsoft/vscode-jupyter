@@ -48,6 +48,31 @@ export function updateNotebookMetadata(
         return { changed, kernelId };
     }
 
+    // If language isn't specified in the metadata, ensure we have that.
+    if (!metadata?.language_info?.name) {
+        metadata = metadata || <nbformat.INotebookMetadata>{ orig_nbformat: 3, language_info: { name: '' } };
+        metadata.language_info = metadata.language_info || { name: '' };
+    }
+
+    let language: string | undefined;
+    switch (kernelConnection?.kind) {
+        case 'connectToLiveKernel':
+            language = kernelConnection.kernelModel.language;
+            break;
+        case 'startUsingKernelSpec':
+            language = kernelConnection.kernelSpec.language;
+            break;
+        case 'startUsingPythonInterpreter':
+            language = PYTHON_LANGUAGE;
+            break;
+        default:
+            break;
+    }
+    if (metadata.language_info.name !== language && language) {
+        metadata.language_info.name = language;
+        changed = true;
+    }
+
     if (kernelInfo && 'language_info' in kernelInfo && kernelInfo.language_info) {
         if (!fastDeepEqual(metadata.language_info, kernelInfo.language_info)) {
             metadata.language_info = cloneDeep(kernelInfo.language_info);

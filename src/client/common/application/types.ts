@@ -61,7 +61,6 @@ import {
     NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
-    NotebookContentProvider,
     NotebookDocument,
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
@@ -70,6 +69,9 @@ import {
     NotebookRendererScript,
     NotebookController,
     NotebookCell
+    NotebookSerializer,
+    NotebookData,
+    NotebookDocumentShowOptions
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -1575,9 +1577,9 @@ export interface IVSCodeNotebook {
     readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
-    registerNotebookContentProvider(
+    registerNotebookSerializer(
         notebookType: string,
-        provider: NotebookContentProvider,
+        serializer: NotebookSerializer,
         options?: NotebookDocumentContentOptions
     ): Disposable;
 
@@ -1592,6 +1594,10 @@ export interface IVSCodeNotebook {
         ) => void | Thenable<void>,
         rendererScripts?: NotebookRendererScript[]
     ): NotebookController;
+    openNotebookDocument(uri: Uri): Thenable<NotebookDocument>;
+    openNotebookDocument(viewType: string, content?: NotebookData): Promise<NotebookDocument>;
+    showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
+    showNotebookDocument(document: NotebookDocument, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
 }
 
 export const IEncryptedStorage = Symbol('IAuthenticationService');

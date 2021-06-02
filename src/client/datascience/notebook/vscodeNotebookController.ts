@@ -36,12 +36,7 @@ import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRem
 import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { JupyterNotebookView } from './constants';
-import {
-    isSameAsTrackedKernelInNotebookMetadata,
-    traceCellMessage,
-    trackKernelInfoInNotebookMetadata,
-    trackKernelInNotebookMetadata
-} from './helpers/helpers';
+import { traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
 import { INotebookControllerManager } from './types';
 
 export class VSCodeNotebookController implements Disposable {
@@ -135,16 +130,14 @@ export class VSCodeNotebookController implements Disposable {
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         traceInfo(`Setting controller affinity for ${notebook.uri.toString()} ${this.id}`);
         this.controller.updateNotebookAffinity(notebook, affinity);
-        // Only on CI Server.
+        // Only when running tests should we force the selection of the kernel.
+        // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
         if (this.context.extensionMode === ExtensionMode.Test) {
-            traceInfo(`Force selection of controller for ${notebook.uri.toString()} ${this.id}`);
             await this.commandManager.executeCommand('notebook.selectKernel', {
                 id: this.id,
                 extension: JVSC_EXTENSION_ID
             });
-            traceInfo(
-                `VSCodeNotebookController.kernelAssociatedWithDocument set for ${notebook.uri.toString()} ${this.id}`
-            );
+            // Used in tests to determine when the controller has been associated with a document.
             VSCodeNotebookController.kernelAssociatedWithDocument = true;
         }
     }
@@ -172,13 +165,6 @@ export class VSCodeNotebookController implements Disposable {
         if (event.selected) {
             await this.updateCellLanguages(event.notebook);
             this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
-        } else {
-            // If this controller was what was previously selected, then wipe that information out.
-            // This happens when user selects our controller & then selects another controller e.g. (.NET Extension).
-            // If the user selects one of our controllers (kernels), then this gets initialized elsewhere.
-            if (isSameAsTrackedKernelInNotebookMetadata(event.notebook, this.connection)) {
-                trackKernelInNotebookMetadata(event.notebook, undefined);
-            }
         }
     }
     /**
@@ -282,7 +268,7 @@ export class VSCodeNotebookController implements Disposable {
             kernelSocket = item;
             saveKernelInfo();
         });
-        const statusChangeDisposable = kernel.onStatusChanged(() => {
+        const statusChangeDisposable = kernel.onStatusChanged(async () => {
             if (kernel.disposed || !kernel.info) {
                 return;
             }
@@ -292,7 +278,7 @@ export class VSCodeNotebookController implements Disposable {
                 // Disregard if we've changed kernels
                 return;
             }
-            trackKernelInfoInNotebookMetadata(doc, kernel.info);
+            await updateNotebookDocumentMetadata(doc, kernel.kernelConnectionMetadata, kernel.info);
             if (this.kernelConnection.kind === 'startUsingKernelSpec') {
                 if (kernel.info.status === 'ok') {
                     saveKernelInfo();

@@ -60,6 +60,10 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         } catch {
             //
         }
+    teardown(async function () {
+        traceInfo(`End Test ${this.currentTest?.title}`);
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     async function createNotebookAndValidateLanguageOfFirstCell(expectedLanguage: string) {
         await commands.executeCommand(Commands.CreateNewNotebook);

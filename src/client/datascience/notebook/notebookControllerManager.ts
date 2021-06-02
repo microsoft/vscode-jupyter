@@ -30,7 +30,7 @@ import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProv
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { INotebookProvider } from '../types';
-import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
+import { getNotebookMetadata, isJupyterNotebook, updateNotebookDocumentMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
 import { JupyterNotebookView } from './constants';
@@ -449,7 +449,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private async notebookKernelChanged(document: NotebookDocument, controller: VSCodeNotebookController) {
         // We're only interested in our Jupyter Notebooks.
         if (!isJupyterNotebook(document)) {
-            trackKernelInNotebookMetadata(document, undefined);
             return;
         }
         const selectedKernelConnectionMetadata = controller.connection;
@@ -513,7 +512,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.interpreterPackages.trackPackages(selectedKernelConnectionMetadata.interpreter);
         }
 
-        trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
+        // Before we start the notebook, make sure the metadata is set to this new kernel.
+        await updateNotebookDocumentMetadata(document, selectedKernelConnectionMetadata);
 
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
@@ -524,10 +524,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             metadata: selectedKernelConnectionMetadata,
             controller: controller.controller
         });
-        traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}}`);
-
-        // Before we start the notebook, make sure the metadata is set to this new kernel.
-        trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
+        traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}`);
 
         // Auto start the local kernels.
         // if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {

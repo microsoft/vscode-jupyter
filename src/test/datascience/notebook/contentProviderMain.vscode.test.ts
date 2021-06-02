@@ -10,8 +10,6 @@ import {
     EventEmitter,
     Memento,
     NotebookCellKind,
-    Uri,
-    NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookDocument,
     CancellationTokenSource,
     NotebookCellData
@@ -19,35 +17,31 @@ import {
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
-import { ICryptoUtils } from '../../../client/common/types';
-import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
-import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
-import { INotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
-import { createNotebookModel } from './helper';
+import { NotebookCellLanguageService } from '../../../client/datascience/notebook/cellLanguageService';
+import { nbformat } from '@jupyterlab/coreutils';
+import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerliazer';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook ContentProvider', () => {
-    let storageProvider: INotebookStorageProvider;
-    let contentProvider: VSCodeNotebookContentProvider;
-    const fileUri = Uri.file('a.ipynb');
+    let contentProvider: NotebookSerializer;
     const disposables: IDisposable[] = [];
+    let languageService: NotebookCellLanguageService;
     setup(async () => {
-        storageProvider = mock<INotebookStorageProvider>();
-        const compatSupport = mock(NotebookEditorCompatibilitySupport);
-        when(compatSupport.canOpenWithOurNotebookEditor(anything())).thenReturn(true);
-        when(compatSupport.canOpenWithVSCodeNotebookEditor(anything())).thenReturn(true);
         const vscNotebooks = mock<IVSCodeNotebook>();
         when(vscNotebooks.onDidSaveNotebookDocument).thenReturn(new EventEmitter<NotebookDocument>().event);
         const memento = mock<Memento>();
         when(memento.get(anything())).thenReturn();
-        contentProvider = new NotebookContentProvider(
-            instance(storageProvider),
-            instance(compatSupport),
-            instance(vscNotebooks)
-        );
+        languageService = mock<NotebookCellLanguageService>();
+        contentProvider = new NotebookSerializer(instance(languageService));
     });
     teardown(() => disposeAllDisposables(disposables));
     test('Return notebook with 2 cells', async () => {
-        const model = createNotebookModel(Uri.file('any'), instance(mock<Memento>()), instance(mock<ICryptoUtils>()), {
+        when(languageService.getPreferredLanguage(anything())).thenReturn(PYTHON_LANGUAGE);
+        const json: nbformat.INotebookContent = {
+            metadata: {
+                orig_nbformat: 4
+            },
+            nbformat: 4,
+            nbformat_minor: 2,
             cells: [
                 {
                     cell_type: 'code',
@@ -62,10 +56,12 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                     metadata: {}
                 }
             ]
-        });
-        when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
+        };
 
-        const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
+        const notebook = contentProvider.deserializeNotebook(
+            Buffer.from(JSON.stringify(json), 'utf-8'),
+            new CancellationTokenSource().token
+        );
 
         assert.isOk(notebook);
 
@@ -91,7 +87,10 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
     });
 
     test('Return notebook with csharp language', async () => {
-        const model = createNotebookModel(Uri.file('any'), instance(mock<Memento>()), instance(mock<ICryptoUtils>()), {
+        when(languageService.getPreferredLanguage(anything())).thenReturn('csharp');
+        const json: nbformat.INotebookContent = {
+            nbformat: 4,
+            nbformat_minor: 2,
             metadata: {
                 language_info: {
                     name: 'csharp'
@@ -112,10 +111,12 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
                     metadata: {}
                 }
             ]
-        });
-        when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
+        };
 
-        const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
+        const notebook = contentProvider.deserializeNotebook(
+            Buffer.from(JSON.stringify(json), 'utf-8'),
+            new CancellationTokenSource().token
+        );
 
         assert.isOk(notebook);
 

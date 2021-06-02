@@ -131,7 +131,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         } else {
             this.isVSCodeNotebookActive.set(false).ignoreErrors();
         }
-        this.isPythonNotebook.set(isPythonNotebook(e?.model?.metadata)).ignoreErrors();
+        this.isPythonNotebook.set(isPythonNotebook(e?.notebookMetadata)).ignoreErrors();
         this.updateContextOfActiveNotebookKernel(e);
         this.updateNativeNotebookContext();
         this.updateNativeNotebookCellContext();
