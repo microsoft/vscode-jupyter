@@ -65,12 +65,6 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
                 'New Notebook not created'
             );
         } catch (ex) {
-            console.error('notebooks.notebookDocuments.length');
-            console.error(notebooks.notebookDocuments.length);
-            console.error('notebooks.visibleNotebookEditors.length');
-            console.error(window.visibleNotebookEditors.length);
-            console.error('window.activeNotebookEditor');
-            console.error(window.activeNotebookEditor);
             throw ex;
         }
         assert.strictEqual(
