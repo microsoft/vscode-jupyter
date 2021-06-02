@@ -341,7 +341,7 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
         source,
         cellLanguage,
         outputs,
-        { custom: getNotebookCellMetadata },
+        { custom: getNotebookCellMetadata(cell) },
         executionSummary
     );
 }
