@@ -68,6 +68,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         contentProvider = api.serviceContainer.get<NotebookContentProvider>(INotebookContentProvider);
     });
     setup(async () => {
+        console.log('## setup for content provider test');
         sinon.restore();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
@@ -106,6 +107,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.deepEqual(JSON.parse(jsonStr), JSON.parse(model.getContent()));
     });
     test('IANHU Verify cells (content, metadata & output)', async () => {
+        console.log('IANHU start verify cells test');
         const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         const model = (await editorProvider.open(testIPynb))!.model! as VSCodeNotebookModel;
 
