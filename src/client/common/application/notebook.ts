@@ -114,7 +114,10 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         serializer: NotebookSerializer,
         options?: NotebookDocumentContentOptions
     ): Disposable {
-        return workspace.registerNotebookSerializer(notebookType, serializer, options);
+        return workspace.registerNotebookSerializer(notebookType, serializer, options, {
+            displayName: 'Jupyter',
+            filenamePattern: ['*.ipynb']
+        });
     }
     public createNotebookController(
         id: string,
