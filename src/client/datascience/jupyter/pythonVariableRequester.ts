@@ -105,17 +105,9 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             // Add in our get variable info script to get types
             await this.importGetVariableInfoScripts(notebook, token);
 
-            const query = '_rwho_ls = %who_ls\nprint(_rwho_ls)';
-            const parseExpr = RegExp("'(\\w+)'", 'g');
-
-            const cells = await notebook.execute(query, Identifiers.EmptyFileName, 0, uuid(), token, true);
-            const text = this.extractJupyterResultText(cells);
-            const matches = this.getAllMatches(parseExpr, text);
-            const matchesAsStr = matches.map((v) => `'${v}'`);
-
             // VariableTypesFunc takes in list of vars and the corresponding var names
             const results = await notebook.execute(
-                `print(${GetVariableInfo.VariableTypesFunc}([${matches}], [${matchesAsStr}]))`,
+                `_rwho_ls = %who_ls\nprint(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`,
                 Identifiers.EmptyFileName,
                 0,
                 uuid(),
@@ -276,22 +268,5 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     private deserializeJupyterResult<T>(cells: ICell[]): T {
         const text = this.extractJupyterResultText(cells);
         return JSON.parse(text) as T;
-    }
-
-    private getAllMatches(regex: RegExp, text: string): string[] {
-        const result: string[] = [];
-        let m: RegExpExecArray | null = null;
-        // eslint-disable-next-line no-cond-assign
-        while ((m = regex.exec(text)) !== null) {
-            if (m.index === regex.lastIndex) {
-                regex.lastIndex += 1;
-            }
-            if (m.length > 1) {
-                result.push(m[1]);
-            }
-        }
-        // Rest after searching
-        regex.lastIndex = -1;
-        return result;
     }
 }
