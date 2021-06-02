@@ -33,10 +33,7 @@ export function getErrorMessageFromPythonTraceback(traceback: string) {
     const message = lastLine.match(pythonErrorMessageRegExp) ? lastLine : undefined;
     const parts = (message || '').split(':');
     // Only get the error type.
-    if (parts.length && !parts[0].includes(' ') && parts[0].toLowerCase().endsWith('error')) {
-        return parts[0];
-    }
-    return;
+    return parts.length && parts[0].endsWith('Error') ? parts[0] : undefined;
 }
 
 export function getLastFrameFromPythonTraceback(
