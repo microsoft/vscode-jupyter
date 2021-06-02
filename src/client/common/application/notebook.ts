@@ -41,8 +41,10 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             return;
         }
         try {
+            console.log('## activeNotebookEditor');
             return window.activeNotebookEditor;
         } catch {
+            console.log('## catch activeNotebookEditor');
             return undefined;
         }
     }
