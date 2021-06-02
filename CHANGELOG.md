@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.7.0 (8 June 2021)
+## 2021.6.1 (8 June 2021)
 
 ### Enhancements
 
