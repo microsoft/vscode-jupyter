@@ -7,6 +7,7 @@ import { Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
+import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/types';
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
@@ -34,7 +35,8 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
             instance(notebook),
             instance(resourceConverter),
             instance(fs),
-            instance(interpreterService)
+            instance(interpreterService),
+            instance(mock<IPythonExecutionFactory>())
         );
     });
     test('No script source when there is no kernel associated with notebook', async () => {
