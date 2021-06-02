@@ -30,7 +30,13 @@ export function getErrorMessageFromPythonTraceback(traceback: string) {
         return;
     }
     const lastLine = reversedLines[0];
-    return lastLine.match(pythonErrorMessageRegExp) ? lastLine : undefined;
+    const message = lastLine.match(pythonErrorMessageRegExp) ? lastLine : undefined;
+    const parts = (message || '').split(':');
+    // Only get the error type.
+    if (parts.length && !parts[0].includes(' ') && parts[0].toLowerCase().endsWith('error')) {
+        return parts[0];
+    }
+    return;
 }
 
 export function getLastFrameFromPythonTraceback(
