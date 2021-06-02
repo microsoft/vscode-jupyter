@@ -1,21 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
-import stripAnsi from 'strip-ansi';
-import * as uuid from 'uuid/v4';
-import * as path from 'path';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { Experiments } from '../../common/experiments/groups';
-import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposable, IExperimentService } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { DataFrameLoading, GetVariableInfo, Identifiers } from '../constants';
+import { IConfigurationService, IExperimentService } from '../../common/types';
+import { Identifiers } from '../constants';
 import {
-    ICell,
     IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesRequest,
@@ -23,7 +15,6 @@ import {
     IKernelVariableRequester,
     INotebook
 } from '../types';
-import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from './kernels/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -53,8 +44,6 @@ interface INotebookState {
 
 @injectable()
 export class KernelVariables implements IJupyterVariables {
-    private importedDataFrameScripts = new Map<string, boolean>();
-    private importedGetVariableInfoScripts = new Map<string, boolean>();
     private variableRequesters = new Map<string, IKernelVariableRequester>();
     private notebookState = new Map<Uri, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
@@ -62,7 +51,6 @@ export class KernelVariables implements IJupyterVariables {
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystem) private fs: IFileSystem,
         @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IKernelVariableRequester)
         @named(Identifiers.PYTHON_VARIABLES_REQUESTER)
@@ -128,36 +116,20 @@ export class KernelVariables implements IJupyterVariables {
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
-        // Import the data frame script directory if we haven't already
-        await this.importDataFrameScripts(notebook);
+        const languageId = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
+        const variableRequester = this.variableRequesters.get(languageId);
+        if (variableRequester) {
+            if (isRefresh) {
+                targetVariable = await this.getFullVariable(targetVariable, notebook);
+            }
 
-        if (isRefresh) {
-            targetVariable = await this.getFullVariable(targetVariable, notebook);
+            let expression = targetVariable.name;
+            if (sliceExpression) {
+                expression = `${targetVariable.name}${sliceExpression}`;
+            }
+            return variableRequester.getDataFrameInfo(targetVariable, notebook, expression);
         }
-
-        let expression = targetVariable.name;
-        if (sliceExpression) {
-            expression = `${targetVariable.name}${sliceExpression}`;
-        }
-
-        // Then execute a call to get the info and turn it into JSON
-        const results = await notebook.execute(
-            `print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
-            Identifiers.EmptyFileName,
-            0,
-            uuid(),
-            undefined,
-            true
-        );
-
-        const fileName = path.basename(notebook.identity.path);
-
-        // Combine with the original result (the call only returns the new fields)
-        return {
-            ...targetVariable,
-            ...this.deserializeJupyterResult(results),
-            fileName
-        };
+        return targetVariable;
     }
 
     public async getDataFrameRows(
@@ -167,73 +139,16 @@ export class KernelVariables implements IJupyterVariables {
         notebook: INotebook,
         sliceExpression?: string
     ): Promise<{}> {
-        // Import the data frame script directory if we haven't already
-        await this.importDataFrameScripts(notebook);
-
-        let expression = targetVariable.name;
-        if (sliceExpression) {
-            expression = `${targetVariable.name}${sliceExpression}`;
+        const language = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
+        const variableRequester = this.variableRequesters.get(language);
+        if (variableRequester) {
+            let expression = targetVariable.name;
+            if (sliceExpression) {
+                expression = `${targetVariable.name}${sliceExpression}`;
+            }
+            return variableRequester.getDataFrameRows(start, end, notebook, expression);
         }
-
-        // Then execute a call to get the rows and turn it into JSON
-        const results = await notebook.execute(
-            `print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
-            Identifiers.EmptyFileName,
-            0,
-            uuid(),
-            undefined,
-            true
-        );
-        return this.deserializeJupyterResult(results);
-    }
-
-    private async importDataFrameScripts(notebook: INotebook, token?: CancellationToken): Promise<void> {
-        const key = notebook.identity.toString();
-        if (!this.importedDataFrameScripts.get(key)) {
-            // Clear our flag if the notebook disposes or restarts
-            const disposables: IDisposable[] = [];
-            const handler = () => {
-                this.importedDataFrameScripts.delete(key);
-                disposables.forEach((d) => d.dispose());
-            };
-            disposables.push(notebook.onDisposed(handler));
-            disposables.push(notebook.onKernelChanged(handler));
-            disposables.push(notebook.onKernelRestarted(handler));
-
-            // First put the code from our helper files into the notebook
-            await this.runScriptFile(notebook, DataFrameLoading.ScriptPath, token);
-
-            this.importedDataFrameScripts.set(notebook.identity.toString(), true);
-        }
-    }
-
-    private async importGetVariableInfoScripts(notebook: INotebook, token?: CancellationToken): Promise<void> {
-        const key = notebook.identity.toString();
-        if (!this.importedGetVariableInfoScripts.get(key)) {
-            // Clear our flag if the notebook disposes or restarts
-            const disposables: IDisposable[] = [];
-            const handler = () => {
-                this.importedGetVariableInfoScripts.delete(key);
-                disposables.forEach((d) => d.dispose());
-            };
-            disposables.push(notebook.onDisposed(handler));
-            disposables.push(notebook.onKernelChanged(handler));
-            disposables.push(notebook.onKernelRestarted(handler));
-
-            await this.runScriptFile(notebook, GetVariableInfo.ScriptPath, token);
-
-            this.importedGetVariableInfoScripts.set(notebook.identity.toString(), true);
-        }
-    }
-
-    // Read in a .py file and execute it silently in the given notebook
-    private async runScriptFile(notebook: INotebook, scriptFile: string, token?: CancellationToken) {
-        if (await this.fs.localFileExists(scriptFile)) {
-            const fileContents = await this.fs.readLocalFile(scriptFile);
-            return notebook.execute(fileContents, Identifiers.EmptyFileName, 0, uuid(), token, true);
-        } else {
-            traceError('Cannot run non-existant script file');
-        }
+        return {};
     }
 
     public async getFullVariable(
@@ -241,83 +156,12 @@ export class KernelVariables implements IJupyterVariables {
         notebook: INotebook,
         token?: CancellationToken
     ): Promise<IJupyterVariable> {
-        // Add in our get variable info script
-        await this.importGetVariableInfoScripts(notebook, token);
-
-        // Then execute a call to get the info and turn it into JSON
-        const results = await notebook.execute(
-            `print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
-            Identifiers.EmptyFileName,
-            0,
-            uuid(),
-            token,
-            true
-        );
-
-        // Combine with the original result (the call only returns the new fields)
-        return {
-            ...targetVariable,
-            ...this.deserializeJupyterResult(results)
-        };
-    }
-
-    private extractJupyterResultText(cells: ICell[]): string {
-        // Verify that we have the correct cell type and outputs
-        if (cells.length > 0 && cells[0].data) {
-            const codeCell = cells[0].data as nbformat.ICodeCell;
-            if (codeCell.outputs.length > 0) {
-                const codeCellOutput = codeCell.outputs[0] as nbformat.IOutput;
-                if (
-                    codeCellOutput &&
-                    codeCellOutput.output_type === 'stream' &&
-                    codeCellOutput.name === 'stderr' &&
-                    codeCellOutput.hasOwnProperty('text')
-                ) {
-                    const resultString = codeCellOutput.text as string;
-                    // See if this the IOPUB data rate limit problem
-                    if (resultString.includes('iopub_data_rate_limit')) {
-                        throw new JupyterDataRateLimitError();
-                    } else {
-                        const error = localize.DataScience.jupyterGetVariablesExecutionError().format(resultString);
-                        traceError(error);
-                        throw new Error(error);
-                    }
-                }
-                if (codeCellOutput && codeCellOutput.output_type === 'execute_result') {
-                    const data = codeCellOutput.data;
-                    if (data && data.hasOwnProperty('text/plain')) {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        return (data as any)['text/plain'];
-                    }
-                }
-                if (
-                    codeCellOutput &&
-                    codeCellOutput.output_type === 'stream' &&
-                    codeCellOutput.hasOwnProperty('text')
-                ) {
-                    return codeCellOutput.text as string;
-                }
-                if (
-                    codeCellOutput &&
-                    codeCellOutput.output_type === 'error' &&
-                    codeCellOutput.hasOwnProperty('traceback')
-                ) {
-                    const traceback: string[] = codeCellOutput.traceback as string[];
-                    const stripped = traceback.map(stripAnsi).join('\r\n');
-                    const error = localize.DataScience.jupyterGetVariablesExecutionError().format(stripped);
-                    traceError(error);
-                    throw new Error(error);
-                }
-            }
+        const languageId = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
+        const variableRequester = this.variableRequesters.get(languageId);
+        if (variableRequester) {
+            return variableRequester.getFullVariable(targetVariable, notebook, token);
         }
-
-        throw new Error(localize.DataScience.jupyterGetVariablesBadResults());
-    }
-
-    // Pull our text result out of the Jupyter cell
-    private deserializeJupyterResult<T>(cells: ICell[]): T {
-        const text = this.extractJupyterResultText(cells);
-        return JSON.parse(text) as T;
+        return targetVariable;
     }
 
     private async getVariablesBasedOnKernel(
@@ -410,27 +254,21 @@ export class KernelVariables implements IJupyterVariables {
         const settings = this.configService.getSettings().variableTooltipFields;
         const languageId = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
         const languageSettings = settings[languageId];
-        const type = matchingVariable?.type;
-        let result: { [attributeName: string]: string } = {};
-        if (matchingVariable && matchingVariable.value) {
-            if (type && type in languageSettings && (await this.inEnhancedTooltipsExperiment())) {
-                const attributeNames = languageSettings[type];
-                const stringifiedAttributeNameList =
-                    '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
-                const attributes = await notebook.execute(
-                    `print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
-                    Identifiers.EmptyFileName,
-                    0,
-                    uuid(),
-                    cancelToken,
-                    true
-                );
-                result = { ...result, ...this.deserializeJupyterResult(attributes) };
-            } else {
-                result[`${word}`] = matchingVariable.value;
-            }
+        const inEnhancedTooltipsExperiment = await this.inEnhancedTooltipsExperiment();
+
+        const variableRequester = this.variableRequesters.get(languageId);
+        if (variableRequester) {
+            return variableRequester.getVariableProperties(
+                word,
+                notebook,
+                cancelToken,
+                matchingVariable,
+                languageSettings,
+                inEnhancedTooltipsExperiment
+            );
         }
-        return result;
+
+        return {};
     }
 
     private async getVariableNamesAndTypesFromKernel(
@@ -438,11 +276,12 @@ export class KernelVariables implements IJupyterVariables {
         token?: CancellationToken
     ): Promise<IJupyterVariable[]> {
         // Get our query and parser
-        const language = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
-        const variableRequester = this.variableRequesters.get(language);
+        const languageId = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
+        const variableRequester = this.variableRequesters.get(languageId);
         if (variableRequester) {
             return variableRequester.getVariableNamesAndTypesFromKernel(notebook, token);
         }
+
         return [];
     }
 

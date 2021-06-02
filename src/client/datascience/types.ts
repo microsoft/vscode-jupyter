@@ -1349,6 +1349,25 @@ export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
 
 export interface IKernelVariableRequester {
     getVariableNamesAndTypesFromKernel(notebook: INotebook, token?: CancellationToken): Promise<IJupyterVariable[]>;
+    getFullVariable(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        token?: CancellationToken
+    ): Promise<IJupyterVariable>;
+    getDataFrameRows(start: number, end: number, notebook: INotebook, expression: string): Promise<{}>;
+    getVariableProperties(
+        word: string,
+        notebook: INotebook,
+        cancelToken: CancellationToken | undefined,
+        matchingVariable: IJupyterVariable | undefined,
+        languageSettings: { [typeNameKey: string]: string[] },
+        inEnhancedTooltipsExperiment: boolean
+    ): Promise<{ [attributeName: string]: string }>;
+    getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        expression: string
+    ): Promise<IJupyterVariable>;
 }
 
 export const INotebookCreationTracker = Symbol('INotebookCreationTracker');

@@ -2,39 +2,109 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
+import * as path from 'path';
 import stripAnsi from 'strip-ansi';
 import { CancellationToken } from 'vscode';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { GetVariableInfo, Identifiers } from '../constants';
-// import * as uuid from 'uuid/v4';
-// import { PYTHON_LANGUAGE } from '../../common/constants';
-// import { localize } from '../../common/utils/localize';
-// import { Identifiers } from '../constants';
+import { DataFrameLoading, GetVariableInfo, Identifiers } from '../constants';
 import { ICell, IJupyterVariable, IKernelVariableRequester, INotebook } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
-// import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
-// import { getKernelConnectionLanguage } from './kernels/helpers';
 
 @injectable()
 export class PythonVariablesRequester implements IKernelVariableRequester {
+    private importedDataFrameScripts = new Map<string, boolean>();
     private importedGetVariableInfoScripts = new Map<string, boolean>();
 
     constructor(@inject(IFileSystem) private fs: IFileSystem) {}
+
+    public async getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        expression: string
+    ): Promise<IJupyterVariable> {
+        // Import the data frame script directory if we haven't already
+        await this.importDataFrameScripts(notebook);
+
+        // Then execute a call to get the info and turn it into JSON
+        const results = await notebook.execute(
+            `print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
+            Identifiers.EmptyFileName,
+            0,
+            uuid(),
+            undefined,
+            true
+        );
+
+        const fileName = path.basename(notebook.identity.path);
+
+        // Combine with the original result (the call only returns the new fields)
+        return {
+            ...targetVariable,
+            ...this.deserializeJupyterResult(results),
+            fileName
+        };
+    }
+
+    public async getDataFrameRows(start: number, end: number, notebook: INotebook, expression: string): Promise<{}> {
+        await this.importDataFrameScripts(notebook);
+
+        // Then execute a call to get the rows and turn it into JSON
+        const results = await notebook.execute(
+            `print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
+            Identifiers.EmptyFileName,
+            0,
+            uuid(),
+            undefined,
+            true
+        );
+        return this.deserializeJupyterResult(results);
+    }
+
+    public async getVariableProperties(
+        word: string,
+        notebook: INotebook,
+        cancelToken: CancellationToken | undefined,
+        matchingVariable: IJupyterVariable | undefined,
+        languageSettings: { [typeNameKey: string]: string[] },
+        inEnhancedTooltipsExperiment: boolean
+    ): Promise<{ [attributeName: string]: string }> {
+        // Import the variable info script directory if we haven't already
+        await this.importGetVariableInfoScripts(notebook, cancelToken);
+
+        let result: { [attributeName: string]: string } = {};
+        if (matchingVariable && matchingVariable.value) {
+            const type = matchingVariable?.type;
+            if (type && type in languageSettings && inEnhancedTooltipsExperiment) {
+                const attributeNames = languageSettings[type];
+                const stringifiedAttributeNameList =
+                    '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
+                const attributes = await notebook.execute(
+                    `print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
+                    Identifiers.EmptyFileName,
+                    0,
+                    uuid(),
+                    cancelToken,
+                    true
+                );
+                result = { ...result, ...this.deserializeJupyterResult(attributes) };
+            } else {
+                result[`${word}`] = matchingVariable.value;
+            }
+        }
+        return result;
+    }
 
     public async getVariableNamesAndTypesFromKernel(
         notebook: INotebook,
         token?: CancellationToken
     ): Promise<IJupyterVariable[]> {
-        // Get our query and parser
-        // const language = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
-        console.log('YESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS');
-        // Now execute the query
-        if (notebook || token) {
+        if (notebook) {
             // Add in our get variable info script to get types
             await this.importGetVariableInfoScripts(notebook, token);
+
             const query = '_rwho_ls = %who_ls\nprint(_rwho_ls)';
             const parseExpr = RegExp("'(\\w+)'", 'g');
 
@@ -73,6 +143,51 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         }
 
         return [];
+    }
+
+    public async getFullVariable(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        token?: CancellationToken
+    ): Promise<IJupyterVariable> {
+        // Import the variable info script directory if we haven't already
+        await this.importGetVariableInfoScripts(notebook, token);
+
+        // Then execute a call to get the info and turn it into JSON
+        const results = await notebook.execute(
+            `print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
+            Identifiers.EmptyFileName,
+            0,
+            uuid(),
+            token,
+            true
+        );
+
+        // Combine with the original result (the call only returns the new fields)
+        return {
+            ...targetVariable,
+            ...this.deserializeJupyterResult(results)
+        };
+    }
+
+    private async importDataFrameScripts(notebook: INotebook, token?: CancellationToken): Promise<void> {
+        const key = notebook.identity.toString();
+        if (!this.importedDataFrameScripts.get(key)) {
+            // Clear our flag if the notebook disposes or restarts
+            const disposables: IDisposable[] = [];
+            const handler = () => {
+                this.importedDataFrameScripts.delete(key);
+                disposables.forEach((d) => d.dispose());
+            };
+            disposables.push(notebook.onDisposed(handler));
+            disposables.push(notebook.onKernelChanged(handler));
+            disposables.push(notebook.onKernelRestarted(handler));
+
+            // First put the code from our helper files into the notebook
+            await this.runScriptFile(notebook, DataFrameLoading.ScriptPath, token);
+
+            this.importedDataFrameScripts.set(notebook.identity.toString(), true);
+        }
     }
 
     private async importGetVariableInfoScripts(notebook: INotebook, token?: CancellationToken): Promise<void> {
