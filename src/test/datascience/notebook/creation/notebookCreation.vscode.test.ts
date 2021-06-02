@@ -44,7 +44,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
-    teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
+    suiteTeardown(() => creationOptions.clear());
     async function createNotebookAndValidateLanguageOfFirstCell(expectedLanguage: string) {
         console.error('Start 1. createNotebookAndValidateLanguageOfFirstCell');
         await commands.executeCommand(Commands.CreateNewNotebook);
