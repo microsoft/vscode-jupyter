@@ -10,6 +10,7 @@ import { Event, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 
 import {
     IConfigurationService,
@@ -70,7 +71,8 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
         private readonly appShell: IApplicationShell,
         private readonly workspaceService: IWorkspaceService,
         private readonly stateFactory: IPersistentStateFactory,
-        extensionContext: IExtensionContext
+        extensionContext: IExtensionContext,
+        private readonly factory: IPythonExecutionFactory
     ) {
         this._rootScriptFolder = path.join(extensionContext.extensionPath, 'tmp', 'scripts');
         this.targetWidgetScriptsFolder = path.join(this._rootScriptFolder, 'nbextensions');
@@ -195,7 +197,8 @@ export class IPyWidgetScriptSource implements ILocalResourceUriConverter {
             this.configurationSettings,
             this.workspaceService,
             this.stateFactory,
-            this.httpClient
+            this.httpClient,
+            this.factory
         );
         this.initializeNotebook();
         traceInfo('IPyWidgetScriptSource.initialize');

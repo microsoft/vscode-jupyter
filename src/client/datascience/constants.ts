@@ -477,6 +477,7 @@ export enum Telemetry {
     NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
     KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
+    KernelSpecNotFoundError = 'DATASCIENCE.KERNEL_SPEC_NOT_FOUND_ERROR',
     ExecuteCell = 'DATASCIENCE.EXECUTE_CELL',
     PythonKerneExecutableMatches = 'DS_INTERNAL.PYTHON_KERNEL_EXECUTABLE_MATCHES',
     /**

@@ -35,7 +35,8 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'ndarray',
     'Series',
     'Tensor',
-    'EagerTensor'
+    'EagerTensor',
+    'DataArray'
 ]);
 interface INotebookState {
     currentExecutionCount: number;
