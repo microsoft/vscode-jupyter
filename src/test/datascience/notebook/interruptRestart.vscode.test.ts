@@ -99,14 +99,12 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         const showInformationMessage = sinon.stub(appShell, 'showInformationMessage');
         showInformationMessage.resolves(); // Ignore message to restart kernel.
         disposables.push({ dispose: () => showInformationMessage.restore() });
-        const promise = runCell(cell);
-        const deferred = createDeferredFromPromise(promise);
+        runCell(cell).catch(noop);
 
         // Wait for cell to get busy.
         await waitForCondition(async () => assertVSCCellIsRunning(cell), 15_000, 'Cell not being executed');
 
         // Wait for ?s, and verify cell is still running.
-        assert.isFalse(deferred.completed);
         assertVSCCellIsRunning(cell);
         // Wait for some output.
         await waitForTextOutputInVSCode(cell, '1', 0, false, 15_000); // Wait for 15 seconds for it to start (possibly kernel is still starting).
@@ -114,16 +112,8 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // Interrupt the kernel.
         commandManager.executeCommand(Commands.NotebookEditorInterruptKernel, vscEditor.document.uri).then(noop, noop);
 
-        // Wait for interruption or message prompting to restart kernel to be displayed.
-        // Interrupt can fail sometimes and then we display message prompting user to restart kernel.
-        await waitForCondition(
-            async () => deferred.completed || showInformationMessage.called,
-            30_000, // Wait for completion or interrupt timeout.
-            'Execution not cancelled'
-        );
-        if (deferred.completed) {
-            await waitForExecutionCompletedWithErrors(cell);
-        }
+        // Wait for interruption (cell will fail with errors).
+        await waitForExecutionCompletedWithErrors(cell);
     });
     test('Restarting kernel will cancel cell execution & we can re-run a cell', async function () {
         traceInfo('Step 1');
