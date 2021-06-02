@@ -340,7 +340,10 @@ export class CellExecution {
             if (this.previousResultsToRestore.executionOrder) {
                 this.temporaryExecution.executionOrder = this.previousResultsToRestore.executionOrder;
             }
-            this.temporaryExecution.end(this.previousResultsToRestore.success, this.previousResultsToRestore.timing?.endTime);
+            this.temporaryExecution.end(
+                this.previousResultsToRestore.success,
+                this.previousResultsToRestore.timing?.endTime
+            );
         } else {
             // Undefined for not success or failure
             this.temporaryExecution?.end(undefined);

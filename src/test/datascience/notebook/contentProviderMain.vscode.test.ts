@@ -69,32 +69,25 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
 
         assert.isOk(notebook);
 
-        const codeCellData = new NotebookCellData(
-                NotebookCellKind.Code,
-                'print(1)',
-                PYTHON_LANGUAGE,
-            );
-        
+        const codeCellData = new NotebookCellData(NotebookCellKind.Code, 'print(1)', PYTHON_LANGUAGE);
+
         codeCellData.outputs = [];
         codeCellData.metadata = {
-                    custom: {
-                        metadata: {}
-                    }
-                };
+            custom: {
+                metadata: {}
+            }
+        };
         codeCellData.executionSummary = { executionOrder: 10 };
 
         const markdownCellData = new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE);
         markdownCellData.outputs = [];
         markdownCellData.metadata = {
-                custom: {
-                    metadata: {}
-                }
-            };
+            custom: {
+                metadata: {}
+            }
+        };
 
-
-        assert.deepEqual(notebook.cells, [
-            codeCellData, markdownCellData
-        ]);
+        assert.deepEqual(notebook.cells, [codeCellData, markdownCellData]);
     });
 
     test('Return notebook with csharp language', async () => {
@@ -126,35 +119,29 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
 
         assert.isOk(notebook);
 
-        const codeCellData = new NotebookCellData(
-                NotebookCellKind.Code,
-                'Console.WriteLine("1")',
-                'csharp',
-            );
+        const codeCellData = new NotebookCellData(NotebookCellKind.Code, 'Console.WriteLine("1")', 'csharp');
 
         codeCellData.outputs = [];
         codeCellData.metadata = {
-                    custom: {
-                        metadata: {}
-                    }
-                };
+            custom: {
+                metadata: {}
+            }
+        };
 
         codeCellData.executionSummary = {
-                    executionOrder: 10
-                };
+            executionOrder: 10
+        };
 
         const markdownCellData = new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE);
 
         markdownCellData.outputs = [];
         markdownCellData.metadata = {
-                custom: {
-                    metadata: {}
-                }
-            };
+            custom: {
+                metadata: {}
+            }
+        };
 
-        assert.deepEqual(notebook.cells, [
-            codeCellData, markdownCellData
-        ]);
+        assert.deepEqual(notebook.cells, [codeCellData, markdownCellData]);
     });
     test('Verify mime types and order', () => {
         // https://github.com/microsoft/vscode-python/issues/11880

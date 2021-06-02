@@ -34,30 +34,22 @@ suite('DataScience - VSCode Notebook - helpers', () => {
 
         assert.isOk(notebook);
 
-        const codeCellData = new NotebookCellData(
-                NotebookCellKind.Code,
-                'print(1)',
-                PYTHON_LANGUAGE,
-            );
+        const codeCellData = new NotebookCellData(NotebookCellKind.Code, 'print(1)', PYTHON_LANGUAGE);
         codeCellData.outputs = [];
         codeCellData.metadata = {
-                    custom: { metadata: {} }
-                };
-        codeCellData.executionSummary = 
-                {
-                    executionOrder: 10
-                };
+            custom: { metadata: {} }
+        };
+        codeCellData.executionSummary = {
+            executionOrder: 10
+        };
         const markdownCellData = new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE);
-        
+
         markdownCellData.outputs = [];
         markdownCellData.metadata = {
-                custom: { metadata: {} }
-            };
-    
+            custom: { metadata: {} }
+        };
 
-        assert.deepEqual(notebook.cells, [
-            codeCellData, markdownCellData
-        ]);
+        assert.deepEqual(notebook.cells, [codeCellData, markdownCellData]);
     });
     suite('Outputs', () => {
         function validateCellOutputTranslation(

@@ -322,7 +322,11 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
     return markdownCell;
 }
 function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
-    const cellData = new NotebookCellData(NotebookCellKind.Markup, concatMultilineString(cell.source), MARKDOWN_LANGUAGE);
+    const cellData = new NotebookCellData(
+        NotebookCellKind.Markup,
+        concatMultilineString(cell.source),
+        MARKDOWN_LANGUAGE
+    );
     cellData.outputs = [];
     cellData.metadata = { custom: getNotebookCellMetadata(cell) };
     return cellData;
@@ -338,11 +342,8 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
     const executionSummary: NotebookCellExecutionSummary = hasExecutionCount
         ? { executionOrder: cell.execution_count as number }
         : {};
-    
-    const cellData = new NotebookCellData(
-        NotebookCellKind.Code,
-        source,
-        cellLanguage);
+
+    const cellData = new NotebookCellData(NotebookCellKind.Code, source, cellLanguage);
 
     cellData.outputs = outputs;
     cellData.metadata = { custom: getNotebookCellMetadata(cell) };

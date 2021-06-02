@@ -91,11 +91,8 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
         const cellData = new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE);
         cellData.outputs = [];
         cellData.metadata = {};
-        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-            cellData
-        ])
-        }
-    );
+        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [cellData]);
+    });
     return activeEditor.document.cellAt(startNumber)!;
 }
 export async function insertCodeCell(source: string, options?: { language?: string; index?: number }) {
@@ -109,9 +106,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     const cellData = new NotebookCellData(NotebookCellKind.Code, source, options?.language || PYTHON_LANGUAGE);
     cellData.outputs = [];
     cellData.metadata = {};
-    edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-        cellData
-    ]);
+    edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [cellData]);
     await workspace.applyEdit(edit);
 
     return activeEditor.document.cellAt(startNumber)!;

@@ -48,11 +48,9 @@ export async function updateCellCode(cell: NotebookCell, text: string) {
 export async function addNewCellAfter(cell: NotebookCell, text: string) {
     await chainWithPendingUpdates(cell.notebook, (edit) => {
         traceCellMessage(cell, 'Create new cell after current');
-        const cellData = new NotebookCellData(NotebookCellKind.Code, text, cell.document.languageId)
+        const cellData = new NotebookCellData(NotebookCellKind.Code, text, cell.document.languageId);
         cellData.outputs = [];
         cellData.metadata = cell.metadata || {};
-        edit.replaceNotebookCells(cell.notebook.uri, new NotebookRange(cell.index + 1, cell.index + 1), [
-            cellData
-        ]);
+        edit.replaceNotebookCells(cell.notebook.uri, new NotebookRange(cell.index + 1, cell.index + 1), [cellData]);
     });
 }
