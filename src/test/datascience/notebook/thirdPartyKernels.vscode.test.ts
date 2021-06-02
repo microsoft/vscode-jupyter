@@ -29,7 +29,6 @@
 //     runAllCellsInActiveNotebook,
 //     insertCodeCell,
 //     startJupyterServer,
-//     trustAllNotebooks,
 //     waitForExecutionCompletedSuccessfully,
 //     waitForKernelToChange,
 //     waitForKernelToGetAutoSelected
@@ -75,7 +74,6 @@
 //             return this.skip();
 //         }
 
-//         await trustAllNotebooks();
 //         sinon.restore();
 //     });
 
@@ -124,7 +122,6 @@
 //         );
 //         // Don't use same file (due to dirty handling, we might save in dirty.)
 //         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-//         await trustAllNotebooks();
 //         nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables, venvNoKernelDisplayName);
 //         await closeActiveWindows();
 //         sinon.restore();

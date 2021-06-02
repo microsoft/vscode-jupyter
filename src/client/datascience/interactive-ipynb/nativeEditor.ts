@@ -64,7 +64,6 @@ import {
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
-    ITrustService,
     WebViewViewChangeEventArgs
 } from '../types';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
@@ -147,7 +146,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private executeCancelTokens = new Set<CancellationTokenSource>();
     private loadPromise: Promise<void>;
     private isDisposing?: boolean;
-    private previouslyNotTrusted: boolean = false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private waitingForMessageResponse = new Map<string, Deferred<any>>();
 
@@ -179,7 +177,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         asyncRegistry: IAsyncDisposableRegistry,
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
-        private trustService: ITrustService,
         private _model: NativeEditorNotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
@@ -224,9 +221,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             serverStorage
         );
         asyncRegistry.push(this);
-        asyncRegistry.push(this.trustService.onDidSetNotebookTrust(this.monitorChangesToTrust, this));
         this.synchronizer.subscribeToUserActions(this, this.postMessage.bind(this));
-
+        this._disposables.push(this.workspaceService.onDidGrantWorkspaceTrust(this.onDidChangeTrust, this));
         traceInfo(`Loading web panel for ${this.model.file}`);
 
         // Load the web panel using our file path so it can find
@@ -237,7 +233,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Sign up for dirty events
         this._model.changed(this.modelChanged.bind(this));
-        this.previouslyNotTrusted = !this._model.isTrusted;
     }
 
     @captureTelemetry(Telemetry.SyncAllCells)
@@ -349,10 +344,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.handleMessage(message, payload, this.loadCellsComplete);
                 break;
 
-            case InteractiveWindowMessages.LaunchNotebookTrustPrompt:
-                this.handleMessage(message, payload, this.launchNotebookTrustPrompt);
-                break;
-
             case InteractiveWindowMessages.RestartKernel:
                 this.interruptExecution();
                 break;
@@ -437,10 +428,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get owningResource(): Resource {
         // Resource to use for loading and our identity are the same.
         return this.notebookIdentity.resource;
-    }
-
-    public toggleOutput(): void {
-        throw Error('Not implemented Exception');
     }
 
     public expandAllCells(): void {
@@ -704,10 +691,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         }
     }
-    private async monitorChangesToTrust() {
-        if (this.previouslyNotTrusted && this.model?.isTrusted) {
-            this.previouslyNotTrusted = false;
-            // Tell UI to update main state
+    private async onDidChangeTrust() {
+        if (this.model.isTrusted) {
             this.postMessage(InteractiveWindowMessages.TrustNotebookComplete).ignoreErrors();
         }
     }
@@ -723,12 +708,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         value[updatedName] = value[name];
         delete value[name];
         this.workspaceStorage.update(VariableExplorerStateKeys.height, value).then(noop, noop);
-    }
-
-    private async launchNotebookTrustPrompt() {
-        if (this.model && !this.model.isTrusted) {
-            await this.commandManager.executeCommand(Commands.TrustNotebook, this.model.file);
-        }
     }
 
     private interruptExecution() {

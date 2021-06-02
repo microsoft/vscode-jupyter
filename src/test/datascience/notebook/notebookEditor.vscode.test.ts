@@ -15,7 +15,6 @@ import {
     insertCodeCell,
     selectCell,
     startJupyterServer,
-    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     createEmptyPythonNotebook,
     runAllCellsInActiveNotebook,
@@ -43,7 +42,6 @@ suite('Notebook Editor tests', function () {
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         await startJupyterServer();
-        await trustAllNotebooks();
         await closeActiveWindows();
         await createEmptyPythonNotebook(disposables);
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');

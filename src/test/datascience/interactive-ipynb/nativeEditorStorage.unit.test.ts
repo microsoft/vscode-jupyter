@@ -33,14 +33,13 @@ import {
     IEditorContentChange,
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/cellLanguageService';
 import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 import { NativeEditorStorage } from '../../../client/datascience/notebookStorage/nativeEditorStorage';
 import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
 import { NotebookStorageProvider } from '../../../client/datascience/notebookStorage/notebookStorageProvider';
-import { ICell, IJupyterExecution, INotebookServerOptions, ITrustService } from '../../../client/datascience/types';
+import { ICell, IJupyterExecution, INotebookServerOptions } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { concatMultilineString } from '../../../datascience-ui/common';
@@ -61,7 +60,6 @@ suite('DataScience - Native Editor Storage', () => {
     let executionProvider: IJupyterExecution;
     let globalMemento: MockMemento;
     let localMemento: MockMemento;
-    let trustService: ITrustService;
     let context: typemoq.IMock<IExtensionContext>;
     let crypto: ICryptoUtils;
     let lastWriteFileValue: any;
@@ -256,7 +254,6 @@ suite('DataScience - Native Editor Storage', () => {
         interpreterService = mock<IInterpreterService>();
         webPanelProvider = mock(WebviewPanelProvider);
         executionProvider = mock(JupyterExecutionFactory);
-        trustService = mock(TrustService);
         const settings = mock(JupyterSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 
@@ -280,11 +277,6 @@ suite('DataScience - Native Editor Storage', () => {
 
         const serverStartedEvent = new EventEmitter<INotebookServerOptions>();
         when(executionProvider.serverStarted).thenReturn(serverStartedEvent.event);
-
-        when(trustService.isNotebookTrusted(anything(), anything())).thenReturn(Promise.resolve(true));
-        when(trustService.trustNotebook(anything(), anything())).thenCall(() => {
-            return Promise.resolve();
-        });
 
         testIndex += 1;
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
@@ -349,6 +341,8 @@ suite('DataScience - Native Editor Storage', () => {
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const mockVSC = mock<IVSCodeNotebook>();
         when(mockVSC.notebookEditors).thenReturn([]);
+        const workspace = mock<IWorkspaceService>();
+        when(workspace.isTrusted).thenReturn(true);
         const cellLanguageService = mock<NotebookCellLanguageService>();
         when(cellLanguageService.getPreferredLanguage(anything())).thenReturn(PYTHON_LANGUAGE);
         const notebookStorage = new NativeEditorStorage(
@@ -357,8 +351,7 @@ suite('DataScience - Native Editor Storage', () => {
             context.object,
             globalMemento,
             localMemento,
-            instance(trustService),
-            new NotebookModelFactory(false, instance(mockVSC), instance(cellLanguageService))
+            new NotebookModelFactory(false, instance(mockVSC), instance(workspace), instance(cellLanguageService))
         );
         const container = mock<IServiceContainer>();
         when(container.tryGet(anything())).thenReturn(undefined);

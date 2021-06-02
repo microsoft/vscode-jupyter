@@ -567,8 +567,6 @@ export namespace DataScience {
     export const fetchingDataViewer = localize('DataScience.fetchingDataViewer', 'Fetching data ...');
     export const noRowsInDataViewer = localize('DataScience.noRowsInDataViewer', 'No rows match current filter');
     export const jupyterServer = localize('DataScience.jupyterServer', 'Jupyter Server');
-    export const notebookIsTrusted = localize('DataScience.notebookIsTrusted', 'Trusted');
-    export const notebookIsNotTrusted = localize('DataScience.notebookIsNotTrusted', 'Not Trusted');
     export const noKernel = localize('DataScience.noKernel', 'No Kernel');
     export const serverNotStarted = localize('DataScience.serverNotStarted', 'Not Started');
     export const selectKernel = localize('DataScience.selectKernel', 'Change Kernel');
@@ -933,16 +931,6 @@ export namespace DataScience {
     export const usingPreviewNotebookWithOtherNotebookWarning = localize(
         'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
         'Opening the same file in the Preview Notebook Editor and stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
-    );
-    export const launchNotebookTrustPrompt = localize(
-        'DataScience.launchNotebookTrustPrompt',
-        'A notebook could execute harmful code when opened. Some outputs have been hidden. Do you trust this notebook? [Learn more.](https://aka.ms/trusted-notebooks)'
-    );
-    export const trustNotebook = localize('DataScience.launchNotebookTrustPrompt.yes', 'Trust');
-    export const doNotTrustNotebook = localize('DataScience.launchNotebookTrustPrompt.no', 'Do not trust');
-    export const trustAllNotebooks = localize(
-        'DataScience.launchNotebookTrustPrompt.trustAllNotebooks',
-        'Trust all notebooks'
     );
     export const insecureSessionMessage = localize(
         'DataScience.insecureSessionMessage',
