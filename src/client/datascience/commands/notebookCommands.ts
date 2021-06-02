@@ -5,8 +5,10 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { ICommandManager } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { IDisposable } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { Commands } from '../constants';
 import {
     getDisplayNameOrNameOfKernelConnection,
@@ -25,6 +27,8 @@ export class NotebookCommands implements IDisposable {
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
+        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNotebook: boolean,
+        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
         @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher
     ) {}
@@ -44,8 +48,17 @@ export class NotebookCommands implements IDisposable {
     }
 
     private toggleOutput() {
-        if (this.notebookEditorProvider.activeEditor) {
-            this.notebookEditorProvider.activeEditor.toggleOutput();
+        if (this.useNativeNotebook && this.notebook.activeNotebookEditor?.selections.length) {
+            const cells = this.notebook.activeNotebookEditor.document.getCells(
+                this.notebook.activeNotebookEditor?.selections[0]
+            );
+            if (cells.length) {
+                const cmd =
+                    cells[0].metadata.outputCollapsed === true
+                        ? 'notebook.cell.expandCellOutput'
+                        : 'notebook.cell.collapseCellOutput';
+                this.commandManager.executeCommand(cmd).then(noop, noop);
+            }
         }
     }
 
