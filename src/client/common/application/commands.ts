@@ -53,6 +53,8 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.ResetLoggingLevel]: [];
     [DSCommands.OpenVariableView]: [];
     [DSCommands.NotebookEditorToggleOutput]: [];
+    ['notebook.cell.collapseCellOutput']: [];
+    ['notebook.cell.expandCellOutput']: [];
 }
 
 /**
@@ -140,8 +142,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.OpenNotebookNonCustomEditor]: [Uri];
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
-    [DSCommands.TrustNotebook]: [undefined | never | Uri];
-    [DSCommands.NotebookTrusted]: [];
     [DSCommands.NotebookEditorExpandAllCells]: [];
     [DSCommands.NotebookEditorCollapseAllCells]: [];
     [DSCommands.CreateGitHubIssue]: [];

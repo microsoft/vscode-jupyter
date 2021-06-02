@@ -4,11 +4,19 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
-import { ICommandManager, IDebugService, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
+import {
+    ICommandManager,
+    IDebugService,
+    IDocumentManager,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import { disposeAllDisposables } from '../../common/helpers';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposable, IDisposableRegistry, IJupyterSettings } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -30,9 +38,17 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IVSCodeNotebook) private readonly vsCodeNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vsCodeNotebook: IVSCodeNotebook,
+        @inject(IWorkspaceService) workspace: IWorkspaceService
     ) {
         disposableRegistry.push(this);
+        disposableRegistry.push(
+            workspace.onDidGrantWorkspaceTrust(() => {
+                disposeAllDisposables(this.activeCodeWatchers);
+                this.activeCodeWatchers = [];
+                this.didChangeCodeLenses.fire();
+            })
+        );
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
         disposableRegistry.push(this.documentManager.onDidCloseTextDocument(this.onDidCloseTextDocument.bind(this)));
         disposableRegistry.push(this.debugLocationTracker.updated(this.onDebugLocationUpdated.bind(this)));
@@ -99,7 +115,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // ask whenever a change occurs. Do this regardless of if we have code lens turned on or not as
         // shift+enter relies on this code context.
         const editorContext = new ContextKey(EditorContexts.HasCodeCells, this.commandManager);
-        editorContext.set(result && result.length > 0).catch();
+        editorContext.set(result && result.length > 0).catch(noop);
 
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings(document.uri);

@@ -13,7 +13,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
             level: 'off'
         },
         allowImportFromNotebook: true,
-        alwaysTrustNotebooks: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         jupyterServerType: 'local',

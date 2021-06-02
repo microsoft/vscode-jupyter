@@ -616,7 +616,7 @@ export namespace vscMockExtHostedTypes {
         ): void {
             // Noop
         }
-        replaceNotebookMetadata(_uri: vscode.Uri, _value: vscode.NotebookDocumentMetadata): void {
+        replaceNotebookMetadata(_uri: vscode.Uri, _value: { [key: string]: any }): void {
             //
         }
         replaceNotebookCells(
@@ -640,7 +640,7 @@ export namespace vscMockExtHostedTypes {
         replaceNotebookCellMetadata(
             _uri: vscode.Uri,
             _index: number,
-            _cellMetadata: vscode.NotebookCellMetadata,
+            _cellMetadata: { [key: string]: any },
             _metadata?: vscode.WorkspaceEditEntryMetadata
         ): void {
             // Noop.

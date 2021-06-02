@@ -1004,6 +1004,7 @@ export interface IEventNamePropertyMapping {
         result: 'found' | 'notfound' | 'failed'; // Whether a preferred kernel was found or not.
         language: string; // Language of the associated notebook or interactive window.
         resourceType: 'notebook' | 'interactive'; // Whether its a notebook or interactive window.
+        hasActiveInterpreter?: boolean; // Whether we have an active interpreter or not.
     };
     /**
      * Telemetry event sent if there's an error installing a jupyter required dependency
@@ -1254,13 +1255,6 @@ export interface IEventNamePropertyMapping {
         kernelLiveCount: number; // Total number of live kernels in the kernel list.
     } & ResourceSpecificTelemetryProperties;
 
-    // Trusted notebooks events
-    [Telemetry.NotebookTrustPromptShown]: never | undefined;
-    [Telemetry.TrustNotebook]: never | undefined;
-    [Telemetry.TrustAllNotebooks]: never | undefined;
-    [Telemetry.DoNotTrustNotebook]: never | undefined;
-    [Telemetry.NativeRandomBytesGenerationFailed]: [never | undefined];
-
     // Native notebooks events
     [VSCodeNativeTelemetry.AddCell]: never | undefined;
     [VSCodeNativeTelemetry.DeleteCell]: never | undefined;
@@ -1387,5 +1381,13 @@ export interface IEventNamePropertyMapping {
          * `doNotShowAgain` - If prompt was displayed & doNotShowAgain clicked by the user
          */
         action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
+    };
+    [Telemetry.KernelSpecNotFoundError]: {
+        resourceType: 'notebook' | 'interactive'; // Whether its a notebook or interactive window.
+        language: string; // Language defined in notebook metadata.
+        kernelConnectionProvided: boolean; // Whether kernelConnection was provided.
+        notebookMetadataProvided: boolean; // Whether notebook metadata was provided.
+        hasKernelSpecInMetadata: boolean; // Whether we have kernelspec info in the notebook metadata.
+        kernelConnectionFound: boolean; // Whether a kernel connection was found or not.
     };
 }

@@ -19,7 +19,6 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
     runCell,
-    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from './helper';
@@ -57,7 +56,6 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         }
         api = await initialize();
 
-        await trustAllNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         widgetCoordinator = api.serviceContainer.get<NotebookIPyWidgetCoordinator>(NotebookIPyWidgetCoordinator);

@@ -29,7 +29,6 @@ import {
     insertCodeCell,
     insertMarkdownCell,
     saveActiveNotebook,
-    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from './helper';
@@ -90,7 +89,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         ) {
             return this.skip();
         }
-        await trustAllNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);

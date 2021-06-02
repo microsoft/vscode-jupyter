@@ -61,8 +61,7 @@ import {
     INotebookModel,
     INotebookProvider,
     IStatusProvider,
-    IThemeFinder,
-    ITrustService
+    IThemeFinder
 } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
 import { NativeEditorNotebookModel } from './notebookModel';
@@ -264,7 +263,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             this.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry),
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
-            this.serviceContainer.get<ITrustService>(ITrustService),
             model,
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),

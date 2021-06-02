@@ -36,6 +36,7 @@ import { ILocalKernelFinder } from './types';
 import { getResourceType, tryGetRealPath } from '../common';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -114,7 +115,8 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
                 result: preferred ? 'found' : 'notfound',
                 resourceType,
-                language: telemetrySafeLanguage
+                language: telemetrySafeLanguage,
+                hasActiveInterpreter: !!preferredInterpreter
             });
             if (preferred) {
                 traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
@@ -124,7 +126,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             sendTelemetryEvent(
                 Telemetry.PreferredKernel,
                 undefined,
-                { result: 'failed', resourceType, language: telemetrySafeLanguage },
+                {
+                    result: 'failed',
+                    resourceType,
+                    language: telemetrySafeLanguage
+                },
                 ex,
                 true
             );
@@ -166,7 +172,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             }
 
             // ! as the has and set above verify that we have a return here
-            return await this.workspaceToMetadata.get(workspaceFolderId)!;
+            const kernels = await this.workspaceToMetadata.get(workspaceFolderId)!;
+            sendKernelListTelemetry(resource, kernels);
+            return kernels;
         } catch (e) {
             traceError(`List kernels failed: ${e} ${e.stack}`);
             throw e;
