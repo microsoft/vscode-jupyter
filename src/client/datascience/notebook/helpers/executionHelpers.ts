@@ -50,7 +50,7 @@ export async function addNewCellAfter(cell: NotebookCell, text: string) {
         traceCellMessage(cell, 'Create new cell after current');
         const cellData = new NotebookCellData(NotebookCellKind.Code, text, cell.document.languageId);
         cellData.outputs = [];
-        cellData.metadata = cell.metadata || {};
+        cellData.metadata = {};
         edit.replaceNotebookCells(cell.notebook.uri, new NotebookRange(cell.index + 1, cell.index + 1), [cellData]);
     });
 }
