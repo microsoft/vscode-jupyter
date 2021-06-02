@@ -4,6 +4,8 @@
 
 name: Build and Test
 
+permissions: read-all
+
 on:
   pull_request:
     branches:
