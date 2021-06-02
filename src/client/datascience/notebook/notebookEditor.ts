@@ -7,7 +7,6 @@ import {
     ConfigurationTarget,
     Event,
     EventEmitter,
-    NotebookCell,
     NotebookCellKind,
     NotebookRange,
     NotebookDocument,
