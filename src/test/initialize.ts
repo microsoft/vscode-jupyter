@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import type { IExtensionApi } from '../client/api';
 import { disposeAllDisposables } from '../client/common/helpers';
 import type { IDisposable } from '../client/common/types';
-import { CreationOptionService } from '../client/datascience/notebook/creation/creationOptionsService';
 import { clearPendingChainedUpdatesForTests } from '../client/datascience/notebook/helpers/notebookUpdater';
 import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
@@ -64,7 +63,6 @@ export async function closeActiveWindows(disposables: IDisposable[] = []): Promi
     }
     clearPendingTimers();
     disposeAllDisposables(disposables);
-    CreationOptionService.instance?.clear();
     await closeActiveNotebooks();
     await closeWindowsInternal();
 }
