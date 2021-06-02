@@ -10,7 +10,12 @@ import { Telemetry } from '../../constants';
 @injectable()
 export class CreationOptionService {
     private readonly _registrations: { extensionId: string; displayName: string; defaultCellLanguage: string }[] = [];
+    private static _instance?: CreationOptionService;
+    public static get instance(): CreationOptionService | undefined {
+        return CreationOptionService._instance;
+    }
     constructor(@inject(IExtensions) extensions: IExtensions) {
+        CreationOptionService._instance = this;
         const contributingExtensions = extensions.all.filter((item) =>
             item.packageJSON.contributes && item.packageJSON.contributes['jupyter.kernels'] ? true : false
         );
