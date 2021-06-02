@@ -167,7 +167,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
             'Cell5, output'
         );
 
-        const cellOutputMetadata = richOutput.items[0].metadata as CellOutputMetadata;
+        const cellOutputMetadata = richOutput.metadata as CellOutputMetadata;
         assert.deepEqual(
             cellOutputMetadata.metadata,
             {

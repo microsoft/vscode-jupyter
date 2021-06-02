@@ -21,7 +21,6 @@ import {
     NotebookContentProvider as VSCNotebookContentProvider,
     NotebookDocument,
     NotebookCellKind,
-    NotebookCellMetadata,
     NotebookCellOutputItem,
     NotebookRange,
     NotebookCellExecutionState,
@@ -90,7 +89,7 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     await chainWithPendingUpdates(activeEditor.document, (edit) =>
         edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-            new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE, [], new NotebookCellMetadata())
+            new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE, [], {})
         ])
     );
     return activeEditor.document.cellAt(startNumber)!;
@@ -104,13 +103,7 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     const edit = new WorkspaceEdit();
     edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-        new NotebookCellData(
-            NotebookCellKind.Code,
-            source,
-            options?.language || PYTHON_LANGUAGE,
-            [],
-            new NotebookCellMetadata()
-        )
+        new NotebookCellData(NotebookCellKind.Code, source, options?.language || PYTHON_LANGUAGE, [], {})
     ]);
     await workspace.applyEdit(edit);
 
