@@ -143,9 +143,6 @@ export class NotebookEditor implements INotebookEditor {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
         }
-        if (!this.vscodeNotebook.activeNotebookEditor) {
-            return;
-        }
 
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
