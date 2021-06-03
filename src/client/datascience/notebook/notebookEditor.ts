@@ -7,7 +7,6 @@ import {
     ConfigurationTarget,
     Event,
     EventEmitter,
-    NotebookCell,
     NotebookCellKind,
     NotebookRange,
     NotebookDocument,
@@ -153,30 +152,6 @@ export class NotebookEditor implements INotebookEditor {
             ).then(noop, noop);
         }
     }
-    public toggleOutput(): void {
-        if (!this.vscodeNotebook.activeNotebookEditor) {
-            return;
-        }
-
-        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
-        if (editor) {
-            const cells: NotebookCell[] = [];
-            editor.selections.map((cr) => {
-                if (!cr.isEmpty) {
-                    for (let index = cr.start; index < cr.end; index++) {
-                        cells.push(editor.document.cellAt(index));
-                    }
-                }
-            });
-            chainWithPendingUpdates(editor.document, (edit) => {
-                cells.forEach((cell) => {
-                    const collapsed = cell.metadata.outputCollapsed || false;
-                    const metadata = cell.metadata.with({ outputCollapsed: !collapsed });
-                    edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
-                });
-            }).then(noop, noop);
-        }
-    }
     public expandAllCells(): void {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
@@ -186,7 +161,7 @@ export class NotebookEditor implements INotebookEditor {
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.getCells().forEach((cell, index) => {
-                    const metadata = cell.metadata.with({ inputCollapsed: false, outputCollapsed: false });
+                    const metadata = { ...(cell.metadata || {}), inputCollapsed: false, outputCollapsed: false };
                     edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);
@@ -201,7 +176,7 @@ export class NotebookEditor implements INotebookEditor {
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.getCells().forEach((cell, index) => {
-                    const metadata = cell.metadata.with({ inputCollapsed: true, outputCollapsed: true });
+                    const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: true };
                     edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);
@@ -288,24 +263,6 @@ export class NotebookEditor implements INotebookEditor {
         this._closed.fire(this);
     }
 
-    public runAbove(cell: NotebookCell | undefined): void {
-        if (cell && cell.index > 0) {
-            void this.commandManager.executeCommand(
-                'notebook.cell.execute',
-                { start: 0, end: cell.index },
-                cell.notebook.uri
-            );
-        }
-    }
-    public runCellAndBelow(cell: NotebookCell | undefined): void {
-        if (cell && cell.index >= 0) {
-            void this.commandManager.executeCommand(
-                'notebook.cell.execute',
-                { start: cell.index, end: cell.notebook.cellCount },
-                cell.notebook.uri
-            );
-        }
-    }
     private onClosedDocument(e?: NotebookDocument) {
         if (this.document === e) {
             this._closed.fire(this);

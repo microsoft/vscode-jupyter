@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CancellationToken, NotebookControllerAffinity } from 'vscode';
+import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
@@ -28,7 +28,6 @@ import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/ty
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { sendNotebookControllerCreateTelemetry } from '../telemetry/kernelTelemetry';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
@@ -40,6 +39,7 @@ import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes'
 import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
+import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -145,8 +145,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             const controllers = await this.createNotebookControllers(connections);
 
             // Send telemetry related to fetching the kernel connections
-            // KERNELPUSH: undefined works for telemetry?
-            sendNotebookControllerCreateTelemetry(undefined, controllers, stopWatch);
+            sendKernelListTelemetry(
+                Uri.file('test.ipynb'), // Give a dummy ipynb value, we need this as its used in telemetry to determine the resource.
+                controllers.map((item) => item.connection),
+                stopWatch
+            );
 
             traceInfoIf(
                 !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,

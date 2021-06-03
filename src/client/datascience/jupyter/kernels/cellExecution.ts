@@ -185,7 +185,8 @@ export class CellExecution {
             `Cell Exec contents ${this.cell.document.getText().substring(0, 50)}...`
         );
         if (!this.canExecuteCell()) {
-            this.execution?.end({});
+            // End state is bool | undefined not optional. Undefined == not success or failure
+            this.execution?.end(undefined);
             this.execution = undefined;
             return;
         }
@@ -199,7 +200,7 @@ export class CellExecution {
 
         this.startTime = new Date().getTime();
         CellExecution.activeNotebookCellExecution.set(this.cell.notebook, this.execution);
-        this.execution?.start({ startTime: this.startTime });
+        this.execution?.start(this.startTime);
         await Promise.all([this.initPromise, this.execution?.clearOutput()]);
         this.stopWatch.reset();
 
@@ -289,13 +290,15 @@ export class CellExecution {
     }
     private endCellTask(success: 'success' | 'failed' | 'cancelled') {
         if (this.isEmptyCodeCell) {
-            this.execution?.end({});
+            // Undefined for not success or failures
+            this.execution?.end(undefined);
         } else if (success === 'success' || success === 'failed') {
             this.endTime = new Date().getTime();
-            this.execution?.end({ endTime: this.endTime, success: success === 'success' });
+            this.execution?.end(success === 'success', this.endTime);
         } else {
             // Cell was cancelled.
-            this.execution?.end({});
+            // Undefined for not success or failures
+            this.execution?.end(undefined);
         }
         if (CellExecution.activeNotebookCellExecution.get(this.cell.notebook) === this.execution) {
             CellExecution.activeNotebookCellExecution.set(this.cell.notebook, undefined);
@@ -323,7 +326,7 @@ export class CellExecution {
         // Create a temporary task.
         this.previousResultsToRestore = { ...(this.cell.executionSummary || {}) };
         this.temporaryExecution = this.controller.createNotebookCellExecution(this.cell);
-        this.temporaryExecution?.start({});
+        this.temporaryExecution?.start();
         if (this.previousResultsToRestore?.executionOrder && this.execution) {
             this.execution.executionOrder = this.previousResultsToRestore.executionOrder;
         }
@@ -337,12 +340,13 @@ export class CellExecution {
             if (this.previousResultsToRestore.executionOrder) {
                 this.temporaryExecution.executionOrder = this.previousResultsToRestore.executionOrder;
             }
-            this.temporaryExecution.end({
-                endTime: this.previousResultsToRestore.endTime,
-                success: this.previousResultsToRestore.success
-            });
+            this.temporaryExecution.end(
+                this.previousResultsToRestore.success,
+                this.previousResultsToRestore.timing?.endTime
+            );
         } else {
-            this.temporaryExecution?.end({});
+            // Undefined for not success or failure
+            this.temporaryExecution?.end(undefined);
         }
         this.previousResultsToRestore = undefined;
         this.temporaryExecution = undefined;
@@ -719,7 +723,7 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(`${existingOutputText}${newContent}`))
                 });
-                promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo.id);
+                promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo);
             } else if (clearOutput) {
                 // Replace the current outputs with a single new output.
                 const output = cellOutputToVSCCellOutput({
@@ -857,7 +861,7 @@ export class CellExecution {
                 // This message could have come from a background thread.
                 // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
                 const task = this.execution || this.createTemporaryTask();
-                const promise = task?.replaceOutputItems(newOutput.items, outputToBeUpdated.id);
+                const promise = task?.replaceOutputItems(newOutput.items, outputToBeUpdated);
                 this.endTemporaryTask();
                 // await on the promise at the end, we want to minimize UI flickers.
                 // The way we update output of other cells is to use an existing task or a temporary task.

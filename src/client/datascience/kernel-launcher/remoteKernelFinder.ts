@@ -28,6 +28,7 @@ import { traceError, traceInfoIf } from '../../common/logger';
 import { getResourceType } from '../common';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -165,6 +166,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                     )}`
                 );
 
+                sendKernelListTelemetry(resource, items);
                 return items;
             } finally {
                 if (sessionManager) {
@@ -172,6 +174,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 }
             }
         }
+        sendKernelListTelemetry(resource, []);
         return [];
     }
 

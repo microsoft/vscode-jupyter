@@ -44,16 +44,15 @@ export class NotebookContentProvider implements VSCNotebookContentProvider {
         if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {
             // If not supported, return a notebook with error displayed.
             // We cannot, not display a notebook.
+            const cellData = new NotebookCellData(
+                NotebookCellKind.Markup,
+                `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
+                MARKDOWN_LANGUAGE
+            );
+            cellData.outputs = [];
+            cellData.metadata = {};
             return {
-                cells: [
-                    new NotebookCellData(
-                        NotebookCellKind.Markup,
-                        `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
-                        MARKDOWN_LANGUAGE,
-                        [],
-                        {}
-                    )
-                ],
+                cells: [cellData],
                 metadata: {}
             };
         }

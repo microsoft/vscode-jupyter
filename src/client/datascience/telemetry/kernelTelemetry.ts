@@ -5,13 +5,12 @@ import { Resource } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Telemetry } from '../constants';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from './telemetry';
 
 export function sendKernelListTelemetry(
     resource: Resource,
-    kernels: { selection: KernelConnectionMetadata }[],
-    stopWatch: StopWatch
+    kernels: KernelConnectionMetadata[],
+    stopWatch?: StopWatch
 ) {
     let counters = {
         kernelSpecCount: 0,
@@ -19,7 +18,7 @@ export function sendKernelListTelemetry(
         kernelLiveCount: 0
     };
     kernels.forEach((item) => {
-        switch (item.selection.kind) {
+        switch (item.kind) {
             case 'connectToLiveKernel':
                 counters.kernelLiveCount += 1;
                 break;
@@ -35,35 +34,7 @@ export function sendKernelListTelemetry(
         }
     });
     trackKernelResourceInformation(resource, counters);
-    sendKernelTelemetryEvent(resource, Telemetry.KernelCount, stopWatch.elapsedTime, counters);
-}
-
-export function sendNotebookControllerCreateTelemetry(
-    resource: Resource,
-    controllers: VSCodeNotebookController[],
-    stopWatch: StopWatch
-) {
-    let counters = {
-        kernelSpecCount: 0,
-        kernelInterpreterCount: 0,
-        kernelLiveCount: 0
-    };
-    controllers.forEach((item) => {
-        switch (item.connection.kind) {
-            case 'connectToLiveKernel':
-                counters.kernelLiveCount += 1;
-                break;
-            case 'startUsingDefaultKernel':
-            case 'startUsingKernelSpec':
-                counters.kernelSpecCount += 1;
-                break;
-            case 'startUsingPythonInterpreter':
-                counters.kernelInterpreterCount += 1;
-                break;
-            default:
-                break;
-        }
-    });
-    trackKernelResourceInformation(resource, counters);
-    sendKernelTelemetryEvent(resource, Telemetry.KernelCount, stopWatch.elapsedTime, counters);
+    if (stopWatch) {
+        sendKernelTelemetryEvent(resource, Telemetry.KernelCount, stopWatch.elapsedTime, counters);
+    }
 }

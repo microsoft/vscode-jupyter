@@ -15,7 +15,8 @@ import {
     NotebookEditorSelectionChangeEvent,
     NotebookExecuteHandler,
     NotebookRendererScript,
-    window
+    window,
+    workspace
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
 import { IDisposableRegistry } from '../types';
@@ -31,7 +32,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     public readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
-        return this.canUseNotebookApi ? notebooks.notebookDocuments : [];
+        return this.canUseNotebookApi ? workspace.notebookDocuments : [];
     }
     public get notebookEditors() {
         return this.canUseNotebookApi ? window.visibleNotebookEditors : [];
@@ -64,8 +65,8 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.canUseNotebookApi = true;
             this.onDidChangeNotebookEditorSelection = window.onDidChangeNotebookEditorSelection;
             this.onDidChangeActiveNotebookEditor = window.onDidChangeActiveNotebookEditor;
-            this.onDidOpenNotebookDocument = notebooks.onDidOpenNotebookDocument;
-            this.onDidCloseNotebookDocument = notebooks.onDidCloseNotebookDocument;
+            this.onDidOpenNotebookDocument = workspace.onDidOpenNotebookDocument;
+            this.onDidCloseNotebookDocument = workspace.onDidCloseNotebookDocument;
             this.onDidChangeVisibleNotebookEditors = window.onDidChangeVisibleNotebookEditors;
             this.onDidSaveNotebookDocument = notebooks.onDidSaveNotebookDocument;
             this.onDidChangeNotebookDocument = this._onDidChangeNotebookDocument.event;
@@ -90,7 +91,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             transientDocumentMetadata?: { [x: string]: boolean | undefined } | undefined;
         }
     ): Disposable {
-        return notebooks.registerNotebookContentProvider(notebookType, provider, options);
+        return workspace.registerNotebookContentProvider(notebookType, provider, options);
     }
     public createNotebookController(
         id: string,
