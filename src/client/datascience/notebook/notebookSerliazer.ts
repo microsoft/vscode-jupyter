@@ -87,7 +87,7 @@ export class NotebookSerializer implements VSCNotebookSerializer {
                 ? data.metadata.indentAmount
                 : ' ';
 
-        if ('viewType' in data) {
+        if ('notebookType' in data) {
             notebookContent.cells = data
                 .getCells()
                 .map((cell) => createJupyterCellFromVSCNotebookCell(cell))
