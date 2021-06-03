@@ -134,10 +134,10 @@ async function closeWindowsInternal() {
 function isANotebookOpen() {
     /* eslint-disable */
     if (
-        Array.isArray((vscode as any).notebook.visibleNotebookEditors) &&
-        (vscode as any).notebook.visibleNotebookEditors.length
+        Array.isArray((vscode as any).window.visibleNotebookEditors) &&
+        (vscode as any).window.visibleNotebookEditors.length
     ) {
         return true;
     }
-    return !!(vscode as any).notebook.activeNotebookEditor;
+    return !!(vscode as any).window.activeNotebookEditor;
 }
