@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, notebooks, window } from 'vscode';
+import { commands, window, workspace } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { traceInfo } from '../../../../client/common/logger';
