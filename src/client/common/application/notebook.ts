@@ -77,6 +77,9 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.onDidSaveNotebookDocument = this.createDisposableEventEmitter<NotebookDocument>();
             this.onDidChangeNotebookDocument = this.createDisposableEventEmitter<NotebookCellChangedEvent>();
         }
+        this.onDidChangeActiveNotebookEditor((e) => {
+            console.error(`Changed active notebook and it is now ${e?.document?.uri?.toString()}`);
+        });
     }
     public registerNotebookContentProvider(
         notebookType: string,
