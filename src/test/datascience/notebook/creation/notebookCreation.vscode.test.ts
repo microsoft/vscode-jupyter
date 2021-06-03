@@ -5,22 +5,23 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
-import * as fs from 'fs';
-import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../../client/common/application/types';
-import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../../client/common/constants';
+import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
 import { Commands } from '../../../../client/datascience/constants';
 import { CreationOptionService } from '../../../../client/datascience/notebook/creation/creationOptionsService';
 import { IExtensionTestApi, waitForCondition } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
-import { noop } from '../../../core';
 import { closeActiveWindows, initialize } from '../../../initialize';
-import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests, ensureNewNotebooksHavePythonCells } from '../helper';
-const screenshot = require('screenshot-desktop');
+import {
+    canRunNotebookTests,
+    closeNotebooksAndCleanUpAfterTests,
+    ensureNewNotebooksHavePythonCells,
+    workAroundVSCodeNotebookStartPages
+} from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite.only('DataScience - VSCode Notebook - (Creation Integration)', function () {
@@ -37,16 +38,11 @@ suite.only('DataScience - VSCode Notebook - (Creation Integration)', function ()
         creationOptions = api.serviceContainer.get<CreationOptionService>(CreationOptionService);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         creationOptions.clear();
+        await workAroundVSCodeNotebookStartPages();
         await ensureNewNotebooksHavePythonCells();
     });
-    let fileCounter = 0;
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        const file = path.join(EXTENSION_ROOT_DIR, 'images', `image${fileCounter++}.jpg`);
-
-        await screenshot()
-            .then((img: any) => fs.writeFileSync(file, img))
-            .catch(noop);
         sinon.restore();
         creationOptions.clear();
         await closeNotebooksAndCleanUpAfterTests(disposables);
