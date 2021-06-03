@@ -106,7 +106,7 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
         this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils);
-        this.controller.hasExecutionOrder = true;
+        this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposables);

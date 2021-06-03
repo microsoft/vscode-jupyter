@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { notebooks, NotebookCell, NotebookCellKind, NotebookController, NotebookDocument } from 'vscode';
+import { NotebookCell, NotebookCellKind, NotebookController, NotebookDocument, workspace } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
@@ -133,7 +133,7 @@ export class KernelExecution implements IDisposable {
         );
 
         // If the document is closed (user or on CI), then just stop handling the UI updates & cancel cell execution queue.
-        notebooks.onDidCloseNotebookDocument(
+        workspace.onDidCloseNotebookDocument(
             async (e: NotebookDocument) => {
                 if (e === document) {
                     if (!newCellExecutionQueue.failed || !newCellExecutionQueue.isEmpty) {

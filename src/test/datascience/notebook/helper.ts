@@ -87,11 +87,12 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
         throw new Error('No active editor');
     }
     const startNumber = options?.index ?? activeEditor.document.cellCount;
-    await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-            new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE, [], {})
-        ])
-    );
+    await chainWithPendingUpdates(activeEditor.document, (edit) => {
+        const cellData = new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE);
+        cellData.outputs = [];
+        cellData.metadata = {};
+        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [cellData]);
+    });
     return activeEditor.document.cellAt(startNumber)!;
 }
 export async function insertCodeCell(source: string, options?: { language?: string; index?: number }) {
@@ -102,9 +103,10 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     }
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     const edit = new WorkspaceEdit();
-    edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-        new NotebookCellData(NotebookCellKind.Code, source, options?.language || PYTHON_LANGUAGE, [], {})
-    ]);
+    const cellData = new NotebookCellData(NotebookCellKind.Code, source, options?.language || PYTHON_LANGUAGE);
+    cellData.outputs = [];
+    cellData.metadata = {};
+    edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [cellData]);
     await workspace.applyEdit(edit);
 
     return activeEditor.document.cellAt(startNumber)!;
