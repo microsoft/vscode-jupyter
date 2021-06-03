@@ -141,7 +141,9 @@ export class VSCodeNotebookController implements Disposable {
                 id: this.id,
                 extension: JVSC_EXTENSION_ID
             });
-            traceInfo(`VSCodeNotebookController.kernelAssociatedWithDocument set for ${notebook.uri.toString()} ${this.id}`);
+            traceInfo(
+                `VSCodeNotebookController.kernelAssociatedWithDocument set for ${notebook.uri.toString()} ${this.id}`
+            );
             VSCodeNotebookController.kernelAssociatedWithDocument = true;
         }
     }
