@@ -31,7 +31,8 @@ import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    saveActiveNotebook
+    saveActiveNotebook,
+    workAroundVSCodeNotebookStartPages
 } from './helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -64,6 +65,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
+        await workAroundVSCodeNotebookStartPages();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         contentProvider = api.serviceContainer.get<NotebookContentProvider>(INotebookContentProvider);
     });
