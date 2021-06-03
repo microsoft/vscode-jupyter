@@ -64,9 +64,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         );
     }
     test('With 3rd party integration, display quick pick when selecting create blank notebook command', async function () {
-        console.error('Start1');
         await creationOptions.registerNewNotebookContent('julia');
-        console.error('Start2');
         assert.equal(creationOptions.registrations.length, 1);
         assert.isUndefined(vscodeNotebook.activeNotebookEditor);
 
@@ -86,17 +84,13 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         disposables.push({ dispose: () => stub.restore() });
 
         // Create a blank notebook & we should have a julia cell.
-        console.error('Start3');
         await createNotebookAndValidateLanguageOfFirstCell('julia');
-        console.error('Start4');
         assert.equal(stub.callCount, 1);
 
         await closeActiveWindows();
 
         // Try again & this time select the first item from the list & we should end up with a python notebook.
-        console.error('Start5');
         await createNotebookAndValidateLanguageOfFirstCell(PYTHON_LANGUAGE.toLowerCase());
-        console.error('Start6');
         assert.equal(stub.callCount, 2);
     });
     test('Without 3rd party integration, do not display quick pick when selecting create blank notebook command', async function () {
