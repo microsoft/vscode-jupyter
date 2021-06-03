@@ -13,6 +13,8 @@ import { openNotebook } from '../helpers';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests } from './helper';
 import { window } from 'vscode';
 import { initialize } from '../../initialize';
+import { nbformat } from '@jupyterlab/coreutils';
+import { cellOutputToVSCCellOutput } from '../../../client/datascience/notebook/helpers/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
@@ -74,6 +76,130 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
                     );
                 });
             });
+        });
+    });
+    test('Verify order of outputs', async () => {
+        const dataAndExpectedOrder: { output: nbformat.IDisplayData; expectedMimeTypesOrder: string[] }[] = [
+            {
+                output: {
+                    data: {
+                        'application/vnd.vegalite.v4+json': 'some json',
+                        'text/html': '<a>Hello</a>'
+                    },
+                    metadata: {},
+                    output_type: 'display_data'
+                },
+                expectedMimeTypesOrder: ['application/vnd.vegalite.v4+json', 'text/html']
+            },
+            {
+                output: {
+                    data: {
+                        'application/vnd.vegalite.v4+json': 'some json',
+                        'application/javascript': 'some js',
+                        'text/plain': 'some text',
+                        'text/html': '<a>Hello</a>'
+                    },
+                    metadata: {},
+                    output_type: 'display_data'
+                },
+                expectedMimeTypesOrder: [
+                    'application/vnd.vegalite.v4+json',
+                    'text/html',
+                    'application/javascript',
+                    'text/plain'
+                ]
+            },
+            {
+                output: {
+                    data: {
+                        'application/vnd.vegalite.v4+json': '', // Empty, should give preference to other mimetypes.
+                        'application/javascript': 'some js',
+                        'text/plain': 'some text',
+                        'text/html': '<a>Hello</a>'
+                    },
+                    metadata: {},
+                    output_type: 'display_data'
+                },
+                expectedMimeTypesOrder: [
+                    'text/html',
+                    'application/javascript',
+                    'text/plain',
+                    'application/vnd.vegalite.v4+json'
+                ]
+            },
+            {
+                output: {
+                    data: {
+                        'text/plain': 'some text',
+                        'text/html': '<a>Hello</a>'
+                    },
+                    metadata: {},
+                    output_type: 'display_data'
+                },
+                expectedMimeTypesOrder: ['text/html', 'text/plain']
+            },
+            {
+                output: {
+                    data: {
+                        'application/javascript': 'some js',
+                        'text/plain': 'some text'
+                    },
+                    metadata: {},
+                    output_type: 'display_data'
+                },
+                expectedMimeTypesOrder: ['application/javascript', 'text/plain']
+            },
+            {
+                output: {
+                    data: {
+                        'image/svg+xml': 'some svg',
+                        'text/plain': 'some text'
+                    },
+                    metadata: {},
+                    output_type: 'display_data'
+                },
+                expectedMimeTypesOrder: ['image/svg+xml', 'text/plain']
+            },
+            {
+                output: {
+                    data: {
+                        'text/latex': 'some latex',
+                        'text/plain': 'some text'
+                    },
+                    metadata: {},
+                    output_type: 'display_data'
+                },
+                expectedMimeTypesOrder: ['text/latex', 'text/plain']
+            },
+            {
+                output: {
+                    data: {
+                        'application/vnd.jupyter.widget-view+json': 'some widget',
+                        'text/plain': 'some text'
+                    },
+                    metadata: {},
+                    output_type: 'display_data'
+                },
+                expectedMimeTypesOrder: ['application/vnd.jupyter.widget-view+json', 'text/plain']
+            },
+            {
+                output: {
+                    data: {
+                        'text/plain': 'some text',
+                        'image/svg+xml': 'some svg',
+                        'image/png': 'some png'
+                    },
+                    metadata: {},
+                    output_type: 'display_data'
+                },
+                expectedMimeTypesOrder: ['image/svg+xml', 'image/png', 'text/plain']
+            }
+        ];
+
+        dataAndExpectedOrder.forEach(({ output, expectedMimeTypesOrder }) => {
+            const sortedOutputs = cellOutputToVSCCellOutput(output);
+            const mimeTypes = sortedOutputs.items.map((item) => item.mime).join(',');
+            assert.equal(mimeTypes, expectedMimeTypesOrder.join(','));
         });
     });
 });
