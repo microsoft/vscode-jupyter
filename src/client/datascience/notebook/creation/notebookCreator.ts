@@ -3,10 +3,8 @@
 
 import { inject, injectable } from 'inversify';
 import { QuickPickItem } from 'vscode';
-import { IS_CI_SERVER } from '../../../../test/ciConstants';
 import { IApplicationShell } from '../../../common/application/types';
 import { JVSC_EXTENSION_DisplayName, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../common/constants';
-import { traceInfoIf } from '../../../common/logger';
 import { DataScience } from '../../../common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry, VSCodeNotebookProvider } from '../../constants';
@@ -23,7 +21,6 @@ export class NotebookCreator {
 
     public async createNewNotebook() {
         if (this.creationOptionsService.registrations.length === 0) {
-            console.error('Create using createNew');
             await this.editorProvider.createNew();
             return;
         }
@@ -48,7 +45,6 @@ export class NotebookCreator {
             label: JVSC_EXTENSION_DisplayName
         });
         const placeHolder = DataScience.placeHolderToSelectOptionForNotebookCreation();
-        traceInfoIf(IS_CI_SERVER, `Display quick pick for creation of notebooks ${items.length}`);
         const item = await this.appShell.showQuickPick(items, {
             matchOnDescription: true,
             matchOnDetail: true,
