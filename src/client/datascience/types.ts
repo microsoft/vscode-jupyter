@@ -526,6 +526,7 @@ export interface IInteractiveBase extends Disposable {
     stopProgress(): void;
     undoCells(): void;
     redoCells(): void;
+    toggleOutput?(): void;
     removeAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
