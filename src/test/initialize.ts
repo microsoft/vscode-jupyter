@@ -72,7 +72,7 @@ export async function closeActiveNotebooks(): Promise<void> {
     }
     // We could have untitled notebooks, close them by reverting changes.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    while ((vscode as any).notebook.activeNotebookEditor || vscode.window.activeTextEditor) {
+    while ((vscode as any).window.activeNotebookEditor || vscode.window.activeTextEditor) {
         await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
     }
     // Work around VS Code issues (sometimes notebooks do not get closed).
