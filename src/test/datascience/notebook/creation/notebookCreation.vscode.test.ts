@@ -52,23 +52,8 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         }
     });
     async function createNotebookAndValidateLanguageOfFirstCell(expectedLanguage: string) {
-        console.error('Start 1. createNotebookAndValidateLanguageOfFirstCell');
         await commands.executeCommand(Commands.CreateNewNotebook);
-        try {
-            await waitForCondition(
-                async () => !!vscodeNotebook.activeNotebookEditor,
-                10_000,
-                'New Notebook not created'
-            );
-        } catch (ex) {
-            console.error('notebooks.notebookDocuments.length');
-            console.error(workspace.notebookDocuments.length);
-            console.error('notebooks.visibleNotebookEditors.length');
-            console.error(window.visibleNotebookEditors.length);
-            console.error('window.activeNotebookEditor');
-            console.error(window.activeNotebookEditor);
-            throw ex;
-        }
+        await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
         assert.strictEqual(
             vscodeNotebook.activeNotebookEditor!.document.cellAt(0).document.languageId.toLowerCase(),
             expectedLanguage

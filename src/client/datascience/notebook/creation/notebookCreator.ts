@@ -21,11 +21,9 @@ export class NotebookCreator {
 
     public async createNewNotebook() {
         if (this.creationOptionsService.registrations.length === 0) {
-            console.error('Stop 2. this.editorProvider.createNew();');
             await this.editorProvider.createNew();
             return;
         }
-        console.error('Stop 3. this.editorProvider.createNew();');
 
         const items: (QuickPickItem & {
             extensionId: string;
@@ -47,7 +45,6 @@ export class NotebookCreator {
             label: JVSC_EXTENSION_DisplayName
         });
         const placeHolder = DataScience.placeHolderToSelectOptionForNotebookCreation();
-        console.error('Stop 3. this.appShell.showQuickPick(items, {');
         const item = await this.appShell.showQuickPick(items, {
             matchOnDescription: true,
             matchOnDetail: true,
