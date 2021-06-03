@@ -18,9 +18,7 @@ import {
     window,
     workspace
 } from 'vscode';
-import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { UseVSCodeNotebookEditorApi } from '../constants';
-import { traceErrorIf } from '../logger';
 import { IDisposableRegistry } from '../types';
 import { IApplicationEnvironment, IVSCodeNotebook, NotebookCellChangedEvent } from './types';
 
@@ -41,18 +39,12 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     }
     public get activeNotebookEditor(): NotebookEditor | undefined {
         if (!this.useNativeNb) {
-            console.error('Not using native');
             return;
         }
         try {
-            console.error(`window.visibleNotebookEditors.length = ${window.visibleNotebookEditors.length}`);
-            console.error(`workspace.notebookDocuments.length = ${workspace.notebookDocuments.length}`);
-            console.error(`window.activeNotebookEditor = ${window.activeNotebookEditor}`);
-            console.error(`window.activeTextEditor = ${window.activeTextEditor?.document?.uri?.toString()}`);
             return window.activeNotebookEditor;
-        } catch (ex) {
-            traceErrorIf(IS_CI_SERVER, 'Failed to get activeNotebookEditor', ex);
-            return undefined;
+        } catch {
+            return;
         }
     }
     private readonly _onDidChangeNotebookDocument = new EventEmitter<NotebookCellChangedEvent>();
