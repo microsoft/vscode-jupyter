@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.6.1 (8 June 2021)
+## 2021.6.99 (8 June 2021)
 
 ### Enhancements
 
@@ -70,6 +70,8 @@
    ([#6014](https://github.com/Microsoft/vscode-jupyter/issues/6014))
 1. API Changes viewType => notebookType and notebook namespace to notebooks.
    ([#6046](https://github.com/microsoft/vscode-jupyter/issues/6046))
+1. Update test init code to use window and not notebook for editor properties.
+   ([#6098](https://github.com/Microsoft/vscode-jupyter/issues/6098))
 
 ### Thanks
 
