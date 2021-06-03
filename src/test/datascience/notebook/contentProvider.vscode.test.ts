@@ -111,8 +111,8 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         const model = (await editorProvider.open(testIPynb))!.model! as VSCodeNotebookModel;
 
-        assert.equal(vscodeNotebook.notebookEditors.length, 1, 'One document open');
-        await window.showNotebookDocument(vscodeNotebook.notebookEditors[0].document.uri);
+        // assert.equal(vscodeNotebook.notebookEditors.length, 1, 'One document open');
+        // await window.showNotebookDocument(vscodeNotebook.notebookEditors[0].document.uri);
         const notebook = vscodeNotebook.activeNotebookEditor?.document!;
 
         console.log(`IANHU model: ${model}`);
