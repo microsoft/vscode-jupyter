@@ -18,7 +18,9 @@ import {
     window,
     workspace
 } from 'vscode';
+import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { UseVSCodeNotebookEditorApi } from '../constants';
+import { traceErrorIf } from '../logger';
 import { IDisposableRegistry } from '../types';
 import { IApplicationEnvironment, IVSCodeNotebook, NotebookCellChangedEvent } from './types';
 
@@ -48,7 +50,8 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             console.error(`window.activeNotebookEditor = ${window.activeNotebookEditor}`);
             console.error(`window.activeTextEditor = ${window.activeTextEditor?.document?.uri?.toString()}`);
             return window.activeNotebookEditor;
-        } catch {
+        } catch (ex) {
+            traceErrorIf(IS_CI_SERVER, 'Failed to get activeNotebookEditor', ex);
             return undefined;
         }
     }
