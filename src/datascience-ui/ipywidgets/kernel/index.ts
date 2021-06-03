@@ -108,10 +108,10 @@ export function renderOutput(outputItem: OutputItem, element: HTMLElement) {
         throw ex;
     }
 }
-export function disposeOutput(e: { outputId: string } | undefined) {
-    if (e) {
+export function disposeOutput(outputId?: string) {
+    if (outputId) {
         stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter(
-            (item) => !(e.outputId in item)
+            (item) => !(outputId in item)
         );
     }
 }
