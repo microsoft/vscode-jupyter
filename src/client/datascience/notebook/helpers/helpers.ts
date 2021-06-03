@@ -679,7 +679,7 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
             // VS Code expects bytes when rendering images.
             return Buffer.from(value).toString('base64');
         } else if (mime.toLowerCase().includes('json')) {
-            return JSON.parse(stringValue);
+            return stringValue.length > 0 ? JSON.parse(stringValue) : stringValue;
         } else {
             return stringValue;
         }
