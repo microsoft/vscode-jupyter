@@ -132,9 +132,11 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
+        traceInfo(`Setting controller affinity for ${notebook.uri.toString()} ${this.id}`);
         this.controller.updateNotebookAffinity(notebook, affinity);
         // Only on CI Server.
         if (this.context.extensionMode === ExtensionMode.Test) {
+            traceInfo(`Force selection of controller for ${notebook.uri.toString()} ${this.id}`);
             await this.commandManager.executeCommand('notebook.selectKernel', {
                 id: this.id,
                 extension: JVSC_EXTENSION_ID
