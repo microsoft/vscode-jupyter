@@ -25,6 +25,7 @@ export class NotebookCreator {
             await this.editorProvider.createNew();
             return;
         }
+        console.error('Stop 3. this.editorProvider.createNew();');
 
         const items: (QuickPickItem & {
             extensionId: string;
