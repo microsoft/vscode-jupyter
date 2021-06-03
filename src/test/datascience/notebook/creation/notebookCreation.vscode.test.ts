@@ -16,7 +16,12 @@ import { CreationOptionService } from '../../../../client/datascience/notebook/c
 import { IExtensionTestApi, waitForCondition } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
-import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests, ensureNewNotebooksHavePythonCells } from '../helper';
+import {
+    canRunNotebookTests,
+    closeNotebooksAndCleanUpAfterTests,
+    ensureNewNotebooksHavePythonCells,
+    workAroundVSCodeNotebookStartPages
+} from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
@@ -33,6 +38,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         creationOptions = api.serviceContainer.get<CreationOptionService>(CreationOptionService);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         creationOptions.clear();
+        await workAroundVSCodeNotebookStartPages();
         await ensureNewNotebooksHavePythonCells();
     });
     teardown(async function () {
