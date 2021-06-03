@@ -39,9 +39,14 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     }
     public get activeNotebookEditor(): NotebookEditor | undefined {
         if (!this.useNativeNb) {
+            console.error('Not using native');
             return;
         }
         try {
+            console.error(`window.visibleNotebookEditors.length = ${window.visibleNotebookEditors.length}`);
+            console.error(`workspace.notebookDocuments.length = ${workspace.notebookDocuments.length}`);
+            console.error(`window.activeNotebookEditor = ${window.activeNotebookEditor}`);
+            console.error(`window.activeTextEditor = ${window.activeTextEditor?.document?.uri?.toString()}`);
             return window.activeNotebookEditor;
         } catch {
             return undefined;
