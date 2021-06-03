@@ -5,21 +5,25 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
+import * as fs from 'fs';
+import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
+import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
 import { Commands } from '../../../../client/datascience/constants';
 import { CreationOptionService } from '../../../../client/datascience/notebook/creation/creationOptionsService';
 import { IExtensionTestApi, waitForCondition } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
+import { noop } from '../../../core';
 import { closeActiveWindows, initialize } from '../../../initialize';
 import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests, ensureNewNotebooksHavePythonCells } from '../helper';
+const screenshot = require('screenshot-desktop');
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
+suite.only('DataScience - VSCode Notebook - (Creation Integration)', function () {
     this.timeout(15_000);
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
@@ -35,8 +39,14 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         creationOptions.clear();
         await ensureNewNotebooksHavePythonCells();
     });
+    let fileCounter = 0;
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        const file = path.join(EXTENSION_ROOT_DIR, 'images', `image${fileCounter++}.jpg`);
+
+        await screenshot()
+            .then((img: any) => fs.writeFileSync(file, img))
+            .catch(noop);
         sinon.restore();
         creationOptions.clear();
         await closeNotebooksAndCleanUpAfterTests(disposables);

@@ -392,6 +392,9 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
+      - name: apt-get install imagemagick
+        run: apt-get install imagemagick
+
       # Start caching
 
       # Cache Python Dependencies.
@@ -828,13 +831,13 @@ jobs:
         id: test_vscode
         if: matrix.test-suite == 'integration' && matrix.python != 'noPython'
 
-      - name: Publish VSCode Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: VSCode Test Report
-        if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
+    #   - name: Publish VSCode Test Report
+    #     uses: scacap/action-surefire-report@v1
+    #     with:
+    #       github_token: ${{ secrets.GITHUB_TOKEN }}
+    #       report_paths: ${{ env.TEST_RESULTS_GLOB }}
+    #       check_name: VSCode Test Report
+    #     if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter
         uses: GabrielBB/xvfb-action@v1.4
@@ -853,13 +856,13 @@ jobs:
         id: test_notebook_vscode
         if: matrix.test-suite == 'notebook' && matrix.python != 'noPython'
 
-      - name: Publish Notebook Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
-        if: steps.test_notebook_vscode.outcome == 'failure' && failure()
+    #   - name: Publish Notebook Test Report
+    #     uses: scacap/action-surefire-report@v1
+    #     with:
+    #       github_token: ${{ secrets.GITHUB_TOKEN }}
+    #       report_paths: ${{ env.TEST_RESULTS_GLOB }}
+    #       check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
+    #     if: steps.test_notebook_vscode.outcome == 'failure' && failure()
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
@@ -873,13 +876,13 @@ jobs:
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
 
-      - name: Publish Notebook Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
-        if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
+    #   - name: Publish Notebook Test Report
+    #     uses: scacap/action-surefire-report@v1
+    #     with:
+    #       github_token: ${{ secrets.GITHUB_TOKEN }}
+    #       report_paths: ${{ env.TEST_RESULTS_GLOB }}
+    #       check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
+    #     if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
 
         # Run native notebook tests that also require webviews
         # note, Webview test middleware on, and webview build not skipped
@@ -899,13 +902,23 @@ jobs:
         id: test_notebook_webview_vscode
         if: matrix.test-suite == 'notebookAndWebview' && matrix.python != 'noPython'
 
-      - name: Publish Notebook Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
-        if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
+    #   - name: Publish Notebook Test Report
+    #     uses: scacap/action-surefire-report@v1
+    #     with:
+    #       github_token: ${{ secrets.GITHUB_TOKEN }}
+    #       report_paths: ${{ env.TEST_RESULTS_GLOB }}
+    #       check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
+    #     if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
+
+
+    #   # Upload unit test coverage reports for later use in the "reports" job.
+    #   - name: Upload unit test coverage reports
+    #     uses: actions/upload-artifact@v2
+    #     if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
+    #     with:
+    #       name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+    #       path: .nyc_output
+    #       retention-days: 1
 
 
       # Upload unit test coverage reports for later use in the "reports" job.
@@ -914,7 +927,7 @@ jobs:
         if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
-          path: .nyc_output
+          path: images
           retention-days: 1
 
   smoke-tests:
