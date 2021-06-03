@@ -24,7 +24,7 @@ import {
 } from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite.only('DataScience - VSCode Notebook - (Creation Integration)', function () {
+suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
     this.timeout(15_000);
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
