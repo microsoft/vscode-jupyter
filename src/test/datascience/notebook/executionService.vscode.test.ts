@@ -38,7 +38,8 @@ import {
     assertVSCCellIsNotRunning,
     createEmptyPythonNotebook,
     assertNotHasTextOutputInVSCode,
-    waitForQueuedForExecutionOrExecuting
+    waitForQueuedForExecutionOrExecuting,
+    workAroundVSCodeNotebookStartPages
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
@@ -75,6 +76,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
+        await workAroundVSCodeNotebookStartPages();
         await hijackPrompt(
             'showErrorMessage',
             { endsWith: expectedPromptMessageSuffix },
