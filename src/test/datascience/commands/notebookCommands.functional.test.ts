@@ -7,7 +7,7 @@ import { EventEmitter, Uri } from 'vscode';
 import { PythonExtensionChecker } from '../../../client/api/pythonApi';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
-import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
+import { ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { NotebookCommands } from '../../../client/datascience/commands/notebookCommands';
 import { Commands } from '../../../client/datascience/constants';
@@ -148,8 +148,6 @@ suite('DataScience - Notebook Commands', () => {
                     instance(notebookEditorProvider),
                     instance(interactiveWindowProvider),
                     instance(notebookProvider),
-                    false,
-                    instance(mock<IVSCodeNotebook>()),
                     kernelSelector,
                     kernelSwitcher
                 );

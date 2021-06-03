@@ -416,6 +416,26 @@ export async function stopJupyterServer() {
     await JupyterServer.instance.dispose().catch(noop);
 }
 
+let workedAroundVSCodeNotebookStartPage = false;
+/**
+ * VS Code displays a start page when opening notebooks for the first time.
+ * This takes focus from the notebook, hence our tests can fail as a result of this.
+ * Solution, try to trigger the display of the start page displayed before starting the tests.
+ */
+export async function workAroundVSCodeNotebookStartPages() {
+    if (workedAroundVSCodeNotebookStartPage) {
+        return;
+    }
+    workedAroundVSCodeNotebookStartPage = true;
+    const { editorProvider } = await getServices();
+    await closeActiveWindows();
+
+    // Open a notebook, VS Code will open the start page (wait for 5s for VSCode to react & open it)
+    await editorProvider.createNew();
+    await sleep(5_000);
+    await closeActiveWindows();
+}
+
 export async function prewarmNotebooks() {
     const { editorProvider, vscodeNotebook, serviceContainer } = await getServices();
     await closeActiveWindows();

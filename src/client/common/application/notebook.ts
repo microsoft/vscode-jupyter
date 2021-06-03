@@ -44,7 +44,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         try {
             return window.activeNotebookEditor;
         } catch {
-            return undefined;
+            return;
         }
     }
     private readonly _onDidChangeNotebookDocument = new EventEmitter<NotebookCellChangedEvent>();
