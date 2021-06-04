@@ -109,7 +109,7 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
-        this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposables);
+        this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
     }
 
     public asWebviewUri(localResource: Uri): Uri {
@@ -166,7 +166,7 @@ export class VSCodeNotebookController implements Disposable {
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
         await Promise.all(cells.map((cell) => this.executeCell(targetNotebook, cell)));
     }
-    private async onDidChangeNotebookAssociation(event: { notebook: NotebookDocument; selected: boolean }) {
+    private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
         // If this NotebookController was selected, fire off the event
         if (event.selected) {
             await this.updateCellLanguages(event.notebook);
