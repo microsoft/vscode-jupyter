@@ -11,7 +11,7 @@ import {
     Disposable,
     EventEmitter,
     Memento,
-    notebook as vscNotebook,
+    notebooks as vscNotebook,
     NotebookCell,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
@@ -634,13 +634,17 @@ ${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${tar
                 }
                 this.existingDisposable = vscNotebook.onDidChangeNotebookCellExecutionState(
                     async (e: NotebookCellExecutionStateChangeEvent) => {
-                        if (e.executionState === NotebookCellExecutionState.Idle && refreshRequired) {
+                        if (e.state === NotebookCellExecutionState.Idle && refreshRequired) {
                             await this.updateWithNewVariable(newVariableName);
                         }
                     }
                 );
 
-                await this.commandManager.executeCommand('notebook.cell.execute', { start: lastCell.index, end: lastCell.notebook.cellCount }, lastCell.notebook.uri);
+                await this.commandManager.executeCommand(
+                    'notebook.cell.execute',
+                    { start: lastCell.index, end: lastCell.notebook.cellCount },
+                    lastCell.notebook.uri
+                );
             }
         }
     }
