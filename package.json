@@ -863,13 +863,13 @@
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
                     "group": "inline/cell@0",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.consolidatedRunButton"
                 },
                 {
                     "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
-                    "group": "inline/cell@0",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "group": "inline/cell@1",
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.consolidatedRunButton"
                 }
             ],
             "notebook/toolbar": [
@@ -925,12 +925,12 @@
                 {
                     "command": "jupyter.notebookeditor.runallcellsabove",
                     "title": "%DataScience.runAbove%",
-                    "when": "notebookEditorFocused && notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookEditorFocused && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.consolidatedRunButton"
                 },
                 {
                     "command": "jupyter.notebookeditor.runcellandallbelow",
                     "title": "%DataScience.runBelow%",
-                    "when": "notebookEditorFocused && notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookEditorFocused && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.consolidatedRunButton"
                 },
                 {
                     "command": "jupyter.exportAsPythonScript",
