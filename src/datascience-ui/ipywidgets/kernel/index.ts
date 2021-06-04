@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 /* eslint-disable no-console */
 import type { nbformat } from '@jupyterlab/coreutils';
-import { CellInfo } from 'vscode-notebook-renderer';
 import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
@@ -12,6 +11,7 @@ import { logMessage } from '../../react-common/logger';
 import { PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
+import { OutputItem } from 'vscode-notebook-renderer';
 
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
@@ -90,10 +90,10 @@ const renderedWidgets = new Set<string>();
  * This will be exposed as a public method on window for renderer to render output.
  */
 let stackOfWidgetsRenderStatusByOutputId: { outputId: string; container: HTMLElement; success?: boolean }[] = [];
-export function renderOutput(outputId: string, cellInfo: CellInfo) {
+export function renderOutput(outputItem: OutputItem, element: HTMLElement) {
     try {
-        stackOfWidgetsRenderStatusByOutputId.push({ outputId: outputId, container: cellInfo.element });
-        const output = convertVSCodeOutputToExecutResultOrDisplayData(cellInfo);
+        stackOfWidgetsRenderStatusByOutputId.push({ outputId: outputItem.id, container: element });
+        const output = convertVSCodeOutputToExecuteResultOrDisplayData(outputItem);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const model = output.data['application/vnd.jupyter.widget-view+json'] as any;
@@ -102,16 +102,16 @@ export function renderOutput(outputId: string, cellInfo: CellInfo) {
             return console.error('Nothing to render');
         }
         /* eslint-disable no-console */
-        renderIPyWidget(outputId, model, cellInfo.element);
+        renderIPyWidget(outputItem.id, model, element);
     } catch (ex) {
         console.error(`Failed to render ipywidget type`, ex);
         throw ex;
     }
 }
-export function disposeOutput(e: { outputId: string } | undefined) {
-    if (e) {
+export function disposeOutput(outputId?: string) {
+    if (outputId) {
         stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter(
-            (item) => !(e.outputId in item)
+            (item) => !(outputId in item)
         );
     }
 }
@@ -196,18 +196,18 @@ function initialize() {
     }
 }
 
-function convertVSCodeOutputToExecutResultOrDisplayData(
-    cellInfo: CellInfo
+function convertVSCodeOutputToExecuteResultOrDisplayData(
+    outputItem: OutputItem
 ): nbformat.IExecuteResult | nbformat.IDisplayData {
     return {
         data: {
-            [cellInfo.mime]: cellInfo.mime.toLowerCase().includes('json') ? cellInfo.json() : cellInfo.text()
+            [outputItem.mime]: outputItem.mime.toLowerCase().includes('json') ? outputItem.json() : outputItem.text()
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: (cellInfo.metadata as any) || {},
+        metadata: (outputItem.metadata as any) || {},
         execution_count: null,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        output_type: (cellInfo.metadata as any)?.outputType || 'execute_result'
+        output_type: (outputItem.metadata as any)?.outputType || 'execute_result'
     };
 }
 
