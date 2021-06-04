@@ -81,8 +81,7 @@ async function createSettings(): Promise<string> {
         'security.workspace.trust.enabled': false, // Disable trusted workspaces.
         // Disable the start page in VS Code tests, else this UI pops up and has potential to break tests.
         // For instance if the start page UI opens up, then active editor, active notebook and the like are empty.
-        'python.showStartPage': false,
-        'security.workspace.trust.enabled': false // Trust everything
+        'python.showStartPage': false
     };
 
     if (channel !== 'insiders') {
