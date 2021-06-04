@@ -78,7 +78,50 @@ function createJupyterKernelWithoutSerialization() {
     console.log(colors.green(destPath + ' file generated (by Jupyter VSC)'));
 }
 
+/**
+ * The Variable Explorer currently uses react-data-grid@6.1.0 and is the only component that does.
+ * We retrieve variable names sorted so there will never be a time where variables are unsorted.
+ * react-data-grid is on v7+ now and a PR to implement this would cause a lot of cascading changes for us,
+ * so we modify the compiled javascript so that the react-data-grid is always sorted by something.
+ */
+function makeVariableExplorerAlwaysSorted() {
+    const fileNames = ['react-data-grid.js', 'react-data-grid.min.js'];
+    const alwaysSortedCode = 'case g.NONE:e=r?g.DESC:g.ASC;break;case g.ASC:e=g.DESC;break;case g.DESC:e=g.ASC';
+    const originalCode = 'case g.NONE:e=r?g.DESC:g.ASC;break;case g.ASC:e=r?g.NONE:g.DESC;break;case g.DESC:e=r?g.ASC:g.NONE';
+    for (const fileName of fileNames) {
+        var relativePath = path.join(
+            'node_modules',
+            'react-data-grid',
+            'dist',
+            fileName
+        );
+        var filePath = path.join(constants.ExtensionRootDir, relativePath);
+        if (!fs.existsSync(filePath)) {
+            throw new Error("react-data-grid dist file not found '" + filePath + "' (pvsc post install script)");
+        }
+        var fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
+        if (fileContents.indexOf(alwaysSortedCode) > 0) {
+            // tslint:disable-next-line:no-console
+            console.log(colors.blue(relativePath + ' file already updated (by Jupyter VSC)'));
+            return;
+        }
+        if (fileContents.indexOf(originalCode) > 0) {
+            var replacedText = fileContents.replace(originalCode, alwaysSortedCode);
+            if (fileContents === replacedText) {
+                throw new Error(`Fix for react-data-grid file ${fileName} failed (pvsc post install script)`);
+            }
+            fs.writeFileSync(filePath, replacedText);
+            // tslint:disable-next-line:no-console
+            console.log(colors.green(relativePath + ' file updated (by Jupyter VSC)'));
+        } else {
+            // tslint:disable-next-line:no-console
+            console.log(colors.red(relativePath + ' file does not need updating.'));
+        }
+    }
+}
+
 (async () => {
+    makeVariableExplorerAlwaysSorted()
     fixJupyterLabDTSFiles();
     createJupyterKernelWithoutSerialization();
     await downloadRendererExtension();
