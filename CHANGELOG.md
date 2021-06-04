@@ -72,6 +72,12 @@
    ([#6046](https://github.com/microsoft/vscode-jupyter/issues/6046))
 1. Update test init code to use window and not notebook for editor properties.
    ([#6098](https://github.com/Microsoft/vscode-jupyter/issues/6098))
+1. Support the new renderer API in jupyter extension.
+   ([#6118](https://github.com/Microsoft/vscode-jupyter/issues/6118))
+1. Update to new notebookcontroller selection function name.
+   ([#6121](https://github.com/Microsoft/vscode-jupyter/issues/6121))
+1. Inline execution handler change to notebook API.
+   ([#6137](https://github.com/Microsoft/vscode-jupyter/issues/6137))
 
 ### Thanks
 
