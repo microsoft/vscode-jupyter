@@ -303,6 +303,7 @@ export class NotebookEditor implements INotebookEditor {
         const stopWatch = new StopWatch();
         try {
             await kernel.restart();
+            this.resetExecutionState();
             sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
             this.resetExecutionState();
         } catch (exc) {
@@ -357,14 +358,11 @@ export class NotebookEditor implements INotebookEditor {
                 .ignoreErrors();
         }
     }
-    
     private resetExecutionState() {
         // After kernel restart, clear timer and check mark for VS Code notebooks only.
         // This is intended to provide a clearer visual indication that the kernel has
         // been restarted
-        console.log('Resetting execution state');
         if (!this.vscodeNotebook.activeNotebookEditor) {
-            console.log('No active notebook, returning early');
             return;
         }
         const notebook = this.vscodeNotebook.activeNotebookEditor.document;
@@ -378,7 +376,6 @@ export class NotebookEditor implements INotebookEditor {
                         cell.document.languageId
                     );
                 });
-                console.log('Replacing cells', newCells);
                 edit.replaceNotebookCells(editor.document.uri, new NotebookRange(0, notebook.cellCount), newCells);
             }).then(noop, noop);
         }

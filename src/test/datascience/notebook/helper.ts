@@ -646,15 +646,15 @@ export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
 export function assertVSCCellExecutionSummaryClearedAfterRestart(cell: NotebookCell) {
     // After restart, verify that cell status and timer are cleared, but not execution order
     assert.ok(
-        cell.latestExecutionSummary?.executionOrder !== undefined,
+        cell.executionSummary?.executionOrder !== undefined,
         'Cell execution order cleared on kernel restart'
     );
     assert.ok(
-        cell.latestExecutionSummary?.duration === undefined,
+        cell.executionSummary?.timing === undefined,
         'Cell execution duration not cleared on kernel restart'
     );
     assert.ok(
-        cell.latestExecutionSummary?.success === undefined,
+        cell.executionSummary?.success === undefined,
         'Cell execution success not cleared on kernel restart'
     );
 }
