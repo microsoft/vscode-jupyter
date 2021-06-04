@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
+import { CancellationToken, NotebookCell, Position, TextDocument, Uri } from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
@@ -93,6 +93,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunCell]: [Uri, number, number, number, number];
     [DSCommands.RunAllCellsAbove]: [Uri, number, number];
     [DSCommands.RunCellAndAllBelow]: [Uri, number, number];
+    [DSCommands.NativeNotebookRunAllCellsAbove]: [NotebookCell];
+    [DSCommands.NativeNotebookRunCellAndAllBelow]: [NotebookCell];
     [DSCommands.RunAllCellsAbovePalette]: [];
     [DSCommands.RunCellAndAllBelowPalette]: [];
     [DSCommands.DebugCurrentCellPalette]: [];

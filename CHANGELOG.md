@@ -22,8 +22,6 @@
    ([#5954](https://github.com/Microsoft/vscode-jupyter/issues/5954))
 1. Tweak variable view fit and finish to match VS Code.
    ([#5955](https://github.com/Microsoft/vscode-jupyter/issues/5955))
-1. Replace 'Run cells above' and 'Run cell and below' commands and cell toolbar buttons with VS Code's built-in 'Execute Above Cells' and 'Execute Cell And Below' commands and unified run button.
-   ([#6025](https://github.com/microsoft/vscode-jupyter/issues/6025))
 
 ### Fixes
 
