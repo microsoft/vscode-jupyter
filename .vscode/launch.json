@@ -169,7 +169,8 @@
                 "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "", // Initialize this to run tests again Julia & other kernels.
                 "VSC_JUPYTER_RUN_NB_TEST": "", // Initialize this to run notebook tests (must be using VSC Insiders).
                 "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "true",
-                "TEST_FILES_SUFFIX": "vscode.test"
+                "TEST_FILES_SUFFIX": "vscode.test",
+                "VSC_JUPYTER_EXPOSE_SVC": "1"
             },
             "stopOnEntry": false,
             "sourceMaps": true,

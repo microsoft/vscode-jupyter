@@ -37,7 +37,7 @@ import * as uuid from 'uuid/v4';
 import { initializeIcons } from '@fluentui/react';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
-const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
+const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);
 const RowNumberColumnName = uuid(); // Unique key for our column containing row numbers
 
 // Our css has to come after in order to override body styles
@@ -71,6 +71,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
     private resetGridEvent: Slick.Event<ISlickGridSlice> = new Slick.Event<ISlickGridSlice>();
+    private resizeGridEvent: Slick.Event<void> = new Slick.Event<void>();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
     private gridColumnUpdateEvent: Slick.Event<Slick.Column<Slick.SlickData>[]> = new Slick.Event<
         Slick.Column<Slick.SlickData>[]
@@ -180,6 +181,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     originalVariableShape={this.state.originalVariableShape}
                     handleSliceRequest={this.handleSliceRequest}
                     onCheckboxToggled={this.handleCheckboxToggle}
+                    onPanelToggled={() => this.resizeGridEvent.notify()}
                 />
             );
         }
@@ -262,6 +264,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 idProperty={RowNumberColumnName}
                 rowsAdded={this.gridAddEvent}
                 resetGridEvent={this.resetGridEvent}
+                resizeGridEvent={this.resizeGridEvent}
                 columnsUpdated={this.gridColumnUpdateEvent}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}

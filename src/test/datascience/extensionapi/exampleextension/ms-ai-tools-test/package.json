@@ -34,6 +34,12 @@
 				"title": "Create new blank Julia notebook",
 				"category": "Notebook"
 			}
+		],
+        "jupyter.kernels": [
+			{
+				"title": "Julia",
+				"defaultLanguage": "julia"
+			}
 		]
 	},
 	"scripts": {

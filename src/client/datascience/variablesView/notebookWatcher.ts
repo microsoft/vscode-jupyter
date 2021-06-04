@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import {
     Event,
     EventEmitter,
-    notebook,
+    notebooks,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
     Uri
@@ -69,16 +69,20 @@ export class NotebookWatcher implements INotebookWatcher {
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
         this.notebookEditorProvider.onDidCloseNotebookEditor(this.notebookEditorClosed, this, this.disposables);
-        notebook.onDidChangeCellExecutionState(this.onDidChangeCellExecutionState, this, this.disposables);
+        notebooks.onDidChangeNotebookCellExecutionState(
+            this.onDidChangeNotebookCellExecutionState,
+            this,
+            this.disposables
+        );
     }
 
     // Handle when a cell finishes execution
-    private onDidChangeCellExecutionState(cellStateChange: NotebookCellExecutionStateChangeEvent): void {
+    private onDidChangeNotebookCellExecutionState(cellStateChange: NotebookCellExecutionStateChangeEvent): void {
         // If a cell has moved to idle, update our state
-        if (cellStateChange.executionState === NotebookCellExecutionState.Idle) {
+        if (cellStateChange.state === NotebookCellExecutionState.Idle) {
             // Convert to the old KernelStateEventArgs format
             this.handleExecute({
-                resource: cellStateChange.document.uri,
+                resource: cellStateChange.cell.notebook.uri,
                 state: KernelState.executed,
                 cell: cellStateChange.cell,
                 silent: false
@@ -102,10 +106,10 @@ export class NotebookWatcher implements INotebookWatcher {
         // We are not interested in silent executions
         if (this.isNonSilentExecution(kernelStateEvent)) {
             // First, update our execution counts, regardless of if this is the active document
-            if (kernelStateEvent.cell?.latestExecutionSummary?.executionOrder !== undefined) {
+            if (kernelStateEvent.cell?.executionSummary?.executionOrder !== undefined) {
                 this.updateExecutionCount(
                     kernelStateEvent.resource,
-                    kernelStateEvent.cell.latestExecutionSummary?.executionOrder
+                    kernelStateEvent.cell.executionSummary?.executionOrder
                 );
             }
 
@@ -113,10 +117,10 @@ export class NotebookWatcher implements INotebookWatcher {
             if (
                 //this.isActiveNotebookExecution(kernelStateEvent) &&
                 this.isActiveNotebookEvent(kernelStateEvent) &&
-                kernelStateEvent.cell?.latestExecutionSummary?.executionOrder !== undefined
+                kernelStateEvent.cell?.executionSummary?.executionOrder !== undefined
             ) {
                 this._onDidExecuteActiveNotebook.fire({
-                    executionCount: kernelStateEvent.cell.latestExecutionSummary?.executionOrder
+                    executionCount: kernelStateEvent.cell.executionSummary?.executionOrder
                 });
             }
         }
@@ -157,7 +161,7 @@ export class NotebookWatcher implements INotebookWatcher {
         if (
             kernelStateEvent.state === KernelState.executed &&
             kernelStateEvent.cell &&
-            kernelStateEvent.cell.latestExecutionSummary?.executionOrder &&
+            kernelStateEvent.cell.executionSummary?.executionOrder &&
             !kernelStateEvent.silent
         ) {
             return true;

@@ -8,6 +8,7 @@ import { JupyterSettings } from '../../../client/common/configSettings';
 import { IConfigurationService, IExperimentService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from '../../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
+import { INotebookControllerManager } from '../../../client/datascience/notebook/types';
 import {
     IInteractiveWindowProvider,
     INotebookCreationTracker,
@@ -27,6 +28,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
     let settings: IWatchableJupyterSettings;
     let vscodeNotebook: IVSCodeNotebook;
     let extensionChecker: PythonExtensionChecker;
+    let notebookController: INotebookControllerManager;
     setup(() => {
         notebookEditorProvider = mock<INotebookEditorProvider>();
         interactiveProvider = mock<IInteractiveWindowProvider>();
@@ -40,6 +42,7 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
         extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         when(extensionChecker.isPythonExtensionActive).thenReturn(true);
+        notebookController = mock<INotebookControllerManager>();
 
         // Set up our config settings
         settings = mock(JupyterSettings);
@@ -55,7 +58,8 @@ suite('DataScience - Kernel Daemon Pool PreWarmer', () => {
             instance(rawNotebookSupported),
             instance(configService),
             instance(vscodeNotebook),
-            instance(extensionChecker)
+            instance(extensionChecker),
+            instance(notebookController)
         );
     });
     test('Should not pre-warm daemon pool if ds was never used', async () => {

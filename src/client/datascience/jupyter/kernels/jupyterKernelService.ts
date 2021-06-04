@@ -12,7 +12,7 @@ import '../../../common/extensions';
 import { traceDecorators, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 
-import { ReadWrite } from '../../../common/types';
+import { ReadWrite, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -49,6 +49,7 @@ export class JupyterKernelService {
      */
     @traceDecorators.verbose('Check if a kernel is usable')
     public async ensureKernelIsUsable(
+        resource: Resource,
         kernel: KernelConnectionMetadata,
         cancelToken?: CancellationToken,
         disableUI?: boolean
@@ -59,7 +60,12 @@ export class JupyterKernelService {
 
         // If we have an interpreter, make sure it has the correct dependencies installed
         if (kernel.kind !== 'connectToLiveKernel' && kernel.interpreter) {
-            await this.kernelDependencyService.installMissingDependencies(kernel.interpreter, token, disableUI);
+            await this.kernelDependencyService.installMissingDependencies(
+                resource,
+                kernel.interpreter,
+                token,
+                disableUI
+            );
         }
 
         // If the spec file doesn't exist or is not defined, we need to register this kernel
@@ -146,8 +152,15 @@ export class JupyterKernelService {
             };
         }
 
+        traceInfo(`RegisterKernel for ${kernel.id}`);
+
         // Write out the contents into the new spec file
-        await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
+        try {
+            await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
+        } catch (ex) {
+            sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex, true);
+            throw ex;
+        }
         if (cancelToken?.isCancellationRequested) {
             return;
         }
@@ -234,7 +247,12 @@ export class JupyterKernelService {
 
             // Update the kernel.json with our new stuff.
             if (shouldUpdate) {
-                await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(specModel, undefined, 2));
+                try {
+                    await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(specModel, undefined, 2));
+                } catch (ex) {
+                    sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex, true);
+                    throw ex;
+                }
             }
 
             // Always update the metadata for the original kernel.

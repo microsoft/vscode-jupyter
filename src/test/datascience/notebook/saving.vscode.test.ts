@@ -25,7 +25,6 @@ import {
     runAllCellsInActiveNotebook,
     insertCodeCell,
     saveActiveNotebook,
-    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors
 } from './helper';
@@ -54,7 +53,6 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     });
     setup(async () => {
         sinon.restore();
-        await trustAllNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testEmptyIPynb = Uri.file(await createTemporaryNotebook(templateIPynbEmpty, disposables));
@@ -99,24 +97,13 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             assertHasTextOutputInVSCode(cell1, '1', 0);
             assertVSCCellHasErrorOutput(cell2);
 
-            expect(cell1.latestExecutionSummary?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
-            expect(cell2.latestExecutionSummary?.executionOrder).to.be.greaterThan(
-                cell1.latestExecutionSummary?.executionOrder!,
+            expect(cell1.executionSummary?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
+            expect(cell2.executionSummary?.executionOrder).to.be.greaterThan(
+                cell1.executionSummary?.executionOrder!,
                 'Execution count > cell 1'
             );
-            assert.isUndefined(
-                cell3.latestExecutionSummary?.executionOrder,
-                'Execution count must be undefined for cell 3'
-            );
-            assert.isUndefined(
-                cell4.latestExecutionSummary?.executionOrder,
-                'Execution count must be undefined for cell 4'
-            );
-
-            assert.isEmpty(cell1.metadata.statusMessage || '', 'Cell 1 status should be empty'); // No errors.
-            assert.isNotEmpty(cell2.metadata.statusMessage, 'Cell 1 status should be empty'); // Errors.
-            assert.isEmpty(cell3.metadata.statusMessage || '', 'Cell 3 status should be empty'); // Not executed.
-            assert.isEmpty(cell4.metadata.statusMessage || '', 'Cell 4 status should be empty'); // Not executed.
+            assert.isUndefined(cell3.executionSummary?.executionOrder, 'Execution count must be undefined for cell 3');
+            assert.isUndefined(cell4.executionSummary?.executionOrder, 'Execution count must be undefined for cell 4');
         }
 
         verifyCelMetadata();

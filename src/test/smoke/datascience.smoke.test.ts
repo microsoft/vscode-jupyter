@@ -9,7 +9,8 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IInteractiveWindowProvider, ISystemPseudoRandomNumberGenerator } from '../../client/datascience/types';
+import { traceInfo } from '../../client/common/logger';
+import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IExtensionTestApi, openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
@@ -26,26 +27,16 @@ suite('Smoke Tests', () => {
         api = await initialize();
         await setAutoSaveDelayInWorkspaceRoot(1);
     });
-    setup(initializeTest);
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
+        await initializeTest();
+        traceInfo(`Start Test Completed ${this.currentTest?.title}`);
+    });
     suiteTeardown(closeActiveWindows);
-    teardown(closeActiveWindows);
-
-    test('Random bytes generation', async function () {
-        return this.skip(); // Failing on windows. Tracked by 4444
-        // We do have a unit test testing this, however create a smoke test to
-        // ensure that the bundling of the native node modules worked
-        const numRequestedBytes = 1024;
-        if (!api) {
-            api = await initialize();
-        }
-        const prng = api.serviceManager.get<ISystemPseudoRandomNumberGenerator>(ISystemPseudoRandomNumberGenerator);
-        const generatedKey = await prng.generateRandomKey(numRequestedBytes);
-        const generatedKeyLength = generatedKey.length;
-        assert.ok(
-            generatedKeyLength === numRequestedBytes * 2, // *2 because the bytes are returned as hex
-            `Expected to generate ${numRequestedBytes} random bytes but instead generated ${generatedKeyLength} random bytes`
-        );
-        assert.ok(generatedKey !== '', `Generated key is null`);
+    teardown(async function () {
+        traceInfo(`End Test ${this.currentTest?.title}`);
+        await closeActiveWindows();
+        traceInfo(`End Test Compelete ${this.currentTest?.title}`);
     });
 
     test('Run Cell in interactive window', async () => {
@@ -64,11 +55,15 @@ suite('Smoke Tests', () => {
         const textDocument = await openFile(file);
 
         // Wait for code lenses to get detected.
+        console.log('Step0');
         await sleep(1_000);
-
+        console.log('Step1');
         await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
+        console.log('Step2');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
+        console.log('Step3');
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
+        console.log('Step4');
     }).timeout(timeoutForCellToRun);
 
     test('Run Cell in native editor', async () => {

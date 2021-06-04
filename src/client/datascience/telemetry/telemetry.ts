@@ -22,6 +22,9 @@ import { InterpreterPackages } from './interpreterPackages';
 import { populateTelemetryWithErrorInfo } from '../../common/errors';
 import { createDeferred } from '../../common/utils/async';
 
+/**
+ * This information is sent with each telemetry event.
+ */
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
     /**
@@ -38,6 +41,10 @@ type ContextualTelemetryProps = {
     kernelSpecCount: number; // Total number of kernel specs in list of kernels.
     kernelInterpreterCount: number; // Total number of interpreters in list of kernels
     kernelLiveCount: number; // Total number of live kernels in list of kernels.
+    /**
+     * When we start local Python kernels, this property indicates whether the interpreter matches the kernel. If not this means we've started the wrong interpreter or the mapping is wrong.
+     */
+    interpreterMatchesKernel: boolean;
 };
 
 type Context = {

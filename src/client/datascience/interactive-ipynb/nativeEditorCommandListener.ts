@@ -5,10 +5,10 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { NotebookCell, NotebookDocument, Uri } from 'vscode';
+import { Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
@@ -34,9 +34,8 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(
-                Commands.NotebookEditorInterruptKernel,
-                (document: NotebookDocument | undefined) => this.interruptKernel(document)
+            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, (notebookUri: Uri | undefined) =>
+                this.interruptKernel(notebookUri)
             )
         );
         this.disposableRegistry.push(
@@ -54,14 +53,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NativeNotebookRunAllCellsAbove, (cell) => this.runAbove(cell))
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NativeNotebookRunCellAndAllBelow, (cell) =>
-                this.runCellAndBelow(cell)
-            )
         );
     }
 
@@ -100,14 +91,26 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         }
     }
 
-    private interruptKernel(document: NotebookDocument | undefined) {
+    private interruptKernel(notebookUri: Uri | undefined) {
         // `document` may be undefined if this command is invoked from the command palette.
-        const target =
-            this.provider.activeEditor?.file.toString() === document?.uri.toString()
-                ? this.provider.activeEditor
-                : this.provider.editors.find((editor) => editor.file.toString() === document?.uri.toString());
-        if (target) {
-            target.interruptKernel().ignoreErrors();
+        if (notebookUri) {
+            traceInfo(`Interrupt requested for ${notebookUri.toString()} in nativeEditorCommandListener`);
+            traceInfo(`this.provider.activeEditor?.file.toString() = ${this.provider.activeEditor?.file.toString()}`);
+            traceInfo(`this.provider.editors = ${this.provider.editors.map((item) => item.file.toString())}`);
+            const target =
+                this.provider.activeEditor?.file.toString() === notebookUri.toString()
+                    ? this.provider.activeEditor
+                    : this.provider.editors.find((editor) => editor.file.toString() === notebookUri.toString());
+            if (target) {
+                target.interruptKernel().ignoreErrors();
+            } else {
+                traceInfo(
+                    `Interrupt requested for ${notebookUri.toString()} in nativeEditorCommandListener & editor not found`
+                );
+            }
+        } else {
+            traceInfo(`Interrupt requested for active editor in nativeEditorCommandListener`);
+            this.provider.activeEditor?.interruptKernel().ignoreErrors();
         }
     }
 
@@ -133,19 +136,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             } catch (e) {
                 await this.dataScienceErrorHandler.handleError(e);
             }
-        }
-    }
-
-    private runAbove(cell: NotebookCell | undefined): void {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.runAbove(cell);
-        }
-    }
-    private runCellAndBelow(cell: NotebookCell | undefined): void {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.runCellAndBelow(cell);
         }
     }
 }

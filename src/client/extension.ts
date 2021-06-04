@@ -74,7 +74,6 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             onKernelStateChange: () => ({ dispose: noop }),
             ready: Promise.resolve(),
             registerCellToolbarButton: () => ({ dispose: noop }),
-            registerNewNotebookContent: () => Promise.resolve(),
             registerPythonApi: noop,
             registerRemoteServerProvider: noop,
             showDataViewer: () => Promise.resolve()
@@ -121,7 +120,7 @@ async function activateUnsafe(
         startupDurations.endActivateTime = startupStopWatch.elapsedTime;
         activationDeferred.resolve();
 
-        const api = buildApi(activationPromise, serviceManager, serviceContainer);
+        const api = buildApi(activationPromise, serviceManager, serviceContainer, context);
         return [api, activationPromise, serviceContainer];
     } finally {
         // Make sure that we clear our status message

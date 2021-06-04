@@ -41,7 +41,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public logging: ILoggingSettings = { level: LogLevel.Error };
     public allowImportFromNotebook: boolean = false;
     public allowUnauthorizedRemoteConnection: boolean = false;
-    public alwaysTrustNotebooks: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;
     public jupyterLaunchRetries: number = 3;
@@ -108,6 +107,10 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         this._workspace = workspace || new WorkspaceService();
         this._workspaceRoot = workspaceFolder;
         this.initialize();
+        // Disable auto start in untrusted workspaces.
+        if (workspace && workspace.isTrusted === false) {
+            this.disableJupyterAutoStart = true;
+        }
     }
     // eslint-disable-next-line
     public static getInstance(resource: Uri | undefined, workspace?: IWorkspaceService): JupyterSettings {

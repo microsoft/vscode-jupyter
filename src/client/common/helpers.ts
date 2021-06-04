@@ -25,7 +25,11 @@ export function disposeAllDisposables(disposables: IDisposable[] = []) {
     while (disposables.length) {
         const disposable = disposables.shift();
         if (disposable) {
-            disposable.dispose();
+            try {
+                disposable.dispose();
+            } catch {
+                // Don't care.
+            }
         }
     }
 }

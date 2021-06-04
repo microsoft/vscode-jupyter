@@ -29,10 +29,7 @@ export class PortAttributesProviders implements PortAttributesProvider, IExtensi
     ): PortAttributes | undefined {
         try {
             if (KernelLauncher.usedPorts.includes(port) || NotebookStarter.usedPorts.includes(port)) {
-                return {
-                    autoForwardAction: PortAutoForwardAction.Ignore,
-                    port
-                };
+                return new PortAttributes(port, PortAutoForwardAction.Ignore);
             }
         } catch (ex) {
             // In case proposed API changes.

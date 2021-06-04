@@ -11,14 +11,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { inject, injectable, named } from 'inversify';
+import { CancellationToken, Disposable, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
 import {
+    GLOBAL_MEMENTO,
     IDisposableRegistry,
     IExtensions,
+    IMemento,
     InstallerResponse,
     IPersistentStateFactory,
     Product,
@@ -26,8 +29,9 @@ import {
 } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
+import { isResource, noop } from '../common/utils/misc';
 import { PythonExtension, Telemetry } from '../datascience/constants';
+import { InterpreterPackages } from '../datascience/telemetry/interpreterPackages';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -60,7 +64,8 @@ export class PythonApiProvider implements IPythonApiProvider {
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
+        @inject(IWorkspaceService) private workspace: IWorkspaceService
     ) {
         const previouslyInstalled = this.extensionChecker.isPythonExtensionInstalled;
         if (!previouslyInstalled) {
@@ -83,7 +88,9 @@ export class PythonApiProvider implements IPythonApiProvider {
     }
 
     public setApi(api: PythonApi): void {
-        if (this.api.resolved) {
+        // Never allow accessing python API (we dont want to ever use the API and run code in untrusted API).
+        // Don't assume Python API will always be disabled in untrusted worksapces.
+        if (this.api.resolved || !this.workspace.isTrusted) {
             return;
         }
         this.api.resolve(api);
@@ -121,13 +128,13 @@ export class PythonApiProvider implements IPythonApiProvider {
 @injectable()
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
-    private pythonExtensionId = PythonExtension;
     private waitingOnInstallPrompt?: Promise<void>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         // If the python extension is not installed listen to see if anything does install it
         if (!this.isPythonExtensionInstalled) {
@@ -136,26 +143,38 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     public get isPythonExtensionInstalled() {
-        return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
+        return this.extensions.getExtension(PythonExtension) !== undefined;
     }
     public get isPythonExtensionActive() {
-        return this.extensions.getExtension(this.pythonExtensionId)?.isActive === true;
+        return this.extensions.getExtension(PythonExtension)?.isActive === true;
     }
 
     public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
+        // If workspace is not trusted, then don't show prompt
+        if (!this.workspace.isTrusted) {
+            return;
+        }
         if (this.waitingOnInstallPrompt) {
             return this.waitingOnInstallPrompt;
         }
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
         const no = localize.Common.bannerLabelNo();
+        sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
         const answer = await this.appShell.showErrorMessage(localize.DataScience.pythonExtensionRequired(), yes, no);
         if (answer === yes) {
+            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
             await this.installPythonExtension();
+        } else {
+            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
         }
     }
 
     public async showPythonExtensionInstallRecommendedPrompt() {
+        // If workspace is not trusted, then don't show prompt
+        if (!this.workspace.isTrusted) {
+            return;
+        }
         const key = 'ShouldShowPythonExtensionInstallRecommendedPrompt';
         const surveyPrompt = this.persistentStateFactory.createGlobalPersistentState(key, true);
         if (surveyPrompt.value) {
@@ -249,17 +268,26 @@ export class PythonInstaller implements IPythonInstaller {
     public get onInstalled(): Event<{ product: Product; resource?: InterpreterUri }> {
         return this._onInstalled.event;
     }
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    constructor(
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(InterpreterPackages) private readonly interpreterPacakges: InterpreterPackages,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
+    ) {}
 
     public async install(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
+        reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse> {
+        if (resource && !isResource(resource)) {
+            this.interpreterPacakges.trackPackages(resource);
+        }
         let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
         try {
             const api = await this.apiProvider.getApi();
-            const result = await api.install(ProductMapping[product], resource, cancel);
+            const result = await api.install(ProductMapping[product], resource, cancel, reInstallAndUpdate);
+            trackPackageInstalledIntoInterpreter(this.memento, product, resource).catch(noop);
             if (result === InstallerResponse.Installed) {
                 this._onInstalled.fire({ product, resource });
             }

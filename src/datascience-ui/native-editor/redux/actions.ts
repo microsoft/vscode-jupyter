@@ -27,6 +27,7 @@ import {
     IOpenSettingsAction,
     ISendCommandAction,
     IShowDataViewerAction,
+    ISortVariablesRequest,
     IVariableExplorerHeight
 } from '../../interactive-common/redux/reducers/types';
 import { IMonacoModelContentChangeEvent } from '../../react-common/monacoHelpers';
@@ -123,22 +124,28 @@ export const actionCreators = {
     editorUnmounted: (): CommonAction => createIncomingAction(CommonActionType.UNMOUNT),
     selectKernel: (): CommonAction => createIncomingAction(InteractiveWindowMessages.SelectKernel),
     selectServer: (): CommonAction => createIncomingAction(CommonActionType.SELECT_SERVER),
-    launchNotebookTrustPrompt: (): CommonAction => createIncomingAction(CommonActionType.LAUNCH_NOTEBOOK_TRUST_PROMPT),
     openSettings: (setting?: string): CommonAction<IOpenSettingsAction> =>
         createIncomingActionWithPayload(CommonActionType.OPEN_SETTINGS, { setting }),
     getVariableData: (
         newExecutionCount: number,
         refreshCount: number,
         startIndex: number = 0,
-        pageSize: number = 100
+        pageSize: number = 100,
+        sortColumn: string = 'name',
+        sortAscending: boolean = true
     ): CommonAction<IJupyterVariablesRequest> =>
         createIncomingActionWithPayload(CommonActionType.GET_VARIABLE_DATA, {
             executionCount: newExecutionCount,
-            sortColumn: 'name',
-            sortAscending: true,
+            sortColumn: sortColumn,
+            sortAscending: sortAscending,
             startIndex,
             pageSize,
             refreshCount
+        }),
+    sortVariables: (sortColumn: string = 'name', sortAscending: boolean = true): CommonAction<ISortVariablesRequest> =>
+        createIncomingActionWithPayload(CommonActionType.SORT_VARIABLES, {
+            sortColumn,
+            sortAscending
         }),
     widgetFailed: (ex: Error): CommonAction<Error> =>
         createIncomingActionWithPayload(CommonActionType.IPYWIDGET_RENDER_FAILURE, ex),

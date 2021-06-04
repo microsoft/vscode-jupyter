@@ -4,8 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, Uri } from 'vscode';
+import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
+import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
+import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebook, INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
@@ -62,11 +64,11 @@ class IPyWidgetMessageDispatcherWithOldMessages implements IIPyWidgetMessageDisp
  * - When kernel finally sends a message `display xyz`, ipywidgets looks for data related `xyz` and displays it.
  *   I.e. by now, ipywidgets has all of the data related to `xyz`. `xyz` is merely an id.
  *   I.e. kernel merely sends a message saying `ipywidgets please display the UI related to id xyz`.
- *   The terminoloy used by ipywidgest for the identifier is the `model id`.
+ *   The terminology used by ipywidgets for the identifier is the `model id`.
  *
- * Now, if we have another UI opened for the same notebook, e.g. multiple notebooks, we need all of this informaiton.
+ * Now, if we have another UI opened for the same notebook, e.g. multiple notebooks, we need all of this informtiton.
  * I.e. ipywidgets needs all of the information prior to the `display xyz command` form kernel.
- * For this to happen, ipywidgets needs to be sent all of the messages from the time it reigstered for a comm target in the original notebook.
+ * For this to happen, ipywidgets needs to be sent all of the messages from the time it registered for a comm target in the original notebook.
  *
  * Solution:
  * - Save all of the messages sent to ipywidgets.
@@ -76,12 +78,13 @@ class IPyWidgetMessageDispatcherWithOldMessages implements IIPyWidgetMessageDisp
 @injectable()
 export class IPyWidgetMessageDispatcherFactory implements IDisposable {
     private readonly messageDispatchers = new Map<string, IPyWidgetMessageDispatcher>();
-    private readonly messages: IPyWidgetMessage[] = [];
+    private readonly messagesPerNotebook = new WeakMap<NotebookDocument, IPyWidgetMessage[]>();
     private disposed = false;
     private disposables: IDisposable[] = [];
     constructor(
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook
     ) {
         disposables.push(this);
         notebookProvider.onNotebookCreated((e) => this.trackDisposingOfNotebook(e.notebook), this, this.disposables);
@@ -99,22 +102,24 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
     }
     public create(identity: Uri): IIPyWidgetMessageDispatcher {
         let baseDispatcher = this.messageDispatchers.get(identity.fsPath);
+        const document = this.notebook.notebookDocuments.find((item) => item.uri.toString() === identity.toString());
         if (!baseDispatcher) {
             baseDispatcher = new IPyWidgetMessageDispatcher(this.notebookProvider, identity);
             this.messageDispatchers.set(identity.fsPath, baseDispatcher);
 
             // Capture all messages so we can re-play messages that others missed.
-            this.disposables.push(baseDispatcher.postMessage(this.onMessage, this));
+            this.disposables.push(baseDispatcher.postMessage((msg) => this.onMessage(msg, document), this));
         }
 
         // If we have messages upto this point, then capture those messages,
         // & pass to the dispatcher so it can re-broadcast those old messages.
         // If there are no old messages, even then return a new instance of the class.
         // This way, the reference to that will be controlled by calling code.
-        const dispatcher = new IPyWidgetMessageDispatcherWithOldMessages(
-            baseDispatcher,
-            this.messages as ReadonlyArray<IPyWidgetMessage>
-        );
+        let messages: ReadonlyArray<IPyWidgetMessage> = [];
+        if (document && this.messagesPerNotebook.get(document)) {
+            messages = this.messagesPerNotebook.get(document) || [];
+        }
+        const dispatcher = new IPyWidgetMessageDispatcherWithOldMessages(baseDispatcher, messages);
         this.disposables.push(dispatcher);
         return dispatcher;
     }
@@ -133,11 +138,22 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
         );
     }
 
-    private onMessage(_message: IPyWidgetMessage) {
-        // Disabled for now, as this has the potential to consume a lot of resources (memory).
+    private onMessage(message: IPyWidgetMessage, document?: NotebookDocument) {
+        // For now (we only support splitting notebook editors & running the cells again to get widgest in the new editors)
+        // This is because if we want all widgets rendererd upto this point to work on the new editors (after splitting),
+        // then this has the potential to consume a lot of resources (memory).
         // One solution - store n messages in array, then use file as storage.
         // Next problem, data at rest is not encrypted, now we need to encrypt.
-        // Till we decide, lets disable this.
-        //this.messages.push(message);
+        // Till we decide, lets disable this (& only re-broadcast a smaller subset of messages).
+        if (!document) {
+            return;
+        }
+        this.messagesPerNotebook.set(document, this.messagesPerNotebook.get(document) || []);
+        if (
+            message.message === IPyWidgetMessages.IPyWidgets_kernelOptions ||
+            message.message === IPyWidgetMessages.IPyWidgets_registerCommTarget
+        ) {
+            this.messagesPerNotebook.get(document)!.push(message);
+        }
     }
 }

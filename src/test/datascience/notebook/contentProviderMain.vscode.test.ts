@@ -13,8 +13,8 @@ import {
     Uri,
     NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookDocument,
-    NotebookCellMetadata,
-    CancellationTokenSource
+    CancellationTokenSource,
+    NotebookCellData
 } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -46,145 +46,104 @@ suite('DataScience - VSCode Notebook ContentProvider', () => {
         );
     });
     teardown(() => disposeAllDisposables(disposables));
-    [true, false].forEach((isNotebookTrusted) => {
-        suite(isNotebookTrusted ? 'Trusted Notebook' : 'Un-trusted notebook', () => {
-            test('Return notebook with 2 cells', async () => {
-                const model = createNotebookModel(
-                    isNotebookTrusted,
-                    Uri.file('any'),
-                    instance(mock<Memento>()),
-                    instance(mock<ICryptoUtils>()),
-                    {
-                        cells: [
-                            {
-                                cell_type: 'code',
-                                execution_count: 10,
-                                outputs: [],
-                                source: 'print(1)',
-                                metadata: {}
-                            },
-                            {
-                                cell_type: 'markdown',
-                                source: '# HEAD',
-                                metadata: {}
-                            }
-                        ]
-                    }
-                );
-                when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
-
-                const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
-
-                assert.isOk(notebook);
-                assert.equal(notebook.metadata?.cellEditable, isNotebookTrusted);
-                assert.equal(notebook.metadata?.editable, isNotebookTrusted);
-
-                assert.deepEqual(notebook.cells, [
-                    {
-                        kind: NotebookCellKind.Code,
-                        language: PYTHON_LANGUAGE,
-                        outputs: [],
-                        source: 'print(1)',
-                        metadata: new NotebookCellMetadata().with({
-                            custom: {
-                                metadata: {}
-                            },
-                            editable: true,
-                            statusMessage: undefined
-                        }),
-                        latestExecutionSummary: {
-                            executionOrder: 10
-                        }
-                    },
-                    {
-                        kind: NotebookCellKind.Markdown,
-                        language: MARKDOWN_LANGUAGE,
-                        outputs: [],
-                        source: '# HEAD',
-                        metadata: new NotebookCellMetadata().with({
-                            custom: {
-                                metadata: {}
-                            },
-                            editable: true
-                        }),
-                        latestExecutionSummary: undefined
-                    }
-                ]);
-            });
-
-            test('Return notebook with csharp language', async () => {
-                const model = createNotebookModel(
-                    isNotebookTrusted,
-                    Uri.file('any'),
-                    instance(mock<Memento>()),
-                    instance(mock<ICryptoUtils>()),
-                    {
-                        metadata: {
-                            language_info: {
-                                name: 'csharp'
-                            },
-                            orig_nbformat: 5
-                        },
-                        cells: [
-                            {
-                                cell_type: 'code',
-                                execution_count: 10,
-                                outputs: [],
-                                source: 'Console.WriteLine("1")',
-                                metadata: {}
-                            },
-                            {
-                                cell_type: 'markdown',
-                                source: '# HEAD',
-                                metadata: {}
-                            }
-                        ]
-                    }
-                );
-                when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
-
-                const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
-
-                assert.isOk(notebook);
-
-                assert.equal(notebook.metadata?.cellEditable, isNotebookTrusted);
-                assert.equal(notebook.metadata?.editable, isNotebookTrusted);
-
-                assert.deepEqual(notebook.cells, [
-                    {
-                        kind: NotebookCellKind.Code,
-                        language: 'csharp',
-                        outputs: [],
-                        source: 'Console.WriteLine("1")',
-                        metadata: new NotebookCellMetadata().with({
-                            custom: {
-                                metadata: {}
-                            },
-                            editable: true,
-                            statusMessage: undefined
-                        }),
-                        latestExecutionSummary: {
-                            executionOrder: 10
-                        }
-                    },
-                    {
-                        kind: NotebookCellKind.Markdown,
-                        language: MARKDOWN_LANGUAGE,
-                        outputs: [],
-                        source: '# HEAD',
-                        metadata: new NotebookCellMetadata().with({
-                            custom: {
-                                metadata: {}
-                            },
-                            editable: true
-                        }),
-                        latestExecutionSummary: undefined
-                    }
-                ]);
-            });
-            test('Verify mime types and order', () => {
-                // https://github.com/microsoft/vscode-python/issues/11880
-            });
+    test('Return notebook with 2 cells', async () => {
+        const model = createNotebookModel(Uri.file('any'), instance(mock<Memento>()), instance(mock<ICryptoUtils>()), {
+            cells: [
+                {
+                    cell_type: 'code',
+                    execution_count: 10,
+                    outputs: [],
+                    source: 'print(1)',
+                    metadata: {}
+                },
+                {
+                    cell_type: 'markdown',
+                    source: '# HEAD',
+                    metadata: {}
+                }
+            ]
         });
+        when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
+
+        const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
+
+        assert.isOk(notebook);
+
+        const codeCellData = new NotebookCellData(NotebookCellKind.Code, 'print(1)', PYTHON_LANGUAGE);
+
+        codeCellData.outputs = [];
+        codeCellData.metadata = {
+            custom: {
+                metadata: {}
+            }
+        };
+        codeCellData.executionSummary = { executionOrder: 10 };
+
+        const markdownCellData = new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE);
+        markdownCellData.outputs = [];
+        markdownCellData.metadata = {
+            custom: {
+                metadata: {}
+            }
+        };
+
+        assert.deepEqual(notebook.cells, [codeCellData, markdownCellData]);
+    });
+
+    test('Return notebook with csharp language', async () => {
+        const model = createNotebookModel(Uri.file('any'), instance(mock<Memento>()), instance(mock<ICryptoUtils>()), {
+            metadata: {
+                language_info: {
+                    name: 'csharp'
+                },
+                orig_nbformat: 5
+            },
+            cells: [
+                {
+                    cell_type: 'code',
+                    execution_count: 10,
+                    outputs: [],
+                    source: 'Console.WriteLine("1")',
+                    metadata: {}
+                },
+                {
+                    cell_type: 'markdown',
+                    source: '# HEAD',
+                    metadata: {}
+                }
+            ]
+        });
+        when(storageProvider.getOrCreateModel(anything())).thenResolve(model);
+
+        const notebook = await contentProvider.openNotebook(fileUri, {}, new CancellationTokenSource().token);
+
+        assert.isOk(notebook);
+
+        const codeCellData = new NotebookCellData(NotebookCellKind.Code, 'Console.WriteLine("1")', 'csharp');
+
+        codeCellData.outputs = [];
+        codeCellData.metadata = {
+            custom: {
+                metadata: {}
+            }
+        };
+
+        codeCellData.executionSummary = {
+            executionOrder: 10
+        };
+
+        const markdownCellData = new NotebookCellData(NotebookCellKind.Markup, '# HEAD', MARKDOWN_LANGUAGE);
+
+        markdownCellData.outputs = [];
+        markdownCellData.metadata = {
+            custom: {
+                metadata: {}
+            }
+        };
+
+        assert.deepEqual(notebook.cells, [codeCellData, markdownCellData]);
+    });
+    test('Verify mime types and order', () => {
+        // https://github.com/microsoft/vscode-python/issues/11880
     });
 });

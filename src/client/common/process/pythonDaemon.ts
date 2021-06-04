@@ -47,7 +47,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
         try {
             this.throwIfRPCConnectionIsDead();
-            const request = new RequestType0<PythonEnvInfo & ErrorResponse, void, void>('get_interpreter_information');
+            const request = new RequestType0<PythonEnvInfo & ErrorResponse, void>('get_interpreter_information');
             const response = await this.sendRequestWithoutArgs(request);
             if (response.error) {
                 throw Error(response.error);
@@ -62,7 +62,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
         try {
             this.throwIfRPCConnectionIsDead();
             type ExecutablePathResponse = ErrorResponse & { path: string };
-            const request = new RequestType0<ExecutablePathResponse, void, void>('get_executable');
+            const request = new RequestType0<ExecutablePathResponse, void>('get_executable');
             const response = await this.sendRequestWithoutArgs(request);
             if (response.error) {
                 throw new DaemonError(response.error);
@@ -80,7 +80,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
         try {
             this.throwIfRPCConnectionIsDead();
             type ModuleInstalledResponse = ErrorResponse & { exists: boolean };
-            const request = new RequestType<{ module_name: string }, ModuleInstalledResponse, void, void>(
+            const request = new RequestType<{ module_name: string }, ModuleInstalledResponse, void>(
                 'is_module_installed'
             );
             const response = await this.sendRequest(request, { module_name: moduleName });

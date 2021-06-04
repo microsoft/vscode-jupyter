@@ -16,7 +16,12 @@ import { CreationOptionService } from '../../../../client/datascience/notebook/c
 import { IExtensionTestApi, waitForCondition } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { closeActiveWindows, initialize } from '../../../initialize';
-import { canRunNotebookTests, closeNotebooksAndCleanUpAfterTests, ensureNewNotebooksHavePythonCells } from '../helper';
+import {
+    canRunNotebookTests,
+    closeNotebooksAndCleanUpAfterTests,
+    ensureNewNotebooksHavePythonCells,
+    workAroundVSCodeNotebookStartPages
+} from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
@@ -33,18 +38,29 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         creationOptions = api.serviceContainer.get<CreationOptionService>(CreationOptionService);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         creationOptions.clear();
+        await workAroundVSCodeNotebookStartPages();
         await ensureNewNotebooksHavePythonCells();
     });
-    teardown(async () => {
+    teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
         sinon.restore();
         creationOptions.clear();
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    setup(async () => {
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
+    suiteTeardown(() => {
+        try {
+            creationOptions.clear();
+        } catch {
+            //
+        }
+    });
     async function createNotebookAndValidateLanguageOfFirstCell(expectedLanguage: string) {
         await commands.executeCommand(Commands.CreateNewNotebook);
         await waitForCondition(async () => !!vscodeNotebook.activeNotebookEditor, 10_000, 'New Notebook not created');
@@ -54,7 +70,7 @@ suite('DataScience - VSCode Notebook - (Creation Integration)', function () {
         );
     }
     test('With 3rd party integration, display quick pick when selecting create blank notebook command', async function () {
-        await creationOptions.registerNewNotebookContent({ defaultCellLanguage: 'julia' });
+        await creationOptions.registerNewNotebookContent('julia');
         assert.equal(creationOptions.registrations.length, 1);
         assert.isUndefined(vscodeNotebook.activeNotebookEditor);
 

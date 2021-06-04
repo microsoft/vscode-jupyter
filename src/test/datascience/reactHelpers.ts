@@ -414,7 +414,18 @@ export function setUpDomEnvironment() {
             content += 'export function getCSSBasedConfiguration() { return CSSBasedConfiguration.INSTANCE; };\n';
             mod._compile(content, filename);
         } else {
-            _oldLoader(mod, filename);
+            try {
+                _oldLoader(mod, filename);
+            } catch (e) {
+                // Ignore errors in the following Language Server Classes
+                // node_modules\\vscode-languageclient\\lib\\common\\protocolDiagnostic.js
+                // node_modules\\vscode-languageclient\\lib\\common\\protocolCallHierarchyItem.js
+                if (e.stack.includes('protocolDiagnostic.js') || e.stack.includes('protocolCallHierarchyItem.js')) {
+                    console.error(`Failed to load module for tests ${mod} in ${filename}`, e);
+                } else {
+                    throw e;
+                }
+            }
         }
     };
 }

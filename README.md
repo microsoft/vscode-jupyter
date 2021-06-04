@@ -90,3 +90,7 @@ services. Read our
 learn more. This extension respects the `telemetry.enableTelemetry`
 setting which you can learn more about at
 https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting.
+
+## Trademarks
+
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow Microsoft's Trademark & Brand Guidelines. Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.

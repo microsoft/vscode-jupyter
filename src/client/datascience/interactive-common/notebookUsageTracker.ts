@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, notebook, NotebookCellExecutionStateChangeEvent } from 'vscode';
+import { EventEmitter, notebooks, NotebookCellExecutionStateChangeEvent } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
@@ -35,7 +35,11 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
             findFilesPromise.then((r) => (this.notebookCount += r.length), noop);
         }
         this.editorProvider.onDidOpenNotebookEditor(this.onEditorOpened, this, this.disposables);
-        notebook.onDidChangeCellExecutionState(this.onDidChangeCellExecutionState, this, this.disposables);
+        notebooks.onDidChangeNotebookCellExecutionState(
+            this.onDidChangeNotebookCellExecutionState,
+            this,
+            this.disposables
+        );
     }
     public dispose() {
         // Send a bunch of telemetry
@@ -60,7 +64,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
             editor.executed((e) => this.executedNotebooksIndexedByUri.add(e.file.fsPath), this, this.disposables);
         }
     }
-    private onDidChangeCellExecutionState(e: NotebookCellExecutionStateChangeEvent): void {
+    private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): void {
         this.executedNotebooksIndexedByUri.add(e.cell.notebook.uri.fsPath);
     }
 }

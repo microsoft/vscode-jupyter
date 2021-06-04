@@ -38,7 +38,6 @@ import { IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
-import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
 import { KernelConnectionMetadata, NotebookCellRunState } from './jupyter/kernels/types';
 import { KernelStateEventArgs } from './notebookExtensibility';
 
@@ -527,6 +526,7 @@ export interface IInteractiveBase extends Disposable {
     stopProgress(): void;
     undoCells(): void;
     redoCells(): void;
+    toggleOutput?(): void;
     removeAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
@@ -620,8 +620,6 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
     syncAllCells(): Promise<void>;
-    runAbove(cell: NotebookCell | undefined): void;
-    runCellAndBelow(cell: NotebookCell | undefined): void;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');
@@ -688,7 +686,7 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
-export interface ICodeWatcher {
+export interface ICodeWatcher extends IDisposable {
     readonly uri: Uri | undefined;
     codeLensUpdated: Event<void>;
     setDocument(document: TextDocument): void;
@@ -1088,14 +1086,6 @@ export interface IJupyterSubCommandExecutionService {
      * @memberof IJupyterSubCommandExecutionService
      */
     openNotebook(notebookFile: string): Promise<void>;
-    /**
-     * Gets the kernelspecs.
-     *
-     * @param {CancellationToken} [token]
-     * @returns {Promise<JupyterKernelSpec[]>}
-     * @memberof IJupyterSubCommandExecutionService
-     */
-    getKernelSpecs(token?: CancellationToken): Promise<JupyterKernelSpec[]>;
 }
 
 export const IJupyterInterpreterDependencyManager = Symbol('IJupyterInterpreterDependencyManager');
@@ -1151,10 +1141,6 @@ export interface INotebookModel {
      * all editors associated with the document have been closed.)
      */
     dispose(): void;
-    /**
-     * Trusts a notebook document.
-     */
-    trust(): void;
 }
 
 export interface IModelLoadOptions {
@@ -1331,20 +1317,51 @@ export type KernelSocketInformation = {
     readonly options: KernelSocketOptions;
 };
 
+/**
+ * Response for installation of kernel dependencies such as ipykernel.
+ * (these values are used in telemetry)
+ */
 export enum KernelInterpreterDependencyResponse {
-    ok,
-    cancel,
-    failed
+    ok = 0, // Used in telemetry.
+    cancel = 1, // Used in telemetry.
+    failed = 2, // Used in telemetry.
+    selectDifferentKernel = 3 // Used in telemetry.
 }
 
 export const IKernelDependencyService = Symbol('IKernelDependencyService');
 export interface IKernelDependencyService {
     installMissingDependencies(
+        resource: Resource,
         interpreter: PythonEnvironment,
         token?: CancellationToken,
         disableUI?: boolean
     ): Promise<void>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+}
+
+export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
+
+export interface IKernelVariableRequester {
+    getVariableNamesAndTypesFromKernel(notebook: INotebook, token?: CancellationToken): Promise<IJupyterVariable[]>;
+    getFullVariable(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        token?: CancellationToken
+    ): Promise<IJupyterVariable>;
+    getDataFrameRows(start: number, end: number, notebook: INotebook, expression: string): Promise<{}>;
+    getVariableProperties(
+        word: string,
+        notebook: INotebook,
+        cancelToken: CancellationToken | undefined,
+        matchingVariable: IJupyterVariable | undefined,
+        languageSettings: { [typeNameKey: string]: string[] },
+        inEnhancedTooltipsExperiment: boolean
+    ): Promise<{ [attributeName: string]: string }>;
+    getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        expression: string
+    ): Promise<IJupyterVariable>;
 }
 
 export const INotebookCreationTracker = Symbol('INotebookCreationTracker');
@@ -1413,19 +1430,6 @@ export interface IJupyterUriProviderRegistration {
     registerProvider(picker: IJupyterUriProvider): void;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
-export const IDigestStorage = Symbol('IDigestStorage');
-export interface IDigestStorage {
-    readonly key: Promise<string | undefined>;
-    saveDigest(uri: Uri, digest: string): Promise<void>;
-    containsDigest(uri: Uri, digest: string): Promise<boolean>;
-}
-
-export const ITrustService = Symbol('ITrustService');
-export interface ITrustService {
-    readonly onDidSetNotebookTrust: Event<void>;
-    isNotebookTrusted(uri: Uri, notebookContents: string): Promise<boolean>;
-    trustNotebook(uri: Uri, notebookContents: string): Promise<void>;
-}
 
 export interface ISwitchKernelOptions {
     identity: Resource;
@@ -1463,14 +1467,6 @@ export interface IExternalWebviewCellButtonWithCallback extends IExternalWebview
 export interface IExternalCommandFromWebview {
     buttonId: string;
     cell: ICell;
-}
-
-// Smoke tests compile the tests but exercise the VSIX, so Symbols are not shared
-// Ensure we reuse Symbols created for existing keys so that we can retrieve the
-// Symbol matching this key from the extension API serviceManager
-export const ISystemPseudoRandomNumberGenerator = Symbol.for('ISystemPseudoRandomNumberGenerator');
-export interface ISystemPseudoRandomNumberGenerator {
-    generateRandomKey(numBytes: number): Promise<string>;
 }
 
 export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchronization');

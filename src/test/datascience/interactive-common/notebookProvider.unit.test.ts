@@ -62,6 +62,7 @@ suite('DataScience - NotebookProvider', () => {
 
     test('NotebookProvider getOrCreateNotebook jupyter provider has notebook already', async () => {
         const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
+        notebookMock.setup((notebook) => notebook.disposed).returns(() => false);
         when(jupyterNotebookProvider.getNotebook(anything())).thenResolve(notebookMock.object);
 
         const notebook = await notebookProvider.getOrCreateNotebook({

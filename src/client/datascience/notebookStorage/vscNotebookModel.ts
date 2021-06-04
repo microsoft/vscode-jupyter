@@ -4,6 +4,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { Memento, NotebookDocument, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ICryptoUtils } from '../../common/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
@@ -11,7 +12,6 @@ import {
     getNotebookMetadata,
     notebookModelToVSCNotebookData
 } from '../notebook/helpers/helpers';
-import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { CellState } from '../types';
 import { BaseNotebookModel, getDefaultNotebookContentForNativeNotebooks } from './baseModel';
 
@@ -64,7 +64,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     private document?: NotebookDocument;
 
     constructor(
-        isTrusted: boolean,
+        _isTrusted: () => boolean,
         file: Uri,
         globalMemento: Memento,
         crypto: ICryptoUtils,
@@ -74,7 +74,7 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         private readonly vscodeNotebook: IVSCodeNotebook,
         private readonly preferredLanguage: string
     ) {
-        super(isTrusted, file, globalMemento, crypto, originalJson, indentAmount, pythonNumber, false);
+        super(_isTrusted, file, globalMemento, crypto, originalJson, indentAmount, pythonNumber, false);
         // Do not change this code without changing code in base class.
         // We cannot invoke this in base class as `cellLanguageService` is not available in base class.
         this.ensureNotebookJson();
@@ -84,11 +84,10 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     }
     public getNotebookData() {
         return notebookModelToVSCNotebookData(
-            this.isTrusted,
             this.notebookContentWithoutCells,
             this.file,
             this.notebookJson.cells || [],
-            this.preferredLanguage || 'plaintext',
+            this.preferredLanguage || PYTHON_LANGUAGE,
             this.originalJson
         );
     }
@@ -113,23 +112,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
      */
     public associateNotebookDocument(document: NotebookDocument) {
         this.document = document;
-    }
-    public async trustNotebook() {
-        this.trust();
-        const editor = this.vscodeNotebook?.notebookEditors.find((item) => item.document === this.document);
-        const document = editor?.document;
-        if (editor && document && !document.metadata.trusted) {
-            await chainWithPendingUpdates(editor.document, (edit) => {
-                edit.replaceNotebookMetadata(
-                    document.uri,
-                    document.metadata.with({
-                        cellEditable: true,
-                        editable: true,
-                        trusted: true
-                    })
-                );
-            });
-        }
     }
     public getOriginalContentOnDisc(): string {
         return JSON.stringify(this.notebookJson, null, this.indentAmount);

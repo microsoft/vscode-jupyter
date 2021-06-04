@@ -18,15 +18,14 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
 import { pruneCell } from '../common';
-import { CodeSnippets, Identifiers } from '../constants';
+import { CodeSnippets, defaultNotebookFormat, Identifiers } from '../constants';
 import {
     CellState,
     ICell,
     IDataScienceErrorHandler,
     IJupyterExecution,
     INotebookEditorProvider,
-    INotebookExporter,
-    ITrustService
+    INotebookExporter
 } from '../types';
 
 @injectable()
@@ -39,8 +38,7 @@ export class JupyterExporter implements INotebookExporter {
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
-        @inject(IDataScienceErrorHandler) protected errorHandler: IDataScienceErrorHandler,
-        @inject(ITrustService) private readonly trustService: ITrustService
+        @inject(IDataScienceErrorHandler) protected errorHandler: IDataScienceErrorHandler
     ) {}
 
     public dispose() {
@@ -59,7 +57,6 @@ export class JupyterExporter implements INotebookExporter {
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const contents = JSON.stringify(notebook);
-            await this.trustService.trustNotebook(Uri.file(file), contents);
             await this.fileSystem.writeFile(Uri.file(file), contents);
             if (!showOpenPrompt) {
                 return;
@@ -107,7 +104,7 @@ export class JupyterExporter implements INotebookExporter {
                 pygments_lexer: `ipython${pythonNumber}`,
                 version: pythonNumber
             },
-            orig_nbformat: 2,
+            orig_nbformat: defaultNotebookFormat.major,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             kernelspec: kernelSpec as any
         };
@@ -118,8 +115,8 @@ export class JupyterExporter implements INotebookExporter {
         // Combine this into a JSON object
         return {
             cells: this.pruneCells(cells, matcher),
-            nbformat: 4,
-            nbformat_minor: 2,
+            nbformat: defaultNotebookFormat.major,
+            nbformat_minor: defaultNotebookFormat.minor,
             metadata: metadata
         };
     }

@@ -5,7 +5,15 @@
 
 import type { KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
-import type { CancellationToken, Event, NotebookCell, NotebookDocument, QuickPickItem, Uri } from 'vscode';
+import type {
+    CancellationToken,
+    Event,
+    NotebookCell,
+    NotebookController,
+    NotebookDocument,
+    QuickPickItem,
+    Uri
+} from 'vscode';
 import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -127,7 +135,7 @@ export interface IKernel extends IAsyncDisposable {
     executeAllCells(document: NotebookDocument): Promise<void>;
 }
 
-export type KernelOptions = { metadata: KernelConnectionMetadata };
+export type KernelOptions = { metadata: KernelConnectionMetadata; controller: NotebookController };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
     /**

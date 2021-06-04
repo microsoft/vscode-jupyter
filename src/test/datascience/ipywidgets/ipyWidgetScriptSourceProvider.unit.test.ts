@@ -11,6 +11,7 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { HttpClient } from '../../../client/common/net/httpClient';
 import { PersistentState, PersistentStateFactory } from '../../../client/common/persistentState';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { IConfigurationService, IJupyterSettings } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
@@ -46,6 +47,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         const fs = mock(FileSystem);
         const interpreterService = mock<IInterpreterService>();
         const stateFactory = mock(PersistentStateFactory);
+        const factory = mock<IPythonExecutionFactory>();
         userSelectedOkOrDoNotShowAgainInPrompt = mock<PersistentState<boolean>>();
 
         when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
@@ -64,7 +66,8 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
             instance(configService),
             instance(workspaceService),
             instance(stateFactory),
-            instance(httpClient)
+            instance(httpClient),
+            instance(factory)
         );
     });
     teardown(() => sinon.restore());

@@ -63,7 +63,6 @@ suite('DataScience Native Toolbar', () => {
             sendCommand: noopAny,
             toggleVariableExplorer: sinon.stub(),
             setVariableExplorerHeight: sinon.stub(),
-            launchNotebookTrustPrompt: sinon.stub(),
             variablesVisible: false,
             isNotebookTrusted: true,
             cellVMs: []
@@ -77,12 +76,6 @@ suite('DataScience Native Toolbar', () => {
     }
     function getTrustMessage() {
         return wrapper.find(TrustMessage);
-    }
-    function clickTrustMessage() {
-        const handler = getTrustMessage().props().launchNotebookTrustPrompt;
-        if (handler) {
-            handler();
-        }
     }
     function assertEnabled(button: Button) {
         assert.isFalse(getToolbarButton(button).props().disabled);
@@ -228,11 +221,6 @@ suite('DataScience Native Toolbar', () => {
             const message = getTrustMessage();
             assert.equal(message.text(), 'Trusted');
         });
-        test('Clicking trust message does nothing', () => {
-            mountToolbar();
-            clickTrustMessage();
-            assert.isTrue(((props.launchNotebookTrustPrompt as any) as sinon.SinonStub).notCalled);
-        });
     });
     suite('When untrusted', () => {
         setup(() => {
@@ -264,7 +252,6 @@ suite('DataScience Native Toolbar', () => {
                 sendCommand: noopAny,
                 toggleVariableExplorer: sinon.stub(),
                 setVariableExplorerHeight: sinon.stub(),
-                launchNotebookTrustPrompt: sinon.stub(),
                 variablesVisible: false,
                 isNotebookTrusted: false,
                 cellVMs: []
@@ -285,11 +272,6 @@ suite('DataScience Native Toolbar', () => {
             mountToolbar();
             const message = getTrustMessage();
             assert.equal(message.text(), 'Not Trusted');
-        });
-        test('Clicking trust message dispatches launchNotebookTrustPrompt', () => {
-            mountToolbar();
-            clickTrustMessage();
-            assert.isTrue(((props.launchNotebookTrustPrompt as any) as sinon.SinonStub).calledOnce);
         });
     });
 });
