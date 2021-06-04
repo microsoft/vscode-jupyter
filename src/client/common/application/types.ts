@@ -68,7 +68,7 @@ import {
     NotebookDocumentContentOptions,
     NotebookRendererScript,
     NotebookController,
-    NotebookCell
+    NotebookCell,
     NotebookSerializer,
     NotebookData,
     NotebookDocumentShowOptions

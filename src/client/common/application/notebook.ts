@@ -16,7 +16,7 @@ import {
     NotebookRendererScript,
     window,
     workspace,
-    NotebookCell
+    NotebookCell,
     NotebookSerializer,
     NotebookDocumentContentOptions,
     Uri,
