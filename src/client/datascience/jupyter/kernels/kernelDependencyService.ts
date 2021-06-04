@@ -140,7 +140,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         const selectKernel = DataScience.selectKernel();
         // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
         // https://github.com/microsoft/vscode-jupyter/issues/6135
-        const options = resource ? [installPrompt] : [installPrompt, selectKernel];
+        const options = resource ? [installPrompt, selectKernel] : [installPrompt];
         const selection = this.isCodeSpace
             ? installPrompt
             : await Promise.race([
