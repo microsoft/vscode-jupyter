@@ -77,8 +77,6 @@ export namespace Commands {
     export const RunAllCells = 'jupyter.runallcells';
     export const RunAllCellsAbove = 'jupyter.runallcellsabove';
     export const RunCellAndAllBelow = 'jupyter.runcellandallbelow';
-    export const NativeNotebookRunAllCellsAbove = 'jupyter.notebookeditor.runallcellsabove';
-    export const NativeNotebookRunCellAndAllBelow = 'jupyter.notebookeditor.runcellandallbelow';
     export const SetJupyterKernel = 'jupyter.setKernel';
     export const SwitchJupyterKernel = 'jupyter.switchKernel';
     export const RunAllCellsAbovePalette = 'jupyter.runallcellsabove.palette';
@@ -707,3 +705,6 @@ export namespace LiveShareCommands {
 export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
 export const OurNotebookProvider = 'OurNotebookProvider';
 export const DataScienceStartupTime = Symbol('DataScienceStartupTime');
+
+// Default for notebook version (major & minor) used when creating notebooks.
+export const defaultNotebookFormat = { major: 4, minor: 2 };

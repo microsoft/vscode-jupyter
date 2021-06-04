@@ -79,7 +79,7 @@ export class NoKernelsNotebookController implements Disposable {
             traceback: errorMessage.split('\n')
         });
         task.appendOutput(errorOutput).then(noop, noop);
-        task.end();
+        task.end(undefined);
         this.errorHandler.handleError(new KernelSpecNotFoundError(getNotebookMetadata(notebook))).catch(noop);
     }
 }

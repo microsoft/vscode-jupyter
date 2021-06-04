@@ -2,27 +2,27 @@
 // Licensed under the MIT License.
 
 import './styles.css';
-import { ActivationFunction, CellInfo } from 'vscode-notebook-renderer';
+import { ActivationFunction, OutputItem } from 'vscode-notebook-renderer';
 
 export const activate: ActivationFunction = (_context) => {
     console.log('Jupyter IPyWidget Renderer Activated');
     return {
-        renderCell(outputId, info: CellInfo) {
+        renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
             const renderOutputFunc =
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
             if (renderOutputFunc) {
-                info.element.className = (info.element.className || '') + ' cell-output-ipywidget-background';
-                return renderOutputFunc(outputId, info);
+                element.className = (element.className || '') + ' cell-output-ipywidget-background';
+                return renderOutputFunc(outputItem, element);
             }
             console.error('Rendering widgets on notebook open is not supported.');
         },
-        destroyCell(outputId) {
+        disposeOutputItem(id?: string) {
             const disposeOutputFunc =
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (window as any).ipywidgetsKernel?.disposeOutput || (global as any).ipywidgetsKernel?.disposeOutput;
             if (disposeOutputFunc) {
-                return disposeOutputFunc(outputId);
+                return disposeOutputFunc(id);
             }
         }
     };

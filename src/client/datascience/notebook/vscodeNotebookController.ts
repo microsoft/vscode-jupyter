@@ -106,10 +106,10 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.description = getDescriptionOfKernelConnection(kernelConnection);
         this.controller.detail = getDetailOfKernelConnection(kernelConnection, this.pathUtils);
-        this.controller.hasExecutionOrder = true;
+        this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
-        this.controller.onDidChangeNotebookAssociation(this.onDidChangeNotebookAssociation, this, this.disposables);
+        this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
     }
 
     public asWebviewUri(localResource: Uri): Uri {
@@ -132,13 +132,18 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
+        traceInfo(`Setting controller affinity for ${notebook.uri.toString()} ${this.id}`);
         this.controller.updateNotebookAffinity(notebook, affinity);
         // Only on CI Server.
         if (this.context.extensionMode === ExtensionMode.Test) {
+            traceInfo(`Force selection of controller for ${notebook.uri.toString()} ${this.id}`);
             await this.commandManager.executeCommand('notebook.selectKernel', {
                 id: this.id,
                 extension: JVSC_EXTENSION_ID
             });
+            traceInfo(
+                `VSCodeNotebookController.kernelAssociatedWithDocument set for ${notebook.uri.toString()} ${this.id}`
+            );
             VSCodeNotebookController.kernelAssociatedWithDocument = true;
         }
     }
@@ -161,7 +166,7 @@ export class VSCodeNotebookController implements Disposable {
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
         await Promise.all(cells.map((cell) => this.executeCell(targetNotebook, cell)));
     }
-    private async onDidChangeNotebookAssociation(event: { notebook: NotebookDocument; selected: boolean }) {
+    private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
         // If this NotebookController was selected, fire off the event
         if (event.selected) {
             await this.updateCellLanguages(event.notebook);

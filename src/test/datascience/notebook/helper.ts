@@ -87,11 +87,12 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
         throw new Error('No active editor');
     }
     const startNumber = options?.index ?? activeEditor.document.cellCount;
-    await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-            new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE, [], {})
-        ])
-    );
+    await chainWithPendingUpdates(activeEditor.document, (edit) => {
+        const cellData = new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE);
+        cellData.outputs = [];
+        cellData.metadata = {};
+        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [cellData]);
+    });
     return activeEditor.document.cellAt(startNumber)!;
 }
 export async function insertCodeCell(source: string, options?: { language?: string; index?: number }) {
@@ -102,9 +103,10 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     }
     const startNumber = options?.index ?? activeEditor.document.cellCount;
     const edit = new WorkspaceEdit();
-    edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [
-        new NotebookCellData(NotebookCellKind.Code, source, options?.language || PYTHON_LANGUAGE, [], {})
-    ]);
+    const cellData = new NotebookCellData(NotebookCellKind.Code, source, options?.language || PYTHON_LANGUAGE);
+    cellData.outputs = [];
+    cellData.metadata = {};
+    edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [cellData]);
     await workspace.applyEdit(edit);
 
     return activeEditor.document.cellAt(startNumber)!;
@@ -412,6 +414,26 @@ export async function stopJupyterServer() {
         return;
     }
     await JupyterServer.instance.dispose().catch(noop);
+}
+
+let workedAroundVSCodeNotebookStartPage = false;
+/**
+ * VS Code displays a start page when opening notebooks for the first time.
+ * This takes focus from the notebook, hence our tests can fail as a result of this.
+ * Solution, try to trigger the display of the start page displayed before starting the tests.
+ */
+export async function workAroundVSCodeNotebookStartPages() {
+    if (workedAroundVSCodeNotebookStartPage) {
+        return;
+    }
+    workedAroundVSCodeNotebookStartPage = true;
+    const { editorProvider } = await getServices();
+    await closeActiveWindows();
+
+    // Open a notebook, VS Code will open the start page (wait for 5s for VSCode to react & open it)
+    await editorProvider.createNew();
+    await sleep(5_000);
+    await closeActiveWindows();
 }
 
 export async function prewarmNotebooks() {

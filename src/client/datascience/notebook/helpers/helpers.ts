@@ -25,7 +25,7 @@ import '../../../common/extensions';
 import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { isUntitledFile } from '../../../common/utils/misc';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
+import { defaultNotebookFormat, Telemetry } from '../../constants';
 import { KernelConnectionMetadata, NotebookCellRunState } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { CellState, IJupyterKernelSpec } from '../../types';
@@ -73,7 +73,7 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
     // If language isn't specified in the metadata, at least specify that
     if (!notebookContent?.metadata?.language_info?.name) {
         const content = notebookContent || {};
-        const metadata = content.metadata || { orig_nbformat: 3, language_info: {} };
+        const metadata = content.metadata || { orig_nbformat: defaultNotebookFormat.major, language_info: {} };
         const language_info = { ...metadata.language_info };
         // Fix nyc compiler not working.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -304,9 +304,10 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
 }
 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
-    return new NotebookCellData(NotebookCellKind.Code, concatMultilineString(cell.source), 'raw', [], {
-        custom: getNotebookCellMetadata(cell)
-    });
+    const cellData = new NotebookCellData(NotebookCellKind.Code, concatMultilineString(cell.source), 'raw');
+    cellData.outputs = [];
+    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
+    return cellData;
 }
 function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkdownCell {
     const cellMetadata = cell.metadata.custom as CellMetadata | undefined;
@@ -321,9 +322,14 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
     return markdownCell;
 }
 function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
-    return new NotebookCellData(NotebookCellKind.Markup, concatMultilineString(cell.source), MARKDOWN_LANGUAGE, [], {
-        custom: getNotebookCellMetadata(cell)
-    });
+    const cellData = new NotebookCellData(
+        NotebookCellKind.Markup,
+        concatMultilineString(cell.source),
+        MARKDOWN_LANGUAGE
+    );
+    cellData.outputs = [];
+    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
+    return cellData;
 }
 function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLanguage: string): NotebookCellData {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -336,14 +342,13 @@ function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLangua
     const executionSummary: NotebookCellExecutionSummary = hasExecutionCount
         ? { executionOrder: cell.execution_count as number }
         : {};
-    return new NotebookCellData(
-        NotebookCellKind.Code,
-        source,
-        cellLanguage,
-        outputs,
-        { custom: getNotebookCellMetadata(cell) },
-        executionSummary
-    );
+
+    const cellData = new NotebookCellData(NotebookCellKind.Code, source, cellLanguage);
+
+    cellData.outputs = outputs;
+    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
+    cellData.executionSummary = executionSummary;
+    return cellData;
 }
 const orderOfMimeTypes = [
     'application/vnd.*',
@@ -361,6 +366,14 @@ const orderOfMimeTypes = [
     'application/json',
     'text/plain'
 ];
+function isEmptyVendoredMimeType(outputItem: NotebookCellOutputItem) {
+    if (outputItem.mime.startsWith('application/vnd.')) {
+        try {
+            return Buffer.from(outputItem.data).toString().length === 0;
+        } catch {}
+    }
+    return false;
+}
 function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[]): NotebookCellOutputItem[] {
     return outputItems.sort((outputItemA, outputItemB) => {
         const isMimeTypeMatch = (value: string, compareWith: string) => {
@@ -369,8 +382,19 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
             }
             return compareWith.startsWith(value);
         };
-        const indexOfMimeTypeA = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(outputItemA.mime, mime));
-        const indexOfMimeTypeB = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(outputItemB.mime, mime));
+        let indexOfMimeTypeA = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(mime, outputItemA.mime));
+        let indexOfMimeTypeB = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(mime, outputItemB.mime));
+        // Sometimes we can have mime types with empty data, e.g. when using holoview we can have `application/vnd.holoviews_load.v0+json` with empty value.
+        // & in these cases we have HTML/JS and those take precedence.
+        // https://github.com/microsoft/vscode-jupyter/issues/6109
+        if (isEmptyVendoredMimeType(outputItemA)) {
+            indexOfMimeTypeA = -1;
+        }
+        if (isEmptyVendoredMimeType(outputItemB)) {
+            indexOfMimeTypeB = -1;
+        }
+        indexOfMimeTypeA = indexOfMimeTypeA == -1 ? 100 : indexOfMimeTypeA;
+        indexOfMimeTypeB = indexOfMimeTypeB == -1 ? 100 : indexOfMimeTypeB;
         return indexOfMimeTypeA - indexOfMimeTypeB;
     });
 }
@@ -536,7 +560,8 @@ function translateDisplayDataOutput(
         items.push(new NotebookCellOutputItem(convertJupyterOutputToBuffer(key, data[key]), key));
     }
 
-    return new NotebookCellOutput(sortOutputItemsBasedOnDisplayOrder(items), metadata);
+    const x = sortOutputItemsBasedOnDisplayOrder(items);
+    return new NotebookCellOutput(x, metadata);
 }
 
 function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
@@ -654,7 +679,7 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
             // VS Code expects bytes when rendering images.
             return Buffer.from(value).toString('base64');
         } else if (mime.toLowerCase().includes('json')) {
-            return JSON.parse(stringValue);
+            return stringValue.length > 0 ? JSON.parse(stringValue) : stringValue;
         } else {
             return stringValue;
         }
