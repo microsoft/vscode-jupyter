@@ -50,6 +50,13 @@ export class WorkspaceService implements IWorkspaceService {
     public asRelativePath(pathOrUri: string | Uri, includeWorkspaceFolder?: boolean): string {
         return workspace.asRelativePath(pathOrUri, includeWorkspaceFolder);
     }
+    public get isTrusted() {
+        return workspace.isTrusted;
+    }
+    public get onDidGrantWorkspaceTrust() {
+        return workspace.onDidGrantWorkspaceTrust;
+    }
+
     public createFileSystemWatcher(
         globPattern: GlobPattern,
         _ignoreCreateEvents?: boolean,

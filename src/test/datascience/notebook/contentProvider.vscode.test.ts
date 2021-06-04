@@ -32,7 +32,7 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
     saveActiveNotebook,
-    trustAllNotebooks
+    workAroundVSCodeNotebookStartPages
 } from './helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -65,6 +65,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
+        await workAroundVSCodeNotebookStartPages();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         contentProvider = api.serviceContainer.get<NotebookContentProvider>(INotebookContentProvider);
     });
@@ -74,7 +75,6 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
         testIPynbWithOutput = Uri.file(await createTemporaryNotebook(templateIPynbWithOutput, disposables));
-        await trustAllNotebooks();
     });
     teardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Opening a 0 byte ipynb file will have an empty cell', async () => {
@@ -103,20 +103,13 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         );
         const model = await storageProvider.getOrCreateModel({ file: Uri.file(file) });
         disposables.push(model);
-        model.trust();
         const jsonStr = fs.readFileSync(file, { encoding: 'utf8' });
-
-        // JSON should be identical, before and after trusting a notebook.
-        assert.deepEqual(JSON.parse(jsonStr), JSON.parse(model.getContent()));
-
-        model.trust();
 
         assert.deepEqual(JSON.parse(jsonStr), JSON.parse(model.getContent()));
     });
     test('Verify cells (content, metadata & output)', async () => {
         const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         const model = (await editorProvider.open(testIPynb))!.model! as VSCodeNotebookModel;
-        await model.trustNotebook(); // We want to test the output as well.
 
         const notebook = vscodeNotebook.activeNotebookEditor?.document!;
 
@@ -171,12 +164,12 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.lengthOf(notebook.cellAt(4).outputs, 1, 'Cell5, outputs');
         const richOutput = notebook.cellAt(4).outputs[0];
         assert.deepEqual(
-            richOutput.outputs.map((op) => op.mime),
+            richOutput.items.map((op) => op.mime),
             ['image/svg+xml', 'image/png', 'text/plain'],
             'Cell5, output'
         );
 
-        const cellOutputMetadata = richOutput.outputs[0].metadata as CellOutputMetadata;
+        const cellOutputMetadata = richOutput.metadata as CellOutputMetadata;
         assert.deepEqual(
             cellOutputMetadata.metadata,
             {
@@ -202,15 +195,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
 
         const originalJsonStr = (await fs.readFile(templateIPynb, { encoding: 'utf8' })).trim();
         const originalJson: nbformat.INotebookContent = JSON.parse(originalJsonStr);
-        // assert.deepEqual(
-        //     JSON.parse(model.getContent()).cells,
-        //     originalJson.cells,
-        //     'Untrusted notebook json content is invalid'
-        // );
-        // https://github.com/microsoft/vscode-python/issues/13155
-        // assert.equal(model.getContent(), originalJsonStr, 'Untrusted notebook json not identical');
 
-        model.trust();
         // , originalJson, 'Trusted notebook json content is invalid');
         assert.deepEqual(
             JSON.parse(model.getContent()).cells,

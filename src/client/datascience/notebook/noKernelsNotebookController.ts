@@ -68,9 +68,9 @@ export class NoKernelsNotebookController implements Disposable {
         }
         const cell = cells[0];
         const notebook = cell.notebook;
-        const task = this.controller.createNotebookCellExecutionTask(cell);
+        const task = this.controller.createNotebookCellExecution(cell);
         task.start();
-        task.clearOutput(cell.index).then(noop, noop);
+        task.clearOutput(cell).then(noop, noop);
         const errorMessage = getKernelNotInstalledErrorMessage(getNotebookMetadata(notebook));
         const errorOutput = translateErrorOutput({
             ename: '',
@@ -79,7 +79,7 @@ export class NoKernelsNotebookController implements Disposable {
             traceback: errorMessage.split('\n')
         });
         task.appendOutput(errorOutput).then(noop, noop);
-        task.end();
+        task.end(undefined);
         this.errorHandler.handleError(new KernelSpecNotFoundError(getNotebookMetadata(notebook))).catch(noop);
     }
 }

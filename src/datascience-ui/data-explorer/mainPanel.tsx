@@ -42,7 +42,7 @@ import { Tokenizer } from '../interactive-common/tokenizer';
 import { createDeferred } from '../../client/common/utils/async';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
-const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
+const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);
 const RowNumberColumnName = 'No.'; // Unique key for our column containing row numbers
 const onigasmPromise = createDeferred<boolean>();
 const monacoPromise = createDeferred();

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CancellationToken, NotebookControllerAffinity } from 'vscode';
+import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import {
@@ -28,7 +28,6 @@ import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/ty
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { sendNotebookControllerCreateTelemetry } from '../telemetry/kernelTelemetry';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
@@ -40,6 +39,7 @@ import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes'
 import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
+import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -79,7 +79,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
         @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
-        @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService
+        @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -144,8 +145,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             const controllers = await this.createNotebookControllers(connections);
 
             // Send telemetry related to fetching the kernel connections
-            // KERNELPUSH: undefined works for telemetry?
-            sendNotebookControllerCreateTelemetry(undefined, controllers, stopWatch);
+            sendKernelListTelemetry(
+                Uri.file('test.ipynb'), // Give a dummy ipynb value, we need this as its used in telemetry to determine the resource.
+                controllers.map((item) => item.connection),
+                stopWatch
+            );
 
             traceInfoIf(
                 !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
@@ -165,7 +169,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // When a document is opened we need to look for a perferred kernel for it
     private onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
-        if (document.viewType !== JupyterNotebookView) {
+        if (document.notebookType !== JupyterNotebookView || !this.workspace.isTrusted) {
             return;
         }
 
@@ -306,7 +310,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 this,
                 this.pathUtils,
                 this.disposables,
-                this.languageService
+                this.languageService,
+                this.workspace
             );
 
             // Hook up to if this NotebookController is selected or de-selected

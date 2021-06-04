@@ -44,7 +44,7 @@ export class NotebookCommands implements IDisposable {
     }
 
     private toggleOutput() {
-        if (this.notebookEditorProvider.activeEditor) {
+        if (this.notebookEditorProvider.activeEditor?.toggleOutput) {
             this.notebookEditorProvider.activeEditor.toggleOutput();
         }
     }

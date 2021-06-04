@@ -10,7 +10,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { traceInfo } from '../../client/common/logger';
-import { IInteractiveWindowProvider, ISystemPseudoRandomNumberGenerator } from '../../client/datascience/types';
+import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IExtensionTestApi, openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
@@ -37,24 +37,6 @@ suite('Smoke Tests', () => {
         traceInfo(`End Test ${this.currentTest?.title}`);
         await closeActiveWindows();
         traceInfo(`End Test Compelete ${this.currentTest?.title}`);
-    });
-
-    test('Random bytes generation', async function () {
-        return this.skip(); // Failing on windows. Tracked by 4444
-        // We do have a unit test testing this, however create a smoke test to
-        // ensure that the bundling of the native node modules worked
-        const numRequestedBytes = 1024;
-        if (!api) {
-            api = await initialize();
-        }
-        const prng = api.serviceManager.get<ISystemPseudoRandomNumberGenerator>(ISystemPseudoRandomNumberGenerator);
-        const generatedKey = await prng.generateRandomKey(numRequestedBytes);
-        const generatedKeyLength = generatedKey.length;
-        assert.ok(
-            generatedKeyLength === numRequestedBytes * 2, // *2 because the bytes are returned as hex
-            `Expected to generate ${numRequestedBytes} random bytes but instead generated ${generatedKeyLength} random bytes`
-        );
-        assert.ok(generatedKey !== '', `Generated key is null`);
     });
 
     test('Run Cell in interactive window', async () => {

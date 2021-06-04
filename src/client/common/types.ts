@@ -118,7 +118,6 @@ export interface IJupyterSettings {
     readonly logging: ILoggingSettings;
     readonly allowUnauthorizedRemoteConnection: boolean;
     readonly allowImportFromNotebook: boolean;
-    readonly alwaysTrustNotebooks: boolean;
     readonly jupyterInterruptTimeout: number;
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;

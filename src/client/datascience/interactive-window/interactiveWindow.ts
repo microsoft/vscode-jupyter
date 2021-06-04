@@ -27,9 +27,10 @@ import {
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
+import { Commands, defaultNotebookFormat, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { ExportFormat, IExportDialog } from '../export/types';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -414,18 +415,18 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // extension contexts
         if (this.commandManager && this.commandManager.executeCommand) {
             const interactiveContext = new ContextKey(EditorContexts.HaveInteractive, this.commandManager);
-            interactiveContext.set(!this.isDisposed).catch();
+            interactiveContext.set(!this.isDisposed).catch(noop);
             const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);
             const redoableContext = new ContextKey(EditorContexts.HaveRedoableCells, this.commandManager);
             const hasCellSelectedContext = new ContextKey(EditorContexts.HaveCellSelected, this.commandManager);
             if (info) {
-                interactiveCellsContext.set(info.cellCount > 0).catch();
-                redoableContext.set(info.redoCount > 0).catch();
-                hasCellSelectedContext.set(info.selectedCell ? true : false).catch();
+                interactiveCellsContext.set(info.cellCount > 0).catch(noop);
+                redoableContext.set(info.redoCount > 0).catch(noop);
+                hasCellSelectedContext.set(info.selectedCell ? true : false).catch(noop);
             } else {
-                interactiveCellsContext.set(false).catch();
-                redoableContext.set(false).catch();
-                hasCellSelectedContext.set(false).catch();
+                interactiveCellsContext.set(false).catch(noop);
+                redoableContext.set(false).catch(noop);
+                hasCellSelectedContext.set(false).catch(noop);
             }
         }
     }
@@ -536,7 +537,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
 
         // Pull out the metadata from our active notebook
-        const metadata: nbformat.INotebookMetadata = { orig_nbformat: 3 };
+        const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
         if (this.notebook) {
             updateNotebookMetadata(metadata, this.notebook?.getKernelConnection());
         }
@@ -554,13 +555,15 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
 
         // Then run the export command with these contents
-        this.commandManager.executeCommand(
-            Commands.Export,
-            contents,
-            this.owningResource,
-            defaultFileName,
-            this.notebook?.getMatchingInterpreter()
-        );
+        this.commandManager
+            .executeCommand(
+                Commands.Export,
+                contents,
+                this.owningResource,
+                defaultFileName,
+                this.notebook?.getMatchingInterpreter()
+            )
+            .then(noop, noop);
     }
 
     private handleModelChange(update: NotebookModelChange) {

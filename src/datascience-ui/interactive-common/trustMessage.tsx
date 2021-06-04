@@ -8,7 +8,6 @@ import { getMaxWidth } from './utils';
 interface ITrustMessageProps {
     shouldShowTrustMessage: boolean;
     isNotebookTrusted?: boolean;
-    launchNotebookTrustPrompt?(): void; // Native editor-specific
 }
 
 export class TrustMessage extends React.PureComponent<ITrustMessageProps> {
@@ -38,7 +37,6 @@ export class TrustMessage extends React.PureComponent<ITrustMessageProps> {
                         this.props.isNotebookTrusted ? '' : ' jupyter-info-section-hoverable'
                     }`} // Disable animation on hover for already-trusted notebooks
                     style={dynamicStyle}
-                    onClick={this.props.launchNotebookTrustPrompt}
                 >
                     <div className="kernel-status-text">{text}</div>
                 </button>

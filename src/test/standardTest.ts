@@ -78,15 +78,12 @@ async function createSettings(): Promise<string> {
         'python.insidersChannel': 'off',
         'jupyter.logging.level': 'debug',
         'python.logging.level': 'debug',
+        'security.workspace.trust.enabled': false, // Disable trusted workspaces.
         // Disable the start page in VS Code tests, else this UI pops up and has potential to break tests.
         // For instance if the start page UI opens up, then active editor, active notebook and the like are empty.
         'python.showStartPage': false
     };
 
-    // if smoke tests, then trust everything.
-    if (isRunningSmokeTests) {
-        defaultSettings['jupyter.alwaysTrustNotebooks'] = true;
-    }
     if (channel !== 'insiders') {
         // When in Stable, ensure we don't end up using Native Notebooks in CI tests.
         // I.e. ensure we have predictable state/experiments.

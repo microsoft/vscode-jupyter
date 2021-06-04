@@ -480,6 +480,30 @@ suite('DataScience DataViewer tests', () => {
         verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 'inf', 3, '-inf', 4, 'nan']);
     });
 
+    runMountedTest('Filter 2D xarray DataArrays', async (wrapper) => {
+        await injectCode(
+            'import xarray as xr\r\nfoo = xr.DataArray([[1,2,3],[4,5,6],[7,8,9]], dims=list("ab"), coords=dict(a=["x","y","z"], b=["m","n","o"]))'
+        );
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'DataArray');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        await filterRows(wrapper.wrapper, '0', '> 1');
+        verifyRows(wrapper.wrapper, [1, 4, 5, 6, 2, 7, 8, 9]);
+    });
+
+    runMountedTest('2D xarray DataArrays', async (wrapper) => {
+        await injectCode(
+            'import xarray as xr\r\nfoo = xr.DataArray([[1,2,3],[4,5,6]], dims=list("ab"), coords=dict(a=["x","y"], b=["m","n","o"]))'
+        );
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('foo', 'DataArray');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 1, 2, 3, 1, 4, 5, 6]);
+    });
+
     runMountedTest('Ragged 1D numpy array', async (wrapper) => {
         await injectCode("import numpy as np\r\nfoo = np.array(['hello', 42, ['hi', 'hey']])");
         const gotAllRows = getCompletedPromise(wrapper);
