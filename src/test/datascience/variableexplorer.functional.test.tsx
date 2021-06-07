@@ -460,7 +460,7 @@ Name: 0, dtype: float64`,
                         shape: '(3,)',
                         count: 0,
                         truncated: false
-                    },
+                    }
                 ];
                 verifyVariables(wrapper, targetVariables);
 
