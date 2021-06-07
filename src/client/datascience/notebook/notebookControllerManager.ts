@@ -207,6 +207,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
 
+    // Find the preferred controller for the given notebook document
     private async findPreferredController(document: NotebookDocument, cancelToken: CancellationToken) {
         // Prep so that we can track the selected controller for this document
         this.controllerMapping.set(document, undefined);
@@ -216,7 +217,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 traceInfo('Find preferred kernel cancelled');
                 return;
             }
-            // await this.createOrDeletePlaceholderPythonKernel();
 
             // If we found a preferred kernel, set the association on the NotebookController
             if (preferredConnection) {
@@ -257,7 +257,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
-        // Don't update until initial load is done
+        // Don't look for a preferred kernel until we have finished our initial controller load
         await this.getNotebookControllers();
 
         let preferred: KernelConnectionMetadata | undefined;
@@ -402,10 +402,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return kernels;
     }
 
+    // Update any new or removed kernel connections, LiveKernelModels might be added or removed
+    // during remote connections
     private async updateRemoteConnections(cancelToken: CancellationToken) {
         // Don't update until initial load is done
         await this.getNotebookControllers();
 
+        // We've connected and done the intial fetch, so this is speedy
         const connections = await this.getKernelConnectionMetadata(cancelToken);
 
         if (cancelToken.isCancellationRequested) {
