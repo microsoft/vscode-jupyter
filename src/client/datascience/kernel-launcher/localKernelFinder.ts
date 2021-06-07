@@ -5,6 +5,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import * as fs from 'fs-extra';
 import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
@@ -23,7 +24,8 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     getInterpreterKernelSpecName,
     getKernelId,
-    getLanguageInNotebookMetadata
+    getLanguageInNotebookMetadata,
+    isKernelRegisteredByUs
 } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import {
@@ -543,6 +545,13 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
         // Some registered kernel specs do not have a name, in this case use the last part of the path
         kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath));
+
+        // Possible user deleted the underlying kernel.
+        const interpreterPath = interpreter?.path || kernelJson?.metadata?.interpreter?.path;
+        if (isKernelRegisteredByUs(kernelSpec) && interpreterPath && !(await fs.pathExists(interpreterPath))) {
+            return;
+        }
+
         return kernelSpec;
     }
 
