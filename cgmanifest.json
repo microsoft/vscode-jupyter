@@ -9,66 +9,6 @@
                 "Type": "pip"
             },
             "DevelopmentDependency": false
-        },
-        {
-            "Component": {
-                "Npm": {
-                    "Name": "dns-packet",
-                    "Version": "5.2.1"
-                },
-                "Type": "npm"
-            },
-            "DevelopmentDependency": false
-        },
-        {
-            "Component": {
-                "Npm": {
-                    "Name": "sanitize-html",
-                    "Version": "1.20.1"
-                },
-                "Type": "npm"
-            },
-            "DevelopmentDependency": false
-        },
-        {
-            "Component": {
-                "Npm": {
-                    "Name": "static-eval",
-                    "Version": "2.0.2"
-                },
-                "Type": "npm"
-            },
-            "DevelopmentDependency": false
-        },
-        {
-            "Component": {
-                "Npm": {
-                    "Name": "url-parse",
-                    "Version": "1.4.7"
-                },
-                "Type": "npm"
-            },
-            "DevelopmentDependency": false
-        },
-        {
-            "Component": {
-                "Npm": {
-                    "Name": "ws",
-                    "Version": "7.2.0"
-                },
-                "Type": "npm"
-            },
-            "DevelopmentDependency": false
-        },
-        {
-            "Component": {
-                "Npm": {
-                    "Name": "ws",
-                    "Version": "6.2.1"
-                },
-                "Type": "npm"
-            },
-            "DevelopmentDependency": false
         }
     ]
 }
