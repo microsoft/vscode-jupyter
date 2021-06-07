@@ -23,7 +23,8 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     getInterpreterKernelSpecName,
     getKernelId,
-    getLanguageInNotebookMetadata
+    getLanguageInNotebookMetadata,
+    isKernelRegisteredByUs
 } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import {
@@ -543,6 +544,17 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
         // Some registered kernel specs do not have a name, in this case use the last part of the path
         kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath));
+
+        // Possible user deleted the underlying kernel.
+        const interpreterPath = interpreter?.path || kernelJson?.metadata?.interpreter?.path;
+        if (
+            isKernelRegisteredByUs(kernelSpec) &&
+            interpreterPath &&
+            !(await this.fs.localFileExists(interpreterPath))
+        ) {
+            return;
+        }
+
         return kernelSpec;
     }
 
