@@ -824,12 +824,6 @@ A = 1,2`;
                 (viewPort.props as any).onGridSort('name', 'DESC');
                 await completeDesc;
                 verifyVariables(wrapper, targetVariablesDescending);
-
-                // Sort by default order
-                const completeNone = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete);
-                (viewPort.props as any).onGridSort('', 'NONE');
-                await completeNone;
-                verifyVariables(wrapper, targetVariablesAscending);
             },
             () => {
                 return Promise.resolve(ioc);
@@ -850,59 +844,6 @@ a = 1,2,3,4,5,6,7,8,9`;
 
                 // Wait for two variable completes so we get the visible list (should be about 16 items when finished)
                 await addCodeImpartial(wrapper, basicCode, true);
-
-                const targetVariablesDefault: IJupyterVariable[] = [
-                    {
-                        name: 'A',
-                        value: '[1, 2, 3]',
-                        supportsDataExplorer: true,
-                        type: 'list',
-                        size: 54,
-                        shape: '',
-                        count: 3,
-                        truncated: false
-                    },
-                    {
-                        name: 'B',
-                        value: undefined,
-                        supportsDataExplorer: false,
-                        type: 'set',
-                        size: 54,
-                        shape: '',
-                        count: 1,
-                        truncated: false
-                    },
-                    {
-                        name: 'C',
-                        value: "{'c': 1}",
-                        supportsDataExplorer: true,
-                        type: 'dict',
-                        size: 54,
-                        shape: '',
-                        count: 1,
-                        truncated: false
-                    },
-                    {
-                        name: 'a',
-                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
-                        supportsDataExplorer: false,
-                        type: 'tuple',
-                        size: 54,
-                        shape: '9',
-                        count: 0,
-                        truncated: false
-                    },
-                    {
-                        name: 'z',
-                        value: '(1+1j)',
-                        supportsDataExplorer: false,
-                        type: 'complex',
-                        size: 54,
-                        shape: '',
-                        count: 0,
-                        truncated: false
-                    }
-                ];
 
                 const targetVariablesTypeAscending: IJupyterVariable[] = [
                     {
@@ -1025,12 +966,6 @@ a = 1,2,3,4,5,6,7,8,9`;
                 (viewPort.props as any).onGridSort('type', 'DESC');
                 await completeDesc;
                 verifyVariables(wrapper, targetVariablesTypeDescending);
-
-                // Sort by default order
-                const completeNone = mount.waitForMessage(InteractiveWindowMessages.VariablesComplete);
-                (viewPort.props as any).onGridSort('', 'NONE');
-                await completeNone;
-                verifyVariables(wrapper, targetVariablesDefault);
             },
             () => {
                 return Promise.resolve(ioc);
