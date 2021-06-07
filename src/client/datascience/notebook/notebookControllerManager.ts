@@ -421,17 +421,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Look for any connections that are not registered already as controllers
         const missingConnections = connections.filter((connection) => {
-            //const found = this.registeredControllers.some((controller) => {
-            //return controller.id === connection.id;
-            //});
-
-            //return !found;
             return !this.registeredControllers.some((controller) => {
                 return controller.id === connection.id;
             });
         });
 
         // IANHU: Also remove anything currently registered that we don't have anymore
+        const disposedControllers = this.registeredControllers.filter((controller) => {
+            return !connections.some((connection) => {
+                return connection.id === controller.id;
+            });
+        });
 
         // If we have any new connections, register them
         if (missingConnections.length > 0) {
@@ -446,6 +446,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 }
             });
         }
+
+        // If we have any out of date connections, dispose of them
+        disposedControllers.forEach((controller) => {
+            controller.dispose();
+        });
     }
 
     private async notebookKernelChanged(document: NotebookDocument, controller: VSCodeNotebookController) {
