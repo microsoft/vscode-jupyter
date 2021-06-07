@@ -673,8 +673,9 @@ d = tf.constant([[1.0, 2.0], [3.0, 4.0]])
                 const basicCode: string = `B = set([42])
 z = complex(1, 1)
 C = {'c': 1}
-A = [1, 2, 3]
-a = 1,2,3,4,5,6,7,8,9`;
+Ab = [1, 2, 3]
+aa = 1,2,3,4,5,6,7,8,9
+A = 1,2`;
 
                 const { mount } = await getOrCreateInteractiveWindow(ioc);
                 const wrapper = mount.wrapper;
@@ -686,6 +687,26 @@ a = 1,2,3,4,5,6,7,8,9`;
                 const targetVariablesAscending: IJupyterVariable[] = [
                     {
                         name: 'A',
+                        value: '(1, 2)',
+                        supportsDataExplorer: false,
+                        type: 'tuple',
+                        size: 54,
+                        shape: '2',
+                        count: 0,
+                        truncated: false
+                    },
+                    {
+                        name: 'aa',
+                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
+                        supportsDataExplorer: false,
+                        type: 'tuple',
+                        size: 54,
+                        shape: '9',
+                        count: 0,
+                        truncated: false
+                    },
+                    {
+                        name: 'Ab',
                         value: '[1, 2, 3]',
                         supportsDataExplorer: true,
                         type: 'list',
@@ -712,16 +733,6 @@ a = 1,2,3,4,5,6,7,8,9`;
                         size: 54,
                         shape: '',
                         count: 1,
-                        truncated: false
-                    },
-                    {
-                        name: 'a',
-                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
-                        supportsDataExplorer: false,
-                        type: 'tuple',
-                        size: 54,
-                        shape: '9',
-                        count: 0,
                         truncated: false
                     },
                     {
@@ -748,16 +759,6 @@ a = 1,2,3,4,5,6,7,8,9`;
                         truncated: false
                     },
                     {
-                        name: 'a',
-                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
-                        supportsDataExplorer: false,
-                        type: 'tuple',
-                        size: 54,
-                        shape: '9',
-                        count: 0,
-                        truncated: false
-                    },
-                    {
                         name: 'C',
                         value: "{'c': 1}",
                         supportsDataExplorer: true,
@@ -778,13 +779,33 @@ a = 1,2,3,4,5,6,7,8,9`;
                         truncated: false
                     },
                     {
-                        name: 'A',
+                        name: 'Ab',
                         value: '[1, 2, 3]',
                         supportsDataExplorer: true,
                         type: 'list',
                         size: 54,
                         shape: '',
                         count: 3,
+                        truncated: false
+                    },
+                    {
+                        name: 'aa',
+                        value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
+                        supportsDataExplorer: false,
+                        type: 'tuple',
+                        size: 54,
+                        shape: '9',
+                        count: 0,
+                        truncated: false
+                    },
+                    {
+                        name: 'A',
+                        value: '(1, 2)',
+                        supportsDataExplorer: false,
+                        type: 'tuple',
+                        size: 54,
+                        shape: '2',
+                        count: 0,
                         truncated: false
                     }
                 ];
