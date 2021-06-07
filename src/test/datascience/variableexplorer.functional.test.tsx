@@ -460,13 +460,13 @@ Name: 0, dtype: float64`,
                         shape: '(3,)',
                         count: 0,
                         truncated: false
-                    }
+                    },
                 ];
                 verifyVariables(wrapper, targetVariables);
 
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
-                    targetVariables[6].value = 'array([1., 2., 3.])'; // Debugger shows np array differently
+                    targetVariables[5].value = 'array([1., 2., 3.])'; // Debugger shows np array differently
                     await verifyAfterStep(ioc, wrapper, () => {
                         verifyVariables(wrapper, targetVariables);
                         return Promise.resolve();
@@ -681,8 +681,8 @@ A = 1,2`;
                 const wrapper = mount.wrapper;
                 openVariableExplorer(wrapper);
 
-                // Wait for two variable completes so we get the visible list (should be about 16 items when finished)
-                await addCodeImpartial(wrapper, basicCode, true);
+                // Wait for two variable completes so we get the visible list (should be 6 items when finished)
+                await addCodeImpartial(wrapper, basicCode, true, 2);
 
                 const targetVariablesAscending: IJupyterVariable[] = [
                     {
