@@ -13,10 +13,10 @@ import {
     NotebookDocument,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
-    NotebookExecuteHandler,
     NotebookRendererScript,
     window,
-    workspace
+    workspace,
+    NotebookCell
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
 import { IDisposableRegistry } from '../types';
@@ -93,7 +93,11 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         id: string,
         viewType: string,
         label: string,
-        handler?: NotebookExecuteHandler,
+        handler?: (
+            cells: NotebookCell[],
+            notebook: NotebookDocument,
+            controller: NotebookController
+        ) => void | Thenable<void>,
         rendererScripts?: NotebookRendererScript[]
     ): NotebookController {
         return notebooks.createNotebookController(id, viewType, label, handler, rendererScripts);
