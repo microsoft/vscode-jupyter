@@ -437,6 +437,16 @@ mySeries = myDataframe[0]
                         count: 0,
                         truncated: false
                     },
+                    {
+                        name: 'mynpArray',
+                        value: '[1. 2. 3.]',
+                        supportsDataExplorer: true,
+                        type: 'ndarray',
+                        size: 54,
+                        shape: '(3,)',
+                        count: 0,
+                        truncated: false
+                    },
                     /* eslint-disable no-trailing-spaces */
                     {
                         name: 'mySeries',
@@ -446,16 +456,6 @@ mySeries = myDataframe[0]
 Name: 0, dtype: float64`,
                         supportsDataExplorer: true,
                         type: 'Series',
-                        size: 54,
-                        shape: '(3,)',
-                        count: 0,
-                        truncated: false
-                    },
-                    {
-                        name: 'mynpArray',
-                        value: '[1. 2. 3.]',
-                        supportsDataExplorer: true,
-                        type: 'ndarray',
                         size: 54,
                         shape: '(3,)',
                         count: 0,
