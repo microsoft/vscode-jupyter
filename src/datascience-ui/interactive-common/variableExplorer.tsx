@@ -303,6 +303,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     emptyRowsView={VariableExplorerEmptyRowsView}
                     rowRenderer={VariableExplorerRowRenderer}
                     onGridSort={this.sortRows}
+                    sortColumn="name"
+                    sortDirection="ASC"
                 />
             </div>
         );
