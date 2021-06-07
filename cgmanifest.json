@@ -1,0 +1,14 @@
+{
+    "Registrations": [
+        {
+            "Component": {
+                "Pip": {
+                    "Name": "py",
+                    "Version": "1.9.0"
+                },
+                "Type": "pip"
+            },
+            "DevelopmentDependency": false
+        }
+    ]
+}
