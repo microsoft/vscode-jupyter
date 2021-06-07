@@ -49,6 +49,8 @@
    ([#5934](https://github.com/Microsoft/vscode-jupyter/issues/5934))
 1. Support new renderer API in Jupyter.
    ([#5952](https://github.com/Microsoft/vscode-jupyter/issues/5952))
+1. Hide kernels belonging to deleted Python environments from kernel picker.
+   ([#6164](https://github.com/Microsoft/vscode-jupyter/issues/6164))
 
 ### Code Health
 
