@@ -28,7 +28,8 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'ndarray',
     'Series',
     'Tensor',
-    'EagerTensor'
+    'EagerTensor',
+    'DataArray'
 ]);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
@@ -76,6 +77,21 @@ export class DebuggerVariables extends DebugLocationTracker
         };
 
         if (this.active) {
+            type SortableColumn = 'name' | 'type';
+            const sortColumn = request.sortColumn as SortableColumn;
+            const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
+                // In case it is undefined or null
+                const aColumn = a[sortColumn] ? a[sortColumn] : '';
+                const bColumn = b[sortColumn] ? b[sortColumn] : '';
+
+                if (request.sortAscending) {
+                    return aColumn.localeCompare(bColumn, undefined, { sensitivity: 'base' });
+                } else {
+                    return bColumn.localeCompare(aColumn, undefined, { sensitivity: 'base' });
+                }
+            };
+            this.lastKnownVariables.sort(comparer);
+
             const startPos = request.startIndex ? request.startIndex : 0;
             const chunkSize = request.pageSize ? request.pageSize : MaximumRowChunkSizeForDebugger;
             result.pageStartIndex = startPos;
