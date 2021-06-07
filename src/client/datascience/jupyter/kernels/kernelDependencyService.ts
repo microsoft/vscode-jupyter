@@ -64,7 +64,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Cache the install run
         let promise = this.installPromises.get(interpreter.path);
         if (!promise) {
-            promise = this.runInstaller(interpreter, token, disableUI);
+            promise = this.runInstaller(interpreter, token, disableUI, resource);
             this.installPromises.set(interpreter.path, promise);
         }
 
@@ -89,11 +89,17 @@ export class KernelDependencyService implements IKernelDependencyService {
             return;
         }
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
-            const cmd =
-                getResourceType(resource) === 'notebook' && this.useNativeNb
-                    ? 'notebook.selectKernel'
-                    : Commands.SwitchJupyterKernel;
-            this.commandManager.executeCommand(cmd).then(noop, noop);
+            if (getResourceType(resource) === 'notebook' && this.useNativeNb) {
+                this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
+            } else {
+                this.commandManager
+                    .executeCommand(Commands.SwitchJupyterKernel, {
+                        currentKernelDisplayName: interpreter.displayName,
+                        identity: resource,
+                        resource
+                    })
+                    .then(noop, noop);
+            }
         }
         throw new IpyKernelNotInstalledError(
             DataScience.ipykernelNotInstalled().format(
@@ -105,7 +111,8 @@ export class KernelDependencyService implements IKernelDependencyService {
     private async runInstaller(
         interpreter: PythonEnvironment,
         token?: CancellationToken,
-        disableUI?: boolean
+        disableUI?: boolean,
+        resource?: Resource
     ): Promise<KernelInterpreterDependencyResponse> {
         // If there's no UI, then cancel installation.
         if (disableUI) {
@@ -131,10 +138,19 @@ export class KernelDependencyService implements IKernelDependencyService {
         });
         const installPrompt = isModulePresent ? Common.reInstall() : Common.install();
         const selectKernel = DataScience.selectKernel();
+        // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
+        // https://github.com/microsoft/vscode-jupyter/issues/6135
+        const options = resource ? [installPrompt, selectKernel] : [installPrompt];
+        // In the case of interactive window, due to the current code flow we get this code executed twice,
+        // hence we get two messages about ipykernel not being installed.
+        // THat's a very poor ux, one could end up with two modal dialog boxes (one after the other for interactive).
+        // hence disabling modal dialog for interactive window for now.
+        // Again to be resolved in https://github.com/microsoft/vscode-jupyter/issues/6135
+        const modal = getResourceType(resource) === 'notebook';
         const selection = this.isCodeSpace
             ? installPrompt
             : await Promise.race([
-                  this.appShell.showErrorMessage(message, { modal: true }, installPrompt, selectKernel),
+                  this.appShell.showErrorMessage(message, { modal }, ...options),
                   promptCancellationPromise
               ]);
         if (installerToken.isCancellationRequested) {

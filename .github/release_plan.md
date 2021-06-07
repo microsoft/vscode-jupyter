@@ -23,7 +23,7 @@
     -   [ ] Merge pull request into `release-YYYY.MM`
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
--   [ ] Update `main` post-release
+-   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
     -   [ ] Bump the version number to the next monthly ("YYYY.MM.0") release in the `main` branch
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
