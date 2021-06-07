@@ -5,7 +5,6 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as fs from 'fs-extra';
 import { CancellationToken } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
@@ -548,7 +547,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
         // Possible user deleted the underlying kernel.
         const interpreterPath = interpreter?.path || kernelJson?.metadata?.interpreter?.path;
-        if (isKernelRegisteredByUs(kernelSpec) && interpreterPath && !(await fs.pathExists(interpreterPath))) {
+        if (
+            isKernelRegisteredByUs(kernelSpec) &&
+            interpreterPath &&
+            !(await this.fs.localFileExists(interpreterPath))
+        ) {
             return;
         }
 
