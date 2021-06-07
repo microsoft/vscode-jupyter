@@ -87,14 +87,10 @@ function createJupyterKernelWithoutSerialization() {
 function makeVariableExplorerAlwaysSorted() {
     const fileNames = ['react-data-grid.js', 'react-data-grid.min.js'];
     const alwaysSortedCode = 'case g.NONE:e=r?g.DESC:g.ASC;break;case g.ASC:e=g.DESC;break;case g.DESC:e=g.ASC';
-    const originalCode = 'case g.NONE:e=r?g.DESC:g.ASC;break;case g.ASC:e=r?g.NONE:g.DESC;break;case g.DESC:e=r?g.ASC:g.NONE';
+    const originalCode =
+        'case g.NONE:e=r?g.DESC:g.ASC;break;case g.ASC:e=r?g.NONE:g.DESC;break;case g.DESC:e=r?g.ASC:g.NONE';
     for (const fileName of fileNames) {
-        var relativePath = path.join(
-            'node_modules',
-            'react-data-grid',
-            'dist',
-            fileName
-        );
+        var relativePath = path.join('node_modules', 'react-data-grid', 'dist', fileName);
         var filePath = path.join(constants.ExtensionRootDir, relativePath);
         if (!fs.existsSync(filePath)) {
             throw new Error("react-data-grid dist file not found '" + filePath + "' (pvsc post install script)");
@@ -121,7 +117,7 @@ function makeVariableExplorerAlwaysSorted() {
 }
 
 (async () => {
-    makeVariableExplorerAlwaysSorted()
+    makeVariableExplorerAlwaysSorted();
     fixJupyterLabDTSFiles();
     createJupyterKernelWithoutSerialization();
     await downloadRendererExtension();
