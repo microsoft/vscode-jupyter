@@ -183,12 +183,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
-        // IANHU: Needed?
-        // Wait until initial kernels have loaded before looking for preferred
-        // await this.getNotebookControllers();
-
         // Keep track of a token per document so that we can cancel the search if the doc is closed
-        // IANHU: Rename to document open?
         const preferredSearchToken = new CancellationTokenSource();
         this.findPreferredInProgress.set(document, preferredSearchToken);
 
@@ -426,7 +421,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             });
         });
 
-        // IANHU: Also remove anything currently registered that we don't have anymore
+        // Look for any controllers that we have disposed
         const disposedControllers = this.registeredControllers.filter((controller) => {
             return !connections.some((connection) => {
                 return connection.id === controller.id;
