@@ -507,7 +507,7 @@ export class CellExecution {
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
                     'KernelMessage = StreamMessage',
-                    `Stream '${msg.content.name}`,
+                    `Cell Index ${this.cell.index}, Stream '${msg.content.name}`,
                     msg.content.text
                 );
                 await this.handleStreamMessage(msg as KernelMessage.IStreamMsg, clearState);
