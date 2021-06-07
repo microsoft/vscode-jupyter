@@ -18,7 +18,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
 import { pruneCell } from '../common';
-import { CodeSnippets, Identifiers } from '../constants';
+import { CodeSnippets, defaultNotebookFormat, Identifiers } from '../constants';
 import {
     CellState,
     ICell,
@@ -104,7 +104,7 @@ export class JupyterExporter implements INotebookExporter {
                 pygments_lexer: `ipython${pythonNumber}`,
                 version: pythonNumber
             },
-            orig_nbformat: 2,
+            orig_nbformat: defaultNotebookFormat.major,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             kernelspec: kernelSpec as any
         };
@@ -115,8 +115,8 @@ export class JupyterExporter implements INotebookExporter {
         // Combine this into a JSON object
         return {
             cells: this.pruneCells(cells, matcher),
-            nbformat: 4,
-            nbformat_minor: 2,
+            nbformat: defaultNotebookFormat.major,
+            nbformat_minor: defaultNotebookFormat.minor,
             metadata: metadata
         };
     }

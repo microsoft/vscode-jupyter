@@ -11,6 +11,7 @@ import { ICryptoUtils } from '../../common/types';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { pruneCell } from '../common';
+import { defaultNotebookFormat } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
     getInterpreterFromKernelConnectionMetadata,
@@ -155,14 +156,14 @@ export function getDefaultNotebookContent(pythonNumber: number = 3): Partial<nbf
             pygments_lexer: `ipython${pythonNumber}`,
             version: pythonNumber
         },
-        orig_nbformat: 2
+        orig_nbformat: defaultNotebookFormat.major
     };
 
     // Default notebook data.
     return {
         metadata: metadata,
-        nbformat: 4,
-        nbformat_minor: 2
+        nbformat: defaultNotebookFormat.major,
+        nbformat_minor: defaultNotebookFormat.minor
     };
 }
 /**
@@ -181,7 +182,7 @@ export function getDefaultNotebookContentForNativeNotebooks(language: string = '
                     name: language,
                     nbconvert_exporter: 'python'
                 },
-                orig_nbformat: 2
+                orig_nbformat: defaultNotebookFormat.major
             };
             break;
         default:
@@ -189,14 +190,14 @@ export function getDefaultNotebookContentForNativeNotebooks(language: string = '
                 language_info: {
                     name: language
                 },
-                orig_nbformat: 2
+                orig_nbformat: defaultNotebookFormat.major
             };
     }
 
     return {
         metadata,
-        nbformat: 4,
-        nbformat_minor: 2
+        nbformat: defaultNotebookFormat.major,
+        nbformat_minor: defaultNotebookFormat.minor
     };
 }
 export abstract class BaseNotebookModel implements INotebookModel {

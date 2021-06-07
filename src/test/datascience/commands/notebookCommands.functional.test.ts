@@ -149,7 +149,8 @@ suite('DataScience - Notebook Commands', () => {
                     instance(interactiveWindowProvider),
                     instance(notebookProvider),
                     kernelSelector,
-                    kernelSwitcher
+                    kernelSwitcher,
+                    instance(configService)
                 );
             });
 
