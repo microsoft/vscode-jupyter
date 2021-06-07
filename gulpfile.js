@@ -174,7 +174,7 @@ async function updateBuildNumber(args) {
             versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
         const newVersion =
             versionParts.length > 1
-                ? `${versionParts[0]}.${versionParts[1]}.99${buildNumberPortion}`
+                ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}`
                 : packageJson.version;
         packageJson.version = newVersion;
 
