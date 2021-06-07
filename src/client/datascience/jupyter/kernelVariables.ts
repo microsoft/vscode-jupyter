@@ -207,10 +207,10 @@ export class KernelVariables implements IJupyterVariables {
             type SortableColumn = 'name' | 'type';
             const sortColumn = request.sortColumn as SortableColumn;
             const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
-                if (!request.sortAscending) {
-                    return a[sortColumn] < b[sortColumn] ? 1 : -1;
+                if (request.sortAscending) {
+                    return a[sortColumn].localeCompare(b[sortColumn], undefined, { sensitivity: 'base' });
                 } else {
-                    return a[sortColumn] > b[sortColumn] ? 1 : -1;
+                    return b[sortColumn].localeCompare(a[sortColumn], undefined, { sensitivity: 'base' });
                 }
             };
             list.variables.sort(comparer);
