@@ -14,6 +14,7 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { pruneCell } from '../common';
 import { traceInfoIf } from '../../common/logger';
 import { IS_CI_SERVER } from '../../../test/ciConstants';
+import { defaultNotebookFormat } from '../constants';
 
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
@@ -27,12 +28,8 @@ export class NotebookSerializer implements VSCNotebookSerializer {
     ) {}
     public deserializeNotebook(content: Uint8Array, _token: CancellationToken): NotebookData {
         const contents = Buffer.from(content).toString();
-        const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
-        traceInfoIf(IS_CI_SERVER, `NotebookJSON ${json}`);
-        // Double check json (if we have any)
-        if (json && !json.cells) {
-            return new NotebookData([]);
-        }
+        const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : {};
+        traceInfoIf(IS_CI_SERVER, `NotebookJSON ${JSON.stringify(json)}`);
 
         // Then compute indent. It's computed from the contents
         const indentAmount = contents ? detectIndent(contents).indent : ' ';
@@ -55,6 +52,11 @@ export class NotebookSerializer implements VSCNotebookSerializer {
                     source: ''
                 }
             ];
+        }
+        // For notebooks without metadata default the language in metadata to the preferred language.
+        if (!json.metadata || (!json.metadata.kernelspec && !json.metadata.language_info)) {
+            json.metadata = json?.metadata || { orig_nbformat: defaultNotebookFormat.major };
+            json.metadata.language_info = json.metadata.language_info || { name: preferredCellLanguage };
         }
         const data = notebookModelToVSCNotebookData(
             { ...json, cells: [] },
