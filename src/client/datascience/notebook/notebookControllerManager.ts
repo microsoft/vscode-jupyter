@@ -58,7 +58,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }>;
 
     // Promise to resolve when we have loaded our controllers
-    private controllersPromise?: Promise<VSCodeNotebookController[]>;
+    private controllersPromise?: Promise<void>;
 
     // Listing of the controllers that we have registered
     private registeredControllers: VSCodeNotebookController[] = [];
@@ -107,7 +107,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         if (this.isLocalLaunch) {
             // Pre-warm fetching local kernels, for remote connections fetch as and when needed.
-            this.getNotebookControllers().catch(traceError);
+            this.loadNotebookControllers().catch(traceError);
         }
     }
 
@@ -118,15 +118,18 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
 
+    public getNotebookControllers(): VSCodeNotebookController[] {
+        return this.registeredControllers;
+    }
+
     // Find all the notebook controllers that we have registered
-    public async getNotebookControllers(): Promise<VSCodeNotebookController[]> {
+    public async loadNotebookControllers(): Promise<void> {
         if (!this.controllersPromise) {
-            this.controllersPromise = this.loadNotebookControllers()
+            this.controllersPromise = this.loadNotebookControllersImpl()
                 .then((controllers) => {
                     // Just assign here as this is our initial set of controllers
                     // anything that adds or updates should make sure the initial load has happened first
                     this.registeredControllers = controllers;
-                    return controllers;
                 })
                 .catch((error) => {
                     traceError('Error loading notebook controllers', error);
@@ -137,7 +140,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // Turn all our kernelConnections that we know about into registered NotebookControllers
-    private async loadNotebookControllers(): Promise<VSCodeNotebookController[]> {
+    private async loadNotebookControllersImpl(): Promise<VSCodeNotebookController[]> {
         const stopWatch = new StopWatch();
 
         try {
@@ -234,9 +237,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private async setPreferredController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata) {
         // Wait for our controllers to be loaded before we try to set a preferred on
         // can happen if a document is opened quick and we have not yet loaded our controllers
-        const controllers = await this.getNotebookControllers();
+        await this.loadNotebookControllers();
 
-        const targetController = controllers.find((value) => {
+        const targetController = this.getNotebookControllers().find((value) => {
             // Check for a connection match
             return areKernelConnectionsEqual(kernelConnection, value.connection);
         });

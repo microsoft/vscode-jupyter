@@ -247,7 +247,7 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     await waitForKernelToGetAutoSelected(undefined, 10_000);
 
     // Get the list of NotebookControllers for this document
-    const notebookControllers = await notebookControllerManager.getNotebookControllers();
+    const notebookControllers = notebookControllerManager.getNotebookControllers();
 
     // Get the list of kernels possible
     traceInfo(`Controllers found for wait search: ${notebookControllers?.map((k) => `${k.label}:${k.id}`).join('\n')}`);
