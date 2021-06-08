@@ -191,7 +191,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // For a remote connection check for new live kernel models before we find preferred
             this.updateRemoteConnections(preferredSearchToken.token)
                 .then(() => {
-                    this.findPreferredController(document, preferredSearchToken.token).catch((error) => {
+                    this.setController(document, preferredSearchToken.token).catch((error) => {
                         traceError(error);
                     });
                 })
@@ -200,15 +200,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     this.findPreferredInProgress.delete(document);
                 });
         } else {
-            this.findPreferredController(document, preferredSearchToken.token).finally(() => {
+            this.setController(document, preferredSearchToken.token).finally(() => {
                 // Make sure that we clear our finding in progress when done
                 this.findPreferredInProgress.delete(document);
             });
         }
     }
 
-    // Find the preferred controller for the given notebook document
-    private async findPreferredController(document: NotebookDocument, cancelToken: CancellationToken) {
+    // Set the controller for this notebook document
+    private async setController(document: NotebookDocument, cancelToken: CancellationToken) {
         // Prep so that we can track the selected controller for this document
         this.controllerMapping.set(document, undefined);
 
@@ -257,9 +257,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
-        // Don't look for a preferred kernel until we have finished our initial controller load
-        await this.getNotebookControllers();
-
         let preferred: KernelConnectionMetadata | undefined;
 
         if (this.isLocalLaunch) {
