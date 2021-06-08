@@ -118,7 +118,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // Find all the notebook controllers that we have registered
-    public async loadNotebookControllers(): Promise<void> {
+    private async loadNotebookControllers(): Promise<void> {
         if (!this.controllersPromise) {
             this.controllersPromise = this.loadNotebookControllersImpl()
                 .then((controllers) => {
@@ -207,7 +207,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Set the controller for this notebook document
     private async setController(document: NotebookDocument, cancelToken: CancellationToken) {
-        await this.loadNotebookControllers();
+        // await this.loadNotebookControllers();
 
         // Prep so that we can track the selected controller for this document
         this.controllerMapping.set(document, undefined);
