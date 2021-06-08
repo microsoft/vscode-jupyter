@@ -60,6 +60,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<VSCodeNotebookController[]>;
 
+    // Listing of the controllers that we have registered
+    private registeredControllers: VSCodeNotebookController[] = [];
+
     private cancelToken: CancellationTokenSource | undefined;
     private readonly isLocalLaunch: boolean;
     constructor(
@@ -113,10 +116,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Find all the notebook controllers that we have registered
     public async getNotebookControllers(): Promise<VSCodeNotebookController[]> {
         if (!this.controllersPromise) {
-            this.controllersPromise = this.loadNotebookControllers().catch((error) => {
-                traceError('Error loading notebook controllers', error);
-                throw error;
-            });
+            this.controllersPromise = this.loadNotebookControllers()
+                .then((controllers) => {
+                    // Just assign here as this is our initial set of controllers
+                    // anything that adds or updates should make sure the initial load has happened first
+                    this.registeredControllers = controllers;
+                    return controllers;
+                })
+                .catch((error) => {
+                    traceError('Error loading notebook controllers', error);
+                    throw error;
+                });
         }
         return this.controllersPromise;
     }
@@ -168,35 +178,51 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
-        // Prep so that we can track the selected controller for this document
-        this.controllerMapping.set(document, undefined);
-
         // Keep track of a token per document so that we can cancel the search if the doc is closed
         const preferredSearchToken = new CancellationTokenSource();
         this.findPreferredInProgress.set(document, preferredSearchToken);
 
-        this.findPreferredKernel(document, preferredSearchToken.token)
-            .then(async (preferredConnection) => {
-                if (preferredSearchToken.token.isCancellationRequested) {
-                    traceInfo('Find preferred kernel cancelled');
-                    return;
-                }
-                // await this.createOrDeletePlaceholderPythonKernel();
-
-                // If we found a preferred kernel, set the association on the NotebookController
-                if (preferredConnection) {
-                    traceInfo(
-                        `PreferredConnection: ${
-                            preferredConnection.id
-                        } found for NotebookDocument: ${document.uri.toString()}`
-                    );
-                    this.setPreferredController(document, preferredConnection).catch(traceError);
-                }
-            })
-            .finally(() => {
+        if (!this.isLocalLaunch) {
+            // For a remote connection check for new live kernel models before we find preferred
+            this.updateRemoteConnections(preferredSearchToken.token)
+                .then(() => {
+                    this.findPreferredController(document, preferredSearchToken.token).catch((error) => {
+                        traceError(error);
+                    });
+                })
+                .finally(() => {
+                    // Make sure that we clear our finding in progress when done
+                    this.findPreferredInProgress.delete(document);
+                });
+        } else {
+            this.findPreferredController(document, preferredSearchToken.token).finally(() => {
                 // Make sure that we clear our finding in progress when done
                 this.findPreferredInProgress.delete(document);
             });
+        }
+    }
+
+    // Find the preferred controller for the given notebook document
+    private async findPreferredController(document: NotebookDocument, cancelToken: CancellationToken) {
+        // Prep so that we can track the selected controller for this document
+        this.controllerMapping.set(document, undefined);
+
+        return this.findPreferredKernel(document, cancelToken).then(async (preferredConnection) => {
+            if (cancelToken.isCancellationRequested) {
+                traceInfo('Find preferred kernel cancelled');
+                return;
+            }
+
+            // If we found a preferred kernel, set the association on the NotebookController
+            if (preferredConnection) {
+                traceInfo(
+                    `PreferredConnection: ${
+                        preferredConnection.id
+                    } found for NotebookDocument: ${document.uri.toString()}`
+                );
+                this.setPreferredController(document, preferredConnection).catch(traceError);
+            }
+        });
     }
 
     // For the given document, find the notebook controller that matches this kernel connection and associate the two
@@ -226,6 +252,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
+        // Don't look for a preferred kernel until we have finished our initial controller load
+        await this.getNotebookControllers();
+
         let preferred: KernelConnectionMetadata | undefined;
 
         if (this.isLocalLaunch) {
@@ -325,7 +354,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 ex,
                 true
             );
-            traceError(`Failed to create notebbook controller for ${kernelConnection.id}`, ex);
+            traceError(`Failed to create notebook controller for ${kernelConnection.id}`, ex);
         }
     }
 
@@ -366,6 +395,55 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
 
         return kernels;
+    }
+
+    // Update any new or removed kernel connections, LiveKernelModels might be added or removed
+    // during remote connections
+    private async updateRemoteConnections(cancelToken: CancellationToken) {
+        // Don't update until initial load is done
+        await this.getNotebookControllers();
+
+        // We've connected and done the intial fetch, so this is speedy
+        const connections = await this.getKernelConnectionMetadata(cancelToken);
+
+        if (cancelToken.isCancellationRequested) {
+            // Bail out on making the controllers if we are cancelling
+            traceInfo('Cancelled loading notebook controllers');
+            return [];
+        }
+
+        // Look for any connections that are not registered already as controllers
+        const missingConnections = connections.filter((connection) => {
+            return !this.registeredControllers.some((controller) => {
+                return controller.id === connection.id;
+            });
+        });
+
+        // Look for any controllers that we have disposed
+        const disposedControllers = this.registeredControllers.filter((controller) => {
+            return !connections.some((connection) => {
+                return connection.id === controller.id;
+            });
+        });
+
+        // If we have any new connections, register them
+        if (missingConnections.length > 0) {
+            const connectionsWithLabel = missingConnections.map((value) => {
+                return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
+            });
+
+            connectionsWithLabel.forEach((value) => {
+                const controller = this.createNotebookController(value.connection, value.label);
+                if (controller) {
+                    this.registeredControllers.push(controller);
+                }
+            });
+        }
+
+        // If we have any out of date connections, dispose of them
+        disposedControllers.forEach((controller) => {
+            controller.dispose();
+        });
     }
 
     private async notebookKernelChanged(document: NotebookDocument, controller: VSCodeNotebookController) {
