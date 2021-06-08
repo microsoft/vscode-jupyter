@@ -42,7 +42,7 @@ export class NotebookSerializer implements VSCNotebookSerializer {
         const preferredCellLanguage = this.cellLanguageService.getPreferredLanguage(json?.metadata);
         traceInfoIf(IS_CI_SERVER, `Preferred language in deserializer ${preferredCellLanguage}`);
         // Ensure we always have a blank cell.
-        if (json?.cells?.length === 0) {
+        if ((json?.cells || []).length === 0) {
             json.cells = [
                 {
                     cell_type: 'code',
