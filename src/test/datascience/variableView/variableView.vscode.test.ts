@@ -33,6 +33,7 @@ suite('DataScience - VariableView', () => {
     let variableViewProvider: ITestVariableViewProvider;
     let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
+        traceInfo(`Start Test Suite`);
         this.timeout(120_000);
         api = await initialize();
 
@@ -54,6 +55,7 @@ suite('DataScience - VariableView', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        traceInfo(`Start Test Suite (completed)`);
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);

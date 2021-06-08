@@ -41,6 +41,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { testOnlyMethod } from '../../common/utils/decorators';
+import { IS_CI_SERVER } from '../../../test/ciConstants';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -227,6 +228,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     } found for NotebookDocument: ${document.uri.toString()}`
                 );
                 this.setPreferredController(document, preferredConnection).catch(traceError);
+            } else {
+                traceInfoIf(
+                    IS_CI_SERVER,
+                    `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`
+                );
             }
         });
     }
@@ -245,6 +251,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (targetController) {
             traceInfo(`TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`);
             await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+        } else {
+            traceInfoIf(
+                IS_CI_SERVER,
+                `TargetController nof found ID: ${kernelConnection.id} for document ${document.uri.toString()}`
+            );
         }
     }
 
@@ -360,6 +371,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
+        traceInfoIf(IS_CI_SERVER, `Notebook Controller set ${event.notebook.uri.toString()}, ${event.controller.id}`);
         this.widgetCoordinator.setActiveController(event.notebook, event.controller);
         if (this.controllerMapping.has(event.notebook)) {
             this.controllerMapping.set(event.notebook, event.controller);
