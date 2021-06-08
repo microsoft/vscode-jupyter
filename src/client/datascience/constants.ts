@@ -161,6 +161,8 @@ export namespace Commands {
     export const OpenVariableView = 'jupyter.openVariableView';
     export const NotebookEditorKeybindSave = 'jupyter.notebookeditor.keybind.save';
     export const NotebookEditorKeybindUndo = 'jupyter.notebookeditor.keybind.undo';
+    export const NotebookEditorKeybindRenderMarkdownAndSelectBelow =
+        'jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow';
     export const NotebookEditorToggleOutput = 'jupyter.notebookeditor.keybind.toggleOutput';
 }
 

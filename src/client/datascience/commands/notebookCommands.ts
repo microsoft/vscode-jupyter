@@ -38,7 +38,12 @@ export class NotebookCommands implements IDisposable {
             this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this),
             this.commandManager.registerCommand(Commands.NotebookEditorKeybindSave, this.keybindSave, this),
             this.commandManager.registerCommand(Commands.NotebookEditorKeybindUndo, this.keybindUndo, this),
-            this.commandManager.registerCommand(Commands.NotebookEditorToggleOutput, this.toggleOutput, this)
+            this.commandManager.registerCommand(Commands.NotebookEditorToggleOutput, this.toggleOutput, this),
+            this.commandManager.registerCommand(
+                Commands.NotebookEditorKeybindRenderMarkdownAndSelectBelow,
+                this.renderMarkdownAndSelectBelow,
+                this
+            )
         );
     }
     public dispose() {
@@ -49,6 +54,12 @@ export class NotebookCommands implements IDisposable {
         if (this.notebookEditorProvider.activeEditor?.toggleOutput) {
             this.notebookEditorProvider.activeEditor.toggleOutput();
         }
+    }
+
+    private renderMarkdownAndSelectBelow() {
+        this.commandManager
+            .executeCommand('notebook.cell.quitEdit')
+            .then(() => this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow'));
     }
 
     private collapseAll() {

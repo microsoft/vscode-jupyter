@@ -385,6 +385,7 @@
     "DataScience.addCell": "Add cell",
     "DataScience.runAll": "Run all cells",
     "DataScience.toggleCellOutput": "Toggle Cell Output",
+    "DataScience.renderMarkdownAndSelectBelow": "Execute Notebook Cell and Select Below",
     "DataScience.convertingToPythonFile": "Converting ipynb to python file",
     "DataScience.untitledNotebookMessage": "Your changes will be lost if you don't save them.",
     "DataScience.untitledNotebookYes": "Save",
