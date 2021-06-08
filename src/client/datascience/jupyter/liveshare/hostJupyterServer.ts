@@ -372,6 +372,9 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             );
         }
 
+        traceInfo(
+            `Computed Launch Info uri = ${resource?.fsPath}, changed ${changedKernel}, ${launchInfo.kernelConnectionMetadata?.id}`
+        );
         return { info: launchInfo, changedKernel };
     }
 
