@@ -59,7 +59,7 @@ export class NotebookCommands implements IDisposable {
     private renderMarkdownAndSelectBelow() {
         this.commandManager
             .executeCommand('notebook.cell.quitEdit')
-            .then(() => this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow'));
+            .then(() => void this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow'));
     }
 
     private collapseAll() {
