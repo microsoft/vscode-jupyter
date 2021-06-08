@@ -190,6 +190,7 @@ import { IExtensions } from '../../../client/common/types';
             extensions = mock<IExtensions>();
             when(extensions.getExtension(anything())).thenReturn();
             fs = mock(FileSystem);
+            when(fs.localFileExists(anything())).thenResolve(true);
             const pathUtils = new PathUtils(isWindows);
             const workspaceService = mock(WorkspaceService);
             const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');

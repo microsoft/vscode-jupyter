@@ -58,3 +58,16 @@ def _VSCODE_getVariableProperties(var, listOfAttributes):
         if hasattr(var, attr)
     }
     return _VSCODE_json.dumps(result)
+
+
+def _VSCODE_getVariableTypes(varnames):
+    # Map with key: varname and value: vartype
+    result = {}
+    for name in varnames:
+        try:
+            vartype = type(globals()[name])
+            if hasattr(vartype, "__name__"):
+                result[name] = vartype.__name__
+        except TypeError:
+            pass
+    return _VSCODE_json.dumps(result)

@@ -471,7 +471,7 @@ suite('DataScience Native Editor', () => {
 
                 runMountedTest('Remote kernel can be switched and remembered', async function () {
                     // Turn off raw kernel for this test as it's testing remote
-                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
+                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true, jupyterServerType: 'remote' });
 
                     const pythonService = await createPythonService(ioc, 2);
 

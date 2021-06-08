@@ -235,6 +235,7 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IKernelDependencyService,
+    IKernelVariableRequester,
     INbConvertExportToPythonService,
     INbConvertInterpreterDependencyChecker,
     INotebookCreationTracker,
@@ -311,6 +312,7 @@ import { RemoteKernelFinder } from '../../client/datascience/kernel-launcher/rem
 import { Extensions } from '../../client/common/application/extensions';
 import { NotebookCreator } from '../../client/datascience/notebook/creation/notebookCreator';
 import { CreationOptionService } from '../../client/datascience/notebook/creation/creationOptionsService';
+import { PythonVariablesRequester } from '../../client/datascience/jupyter/pythonVariableRequester';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -611,6 +613,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IJupyterVariables,
             DebuggerVariables,
             Identifiers.DEBUGGER_VARIABLES
+        );
+        this.serviceManager.addSingleton<IKernelVariableRequester>(
+            IKernelVariableRequester,
+            PythonVariablesRequester,
+            Identifiers.PYTHON_VARIABLES_REQUESTER
         );
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [
             ICellHashListener
