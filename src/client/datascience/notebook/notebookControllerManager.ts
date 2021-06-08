@@ -444,6 +444,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // If we have any out of date connections, dispose of them
         disposedControllers.forEach((controller) => {
+            this.registeredControllers = this.registeredControllers.filter((regController) => {
+                return regController.id !== controller.id;
+            });
             controller.dispose();
         });
     }
