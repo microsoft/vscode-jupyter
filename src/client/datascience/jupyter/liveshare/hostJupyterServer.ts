@@ -372,14 +372,14 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 launchInfo.kernelConnectionMetadata = kernelInfo;
                 changedKernel = true;
             }
-            if (!changedKernel && kernelConnection && kernelConnection.id !== launchInfo.kernelConnectionMetadata?.id) {
-                // Update kernel info if its different from what was originally provided.
-                launchInfo.kernelConnectionMetadata = kernelInfo;
-                changedKernel = true;
-            }
             traceInfo(
                 `Compute Launch Info uri = ${resource?.fsPath}, changed ${changedKernel}, ${launchInfo.kernelConnectionMetadata?.id}`
             );
+        }
+        if (!changedKernel && kernelConnection && kernelConnection.id !== launchInfo.kernelConnectionMetadata?.id) {
+            traceInfoIf(IS_CI_SERVER, `kernelConnection provided is different from launch info ${kernelConnection.id}`);
+            // Update kernel info if its different from what was originally provided.
+            changedKernel = true;
         }
 
         traceInfo(
