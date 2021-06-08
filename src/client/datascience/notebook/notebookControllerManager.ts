@@ -212,6 +212,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Set the controller for this notebook document
     private async setController(document: NotebookDocument, cancelToken: CancellationToken) {
+        await this.loadNotebookControllers();
+
         // Prep so that we can track the selected controller for this document
         this.controllerMapping.set(document, undefined);
 
@@ -406,7 +408,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // during remote connections
     private async updateRemoteConnections(cancelToken: CancellationToken) {
         // Don't update until initial load is done
-        await this.getNotebookControllers();
+        await this.loadNotebookControllers();
 
         // We've connected and done the intial fetch, so this is speedy
         const connections = await this.getKernelConnectionMetadata(cancelToken);
