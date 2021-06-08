@@ -106,7 +106,8 @@ export class DebuggerVariables extends DebugLocationTracker
             }
             result.totalCount = this.lastKnownVariables.length;
         }
-
+        console.log('getVariables');
+        console.log(result);
         return result;
     }
 
@@ -212,12 +213,15 @@ export class DebuggerVariables extends DebugLocationTracker
     public onDidSendMessage(message: any) {
         super.onDidSendMessage(message);
         // When the initialize response comes back, indicate we have started.
+        console.log('on did message send');
+        console.log(message);
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
         } else if (message.type === 'response' && message.command === 'variables' && message.body) {
             // If using the interactive debugger, update our variables.
             // eslint-disable-next-line
             // TODO: Figure out what resource to use
+            console.log('right before updating variables');
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
             this.monkeyPatchDataViewableVariables(message);
         } else if (message.type === 'event' && message.event === 'terminated') {
@@ -266,6 +270,8 @@ export class DebuggerVariables extends DebugLocationTracker
                 format: { rawString: true }
             });
             if (results && results.result !== 'None') {
+                console.log('evaluate function results');
+                console.log(results);
                 return results;
             } else {
                 traceError(`Cannot evaluate ${code}`);
@@ -311,6 +317,8 @@ export class DebuggerVariables extends DebugLocationTracker
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (variable as any).frameId
         );
+        console.log('get full variable');
+        console.log(results);
         if (results && results.result) {
             // Results should be the updated variable.
             return {
@@ -356,7 +364,7 @@ export class DebuggerVariables extends DebugLocationTracker
             }
             return true;
         });
-
+        console.log(allowedVariables);
         this.lastKnownVariables = allowedVariables.map((v) => {
             return convertDebugProtocolVariableToIJupyterVariable(v);
         });
