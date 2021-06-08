@@ -101,11 +101,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
-
-        if (this.isLocalLaunch) {
-            // Pre-warm fetching local kernels, for remote connections fetch as and when needed.
-            this.getNotebookControllers().catch(traceError);
-        }
     }
 
     // Look up what NotebookController is currently selected for the given notebook document
