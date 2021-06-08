@@ -207,8 +207,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Set the controller for this notebook document
     private async setController(document: NotebookDocument, cancelToken: CancellationToken) {
-        // await this.loadNotebookControllers();
-
         // Prep so that we can track the selected controller for this document
         this.controllerMapping.set(document, undefined);
 
