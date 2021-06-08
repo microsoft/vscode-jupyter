@@ -235,7 +235,7 @@ export class ScriptManager extends EventEmitter {
         error: any,
         timedout: boolean = false
     ) {
-        const isOnline = await isonline.default({ timeout: 1000 });
+        const isOnline = await isonline({ timeout: 1000 });
         this.emit('onWidgetLoadError', { className, moduleName, moduleVersion, error, timedout, isOnline });
     }
 }
