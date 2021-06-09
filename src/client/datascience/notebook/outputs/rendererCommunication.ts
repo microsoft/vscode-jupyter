@@ -33,7 +33,7 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
         api.onDidReceiveMessage(
             ({ editor, message }) => {
                 if (message.type === 'saveAs') {
-                    this.plotSaveHandler.savePlot(editor, message.outputId, message.mimnType).catch(noop);
+                    this.plotSaveHandler.savePlot(editor, message.outputId, message.mimeType).catch(noop);
                 }
             },
             this,
