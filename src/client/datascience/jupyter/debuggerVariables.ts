@@ -217,9 +217,11 @@ export class DebuggerVariables extends DebugLocationTracker
             message.type === 'request' &&
             message.command === 'variables' &&
             message.arguments &&
+            this.currentSeqNumForVariables === 0 &&
             this.currentVariablesReference === message.arguments.variablesReference
         ) {
             // Keep track of seq number for the appropriate variables update
+            // Only set if we are not waiting on another sequence number for variable updates
             this.currentSeqNumForVariables = message.seq;
         }
     }
@@ -231,10 +233,18 @@ export class DebuggerVariables extends DebugLocationTracker
         // When the initialize response comes back, indicate we have started.
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
-        } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
+        } else if (
+            message.type === 'response' &&
+            message.command === 'scopes' &&
+            message.body &&
+            message.body.scopes &&
+            this.currentVariablesReference === 0
+        ) {
             // Keep track of variablesReference because "hover" requests also try to update variables
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const response = message as DebugProtocol.ScopesResponse;
+
+            // Only set if we are not waiting on another variablesReference
             this.currentVariablesReference = response.body.scopes[0].variablesReference;
         } else if (
             message.type === 'response' &&
@@ -251,6 +261,10 @@ export class DebuggerVariables extends DebugLocationTracker
             // 2. onWillReceiveMessage will have that variablesReference and
             // will request for variables with a seq number
             // 3. We only updateVariables if the seq number matches the one from above
+
+            // Reset values after our variables are correctly updated
+            this.currentSeqNumForVariables = 0;
+            this.currentVariablesReference = 0;
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
             this.monkeyPatchDataViewableVariables(message);
         } else if (message.type === 'event' && message.event === 'terminated') {
