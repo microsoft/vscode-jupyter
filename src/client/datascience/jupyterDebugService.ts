@@ -245,6 +245,9 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             this.sendToTrackers(args);
             deferred.resolve();
         });
+        await this.emitMessage('scopes', {
+            frameId: this._topFrameId ? this._topFrameId : 1
+        });
         return deferred.promise;
     }
 
