@@ -40,6 +40,7 @@ import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
+import { testOnlyMethod } from '../../common/utils/decorators';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -58,7 +59,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }>;
 
     // Promise to resolve when we have loaded our controllers
-    private controllersPromise?: Promise<VSCodeNotebookController[]>;
+    private controllersPromise?: Promise<void>;
 
     // Listing of the controllers that we have registered
     private registeredControllers: VSCodeNotebookController[] = [];
@@ -113,15 +114,20 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
 
+    // Function to expose currently registered controllers to test code only
+    @testOnlyMethod()
+    public registeredNotebookControllers(): VSCodeNotebookController[] {
+        return this.registeredControllers;
+    }
+
     // Find all the notebook controllers that we have registered
-    public async getNotebookControllers(): Promise<VSCodeNotebookController[]> {
+    private async loadNotebookControllers(): Promise<void> {
         if (!this.controllersPromise) {
-            this.controllersPromise = this.loadNotebookControllers()
+            this.controllersPromise = this.loadNotebookControllersImpl()
                 .then((controllers) => {
                     // Just assign here as this is our initial set of controllers
                     // anything that adds or updates should make sure the initial load has happened first
                     this.registeredControllers = controllers;
-                    return controllers;
                 })
                 .catch((error) => {
                     traceError('Error loading notebook controllers', error);
@@ -132,7 +138,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // Turn all our kernelConnections that we know about into registered NotebookControllers
-    private async loadNotebookControllers(): Promise<VSCodeNotebookController[]> {
+    private async loadNotebookControllersImpl(): Promise<VSCodeNotebookController[]> {
         const stopWatch = new StopWatch();
 
         try {
@@ -186,7 +192,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // For a remote connection check for new live kernel models before we find preferred
             this.updateRemoteConnections(preferredSearchToken.token)
                 .then(() => {
-                    this.findPreferredController(document, preferredSearchToken.token).catch((error) => {
+                    this.setController(document, preferredSearchToken.token).catch((error) => {
                         traceError(error);
                     });
                 })
@@ -195,15 +201,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     this.findPreferredInProgress.delete(document);
                 });
         } else {
-            this.findPreferredController(document, preferredSearchToken.token).finally(() => {
+            this.setController(document, preferredSearchToken.token).finally(() => {
                 // Make sure that we clear our finding in progress when done
                 this.findPreferredInProgress.delete(document);
             });
         }
     }
 
-    // Find the preferred controller for the given notebook document
-    private async findPreferredController(document: NotebookDocument, cancelToken: CancellationToken) {
+    // Set the controller for this notebook document
+    private async setController(document: NotebookDocument, cancelToken: CancellationToken) {
         // Prep so that we can track the selected controller for this document
         this.controllerMapping.set(document, undefined);
 
@@ -229,9 +235,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private async setPreferredController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata) {
         // Wait for our controllers to be loaded before we try to set a preferred on
         // can happen if a document is opened quick and we have not yet loaded our controllers
-        const controllers = await this.getNotebookControllers();
+        await this.loadNotebookControllers();
 
-        const targetController = controllers.find((value) => {
+        const targetController = this.registeredControllers.find((value) => {
             // Check for a connection match
             return areKernelConnectionsEqual(kernelConnection, value.connection);
         });
@@ -252,9 +258,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         document: NotebookDocument,
         token: CancellationToken
     ): Promise<KernelConnectionMetadata | undefined> {
-        // Don't look for a preferred kernel until we have finished our initial controller load
-        await this.getNotebookControllers();
-
         let preferred: KernelConnectionMetadata | undefined;
 
         if (this.isLocalLaunch) {
@@ -401,7 +404,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // during remote connections
     private async updateRemoteConnections(cancelToken: CancellationToken) {
         // Don't update until initial load is done
-        await this.getNotebookControllers();
+        await this.loadNotebookControllers();
 
         // We've connected and done the intial fetch, so this is speedy
         const connections = await this.getKernelConnectionMetadata(cancelToken);
@@ -442,6 +445,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // If we have any out of date connections, dispose of them
         disposedControllers.forEach((controller) => {
+            this.registeredControllers = this.registeredControllers.filter((regController) => {
+                return regController.id !== controller.id;
+            });
             controller.dispose();
         });
     }
