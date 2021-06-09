@@ -5,7 +5,7 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Event, EventEmitter, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
 
 import { traceInfo } from '../../../client/common/logger';
 import { createDeferred } from '../../../client/common/utils/async';
@@ -139,25 +139,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
                 const ext = path.extname(file.fsPath);
                 switch (ext.toLowerCase()) {
                     case '.pdf':
-                        traceInfo('Attempting pdf write...');
-                        // Import here since pdfkit is so huge.
-                        // eslint-disable-next-line @typescript-eslint/no-require-imports
-                        const SVGtoPDF = require('svg-to-pdfkit');
-                        const deferred = createDeferred<void>();
-                        // eslint-disable-next-line @typescript-eslint/no-require-imports
-                        const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');
-                        const doc = new pdfkit();
-                        const ws = this.fs.createLocalWriteStream(file.fsPath);
-                        traceInfo(`Writing pdf to ${file.fsPath}`);
-                        ws.on('finish', () => deferred.resolve);
-                        // See docs or demo from source https://cdn.statically.io/gh/alafr/SVG-to-PDFKit/master/examples/demo.htm
-                        // How to resize to fit (fit within the height & width of page).
-                        SVGtoPDF(doc, payload.svg, 0, 0, { preserveAspectRatio: 'xMinYMin meet' });
-                        doc.pipe(ws);
-                        doc.end();
-                        traceInfo(`Finishing pdf to ${file.fsPath}`);
-                        await deferred.promise;
-                        traceInfo(`Completed pdf to ${file.fsPath}`);
+                        await saveSvgToPdf(payload.svg, this.fs, file);
                         break;
 
                     case '.png':
@@ -177,4 +159,26 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e));
         }
     }
+}
+
+export async function saveSvgToPdf(svg: string, fs: IFileSystem, file: Uri) {
+    traceInfo('Attempting pdf write...');
+    // Import here since pdfkit is so huge.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const SVGtoPDF = require('svg-to-pdfkit');
+    const deferred = createDeferred<void>();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');
+    const doc = new pdfkit();
+    const ws = fs.createLocalWriteStream(file.fsPath);
+    traceInfo(`Writing pdf to ${file.fsPath}`);
+    ws.on('finish', () => deferred.resolve);
+    // See docs or demo from source https://cdn.statically.io/gh/alafr/SVG-to-PDFKit/master/examples/demo.htm
+    // How to resize to fit (fit within the height & width of page).
+    SVGtoPDF(doc, svg, 0, 0, { preserveAspectRatio: 'xMinYMin meet' });
+    doc.pipe(ws);
+    doc.end();
+    traceInfo(`Finishing pdf to ${file.fsPath}`);
+    await deferred.promise;
+    traceInfo(`Completed pdf to ${file.fsPath}`);
 }
