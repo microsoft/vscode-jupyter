@@ -242,10 +242,15 @@ export class DebuggerVariables extends DebugLocationTracker
             message.body &&
             message.request_seq === this.currentSeqNumForVariables
         ) {
-            // Only update variables if it came from a "scopes" command and not a "hover"
             // If using the interactive debugger, update our variables.
             // eslint-disable-next-line
             // TODO: Figure out what resource to use
+
+            // Only update variables if it came from a "scopes" command and not a "hover"
+            // 1. Scopes command will come first with a variablesReference number
+            // 2. onWillReceiveMessage will have that variablesReference and
+            // will request for variables with a seq number
+            // 3. We only updateVariables if the seq number matches the one from above
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
             this.monkeyPatchDataViewableVariables(message);
         } else if (message.type === 'event' && message.event === 'terminated') {
