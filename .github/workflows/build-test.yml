@@ -895,6 +895,7 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: 'PythonExtActivationGrep'
           VSC_JUPYTER_CI_TEST_ACTIVATE_PYTHON_EXT: 'true'
         id: test_notebookWithoutActivatingPythonExt_vscode
         if: matrix.test-suite == 'notebookDoNotActivatePythonExt'

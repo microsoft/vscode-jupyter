@@ -17,7 +17,9 @@ import { PythonExtension } from '../../../client/datascience/constants';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Python Ext Activation)', function () {
+
+// Note: The value `PythonExtActivationGrep` is used on CI to run this spefific test via the grep flag.
+suite('DataScience - VSCode Notebook - (PythonExtActivationGrep)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let extensions: IExtensions;
