@@ -17,6 +17,7 @@
 1. Add support for [Virtual Workspaces](https://github.com/microsoft/vscode/wiki/Virtual-Workspaces).
    ([#5803](https://github.com/Microsoft/vscode-jupyter/issues/5803))
 1. Losslessly compressed PNG images to save ~20KB.
+   (thanks [Christopher Yeh](https://github.com/chrisyeh96))
    ([#5869](https://github.com/Microsoft/vscode-jupyter/issues/5869))
 1. Adopt `notebook/toolbar` contribution point for native notebooks.
    ([#5954](https://github.com/Microsoft/vscode-jupyter/issues/5954))
