@@ -210,6 +210,7 @@ export class DebuggerVariables extends DebugLocationTracker
         return JSON.parse(results.result);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onWillReceiveMessage(message: any) {
         super.onWillReceiveMessage(message);
         if (
@@ -232,6 +233,7 @@ export class DebuggerVariables extends DebugLocationTracker
             this.debuggingStarted = true;
         } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
             // Keep track of variablesReference because "hover" requests also try to update variables
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const localVarsObj = message.body.scopes.find((s: any) => s.name === 'Locals');
             this.currentVariablesReference = localVarsObj.variablesReference;
         } else if (
