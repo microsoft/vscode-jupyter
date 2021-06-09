@@ -40,6 +40,7 @@ import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
+import { testOnlyMethod } from '../../common/utils/decorators';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -113,7 +114,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
 
-    public getNotebookControllers(): VSCodeNotebookController[] {
+    // Function to expose currently registered controllers to test code only
+    @testOnlyMethod()
+    public registeredNotebookControllers(): VSCodeNotebookController[] {
         return this.registeredControllers;
     }
 
@@ -234,7 +237,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // can happen if a document is opened quick and we have not yet loaded our controllers
         await this.loadNotebookControllers();
 
-        const targetController = this.getNotebookControllers().find((value) => {
+        const targetController = this.registeredControllers.find((value) => {
             // Check for a connection match
             return areKernelConnectionsEqual(kernelConnection, value.connection);
         });
