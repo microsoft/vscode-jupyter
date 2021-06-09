@@ -57,7 +57,7 @@
     -   [ ] Merge pull request into `release-YYYY.MM`
 -   [ ] Make sure component governance is happy
 -   [ ] [Turn off automatic uploads for insider builds from main](https://github.com/microsoft/vscode-jupyter/blob/f05fedf399d34684b408245ba27bc29aa25c13f6/.github/workflows/build-test.yml#L73). This prevents stable customers from getting insiders builds as they have the same engine version and higher build numbers.
--   [ ] Do a quick sanity check on the appropiate VS Code version (try to get the candidate build from VS Code, if not available, build the release branch locally, if there's no release branch, use the latest indiers).
+-   [ ] Do a quick sanity check on the appropriate VS Code version (try to get the candidate build from VS Code, if not available, build the release branch locally, if there's no release branch, use the latest insiders).
 
 ## Release
 
