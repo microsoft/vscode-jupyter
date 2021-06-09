@@ -109,6 +109,7 @@ export class DebuggerVariables extends DebugLocationTracker
             }
             result.totalCount = this.lastKnownVariables.length;
         }
+
         return result;
     }
 

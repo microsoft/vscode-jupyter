@@ -230,9 +230,6 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             this.sendToTrackers(args);
             // Get locals variables reference
             const response = args as DebugProtocol.ScopesResponse;
-            // NOT HERE
-            console.log('request variables');
-            console.log(response);
             if (response) {
                 variablesReference = response.body.scopes[0].variablesReference;
             }
@@ -242,9 +239,6 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             }).ignoreErrors();
         });
         this.protocolParser.once('response_variables', (args: any) => {
-            // NOT HERE
-            console.log('response variables');
-            console.log(args);
             this.sendToTrackers(args);
             deferred.resolve();
         });
@@ -259,8 +253,6 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     }
 
     private sendToTrackers(args: any) {
-        console.log('send to trackers');
-        console.log(args);
         switch (args.type) {
             case 'request':
                 this.debugAdapterTrackers.forEach((d) => {

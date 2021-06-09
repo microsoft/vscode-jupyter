@@ -283,7 +283,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             newGridHeight = this.calculateGridHeight(this.props.viewHeight);
         }
 
-        // Disabling variable explorer during debugging because of https://github.com/microsoft/vscode-jupyter/issues/6081
         return (
             <div
                 id="variable-explorer-data-grid"
@@ -311,7 +310,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         );
     }
 
-        private saveCurrentSize() {
+    private saveCurrentSize() {
         this.props.setVariableExplorerHeight(this.state.containerHeight, this.state.gridHeight);
     }
 
