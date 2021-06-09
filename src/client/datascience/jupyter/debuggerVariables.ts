@@ -234,8 +234,8 @@ export class DebuggerVariables extends DebugLocationTracker
         } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
             // Keep track of variablesReference because "hover" requests also try to update variables
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const localVarsObj = message.body.scopes.find((s: any) => s.name === 'Locals');
-            this.currentVariablesReference = localVarsObj.variablesReference;
+            const response = message as DebugProtocol.ScopesResponse;
+            this.currentVariablesReference = response.body.scopes[0].variablesReference;
         } else if (
             message.type === 'response' &&
             message.command === 'variables' &&
