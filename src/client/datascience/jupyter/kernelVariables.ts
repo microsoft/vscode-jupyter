@@ -204,20 +204,20 @@ export class KernelVariables implements IJupyterVariables {
 
         // Use the list of names to fetch the page of data
         if (list) {
-            type SortableColumn = 'name' | 'type';
-            const sortColumn = request.sortColumn as SortableColumn;
-            const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
-                // In case it is undefined or null
-                const aColumn = a[sortColumn] ? a[sortColumn] : '';
-                const bColumn = b[sortColumn] ? b[sortColumn] : '';
+            // type SortableColumn = 'name' | 'type';
+            // const sortColumn = request.sortColumn as SortableColumn;
+            // const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
+            //     // In case it is undefined or null
+            //     const aColumn = a[sortColumn] ? a[sortColumn] : '';
+            //     const bColumn = b[sortColumn] ? b[sortColumn] : '';
 
-                if (request.sortAscending) {
-                    return aColumn.localeCompare(bColumn, undefined, { sensitivity: 'base' });
-                } else {
-                    return bColumn.localeCompare(aColumn, undefined, { sensitivity: 'base' });
-                }
-            };
-            list.variables.sort(comparer);
+            //     if (request.sortAscending) {
+            //         return aColumn.localeCompare(bColumn, undefined, { sensitivity: 'base' });
+            //     } else {
+            //         return bColumn.localeCompare(aColumn, undefined, { sensitivity: 'base' });
+            //     }
+            // };
+            // list.variables.sort(comparer);
 
             const startPos = request.startIndex ? request.startIndex : 0;
             const chunkSize = request.pageSize ? request.pageSize : 100;
