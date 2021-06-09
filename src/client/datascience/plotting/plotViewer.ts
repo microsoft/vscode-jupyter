@@ -156,7 +156,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             }
         } catch (e) {
             traceError(e);
-            this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e));
+            void this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e));
         }
     }
 }
