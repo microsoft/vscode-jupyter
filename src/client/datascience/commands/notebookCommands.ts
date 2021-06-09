@@ -39,6 +39,7 @@ export class NotebookCommands implements IDisposable {
             this.commandManager.registerCommand(Commands.NotebookEditorKeybindSave, this.keybindSave, this),
             this.commandManager.registerCommand(Commands.NotebookEditorKeybindUndo, this.keybindUndo, this),
             this.commandManager.registerCommand(Commands.NotebookEditorToggleOutput, this.toggleOutput, this),
+            this.commandManager.registerCommand(Commands.NotebookEditorKeybindExecuteCell, this.executeCell, this),
             this.commandManager.registerCommand(
                 Commands.NotebookEditorKeybindRenderMarkdownAndSelectBelow,
                 this.renderMarkdownAndSelectBelow,
@@ -54,6 +55,12 @@ export class NotebookCommands implements IDisposable {
         if (this.notebookEditorProvider.activeEditor?.toggleOutput) {
             this.notebookEditorProvider.activeEditor.toggleOutput();
         }
+    }
+
+    private executeCell() {
+        void this.commandManager
+            .executeCommand('notebook.cell.execute')
+            .then(() => this.commandManager.executeCommand('notebook.cell.quitEdit'));
     }
 
     private renderMarkdownAndSelectBelow() {

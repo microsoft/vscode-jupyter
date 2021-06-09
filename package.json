@@ -175,7 +175,7 @@
             {
                 "key": "ctrl+enter",
                 "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.execute"
+                "command": "jupyter.notebookeditor.keybind.executeCell"
             },
             {
                 "key": "ctrl+enter",
