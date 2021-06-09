@@ -11,7 +11,7 @@ import { noop } from '../../../common/utils/misc';
 import { PlotSaveHandler } from './plotSaveHandler';
 
 const rendererId = 'jupyter-notebook-renderer';
-type RendererMessageTypes = { type: 'saveAs'; outputId: string; mimnType: string };
+type RendererMessageTypes = { type: 'saveAs'; outputId: string; mimeType: string };
 
 @injectable()
 export class RendererCommunication implements IExtensionSyncActivationService, IDisposable {
