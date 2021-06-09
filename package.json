@@ -158,7 +158,6 @@
                 "command": "jupyter.notebookeditor.keybind.toggleOutput"
             },
             {
-<<<<<<< HEAD
                 "key": "shift+L",
                 "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.toggleLineNumbers"
@@ -170,11 +169,6 @@
             },
             {
                 "key": "ctrl+shift+-",
-=======
-                "mac": "ctrl+shift+-",
-                "win": "ctrl+shift+-",
-                "linux": "ctrl+shift+-",
->>>>>>> release-2021.06
                 "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.split"
             },
@@ -815,51 +809,31 @@
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "group": "navigation@1",
-<<<<<<< HEAD
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel && config.notebook.globalToolbar != true"
-=======
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel"
->>>>>>> release-2021.06
                 },
                 {
                     "command": "jupyter.notebookeditor.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
                     "group": "overflow@1",
-<<<<<<< HEAD
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel && config.notebook.globalToolbar != true"
-=======
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
->>>>>>> release-2021.06
                 },
                 {
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "group": "navigation@2",
-<<<<<<< HEAD
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
-=======
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
->>>>>>> release-2021.06
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation@3",
-<<<<<<< HEAD
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
-=======
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
->>>>>>> release-2021.06
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "group": "overflow@1000",
-<<<<<<< HEAD
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
-=======
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
->>>>>>> release-2021.06
                 }
             ],
             "notebook/toolbar": [
@@ -911,14 +885,11 @@
                     "command": "jupyter.notebookeditor.keybind.toggleOutput",
                     "title": "%DataScience.toggleCellOutput%",
                     "when": "notebookType == jupyter-notebook"
-<<<<<<< HEAD
                 },
                 {
                     "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow",
                     "title": "%DataScience.renderMarkdownAndSelectBelow%",
                     "when": "false"
-=======
->>>>>>> release-2021.06
                 },
                 {
                     "command": "jupyter.exportAsPythonScript",
