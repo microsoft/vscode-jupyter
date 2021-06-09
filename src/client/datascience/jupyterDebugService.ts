@@ -226,9 +226,6 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         await this.getStack();
         const deferred = createDeferred<void>();
         let variablesReference = 0;
-        await this.emitMessage('scopes', {
-            frameId: this._topFrameId ? this._topFrameId : 1
-        });
         this.protocolParser.once('response_scopes', (args: any) => {
             this.sendToTrackers(args);
             // Get locals variables reference
@@ -238,7 +235,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             }
             this.emitMessage('variables', {
                 threadId: this._stoppedThreadId ? this._stoppedThreadId : 1,
-                variablesReference
+                variablesReference: variablesReference
             }).ignoreErrors();
         });
         this.protocolParser.once('response_variables', (args: any) => {
