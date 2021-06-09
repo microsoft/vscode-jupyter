@@ -17,7 +17,7 @@ import { PythonExtension } from '../../../client/datascience/constants';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite.only('DataScience - VSCode Notebook - (Python Ext Activation)', function () {
+suite('DataScience - VSCode Notebook - (Python Ext Activation)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let extensions: IExtensions;
