@@ -219,8 +219,6 @@ export class DebuggerVariables extends DebugLocationTracker
             message.arguments &&
             this.currentVariablesReference === message.arguments.variablesReference
         ) {
-            // Keep track of seq number for the appropriate variables update
-            // Only set if we are not waiting on another sequence number for variable updates
             this.currentSeqNumsForVariables.add(message.seq);
         }
     }
@@ -233,13 +231,15 @@ export class DebuggerVariables extends DebugLocationTracker
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
         } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
-            // Keep track of variablesReference because "hover" requests also try to update variables
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const response = message as DebugProtocol.ScopesResponse;
 
-            // Only set if we are not waiting on another variablesReference
-            this.currentVariablesReference = response.body.scopes[0].variablesReference;
-            this.currentSeqNumsForVariables.clear();
+            // Keep track of variablesReference because "hover" requests also try to update variables
+            const newVariablesReference = response.body.scopes[0].variablesReference;
+            if (newVariablesReference !== this.currentVariablesReference) {
+                this.currentVariablesReference = response.body.scopes[0].variablesReference;
+                this.currentSeqNumsForVariables.clear();
+            }
         } else if (
             message.type === 'response' &&
             message.command === 'variables' &&
@@ -254,9 +254,9 @@ export class DebuggerVariables extends DebugLocationTracker
             // 1. Scopes command will come first with a variablesReference number
             // 2. onWillReceiveMessage will have that variablesReference and
             // will request for variables with a seq number
-            // 3. We only updateVariables if the seq number matches the one from above
+            // 3. We only updateVariables if the seq number is one of the sequence numbers that
+            // came with the most recent 'scopes' variablesReference
 
-            // Reset values after our variables are correctly updated
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
             this.monkeyPatchDataViewableVariables(message);
         } else if (message.type === 'event' && message.event === 'terminated') {
