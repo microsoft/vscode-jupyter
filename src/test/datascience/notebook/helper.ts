@@ -170,7 +170,7 @@ export async function createTemporaryNotebook(
     return tempFile;
 }
 
-export async function canRunNotebookTests() {
+export async function canRunNotebookTests(preWarmJupyterServer = true) {
     if (
         //isInsiders() ||
         !process.env.VSC_JUPYTER_RUN_NB_TEST
@@ -182,7 +182,7 @@ export async function canRunNotebookTests() {
         );
         return false;
     }
-    const api = await initialize();
+    const api = await initialize(preWarmJupyterServer);
     const appEnv = api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
     const canRunTests = appEnv.channel === 'insiders';
     if (!canRunTests) {

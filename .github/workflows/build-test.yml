@@ -594,6 +594,11 @@ jobs:
             jupyter: raw
             test-suite: notebookAndWebview # Test webview only with raw & non-conda.
           - os: ubuntu-latest
+            pythonVersion: '3.8'
+            python: nonConda
+            jupyter: raw
+            test-suite: notebookDoNotActivatePythonExt # Test where we ensure we don't activate Python ext unnecesarily (e.g. when opening C# notebooks).
+          - os: ubuntu-latest
             jupyter: raw
             python: noPython
             test-suite: notebook # Non-Python kernel tests without Python extension only when using Raw & notebook tests
@@ -853,7 +858,7 @@ jobs:
         id: test_notebook_vscode
         if: matrix.test-suite == 'notebook' && matrix.python != 'noPython'
 
-      - name: Publish Notebook Test Report
+    - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -880,6 +885,27 @@ jobs:
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
         if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
+
+      - name: Run Native Notebook with VSCode & Jupyter (without activating Python Ext)
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
+        env:
+          VSC_FORCE_REAL_JUPYTER: 1
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_ACTIVATE_PYTHON_EXT: 'true'
+        id: test_notebookWithoutActivatingPythonExt_vscode
+        if: matrix.test-suite == 'notebookDoNotActivatePythonExt'
+
+      - name: Publish Notebook Test Report
+        uses: scacap/action-surefire-report@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ env.TEST_RESULTS_GLOB }}
+          check_name: Notebook without Activating Python Ext Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
+        if: steps.test_notebookWithoutActivatingPythonExt_vscode.outcome == 'failure' && failure()
 
         # Run native notebook tests that also require webviews
         # note, Webview test middleware on, and webview build not skipped

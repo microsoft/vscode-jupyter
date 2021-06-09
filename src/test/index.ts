@@ -120,7 +120,7 @@ function configure(): SetupOptions {
  * @returns
  */
 function activateExtensionScript() {
-    const ex = new Error('Failed to initialize Python extension for tests after 3 minutes');
+    const ex = new Error('Failed to initialize Jupyter extension for tests after 3 minutes');
     let timer: NodeJS.Timer | undefined;
     const failed = new Promise((_, reject) => {
         timer = setTimeout(() => reject(ex), MAX_EXTENSION_ACTIVATION_TIME);
@@ -185,11 +185,11 @@ export async function run(): Promise<void> {
     /* eslint-disable no-console */
     console.time('Time taken to activate the extension');
     try {
-        console.log('Starting & waiting for Python extension to activate');
+        console.log('Starting & waiting for Jupyter extension to activate');
         await activateExtensionScript();
         console.timeEnd('Time taken to activate the extension');
     } catch (ex) {
-        console.error('Failed to activate python extension without errors', ex);
+        console.error('Failed to activate Jupyter extension without errors', ex);
     }
 
     try {
