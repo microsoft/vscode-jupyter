@@ -44,7 +44,7 @@ export class DebuggerVariables extends DebugLocationTracker
     private watchedNotebooks = new Map<string, Disposable[]>();
     private debuggingStarted = false;
     private currentVariablesReference = 0;
-    private currentSeqNumForVariables = 0;
+    private currentSeqNumsForVariables = new Set<Number>();
 
     constructor(
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
@@ -217,12 +217,11 @@ export class DebuggerVariables extends DebugLocationTracker
             message.type === 'request' &&
             message.command === 'variables' &&
             message.arguments &&
-            this.currentSeqNumForVariables === 0 &&
             this.currentVariablesReference === message.arguments.variablesReference
         ) {
             // Keep track of seq number for the appropriate variables update
             // Only set if we are not waiting on another sequence number for variable updates
-            this.currentSeqNumForVariables = message.seq;
+            this.currentSeqNumsForVariables.add(message.seq);
         }
     }
 
@@ -233,24 +232,19 @@ export class DebuggerVariables extends DebugLocationTracker
         // When the initialize response comes back, indicate we have started.
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
-        } else if (
-            message.type === 'response' &&
-            message.command === 'scopes' &&
-            message.body &&
-            message.body.scopes &&
-            this.currentVariablesReference === 0
-        ) {
+        } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
             // Keep track of variablesReference because "hover" requests also try to update variables
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const response = message as DebugProtocol.ScopesResponse;
 
             // Only set if we are not waiting on another variablesReference
             this.currentVariablesReference = response.body.scopes[0].variablesReference;
+            this.currentSeqNumsForVariables.clear();
         } else if (
             message.type === 'response' &&
             message.command === 'variables' &&
             message.body &&
-            message.request_seq === this.currentSeqNumForVariables
+            this.currentSeqNumsForVariables.has(message.request_seq)
         ) {
             // If using the interactive debugger, update our variables.
             // eslint-disable-next-line
@@ -263,8 +257,6 @@ export class DebuggerVariables extends DebugLocationTracker
             // 3. We only updateVariables if the seq number matches the one from above
 
             // Reset values after our variables are correctly updated
-            this.currentSeqNumForVariables = 0;
-            this.currentVariablesReference = 0;
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
             this.monkeyPatchDataViewableVariables(message);
         } else if (message.type === 'event' && message.event === 'terminated') {
