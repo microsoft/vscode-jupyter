@@ -382,6 +382,7 @@ export class DebuggerVariables extends DebugLocationTracker
             }
             return true;
         });
+
         this.lastKnownVariables = allowedVariables.map((v) => {
             return convertDebugProtocolVariableToIJupyterVariable(v);
         });
