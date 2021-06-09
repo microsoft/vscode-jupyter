@@ -34,7 +34,7 @@ The Jupyter Extension supports other languages in addition to Python such as Jul
 
      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
 
-- Select your kernel by clicking on the kernel picker in the bottom right of the status bar or by invoking the `"Notebook: Select Notebook Kernel"` command.
+- Select your kernel by clicking on the kernel picker in the top right of the notebook or by invoking the `"Notebook: Select Notebook Kernel"` command.
 
      <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/KernelPicker.gif?>
 
