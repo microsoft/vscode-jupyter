@@ -1132,16 +1132,3 @@ jobs:
         run: |
           echo ${{steps.version.outputs.version}}
         shell: bash
-
-      - name: Create GH Release
-        id: create_release
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{steps.version.outputs.version}}
-          release_name: Release ${{steps.version.outputs.version}}
-          body_path: RELEASE_CHANGELOG.md
-          draft: true
-          prerelease: false
