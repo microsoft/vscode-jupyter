@@ -237,7 +237,7 @@ export class DebuggerVariables extends DebugLocationTracker
             // Keep track of variablesReference because "hover" requests also try to update variables
             const newVariablesReference = response.body.scopes[0].variablesReference;
             if (newVariablesReference !== this.currentVariablesReference) {
-                this.currentVariablesReference = response.body.scopes[0].variablesReference;
+                this.currentVariablesReference = newVariablesReference;
                 this.currentSeqNumsForVariables.clear();
             }
         } else if (
