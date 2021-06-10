@@ -448,22 +448,40 @@ suite('DataScience DataViewer tests', () => {
     });
 
     runMountedTest('Filter numerical - other column has strings', async (wrapper) => {
-        await injectCode('import numpy as np\r\nx = np.array([["Bob", 2], ["Alice", 4], ["Gina", -np.inf], ["John", np.inf], ["Trudy", np.nan]])');
+        await injectCode(
+            'import numpy as np\r\nx = np.array([["Bob", 2], ["Alice", 4], ["Gina", -np.inf], ["John", np.inf], ["Trudy", np.nan]])'
+        );
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
-        verifyRows(wrapper.wrapper, [0, 'Bob', 2, 1, 'Alice', 4, 2, 'Gina', '-inf', 3, 'John', 'inf', 4, 'Trudy', 'nan']);
+        verifyRows(wrapper.wrapper, [
+            0,
+            'Bob',
+            2,
+            1,
+            'Alice',
+            4,
+            2,
+            'Gina',
+            '-inf',
+            3,
+            'John',
+            'inf',
+            4,
+            'Trudy',
+            'nan'
+        ]);
 
         const filtersAndExpectedResults = {
             '2': [0, 'Bob', 2],
             '4': [1, 'Alice', 4],
             '-inf': [2, 'Gina', '-inf'],
-            'inf': [3, 'John', 'inf'],
-            'nan': [4, 'Trudy'],
+            inf: [3, 'John', 'inf'],
+            nan: [4, 'Trudy'],
             '> 2': [1, 'Alice', 4, 3, 'John', 'inf'],
             '>= 2': [0, 'Bob', 2, 1, 'Alice', 4, 3, 'John', 'inf'],
-            '< 4': [0, 'Bob', 2, 2, 'Gina', '-inf'],
+            '< 4': [0, 'Bob', 2, 2, 'Gina', '-inf']
         };
 
         for (const [filter, expectedResult] of Object.entries(filtersAndExpectedResults)) {
