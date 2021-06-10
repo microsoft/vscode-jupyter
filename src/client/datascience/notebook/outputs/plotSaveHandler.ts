@@ -6,6 +6,7 @@ import { swallowExceptions } from '../../../common/utils/decorators';
 import { DataScience } from '../../../common/utils/localize';
 import * as path from 'path';
 import { saveSvgToPdf } from '../../plotting/plotViewer';
+import { traceError } from '../../../common/logger';
 
 const svgMimeType = 'image/svg+xml';
 const imageExtensionForMimeType: Record<string, string> = {
@@ -23,17 +24,18 @@ export class PlotSaveHandler {
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
 
-    @swallowExceptions()
     public async savePlot(editor: NotebookEditor, outputId: string, mimeType: string) {
         if (editor.document.isClosed) {
             return;
         }
         const output = getOutputItem(editor, outputId, mimeType);
         if (!output) {
-            throw new Error(`Nolot to save ${editor.document.uri.toString()}, id: ${outputId} for ${mimeType}`);
+            return traceError(`Nolot to save ${editor.document.uri.toString()}, id: ${outputId} for ${mimeType}`);
         }
         if (!(mimeType.toLowerCase() in imageExtensionForMimeType)) {
-            throw new Error(`Unsupported MimeType ${editor.document.uri.toString()}, id: ${outputId} for ${mimeType}`);
+            return traceError(
+                `Unsupported MimeType ${editor.document.uri.toString()}, id: ${outputId} for ${mimeType}`
+            );
         }
 
         const saveLocation = await this.getSaveTarget(output, mimeType);
