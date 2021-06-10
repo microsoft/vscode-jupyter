@@ -231,7 +231,6 @@ export class DebuggerVariables extends DebugLocationTracker
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
         } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const response = message as DebugProtocol.ScopesResponse;
 
             // Keep track of variablesReference because "hover" requests also try to update variables
