@@ -6,6 +6,14 @@
 
 1. On remote connections check for new or removed LiveKernelConnections on document open.
    ([#5984](https://github.com/Microsoft/vscode-jupyter/issues/5984))
+1. When editing a markdown cell in preview native notebooks UI, contribute `ctrl+enter` keybinding to render current markdown cell, and `shift+enter` to render current markdown cell and skip to the next cell.
+   ([#5976](https://github.com/Microsoft/vscode-jupyter/issues/5976))
+1. In preview native notebooks UI, contribute `L` keybinding to toggle line numbers for the current cell, and `shift+L` keybinding to toggle line numbers for all cells.
+   ([#4438](https://github.com/Microsoft/vscode-jupyter/issues/4438))
+1. Contribute extension-level `shift+enter` keybinding to execute current code cell and select below in preview native notebooks UI.
+   ([#6037](https://github.com/Microsoft/vscode-jupyter/issues/6037))
+1. In preview native notebooks interface, contribute `ctrl+enter` keybinding which puts the current cell into control mode instead of leaving it in edit mode after running.
+   ([#6198](https://github.com/Microsoft/vscode-jupyter/issues/6198))
 
 ## 2021.6.99 (8 June 2021)
 
