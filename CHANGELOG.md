@@ -1,5 +1,12 @@
 # Changelog
 
+## 2021.6.999 (11 June 2021)
+
+### Fixes
+
+1. On remote connections check for new or removed LiveKernelConnections on document open.
+   ([#5984](https://github.com/Microsoft/vscode-jupyter/issues/5984))
+
 ## 2021.6.99 (8 June 2021)
 
 ### Enhancements
