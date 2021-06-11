@@ -168,7 +168,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             throw new Error('Kernel not available');
         }
         const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
-        commands.executeCommand('jupyter.notebookeditor.restartkernel').then(noop, noop);
+        await commands.executeCommand('jupyter.notebookeditor.restartkernel').then(noop, noop);
 
         await waitForCondition(
             async () => {
