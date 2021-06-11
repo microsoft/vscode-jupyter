@@ -11,6 +11,7 @@ import { ICommandNameArgumentTypeMapping } from '../../common/application/comman
 import {
     IApplicationShell,
     ICommandManager,
+    IDataWranglerProvider,
     IDebugService,
     IDocumentManager,
     IWorkspaceService
@@ -75,7 +76,8 @@ export class CommandRegistry implements IDisposable {
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNotebook: boolean,
         @inject(NotebookCreator) private readonly nativeNotebookCreator: NotebookCreator,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IDataWranglerProvider) private readonly dataWrangler: IDataWranglerProvider
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
@@ -111,6 +113,7 @@ export class CommandRegistry implements IDisposable {
             this.enableLoadingWidgetScriptsFromThirdParty
         );
         this.registerCommand(Commands.ClearSavedJupyterUris, this.clearJupyterUris);
+        this.registerCommand(Commands.OpenDataWrangler, this.openDataWrangler);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);
@@ -485,6 +488,10 @@ export class CommandRegistry implements IDisposable {
         } else {
             return await this.notebookEditorProvider.createNew();
         }
+    }
+
+    private async openDataWrangler(): Promise<void> {
+        await this.dataWrangler.open();
     }
 
     private viewJupyterOutput() {

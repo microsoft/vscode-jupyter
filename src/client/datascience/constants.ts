@@ -168,6 +168,7 @@ export namespace Commands {
         'jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow';
     export const NotebookEditorKeybindExecuteCell = 'jupyter.notebookeditor.keybind.executeCell';
     export const NotebookEditorToggleOutput = 'jupyter.notebookeditor.keybind.toggleOutput';
+    export const OpenDataWrangler = 'jupyter.openDataWrangler';
 }
 
 export namespace CodeLensCommands {
