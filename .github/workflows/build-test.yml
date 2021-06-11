@@ -4,6 +4,9 @@
 
 name: Build and Test
 
+permissions:
+  deployments: write
+
 on:
   pull_request:
     branches:
@@ -70,11 +73,11 @@ jobs:
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-    #   - name: insiders channel
-    #     # Scheduled builds will publish Insider builds.
-    #     if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
-    #     run: |
-    #       echo "release_channel=insider" >> $GITHUB_ENV
+      - name: insiders channel
+        # Scheduled builds will publish Insider builds.
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+        run: |
+          echo "release_channel=insider" >> $GITHUB_ENV
 
       - name: release
         if: github.event_name == 'push' && contains(github.ref, 'refs/heads/release')
@@ -1132,3 +1135,16 @@ jobs:
         run: |
           echo ${{steps.version.outputs.version}}
         shell: bash
+
+      - name: Create GH Release
+        id: create_release
+        if: needs.pick_environment.outputs.release_channel == 'stable'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{steps.version.outputs.version}}
+          release_name: Release ${{steps.version.outputs.version}}
+          body_path: RELEASE_CHANGELOG.md
+          draft: true
+          prerelease: false

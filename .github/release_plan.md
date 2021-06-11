@@ -71,11 +71,11 @@
         -   [ ] Download the [Release VSIX](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-release.vsix) & Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
         -   [ ] Go to https://marketplace.visualstudio.com/manage/publishers/ms-toolsai?noPrompt=true and upload the VSIX
             -   [ ] If there's errors, try diffing against old vsix that worked
--   [ ] Go to https://github.com/microsoft/vscode-jupyter/releases and add a new release
-    -   [ ] Tag is version number
-    -   [ ] Branch is release branch
-    -   [ ] Copy contents of release branch changelog into the release (just copy the markdown)
-    -   [ ] Save
+        -   [ ] Go to https://github.com/microsoft/vscode-jupyter/releases and add a new release
+            -   [ ] Tag is version number
+            -   [ ] Branch is release branch
+            -   [ ] Copy contents of release branch changelog into the release (just copy the markdown)
+            -   [ ] Save
 -   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 -   [ ] Publish the [blog](http://aka.ms/pythonblog) post
 -   [ ] Determine if a hotfix is needed
