@@ -18,3 +18,7 @@ export function getLocString(key: string, defValue: string): string {
 export function storeLocStrings(collection: Record<string, string>) {
     loadedCollection = collection;
 }
+
+export function format(locString: string, ...args: string[]) {
+    return locString.replace(/{(\d+)}/g, (match, number) => (args[number] === undefined ? match : args[number]));
+}

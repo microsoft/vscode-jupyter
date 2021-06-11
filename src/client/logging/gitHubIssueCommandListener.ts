@@ -44,7 +44,7 @@ export class GitHubIssueCommandListener implements IDataScienceCommandListener {
         @inject(IExtensionContext) private extensionContext: IExtensionContext,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
     ) {
-        this.logfilePath = path.join(this.extensionContext.globalStoragePath, 'log.txt');
+        this.logfilePath = path.join(this.extensionContext.globalStorageUri.fsPath, 'log.txt');
         this.diagnosticCollection = languages.createDiagnosticCollection(MARKDOWN_LANGUAGE);
     }
     public register(commandManager: ICommandManager): void {

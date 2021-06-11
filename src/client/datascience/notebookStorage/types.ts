@@ -14,6 +14,7 @@ export interface INotebookModelFactory {
             file: Uri;
             cells: ICell[];
             notebookJson?: Partial<nbformat.INotebookContent>;
+            defaultCellLanguage?: string;
             indentAmount?: string;
             pythonNumber?: number;
             initiallyDirty?: boolean;

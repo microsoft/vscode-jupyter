@@ -5,8 +5,11 @@ import type { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
-import { IDisposable } from '../../common/types';
+import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
+import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { ISessionWithSocket, KernelSocketInformation } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel';
@@ -18,6 +21,7 @@ ZMQ Kernel connection can pretend to be a jupyterlab Session
 */
 export class RawSession implements ISessionWithSocket {
     public isDisposed: boolean = false;
+    public readonly kernelConnectionMetadata: KernelConnectionMetadata | undefined;
     private isDisposing?: boolean;
 
     // Note, ID is the ID of this session
@@ -32,7 +36,8 @@ export class RawSession implements ISessionWithSocket {
     private readonly exitHandler: IDisposable;
 
     // RawSession owns the lifetime of the kernel process and will dispose it
-    constructor(public kernelProcess: IKernelProcess) {
+    constructor(public kernelProcess: IKernelProcess, public readonly resource: Resource) {
+        this.kernelConnectionMetadata = kernelProcess.kernelConnectionMetadata;
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._statusChanged = new signaling.Signal<this, Kernel.Status>(this);
@@ -52,6 +57,11 @@ export class RawSession implements ISessionWithSocket {
     }
 
     public async dispose() {
+        // We want to know who called dispose on us
+        const stacktrace = new Error().stack;
+        sendTelemetryEvent(Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
+
+        // Now actually dispose ourselves
         this.isDisposing = true;
         if (!this.isDisposed) {
             this.exitHandler.dispose();
@@ -157,6 +167,13 @@ export class RawSession implements ISessionWithSocket {
             return;
         }
         traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
+        // Send telemetry so we know why the kernel process exited,
+        // as this affects our kernel startup success
+        sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
+            reason: e.reason,
+            exitCode: e.exitCode
+        });
+
         // Just kill the session.
         this.dispose().ignoreErrors();
     }

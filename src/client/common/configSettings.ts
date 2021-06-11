@@ -14,7 +14,6 @@ import { LogLevel } from '../logging/levels';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
-import { ExtensionChannels } from './insidersBuild/types';
 import {
     ICodeLensExpressions,
     IExperiments,
@@ -41,10 +40,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     private static jupyterSettings: Map<string, JupyterSettings> = new Map<string, JupyterSettings>();
     public experiments!: IExperiments;
     public logging: ILoggingSettings = { level: LogLevel.Error };
-    public insidersChannel: ExtensionChannels = 'off';
     public allowImportFromNotebook: boolean = false;
     public allowUnauthorizedRemoteConnection: boolean = false;
-    public alwaysTrustNotebooks: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;
     public jupyterLaunchRetries: number = 3;
@@ -80,7 +77,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public remoteDebuggerPort: number = 0;
     public colorizeInputBox: boolean = false;
     public addGotoCodeLenses: boolean = false;
-    public useNotebookEditor: boolean = false;
     public runMagicCommands: string = '';
     public runStartupCommands: string | string[] = [];
     public debugJustMyCode: boolean = false;
@@ -110,6 +106,10 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         this._workspace = workspace || new WorkspaceService();
         this._workspaceRoot = workspaceFolder;
         this.initialize();
+        // Disable auto start in untrusted workspaces.
+        if (workspace && workspace.isTrusted === false) {
+            this.disableJupyterAutoStart = true;
+        }
     }
     // eslint-disable-next-line
     public static getInstance(resource: Uri | undefined, workspace?: IWorkspaceService): JupyterSettings {

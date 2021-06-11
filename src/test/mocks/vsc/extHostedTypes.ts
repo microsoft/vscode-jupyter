@@ -7,7 +7,6 @@
 // import * as crypto from 'crypto';
 
 /* eslint-disable  */
-
 import { relative } from 'path';
 import * as vscode from 'vscode';
 import { vscMockHtmlContent } from './htmlContent';
@@ -16,6 +15,50 @@ import { vscUri } from './uri';
 import { generateUuid } from './uuid';
 
 export namespace vscMockExtHostedTypes {
+    export class NotebookCellMetadata {
+        constructor(
+            public readonly editable?: boolean,
+            public readonly breakpointMargin?: boolean,
+            public readonly runnable?: boolean,
+            public readonly executionOrder?: number,
+            public readonly runState?: NotebookCellRunState,
+            public readonly runStartTime?: number,
+            public readonly statusMessage?: string,
+            public readonly lastRunDuration?: number,
+            public readonly inputCollapsed?: boolean,
+            public readonly outputCollapsed?: boolean,
+            public readonly custom?: Record<string, any>
+        ) {}
+
+        // todo@API write a proper signature
+        with(change: {
+            editable?: boolean | null;
+            breakpointMargin?: boolean | null;
+            runnable?: boolean | null;
+            executionOrder?: number | null;
+            runState?: NotebookCellRunState | null;
+            runStartTime?: number | null;
+            statusMessage?: string | null;
+            lastRunDuration?: number | null;
+            inputCollapsed?: boolean | null;
+            outputCollapsed?: boolean | null;
+            custom?: Record<string, any> | null;
+        }): NotebookCellMetadata {
+            return new NotebookCellMetadata(
+                change.editable || this.editable,
+                change.breakpointMargin || this.breakpointMargin,
+                change.runnable || this.runnable,
+                change.executionOrder || this.executionOrder,
+                change.runState || this.runState,
+                change.runStartTime || this.runStartTime,
+                change.statusMessage || this.statusMessage,
+                change.lastRunDuration || this.lastRunDuration,
+                change.inputCollapsed || this.inputCollapsed,
+                change.outputCollapsed || this.outputCollapsed,
+                change.custom || this.custom
+            );
+        }
+    }
     export enum NotebookCellKind {
         Markdown = 1,
         Code = 2
@@ -573,13 +616,12 @@ export namespace vscMockExtHostedTypes {
         ): void {
             // Noop
         }
-        replaceNotebookMetadata(_uri: vscode.Uri, _value: vscode.NotebookDocumentMetadata): void {
+        replaceNotebookMetadata(_uri: vscode.Uri, _value: { [key: string]: any }): void {
             //
         }
         replaceNotebookCells(
             _uri: vscode.Uri,
-            _start: number,
-            _end: number,
+            _range: vscode.NotebookRange,
             _cells: vscode.NotebookCellData[],
             _metadata?: vscode.WorkspaceEditEntryMetadata
         ): void {
@@ -598,7 +640,7 @@ export namespace vscMockExtHostedTypes {
         replaceNotebookCellMetadata(
             _uri: vscode.Uri,
             _index: number,
-            _cellMetadata: vscode.NotebookCellMetadata,
+            _cellMetadata: { [key: string]: any },
             _metadata?: vscode.WorkspaceEditEntryMetadata
         ): void {
             // Noop.

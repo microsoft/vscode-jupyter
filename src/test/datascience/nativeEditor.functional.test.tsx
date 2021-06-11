@@ -28,18 +28,10 @@ import { noop } from '../../client/common/utils/misc';
 import { Commands, Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
-import { IKernelSpecQuickPickItem } from '../../client/datascience/jupyter/kernels/types';
+import { IKernelSpecQuickPickItem, KernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { KeyPrefix } from '../../client/datascience/notebookStorage/nativeEditorStorage';
 import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
-import {
-    ICell,
-    IDataScienceErrorHandler,
-    IJupyterExecution,
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookExporter,
-    ITrustService
-} from '../../client/datascience/types';
+import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { ExecutionCount } from '../../datascience-ui/interactive-common/executionCount';
@@ -173,16 +165,6 @@ suite('DataScience Native Editor', () => {
                         .returns(() => Promise.resolve(Uri.file('foo.ipynb')));
                     ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
                     tempNotebookFile = await createTemporaryFile('.ipynb');
-                    // Stub trustService.isNotebookTrusted. Some tests do not write to storage,
-                    // so explicitly calling trustNotebook on the tempNotebookFile doesn't work
-                    try {
-                        sinon
-                            .stub(ioc.serviceContainer.get<ITrustService>(ITrustService), 'isNotebookTrusted')
-                            .resolves(true);
-                    } catch (e) {
-                        // eslint-disable-next-line no-console
-                        console.log(`Stub failure ${e}`);
-                    }
                     console.log(`Start Test completed ${this.currentTest?.title}`);
                 });
 
@@ -334,7 +316,7 @@ suite('DataScience Native Editor', () => {
                     const context = ioc.get<IExtensionContext>(IExtensionContext);
                     const key = `${KeyPrefix}${file.toString()}`;
                     const name = `${crypto.createHash(key, 'string')}.ipynb`;
-                    return path.join(context.globalStoragePath, name);
+                    return path.join(context.globalStorageUri.fsPath, name);
                 }
 
                 runMountedTest('Save on shutdown', async (context) => {
@@ -418,12 +400,17 @@ suite('DataScience Native Editor', () => {
                             argv: [],
                             env: undefined
                         };
+                        const invalidMetadata: KernelSpecConnectionMetadata = {
+                            kind: 'startUsingKernelSpec',
+                            kernelSpec: invalidKernel,
+                            id: '1'
+                        };
 
                         // Allow the invalid kernel to be used
                         const kernelFinderMock = ioc.kernelFinder;
                         when(
-                            kernelFinderMock.findKernelSpec(objectContaining(kernelDesc), anything(), anything())
-                        ).thenResolve(invalidKernel);
+                            kernelFinderMock.findKernel(objectContaining(kernelDesc), anything(), anything())
+                        ).thenResolve(invalidMetadata);
 
                         // Can only do this with the mock. Have to force the first call to changeKernel on the
                         // the jupyter session to fail
@@ -434,7 +421,11 @@ suite('DataScience Native Editor', () => {
 
                         // Force an update to the editor so that it has a new kernel
                         const editor = (ne.editor as any) as NativeEditorWebView;
-                        await editor.updateNotebookOptions({ kernelSpec: invalidKernel, kind: 'startUsingKernelSpec' });
+                        await editor.updateNotebookOptions({
+                            kernelSpec: invalidKernel,
+                            kind: 'startUsingKernelSpec',
+                            id: '1'
+                        });
 
                         // Run the first cell. Should fail but then ask for another
                         await addCell(ne.mount, 'a=1\na');
@@ -480,7 +471,7 @@ suite('DataScience Native Editor', () => {
 
                 runMountedTest('Remote kernel can be switched and remembered', async function () {
                     // Turn off raw kernel for this test as it's testing remote
-                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
+                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true, jupyterServerType: 'remote' });
 
                     const pythonService = await createPythonService(ioc, 2);
 
@@ -1059,100 +1050,6 @@ df.head()`;
                     } finally {
                         tf.dispose();
                     }
-                });
-
-                runMountedTest('Startup and shutdown', async () => {
-                    // Turn off raw kernel for this test as it's testing jupyterserver start / shutdown
-                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
-                    addMockData(ioc, 'b=2\nb', 2);
-                    addMockData(ioc, 'c=3\nc', 3);
-
-                    const baseFile = [
-                        { id: 'NotebookImport#0', data: { source: 'a=1\na' } },
-                        { id: 'NotebookImport#1', data: { source: 'b=2\nb' } },
-                        { id: 'NotebookImport#2', data: { source: 'c=3\nc' } }
-                    ];
-                    const runAllCells = baseFile.map((cell) => {
-                        return createFileCell(cell, cell.data);
-                    });
-                    const notebook = await ioc
-                        .get<INotebookExporter>(INotebookExporter)
-                        .translateToNotebook(runAllCells, undefined);
-                    let editor = await openEditor(ioc, JSON.stringify(notebook));
-
-                    // Run everything
-                    let threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                        numberOfTimes: 3
-                    });
-                    let runAllButton = findButton(editor.mount.wrapper, NativeEditor, 0);
-                    runAllButton!.simulate('click');
-                    await threeCellsUpdated;
-
-                    // Close editor. Should still have the server up
-                    await closeNotebook(ioc, editor.editor);
-                    const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-                    const server = await jupyterExecution.getServer({
-                        allowUI: () => false,
-                        purpose: Identifiers.HistoryPurpose,
-                        resource: undefined
-                    });
-                    assert.ok(server, 'Server was destroyed on notebook shutdown');
-
-                    // Reopen, and rerun
-                    editor = await openEditor(ioc, JSON.stringify(notebook));
-
-                    threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                        numberOfTimes: 3
-                    });
-                    runAllButton = findButton(editor.mount.wrapper, NativeEditor, 0);
-                    runAllButton!.simulate('click');
-                    await threeCellsUpdated;
-                    verifyHtmlOnCell(editor.mount.wrapper, 'NativeCell', `1`, 0);
-                });
-
-                test('Failure', async () => {
-                    let fail = true;
-                    const errorThrownDeferred = createDeferred<Error>();
-
-                    // Turn off raw kernel for this test as it's testing jupyter usable error
-                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
-
-                    // REmap the functions in the execution and error handler. Note, we can't rebind them as
-                    // they've already been injected into the INotebookProvider
-                    const execution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-                    const errorHandler = ioc.serviceManager.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
-                    const originalGetUsable = execution.getUsableJupyterPython.bind(execution);
-                    execution.getUsableJupyterPython = () => {
-                        if (fail) {
-                            return Promise.resolve(undefined);
-                        }
-                        return originalGetUsable();
-                    };
-                    errorHandler.handleError = (exc: Error) => {
-                        errorThrownDeferred.resolve(exc);
-                        return Promise.resolve();
-                    };
-
-                    addMockData(ioc, 'a=1\na', 1);
-                    const ne = await createNewEditor(ioc);
-                    const result = await Promise.race([addCell(ne.mount, 'a=1\na', true), errorThrownDeferred.promise]);
-                    assert.ok(result, 'Error not found');
-                    assert.ok(result instanceof Error, 'Error not found');
-
-                    // Fix failure and try again
-                    fail = false;
-                    const cell = getOutputCell(ne.mount.wrapper, 'NativeCell', 1);
-                    assert.ok(cell, 'Cannot find the first cell');
-                    const imageButtons = cell!.find(ImageButton);
-                    assert.equal(imageButtons.length, 6, 'Cell buttons not found');
-                    const runButton = imageButtons.findWhere((w) => w.props().tooltip === 'Run cell');
-                    assert.equal(runButton.length, 1, 'No run button found');
-                    const update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                        numberOfTimes: 3
-                    });
-                    runButton.simulate('click');
-                    await update;
-                    verifyHtmlOnCell(ne.mount.wrapper, 'NativeCell', `1`, 1);
                 });
             });
 

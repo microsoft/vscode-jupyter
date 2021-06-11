@@ -5,6 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 
 import {
@@ -17,7 +18,6 @@ import {
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
@@ -65,7 +65,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(NotebookStarter) notebookStarter: NotebookStarter,
         @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutputChannel: IOutputChannel,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) jupyterOutputChannel: IOutputChannel,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         asyncRegistry.push(this);

@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { InterpreterInformation } from '.';
+import { sha256 } from 'hash.js';
+import { InterpreterInformation, PythonEnvironment } from '.';
 import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../common/process/internal/scripts';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 import { parsePythonVersion } from './pythonVersion';
@@ -72,4 +73,8 @@ export async function getInterpreterInfo(
         logger.info(`Found interpreter for ${argv}`);
     }
     return extractInterpreterInfo(python.pythonExecutable, json);
+}
+
+export function getInterpreterHash(interpreter: PythonEnvironment | {path: string}){
+    return sha256().update(interpreter.path).digest('hex');
 }

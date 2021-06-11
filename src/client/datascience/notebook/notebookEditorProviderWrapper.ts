@@ -138,7 +138,7 @@ export class NotebookEditorProviderWrapper implements INotebookEditorProvider {
     public async show(file: Uri): Promise<INotebookEditor | undefined> {
         return (this.ourCustomOrOldNotebookEditorProvider || this.vscodeNotebookEditorProvider).show(file);
     }
-    public async createNew(contents?: string): Promise<INotebookEditor> {
-        return (this.ourCustomOrOldNotebookEditorProvider || this.vscodeNotebookEditorProvider).createNew(contents);
+    public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<INotebookEditor> {
+        return (this.ourCustomOrOldNotebookEditorProvider || this.vscodeNotebookEditorProvider).createNew(options);
     }
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
+import * as path from 'path';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -27,7 +28,8 @@ const DataViewableTypes: Set<string> = new Set<string>([
     'ndarray',
     'Series',
     'Tensor',
-    'EagerTensor'
+    'EagerTensor',
+    'DataArray'
 ]);
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
@@ -75,6 +77,21 @@ export class DebuggerVariables extends DebugLocationTracker
         };
 
         if (this.active) {
+            type SortableColumn = 'name' | 'type';
+            const sortColumn = request.sortColumn as SortableColumn;
+            const comparer = (a: IJupyterVariable, b: IJupyterVariable): number => {
+                // In case it is undefined or null
+                const aColumn = a[sortColumn] ? a[sortColumn] : '';
+                const bColumn = b[sortColumn] ? b[sortColumn] : '';
+
+                if (request.sortAscending) {
+                    return aColumn.localeCompare(bColumn, undefined, { sensitivity: 'base' });
+                } else {
+                    return bColumn.localeCompare(aColumn, undefined, { sensitivity: 'base' });
+                }
+            };
+            this.lastKnownVariables.sort(comparer);
+
             const startPos = request.startIndex ? request.startIndex : 0;
             const chunkSize = request.pageSize ? request.pageSize : MaximumRowChunkSizeForDebugger;
             result.pageStartIndex = startPos;
@@ -107,11 +124,15 @@ export class DebuggerVariables extends DebugLocationTracker
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
         notebook?: INotebook,
-        sliceExpression?: string
+        sliceExpression?: string,
+        isRefresh?: boolean
     ): Promise<IJupyterVariable> {
         if (!this.active) {
             // No active server just return the unchanged target variable
             return targetVariable;
+        }
+        if (isRefresh) {
+            targetVariable = await this.getFullVariable(targetVariable);
         }
         // Listen to notebook events if we haven't already
         if (notebook) {
@@ -133,12 +154,17 @@ export class DebuggerVariables extends DebugLocationTracker
             (targetVariable as any).frameId
         );
 
+        let fileName = notebook ? path.basename(notebook.identity.path) : '';
+        if (!fileName && this.debugLocation?.fileName) {
+            fileName = path.basename(this.debugLocation.fileName);
+        }
         // Results should be the updated variable.
         return results
             ? {
                   ...targetVariable,
                   ...JSON.parse(results.result),
-                  maximumRowChunkSize: MaximumRowChunkSizeForDebugger
+                  maximumRowChunkSize: MaximumRowChunkSizeForDebugger,
+                  fileName
               }
             : targetVariable;
     }
@@ -255,7 +281,6 @@ export class DebuggerVariables extends DebugLocationTracker
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
                 await this.evaluate(DataFrameLoading.DataFrameSysImport);
-                await this.evaluate(DataFrameLoading.DataFrameImport);
                 this.importedDataFrameScriptsIntoKernel.add(key);
             }
         } catch (exc) {
@@ -269,7 +294,6 @@ export class DebuggerVariables extends DebugLocationTracker
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
                 await this.evaluate(GetVariableInfo.GetVariableInfoSysImport);
-                await this.evaluate(GetVariableInfo.VariableInfoImport);
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }
         } catch (exc) {

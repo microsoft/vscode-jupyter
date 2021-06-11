@@ -2,15 +2,17 @@
 // Licensed under the MIT License.
 /* eslint-disable no-console */
 import type { nbformat } from '@jupyterlab/coreutils';
-import { NotebookOutputEventParams } from 'vscode-notebook-renderer';
 import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { SharedMessages } from '../../../client/datascience/messages';
+import { logMessage } from '../../react-common/logger';
 import { PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
+import { OutputItem } from 'vscode-notebook-renderer';
+
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
     private readonly scriptManager: ScriptManager;
@@ -55,7 +57,7 @@ class WidgetManagerComponent {
             timedout: data.timedout,
             error: data.error
         });
-        renderErrorInLastOutputThatHasNotRendered(data.error);
+        console.error(`Failed to to Widget load class ${data.moduleName}${data.className}`, data);
     }
 
     private handleUnsupportedWidgetVersion(data: { moduleName: 'qgrid'; moduleVersion: string }) {
@@ -88,10 +90,10 @@ const renderedWidgets = new Set<string>();
  * This will be exposed as a public method on window for renderer to render output.
  */
 let stackOfWidgetsRenderStatusByOutputId: { outputId: string; container: HTMLElement; success?: boolean }[] = [];
-export function renderOutput(request: NotebookOutputEventParams) {
+export function renderOutput(outputItem: OutputItem, element: HTMLElement) {
     try {
-        stackOfWidgetsRenderStatusByOutputId.push({ outputId: request.outputId, container: request.element });
-        const output = convertVSCodeOutputToExecutResultOrDisplayData(request);
+        stackOfWidgetsRenderStatusByOutputId.push({ outputId: outputItem.id, container: element });
+        const output = convertVSCodeOutputToExecuteResultOrDisplayData(outputItem);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const model = output.data['application/vnd.jupyter.widget-view+json'] as any;
@@ -100,26 +102,17 @@ export function renderOutput(request: NotebookOutputEventParams) {
             return console.error('Nothing to render');
         }
         /* eslint-disable no-console */
-        renderIPyWidget(request.outputId, model, request.element);
+        renderIPyWidget(outputItem.id, model, element);
     } catch (ex) {
         console.error(`Failed to render ipywidget type`, ex);
         throw ex;
     }
 }
-export function disposeOutput(e: { outputId: string } | undefined) {
-    if (e) {
+export function disposeOutput(outputId?: string) {
+    if (outputId) {
         stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter(
-            (item) => !(e.outputId in item)
+            (item) => !(outputId in item)
         );
-    }
-}
-function renderErrorInLastOutputThatHasNotRendered(message: string) {
-    const possiblyEmptyOutputElement = [...stackOfWidgetsRenderStatusByOutputId]
-        .reverse()
-        .find((item) => !item.success);
-    if (possiblyEmptyOutputElement) {
-        //
-        console.log(message);
     }
 }
 function renderIPyWidget(
@@ -203,32 +196,18 @@ function initialize() {
     }
 }
 
-function convertVSCodeOutputToExecutResultOrDisplayData(
-    request: NotebookOutputEventParams
+function convertVSCodeOutputToExecuteResultOrDisplayData(
+    outputItem: OutputItem
 ): nbformat.IExecuteResult | nbformat.IDisplayData {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const metadata: Record<string, any> = {};
-    // Send metadata only for the mimeType we are interested in.
-    const customMetadata = request.output.metadata?.custom;
-    if (customMetadata) {
-        if (customMetadata[request.mimeType]) {
-            metadata[request.mimeType] = customMetadata[request.mimeType];
-        }
-        if (customMetadata.needs_background) {
-            metadata.needs_background = customMetadata.needs_background;
-        }
-        if (customMetadata.unconfined) {
-            metadata.unconfined = customMetadata.unconfined;
-        }
-    }
-
     return {
         data: {
-            [request.mimeType]: request.output.data[request.mimeType]
+            [outputItem.mime]: outputItem.mime.toLowerCase().includes('json') ? outputItem.json() : outputItem.text()
         },
-        metadata,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        metadata: (outputItem.metadata as any) || {},
         execution_count: null,
-        output_type: request.output.metadata?.custom?.vscode?.outputType || 'execute_result'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        output_type: (outputItem.metadata as any)?.outputType || 'execute_result'
     };
 }
 
@@ -243,7 +222,7 @@ function convertVSCodeOutputToExecutResultOrDisplayData(
 function attemptInitialize() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).vscIPyWidgets) {
-        console.log('IPyWidget kernel initializing...');
+        logMessage('IPyWidget kernel initializing...');
         initialize();
     } else {
         setTimeout(attemptInitialize, 100);

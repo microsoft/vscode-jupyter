@@ -3,15 +3,19 @@
 
 'use strict';
 
-import { Disposable, Event, NotebookCell, NotebookCellRunState, Uri } from 'vscode';
+import { Disposable, Event, ExtensionMode, NotebookCell, Uri } from 'vscode';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
+import { IExtensionContext } from './common/types';
+import { VSCodeNotebookProvider } from './datascience/constants';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
+import { NotebookCellRunState } from './datascience/jupyter/kernels/types';
 import { KernelStateEventArgs } from './datascience/notebookExtensibility';
 import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
+    INotebookEditorProvider,
     INotebookExtensibility,
     IWebviewExtensibility
 } from './datascience/types';
@@ -29,7 +33,13 @@ export interface IExtensionApi {
      * @memberof IExtensionApi
      */
     ready: Promise<void>;
+    /**
+     * Do not use this to monitor execution state of cells of Native Notebooks (use VS Code API).
+     */
     readonly onKernelStateChange: Event<KernelStateEventArgs>;
+    /**
+     * Do not use this to register Cell Toolbar icons for Native Notebook.
+     */
     registerCellToolbarButton(
         callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
         codicon: string,
@@ -48,13 +58,18 @@ export interface IExtensionApi {
      */
     registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
     registerPythonApi(pythonApi: PythonApi): void;
+    /**
+     * Creates a blank notebook and defaults the empty cell to the language provided.
+     */
+    createBlankNotebook(options: { defaultCellLanguage: string }): Promise<void>;
 }
 
 export function buildApi(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ready: Promise<any>,
     serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer
+    serviceContainer: IServiceContainer,
+    context: IExtensionContext
 ): IExtensionApi {
     const notebookExtensibility = serviceContainer.get<INotebookExtensibility>(INotebookExtensibility);
     const webviewExtensibility = serviceContainer.get<IWebviewExtensibility>(IWebviewExtensibility);
@@ -82,11 +97,19 @@ export function buildApi(
             container.registerProvider(picker);
         },
         onKernelStateChange: notebookExtensibility.onKernelStateChange.bind(notebookExtensibility),
-        registerCellToolbarButton: webviewExtensibility.registerCellToolbarButton.bind(webviewExtensibility)
+        registerCellToolbarButton: webviewExtensibility.registerCellToolbarButton.bind(webviewExtensibility),
+        createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
+            const service = serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
+            await service.createNew(options);
+        }
     };
 
-    // In test environment return the DI Container.
-    if (isTestExecution()) {
+    // In test/dev environment return the DI Container.
+    if (
+        isTestExecution() ||
+        process.env.VSC_JUPYTER_EXPOSE_SVC ||
+        context.extensionMode === ExtensionMode.Development
+    ) {
         /* eslint-disable @typescript-eslint/no-explicit-any */
         (api as any).serviceContainer = serviceContainer;
         (api as any).serviceManager = serviceManager;

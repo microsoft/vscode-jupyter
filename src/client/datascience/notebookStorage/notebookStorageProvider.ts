@@ -18,7 +18,10 @@ import { VSCodeNotebookModel } from './vscNotebookModel';
 
 export const INotebookStorageProvider = Symbol.for('INotebookStorageProvider');
 export interface INotebookStorageProvider extends INotebookStorage {
-    createNew(contents?: string, forVSCodeNotebook?: boolean): Promise<INotebookModel>;
+    createNew(
+        options?: { contents?: string; defaultCellLanguage: string },
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel>;
 }
 @injectable()
 export class NotebookStorageProvider implements INotebookStorageProvider {
@@ -94,14 +97,18 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         }
     }
 
-    public async createNew(possibleContents?: string, forVSCodeNotebooks?: boolean): Promise<INotebookModel> {
+    public async createNew(
+        options?: { contents?: string; defaultCellLanguage: string },
+        forVSCodeNotebooks?: boolean
+    ): Promise<INotebookModel> {
         // Create a new URI for the dummy file using our root workspace path
         const uri = this.getNextNewNotebookUri(forVSCodeNotebooks);
 
         // Always skip loading from the hot exit file. When creating a new file we want a new file.
         return this.getOrCreateModel({
             file: uri,
-            possibleContents,
+            possibleContents: options?.contents,
+            defaultCellLanguage: options?.defaultCellLanguage,
             skipLoadingDirtyContents: true,
             isNative: forVSCodeNotebooks
         });
@@ -111,7 +118,6 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         return generateNewNotebookUri(
             NotebookStorageProvider.untitledCounter,
             this.workspace.rootPath,
-            undefined,
             forVSCodeNotebooks
         );
     }

@@ -246,7 +246,7 @@ export namespace CommonEffects {
                 ).format(arg.payload.data.moduleName, arg.payload.data.moduleVersion);
             } else if (!arg.payload.data.cdnsUsed) {
                 errorMessage = getLocString(
-                    'DataScience.enableCDNForWidgetsSetting',
+                    'DataScience.enableCDNForWidgetsSettingHtml',
                     "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:jupyter.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1})."
                 ).format(arg.payload.data.moduleName, arg.payload.data.moduleVersion);
             }

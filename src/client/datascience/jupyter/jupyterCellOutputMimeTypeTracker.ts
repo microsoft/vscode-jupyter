@@ -3,10 +3,11 @@
 'use strict';
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import { sha256 } from 'hash.js';
 import { inject, injectable } from 'inversify';
+import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry } from '../constants';
 import { CellState, ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../types';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
@@ -122,7 +123,14 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         if (!e.model) {
             return;
         }
-        e.model?.getCellsWithId().forEach(this.checkCell.bind(this));
+        try {
+            e.model?.getCellsWithId().forEach(this.checkCell.bind(this));
+        } catch (ex) {
+            // Can fail on CI, if the notebook has been closed or the like
+            if (!IS_CI_SERVER) {
+                throw ex;
+            }
+        }
     }
 
     private sendTelemetry(mimeType: string) {
@@ -133,7 +141,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         this.sentMimeTypes.add(mimeType);
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
-        const hashedName = sha256().update(mimeType).digest('hex');
+        const hashedName = getTelemetrySafeHashedString(mimeType);
 
         const lowerMimeType = mimeType.toLowerCase();
         // The following gives us clues of the mimetype.

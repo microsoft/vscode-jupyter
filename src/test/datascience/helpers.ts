@@ -17,7 +17,6 @@ import { INotebookEditorProvider } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { CommandSource } from '../../client/testing/common/constants';
 import { waitForCondition } from '../common';
-import { trustNotebook } from './notebook/helper';
 
 // The default base set of data science settings to use
 export function defaultDataScienceSettings(): IJupyterSettings {
@@ -25,14 +24,12 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         logging: {
             level: 'off'
         },
-        insidersChannel: 'off',
         experiments: {
             enabled: false,
             optOutFrom: [],
             optInto: []
         },
         allowImportFromNotebook: true,
-        alwaysTrustNotebooks: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         jupyterServerType: 'local',
@@ -99,12 +96,8 @@ export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
 export async function openNotebook(
     serviceContainer: IServiceContainer,
     ipynbFile: string,
-    options: { ignoreSavingOldNotebooks?: boolean; isNotTrusted?: boolean } = { ignoreSavingOldNotebooks: true }
+    options: { ignoreSavingOldNotebooks?: boolean } = { ignoreSavingOldNotebooks: true }
 ) {
-    if (!options.isNotTrusted) {
-        traceInfo(`Trust notebook before opening ${ipynbFile}`);
-        await trustNotebook(ipynbFile);
-    }
     traceInfo(`Opening notebook ${ipynbFile}`);
     const cmd = serviceContainer.get<ICommandManager>(ICommandManager);
     await cmd.executeCommand(Commands.OpenNotebook, Uri.file(ipynbFile), undefined, CommandSource.commandPalette);
@@ -128,5 +121,5 @@ export async function openNotebook(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (editorProvider.activeEditor as any).askForSave = () => Promise.resolve(AskForSaveResult.No);
     }
-    traceInfo(`Opened notebook ${ipynbFile} & trusted= ${editorProvider.activeEditor?.model.isTrusted}`);
+    traceInfo(`Opened notebook ${ipynbFile}`);
 }

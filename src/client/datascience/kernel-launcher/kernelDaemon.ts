@@ -29,7 +29,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         super(pythonExecutionService, platformService, pythonPath, proc, connection);
     }
     public async interrupt() {
-        const request = new RequestType0<void, void, void>('interrupt_kernel');
+        const request = new RequestType0<void, void>('interrupt_kernel');
         await this.sendRequestWithoutArgs(request);
     }
     public async kill() {
@@ -38,7 +38,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
             return;
         }
         this.killed = true;
-        const request = new RequestType0<void, void, void>('kill_kernel');
+        const request = new RequestType0<void, void>('kill_kernel');
         await this.sendRequestWithoutArgs(request);
     }
     public async preWarm() {
@@ -47,7 +47,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         }
         this.preWarmed = true;
         this.monitorOutput();
-        const request = new RequestType0<void, void, void>('prewarm_kernel');
+        const request = new RequestType0<void, void>('prewarm_kernel');
 
         await this.sendRequestWithoutArgs(request);
     }
@@ -73,7 +73,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         this.monitorOutput();
 
         if (this.preWarmed) {
-            const request = new RequestType<{ args: string[] }, ExecResponse, void, void>('start_prewarmed_kernel');
+            const request = new RequestType<{ args: string[] }, ExecResponse, void>('start_prewarmed_kernel');
             await this.sendRequest(request, { args: [moduleName].concat(args) });
         } else {
             // No need of the output here, we'll tap into the output coming from daemon `this.outputObservale`.
@@ -102,11 +102,13 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         }
         this.outputHooked = true;
         // Message from daemon when kernel dies.
-        const KernelDiedNotification = new NotificationType<{ exit_code: string; reason?: string }, void>(
-            'kernel_died'
-        );
+        const KernelDiedNotification = new NotificationType<{ exit_code: string; reason?: string }>('kernel_died');
         let stdErr = '';
         this.connection.onNotification(KernelDiedNotification, (output) => {
+            // If we have requested for kernel to be killed, don't raise kernel died error.
+            if (this.killed) {
+                return;
+            }
             this.subject.error(
                 new PythonKernelDiedError({
                     exitCode: parseInt(output.exit_code, 10),
@@ -125,16 +127,24 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
                     // Don't call this.subject.error, as that can only be called once (hence can only be handled once).
                     // Instead log this error & pass this only when the kernel dies.
                     stdErr += out.out;
-                    traceWarning(`Kernel ${this.proc.pid} as possibly died, StdErr from Kernel Process ${out.out}`);
-                } else {
-                    this.subject.next(out);
+                    // If we have requested for kernel to be killed, don't raise kernel died error.
+                    if (!this.killed) {
+                        traceWarning(`Kernel ${this.proc.pid} as possibly died, StdErr from Kernel Process ${out.out}`);
+                    }
                 }
+                this.subject.next(out);
             },
             this.subject.error.bind(this.subject),
             this.subject.complete.bind(this.subject)
         );
 
         // If the daemon dies, then kernel is also dead.
-        this.closed.catch((error) => this.subject.error(new PythonKernelDiedError({ error, stdErr })));
+        this.closed.catch((error) => {
+            // If we have requested for kernel to be killed, don't raise kernel died error.
+            if (this.killed) {
+                return;
+            }
+            this.subject.error(new PythonKernelDiedError({ error, stdErr }));
+        });
     }
 }

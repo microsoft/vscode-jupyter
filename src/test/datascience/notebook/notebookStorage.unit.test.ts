@@ -29,7 +29,7 @@ suite('DataScience - Notebook Storage', () => {
 
     function createModel(index: number): BaseNotebookModel {
         const fileName = `foo${index}.ipynb`;
-        return new NativeEditorNotebookModel(true, Uri.file(fileName), [], globalMemento, instance(crypto));
+        return new NativeEditorNotebookModel(() => true, Uri.file(fileName), [], globalMemento, instance(crypto));
     }
 
     function updateModelKernel(model: BaseNotebookModel, id: string) {
@@ -49,7 +49,8 @@ suite('DataScience - Notebook Storage', () => {
             kernelConnection: {
                 kernelModel,
                 interpreter: undefined,
-                kind: 'connectToLiveKernel'
+                kind: 'connectToLiveKernel',
+                id: '2'
             },
             oldDirty: false,
             newDirty: true,

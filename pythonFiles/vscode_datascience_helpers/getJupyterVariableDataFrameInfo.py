@@ -78,7 +78,13 @@ else:
         _VSCODE_columnNames = list(_VSCODE_df)
 
     # Compute the index column. It may have been renamed
-    _VSCODE_indexColumn = _VSCODE_df.index.name if _VSCODE_df.index.name else "index"
+    try:
+        _VSCODE_indexColumn = (
+            _VSCODE_df.index.name if _VSCODE_df.index.name else "index"
+        )
+    except AttributeError:
+        _VSCODE_indexColumn = "index"
+
     _VSCODE_columnTypes = _VSCODE_builtins.list(_VSCODE_df.dtypes)
     del _VSCODE_df
 

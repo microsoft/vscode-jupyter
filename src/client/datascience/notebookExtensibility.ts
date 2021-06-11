@@ -29,14 +29,16 @@ export class NotebookExtensibility implements INotebookExecutionLogger, INoteboo
         noop();
     }
     public async postExecute(cell: ICell, silent: boolean, language: string, resource: Uri): Promise<void> {
-        const nbCell = translateCellToNative(cell, language);
-        if (nbCell && nbCell.code.length > 0) {
-            this.kernelStateChange.fire({
-                resource,
-                state: KernelState.executed,
-                cell: nbCell as NotebookCell,
-                silent
-            });
+        if (!silent) {
+            const nbCell = translateCellToNative(cell, language);
+            if (nbCell && nbCell.code.length > 0) {
+                this.kernelStateChange.fire({
+                    resource,
+                    state: KernelState.executed,
+                    cell: nbCell as NotebookCell,
+                    silent
+                });
+            }
         }
     }
     public onKernelStarted(resource: Uri): void {

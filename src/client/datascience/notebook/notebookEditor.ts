@@ -7,16 +7,17 @@ import {
     ConfigurationTarget,
     Event,
     EventEmitter,
-    NotebookCell,
     NotebookCellKind,
-    NotebookCellMetadata,
+    NotebookRange,
     NotebookDocument,
     ProgressLocation,
     Uri,
-    WebviewPanel
+    WebviewPanel,
+    NotebookCellData,
+    NotebookCell
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -34,7 +35,7 @@ import {
     InterruptResult,
     IStatusProvider
 } from '../types';
-import { NotebookCellLanguageService } from './defaultCellLanguageService';
+import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 
 export class NotebookEditor implements INotebookEditor {
@@ -46,10 +47,6 @@ export class NotebookEditor implements INotebookEditor {
     }
     public get modified(): Event<INotebookEditor> {
         return this._modified.event;
-    }
-
-    public get executed(): Event<INotebookEditor> {
-        return this._executed.event;
     }
     public get saved(): Event<INotebookEditor> {
         return this._saved.event;
@@ -69,19 +66,15 @@ export class NotebookEditor implements INotebookEditor {
     public get active(): boolean {
         return this.vscodeNotebook.activeNotebookEditor?.document.uri.toString() === this.model.file.toString();
     }
-    public get onExecutedCode(): Event<string> {
-        return this.executedCode.event;
-    }
     public readonly type = 'native';
     public notebook?: INotebook | undefined;
 
     private changedViewState = new EventEmitter<void>();
     private _closed = new EventEmitter<INotebookEditor>();
     private _saved = new EventEmitter<INotebookEditor>();
-    private _executed = new EventEmitter<INotebookEditor>();
     private _modified = new EventEmitter<INotebookEditor>();
-    private executedCode = new EventEmitter<string>();
     private restartingKernel?: boolean;
+    private kernelInterruptedDontAskToRestart: boolean = false;
     constructor(
         public readonly model: INotebookModel,
         public readonly document: NotebookDocument,
@@ -104,6 +97,7 @@ export class NotebookEditor implements INotebookEditor {
             })
         );
         disposables.push(model.onDidDispose(this.dispose.bind(this)));
+        vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
@@ -137,13 +131,37 @@ export class NotebookEditor implements INotebookEditor {
         };
     }
     public hasCell(): Promise<boolean> {
-        return Promise.resolve(this.document.cells.length > 0);
+        return Promise.resolve(this.document.cellCount > 0);
     }
     public undoCells(): void {
         this.commandManager.executeCommand('notebook.undo').then(noop, noop);
     }
     public redoCells(): void {
         this.commandManager.executeCommand('notebook.redo').then(noop, noop);
+    }
+    public toggleOutput(): void {
+        if (!this.vscodeNotebook.activeNotebookEditor) {
+            return;
+        }
+
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            const cells: NotebookCell[] = [];
+            editor.selections.map((cr) => {
+                if (!cr.isEmpty) {
+                    for (let index = cr.start; index < cr.end; index++) {
+                        cells.push(editor.document.cellAt(index));
+                    }
+                }
+            });
+            chainWithPendingUpdates(editor.document, (edit) => {
+                cells.forEach((cell) => {
+                    const collapsed = cell.metadata.outputCollapsed || false;
+                    const metadata = { ...cell.metadata, outputCollapsed: !collapsed };
+                    edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
+                });
+            }).then(noop, noop);
+        }
     }
     public removeAllCells(): void {
         if (!this.vscodeNotebook.activeNotebookEditor) {
@@ -153,14 +171,8 @@ export class NotebookEditor implements INotebookEditor {
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) =>
-                edit.replaceNotebookCells(editor.document.uri, 0, this.document.cells.length, [
-                    {
-                        cellKind: NotebookCellKind.Code,
-                        language: defaultLanguage,
-                        metadata: new NotebookCellMetadata(),
-                        outputs: [],
-                        source: ''
-                    }
+                edit.replaceNotebookCells(editor.document.uri, new NotebookRange(0, this.document.cellCount), [
+                    new NotebookCellData(NotebookCellKind.Code, '', defaultLanguage)
                 ])
             ).then(noop, noop);
         }
@@ -173,8 +185,8 @@ export class NotebookEditor implements INotebookEditor {
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
-                notebook.cells.forEach((cell, index) => {
-                    const metadata = cell.metadata.with({ inputCollapsed: false, outputCollapsed: false });
+                notebook.getCells().forEach((cell, index) => {
+                    const metadata = { ...(cell.metadata || {}), inputCollapsed: false, outputCollapsed: false };
                     edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);
@@ -188,30 +200,31 @@ export class NotebookEditor implements INotebookEditor {
         const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
-                notebook.cells.forEach((cell, index) => {
-                    const metadata = cell.metadata.with({ inputCollapsed: true, outputCollapsed: true });
+                notebook.getCells().forEach((cell, index) => {
+                    const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: true };
                     edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);
         }
     }
-    public notifyExecution(cell: NotebookCell) {
-        this._executed.fire(this);
-        this.executedCode.fire(cell.document.getText());
-    }
     public async interruptKernel(): Promise<void> {
         if (this.restartingKernel) {
+            traceInfo(`Interrupt requested & currently restarting ${this.document.uri} in notebookEditor.`);
             trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
         const kernel = this.kernelProvider.get(this.file);
         if (!kernel || this.restartingKernel) {
+            traceInfo(
+                `Interrupt requested & no kernel or currently restarting ${this.document.uri} in notebookEditor.`
+            );
             trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
         const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
 
         try {
+            traceInfo(`Interrupt requested & sent for ${this.document.uri} in notebookEditor.`);
             const result = await kernel.interrupt(this.document);
             if (result === InterruptResult.TimedOut) {
                 const message = DataScience.restartKernelAfterInterruptMessage();
@@ -220,6 +233,7 @@ export class NotebookEditor implements INotebookEditor {
                 const v = await this.applicationShell.showInformationMessage(message, yes, no);
                 if (v === yes) {
                     this.restartingKernel = false;
+                    this.kernelInterruptedDontAskToRestart = true;
                     await this.restartKernel();
                 }
             }
@@ -227,6 +241,7 @@ export class NotebookEditor implements INotebookEditor {
             traceError('Failed to interrupt kernel', err);
             void this.applicationShell.showErrorMessage(err);
         } finally {
+            this.kernelInterruptedDontAskToRestart = false;
             status.dispose();
         }
     }
@@ -273,50 +288,10 @@ export class NotebookEditor implements INotebookEditor {
         this._closed.fire(this);
     }
 
-    public runAbove(uri: Uri | undefined): void {
-        const cellId = this.getSelectedCellId(uri);
-        const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
-
-        if (index > 0) {
-            // Get all cellIds until `index`.
-            const cells = this.document.cells.slice(0, index).map((cell) => cell);
-            this.runCellRange(cells);
+    private onClosedDocument(e?: NotebookDocument) {
+        if (this.document === e) {
+            this._closed.fire(this);
         }
-    }
-    public runCellAndBelow(uri: Uri | undefined): void {
-        const cellId = this.getSelectedCellId(uri);
-        const index = this.document.cells.findIndex((c) => c.uri.toString() === cellId);
-
-        if (index >= 0) {
-            // Get all cellIds starting from `index`.
-            const cells = this.document.cells.slice(index).map((cell) => cell);
-            this.runCellRange(cells);
-        }
-    }
-
-    private getSelectedCellId(uri: Uri | undefined): string | undefined {
-        const uriStr = uri ? uri.toString() : this.document.uri.toString();
-        const editor = this.vscodeNotebook.notebookEditors.find((nb) => nb.document.uri.toString() === uriStr);
-
-        if (editor && editor.selection) {
-            return editor.selection.uri.toString();
-        }
-
-        return undefined;
-    }
-
-    private runCellRange(cells: NotebookCell[]) {
-        const kernel = this.kernelProvider.get(this.file);
-
-        if (!kernel || this.restartingKernel) {
-            return;
-        }
-
-        cells.forEach(async (cell) => {
-            if (cell.cellKind === NotebookCellKind.Code) {
-                await kernel.executeCell(cell);
-            }
-        });
     }
 
     private async restartKernelInternal(kernel: IKernel): Promise<void> {
@@ -332,11 +307,14 @@ export class NotebookEditor implements INotebookEditor {
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
+            sendKernelTelemetryEvent(
+                this.document.uri,
+                Telemetry.NotebookRestart,
+                stopWatch.elapsedTime,
+                undefined,
+                exc
+            );
             if (exc instanceof JupyterKernelPromiseFailedError && kernel) {
-                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, {
-                    failed: true,
-                    failureCategory: 'kernelpromisetimeout'
-                });
                 // Old approach (INotebook is not exposed in IKernel, and INotebook will eventually go away).
                 const notebook = await this.notebookProvider.getOrCreateNotebook({
                     resource: this.file,
@@ -353,7 +331,6 @@ export class NotebookEditor implements INotebookEditor {
                     metadata: this.model.metadata
                 });
             } else {
-                sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime, exc);
                 // Show the error message
                 void this.applicationShell.showErrorMessage(exc);
                 traceError(exc);
@@ -364,6 +341,9 @@ export class NotebookEditor implements INotebookEditor {
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {
+        if (this.kernelInterruptedDontAskToRestart) {
+            return false;
+        }
         const settings = this.configurationService.getSettings(this.file);
         return settings && settings.askForKernelRestart === true;
     }

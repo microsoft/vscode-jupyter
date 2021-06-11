@@ -11,7 +11,6 @@ import {
 } from 'vscode-jsonrpc/node';
 
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PYTHON_WARNINGS } from '../constants';
 import { traceDecorators, traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IDisposable, IDisposableRegistry } from '../types';
@@ -48,9 +47,6 @@ export class PythonDaemonFactory {
             ? `${this.envVariables.PYTHONPATH}${path.delimiter}${envPythonPath}`
             : envPythonPath;
         this.envVariables.PYTHONUNBUFFERED = '1';
-
-        // Always ignore warnings as the user should never see the output of the daemon running
-        this.envVariables[PYTHON_WARNINGS] = 'ignore';
     }
     @traceDecorators.error('Failed to create daemon')
     public async createDaemonService<T extends IPythonDaemonExecutionService | IDisposable>(): Promise<T> {
@@ -123,7 +119,7 @@ export class PythonDaemonFactory {
         // At this point there should be some information logged in stderr of the daemon process.
         const fail = createDeferred<{ pong: string }>();
         const timer = setTimeout(() => fail.reject(new Error('Timeout waiting for daemon to start')), 5_000);
-        const request = new RequestType<{ data: string }, { pong: string }, void, void>('ping');
+        const request = new RequestType<{ data: string }, { pong: string }, void>('ping');
         // Check whether the daemon has started correctly, by sending a ping.
         const result = await Promise.race([fail.promise, connection.sendRequest(request, { data: 'hello' })]);
         clearTimeout(timer);

@@ -17,7 +17,12 @@ import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeE
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
-import { INotebookCreationTracker, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import {
+    INotebookCreationTracker,
+    INotebookEditor,
+    INotebookEditorProvider,
+    IRawNotebookSupportedService
+} from '../../client/datascience/types';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { FakeClock } from '../common';
 import { createPythonInterpreter } from '../utils/interpreters';
@@ -50,7 +55,10 @@ suite('DataScience - Activation', () => {
         when(contextService.activate()).thenResolve();
         when(daemonPool.activate(anything())).thenResolve();
         const extensionChecker = mock(PythonExtensionChecker);
+        const rawNotebook = mock<IRawNotebookSupportedService>();
+        when(rawNotebook.supported()).thenReturn(false);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        when(extensionChecker.isPythonExtensionActive).thenReturn(true);
         activator = new Activation(
             instance(notebookEditorProvider),
             instance(jupyterInterpreterService),
@@ -58,6 +66,7 @@ suite('DataScience - Activation', () => {
             [],
             instance(contextService),
             instance(daemonPool),
+            instance(rawNotebook),
             instance(tracker),
             instance(extensionChecker)
         );

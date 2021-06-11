@@ -21,6 +21,8 @@ export interface IJupyterExtensionApi {
      * @param serverProvider object called back when picking jupyter server URI
      */
     registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
+    registerNewNotebookContent(options: { defaultCellLanguage: string }): void;
+    createBlankNotebook(options: { defaultCellLanguage: string }): Promise<void>;
 }
 
 export interface IDataFrameInfo {

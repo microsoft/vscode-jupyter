@@ -204,6 +204,12 @@ export function convertToMonacoCompletionItem(
         delete resultAny._documentPosition;
     }
 
+    if (item.documentation && typeof item.documentation !== 'string') {
+        result.documentation = convertToMonacoMarkdown(item.documentation)[0];
+    } else {
+        result.documentation = item.documentation;
+    }
+
     return result;
 }
 

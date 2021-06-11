@@ -3,16 +3,16 @@
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as os from 'os';
+import * as fsExtra from 'fs-extra';
 import { parse, SemVer } from 'semver';
 import { Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { traceError, traceInfo } from '../common/logger';
-import { IFileSystem } from '../common/platform/types';
-import { IPythonExecutionFactory } from '../common/process/types';
 import { DataScience } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
-import { KnownKernelLanguageAliases, KnownNotebookLanguages, Telemetry } from './constants';
+import { jupyterLanguageToMonacoLanguageMapping, Telemetry } from './constants';
 import { ICell } from './types';
+import { getTelemetrySafeLanguage } from '../telemetry/helpers';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -117,30 +117,22 @@ export function traceCellResults(prefix: string, results: ICell[]) {
     }
 }
 
-const jupyterLanguageToMonacoLanguageMapping = new Map([
-    ['c#', 'csharp'],
-    ['f#', 'fsharp'],
-    ['q#', 'qsharp'],
-    ['c++11', 'c++'],
-    ['c++12', 'c++'],
-    ['c++14', 'c++']
-]);
-export function translateKernelLanguageToMonaco(kernelLanguage: string): string {
-    // At the moment these are the only translations.
-    // python, julia, r, javascript, powershell, etc can be left as is.
-    kernelLanguage = kernelLanguage.toLowerCase();
-    return jupyterLanguageToMonacoLanguageMapping.get(kernelLanguage) || kernelLanguage;
+export function translateKernelLanguageToMonaco(language: string): string {
+    language = language.toLowerCase();
+    if (language.length === 2 && language.endsWith('#')) {
+        return `${language.substring(0, 1)}sharp`;
+    }
+    return jupyterLanguageToMonacoLanguageMapping.get(language) || language;
 }
 
 export function generateNewNotebookUri(
     counter: number,
     rootFolder: string | undefined,
-    title?: string,
     forVSCodeNotebooks?: boolean
 ): Uri {
     // However if there are files already on disk, we should be able to overwrite them because
     // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
-    const fileName = title ? `${title}-${counter}.ipynb` : `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
+    const fileName = `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
     // Turn this back into an untitled
     if (forVSCodeNotebooks) {
         return Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
@@ -151,36 +143,13 @@ export function generateNewNotebookUri(
     }
 }
 
-export async function getRealPath(
-    fs: IFileSystem,
-    execFactory: IPythonExecutionFactory,
-    pythonPath: string,
-    expectedPath: string
-): Promise<string | undefined> {
-    if (await fs.localDirectoryExists(expectedPath)) {
+export async function tryGetRealPath(expectedPath: string): Promise<string | undefined> {
+    try {
+        // Real path throws if the expected path is not actually created yet.
+        return await fsExtra.realpath(expectedPath);
+    } catch {
+        // So if that happens, just return the original path.
         return expectedPath;
-    }
-    if (await fs.localFileExists(expectedPath)) {
-        return expectedPath;
-    }
-
-    // If can't find the path, try turning it into a real path.
-    const pythonRunner = await execFactory.create({ pythonPath });
-    const result = await pythonRunner.exec(
-        ['-c', `import os;print(os.path.realpath("${expectedPath.replace(/\\/g, '\\\\')}"))`],
-        {
-            throwOnStdErr: false,
-            encoding: 'utf-8'
-        }
-    );
-    if (result && result.stdout) {
-        const trimmed = result.stdout.trim();
-        if (await fs.localDirectoryExists(trimmed)) {
-            return trimmed;
-        }
-        if (await fs.localFileExists(trimmed)) {
-            return trimmed;
-        }
     }
 }
 
@@ -197,12 +166,8 @@ export function parseSemVer(versionString: string): SemVer | undefined {
 
 export function sendNotebookOrKernelLanguageTelemetry(
     telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
-    language: string = 'unknown'
+    language?: string
 ) {
-    language = (language || 'unknown').toLowerCase();
-    language = KnownKernelLanguageAliases.get(language) || language;
-    if (!KnownNotebookLanguages.includes(language)) {
-        language = 'unknown';
-    }
+    language = getTelemetrySafeLanguage(language);
     sendTelemetryEvent(telemetryEvent, undefined, { language });
 }

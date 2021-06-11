@@ -6,9 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
-import { Cancellation } from '../../../common/cancellation';
-import { traceError, traceInfo, traceWarning } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
+import { traceWarning } from '../../../common/logger';
 
 import {
     IPythonDaemonExecutionService,
@@ -27,7 +25,6 @@ import { JUPYTER_OUTPUT_CHANNEL, JupyterDaemonModule, Telemetry } from '../../co
 import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionService } from '../../types';
 import { JupyterServerInfo } from '../jupyterConnection';
 import { JupyterInstallError } from '../jupyterInstallError';
-import { JupyterKernelSpec, parseKernelSpecs } from '../kernels/jupyterKernelSpec';
 import {
     getMessageForLibrariesNotInstalled,
     JupyterInterpreterDependencyService
@@ -49,7 +46,6 @@ export class JupyterInterpreterSubCommandExecutionService
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(JupyterInterpreterDependencyService)
         private readonly jupyterDependencyService: JupyterInterpreterDependencyService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
@@ -79,6 +75,7 @@ export class JupyterInterpreterSubCommandExecutionService
             if (!interpreter) {
                 // Unlikely scenario, user hasn't selected python, python extension will fall over.
                 // Get user to select something.
+                sendTelemetryEvent(Telemetry.SelectJupyterInterpreterMessageDisplayed);
                 return DataScience.selectJupyterInterpreter();
             }
         }
@@ -154,68 +151,6 @@ export class JupyterInterpreterSubCommandExecutionService
         executionService
             .execModule('jupyter', ['notebook'].concat(args), { throwOnStdErr: false, encoding: 'utf8' })
             .ignoreErrors();
-    }
-
-    public async getKernelSpecs(token?: CancellationToken): Promise<JupyterKernelSpec[]> {
-        const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
-        const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
-            daemonModule: JupyterDaemonModule,
-            pythonPath: interpreter.path
-        });
-        if (Cancellation.isCanceled(token)) {
-            return [];
-        }
-        try {
-            traceInfo('Asking for kernelspecs from jupyter');
-            const spawnOptions = { throwOnStdErr: true, encoding: 'utf8' };
-            // Ask for our current list.
-            const stdoutFromDaemonPromise = await daemon
-                .execModule('jupyter', ['kernelspec', 'list', '--json'], spawnOptions)
-                .then((output) => output.stdout)
-                .catch((daemonEx) => {
-                    sendTelemetryEvent(Telemetry.KernelSpecNotFound);
-                    traceError('Failed to list kernels from daemon', daemonEx);
-                    return '';
-                });
-            // Possible we cannot import ipykernel for some reason. (use as backup option).
-            const stdoutFromFileExecPromise = daemon
-                .exec(
-                    [
-                        path.join(
-                            EXTENSION_ROOT_DIR,
-                            'pythonFiles',
-                            'vscode_datascience_helpers',
-                            'getJupyterKernels.py'
-                        )
-                    ],
-                    spawnOptions
-                )
-                .then((output) => output.stdout)
-                .catch((fileEx) => {
-                    traceError('Failed to list kernels from getJupyterKernels.py', fileEx);
-                    return '';
-                });
-
-            const [stdoutFromDaemon, stdoutFromFileExec] = await Promise.all([
-                stdoutFromDaemonPromise,
-                stdoutFromFileExecPromise
-            ]);
-
-            return parseKernelSpecs(
-                stdoutFromDaemon || stdoutFromFileExec,
-                this.fs,
-                this.pythonExecutionFactory,
-                token
-            ).catch((parserError) => {
-                traceError('Failed to parse kernelspecs', parserError);
-                // This is failing for some folks. In that case return nothing
-                return [];
-            });
-        } catch (ex) {
-            traceError('Failed to list kernels', ex);
-            // This is failing for some folks. In that case return nothing
-            return [];
-        }
     }
 
     public async installMissingDependencies(err?: JupyterInstallError): Promise<void> {

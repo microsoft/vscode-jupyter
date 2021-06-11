@@ -5,12 +5,13 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IPythonExtensionChecker } from '../api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
 import '../common/extensions';
 import { IDisposableRegistry } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
+import { IRawNotebookSupportedService } from './types';
 
 @injectable()
 export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSingleActivationService {
@@ -18,17 +19,25 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         @inject(IEnvironmentActivationService) private readonly activationService: IEnvironmentActivationService,
         @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
     ) {}
     public async activate(): Promise<void> {
-        this.disposables.push(
-            this.jupyterInterpreterService.onDidChangeInterpreter(() => this.preWarmInterpreterVariables().catch(noop))
-        );
-        this.preWarmInterpreterVariables().ignoreErrors();
+        // Don't prewarm global interpreter if running with ZMQ
+        if (!this.rawNotebookSupported.supported()) {
+            this.disposables.push(
+                this.jupyterInterpreterService.onDidChangeInterpreter(() =>
+                    this.preWarmInterpreterVariables().catch(noop)
+                )
+            );
+            this.preWarmInterpreterVariables().ignoreErrors();
+        }
+        this.apiProvider.onDidActivatePythonExtension(this.preWarmInterpreterVariables, this, this.disposables);
     }
 
     private async preWarmInterpreterVariables() {
-        if (!this.extensionChecker.isPythonExtensionInstalled) {
+        if (!this.extensionChecker.isPythonExtensionActive) {
             return;
         }
         const interpreter = await this.jupyterInterpreterService.getSelectedInterpreter();

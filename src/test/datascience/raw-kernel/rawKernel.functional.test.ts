@@ -81,7 +81,7 @@ suite('DataScience raw kernel tests', () => {
             ioc.get<IProcessServiceFactory>(IProcessServiceFactory),
             ioc.get<KernelDaemonPool>(KernelDaemonPool),
             connectionInfo as any,
-            { kernelSpec, interpreter, kind: 'startUsingKernelSpec' },
+            { kernelSpec, interpreter, kind: 'startUsingKernelSpec', id: '1' },
             ioc.get<IFileSystem>(IFileSystem),
             undefined,
             ioc.get<IPythonExtensionChecker>(IPythonExtensionChecker),

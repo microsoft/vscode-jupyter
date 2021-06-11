@@ -3,11 +3,7 @@
 
 export enum Experiments {
     // Experiment to turn on custom editor or VS Code Native Notebook API support.
-    CustomEditor = 'CustomEditor',
-    // Experiment to turn on custom editor or VS Code Native Notebook API support.
     NativeNotebook = 'NativeNotebookEditor',
-    // Experiment to enable an enhanced data viewer.
-    SliceDataViewer = 'jupyterEnhancedDataViewer',
     // Experiment to enable tensor tooltips.
     EnhancedTooltips = 'jupyterEnhancedTensorTooltips'
 }

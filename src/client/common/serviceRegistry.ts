@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IExtensionSingleActivationService } from '../activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient } from '../common/types';
 import { AmlComputeContext } from './amlContext';
 import { LiveShareApi } from '../datascience/liveshare/liveshare';
@@ -36,20 +36,6 @@ import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
 import { ExperimentService } from './experiments/service';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
-import {
-    ExtensionInsidersDailyChannelRule,
-    ExtensionInsidersOffChannelRule,
-    ExtensionInsidersWeeklyChannelRule
-} from './insidersBuild/downloadChannelRules';
-import { ExtensionChannelService } from './insidersBuild/downloadChannelService';
-import { InsidersExtensionPrompt } from './insidersBuild/insidersExtensionPrompt';
-import { InsidersExtensionService } from './insidersBuild/insidersExtensionService';
-import {
-    ExtensionChannel,
-    IExtensionChannelRule,
-    IExtensionChannelService,
-    IInsiderExtensionPrompt
-} from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
 import { BrowserService } from './net/browser';
 import { FileDownloader } from './net/fileDownloader';
@@ -72,6 +58,8 @@ import {
     IsWindows
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
+import { PortAttributesProviders } from './net/portAttributeProvider';
+import { LanguageInitializer } from '../telemetry/languageInitializer';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
@@ -105,10 +93,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
     serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);
     serviceManager.addBinding(IImportTracker, INotebookExecutionLogger);
-    serviceManager.addSingleton<IInsiderExtensionPrompt>(IInsiderExtensionPrompt, InsidersExtensionPrompt);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        InsidersExtensionService
+        LanguageInitializer
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
@@ -118,22 +105,14 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         AmlComputeContext
     );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PortAttributesProviders
+    );
     serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
-    serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersOffChannelRule,
-        ExtensionChannel.off
-    );
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersDailyChannelRule,
-        ExtensionChannel.daily
-    );
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersWeeklyChannelRule,
-        ExtensionChannel.weekly
-    );
     serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        CustomEditorService
+    );
 }

@@ -3,7 +3,7 @@
 'use strict';
 import '../../extensions';
 
-import { Uri, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
+import { Uri, ViewColumn, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import { IWebviewPanel, IWebviewPanelOptions } from '../types';
@@ -29,8 +29,18 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
 
     public async show(preserveFocus: boolean) {
         await this.loadPromise;
-        if (this.panel) {
-            this.panel.reveal(this.panel.viewColumn, preserveFocus);
+        if (!this.panel) {
+            return;
+        }
+
+        if (preserveFocus) {
+            if (!this.panel.visible) {
+                this.panel.reveal(this.panel.viewColumn, preserveFocus);
+            }
+        } else {
+            if (!this.panel.active) {
+                this.panel.reveal(this.panel.viewColumn, preserveFocus);
+            }
         }
     }
 
@@ -42,6 +52,10 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
         if (this.panel) {
             this.panel.dispose();
         }
+    }
+
+    public get viewColumn(): ViewColumn | undefined {
+        return this.panel?.viewColumn;
     }
 
     public isVisible(): boolean {

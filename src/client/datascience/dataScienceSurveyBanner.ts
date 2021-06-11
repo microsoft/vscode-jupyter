@@ -16,12 +16,14 @@ import {
     IJupyterExtensionBanner,
     IPersistentState,
     IPersistentStateFactory,
+    IsCodeSpace,
     ISurveyBanner
 } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { MillisecondsInADay } from '../constants';
 import { InteractiveWindowMessages, IReExecuteCells } from './interactive-common/interactiveWindowTypes';
+import { isJupyterNotebook } from './notebook/helpers/helpers';
 import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
 import { IInteractiveWindowListener, INotebookEditorProvider, INotebookExtensibility } from './types';
 
@@ -53,9 +55,6 @@ enum DSSurveyLabelIndex {
     Yes,
     No
 }
-
-const NotebookOpenThreshold = 5;
-const NotebookExecutionThreshold = 100;
 
 @injectable()
 export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener {
@@ -150,6 +149,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         localize.DataScienceSurveyBanner.bannerLabelNo()
     ];
     private readonly showBannerState = new Map<BannerType, IPersistentState<ShowBannerWithExpiryTime>>();
+    private static surveyDelay = false;
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
@@ -158,6 +158,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
+        @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(UseVSCodeNotebookEditorApi) private useVSCodeNotebookEditorApi: boolean
@@ -166,10 +167,23 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         this.setPersistentState(BannerType.InsidersNotebookSurvey, InsidersNotebookSurveyStateKeys.ShowBanner);
         this.setPersistentState(BannerType.ExperimentNotebookSurvey, ExperimentNotebookSurveyStateKeys.ShowBanner);
         editorProvider.onDidOpenNotebookEditor(this.openedNotebook.bind(this));
+
+        // Change the surveyDelay flag after 10 minutes
+        setTimeout(() => {
+            DataScienceSurveyBanner.surveyDelay = true;
+        }, 10 * 60 * 1000);
     }
 
     public async activate() {
-        this.vscodeNotebook.onDidOpenNotebookDocument(this.openedNotebook, this, this.disposables);
+        this.vscodeNotebook.onDidOpenNotebookDocument(
+            (e) => {
+                if (isJupyterNotebook(e)) {
+                    this.openedNotebook().catch(noop);
+                }
+            },
+            this,
+            this.disposables
+        );
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
     }
 
@@ -185,13 +199,11 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         switch (response) {
             case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
                 await this.launchSurvey(type);
-                // Disable for 6 months
-                await this.disable(6, type);
+                await this.disable(DSSurveyLabelIndex.Yes, type);
                 break;
             }
             case this.bannerLabels[DSSurveyLabelIndex.No]: {
-                // Disable for 3 months
-                await this.disable(3, type);
+                await this.disable(DSSurveyLabelIndex.No, type);
                 break;
             }
             default:
@@ -199,12 +211,22 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     private shouldShowBanner(type: BannerType) {
-        if (!this.isEnabled(type) || this.disabledInCurrentSession) {
+        if (
+            this.isCodeSpace ||
+            !this.isEnabled(type) ||
+            this.disabledInCurrentSession ||
+            !DataScienceSurveyBanner.surveyDelay
+        ) {
             return false;
         }
 
         const executionCount: number = this.getExecutionCount(type);
         const notebookCount: number = this.getOpenNotebookCount(type);
+
+        // The threshold for opening notebooks should be 5 for native and 15 for webviews
+        // And for executing cells, it should be 100 for native and 250 for webviews
+        const NotebookOpenThreshold = type === BannerType.DSSurvey ? 15 : 5;
+        const NotebookExecutionThreshold = type === BannerType.DSSurvey ? 250 : 100;
 
         return executionCount >= NotebookExecutionThreshold || notebookCount > NotebookOpenThreshold;
     }
@@ -221,11 +243,30 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     private async launchSurvey(type: BannerType): Promise<void> {
         this.browserService.launch(this.getSurveyLink(type));
     }
-    private async disable(monthsTillNextPrompt: number, type: BannerType) {
-        await this.showBannerState.get(type)!.updateValue({
-            expiry: monthsTillNextPrompt * 31 * MillisecondsInADay + Date.now(),
-            data: true
-        });
+    private async disable(answer: DSSurveyLabelIndex, type: BannerType) {
+        let monthsTillNextPrompt: number | undefined;
+
+        // The months disabled should be:
+        // For webviews, if yes, disable for 12 months, if no, disable for 6 months
+        // For native, if yes, disable for 6 months, if no, disable for 3 months
+        switch (type) {
+            case BannerType.DSSurvey:
+                monthsTillNextPrompt = answer === DSSurveyLabelIndex.Yes ? 12 : 6;
+                break;
+            case BannerType.ExperimentNotebookSurvey:
+            case BannerType.InsidersNotebookSurvey:
+                monthsTillNextPrompt = answer === DSSurveyLabelIndex.Yes ? 6 : 3;
+                break;
+            default:
+                break;
+        }
+
+        if (monthsTillNextPrompt) {
+            await this.showBannerState.get(type)!.updateValue({
+                expiry: monthsTillNextPrompt * 31 * MillisecondsInADay + Date.now(),
+                data: true
+            });
+        }
     }
 
     private getOpenNotebookCount(type: BannerType): number {

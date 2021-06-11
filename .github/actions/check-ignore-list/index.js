@@ -48,7 +48,8 @@ async function run() {
 
         // Compare this against the ignored files
         const ignoredFiles = eslintjrc.ignorePatterns;
-        const intersection = ignoredFiles.filter((v) => changedFiles.includes(v));
+        // Ignore changes to test extension code.
+        const intersection = ignoredFiles.filter((v) => changedFiles.includes(v) && !v.includes('ms-ai-tools-test'));
 
         if (intersection && intersection.length > 0) {
             core.setFailed(`Files are being ignored that should be linted: ${intersection.join('\n')}`);

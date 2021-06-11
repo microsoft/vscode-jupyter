@@ -3,7 +3,7 @@
 
 import { BANNER_NAME_INTERACTIVE_SHIFTENTER, IJupyterExtensionBanner, ISurveyBanner } from '../common/types';
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
-import { RecommendPythonExtensionBanner } from '../datascience/recommendPythonExtensionBanner';
+import { OpenNotebookBanner } from '../datascience/openNotebookBanner';
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationManager } from './activationManager';
@@ -27,6 +27,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        RecommendPythonExtensionBanner
+        OpenNotebookBanner
     );
 }

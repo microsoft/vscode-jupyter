@@ -6,11 +6,12 @@
 import { inject, injectable } from 'inversify';
 import { ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
+import { traceInfoIf } from '../../../common/logger';
 import { IConfigurationService } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { JupyterSessionStartError } from '../../baseJupyterSession';
 import { RawKernelSessionStartError } from '../../raw-kernel/rawJupyterSession';
-import { IKernelDependencyService, INotebook, KernelInterpreterDependencyResponse } from '../../types';
+import { INotebook } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
 import { getDisplayNameOrNameOfKernelConnection, isLocalLaunch } from './helpers';
 import { KernelSelector } from './kernelSelector';
@@ -21,7 +22,6 @@ export class KernelSwitcher {
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(KernelSelector) private readonly selector: KernelSelector
     ) {}
 
@@ -38,6 +38,11 @@ export class KernelSwitcher {
         // eslint-disable-next-line no-constant-condition
         while (true) {
             try {
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `KernelSwitcher: Attempting switch to ${kernel.id}`
+                );
+
                 await this.switchToKernel(notebook, kernel);
                 return;
             } catch (ex) {
@@ -52,7 +57,7 @@ export class KernelSwitcher {
                     // At this point we have a valid jupyter server.
                     const potential = await this.selector.askForLocalKernel(
                         notebook.resource,
-                        notebook.connection?.type || 'noConnection',
+                        notebook.connection,
                         kernel
                     );
                     if (potential && Object.keys(potential).length > 0) {
@@ -65,16 +70,12 @@ export class KernelSwitcher {
         }
     }
     private async switchToKernel(notebook: INotebook, kernelConnection: KernelConnectionMetadata): Promise<void> {
-        if (notebook.connection?.type === 'raw' && kernelConnection.interpreter) {
-            const response = await this.kernelDependencyService.installMissingDependencies(
-                kernelConnection.interpreter
-            );
-            if (response === KernelInterpreterDependencyResponse.cancel) {
-                return;
-            }
-        }
-
         const switchKernel = async (newKernelConnection: KernelConnectionMetadata) => {
+            traceInfoIf(
+                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                `Switching notebook kernel to ${kernelConnection.id}`
+            );
+
             // Change the kernel. A status update should fire that changes our display
             await notebook.setKernelConnection(
                 newKernelConnection,

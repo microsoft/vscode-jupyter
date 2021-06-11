@@ -2,7 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, Uri } from 'vscode';
+import {
+    Event,
+    EventEmitter,
+    notebooks,
+    NotebookCellExecutionState,
+    NotebookCellExecutionStateChangeEvent,
+    Uri
+} from 'vscode';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
@@ -62,14 +69,30 @@ export class NotebookWatcher implements INotebookWatcher {
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
         this.notebookEditorProvider.onDidCloseNotebookEditor(this.notebookEditorClosed, this, this.disposables);
+        notebooks.onDidChangeNotebookCellExecutionState(
+            this.onDidChangeNotebookCellExecutionState,
+            this,
+            this.disposables
+        );
+    }
+
+    // Handle when a cell finishes execution
+    private onDidChangeNotebookCellExecutionState(cellStateChange: NotebookCellExecutionStateChangeEvent): void {
+        // If a cell has moved to idle, update our state
+        if (cellStateChange.state === NotebookCellExecutionState.Idle) {
+            // Convert to the old KernelStateEventArgs format
+            this.handleExecute({
+                resource: cellStateChange.cell.notebook.uri,
+                state: KernelState.executed,
+                cell: cellStateChange.cell,
+                silent: false
+            });
+        }
     }
 
     // Handle kernel state changes
     private kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
         switch (kernelStateEvent.state) {
-            case KernelState.executed:
-                this.handleExecute(kernelStateEvent);
-                break;
             case KernelState.restarted:
                 this.handleRestart(kernelStateEvent);
                 break;
@@ -83,18 +106,21 @@ export class NotebookWatcher implements INotebookWatcher {
         // We are not interested in silent executions
         if (this.isNonSilentExecution(kernelStateEvent)) {
             // First, update our execution counts, regardless of if this is the active document
-            if (kernelStateEvent.cell?.metadata.executionOrder !== undefined) {
-                this.updateExecutionCount(kernelStateEvent.resource, kernelStateEvent.cell.metadata.executionOrder);
+            if (kernelStateEvent.cell?.executionSummary?.executionOrder !== undefined) {
+                this.updateExecutionCount(
+                    kernelStateEvent.resource,
+                    kernelStateEvent.cell.executionSummary?.executionOrder
+                );
             }
 
             // Next, if this is the active document, send out our notifications
             if (
                 //this.isActiveNotebookExecution(kernelStateEvent) &&
                 this.isActiveNotebookEvent(kernelStateEvent) &&
-                kernelStateEvent.cell?.metadata.executionOrder !== undefined
+                kernelStateEvent.cell?.executionSummary?.executionOrder !== undefined
             ) {
                 this._onDidExecuteActiveNotebook.fire({
-                    executionCount: kernelStateEvent.cell.metadata.executionOrder
+                    executionCount: kernelStateEvent.cell.executionSummary?.executionOrder
                 });
             }
         }
@@ -135,7 +161,7 @@ export class NotebookWatcher implements INotebookWatcher {
         if (
             kernelStateEvent.state === KernelState.executed &&
             kernelStateEvent.cell &&
-            kernelStateEvent.cell.metadata.executionOrder &&
+            kernelStateEvent.cell.executionSummary?.executionOrder &&
             !kernelStateEvent.silent
         ) {
             return true;

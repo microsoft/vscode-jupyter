@@ -17,6 +17,7 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
     public matchOnDescription: boolean = false;
     public matchOnDetail: boolean = false;
     public buttons: QuickInputButton[] = [];
+    public sortByLabel: boolean = true;
     private didChangeValueEmitter: EventEmitter<string> = new EventEmitter<string>();
     private didAcceptEmitter: EventEmitter<void> = new EventEmitter<void>();
     private didTriggerButtonEmitter: EventEmitter<QuickInputButton> = new EventEmitter<QuickInputButton>();

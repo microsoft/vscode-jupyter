@@ -9,8 +9,8 @@ import { sendKernelTelemetryEvent, trackKernelResourceInformation } from './tele
 
 export function sendKernelListTelemetry(
     resource: Resource,
-    kernels: { selection: KernelConnectionMetadata }[],
-    stopWatch: StopWatch
+    kernels: KernelConnectionMetadata[],
+    stopWatch?: StopWatch
 ) {
     let counters = {
         kernelSpecCount: 0,
@@ -18,7 +18,7 @@ export function sendKernelListTelemetry(
         kernelLiveCount: 0
     };
     kernels.forEach((item) => {
-        switch (item.selection.kind) {
+        switch (item.kind) {
             case 'connectToLiveKernel':
                 counters.kernelLiveCount += 1;
                 break;
@@ -34,5 +34,7 @@ export function sendKernelListTelemetry(
         }
     });
     trackKernelResourceInformation(resource, counters);
-    sendKernelTelemetryEvent(resource, Telemetry.KernelCount, stopWatch.elapsedTime, counters);
+    if (stopWatch) {
+        sendKernelTelemetryEvent(resource, Telemetry.KernelCount, stopWatch.elapsedTime, counters);
+    }
 }

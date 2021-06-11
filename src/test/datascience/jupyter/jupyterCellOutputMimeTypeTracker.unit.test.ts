@@ -4,7 +4,6 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { expect } from 'chai';
-import { sha256 } from 'hash.js';
 // eslint-disable-next-line
 import rewiremock from 'rewiremock';
 import { instance, mock, when } from 'ts-mockito';
@@ -16,6 +15,7 @@ import { CellOutputMimeTypeTracker } from '../../../client/datascience/jupyter/j
 import { NativeEditorProvider } from '../../../client/datascience/notebookStorage/nativeEditorProvider';
 import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
 import { CellState, ICell, INotebookEditor } from '../../../client/datascience/types';
+import { getTelemetrySafeHashedString } from '../../../client/telemetry/helpers';
 
 suite('DataScience - Cell Output Mimetype Tracker', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;
@@ -113,7 +113,7 @@ suite('DataScience - Cell Output Mimetype Tracker', () => {
         return { data: { 'application/vnd.plotly.v1+json': '', 'text/html': '' }, output_type };
     }
     function generateTelemetry(mimeType: string) {
-        const hashedName = sha256().update(mimeType).digest('hex');
+        const hashedName = getTelemetrySafeHashedString(mimeType);
 
         const lowerMimeType = mimeType.toLowerCase();
         return {

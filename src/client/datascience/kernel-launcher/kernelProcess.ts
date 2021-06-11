@@ -19,11 +19,7 @@ import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
-import {
-    createDefaultKernelSpec,
-    findIndexOfConnectionFile,
-    isPythonKernelConnection
-} from '../jupyter/kernels/helpers';
+import { findIndexOfConnectionFile, isPythonKernelConnection } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
@@ -231,16 +227,6 @@ export class KernelProcess implements IKernelProcess {
         }
 
         let kernelSpec = this._kernelConnectionMetadata.kernelSpec;
-        // If there is no kernelspec & when launching a Python process, generate a dummy `kernelSpec`
-        if (!kernelSpec && this._kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') {
-            traceInfo(
-                `Creating a default kernel spec for use with interpreter ${this._kernelConnectionMetadata.interpreter.displayName} # ${this._kernelConnectionMetadata.interpreter.path}`
-            );
-            kernelSpec = createDefaultKernelSpec(this._kernelConnectionMetadata.interpreter);
-            traceInfo(
-                `Created a default kernel spec for use with interpreter ${kernelSpec.display_name} # ${kernelSpec.interpreterPath}`
-            );
-        }
         // We always expect a kernel spec.
         if (!kernelSpec) {
             throw new Error('KernelSpec cannot be empty in KernelProcess.ts');
@@ -357,7 +343,17 @@ export class KernelProcess implements IKernelProcess {
                 this.processExecutionFactory.create(this.resource),
                 this.kernelEnvVarsService.getEnvironmentVariables(this.resource, this.launchKernelSpec)
             ]);
-            exeObs = executionService.execObservable(executable, this.launchKernelSpec.argv.slice(1), {
+
+            // Add quotations to arguments if they have a blank space in them.
+            // This will mainly quote paths so that they can run, other arguments shouldn't be quoted or it may cause errors.
+            // The first argument is sliced because it is the executable command.
+            const args = this.launchKernelSpec.argv.slice(1).map((a) => {
+                if (a.includes(' ')) {
+                    return `"${a}"`;
+                }
+                return a;
+            });
+            exeObs = executionService.execObservable(executable, args, {
                 env,
                 cwd: workingDirectory
             });

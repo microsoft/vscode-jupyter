@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IPythonExtensionChecker } from '../../api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { InterpreterUri } from '../../common/installer/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
+import { IDisposableRegistry } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { isResource, noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -17,6 +19,7 @@ const interestedPackages = new Set(
         'jupyter',
         'jupyter-client',
         'jupyter-core',
+        'ipywidgets',
         'nbconvert',
         'nbformat',
         'notebook',
@@ -27,23 +30,60 @@ const interestedPackages = new Set(
     ].map((item) => item.toLowerCase())
 );
 
+const notInstalled = 'NOT INSTALLED';
 @injectable()
 export class InterpreterPackages {
-    private static interpreterInformation = new Map<string, Map<string, string>>();
+    private static interpreterInformation = new Map<string, Deferred<Map<string, string>>>();
     private static pendingInterpreterInformation = new Map<string, Promise<void>>();
+    private pendingInterpreterBeforeActivation = new Set<InterpreterUri>();
+    private static instance?: InterpreterPackages;
     constructor(
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory
-    ) {}
-    public static getPackageVersions(interpreter: PythonEnvironment): Map<string, string> | undefined {
-        return InterpreterPackages.interpreterInformation.get(interpreter.path);
+        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+    ) {
+        InterpreterPackages.instance = this;
+        this.apiProvider.onDidActivatePythonExtension(
+            () => this.pendingInterpreterBeforeActivation.forEach((item) => this.trackPackages(item)),
+            this,
+            this.disposables
+        );
+    }
+    public static getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>> {
+        let deferred = InterpreterPackages.interpreterInformation.get(interpreter.path);
+        if (!deferred) {
+            deferred = createDeferred<Map<string, string>>();
+            InterpreterPackages.interpreterInformation.set(interpreter.path, deferred);
+
+            if (InterpreterPackages.instance) {
+                InterpreterPackages.instance.trackInterpreterPackages(interpreter).catch(noop);
+            }
+        }
+        return deferred.promise;
+    }
+    public static async getPackageVersion(
+        interpreter: PythonEnvironment,
+        packageName: string
+    ): Promise<string | undefined> {
+        const packages = await InterpreterPackages.getPackageVersions(interpreter);
+        const telemetrySafeString = getTelemetrySafeHashedString(packageName.toLocaleLowerCase());
+        if (!packages.has(telemetrySafeString)) {
+            return;
+        }
+        const version = packages.get(telemetrySafeString);
+        if (!version) {
+            return;
+        }
+        return version === notInstalled ? undefined : version;
     }
     public trackPackages(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
         this.trackPackagesInternal(interpreterUri, ignoreCache).catch(noop);
     }
-    public async trackPackagesInternal(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
-        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
+    private async trackPackagesInternal(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
+        if (!this.pythonExtensionChecker.isPythonExtensionActive) {
+            this.pendingInterpreterBeforeActivation.add(interpreterUri);
             return;
         }
         let interpreter: PythonEnvironment;
@@ -86,9 +126,8 @@ export class InterpreterPackages {
         const packageAndVersions = new Map<string, string>();
         // Add defaults.
         interestedPackages.forEach((item) => {
-            packageAndVersions.set(getTelemetrySafeHashedString(item), 'NOT INSTALLED');
+            packageAndVersions.set(getTelemetrySafeHashedString(item), notInstalled);
         });
-        InterpreterPackages.interpreterInformation.set(interpreter.path, packageAndVersions);
         output.stdout
             .split('\n')
             .map((line) => line.trim().toLowerCase())
@@ -105,5 +144,11 @@ export class InterpreterPackages {
                 const version = getTelemetrySafeVersion(rawVersion);
                 packageAndVersions.set(getTelemetrySafeHashedString(packageName), version || '');
             });
+        let deferred = InterpreterPackages.interpreterInformation.get(interpreter.path);
+        if (!deferred) {
+            deferred = createDeferred<Map<string, string>>();
+            InterpreterPackages.interpreterInformation.set(interpreter.path, deferred);
+        }
+        deferred.resolve(packageAndVersions);
     }
 }

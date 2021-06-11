@@ -78,13 +78,18 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         this.variable = variable;
     }
 
-    public async getDataFrameInfo(sliceExpression?: string): Promise<IDataFrameInfo> {
+    public async getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo> {
         let dataFrameInfo: IDataFrameInfo = {};
         await this.ensureInitialized();
         let variable = this.variable;
         if (variable) {
-            if (sliceExpression) {
-                variable = await this.variableManager.getDataFrameInfo(variable, this.notebook, sliceExpression);
+            if (sliceExpression || isRefresh) {
+                variable = await this.variableManager.getDataFrameInfo(
+                    variable,
+                    this.notebook,
+                    sliceExpression,
+                    isRefresh
+                );
             }
             dataFrameInfo = {
                 columns: variable.columns
@@ -96,8 +101,13 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 shape: JupyterVariableDataProvider.parseShape(variable.shape),
                 sliceExpression,
                 type: variable.type,
-                maximumRowChunkSize: variable.maximumRowChunkSize
+                maximumRowChunkSize: variable.maximumRowChunkSize,
+                name: variable.name,
+                fileName: variable.fileName
             };
+        }
+        if (isRefresh) {
+            this.variable = variable;
         }
         return dataFrameInfo;
     }

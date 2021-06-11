@@ -22,7 +22,6 @@ suite('Migrate data science settings', () => {
     const originalSettings = `{
     "python.dataScience.allowImportFromNotebook": true,
     "jupyter.allowImportFromNotebook": true,
-    "python.dataScience.alwaysTrustNotebooks": true,
     "python.dataScience.enabled": true,
     "python.dataScience.jupyterInterruptTimeout": 0,
     "python.dataScience.jupyterLaunchTimeout": 0,
@@ -62,7 +61,6 @@ suite('Migrate data science settings', () => {
     "python.dataScience.remoteDebuggerPort": 0,
     "python.dataScience.colorizeInputBox": true,
     "python.dataScience.addGotoCodeLenses": true,
-    "python.dataScience.useNotebookEditor": true,
     "python.dataScience.runMagicCommands": "foo",
     "python.dataScience.runStartupCommands": ["foo", "bar"],
     "python.dataScience.debugJustMyCode": true,
@@ -88,7 +86,6 @@ suite('Migrate data science settings', () => {
     "python.experiments.optOutFrom": [
         "DeprecatePythonPath - experiment"
     ],
-    "jupyter.alwaysTrustNotebooks": true,
     "jupyter.enabled": true,
     "jupyter.jupyterInterruptTimeout": 0,
     "jupyter.jupyterLaunchTimeout": 0,
@@ -128,7 +125,6 @@ suite('Migrate data science settings', () => {
     "jupyter.remoteDebuggerPort": 0,
     "jupyter.colorizeInputBox": true,
     "jupyter.addGotoCodeLenses": true,
-    "jupyter.useNotebookEditor": true,
     "jupyter.runMagicCommands": "foo",
     "jupyter.runStartupCommands": [
         "foo",

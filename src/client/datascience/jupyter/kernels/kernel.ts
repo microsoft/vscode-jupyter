@@ -7,9 +7,17 @@ import { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
-import { CancellationTokenSource, Event, EventEmitter, NotebookCell, NotebookDocument, Uri } from 'vscode';
+import {
+    CancellationTokenSource,
+    Event,
+    EventEmitter,
+    NotebookCell,
+    NotebookController,
+    NotebookDocument,
+    Uri
+} from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, IVSCodeNotebook } from '../../../common/application/types';
+import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
@@ -28,12 +36,11 @@ import {
     INotebookProvider,
     INotebookProviderConnection,
     InterruptResult,
-    IRawNotebookSupportedService,
     KernelSocketInformation
 } from '../../types';
 import { isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import type { IKernel, IKernelProvider, IKernelSelectionUsage, KernelConnectionMetadata } from './types';
+import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -70,7 +77,6 @@ export class Kernel implements IKernel {
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
     private restarting?: Deferred<void>;
-    private readonly kernelValidated = new Map<string, { kernel: IKernel; promise: Promise<void> }>();
     private readonly kernelExecution: KernelExecution;
     private startCancellation = new CancellationTokenSource();
     constructor(
@@ -82,25 +88,22 @@ export class Kernel implements IKernel {
         interruptTimeout: number,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
-        private readonly kernelProvider: IKernelProvider,
-        private readonly kernelSelectionUsage: IKernelSelectionUsage,
+        kernelProvider: IKernelProvider,
         appShell: IApplicationShell,
-        vscNotebook: IVSCodeNotebook,
-        private readonly rawNotebookSupported: IRawNotebookSupportedService,
         private readonly fs: IFileSystem,
         context: IExtensionContext,
-        private readonly serverStorage: IJupyterServerUriStorage
+        private readonly serverStorage: IJupyterServerUriStorage,
+        controller: NotebookController
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
             errorHandler,
-            editorProvider,
-            kernelSelectionUsage,
             appShell,
-            vscNotebook,
             kernelConnectionMetadata,
             context,
-            interruptTimeout
+            interruptTimeout,
+            disposables,
+            controller
         );
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
@@ -132,6 +135,7 @@ export class Kernel implements IKernel {
         return this.kernelExecution.interrupt(document, this._notebookPromise);
     }
     public async dispose(): Promise<void> {
+        traceInfo(`Dispose kernel ${this.uri.toString()}`);
         this.restarting = undefined;
         this._notebookPromise = undefined;
         if (this.notebook) {
@@ -188,10 +192,10 @@ export class Kernel implements IKernel {
         if (!this._notebookPromise) {
             this.startCancellation = new CancellationTokenSource();
             this._notebookPromise = new Promise<INotebook>(async (resolve, reject) => {
+                const stopWatch = new StopWatch();
                 try {
-                    const stopWatch = new StopWatch();
-                    await this.validate(this.uri);
                     try {
+                        traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
                         this.notebook = await this.notebookProvider.getOrCreateNotebook({
                             identity: this.uri,
                             resource: this.uri,
@@ -207,17 +211,7 @@ export class Kernel implements IKernel {
                             throw new Error('Kernel has not been started');
                         }
                     } catch (ex) {
-                        traceError('failed to create INotebook in kernel', ex);
-                        sendKernelTelemetryEvent(
-                            options.document.uri,
-                            Telemetry.NotebookStart,
-                            stopWatch.elapsedTime,
-                            undefined,
-                            ex
-                        );
-                        if (!options.disableUI) {
-                            this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
-                        }
+                        traceError(`failed to create INotebook in kernel, UI Disabled = ${options.disableUI}`, ex);
                         throw ex;
                     }
                     await this.initializeAfterStart();
@@ -231,10 +225,19 @@ export class Kernel implements IKernel {
                     }
                     resolve(this.notebook);
                 } catch (ex) {
+                    sendKernelTelemetryEvent(
+                        options.document.uri,
+                        Telemetry.NotebookStart,
+                        stopWatch.elapsedTime,
+                        undefined,
+                        ex
+                    );
                     if (options.disableUI) {
                         sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
+                    } else {
+                        this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
                     }
-                    traceError('failed to start INotebook in kernel', ex);
+                    traceError(`failed to start INotebook in kernel, UI Disabled = ${options.disableUI}`, ex);
                     this.startCancellation.cancel();
                     this._notebookPromise = undefined;
                     reject(ex);
@@ -255,40 +258,6 @@ export class Kernel implements IKernel {
         );
     }
 
-    private async validate(uri: Uri): Promise<void> {
-        const kernel = this.kernelProvider.get(uri);
-        if (!kernel) {
-            return;
-        }
-        const key = uri.toString();
-        if (!this.kernelValidated.get(key)) {
-            const promise = new Promise<void>((resolve) =>
-                this.rawNotebookSupported.supported().then((isRawNotebookSupported) =>
-                    this.kernelSelectionUsage
-                        .useSelectedKernel(
-                            kernel?.kernelConnectionMetadata,
-                            uri,
-                            isRawNotebookSupported ? 'raw' : 'jupyter',
-                            undefined,
-                            true // Disable UI when validating.
-                        )
-                        .finally(() => {
-                            // If still using the same promise, then remove the exception information.
-                            // Basically if there's an exception, then we cannot use the kernel and a message would have been displayed.
-                            // We don't want to cache such a promise, as its possible the user later installs the dependencies.
-                            if (this.kernelValidated.get(key)?.kernel === kernel) {
-                                this.kernelValidated.delete(key);
-                            }
-                        })
-                        .finally(resolve)
-                        .catch(noop)
-                )
-            );
-
-            this.kernelValidated.set(key, { kernel, promise });
-        }
-        await this.kernelValidated.get(key)!.promise;
-    }
     private async initializeAfterStart() {
         if (!this.notebook) {
             return;
@@ -305,6 +274,7 @@ export class Kernel implements IKernel {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
             this.notebook.onDisposed(() => {
+                traceInfo(`Kernel got disposed as a result of notebook.onDisposed ${this.uri.toString()}`);
                 this._notebookPromise = undefined;
                 this._onDisposed.fire();
             });

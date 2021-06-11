@@ -3,30 +3,30 @@
 
 'use strict';
 
+import * as fastDeepEqual from 'fast-deep-equal';
 import { nbformat } from '@jupyterlab/coreutils';
 import {
     NotebookCellOutput,
     NotebookCellOutputItem,
     NotebookCell,
     NotebookCellData,
-    NotebookCellMetadata,
-    NotebookCellRunState,
     NotebookData,
     NotebookDocument,
-    NotebookEditor,
-    NotebookKernel as VSCNotebookKernel,
     NotebookCellKind,
-    NotebookDocumentMetadata
+    NotebookCellExecutionState,
+    notebooks,
+    NotebookCellExecutionStateChangeEvent,
+    NotebookCellExecutionSummary
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { isUntitledFile } from '../../../common/utils/misc';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
-import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
+import { defaultNotebookFormat, Telemetry } from '../../constants';
+import { KernelConnectionMetadata, NotebookCellRunState } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { CellState, IJupyterKernelSpec } from '../../types';
 import { JupyterNotebookView } from '../constants';
@@ -35,11 +35,10 @@ import { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
-import { VSCodeNotebookKernelMetadata } from '../kernelWithMetadata';
-import { chainWithPendingUpdates } from './notebookUpdater';
-import { Resource } from '../../../common/types';
+import { IDisposable, Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { CellOutputMimeTypes } from '../types';
+import { disposeAllDisposables } from '../../../common/helpers';
 
 /**
  * Whether this is a Notebook we created/manage/use.
@@ -52,20 +51,13 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     if (typeof option === 'string') {
         return option === JupyterNotebookView;
     } else {
-        return option.viewType === JupyterNotebookView;
+        return option.notebookType === JupyterNotebookView;
     }
-}
-
-export function isJupyterKernel(kernel?: VSCNotebookKernel): kernel is VSCodeNotebookKernelMetadata {
-    if (!kernel) {
-        return false;
-    }
-    return kernel instanceof VSCodeNotebookKernelMetadata;
 }
 
 const kernelInformationForNotebooks = new WeakMap<
     NotebookDocument,
-    { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: KernelMessage.IInfoReplyMsg['content'] }
+    { metadata?: KernelConnectionMetadata | undefined; kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']> }
 >();
 
 export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeNotebook, fs: IFileSystem) {
@@ -81,7 +73,7 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
     // If language isn't specified in the metadata, at least specify that
     if (!notebookContent?.metadata?.language_info?.name) {
         const content = notebookContent || {};
-        const metadata = content.metadata || { orig_nbformat: 3, language_info: {} };
+        const metadata = content.metadata || { orig_nbformat: defaultNotebookFormat.major, language_info: {} };
         const language_info = { ...metadata.language_info };
         // Fix nyc compiler not working.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -93,6 +85,11 @@ export function getNotebookMetadata(document: NotebookDocument): nbformat.INoteb
         updateNotebookMetadata(notebookContent.metadata, data.metadata, data.kernelInfo);
     }
 
+    traceInfoIf(
+        !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+        `Notebook metadata for ${document.uri.toString()} is ${data?.metadata?.id}`
+    );
+
     return notebookContent.metadata;
 }
 
@@ -102,11 +99,13 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
     if (metadata?.language_info?.name && metadata.language_info.name !== PYTHON_LANGUAGE) {
         return false;
     }
-    if (kernelSpec?.language && kernelSpec.language !== PYTHON_LANGUAGE) {
-        return false;
+
+    if (kernelSpec?.name.includes(PYTHON_LANGUAGE)) {
+        return true;
     }
-    // All other notebooks are python notebooks.
-    return true;
+
+    // Valid notebooks will have a language information in the metadata.
+    return kernelSpec?.language === PYTHON_LANGUAGE || metadata?.language_info?.name === PYTHON_LANGUAGE;
 }
 /**
  * No need to update the notebook metadata just yet.
@@ -130,7 +129,67 @@ export function trackKernelInNotebookMetadata(
 ) {
     const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
     data.metadata = kernelConnection;
+    let language: string | undefined;
+    switch (kernelConnection?.kind) {
+        case 'connectToLiveKernel':
+            language = kernelConnection.kernelModel.language;
+            break;
+        case 'startUsingKernelSpec':
+            language = kernelConnection.kernelSpec.language;
+            break;
+        case 'startUsingPythonInterpreter':
+            language = PYTHON_LANGUAGE;
+            break;
+        default:
+            break;
+    }
+    if (language) {
+        data.kernelInfo = {
+            language_info: {
+                name: language,
+                version: ''
+            }
+        };
+    } else {
+        data.kernelInfo = undefined;
+    }
+
     kernelInformationForNotebooks.set(document, data);
+}
+/**
+ * Whether the kernel connection information tracked against the document is the same as the one provided.
+ */
+export function isSameAsTrackedKernelInNotebookMetadata(
+    document: NotebookDocument,
+    kernelConnection: KernelConnectionMetadata
+) {
+    const data = { ...(kernelInformationForNotebooks.get(document) || {}) };
+    const expectedData: typeof data = { metadata: kernelConnection };
+    let language: string | undefined;
+    switch (kernelConnection?.kind) {
+        case 'connectToLiveKernel':
+            language = kernelConnection.kernelModel.language;
+            break;
+        case 'startUsingKernelSpec':
+            language = kernelConnection.kernelSpec.language;
+            break;
+        case 'startUsingPythonInterpreter':
+            language = PYTHON_LANGUAGE;
+            break;
+        default:
+            break;
+    }
+    if (language) {
+        expectedData.kernelInfo = {
+            language_info: {
+                name: language,
+                version: ''
+            }
+        };
+    } else {
+        expectedData.kernelInfo = undefined;
+    }
+    return fastDeepEqual(data, expectedData);
 }
 /**
  * Thus this method doesn't update it the notebook metadata, we merely keep track of the information.
@@ -156,7 +215,6 @@ export function deleteKernelMetadataForTests(document: NotebookDocument) {
  * Converts a NotebookModel into VSCode friendly format.
  */
 export function notebookModelToVSCNotebookData(
-    isNotebookTrusted: boolean,
     notebookContentWithoutCells: Exclude<Partial<nbformat.INotebookContent>, 'cells'>,
     notebookUri: Uri,
     nbCells: nbformat.IBaseCell[],
@@ -164,46 +222,16 @@ export function notebookModelToVSCNotebookData(
     originalJson: Partial<nbformat.INotebookContent>
 ): NotebookData {
     const cells = nbCells
-        .map((cell) => createVSCNotebookCellDataFromCell(isNotebookTrusted, preferredLanguage, cell))
+        .map((cell) => createVSCNotebookCellDataFromCell(preferredLanguage, cell))
         .filter((item) => !!item)
         .map((item) => item!);
 
     if (cells.length === 0 && (isUntitledFile(notebookUri) || Object.keys(originalJson).length === 0)) {
-        cells.push({
-            cellKind: NotebookCellKind.Code,
-            language: preferredLanguage,
-            metadata: new NotebookCellMetadata(),
-            outputs: [],
-            source: ''
-        });
+        cells.push(new NotebookCellData(NotebookCellKind.Code, '', preferredLanguage));
     }
-    return {
-        cells,
-        metadata: new NotebookDocumentMetadata().with({
-            custom: notebookContentWithoutCells, // Include metadata in VSC Model (so that VSC can display these if required)
-            cellEditable: isNotebookTrusted,
-            cellRunnable: isNotebookTrusted,
-            editable: isNotebookTrusted,
-            cellHasExecutionOrder: true,
-            runnable: isNotebookTrusted,
-            displayOrder: [
-                'application/vnd.*',
-                'application/vdom.*',
-                'application/geo+json',
-                'application/x-nteract-model-debug+json',
-                'text/html',
-                'application/javascript',
-                'image/gif',
-                'text/latex',
-                'text/markdown',
-                'image/svg+xml',
-                'image/png',
-                'image/jpeg',
-                'application/json',
-                'text/plain'
-            ]
-        })
-    };
+    const notebookData = new NotebookData(cells);
+    notebookData.metadata = { custom: notebookContentWithoutCells };
+    return notebookData;
 }
 export function cellRunStateToCellState(cellRunState?: NotebookCellRunState): CellState {
     switch (cellRunState) {
@@ -219,9 +247,9 @@ export function createJupyterCellFromVSCNotebookCell(
     vscCell: NotebookCell
 ): nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell {
     let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
-    if (vscCell.cellKind === NotebookCellKind.Markdown) {
+    if (vscCell.kind === NotebookCellKind.Markup) {
         cell = createMarkdownCellFromNotebookCell(vscCell);
-    } else if (vscCell.language === 'raw' || vscCell.language === 'plaintext') {
+    } else if (vscCell.document.languageId === 'raw') {
         cell = createRawCellFromNotebookCell(vscCell);
     } else {
         cell = createCodeCellFromNotebookCell(vscCell);
@@ -268,28 +296,18 @@ function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell 
     const code = cell.document.getText();
     return {
         cell_type: 'code',
-        execution_count: cell.metadata.executionOrder ?? null,
+        execution_count: cell.executionSummary?.executionOrder ?? null,
         source: splitMultilineString(code),
-        outputs: createIOutputFromCellOutputs(cell.outputs),
+        outputs: cell.outputs.map(translateCellDisplayOutput),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
     };
 }
 
-function createNotebookCellDataFromRawCell(isNbTrusted: boolean, cell: nbformat.IRawCell): NotebookCellData {
-    const notebookCellMetadata = new NotebookCellMetadata().with({
-        editable: isNbTrusted,
-        executionOrder: undefined,
-        hasExecutionOrder: false,
-        runnable: false,
-        custom: getNotebookCellMetadata(cell)
-    });
-    return {
-        cellKind: NotebookCellKind.Code,
-        language: 'raw',
-        metadata: notebookCellMetadata,
-        outputs: [],
-        source: concatMultilineString(cell.source)
-    };
+function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
+    const cellData = new NotebookCellData(NotebookCellKind.Code, concatMultilineString(cell.source), 'raw');
+    cellData.outputs = [];
+    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
+    return cellData;
 }
 function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkdownCell {
     const cellMetadata = cell.metadata.custom as CellMetadata | undefined;
@@ -303,127 +321,129 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
     }
     return markdownCell;
 }
-function createNotebookCellDataFromMarkdownCell(isNbTrusted: boolean, cell: nbformat.IMarkdownCell): NotebookCellData {
-    const notebookCellMetadata = new NotebookCellMetadata().with({
-        editable: isNbTrusted,
-        executionOrder: undefined,
-        hasExecutionOrder: false,
-        runnable: false,
-        custom: getNotebookCellMetadata(cell)
-    });
-    return {
-        cellKind: NotebookCellKind.Markdown,
-        language: MARKDOWN_LANGUAGE,
-        metadata: notebookCellMetadata,
-        source: concatMultilineString(cell.source),
-        outputs: []
-    };
+function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
+    const cellData = new NotebookCellData(
+        NotebookCellKind.Markup,
+        concatMultilineString(cell.source),
+        MARKDOWN_LANGUAGE
+    );
+    cellData.outputs = [];
+    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
+    return cellData;
 }
-function createNotebookCellDataFromCodeCell(
-    isNbTrusted: boolean,
-    cell: nbformat.ICodeCell,
-    cellLanguage: string
-): NotebookCellData {
+function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLanguage: string): NotebookCellData {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
     const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
-    const runState = NotebookCellRunState.Idle;
-    const hasErrors = outputs.some((output) => output.outputs.some((opit) => opit.mime === CellOutputMimeTypes.error));
     const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
-    let statusMessage: string | undefined;
-    if (hasExecutionCount && hasErrors) {
-        // Error details are stripped from the output, get raw output.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        statusMessage = getCellStatusMessageBasedOnFirstErrorOutput(cellOutputs);
-    }
-
-    const notebookCellMetadata = new NotebookCellMetadata().with({
-        editable: isNbTrusted,
-        executionOrder: typeof cell.execution_count === 'number' ? cell.execution_count : undefined,
-        hasExecutionOrder: true,
-        runState,
-        runnable: isNbTrusted,
-        statusMessage,
-        custom: getNotebookCellMetadata(cell)
-    });
-
-    // If not trusted, then clear the output in VSC Cell (for untrusted notebooks we do not display output).
-    // At this point we have the original output in the ICell.
-    if (!isNbTrusted) {
-        while (outputs.length) {
-            outputs.shift();
-        }
-    }
 
     const source = concatMultilineString(cell.source);
 
-    return {
-        cellKind: NotebookCellKind.Code,
-        language: cellLanguage,
-        metadata: notebookCellMetadata,
-        source,
-        outputs
-    };
-}
+    const executionSummary: NotebookCellExecutionSummary = hasExecutionCount
+        ? { executionOrder: cell.execution_count as number }
+        : {};
 
-export function createIOutputFromCellOutputs(cellOutputs: readonly NotebookCellOutput[]): nbformat.IOutput[] {
-    return cellOutputs.map(translateCellDisplayOutput);
-}
+    const cellData = new NotebookCellData(NotebookCellKind.Code, source, cellLanguage);
 
-export async function clearCellForExecution(editor: NotebookEditor, cell: NotebookCell) {
-    await chainWithPendingUpdates(editor.document, (edit) => {
-        const metadata = cell.metadata.with({
-            statusMessage: undefined,
-            executionOrder: undefined,
-            lastRunDuration: undefined,
-            runStartTime: undefined
-        });
-        edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
-        edit.replaceNotebookCellOutput(editor.document.uri, cell.index, []);
+    cellData.outputs = outputs;
+    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
+    cellData.executionSummary = executionSummary;
+    return cellData;
+}
+const orderOfMimeTypes = [
+    'application/vnd.*',
+    'application/vdom.*',
+    'application/geo+json',
+    'application/x-nteract-model-debug+json',
+    'text/html',
+    'application/javascript',
+    'image/gif',
+    'text/latex',
+    'text/markdown',
+    'image/svg+xml',
+    'image/png',
+    'image/jpeg',
+    'application/json',
+    'text/plain'
+];
+function isEmptyVendoredMimeType(outputItem: NotebookCellOutputItem) {
+    if (outputItem.mime.startsWith('application/vnd.')) {
+        try {
+            return Buffer.from(outputItem.data).toString().length === 0;
+        } catch {}
+    }
+    return false;
+}
+function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[]): NotebookCellOutputItem[] {
+    return outputItems.sort((outputItemA, outputItemB) => {
+        const isMimeTypeMatch = (value: string, compareWith: string) => {
+            if (value.endsWith('.*')) {
+                value = value.substr(0, value.indexOf('.*'));
+            }
+            return compareWith.startsWith(value);
+        };
+        let indexOfMimeTypeA = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(mime, outputItemA.mime));
+        let indexOfMimeTypeB = orderOfMimeTypes.findIndex((mime) => isMimeTypeMatch(mime, outputItemB.mime));
+        // Sometimes we can have mime types with empty data, e.g. when using holoview we can have `application/vnd.holoviews_load.v0+json` with empty value.
+        // & in these cases we have HTML/JS and those take precedence.
+        // https://github.com/microsoft/vscode-jupyter/issues/6109
+        if (isEmptyVendoredMimeType(outputItemA)) {
+            indexOfMimeTypeA = -1;
+        }
+        if (isEmptyVendoredMimeType(outputItemB)) {
+            indexOfMimeTypeB = -1;
+        }
+        indexOfMimeTypeA = indexOfMimeTypeA == -1 ? 100 : indexOfMimeTypeA;
+        indexOfMimeTypeB = indexOfMimeTypeB == -1 ? 100 : indexOfMimeTypeB;
+        return indexOfMimeTypeA - indexOfMimeTypeB;
     });
-    await updateCellExecutionTimes(editor, cell);
+}
+
+/**
+ * This class is used to track state of cells, used in logging & tests.
+ */
+export class NotebookCellStateTracker implements IDisposable {
+    private readonly disposables: IDisposable[] = [];
+    private static cellStates = new WeakMap<NotebookCell, NotebookCellExecutionState>();
+    constructor() {
+        notebooks.onDidChangeNotebookCellExecutionState(
+            this.onDidChangeNotebookCellExecutionState,
+            this,
+            this.disposables
+        );
+    }
+    dispose() {
+        disposeAllDisposables(this.disposables);
+    }
+    public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
+        return NotebookCellStateTracker.cellStates.get(cell);
+    }
+    private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
+        NotebookCellStateTracker.cellStates.set(e.cell, e.state);
+    }
 }
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
-        `Cell Index:${cell.index}, state:${cell.metadata.runState}, exec: ${cell.metadata.executionOrder}. ${message}`
+        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
+            cell.executionSummary?.executionOrder
+        }. ${message}`
     );
 }
 
-/**
- * Store execution start and end times.
- * Stored as ISO for portability.
- */
-export async function updateCellExecutionTimes(
-    editor: NotebookEditor,
-    cell: NotebookCell,
-    times?: { startTime?: number; lastRunDuration?: number }
-) {
-    if (!times || !times.lastRunDuration || !times.startTime) {
-        return;
-    }
-    const lastRunDuration = times.lastRunDuration ?? cell.metadata.lastRunDuration;
-    await chainWithPendingUpdates(editor.document, (edit) => {
-        traceCellMessage(cell, 'Update run duration');
-        const metadata = cell.metadata.with({ lastRunDuration });
-        edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
-    });
-}
-
 export function createVSCNotebookCellDataFromCell(
-    isNbTrusted: boolean,
     cellLanguage: string,
     cell: nbformat.IBaseCell
 ): NotebookCellData | undefined {
     switch (cell.cell_type) {
         case 'raw': {
-            return createNotebookCellDataFromRawCell(isNbTrusted, cell as nbformat.IRawCell);
+            return createNotebookCellDataFromRawCell(cell as nbformat.IRawCell);
         }
         case 'markdown': {
-            return createNotebookCellDataFromMarkdownCell(isNbTrusted, cell as nbformat.IMarkdownCell);
+            return createNotebookCellDataFromMarkdownCell(cell as nbformat.IMarkdownCell);
         }
         case 'code': {
-            return createNotebookCellDataFromCodeCell(isNbTrusted, cell as nbformat.ICodeCell, cellLanguage);
+            return createNotebookCellDataFromCodeCell(cell as nbformat.ICodeCell, cellLanguage);
         }
         default: {
             traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.cell_type}`);
@@ -499,10 +519,6 @@ function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
             metadata.metadata = output.metadata ? cloneDeep(output.metadata) : {};
             break;
         }
-        case 'stream': {
-            metadata.streamName = (output.name as unknown) as nbformat.StreamType;
-            break;
-        }
         default:
             break;
     }
@@ -541,30 +557,29 @@ function translateDisplayDataOutput(
     const data: Record<string, any> = output.data || {};
     // eslint-disable-next-line
     for (const key in data) {
-        // Add metadata to all (its the same)
-        // We can optionally remove metadata that belongs to other mime types (feels like over optimization, hence not doing that).
-        items.push(new NotebookCellOutputItem(key, data[key], metadata));
+        items.push(new NotebookCellOutputItem(convertJupyterOutputToBuffer(key, data[key]), key));
     }
 
-    return new NotebookCellOutput(items, metadata);
+    const x = sortOutputItemsBasedOnDisplayOrder(items);
+    return new NotebookCellOutput(x, metadata);
 }
 
 function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
-    return new NotebookCellOutput(
-        [
-            new NotebookCellOutputItem(
-                CellOutputMimeTypes.textStream,
-                concatMultilineString(output.text),
-                getOutputMetadata(output)
-            )
-        ],
-        getOutputMetadata(output)
-    );
+    const value = concatMultilineString(output.text);
+    const factoryFn = output.name === 'stderr' ? NotebookCellOutputItem.stderr : NotebookCellOutputItem.stdout;
+    return new NotebookCellOutput([factoryFn(value)], getOutputMetadata(output));
 }
 
 export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: string): boolean {
     const metadata = output.metadata as CellOutputMetadata | undefined;
-    return metadata?.outputType === 'stream' && metadata.streamName === expectedStreamName;
+    return metadata?.outputType === 'stream' && getOutputStreamType(output) === expectedStreamName;
+}
+
+// Output stream can only have stderr or stdout so just check the first output. Undefined if no outputs
+export function getOutputStreamType(output: NotebookCellOutput): string | undefined {
+    if (output.items.length > 0) {
+        return output.items[0].mime === CellOutputMimeTypes.stderr ? 'stderr' : 'stdout';
+    }
 }
 
 type JupyterOutput =
@@ -608,31 +623,99 @@ export type CellOutputMetadata = {
          * We don't know of others properties, but this is definitely used.
          */
         display_id?: string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } & any;
     /**
      * Original cell output type
      */
     outputType: nbformat.OutputType | string;
-    /**
-     * Name of the stream (for text output).
-     */
-    streamName?: nbformat.StreamType;
     executionCount?: nbformat.IExecuteResult['ExecutionCount'];
+    /**
+     * Whether the original Mime data is JSON or not.
+     * This properly only exists in metadata for NotebookCellOutputItems
+     * (this is something we have added)
+     */
+    __isJson?: boolean;
 };
 
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
     // it should have at least one output item
-    const firstItem = output.outputs[0];
-
+    const firstItem = output.items[0];
+    // Bug in VS Code.
+    if (!firstItem.data) {
+        return {
+            output_type: 'error',
+            ename: '',
+            evalue: '',
+            traceback: []
+        };
+    }
+    const originalError: undefined | nbformat.IError = output.metadata?.originalError;
+    const value: Error = JSON.parse(Buffer.from(firstItem.data as Uint8Array).toString('utf8'));
     return {
         output_type: 'error',
-        ename: (firstItem.value as nbformat.IError).ename,
-        evalue: (firstItem.value as nbformat.IError).evalue,
-        traceback: (firstItem.value as nbformat.IError).traceback
+        ename: value.name,
+        evalue: value.message,
+        // VS Code needs an `Error` object which requires a `stack` property as a string.
+        // Its possible the format could change when converting from `traceback` to `string` and back again to `string`
+        traceback: originalError?.traceback || splitMultilineString(value.stack || '')
     };
 }
 
-function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
+const textMimeTypes = ['text/plain', 'text/markdown', CellOutputMimeTypes.stderr, CellOutputMimeTypes.stdout];
+function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
+    if (!value) {
+        return '';
+    }
+    try {
+        const stringValue = Buffer.from(value as Uint8Array).toString('utf8');
+        if (mime === CellOutputMimeTypes.error) {
+            traceInfo(`Concerting ${mime} from ${stringValue}`);
+            return JSON.parse(stringValue);
+        } else if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
+            return splitMultilineString(stringValue);
+        } else if (mime.startsWith('image/') && mime !== 'image/svg+xml') {
+            // Images in Jupyter are stored in base64 encoded format.
+            // VS Code expects bytes when rendering images.
+            return Buffer.from(value).toString('base64');
+        } else if (mime.toLowerCase().includes('json')) {
+            return stringValue.length > 0 ? JSON.parse(stringValue) : stringValue;
+        } else {
+            return stringValue;
+        }
+    } catch (ex) {
+        traceError(`Failed to convert ${mime} output from a buffer ${typeof value}, ${value}`, ex);
+        return '';
+    }
+}
+function convertJupyterOutputToBuffer(mime: string, value: unknown): Buffer {
+    if (!value) {
+        return Buffer.from('');
+    }
+    try {
+        if (
+            (mime.startsWith('text/') || textMimeTypes.includes(mime)) &&
+            (Array.isArray(value) || typeof value === 'string')
+        ) {
+            const stringValue = Array.isArray(value) ? concatMultilineString(value) : value;
+            return Buffer.from(stringValue);
+        } else if (mime.startsWith('image/') && typeof value === 'string' && mime !== 'image/svg+xml') {
+            // Images in Jupyter are stored in base64 encoded format.
+            // VS Code expects bytes when rendering images.
+            return Buffer.from(value, 'base64');
+        } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            return Buffer.from(JSON.stringify(value));
+        } else {
+            // For everything else, treat the data as strings (or multi-line strings).
+            value = Array.isArray(value) ? concatMultilineString(value) : value;
+            return Buffer.from(value as string);
+        }
+    } catch (ex) {
+        traceError(`Failed to convert ${mime} output to a buffer ${typeof value}, ${value}`, ex);
+        return Buffer.from('');
+    }
+}
+export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
     const customMetadata = output.metadata as CellOutputMetadata | undefined;
     let result: JupyterOutput;
     // Possible some other extension added some output (do best effort to translate & save in ipynb).
@@ -644,16 +727,19 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
             break;
         }
         case 'stream': {
-            const outputs = output.outputs
-                .filter((opit) => opit.mime === CellOutputMimeTypes.textStream)
-                .map((opit) => opit.value as string | string[])
+            const outputs = output.items
+                .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
+                .map((opit) => convertOutputMimeToJupyterOutput(opit.mime, opit.data as Uint8Array) as string)
                 .reduceRight<string[]>(
                     (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
                     []
                 );
+
+            const streamType = getOutputStreamType(output) || 'stdout';
+
             result = {
                 output_type: 'stream',
-                name: customMetadata?.streamName || 'stdout',
+                name: streamType,
                 text: splitMultilineString(outputs.join(''))
             };
             break;
@@ -662,8 +748,8 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
             result = {
                 output_type: 'display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                data: output.items.reduceRight((prev: any, curr) => {
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {} // This can never be undefined.
@@ -674,8 +760,8 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
             result = {
                 output_type: 'execute_result',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                data: output.items.reduceRight((prev: any, curr) => {
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {}, // This can never be undefined.
@@ -688,8 +774,8 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
             result = {
                 output_type: 'update_display_data',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                data: output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                data: output.items.reduceRight((prev: any, curr) => {
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {}),
                 metadata: customMetadata?.metadata || {} // This can never be undefined.
@@ -707,10 +793,10 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
             if (customMetadata?.metadata) {
                 unknownOutput.metadata = customMetadata.metadata;
             }
-            if (output.outputs.length > 0) {
+            if (output.items.length > 0) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                unknownOutput.data = output.outputs.reduceRight((prev: any, curr) => {
-                    prev[curr.mime] = curr.value;
+                unknownOutput.data = output.items.reduceRight((prev: any, curr) => {
+                    prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
                 }, {});
             }
@@ -733,137 +819,45 @@ function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
  * As we're displaying the error in the statusbar, we don't want this dup error in output.
  * Hence remove this.
  */
-export function translateErrorOutput(output: nbformat.IError): NotebookCellOutput {
+export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutput {
+    output = output || { output_type: 'error', ename: '', evalue: '', traceback: [] };
     return new NotebookCellOutput(
         [
-            new NotebookCellOutputItem(
-                CellOutputMimeTypes.error,
-                {
-                    ename: output.ename,
-                    evalue: output.evalue,
-                    traceback: output.traceback
-                },
-                getOutputMetadata(output)
-            )
+            NotebookCellOutputItem.error({
+                name: output?.ename || '',
+                message: output?.evalue || '',
+                stack: (output?.traceback || []).join('\n')
+            })
         ],
-        getOutputMetadata(output)
+        { ...getOutputMetadata(output), originalError: output }
     );
 }
 
 export function getTextOutputValue(output: NotebookCellOutput): string {
-    return (
-        (output.outputs.find(
-            (opit) =>
-                opit.mime === CellOutputMimeTypes.textStream ||
-                opit.mime === 'text/plain' ||
-                opit.mime === 'text/markdown'
-        )?.value as any) || ''
+    const item = output.items.find(
+        (opit) =>
+            opit.mime === CellOutputMimeTypes.stdout ||
+            opit.mime === CellOutputMimeTypes.stderr ||
+            opit.mime === 'text/plain' ||
+            opit.mime === 'text/markdown'
     );
-}
-export function getCellStatusMessageBasedOnFirstErrorOutput(outputs?: nbformat.IOutput[]): string {
-    if (!Array.isArray(outputs)) {
-        return '';
-    }
-    const errorOutput = (outputs.find((output) => output.output_type === 'error') as unknown) as
-        | nbformat.IError
-        | undefined;
-    if (!errorOutput) {
-        return '';
-    }
-    return `${errorOutput.ename}${errorOutput.evalue ? ': ' : ''}${errorOutput.evalue}`;
-}
 
+    if (item) {
+        const value = convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
+        return Array.isArray(value) ? value.join('') : value;
+    }
+    return '';
+}
 export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
     const errorOutput = outputs.find(
-        (op) => op.outputs.length && !op.outputs.some((opit) => opit.mime !== CellOutputMimeTypes.error)
+        (op) => op.items.length && !op.items.some((opit) => opit.mime !== CellOutputMimeTypes.error)
     );
 
     return !!errorOutput;
 }
 
-export function getCellStatusMessageBasedOnFirstCellErrorOutput(outputs?: readonly NotebookCellOutput[]): string {
-    if (!Array.isArray(outputs)) {
-        return '';
-    }
-
-    const errorOutput = outputs.find(
-        (op) =>
-            op.outputs.length &&
-            !op.outputs.some((opit: NotebookCellOutputItem) => opit.mime !== CellOutputMimeTypes.error)
-    );
-
-    if (!errorOutput) {
-        return '';
-    }
-
-    const firstItem = errorOutput.outputs[0];
-
-    if (!firstItem) {
-        return '';
-    }
-
-    const errorValue = firstItem.value as nbformat.IError;
-
-    return `${errorValue.ename}${errorValue.evalue ? ': ' : ''}${errorValue.evalue}`;
-}
-
-/**
- * Updates a notebook document as a result of trusting it.
- */
-export async function updateVSCNotebookAfterTrustingNotebook(
-    editor: NotebookEditor,
-    document: NotebookDocument,
-    originalCells: nbformat.IBaseCell[]
-) {
-    const areAllCellsEditableAndRunnable = document.cells.every((cell) => {
-        if (cell.cellKind === NotebookCellKind.Markdown) {
-            return cell.metadata.editable;
-        } else {
-            return cell.metadata.editable && cell.metadata.runnable;
-        }
-    });
-    const isDocumentEditableAndRunnable =
-        document.metadata.cellEditable &&
-        document.metadata.cellRunnable &&
-        document.metadata.editable &&
-        document.metadata.runnable;
-
-    // If already trusted, then nothing to do.
-    if (isDocumentEditableAndRunnable && areAllCellsEditableAndRunnable) {
-        return;
-    }
-
-    await chainWithPendingUpdates(editor.document, (edit) => {
-        edit.replaceNotebookMetadata(
-            document.uri,
-            document.metadata.with({
-                cellEditable: true,
-                cellRunnable: true,
-                editable: true,
-                runnable: true
-            })
-        );
-        document.cells.forEach((cell, index) => {
-            if (cell.cellKind === NotebookCellKind.Markdown) {
-                const metadata = cell.metadata.with({ editable: true });
-                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
-            } else {
-                const metadata = cell.metadata.with({ editable: true, runnable: true });
-                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
-                // Restore the output once we trust the notebook.
-                edit.replaceNotebookCellOutput(
-                    document.uri,
-                    index,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    createVSCCellOutputsFromOutputs(originalCells[index].outputs as any)
-                );
-            }
-        });
-    });
-}
-
 export function findAssociatedNotebookDocument(cellUri: Uri, vscodeNotebook: IVSCodeNotebook, fs: IFileSystem) {
     return vscodeNotebook.notebookDocuments.find((item) =>
-        item.cells.some((cell) => fs.arePathsSame(cell.uri, cellUri))
+        item.getCells().some((cell) => fs.arePathsSame(cell.document.uri, cellUri))
     );
 }

@@ -7,13 +7,20 @@ import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
-import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDebugService,
+    IDocumentManager,
+    IWorkspaceService
+} from '../../common/application/types';
+import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
+import { isUri, noop } from '../../common/utils/misc';
 import { LogLevel } from '../../logging/levels';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -22,6 +29,7 @@ import { IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import { IShowDataViewerFromVariablePanel } from '../interactive-common/interactiveWindowTypes';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../jupyter/debuggerVariables';
+import { NotebookCreator } from '../notebook/creation/notebookCreator';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -62,24 +70,20 @@ export class CommandRegistry implements IDisposable {
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables
+        @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
+        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNotebook: boolean,
+        @inject(NotebookCreator) private readonly nativeNotebookCreator: NotebookCreator,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.notebookCommands);
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
+        if (!this.workspace.isTrusted) {
+            this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
+        }
     }
     public register() {
-        this.commandLineCommand.register();
-        this.serverSelectedCommand.register();
-        this.notebookCommands.register();
-        this.exportCommand.register();
-        this.registerCommand(Commands.RunAllCells, this.runAllCells);
-        this.registerCommand(Commands.RunCell, this.runCell);
-        this.registerCommand(Commands.RunCurrentCell, this.runCurrentCell);
-        this.registerCommand(Commands.RunCurrentCellAdvance, this.runCurrentCellAndAdvance);
-        this.registerCommand(Commands.ExecSelectionInInteractiveWindow, this.runSelectionOrLine);
-        this.registerCommand(Commands.RunAllCellsAbove, this.runAllCellsAbove);
-        this.registerCommand(Commands.RunCellAndAllBelow, this.runCellAndAllBelow);
+        this.registerCommandsIfTrusted();
         this.registerCommand(Commands.InsertCellBelowPosition, this.insertCellBelowPosition);
         this.registerCommand(Commands.InsertCellBelow, this.insertCellBelow);
         this.registerCommand(Commands.InsertCellAbove, this.insertCellAbove);
@@ -94,31 +98,17 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.ChangeCellToCode, this.changeCellToCode);
         this.registerCommand(Commands.GotoNextCellInFile, this.gotoNextCellInFile);
         this.registerCommand(Commands.GotoPrevCellInFile, this.gotoPrevCellInFile);
-        this.registerCommand(Commands.RunAllCellsAbovePalette, this.runAllCellsAboveFromCursor);
-        this.registerCommand(Commands.RunCellAndAllBelowPalette, this.runCellAndAllBelowFromCursor);
-        this.registerCommand(Commands.RunToLine, this.runToLine);
-        this.registerCommand(Commands.RunFromLine, this.runFromLine);
-        this.registerCommand(Commands.RunFileInInteractiveWindows, this.runFileInteractive);
-        this.registerCommand(Commands.DebugFileInInteractiveWindows, this.debugFileInteractive);
         this.registerCommand(Commands.AddCellBelow, this.addCellBelow);
-        this.registerCommand(Commands.RunCurrentCellAndAddBelow, this.runCurrentCellAndAddBelow);
-        this.registerCommand(Commands.DebugCell, this.debugCell);
-        this.registerCommand(Commands.DebugStepOver, this.debugStepOver);
-        this.registerCommand(Commands.DebugContinue, this.debugContinue);
-        this.registerCommand(Commands.DebugStop, this.debugStop);
-        this.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor);
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
         this.registerCommand(Commands.LatestExtension, this.openPythonExtensionPage);
         this.registerCommand(Commands.EnableDebugLogging, this.enableDebugLogging);
         this.registerCommand(Commands.ResetLoggingLevel, this.resetLoggingLevel);
-        this.registerCommand(Commands.ShowDataViewer, this.onVariablePanelShowDataViewerRequest);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
         );
         this.registerCommand(Commands.ClearSavedJupyterUris, this.clearJupyterUris);
-        this.registerCommand(Commands.OpenVariableView, this.openVariableView);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);
@@ -127,6 +117,38 @@ export class CommandRegistry implements IDisposable {
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
+    }
+    private registerCommandsIfTrusted() {
+        if (!this.workspace.isTrusted) {
+            return;
+        }
+        this.commandLineCommand.register();
+        this.serverSelectedCommand.register();
+        this.notebookCommands.register();
+        this.exportCommand.register();
+        this.registerCommand(Commands.RunAllCells, this.runAllCells);
+        this.registerCommand(Commands.RunCell, this.runCell);
+        this.registerCommand(Commands.RunCurrentCell, this.runCurrentCell);
+        this.registerCommand(Commands.RunCurrentCellAdvance, this.runCurrentCellAndAdvance);
+        this.registerCommand(Commands.ExecSelectionInInteractiveWindow, (textOrUri: string | undefined | Uri) => {
+            void this.runSelectionOrLine(textOrUri);
+        });
+        this.registerCommand(Commands.RunAllCellsAbove, this.runAllCellsAbove);
+        this.registerCommand(Commands.RunCellAndAllBelow, this.runCellAndAllBelow);
+        this.registerCommand(Commands.RunAllCellsAbovePalette, this.runAllCellsAboveFromCursor);
+        this.registerCommand(Commands.RunCellAndAllBelowPalette, this.runCellAndAllBelowFromCursor);
+        this.registerCommand(Commands.RunCurrentCellAndAddBelow, this.runCurrentCellAndAddBelow);
+        this.registerCommand(Commands.DebugCell, this.debugCell);
+        this.registerCommand(Commands.DebugStepOver, this.debugStepOver);
+        this.registerCommand(Commands.DebugContinue, this.debugContinue);
+        this.registerCommand(Commands.DebugStop, this.debugStop);
+        this.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor);
+        this.registerCommand(Commands.OpenVariableView, this.openVariableView);
+        this.registerCommand(Commands.ShowDataViewer, this.onVariablePanelShowDataViewerRequest);
+        this.registerCommand(Commands.RunToLine, this.runToLine);
+        this.registerCommand(Commands.RunFromLine, this.runFromLine);
+        this.registerCommand(Commands.RunFileInInteractiveWindows, this.runFileInteractive);
+        this.registerCommand(Commands.DebugFileInInteractiveWindows, this.debugFileInteractive);
     }
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
@@ -295,10 +317,14 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async runSelectionOrLine(): Promise<void> {
+    private async runSelectionOrLine(textOrUri: string | undefined | Uri): Promise<void> {
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
-            return activeCodeWatcher.runSelectionOrLine(this.documentManager.activeTextEditor);
+            return activeCodeWatcher.runSelectionOrLine(
+                this.documentManager.activeTextEditor,
+                // If this is a URI, the runSelectionOrLine is not expecting a URI, so act like nothing was sent.
+                isUri(textOrUri) ? undefined : textOrUri
+            );
         } else {
             return;
         }
@@ -452,7 +478,11 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async createNewNotebook(): Promise<void> {
-        await this.notebookEditorProvider.createNew();
+        if (this.useNativeNotebook) {
+            await this.nativeNotebookCreator.createNewNotebook();
+        } else {
+            await this.notebookEditorProvider.createNew();
+        }
     }
 
     private viewJupyterOutput() {

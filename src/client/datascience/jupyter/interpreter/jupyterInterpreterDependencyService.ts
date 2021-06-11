@@ -137,13 +137,16 @@ export class JupyterInterpreterDependencyService {
         }
 
         const message = getMessageForLibrariesNotInstalled(missingProducts, interpreter.displayName);
-
+        sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+            action: 'displayed',
+            moduleName: ProductNames.get(Product.jupyter)!
+        });
         sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
         const selection = await this.applicationShell.showErrorMessage(
             message,
+            { modal: true },
             DataScience.jupyterInstall(),
-            DataScience.selectDifferentJupyterInterpreter(),
-            DataScience.pythonInteractiveHelpLink()
+            DataScience.selectDifferentJupyterInterpreter()
         );
 
         if (Cancellation.isCanceled(token)) {

@@ -10,7 +10,6 @@ import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/type
 import { INotebookModel, ISwitchKernelOptions } from '../../datascience/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CommandSource } from '../../testing/common/constants';
-import { Commands } from '../constants';
 import { Channel } from './types';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
@@ -21,9 +20,6 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
  * @interface ICommandNameWithoutArgumentTypeMapping
  */
 interface ICommandNameWithoutArgumentTypeMapping {
-    [Commands.SwitchToInsidersDaily]: [];
-    [Commands.SwitchToInsidersWeekly]: [];
-    [Commands.SwitchOffInsidersChannel]: [];
     ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
@@ -36,7 +32,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['jupyterViewVariables.focus']: [];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
-    [DSCommands.ExecSelectionInInteractiveWindow]: [];
     [DSCommands.CreateNewInteractive]: [];
     [DSCommands.UndoCells]: [];
     [DSCommands.RedoCells]: [];
@@ -46,7 +41,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.NotebookEditorUndoCells]: [];
     [DSCommands.NotebookEditorRedoCells]: [];
     [DSCommands.NotebookEditorRemoveAllCells]: [];
-    [DSCommands.NotebookEditorInterruptKernel]: [];
     [DSCommands.NotebookEditorRestartKernel]: [];
     [DSCommands.NotebookEditorRunAllCells]: [];
     [DSCommands.NotebookEditorAddCellBelow]: [];
@@ -58,6 +52,13 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.EnableDebugLogging]: [];
     [DSCommands.ResetLoggingLevel]: [];
     [DSCommands.OpenVariableView]: [];
+    [DSCommands.NotebookEditorToggleOutput]: [];
+    [DSCommands.NotebookEditorKeybindExecuteCell]: [];
+    [DSCommands.NotebookEditorKeybindRenderMarkdownAndSelectBelow]: [];
+    ['notebook.cell.quitEdit']: [];
+    ['notebook.cell.executeAndSelectBelow']: [];
+    ['notebook.cell.collapseCellOutput']: [];
+    ['notebook.cell.expandCellOutput']: [];
 }
 
 /**
@@ -81,21 +82,21 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
     ['vscode.open']: [Uri];
     ['notebook.execute']: [];
-    ['notebook.cell.execute']: [];
+    ['notebook.cell.execute']: [] | [{ start: number; end: number }, Uri];
     ['notebook.cell.insertCodeCellBelow']: [];
     ['notebook.undo']: [];
     ['notebook.redo']: [];
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
+    ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
     ['undo']: [];
+    [DSCommands.NotebookEditorInterruptKernel]: [Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];
     [DSCommands.RunAllCellsAbove]: [Uri, number, number];
     [DSCommands.RunCellAndAllBelow]: [Uri, number, number];
-    [DSCommands.NativeNotebookRunAllCellsAbove]: [Uri];
-    [DSCommands.NativeNotebookRunCellAndAllBelow]: [Uri];
     [DSCommands.RunAllCellsAbovePalette]: [];
     [DSCommands.RunCellAndAllBelowPalette]: [];
     [DSCommands.DebugCurrentCellPalette]: [];
@@ -106,6 +107,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.OpenNotebook]: [undefined | Uri, undefined | string, undefined | CommandSource];
     [DSCommands.OpenNotebookInPreviewEditor]: [undefined | Uri];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.ExecSelectionInInteractiveWindow]: [string | undefined];
     [DSCommands.RunFileInInteractiveWindows]: [Uri];
     [DSCommands.DebugFileInInteractiveWindows]: [Uri];
     [DSCommands.DebugCell]: [Uri, number, number, number, number];
@@ -135,20 +137,19 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.Export]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.NativeNotebookExport]: [Uri];
     [DSCommands.SetJupyterKernel]: [KernelConnectionMetadata, Uri, undefined | Uri];
-    [DSCommands.SwitchJupyterKernel]: [ISwitchKernelOptions | undefined];
+    [DSCommands.SwitchJupyterKernel]: [ISwitchKernelOptions | undefined] | [];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.SaveNotebookNonCustomEditor]: [INotebookModel];
     [DSCommands.SaveAsNotebookNonCustomEditor]: [INotebookModel, Uri];
     [DSCommands.OpenNotebookNonCustomEditor]: [Uri];
     [DSCommands.LatestExtension]: [string];
-    [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [undefined | never];
-    [DSCommands.TrustNotebook]: [undefined | never | Uri];
-    [DSCommands.NotebookTrusted]: [];
+    [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
     [DSCommands.NotebookEditorExpandAllCells]: [];
     [DSCommands.NotebookEditorCollapseAllCells]: [];
     [DSCommands.CreateGitHubIssue]: [];
     [DSCommands.SubmitGitHubIssue]: [];
     [DSCommands.ShowDataViewer]: [IShowDataViewerFromVariablePanel];
+    [DSCommands.RefreshDataViewer]: [];
     [DSCommands.ClearSavedJupyterUris]: [];
     [DSCommands.SelectJupyterURI]: [undefined, 'toolbar' | 'nativeNotebookStatusBar' | undefined];
     [DSCommands.SelectNativeJupyterUriFromToolBar]: [];

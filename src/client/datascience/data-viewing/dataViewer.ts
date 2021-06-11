@@ -3,21 +3,21 @@
 'use strict';
 import '../../common/extensions';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { ViewColumn } from 'vscode';
+import { EventEmitter, Memento, ViewColumn } from 'vscode';
 
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
-import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposable, IExperimentService, Resource } from '../../common/types';
+import { traceError, traceInfo } from '../../common/logger';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposable, IMemento, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
-import { ICodeCssGenerator, IThemeFinder } from '../types';
+import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
@@ -29,8 +29,10 @@ import {
     IGetRowsRequest,
     IGetSliceRequest
 } from './types';
-import { Experiments } from '../../common/experiments/groups';
+import { isValidSliceExpression, preselectedSliceExpression } from '../../../datascience-ui/data-explorer/helpers';
+import { CheckboxState } from '../../telemetry/constants';
 
+const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
 export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements IDataViewer, IDisposable {
@@ -39,6 +41,22 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private pendingRowsCount: number = 0;
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
     private currentSliceExpression: string | undefined;
+    private sentDataViewerSliceDimensionalityTelemetry = false;
+
+    public get active() {
+        return !!this.webPanel?.isActive();
+    }
+
+    public get onDidDisposeDataViewer() {
+        return this._onDidDisposeDataViewer.event;
+    }
+
+    public get onDidChangeDataViewerViewState() {
+        return this._onDidChangeDataViewerViewState.event;
+    }
+
+    private _onDidDisposeDataViewer = new EventEmitter<IDataViewer>();
+    private _onDidChangeDataViewerViewState = new EventEmitter<void>();
 
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
@@ -48,7 +66,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(IExperimentService) private experimentService: IExperimentService
+        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento
     ) {
         super(
             configuration,
@@ -60,9 +78,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             dataExplorerDir,
             [path.join(dataExplorerDir, 'commons.initial.bundle.js'), path.join(dataExplorerDir, 'dataExplorer.js')],
             localize.DataScience.dataExplorerTitle(),
-            ViewColumn.One,
+            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One,
             useCustomEditorApi
         );
+        this.onDidDispose(this.dataViewerDisposed, this);
     }
 
     public async showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
@@ -78,16 +97,46 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             // Then show our web panel. Eventually we need to consume the data
             await super.show(true);
 
-            const dataFrameInfo = await this.prepDataFrameInfo();
+            let dataFrameInfo = await this.prepDataFrameInfo();
 
-            const isSliceDataEnabled = await this.experimentService.inExperiment(Experiments.SliceDataViewer);
+            // If higher dimensional data, preselect a slice to show
+            if (dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
+                this.maybeSendSliceDataDimensionalityTelemetry(dataFrameInfo.shape.length);
+                const slice = preselectedSliceExpression(dataFrameInfo.shape);
+                dataFrameInfo = await this.getDataFrameInfo(slice);
+            }
 
             // Send a message with our data
-            this.postMessage(DataViewerMessages.InitializeData, {
-                ...dataFrameInfo,
-                isSliceDataEnabled
-            }).ignoreErrors();
+            this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
         }
+    }
+
+    private dataViewerDisposed() {
+        this._onDidDisposeDataViewer.fire(this as IDataViewer);
+    }
+
+    public async refreshData() {
+        const currentSliceExpression = this.currentSliceExpression;
+        // Clear our cached info promise
+        this.dataFrameInfoPromise = undefined;
+        // Then send a refresh data payload
+        // At this point, variable shape or type may have changed
+        // such that previous slice expression is no longer valid
+        let dataFrameInfo = await this.getDataFrameInfo(undefined, true);
+        // Check whether the previous slice expression is valid WRT the new shape
+        if (currentSliceExpression !== undefined && dataFrameInfo.shape !== undefined) {
+            if (isValidSliceExpression(currentSliceExpression, dataFrameInfo.shape)) {
+                dataFrameInfo = await this.getDataFrameInfo(currentSliceExpression);
+            } else {
+                // Previously applied slice expression isn't valid anymore
+                // Generate a preselected slice
+                const newSlice = preselectedSliceExpression(dataFrameInfo.shape);
+                dataFrameInfo = await this.getDataFrameInfo(newSlice);
+            }
+        }
+        traceInfo(`Refreshing data viewer for variable ${dataFrameInfo.name}`);
+        // Send a message with our data
+        this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
     }
 
     public dispose(): void {
@@ -98,6 +147,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             this.dataProvider.dispose();
             this.dataProvider = undefined;
         }
+    }
+
+    protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
+        if (args.current.active && args.current.visible && args.previous.active && args.current.visible) {
+            await this.globalMemento.update(PREFERRED_VIEWGROUP, this.webPanel?.viewColumn);
+        }
+        this._onDidChangeDataViewerViewState.fire();
     }
 
     protected get owningResource(): Resource {
@@ -119,6 +175,17 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.getSlice(payload as IGetSliceRequest).ignoreErrors();
                 break;
 
+            case DataViewerMessages.RefreshDataViewer:
+                this.refreshData().ignoreErrors();
+                void sendTelemetryEvent(Telemetry.RefreshDataViewer);
+                break;
+
+            case DataViewerMessages.SliceEnablementStateChanged:
+                void sendTelemetryEvent(Telemetry.DataViewerSliceEnablementStateChanged, undefined, {
+                    newState: payload.newState ? CheckboxState.Checked : CheckboxState.Unchecked
+                });
+                break;
+
             default:
                 break;
         }
@@ -126,11 +193,11 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         super.onMessage(message, payload);
     }
 
-    private getDataFrameInfo(sliceExpression?: string): Promise<IDataFrameInfo> {
+    private getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo> {
         // If requesting a new slice, refresh our cached info promise
         if (!this.dataFrameInfoPromise || sliceExpression !== this.currentSliceExpression) {
             this.dataFrameInfoPromise = this.dataProvider
-                ? this.dataProvider.getDataFrameInfo(sliceExpression)
+                ? this.dataProvider.getDataFrameInfo(sliceExpression, isRefresh)
                 : Promise.resolve({});
             this.currentSliceExpression = sliceExpression;
         }
@@ -171,8 +238,12 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private getSlice(request: IGetSliceRequest) {
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
-                const payload = await this.dataProvider.getDataFrameInfo(request.slice);
-                return this.postMessage(DataViewerMessages.InitializeData, { ...payload, isSliceDataEnabled: true });
+                const payload = await this.getDataFrameInfo(request.slice);
+                if (payload.shape?.length) {
+                    this.maybeSendSliceDataDimensionalityTelemetry(payload.shape.length);
+                }
+                sendTelemetryEvent(Telemetry.DataViewerSliceOperation, undefined, { source: request.source });
+                return this.postMessage(DataViewerMessages.InitializeData, payload);
             }
         });
     }
@@ -220,6 +291,13 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private sendElapsedTimeTelemetry() {
         if (this.rowsTimer && this.pendingRowsCount === 0) {
             sendTelemetryEvent(Telemetry.ShowDataViewer, this.rowsTimer.elapsedTime);
+        }
+    }
+
+    private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {
+        if (!this.sentDataViewerSliceDimensionalityTelemetry) {
+            sendTelemetryEvent(Telemetry.DataViewerDataDimensionality, undefined, { numberOfDimensions });
+            this.sentDataViewerSliceDimensionalityTelemetry = true;
         }
     }
 }

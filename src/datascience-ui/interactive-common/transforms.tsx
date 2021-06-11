@@ -47,7 +47,7 @@ const mimeTypeToImport: TransformData[] = [
     }),
     new TransformData('application/vnd.vegalite.v4+json', async () => {
         const module = await import(/* webpackChunkName: "vega" */ '@nteract/transform-vega');
-        return module.VegaLite3;
+        return module.VegaLite4;
     }),
     new TransformData('application/geo+json', async () => {
         const module = await import(/* webpackChunkName: "geojson" */ '@nteract/transform-geojson');

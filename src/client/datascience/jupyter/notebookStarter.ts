@@ -4,6 +4,7 @@
 'use strict';
 
 import * as cp from 'child_process';
+import * as url from 'url';
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -11,7 +12,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken, Disposable } from 'vscode';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/types';
-import { traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IDisposable, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -36,6 +37,10 @@ import { JupyterInstallError } from './jupyterInstallError';
 @injectable()
 export class NotebookStarter implements Disposable {
     private readonly disposables: IDisposable[] = [];
+    private static _usedPorts = new Set<number>();
+    public static get usedPorts() {
+        return Array.from(NotebookStarter._usedPorts);
+    }
     constructor(
         @inject(IJupyterSubCommandExecutionService)
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
@@ -139,6 +144,17 @@ export class NotebookStarter implements Disposable {
             // Fire off telemetry for the process being talkable
             sendTelemetryEvent(Telemetry.StartJupyterProcess, stopWatch.elapsedTime);
 
+            try {
+                const port = parseInt(url.parse(connection.baseUrl).port || '0', 10);
+                if (port && !isNaN(port)) {
+                    if (launchResult.proc) {
+                        launchResult.proc.on('exit', () => NotebookStarter._usedPorts.delete(port));
+                    }
+                    NotebookStarter._usedPorts.add(port);
+                }
+            } catch (ex) {
+                traceError(`Parsing failed ${connection.baseUrl}`, ex);
+            }
             return connection;
         } catch (err) {
             if (err instanceof CancellationError) {
@@ -157,7 +173,7 @@ export class NotebookStarter implements Disposable {
             if (exitCode !== 0) {
                 throw new Error(localize.DataScience.jupyterServerCrashed().format(exitCode?.toString()));
             } else {
-                throw new WrappedError(localize.DataScience.jupyterNotebookFailure().format(err), err);
+                throw WrappedError.from(localize.DataScience.jupyterNotebookFailure().format(err), err);
             }
         } finally {
             starter?.dispose();

@@ -59,6 +59,9 @@ export class MountedWebView implements IMountedWebView, IDisposable {
     private visible = true;
     private disposedEvent = new EventEmitter<void>();
     private loadFailedEmitter = new EventEmitter<void>();
+    public get viewColumn() {
+        return 1;
+    }
 
     constructor(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, public readonly id: string) {
         // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.

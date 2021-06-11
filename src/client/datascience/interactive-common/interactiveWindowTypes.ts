@@ -99,7 +99,6 @@ export enum InteractiveWindowMessages {
     SavePng = 'save_png',
     StartDebugging = 'start_debugging',
     StopDebugging = 'stop_debugging',
-    LaunchNotebookTrustPrompt = 'launch_notebook_trust_prompt',
     TrustNotebookComplete = 'trust_notebook_complete',
     LoadAllCells = 'load_all_cells',
     LoadAllCellsComplete = 'load_all_cells_complete',
@@ -155,6 +154,7 @@ export enum InteractiveWindowMessages {
 }
 
 export enum IPyWidgetMessages {
+    IPyWidgets_IsReadyRequest = 'IPyWidgets_IsReadyRequest',
     IPyWidgets_Ready = 'IPyWidgets_Ready',
     IPyWidgets_onRestartKernel = 'IPyWidgets_onRestartKernel',
     IPyWidgets_onKernelChanged = 'IPyWidgets_onKernelChanged',
@@ -166,7 +166,7 @@ export enum IPyWidgetMessages {
     /**
      * Extension sends response to the request with yes/no.
      */
-    IPyWidgets_WidgetScriptSourceResponse = 'IPyWidgets_WidgetScriptSourceResponse',
+    IPyWidgets_WidgetScriptSourceResponse = 'IPyWidgets_WidgetScriptSource_Response',
     IPyWidgets_msg = 'IPyWidgets_msg',
     IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
     // Message was received by the widget kernel and added to the msgChain queue for processing
@@ -662,7 +662,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SavePng]: string | undefined;
     public [InteractiveWindowMessages.StartDebugging]: never | undefined;
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
-    public [InteractiveWindowMessages.LaunchNotebookTrustPrompt]: never | undefined;
     public [InteractiveWindowMessages.TrustNotebookComplete]: never | undefined;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
     public [InteractiveWindowMessages.LoadAllCellsComplete]: ILoadAllCells;

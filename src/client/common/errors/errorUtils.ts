@@ -30,7 +30,10 @@ export function getErrorMessageFromPythonTraceback(traceback: string) {
         return;
     }
     const lastLine = reversedLines[0];
-    return lastLine.match(pythonErrorMessageRegExp) ? lastLine : undefined;
+    const message = lastLine.match(pythonErrorMessageRegExp) ? lastLine : undefined;
+    const parts = (message || '').split(':');
+    // Only get the error type.
+    return parts.length && parts[0].endsWith('Error') ? parts[0] : undefined;
 }
 
 export function getLastFrameFromPythonTraceback(
@@ -41,7 +44,9 @@ export function getLastFrameFromPythonTraceback(
     }
     //             File "/Users/donjayamanne/miniconda3/envs/env3/lib/python3.7/site-packages/appnope/_nope.py", line 38, in C
 
-    const lastFrame = traceback
+    // This parameter might be either a string or a string array
+    const fixedTraceback: string = Array.isArray(traceback) ? traceback[0] : traceback;
+    const lastFrame = fixedTraceback
         .split('\n')
         .map((item) => item.trim().toLowerCase())
         .filter((item) => item.length)

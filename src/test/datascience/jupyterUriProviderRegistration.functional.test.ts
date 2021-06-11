@@ -80,6 +80,9 @@ class UriMockExtensions implements IExtensions {
     public get onDidChange(): Event<void> {
         return this.changeEvent.event;
     }
+    public async determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }> {
+        return { displayName: '', extensionId: '' };
+    }
 }
 
 /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */

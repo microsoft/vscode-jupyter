@@ -52,7 +52,7 @@ export async function getInterpreterInfo(pythonPath: string | undefined): Promis
             const json: PythonEnvInfo = JSON.parse(result.stdout.trim());
             const rawVersion = `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}`;
             return {
-                path: pythonPath,
+                path: json.exe,
                 displayName: `Python${rawVersion}`,
                 version: parsePythonVersion(rawVersion),
                 sysVersion: json.sysVersion,

@@ -9,7 +9,13 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../common/application/types';
 
 import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService, IOutputChannel, IPersistentState, IPersistentStateFactory } from '../../common/types';
+import {
+    IConfigurationService,
+    IOutputChannel,
+    IPersistentState,
+    IPersistentStateFactory,
+    Resource
+} from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -19,13 +25,13 @@ import {
     IJupyterKernelSpec,
     IJupyterPasswordConnect,
     IJupyterSession,
-    IJupyterSessionManager,
-    IKernelDependencyService
+    IJupyterSessionManager
 } from '../types';
 import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
-import { createDefaultKernelSpec } from './kernels/helpers';
+import { createInterpreterKernelSpec } from './kernels/helpers';
+import { JupyterKernelService } from './kernels/jupyterKernelService';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
 import { KernelConnectionMetadata } from './kernels/types';
 
@@ -59,7 +65,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private configService: IConfigurationService,
         private readonly appShell: IApplicationShell,
         private readonly stateFactory: IPersistentStateFactory,
-        private readonly kernelDependencyService: IKernelDependencyService
+        private readonly kernelService: JupyterKernelService
     ) {
         this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateUserAllowsInsecureConnections,
@@ -167,6 +173,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     public async startNew(
+        resource: Resource,
         kernelConnection: KernelConnectionMetadata | undefined,
         workingDirectory: string,
         cancelToken?: CancellationToken,
@@ -177,6 +184,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
         // Create a new session and attempt to connect to it
         const session = new JupyterSession(
+            resource,
             this.connInfo,
             this.serverSettings,
             kernelConnection,
@@ -187,7 +195,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.restartSessionUsedEvent.fire.bind(this.restartSessionUsedEvent),
             workingDirectory,
             this.configService.getSettings().jupyterLaunchTimeout,
-            this.kernelDependencyService
+            this.kernelService
         );
         try {
             await session.connect(this.configService.getSettings().jupyterLaunchTimeout, cancelToken, disableUI);
@@ -234,7 +242,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 );
                 // If for some reason the session manager refuses to communicate, fall
                 // back to a default. This may not exist, but it's likely.
-                return [createDefaultKernelSpec()];
+                return [createInterpreterKernelSpec()];
             }
         } catch (e) {
             traceError(`SessionManager:getKernelSpecs failure: `, e);

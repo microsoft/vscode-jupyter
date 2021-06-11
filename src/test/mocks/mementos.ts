@@ -7,6 +7,7 @@ export class MockMemento implements Memento {
     // what VS code has for a memento. We use this to eliminate a bad bug
     // with writing too much data to global storage. See bug https://github.com/microsoft/vscode-python/issues/9159
     private _value: Record<string, {}> = {};
+    private _keys: string[] = [];
     public get<T>(key: string, defaultValue?: T): T {
         const exists = this._value.hasOwnProperty(key);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,7 +21,11 @@ export class MockMemento implements Memento {
     public clear() {
         this._value = {};
     }
-    public setKeysForSync(_keys: string[]): void {
+    public setKeysForSync(keys: string[]): void {
         // noop.
+        this._keys = keys;
+    }
+    public get keys(): readonly string[] {
+        return this._keys;
     }
 }

@@ -72,6 +72,24 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     public asWillSaveTextDocumentParams(_event: code.TextDocumentWillSaveEvent): proto.WillSaveTextDocumentParams {
         throw new Error('Method not implemented.');
     }
+    public asDidCreateFilesParams(_event: code.FileCreateEvent): proto.CreateFilesParams {
+        throw new Error('Method not implemented.');
+    }
+    public asDidRenameFilesParams(_event: code.FileRenameEvent): proto.RenameFilesParams {
+        throw new Error('Method not implemented.');
+    }
+    public asDidDeleteFilesParams(_event: code.FileDeleteEvent): proto.DeleteFilesParams {
+        throw new Error('Method not implemented.');
+    }
+    public asWillCreateFilesParams(_event: code.FileCreateEvent): proto.CreateFilesParams {
+        throw new Error('Method not implemented.');
+    }
+    public asWillRenameFilesParams(_event: code.FileRenameEvent): proto.RenameFilesParams {
+        throw new Error('Method not implemented.');
+    }
+    asWillDeleteFilesParams(_event: code.FileDeleteEvent): proto.DeleteFilesParams {
+        throw new Error('Method not implemented.');
+    }
     public asTextDocumentPositionParams(
         _textDocument: code.TextDocument,
         _position: code.Position
@@ -146,6 +164,9 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
         _position: code.Position,
         _options: { includeDeclaration: boolean }
     ): proto.ReferenceParams {
+        throw new Error('Method not implemented.');
+    }
+    asCodeAction(_item: code.CodeAction): proto.CodeAction {
         throw new Error('Method not implemented.');
     }
     public asCodeActionContext(_context: code.CodeActionContext): proto.CodeActionContext {

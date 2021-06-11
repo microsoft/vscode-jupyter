@@ -16,8 +16,10 @@ export namespace Common {
     export const canceled = localize('Common.canceled', 'Canceled');
     export const cancel = localize('Common.cancel', 'Cancel');
     export const ok = localize('Common.ok', 'Ok');
+    export const download = localize('Common.download', 'Download');
     export const gotIt = localize('Common.gotIt', 'Got it!');
     export const install = localize('Common.install', 'Install');
+    export const reInstall = localize('Common.reInstall', 'Re-Install');
     export const loadingExtension = localize('Common.loadingExtension', 'Jupyter extension loading...');
     export const openOutputPanel = localize('Common.openOutputPanel', 'Show output');
     export const noIWillDoItLater = localize('Common.noIWillDoItLater', 'No, I will do it later');
@@ -42,39 +44,6 @@ export namespace Http {
 }
 export namespace Experiments {
     export const inGroup = localize('Experiments.inGroup', "User belongs to experiment group '{0}'");
-}
-export namespace ExtensionChannels {
-    export const yesWeekly = localize('ExtensionChannels.yesWeekly', 'Yes, weekly');
-    export const yesDaily = localize('ExtensionChannels.yesDaily', 'Yes, daily');
-    export const promptMessage = localize(
-        'ExtensionChannels.promptMessage',
-        'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Jupyter extension?'
-    );
-    export const reloadToUseInsidersMessage = localize(
-        'ExtensionChannels.reloadToUseInsidersMessage',
-        'Please reload Visual Studio Code to use the insiders build of the Jupyter extension.'
-    );
-    export const downloadCompletedOutputMessage = localize(
-        'ExtensionChannels.downloadCompletedOutputMessage',
-        'Insiders build download complete.'
-    );
-    export const startingDownloadOutputMessage = localize(
-        'ExtensionChannels.startingDownloadOutputMessage',
-        'Starting download for Insiders build.'
-    );
-    export const downloadingInsidersMessage = localize(
-        'ExtensionChannels.downloadingInsidersMessage',
-        'Downloading Insiders Extension... '
-    );
-    export const installingInsidersMessage = localize(
-        'ExtensionChannels.installingInsidersMessage',
-        'Installing Insiders build of extension... '
-    );
-    export const installingStableMessage = localize(
-        'ExtensionChannels.installingStableMessage',
-        'Installing Stable build of extension... '
-    );
-    export const installationCompleteMessage = localize('ExtensionChannels.installationCompleteMessage', 'complete.');
 }
 export namespace OutputChannelNames {
     export const jupyter = localize('OutputChannelNames.jupyter', 'Jupyter');
@@ -177,6 +146,10 @@ export namespace ExtensionSurveyBanner {
 }
 
 export namespace DataScience {
+    export const pythonExtensionRequiredToRunNotebook = localize(
+        'DataScience.pythonExtensionRequiredToRunNotebook',
+        'Python Extension required to run Python notebooks.'
+    );
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
         'The Python extension is required to perform that task. Click Yes to open Python extension installation page.'
@@ -285,29 +258,37 @@ export namespace DataScience {
         'DataScience.libraryNotInstalled',
         'Data Science library {0} is not installed. Install?'
     );
+    export const libraryNotInstalledCorrectlyOrOutdated = localize(
+        'DataScience.libraryNotInstalledCorrectlyOrOutdated',
+        'Data Science library {0} is not installed correctly or outdated. Re-Install?'
+    );
     export const couldNotInstallLibrary = localize(
         'DataScience.couldNotInstallLibrary',
         'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.'
     );
     export const libraryRequiredToLaunchJupyterNotInstalled = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalled',
-        'Data Science library {0} is not installed.'
+        'Running cells requires {0}.'
     );
     export const librariesRequiredToLaunchJupyterNotInstalled = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalled',
-        'Data Science libraries {0} are not installed.'
+        'Running cells requires {0}.'
     );
     export const libraryRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter',
-        '{0} requires {1} to be installed.'
+        "Running cells with '{0}' requires {1}."
     );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter',
-        '{0} requires {1} to be installed.'
+        "Running cells with '{0}' requires {1}."
+    );
+    export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate = localize(
+        'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate',
+        "Running cells with '{0}' requires {1} installed or requires an update."
     );
     export const librariesRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter',
-        '{0} requires {1} to be installed.'
+        "Running cells with '{0}' requires {1}."
     );
     export const selectJupyterInterpreter = localize(
         'DataScience.selectJupyterInterpreter',
@@ -401,7 +382,7 @@ export namespace DataScience {
     );
     export const kernelTimeout = localize(
         'DataScience.kernelTimeout',
-        'Timed out waiting to get a heartbeat from kernel process. \n{0} \nView Jupyter [log](command:{1}) for further details.'
+        'Timed out waiting to get a heartbeat from kernel process. \nView Jupyter [log](command:{0}) for further details.'
     );
     export const kernelDied = localize(
         'DataScience.kernelDied',
@@ -473,6 +454,14 @@ export namespace DataScience {
     export const jupyterSelectPasswordPrompt = localize(
         'DataScience.jupyterSelectPasswordPrompt',
         'Enter your password'
+    );
+    export const pythonNotInstalled = localize(
+        'DataScience.installPython',
+        'Python is not installed. \nPlease [download](https://www.python.org/downloads) and install Python in order to execute cells in this notebook.'
+    );
+    export const kernelNotInstalled = localize(
+        'DataScience.installKernel',
+        "The Jupyter Kernel '{0}' could not be found and needs to be installed in order to execute cells in this notebook."
     );
     export const jupyterNotebookFailure = localize(
         'DataScience.jupyterNotebookFailure',
@@ -578,15 +567,13 @@ export namespace DataScience {
     export const fetchingDataViewer = localize('DataScience.fetchingDataViewer', 'Fetching data ...');
     export const noRowsInDataViewer = localize('DataScience.noRowsInDataViewer', 'No rows match current filter');
     export const jupyterServer = localize('DataScience.jupyterServer', 'Jupyter Server');
-    export const notebookIsTrusted = localize('DataScience.notebookIsTrusted', 'Trusted');
-    export const notebookIsNotTrusted = localize('DataScience.notebookIsNotTrusted', 'Not Trusted');
     export const noKernel = localize('DataScience.noKernel', 'No Kernel');
     export const serverNotStarted = localize('DataScience.serverNotStarted', 'Not Started');
-    export const selectKernel = localize('DataScience.selectKernel', 'Select a Kernel');
+    export const selectKernel = localize('DataScience.selectKernel', 'Change Kernel');
     export const selectDifferentKernel = localize('DataScience.selectDifferentKernel', 'Select a different Kernel');
     export const selectDifferentJupyterInterpreter = localize(
         'DataScience.selectDifferentJupyterInterpreter',
-        'Select a different Interpreter'
+        'Change Interpreter'
     );
     export const localJupyterServer = localize('DataScience.localJupyterServer', 'local');
     export const pandasTooOldForViewingFormat = localize(
@@ -609,7 +596,6 @@ export namespace DataScience {
     export const tooManyColumnsYes = localize('DataScience.tooManyColumnsYes', 'Yes');
     export const tooManyColumnsNo = localize('DataScience.tooManyColumnsNo', 'No');
     export const tooManyColumnsDontAskAgain = localize('DataScience.tooManyColumnsDontAskAgain', "Don't Ask Again");
-    export const filterRowsButton = localize('DataScience.filterRowsButton', 'Filter Rows');
     export const filterRowsTooltip = localize(
         'DataScience.filterRowsTooltip',
         'Allows filtering multiple rows. Use =, >, or < signs to filter numeric values.'
@@ -895,10 +881,17 @@ export namespace DataScience {
         'DataScience.useCDNForWidgets',
         'Widgets require us to download supporting files from a 3rd party website. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.'
     );
-    export const enableCDNForWidgetsSetting = localize(
-        'DataScience.enableCDNForWidgetsSetting',
+    export const enableCDNForWidgetsSettingHtml = localize(
+        'DataScience.enableCDNForWidgetsSettingHtml',
         "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:jupyter.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1})."
     );
+
+    export const enableCDNForWidgetsSetting = localize(
+        'DataScience.enableCDNForWidgetsSetting',
+        'Widgets require us to download supporting files from a 3rd party website. (Error loading {0}:{1}).'
+    );
+
+    export const enableCDNForWidgetsButton = localize('DataScience.enableCDNForWidgetsButton', 'Enable Downloads');
 
     export const unhandledMessage = localize(
         'DataScience.unhandledMessage',
@@ -939,16 +932,6 @@ export namespace DataScience {
         'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
         'Opening the same file in the Preview Notebook Editor and stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
     );
-    export const launchNotebookTrustPrompt = localize(
-        'DataScience.launchNotebookTrustPrompt',
-        'A notebook could execute harmful code when opened. Some outputs have been hidden. Do you trust this notebook? [Learn more.](https://aka.ms/trusted-notebooks)'
-    );
-    export const trustNotebook = localize('DataScience.launchNotebookTrustPrompt.yes', 'Trust');
-    export const doNotTrustNotebook = localize('DataScience.launchNotebookTrustPrompt.no', 'Do not trust');
-    export const trustAllNotebooks = localize(
-        'DataScience.launchNotebookTrustPrompt.trustAllNotebooks',
-        'Trust all notebooks'
-    );
     export const insecureSessionMessage = localize(
         'DataScience.insecureSessionMessage',
         'Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?'
@@ -974,6 +957,21 @@ export namespace DataScience {
     export const showDataViewerFail = localize(
         'DataScience.showDataViewerFail',
         'Failed to create the Data Viewer. Check the Jupyter tab of the Output window for more info.'
+    );
+
+    export const kernelTipMessage = localize(
+        'DataScience.kernelTipMessage',
+        'Tip: You can change your notebook kernel in the status bar.'
+    );
+    export const placeHolderToSelectOptionForNotebookCreation = localize(
+        'DataScience.notebookCreationPickerPlaceHolder',
+        'Select an option to create a blank notebook'
+    );
+
+    export const defaultNotebookName = localize('DataScience.defaultNotebookName', 'default');
+    export const recommendExtensionForNotebookLanguage = localize(
+        'DataScience.recommendExtensionForNotebook',
+        "The {0} extension is recommended for notebooks targetting the language '{1}'."
     );
 }
 

@@ -18,7 +18,6 @@ import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
-    trustAllNotebooks,
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
@@ -35,7 +34,7 @@ import { Settings } from '../../../client/datascience/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function () {
-    this.timeout(920_000);
+    this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -60,7 +59,6 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
-        await trustAllNotebooks();
         await startJupyterServer();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
@@ -88,13 +86,13 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     test('MRU and encrypted storage should be updated with remote Uri info', async () => {
         const previousList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
         const encryptedStorageSpiedStore = sinon.spy(encryptedStorage, 'store');
-        await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
+        await openNotebook(api.serviceContainer, ipynbFile.fsPath);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
         await insertCodeCell('print("123412341234")', { index: 0 });
         await runAllCellsInActiveNotebook();
 
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Wait for MRU to get updated & encrypted storage to get updated.
@@ -102,8 +100,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         const newList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
         assert.notDeepEqual(previousList, newList, 'MRU not updated');
     });
-    test('Use same kernel when re-opening notebook', async () => {
-        await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
+    test('Use same kernel when re-opening notebook', async function () {
+        await openNotebook(api.serviceContainer, ipynbFile.fsPath);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
@@ -111,7 +109,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Cell 2 = `print(a)`
         await runAllCellsInActiveNotebook();
 
-        let cell2 = nbEditor.document.cells![1]!;
+        let cell2 = nbEditor.document.getCells()![1]!;
         await waitForExecutionCompletedSuccessfully(cell2);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
 
@@ -132,7 +130,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // It should connect to the same live kernel
         // Second cell should display the value of existing variable from previous execution.
 
-        await openNotebook(api.serviceContainer, ipynbFile.fsPath, { isNotTrusted: true });
+        await openNotebook(api.serviceContainer, ipynbFile.fsPath);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
@@ -141,13 +139,13 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         // Wait till output is empty for both cells
         await waitForCondition(
-            async () => !nbEditor.document.cells.some((cell) => cell.outputs.length > 0),
+            async () => !nbEditor.document.getCells().some((cell) => cell.outputs.length > 0),
             5_000,
             'Cell output not cleared'
         );
 
         // Execute second cell
-        cell2 = nbEditor.document.cells![1]!;
+        cell2 = nbEditor.document.getCells()![1]!;
         await runCell(cell2);
         await waitForExecutionCompletedSuccessfully(cell2);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);

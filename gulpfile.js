@@ -41,7 +41,7 @@ gulp.task('output:clean', () => del(['coverage']));
 
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
-gulp.task('clean:out', () => del(['out/**', '!out', '!out/BCryptGenRandom/**', '!out/client_renderer/**']));
+gulp.task('clean:out', () => del(['out/**', '!out', '!out/client_renderer/**']));
 gulp.task('clean:ipywidgets', () => spawnAsync('npm', ['run', 'build-ipywidgets-clean'], webpackEnv));
 
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
@@ -49,6 +49,55 @@ gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 gulp.task('checkNativeDependencies', (done) => {
     if (hasNativeDependencies()) {
         done(new Error('Native dependencies detected'));
+    }
+    done();
+});
+gulp.task('checkNpmDependencies', (done) => {
+    /**
+     * Sometimes we have to update the package-lock.json file to upload dependencies.
+     * Thisscript will ensure that even if the package-lock.json is re-generated the (minimum) version numbers are still as expected.
+     */
+    const packageLock = require('./package-lock.json');
+    const errors = [];
+
+    const expectedVersions = [
+        { name: 'trim', version: '0.0.3' },
+        { name: 'node_modules/trim', version: '0.0.3' }
+    ];
+    function checkPackageVersions(packages, parent) {
+        expectedVersions.forEach((expectedVersion) => {
+            if (!packages[expectedVersion.name]) {
+                return;
+            }
+            const version = packages[expectedVersion.name].version || packages[expectedVersion.name];
+            if (!version) {
+                return;
+            }
+            if (!version.includes(expectedVersion.version)) {
+                errors.push(
+                    `${expectedVersion.name} version needs to be at least ${
+                        expectedVersion.version
+                    }, current ${version}, ${parent ? `(parent package ${parent})` : ''}`
+                );
+            }
+        });
+    }
+    function checkPackageDependencies(packages) {
+        Object.keys(packages).forEach((packageName) => {
+            const dependencies = packages[packageName]['dependencies'];
+            if (dependencies) {
+                checkPackageVersions(dependencies, packageName);
+            }
+        });
+    }
+
+    checkPackageVersions(packageLock['packages']);
+    checkPackageVersions(packageLock['dependencies']);
+    checkPackageDependencies(packageLock['packages']);
+
+    if (errors.length > 0) {
+        errors.forEach((ex) => console.error(ex));
+        throw new Error(errors.join(', '));
     }
     done();
 });
@@ -108,14 +157,6 @@ gulp.task('webpack', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
 });
-
-gulp.task('updateLicense', async () => {
-    await updateLicense(argv);
-});
-
-async function updateLicense(args) {
-    await fs.copyFile('extension_license.txt', 'LICENSE.txt');
-}
 
 gulp.task('updateBuildNumber', async () => {
     await updateBuildNumber(argv);
@@ -196,6 +237,8 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in webpack performance recommendations:',
                 'WARNING in ./node_modules/vsls/vscode.js',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
+                'WARNING in ./node_modules/keyv/src/index.js',
+                'ERROR in ./node_modules/got/index.js',
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js',
@@ -211,6 +254,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
         case 'extension':
             return [
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
+                'WARNING in ./node_modules/keyv/src/index.js',
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js',
@@ -234,39 +278,20 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 
-gulp.task('includeBCryptGenRandomExe', async () => {
-    const src = path.join(ExtensionRootDir, 'src', 'BCryptGenRandom', 'BCryptGenRandom.exe');
-    const dest = path.join(ExtensionRootDir, 'out', 'BCryptGenRandom', 'BcryptGenRandom.exe');
-    if (fs.existsSync(dest)) {
-        return;
-    }
-    await fs.stat(src);
-    await fs.ensureDir(path.dirname(dest));
-    await fs.copyFile(src, dest);
-});
-
 gulp.task('downloadRendererExtension', async () => {
     await downloadRendererExtension();
 });
 
-gulp.task('prePublishBundle', gulp.series('includeBCryptGenRandomExe', 'downloadRendererExtension', 'webpack'));
-gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
+gulp.task('prePublishBundle', gulp.series('downloadRendererExtension', 'webpack'));
+gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
-    gulp.task(
-        'prePublishNonBundle',
-        gulp.parallel('compile', 'includeBCryptGenRandomExe', 'downloadRendererExtension')
-    );
+    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'downloadRendererExtension'));
 } else {
     gulp.task(
         'prePublishNonBundle',
-        gulp.parallel(
-            'compile',
-            'includeBCryptGenRandomExe',
-            'downloadRendererExtension',
-            gulp.series('compile-webviews')
-        )
+        gulp.parallel('compile', 'downloadRendererExtension', gulp.series('compile-webviews'))
     );
 }
 
@@ -306,7 +331,7 @@ function hasNativeDependencies() {
         path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep)
     )
         .filter((item) => item.length > 0)
-        .filter((item) => !item.includes('zeromq') && !item.includes('keytar')) // Known native modules
+        .filter((item) => !item.includes('zeromq') && !item.includes('canvas') && !item.includes('keytar')) // Known native modules
         .filter(
             (item) =>
                 jsonProperties.findIndex((flattenedDependency) =>

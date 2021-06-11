@@ -8,7 +8,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
@@ -34,7 +34,9 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, () => this.interruptKernel())
+            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, (notebookUri: Uri | undefined) =>
+                this.interruptKernel(notebookUri)
+            )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel())
@@ -51,14 +53,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NativeNotebookRunAllCellsAbove, (uri) => this.runAbove(uri))
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NativeNotebookRunCellAndAllBelow, (uri) =>
-                this.runCellAndBelow(uri)
-            )
         );
     }
 
@@ -97,10 +91,26 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         }
     }
 
-    private interruptKernel() {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.interruptKernel().ignoreErrors();
+    private interruptKernel(notebookUri: Uri | undefined) {
+        // `document` may be undefined if this command is invoked from the command palette.
+        if (notebookUri) {
+            traceInfo(`Interrupt requested for ${notebookUri.toString()} in nativeEditorCommandListener`);
+            traceInfo(`this.provider.activeEditor?.file.toString() = ${this.provider.activeEditor?.file.toString()}`);
+            traceInfo(`this.provider.editors = ${this.provider.editors.map((item) => item.file.toString())}`);
+            const target =
+                this.provider.activeEditor?.file.toString() === notebookUri.toString()
+                    ? this.provider.activeEditor
+                    : this.provider.editors.find((editor) => editor.file.toString() === notebookUri.toString());
+            if (target) {
+                target.interruptKernel().ignoreErrors();
+            } else {
+                traceInfo(
+                    `Interrupt requested for ${notebookUri.toString()} in nativeEditorCommandListener & editor not found`
+                );
+            }
+        } else {
+            traceInfo(`Interrupt requested for active editor in nativeEditorCommandListener`);
+            this.provider.activeEditor?.interruptKernel().ignoreErrors();
         }
     }
 
@@ -112,7 +122,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     }
 
     @captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false)
-    private async openNotebook(file?: Uri, content?: string): Promise<void> {
+    private async openNotebook(file?: Uri, contents?: string): Promise<void> {
         if (file && path.extname(file.fsPath).toLocaleLowerCase() === '.ipynb') {
             try {
                 // Then take the contents and load it.
@@ -120,25 +130,12 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             } catch (e) {
                 await this.dataScienceErrorHandler.handleError(e);
             }
-        } else if (content) {
+        } else if (contents) {
             try {
-                await this.provider.createNew(content);
+                await this.provider.createNew({ contents });
             } catch (e) {
                 await this.dataScienceErrorHandler.handleError(e);
             }
-        }
-    }
-
-    private runAbove(uri: Uri): void {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.runAbove(uri);
-        }
-    }
-    private runCellAndBelow(uri: Uri): void {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            activeEditor.runCellAndBelow(uri);
         }
     }
 }

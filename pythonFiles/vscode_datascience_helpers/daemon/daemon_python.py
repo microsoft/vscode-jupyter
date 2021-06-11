@@ -206,7 +206,7 @@ class PythonDaemon(MethodDispatcher):
 
     @classmethod
     def start_daemon(cls, logging_queue_handler=None):
-        """ Starts the daemon. """
+        """Starts the daemon."""
         if not issubclass(cls, PythonDaemon):
             raise ValueError("Handler class must be an instance of PythonDaemon")
         log.info("Starting %s Daemon", cls.__name__)

@@ -11,7 +11,7 @@ import { ICellViewModel } from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { ErrorBoundary } from '../react-common/errorBoundary';
-import { Image, ImageName } from '../react-common/image';
+import { Codicon, Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
@@ -160,11 +160,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                             onClick={this.props.toggleVariableExplorer}
                             tooltip={variableExplorerTooltip}
                         >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.VariableExplorer}
-                            />
+                            <Codicon codicon="variable-group" />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
@@ -338,6 +334,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             setVariableExplorerHeight: this.props.setVariableExplorerHeight,
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
+            sort: this.props.sortVariables,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
             refreshCount: this.props.variableState.refreshCount,
@@ -351,7 +348,9 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             this.props.currentExecutionCount,
             this.props.variableState.refreshCount,
             startIndex,
-            pageSize
+            pageSize,
+            this.props.variableState.sortColumn,
+            this.props.variableState.sortAscending
         );
     };
 

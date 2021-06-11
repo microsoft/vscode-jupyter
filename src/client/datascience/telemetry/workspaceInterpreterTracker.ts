@@ -42,7 +42,7 @@ export class WorkspaceInterpreterTracker implements IExtensionSyncActivationServ
         return activeInterpreterPath === interpreter.path;
     }
     private trackActiveInterpreters() {
-        if (this.trackingInterpreters || !this.pythonExtensionChecker.isPythonExtensionInstalled) {
+        if (this.trackingInterpreters || !this.pythonExtensionChecker.isPythonExtensionActive) {
             return;
         }
         this.trackingInterpreters = true;

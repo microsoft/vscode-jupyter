@@ -6,7 +6,6 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
-import { IPythonExtensionChecker } from '../../api/types';
 import { traceError } from '../../common/logger';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { IFileSystem } from '../../common/platform/types';
@@ -16,14 +15,7 @@ import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Identifiers, Telemetry } from '../constants';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { INotebookModelFactory } from '../notebookStorage/types';
-import {
-    CellState,
-    IJupyterExecution,
-    IModelLoadOptions,
-    INotebookModel,
-    INotebookStorage,
-    ITrustService
-} from '../types';
+import { CellState, IModelLoadOptions, INotebookModel, INotebookStorage } from '../types';
 import { NativeEditorNotebookModel } from './notebookModel';
 import { VSCodeNotebookModel } from './vscNotebookModel';
 
@@ -57,15 +49,12 @@ export class NativeEditorStorage implements INotebookStorage {
     private backupRequested: { model: INotebookModel; cancellation: CancellationToken } | undefined;
 
     constructor(
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(ICryptoUtils) private crypto: ICryptoUtils,
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
-        @inject(ITrustService) private trustService: ITrustService,
-        @inject(INotebookModelFactory) private readonly factory: INotebookModelFactory,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(INotebookModelFactory) private readonly factory: INotebookModelFactory
     ) {}
     private static isUntitledFile(file: Uri) {
         return isUntitledFile(file);
@@ -83,9 +72,6 @@ export class NativeEditorStorage implements INotebookStorage {
     public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
         const contents = model.getContent();
         const parallelize = [this.fs.writeFile(model.file, contents)];
-        if (model.isTrusted) {
-            parallelize.push(this.trustService.trustNotebook(model.file, contents));
-        }
         await Promise.all(parallelize);
         if (model instanceof VSCodeNotebookModel) {
             // Rest of the code doesn't apply to native notebooks.
@@ -106,9 +92,6 @@ export class NativeEditorStorage implements INotebookStorage {
     public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
         const contents = model.getContent();
         const parallelize = [this.fs.writeFile(file, contents)];
-        if (model.isTrusted) {
-            parallelize.push(this.trustService.trustNotebook(file, contents));
-        }
         await Promise.all(parallelize);
         if (!(model instanceof NativeEditorNotebookModel)) {
             traceError('Attempted to SaveAs with a model that is not NativeEditorNotebookModel');
@@ -170,29 +153,21 @@ export class NativeEditorStorage implements INotebookStorage {
         // Keep track of the time when this data was saved.
         // This way when we retrieve the data we can compare it against last modified date of the file.
         const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
-        return this.writeToStorage(model.file, filePath, specialContents, cancelToken);
+        return this.writeToStorage(filePath, specialContents, cancelToken);
     }
 
     private async clearHotExit(file: Uri, backupId?: string): Promise<void> {
         const key = backupId || this.getStaticStorageKey(file);
         const filePath = this.getHashedFileName(key);
-        await this.writeToStorage(undefined, filePath);
+        await this.writeToStorage(filePath);
     }
 
-    private async writeToStorage(
-        owningFile: Uri | undefined,
-        filePath: string,
-        contents?: string,
-        cancelToken?: CancellationToken
-    ): Promise<void> {
+    private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
         try {
             if (!cancelToken?.isCancellationRequested) {
                 if (contents) {
                     await this.fs.createLocalDirectory(path.dirname(filePath));
                     if (!cancelToken?.isCancellationRequested) {
-                        if (owningFile) {
-                            this.trustService.trustNotebook(owningFile, contents).ignoreErrors();
-                        }
                         await this.fs.writeLocalFile(filePath, contents);
                     }
                 } else {
@@ -208,7 +183,7 @@ export class NativeEditorStorage implements INotebookStorage {
             traceError(`Error writing storage for ${filePath}: `, exc);
         }
     }
-    private async extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): Promise<number> {
+    private extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): number {
         if (
             notebookData &&
             notebookData.metadata &&
@@ -219,11 +194,6 @@ export class NativeEditorStorage implements INotebookStorage {
         ) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (notebookData.metadata.language_info.codemirror_mode as any).version;
-        }
-        // Use the active interpreter if allowed
-        if (this.extensionChecker.isPythonExtensionInstalled) {
-            const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-            return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
         }
 
         return 3;
@@ -266,10 +236,22 @@ export class NativeEditorStorage implements INotebookStorage {
                 : await this.getStoredContents(options.file, backupId);
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
-                return this.loadContents(options.file, dirtyContents, true, options.isNative);
+                return this.loadContents(
+                    options.file,
+                    dirtyContents,
+                    true,
+                    options.isNative,
+                    options.defaultCellLanguage
+                );
             } else {
                 // Load without setting dirty
-                return this.loadContents(options.file, contents, undefined, options.isNative);
+                return this.loadContents(
+                    options.file,
+                    contents,
+                    undefined,
+                    options.isNative,
+                    options.defaultCellLanguage
+                );
             }
         } catch (ex) {
             // May not exist at this time. Should always have a single cell though
@@ -280,6 +262,7 @@ export class NativeEditorStorage implements INotebookStorage {
                     file: options.file,
                     cells: [],
                     crypto: this.crypto,
+                    defaultCellLanguage: options?.defaultCellLanguage,
                     globalMemento: this.globalStorage
                 },
                 options.isNative
@@ -315,7 +298,8 @@ export class NativeEditorStorage implements INotebookStorage {
         file: Uri,
         contents: string | undefined,
         isInitiallyDirty = false,
-        forVSCodeNotebook?: boolean
+        forVSCodeNotebook?: boolean,
+        defaultCellLanguage?: string
     ) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
@@ -354,7 +338,7 @@ export class NativeEditorStorage implements INotebookStorage {
                 remapped.splice(0, 0, this.createEmptyCell(uuid()));
             }
         }
-        const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
+        const pythonNumber = json ? this.extractPythonMainVersion(json) : 3;
 
         const model = this.factory.createModel(
             {
@@ -366,21 +350,11 @@ export class NativeEditorStorage implements INotebookStorage {
                 pythonNumber,
                 initiallyDirty: isInitiallyDirty,
                 crypto: this.crypto,
+                defaultCellLanguage,
                 globalMemento: this.globalStorage
             },
             forVSCodeNotebook
         );
-
-        // If no contents or untitled, this is a newly created file
-        // If dirty, that means it's been edited before in our extension
-        if (contents !== undefined && !isUntitledFile(file) && !isInitiallyDirty && !model.isTrusted) {
-            const isNotebookTrusted = await this.trustService.isNotebookTrusted(file, model.getContent());
-            if (isNotebookTrusted) {
-                model.trust();
-            }
-        } else {
-            model.trust();
-        }
 
         return model;
     }
@@ -464,7 +438,7 @@ export class NativeEditorStorage implements INotebookStorage {
         const workspaceData = this.localStorage.get<string>(key);
         if (workspaceData) {
             // Make sure to clear so we don't use this again.
-            this.localStorage.update(key, undefined);
+            void this.localStorage.update(key, undefined);
 
             return workspaceData;
         }
@@ -500,6 +474,6 @@ export class NativeEditorStorage implements INotebookStorage {
 
     private getHashedFileName(key: string): string {
         const file = `${this.crypto.createHash(key, 'string')}.ipynb`;
-        return path.join(this.context.globalStoragePath, file);
+        return path.join(this.context.globalStorageUri.fsPath, file);
     }
 }

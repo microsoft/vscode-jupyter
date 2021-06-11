@@ -16,14 +16,15 @@ import {
     runCell,
     insertCodeCell,
     prewarmNotebooks,
-    trustAllNotebooks,
-    waitForExecutionCompletedSuccessfully
+    waitForExecutionCompletedSuccessfully,
+    workAroundVSCodeNotebookStartPages
 } from '../notebook/helper';
 import { OnMessageListener } from '../vscodeTestHelpers';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { verifyViewVariables } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
+import { traceInfo } from '../../../client/common/logger';
 
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
@@ -45,7 +46,7 @@ suite('DataScience - VariableView', () => {
         if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
-        await trustAllNotebooks();
+        await workAroundVSCodeNotebookStartPages();
         await prewarmNotebooks();
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -55,14 +56,18 @@ suite('DataScience - VariableView', () => {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });
     setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
 
         // Create an editor to use for our tests
         await createEmptyPythonNotebook(disposables);
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
         await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
 
     // Cleanup after suite is finished
@@ -72,7 +77,7 @@ suite('DataScience - VariableView', () => {
     test('Can show VariableView (webview-test)', async function () {
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
@@ -89,7 +94,7 @@ suite('DataScience - VariableView', () => {
 
         // Send a second cell
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
         await runCell(cell2);
 
         // Wait until our VariablesComplete message to see that we have the new variables and have rendered them

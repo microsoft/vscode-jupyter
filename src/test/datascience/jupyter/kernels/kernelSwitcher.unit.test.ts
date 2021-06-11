@@ -16,7 +16,6 @@ import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { JupyterSessionStartError } from '../../../../client/datascience/baseJupyterSession';
 import { NotebookProvider } from '../../../../client/datascience/interactive-common/notebookProvider';
 import { JupyterNotebookBase } from '../../../../client/datascience/jupyter/jupyterNotebook';
-import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { KernelConnectionMetadata, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
@@ -54,7 +53,8 @@ suite('DataScience - Kernel Switcher', () => {
         newKernelConnection = {
             kernelModel: currentKernel,
             interpreter: selectedInterpreter,
-            kind: 'connectToLiveKernel'
+            kind: 'connectToLiveKernel',
+            id: '10'
         };
         notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);
@@ -66,12 +66,7 @@ suite('DataScience - Kernel Switcher', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(notebook.connection).thenReturn(instance(connection));
         when(configService.getSettings(anything())).thenReturn(instance(settings));
-        kernelSwitcher = new KernelSwitcher(
-            instance(configService),
-            instance(appShell),
-            instance(mock(KernelDependencyService)),
-            instance(kernelSelector)
-        );
+        kernelSwitcher = new KernelSwitcher(instance(configService), instance(appShell), instance(kernelSelector));
         when(appShell.withProgress(anything(), anything())).thenCall(async (_, cb: () => Promise<void>) => {
             await cb();
         });
@@ -112,7 +107,8 @@ suite('DataScience - Kernel Switcher', () => {
                     setup(() => {
                         when(notebook.getKernelConnection()).thenReturn({
                             kernelSpec: currentKernelInfo.currentKernel as any,
-                            kind: 'startUsingKernelSpec'
+                            kind: 'startUsingKernelSpec',
+                            id: '1'
                         });
                     });
 

@@ -73,7 +73,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         this.activatedWorkspaces.add(key);
 
         // Get latest interpreter list in the background.
-        if (this.extensionChecker.isPythonExtensionInstalled) {
+        if (this.extensionChecker.isPythonExtensionActive) {
             this.interpreterService.getInterpreters(resource).ignoreErrors();
         }
 

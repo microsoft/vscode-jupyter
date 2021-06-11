@@ -6,12 +6,10 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import { traceInfo } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
 
-import { IPythonExecutionFactory } from '../../../common/process/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { getRealPath } from '../../common';
 import { IJupyterKernelSpec } from '../../types';
+import { tryGetRealPath } from '../../common';
 
 export class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
@@ -51,12 +49,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
  * @param {CancellationToken} [token]
  * @returns
  */
-export async function parseKernelSpecs(
-    stdout: string,
-    fs: IFileSystem,
-    execFactory: IPythonExecutionFactory,
-    token?: CancellationToken
-) {
+export async function parseKernelSpecs(stdout: string, token?: CancellationToken) {
     traceInfo('Parsing kernelspecs from jupyter');
     // This should give us back a key value pair we can parse
     const jsOut = JSON.parse(stdout.trim()) as {
@@ -73,12 +66,7 @@ export async function parseKernelSpecs(
                     ...spec,
                     name: kernelName
                 };
-                const specFile = await getRealPath(
-                    fs,
-                    execFactory,
-                    spec.argv[0],
-                    path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json')
-                );
+                const specFile = await tryGetRealPath(path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json'));
                 if (specFile) {
                     return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
                 }

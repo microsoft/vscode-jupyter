@@ -12,9 +12,11 @@ import {
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -24,10 +26,13 @@ import {
     IPersistentStateFactory
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { ConsoleForegroundColors } from '../../logging/_global';
 import { sendTelemetryEvent } from '../../telemetry';
-import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { Commands, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
@@ -41,43 +46,36 @@ import { IIPyWidgetMessageDispatcher } from './types';
 //
 export class CommonMessageCoordinator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private cachedMessages: any[] = [];
+    /**
+     * Whether we have any handlers listerning to this event.
+     */
+    private listeningToPostMessageEvent?: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get postMessage(): Event<{ message: string; payload: any }> {
+        this.listeningToPostMessageEvent = true;
         return this.postEmitter.event;
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
     private ipyWidgetScriptSource?: IPyWidgetScriptSource;
+    private appShell: IApplicationShell;
+    private commandManager: ICommandManager;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private postEmitter: EventEmitter<{ message: string; payload: any }>;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    private hashFn = require('hash.js').sha256;
+    private readonly postEmitter = new EventEmitter<{ message: string; payload: any }>();
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
 
-    private constructor(
-        private readonly identity: Uri,
-        private readonly serviceContainer: IServiceContainer,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        postEmitter?: EventEmitter<{ message: string; payload: any }>
-    ) {
-        this.postEmitter =
-            postEmitter ??
-            new EventEmitter<{
-                message: string;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                payload: any;
-            }>();
+    private constructor(private readonly identity: Uri, private readonly serviceContainer: IServiceContainer) {
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, JUPYTER_OUTPUT_CHANNEL);
+        this.jupyterOutput = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell, IApplicationShell);
+        this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
     }
 
-    public static async create(
-        identity: Uri,
-        serviceContainer: IServiceContainer,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        postEmitter?: EventEmitter<{ message: string; payload: any }>
-    ): Promise<CommonMessageCoordinator> {
-        const result = new CommonMessageCoordinator(identity, serviceContainer, postEmitter);
+    public static async create(identity: Uri, serviceContainer: IServiceContainer): Promise<CommonMessageCoordinator> {
+        const result = new CommonMessageCoordinator(identity, serviceContainer);
         await result.initialize();
+        traceInfo('Created and initailized CommonMessageCoordinator');
         return result;
     }
 
@@ -91,7 +89,7 @@ export class CommonMessageCoordinator {
         if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
             this.sendLoadSucceededTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
-            this.sendLoadFailureTelemetry(payload);
+            this.handleWidgetLoadFailure(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported) {
             this.sendUnsupportedWidgetVersionFailureTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
@@ -107,21 +105,17 @@ export class CommonMessageCoordinator {
         this.getIPyWidgetScriptSource()?.onMessage(message, payload);
     }
 
-    private initialize(): Promise<[void, void]> {
-        return Promise.all([
-            this.getIPyWidgetMessageDispatcher()?.initialize(),
-            this.getIPyWidgetScriptSource()?.initialize()
-        ]);
-    }
-
-    private hash(s: string): string {
-        return this.hashFn().update(s).digest('hex');
+    private async initialize(): Promise<void> {
+        traceInfo('initialize CommonMessageCoordinator');
+        // First hook up the widget script source that will listen to messages even before we start sending messages.
+        const promise = this.getIPyWidgetScriptSource()?.initialize();
+        await promise.then(() => this.getIPyWidgetMessageDispatcher()?.initialize());
     }
 
     private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
         try {
             sendTelemetryEvent(Telemetry.IPyWidgetLoadSuccess, 0, {
-                moduleHash: this.hash(payload.moduleName),
+                moduleHash: getTelemetrySafeHashedString(payload.moduleName),
                 moduleVersion: payload.moduleVersion
             });
         } catch {
@@ -129,11 +123,40 @@ export class CommonMessageCoordinator {
         }
     }
 
-    private sendLoadFailureTelemetry(payload: ILoadIPyWidgetClassFailureAction) {
+    private handleWidgetLoadFailure(payload: ILoadIPyWidgetClassFailureAction) {
         try {
+            let errorMessage: string = payload.error.toString();
+            if (!payload.isOnline) {
+                errorMessage = localize.DataScience.loadClassFailedWithNoInternet().format(
+                    payload.moduleName,
+                    payload.moduleVersion
+                );
+                this.appShell.showErrorMessage(errorMessage).then(noop, noop);
+            } else if (!payload.cdnsUsed) {
+                const moreInfo = localize.Common.moreInfo();
+                const enableDownloads = localize.DataScience.enableCDNForWidgetsButton();
+                errorMessage = localize.DataScience.enableCDNForWidgetsSetting().format(
+                    payload.moduleName,
+                    payload.moduleVersion
+                );
+                this.appShell.showErrorMessage(errorMessage, ...[enableDownloads, moreInfo]).then((selection) => {
+                    switch (selection) {
+                        case moreInfo:
+                            this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
+                            break;
+                        case enableDownloads:
+                            void this.commandManager.executeCommand(Commands.EnableLoadingWidgetsFrom3rdPartySource);
+                            break;
+                        default:
+                            break;
+                    }
+                }, noop);
+            }
+            traceError(`Widget load failure ${errorMessage}`, payload);
+
             sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
                 isOnline: payload.isOnline,
-                moduleHash: this.hash(payload.moduleName),
+                moduleHash: getTelemetrySafeHashedString(payload.moduleName),
                 moduleVersion: payload.moduleVersion,
                 timedout: payload.timedout
             });
@@ -144,7 +167,7 @@ export class CommonMessageCoordinator {
     private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgeWidgetVersionNotSupportedAction) {
         try {
             sendTelemetryEvent(Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure, 0, {
-                moduleHash: this.hash(payload.moduleName),
+                moduleHash: getTelemetrySafeHashedString(payload.moduleName),
                 moduleVersion: payload.moduleVersion
             });
         } catch {
@@ -184,9 +207,7 @@ export class CommonMessageCoordinator {
             this.ipyWidgetMessageDispatcher = this.serviceContainer
                 .get<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory)
                 .create(this.identity);
-            this.disposables.push(
-                this.ipyWidgetMessageDispatcher.postMessage(this.postEmitter.fire.bind(this.postEmitter))
-            );
+            this.disposables.push(this.ipyWidgetMessageDispatcher.postMessage(this.cacheOrSend, this));
         }
         return this.ipyWidgetMessageDispatcher;
     }
@@ -204,13 +225,24 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IApplicationShell>(IApplicationShell),
                 this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
                 this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
-                this.serviceContainer.get<IExtensionContext>(IExtensionContext)
+                this.serviceContainer.get<IExtensionContext>(IExtensionContext),
+                this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
             );
-            this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.postEmitter.fire.bind(this.postEmitter)));
-            this.disposables.push(
-                this.ipyWidgetScriptSource.postInternalMessage(this.postEmitter.fire.bind(this.postEmitter))
-            );
+            this.disposables.push(this.ipyWidgetScriptSource.postMessage(this.cacheOrSend, this));
         }
         return this.ipyWidgetScriptSource;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private cacheOrSend(data: any) {
+        // If no one is listening to the messages, then cache these.
+        // It means its too early to dispatch the messages, we need to wait for the event handlers to get bound.
+        if (!this.listeningToPostMessageEvent) {
+            traceInfo(`${ConsoleForegroundColors.Green}Queuing messages (no listenerts)`);
+            this.cachedMessages.push(data);
+            return;
+        }
+        this.cachedMessages.forEach((item) => this.postEmitter.fire(item));
+        this.cachedMessages = [];
+        this.postEmitter.fire(data);
     }
 }

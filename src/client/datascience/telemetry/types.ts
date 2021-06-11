@@ -4,7 +4,6 @@
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 
-let connection: KernelConnectionMetadata;
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
     /**
@@ -34,7 +33,7 @@ export type ResourceSpecificTelemetryProperties = Partial<{
     /**
      * Whether kernel was started using kernel spec, interpreter, etc.
      */
-    kernelConnectionType?: typeof connection.kind;
+    kernelConnectionType?: KernelConnectionMetadata['kind'];
     /**
      * Language of the kernel connection.
      */
