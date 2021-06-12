@@ -418,7 +418,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         }
         const cells = generateCells(undefined, code, file.fsPath, 1, true, uuid(), language);
         cells.forEach((c) => {
-            const cellMatcher = new CellMatcher();
+            const cellMatcher = new CellMatcher(undefined);
             const key = cellMatcher
                 .stripFirstMarker(concatMultilineString(c.data.source))
                 .replace(LineFeedRegEx, '')

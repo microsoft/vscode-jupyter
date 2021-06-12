@@ -60,7 +60,7 @@ export function generateCells(
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
     const split = code.splitLines({ trim: false });
     const firstLine = split[0];
-    const matcher = new CellMatcher(settings, language);
+    const matcher = new CellMatcher(language, settings);
     const { magicCommandsAsComments = false } = settings || {};
     if (matcher.isMarkdown(firstLine)) {
         // We have at least one markdown. We might have to split it if there any lines that don't begin
@@ -99,7 +99,7 @@ export function generateCells(
 }
 
 export function hasCells(document: TextDocument, settings?: IJupyterSettings, language?: string): boolean {
-    const matcher = new CellMatcher(settings, language);
+    const matcher = new CellMatcher(language, settings);
     for (let index = 0; index < document.lineCount; index += 1) {
         const line = document.lineAt(index);
         if (matcher.isCell(line.text)) {
@@ -114,7 +114,7 @@ export function generateCellsFromString(source: string, settings?: IJupyterSetti
     const lines: string[] = source.splitLines({ trim: false, removeEmptyEntries: false });
 
     // Find all the lines that start a cell
-    const matcher = new CellMatcher(settings, language);
+    const matcher = new CellMatcher(language, settings);
     const starts: { startLine: number; title: string; code: string; cell_type: string }[] = [];
     let currentCode: string | undefined;
     for (let index = 0; index < lines.length; index += 1) {
@@ -151,9 +151,13 @@ export function generateCellsFromString(source: string, settings?: IJupyterSetti
     );
 }
 
-export function generateCellRangesFromDocument(document: TextDocument, settings?: IJupyterSettings, language?: string): ICellRange[] {
+export function generateCellRangesFromDocument(
+    document: TextDocument,
+    settings?: IJupyterSettings,
+    language?: string
+): ICellRange[] {
     // Implmentation of getCells here based on Don's Jupyter extension work
-    const matcher = new CellMatcher(settings, language);
+    const matcher = new CellMatcher(language, settings);
     const cells: ICellRange[] = [];
     for (let index = 0; index < document.lineCount; index += 1) {
         const line = document.lineAt(index);

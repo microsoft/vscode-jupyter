@@ -103,7 +103,7 @@ import {
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
-import { translateCellToNative } from '../utils';
+import { getLanguageOfResource, translateCellToNative } from '../utils';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
@@ -622,7 +622,10 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             this._notebook && !this.perceivedJupyterStartupTelemetryCaptured ? new StopWatch() : undefined;
         let result = true;
         // Do not execute or render empty code cells
-        const cellMatcher = new CellMatcher(this.configService.getSettings(this.owningResource));
+        const cellMatcher = new CellMatcher(
+            getLanguageOfResource(this.owningResource),
+            this.configService.getSettings(this.owningResource)
+        );
         if (cellMatcher.stripFirstMarker(code).length === 0) {
             return result;
         }
@@ -1369,8 +1372,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             const line = editor.selection.start.line;
             const revealLine = line + 1;
             const defaultCellMarker =
-                this.configService.getSettings(this.owningResource).codeLensExpressions.find((v) => v.language === editor?.document.languageId)
-                ?.defaultCellMarker ||
+                this.configService
+                    .getSettings(this.owningResource)
+                    .codeLensExpressions.find((v) => v.language === editor?.document.languageId)?.defaultCellMarker ||
                 Identifiers.DefaultCodeCellMarker;
             let newCode = `${source}${os.EOL}`;
             if (hasCellsAlready) {

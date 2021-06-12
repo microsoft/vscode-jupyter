@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { PYTHON_LANGUAGE } from '../common/constants';
 import '../common/extensions';
 
 import { IJupyterSettings } from '../common/types';
@@ -16,14 +17,12 @@ export class CellMatcher {
     private defaultCellMarker: string;
     private defaultCellMarkerExec: RegExp;
 
-    constructor(settings?: IJupyterSettings, language?: string) {
-
+    constructor(language: string | undefined, settings?: IJupyterSettings) {
         if (!language) {
-            language = 'python'
+            language = PYTHON_LANGUAGE;
         }
 
-        const codeLens = settings?.codeLensExpressions
-        .find((v) => v.language === language)
+        const codeLens = settings?.codeLensExpressions.find((v) => v.language === language);
 
         this.codeMatchRegEx = this.createRegExp(
             codeLens ? codeLens.codeExpression : undefined,

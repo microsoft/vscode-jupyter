@@ -358,7 +358,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
 
         const editor = this.documentManager.activeTextEditor;
-        const cellMatcher = new CellMatcher();
+        const cellMatcher = new CellMatcher(editor.document.languageId);
         let index = 0;
         const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
 
@@ -731,7 +731,10 @@ export class CodeWatcher implements ICodeWatcher {
         if (cell.cell_type === toCellType) {
             return;
         }
-        const cellMatcher = new CellMatcher(this.configService.getSettings(editor.document.uri));
+        const cellMatcher = new CellMatcher(
+            editor.document.languageId,
+            this.configService.getSettings(editor.document.uri)
+        );
         const definitionLine = editor.document.lineAt(cell.range.start.line);
         const definitionText = editor.document.getText(definitionLine.range);
 
@@ -959,8 +962,12 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private getDefaultCellMarker(resource: Resource): string {
-        return this.configService.getSettings(resource)
-                .codeLensExpressions.find((v) => v.language === this.document?.languageId)?.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+        return (
+            this.configService
+                .getSettings(resource)
+                .codeLensExpressions.find((v) => v.language === this.document?.languageId)?.defaultCellMarker ||
+            Identifiers.DefaultCodeCellMarker
+        );
     }
 
     private onCodeLensFactoryUpdated(): void {

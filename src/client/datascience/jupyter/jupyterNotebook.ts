@@ -56,6 +56,7 @@ import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
 import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { IPythonExecutionFactory } from '../../common/process/types';
+import { getLanguageOfResource } from '../utils';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -858,7 +859,15 @@ export class JupyterNotebookBase implements INotebook {
         // If we have a session, execute the code now.
         if (this.session) {
             // Generate our cells ahead of time
-            const cells = generateCells(this.configService.getSettings(this.resource), code, file, line, true, id, language);
+            const cells = generateCells(
+                this.configService.getSettings(this.resource),
+                code,
+                file,
+                line,
+                true,
+                id,
+                language
+            );
 
             // Might have more than one (markdown might be split)
             if (cells.length > 1) {
@@ -894,7 +903,10 @@ export class JupyterNotebookBase implements INotebook {
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined => {
         //traceInfo(`Executing code in jupyter : ${code}`);
         try {
-            const cellMatcher = new CellMatcher(this.configService.getSettings(this.resource));
+            const cellMatcher = new CellMatcher(
+                getLanguageOfResource(this.resource),
+                this.configService.getSettings(this.resource)
+            );
             return this.session
                 ? this.session.requestExecute(
                       {

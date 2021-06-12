@@ -3,7 +3,7 @@
 'use strict';
 
 import * as path from 'path';
-import { NotebookCellKind, NotebookCell, Uri } from 'vscode';
+import { NotebookCellKind, NotebookCell, Uri, workspace } from 'vscode';
 
 import { IWorkspaceService } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
@@ -12,6 +12,8 @@ import { concatMultilineString } from '../../datascience-ui/common';
 import { IConfigurationService } from '../common/types';
 import { CellState, ICell } from './types';
 import { NotebookCellRunState } from './jupyter/kernels/types';
+import { arePathsSame } from '../../datascience-ui/react-common/arePathsSame';
+import { PYTHON_LANGUAGE } from '../common/constants';
 
 export async function calculateWorkingDirectory(
     configService: IConfigurationService,
@@ -93,4 +95,12 @@ export function translateCellStateFromNative(state: NotebookCellRunState): CellS
         default:
             return CellState.init;
     }
+}
+
+export function getLanguageOfResource(res: Uri | undefined): string {
+    if (workspace.textDocuments && res) {
+        const doc = workspace.textDocuments.find((d) => arePathsSame(d.fileName, res.fsPath));
+        return doc?.languageId || PYTHON_LANGUAGE;
+    }
+    return PYTHON_LANGUAGE;
 }

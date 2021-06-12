@@ -6,6 +6,7 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
+import { Uri } from 'vscode';
 
 import { IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -46,7 +47,8 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(INbConvertInterpreterDependencyChecker)
         private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker,
-        @inject(INbConvertExportToPythonService) private readonly exportToPythonService: INbConvertExportToPythonService,
+        @inject(INbConvertExportToPythonService)
+        private readonly exportToPythonService: INbConvertExportToPythonService,
         @inject(IDocumentManager) private readonly DocumentManager: IDocumentManager
     ) {}
 
@@ -105,9 +107,13 @@ export class JupyterImporter implements INotebookImporter {
     };
 
     private get defaultCellMarker(): string {
-        const language = this.DocumentManager.activeTextEditor ? this.DocumentManager.activeTextEditor.document.languageId : 'python'
-        return this.configuration.getSettings().codeLensExpressions.find((v) => v.language === language)
-        ?.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+        const language = this.DocumentManager.activeTextEditor
+            ? this.DocumentManager.activeTextEditor.document.languageId
+            : 'python';
+        return (
+            this.configuration.getSettings().codeLensExpressions.find((v) => v.language === language)
+                ?.defaultCellMarker || Identifiers.DefaultCodeCellMarker
+        );
     }
 
     private addIPythonImport = (pythonOutput: string): string => {

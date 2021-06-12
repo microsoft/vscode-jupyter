@@ -26,6 +26,7 @@ import {
     INotebook,
     INotebookExecutionLogger
 } from '../types';
+import { getLanguageOfResource } from '../utils';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
@@ -147,7 +148,9 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
     }
 
     public extractExecutableLines(cell: ICell): string[] {
-        const cellMatcher = new CellMatcher(this.configService.getSettings(getCellResource(cell)));
+        const resource = getCellResource(cell);
+        const language = getLanguageOfResource(resource);
+        const cellMatcher = new CellMatcher(language, this.configService.getSettings(getCellResource(cell)));
         const lines = splitMultilineString(cell.data.source);
         // Only strip this off the first line. Otherwise we want the markers in the code.
         if (lines.length > 0 && (cellMatcher.isCode(lines[0]) || cellMatcher.isMarkdown(lines[0]))) {

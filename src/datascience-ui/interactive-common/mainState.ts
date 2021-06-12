@@ -243,7 +243,7 @@ export function extractInputText(inputCellVM: ICellViewModel, settings: IJupyter
     if (inputCell.data.source) {
         source = splitMultilineString(cloneDeep(inputCell.data.source));
     }
-    const matcher = new CellMatcher(settings);
+    const matcher = new CellMatcher(undefined, settings);
 
     // Eliminate the #%% on the front if it has nothing else on the line
     if (source.length > 0) {

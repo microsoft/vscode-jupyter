@@ -72,7 +72,7 @@ export namespace Execution {
 
     export function submitInput(arg: InteractiveReducerArg<ICodeAction>): IMainState {
         // noop if the submitted code is just a cell marker
-        const matcher = new CellMatcher(arg.prevState.settings);
+        const matcher = new CellMatcher(undefined, arg.prevState.settings);
         if (matcher.stripFirstMarker(arg.payload.data.code).length > 0 && arg.prevState.editCellVM) {
             // This should be from the edit cell VM. Copy it and change the cell id
             let newCell = cloneDeep(arg.prevState.editCellVM);
