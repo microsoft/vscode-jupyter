@@ -18,10 +18,11 @@ import {
     UIKind,
     Uri
 } from 'vscode';
+import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceInfoIf } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { ConsoleForegroundColors } from '../../logging/_global';
@@ -133,10 +134,18 @@ export class VSCodeNotebookController implements Disposable {
         // Only when running tests should we force the selection of the kernel.
         // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
         if (this.context.extensionMode === ExtensionMode.Test) {
+            traceInfoIf(
+                IS_CI_SERVER,
+                `Command notebook.selectKernel executing for ${notebook.uri.toString()} ${this.id}`
+            );
             await this.commandManager.executeCommand('notebook.selectKernel', {
                 id: this.id,
                 extension: JVSC_EXTENSION_ID
             });
+            traceInfoIf(
+                IS_CI_SERVER,
+                `Command notebook.selectKernel exected for ${notebook.uri.toString()} ${this.id}`
+            );
             // Used in tests to determine when the controller has been associated with a document.
             VSCodeNotebookController.kernelAssociatedWithDocument = true;
         }

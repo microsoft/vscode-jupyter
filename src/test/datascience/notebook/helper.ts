@@ -310,7 +310,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
             return controller !== undefined;
         },
         time,
-        'Failed to set notebook controllers'
+        `Failed to set notebook controllers in ${time}ms for ${vscodeNotebook.activeNotebookEditor?.document?.uri?.toString()}`
     );
     let kernelInfo = '';
     const isRightKernel = () => {
