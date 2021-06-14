@@ -42,10 +42,10 @@ export class DataScience implements IDataScience {
         this.commandRegistry.register();
 
         const codeLensExpressions = this.configuration.getSettings(undefined).codeLensExpressions;
-        codeLensExpressions.forEach(c => {
+        codeLensExpressions.forEach((c) => {
             this.extensionContext.subscriptions.push(
-                 vscode.languages.registerCodeLensProvider({ language: c.language }, this.dataScienceCodeLensProvider)
-             );
+                vscode.languages.registerCodeLensProvider({ language: c.language }, this.dataScienceCodeLensProvider)
+            );
         });
 
         // Set our initial settings and sign up for changes
@@ -74,7 +74,7 @@ export class DataScience implements IDataScience {
         const settings = this.configuration.getSettings(undefined);
         const ownsSelection = settings.sendSelectionToInteractiveWindow;
         const editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);
-        editorContext.set(ownsSelection).catch();
+        void editorContext.set(ownsSelection).catch();
     };
 
     private onChangedActiveTextEditor() {
@@ -85,9 +85,9 @@ export class DataScience implements IDataScience {
         if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
             // Inform the editor context that we have cells, fire and forget is ok on the promise here
             // as we don't care to wait for this context to be set and we can't do anything if it fails
-            editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings())).catch();
+            void editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings())).catch();
         } else {
-            editorContext.set(false).catch();
+            void editorContext.set(false).catch();
         }
     }
 
