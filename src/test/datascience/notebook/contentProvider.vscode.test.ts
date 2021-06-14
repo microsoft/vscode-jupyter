@@ -9,7 +9,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { NotebookCellKind, commands, Uri, NotebookContentProvider, CancellationTokenSource } from 'vscode';
+import { NotebookCellKind, commands, Uri, NotebookContentProvider, CancellationTokenSource, window } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import {
@@ -70,6 +70,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         contentProvider = api.serviceContainer.get<NotebookContentProvider>(INotebookContentProvider);
     });
     setup(async () => {
+        console.log('## setup for content provider test');
         sinon.restore();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
@@ -107,11 +108,17 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
 
         assert.deepEqual(JSON.parse(jsonStr), JSON.parse(model.getContent()));
     });
-    test('Verify cells (content, metadata & output)', async () => {
+    test('IANHU Verify cells (content, metadata & output)', async () => {
+        console.log('IANHU start verify cells test');
         const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         const model = (await editorProvider.open(testIPynb))!.model! as VSCodeNotebookModel;
 
+        // assert.equal(vscodeNotebook.notebookEditors.length, 1, 'One document open');
+        // await window.showNotebookDocument(vscodeNotebook.notebookEditors[0].document.uri);
         const notebook = vscodeNotebook.activeNotebookEditor?.document!;
+
+        console.log(`IANHU model: ${model}`);
+        console.log(`IANHU notebook: ${notebook}`);
 
         assert.equal(notebook.cellCount, model?.cellCount, 'Incorrect number of cells');
         assert.equal(notebook.cellCount, 6, 'Incorrect number of cells');
