@@ -363,6 +363,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceError(`Failed to create notebook controller for ${kernelConnection.id}`, ex);
         }
     }
+    /**
+     * In our tests, preferred controllers are setup as the active controller.
+     *
+     * This method is called on when running tests, else in the real world,
+     * users need to select a kernel (preferred is on top of the list).
+     */
     private async setAsActiveControllerForTests(controller: VSCodeNotebookController, notebook: NotebookDocument) {
         // Only when running tests should we force the selection of the kernel.
         // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
