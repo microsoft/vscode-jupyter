@@ -25,6 +25,25 @@ export class CellMatcher {
         const codeLens = settings?.codeLensExpressions.find
             ? settings?.codeLensExpressions.find((v) => v.language === language)
             : undefined;
+
+        // Use either the old or new settings based on if different and the language is python.
+        const codeExpression =
+            language == PYTHON_LANGUAGE &&
+            settings?.codeRegularExpression &&
+            settings?.codeRegularExpression !== RegExpValues.PythonCellMarker.source
+                ? settings?.codeRegularExpression
+                : codeLens?.codeExpression;
+        const markdownExpression =
+            language == PYTHON_LANGUAGE &&
+            settings?.markdownRegularExpression &&
+            settings?.markdownRegularExpression !== RegExpValues.PythonMarkdownCellMarker.source
+                ? settings?.markdownRegularExpression
+                : codeLens?.markdownExpression;
+        const defaultExpression =
+            language == PYTHON_LANGUAGE && settings?.defaultCellMarker && settings?.defaultCellMarker !== '# %%'
+                ? settings?.defaultCellMarker
+                : codeLens?.defaultCellMarker;
+
         const backupCellRegex =
             language == MARKDOWN_LANGUAGE ? RegExpValues.MarkdownCellMarker : RegExpValues.PythonCellMarker;
         const backupMarkdownRegex =
@@ -32,14 +51,11 @@ export class CellMatcher {
                 ? RegExpValues.MarkdownMarkdownCellMarker
                 : RegExpValues.PythonMarkdownCellMarker;
 
-        this.codeMatchRegEx = this.createRegExp(codeLens ? codeLens.codeExpression : undefined, backupCellRegex);
-        this.markdownMatchRegEx = this.createRegExp(
-            codeLens ? codeLens.markdownExpression : undefined,
-            backupMarkdownRegex
-        );
+        this.codeMatchRegEx = this.createRegExp(codeExpression, backupCellRegex);
+        this.markdownMatchRegEx = this.createRegExp(markdownExpression, backupMarkdownRegex);
         this.codeExecRegEx = new RegExp(`${this.codeMatchRegEx.source}(.*)`);
         this.markdownExecRegEx = new RegExp(`${this.markdownMatchRegEx.source}(.*)`);
-        this.defaultCellMarker = codeLens ? codeLens?.defaultCellMarker : '# %%';
+        this.defaultCellMarker = defaultExpression ? defaultExpression : '# %%';
         this.defaultCellMarkerExec = this.createRegExp(`${this.defaultCellMarker}(.*)`, /# %%(.*)/);
     }
 

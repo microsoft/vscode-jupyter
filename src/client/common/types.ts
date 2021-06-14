@@ -133,6 +133,8 @@ export interface IJupyterSettings {
     readonly enableScrollingForCellOutputs: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;
     readonly allowLiveShare: boolean;
+    readonly markdownRegularExpression: string | undefined;
+    readonly codeRegularExpression: string | undefined;
     readonly errorBackgroundColor: string;
     readonly ignoreVscodeTheme: boolean;
     readonly variableExplorerExclude: string;
@@ -157,6 +159,7 @@ export interface IJupyterSettings {
     readonly runStartupCommands: string | string[];
     readonly debugJustMyCode: boolean;
     readonly verboseLogging: boolean;
+    readonly defaultCellMarker: string | undefined;
     readonly themeMatplotlibPlots: boolean;
     readonly variableQueries: IVariableQuery[];
     readonly codeLensExpressions: ICodeLensExpressions[];

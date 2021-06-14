@@ -1547,6 +1547,27 @@
                     "description": "Types to exclude from showing in the Interactive variable explorer",
                     "scope": "resource"
                 },
+                "jupyter.codeRegularExpression": {
+                    "type": "string",
+                    "deprecationMessage": "This setting is no longer being used. Use jupyter.codeLensExpressions instead",
+                    "default": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
+                    "description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell.",
+                    "scope": "resource"
+                },
+                "jupyter.defaultCellMarker": {
+                    "type": "string",
+                    "deprecationMessage": "This setting is no longer being used. Use jupyter.codeLensExpressions instead",
+                    "default": "# %%",
+                    "description": "Cell marker used for delineating a cell in a python file.",
+                    "scope": "resource"
+                },
+                "jupyter.markdownRegularExpression": {
+                    "type": "string",
+                    "deprecationMessage": "This setting is no longer being used. Use jupyter.codeLensExpressions instead",
+                    "default": "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
+                    "description": "Regular expression used to identify markdown cells. All comments after this expression are considered part of the markdown.",
+                    "scope": "resource"
+                },
                 "jupyter.codeLensExpressions": {
                     "type": "array",
                     "description": "Language to code lens mapping for identifying markdown and code cells based on different languages or file extensions",

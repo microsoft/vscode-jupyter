@@ -56,6 +56,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public maxOutputSize: number = -1;
     public enableScrollingForCellOutputs: boolean = false;
     public sendSelectionToInteractiveWindow: boolean = false;
+    public markdownRegularExpression: string = '';
+    public codeRegularExpression: string = '';
     public allowLiveShare: boolean = false;
     public errorBackgroundColor: string = '';
     public ignoreVscodeTheme: boolean = false;
@@ -80,6 +82,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public runMagicCommands: string = '';
     public runStartupCommands: string | string[] = [];
     public debugJustMyCode: boolean = false;
+    public defaultCellMarker: string = '';
     public themeMatplotlibPlots: boolean = false;
     public variableQueries: IVariableQuery[] = [];
     public codeLensExpressions: ICodeLensExpressions[] = [];
