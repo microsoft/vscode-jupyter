@@ -51,18 +51,18 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],
-        codeLensExpressions : [
+        codeLensExpressions: [
             {
-              "language": "python",
-              "codeExpression": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
-              "markdownExpression": "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
-              "defaultCellMarker" : "# %%"
+                language: 'python',
+                codeExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+                markdownExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+                defaultCellMarker: '# %%'
             },
             {
-                "language": "markdown",
-                "codeExpression": "^(```python|```\\{code-cell\\}\\s+ipython)",
-                "markdownExpression": "^(```)",
-                "defaultCellMarker" : "```python"
+                language: 'markdown',
+                codeExpression: '^(```python|```\\{code-cell\\}\\s+ipython)',
+                markdownExpression: '^(```)',
+                defaultCellMarker: '```python'
             }
         ],
         jupyterCommandLineArguments: [],

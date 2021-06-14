@@ -246,7 +246,7 @@ suite('DataScience notebook tests', () => {
                             // Get settings for codeLensExpressions
                             const markdownRegexSettings = ioc.getSettings().codeLensExpressions;
 
-                            markdownRegexSettings.forEach((t) => t.markdownExpression = markdownRegex!);
+                            markdownRegexSettings.forEach((t) => (t.markdownExpression = markdownRegex!));
 
                             ioc.forceDataScienceSettingsChanged({ codeLensExpressions: markdownRegexSettings });
                             await verifyCell(
