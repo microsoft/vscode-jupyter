@@ -26,12 +26,13 @@ import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../client/common/logger';
 
-suite('DataScience - VariableView', () => {
+suite('DataScience - VariableView', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
     let variableViewProvider: ITestVariableViewProvider;
     let vscodeNotebook: IVSCodeNotebook;
+    this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo(`Start Test Suite`);
         this.timeout(120_000);
