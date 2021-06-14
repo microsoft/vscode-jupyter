@@ -813,7 +813,6 @@ module.exports = {
         'src/client/datascience/crossProcessLock.ts',
         'src/client/datascience/debugLocationTrackerFactory.ts',
         'src/client/datascience/kernelSocketWrapper.ts',
-        'src/client/datascience/jupyterDebugService.ts',
         'src/client/datascience/interactive-common/serialization.ts',
         'src/client/datascience/interactive-common/showPlotListener.ts',
         'src/client/datascience/interactive-common/debugListener.ts',
