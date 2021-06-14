@@ -210,7 +210,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Set the controller for this notebook document
     private async setController(document: NotebookDocument, cancelToken: CancellationToken) {
         // Prep so that we can track the selected controller for this document
-        this.controllerMapping.set(document, undefined);
+        traceInfoIf(IS_CI_SERVER, `Clear controller mapping for ${document.uri.toString()}`);
+        this.controllerMapping.delete(document);
 
         return this.findPreferredKernel(document, cancelToken).then(async (preferredConnection) => {
             if (cancelToken.isCancellationRequested) {
