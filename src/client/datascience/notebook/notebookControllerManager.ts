@@ -110,9 +110,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Look up what NotebookController is currently selected for the given notebook document
     public getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined {
-        if (this.controllerMapping.has(document)) {
-            return this.controllerMapping.get(document);
-        }
+        return this.controllerMapping.get(document);
     }
 
     // Function to expose currently registered controllers to test code only
@@ -294,9 +292,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
 
         // Remove from our current selection tracking list
-        if (this.controllerMapping.has(document)) {
-            this.controllerMapping.delete(document);
-        }
+        this.controllerMapping.delete(document);
     }
 
     private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]): VSCodeNotebookController[] {
@@ -373,15 +369,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }) {
         traceInfoIf(IS_CI_SERVER, `Notebook Controller set ${event.notebook.uri.toString()}, ${event.controller.id}`);
         this.widgetCoordinator.setActiveController(event.notebook, event.controller);
-        if (this.controllerMapping.has(event.notebook)) {
-            this.controllerMapping.set(event.notebook, event.controller);
+        this.controllerMapping.set(event.notebook, event.controller);
 
-            // Now actually handle the change
-            await this.notebookKernelChanged(event.notebook, event.controller);
+        // Now actually handle the change
+        await this.notebookKernelChanged(event.notebook, event.controller);
 
-            // Now notify out that we have updated a notebooks controller
-            this._onNotebookControllerSelected.fire(event);
-        }
+        // Now notify out that we have updated a notebooks controller
+        this._onNotebookControllerSelected.fire(event);
     }
 
     private async getKernelConnectionMetadata(token: CancellationToken): Promise<KernelConnectionMetadata[]> {
