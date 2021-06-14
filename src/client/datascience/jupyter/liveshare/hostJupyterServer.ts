@@ -367,7 +367,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                       ));
                 traceInfoIf(IS_CI_SERVER, `kernelInfo found ${kernelInfo?.id}`);
             }
-            if (kernelInfo && kernelInfo == launchInfo.kernelConnectionMetadata) {
+            if (kernelInfo && kernelInfo.id !== launchInfo.kernelConnectionMetadata?.id) {
                 // Update kernel info if we found a new one.
                 launchInfo.kernelConnectionMetadata = kernelInfo;
                 changedKernel = true;
