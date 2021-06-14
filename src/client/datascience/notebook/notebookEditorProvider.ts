@@ -21,7 +21,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
-import { Commands, Telemetry } from '../constants';
+import { Commands, defaultNotebookFormat, Telemetry } from '../constants';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
@@ -133,9 +133,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<INotebookEditor> {
         const nbJson: nbformat.INotebookContent = {
             cells: [],
-            metadata: { orig_nbformat: 4 },
-            nbformat: 4,
-            nbformat_minor: 2
+            metadata: { orig_nbformat: defaultNotebookFormat.major },
+            nbformat: defaultNotebookFormat.major,
+            nbformat_minor: defaultNotebookFormat.minor
         };
         if (options?.contents) {
             Object.assign(nbJson, JSON.parse(options.contents));
