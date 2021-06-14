@@ -83,7 +83,11 @@ export class VSCodeNotebookController implements Disposable {
         private readonly pathUtils: IPathUtils,
         disposableRegistry: IDisposableRegistry,
         private readonly languageService: NotebookCellLanguageService,
-        private readonly workspace: IWorkspaceService
+        private readonly workspace: IWorkspaceService,
+        private readonly setAsActiveControllerForTests: (
+            controller: VSCodeNotebookController,
+            notebook: NotebookDocument
+        ) => Promise<void>
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -134,20 +138,7 @@ export class VSCodeNotebookController implements Disposable {
         // Only when running tests should we force the selection of the kernel.
         // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
         if (this.context.extensionMode === ExtensionMode.Test) {
-            traceInfoIf(
-                IS_CI_SERVER,
-                `Command notebook.selectKernel executing for ${notebook.uri.toString()} ${this.id}`
-            );
-            await this.commandManager.executeCommand('notebook.selectKernel', {
-                id: this.id,
-                extension: JVSC_EXTENSION_ID
-            });
-            traceInfoIf(
-                IS_CI_SERVER,
-                `Command notebook.selectKernel exected for ${notebook.uri.toString()} ${this.id}`
-            );
-            // Used in tests to determine when the controller has been associated with a document.
-            VSCodeNotebookController.kernelAssociatedWithDocument = true;
+            await this.setAsActiveControllerForTests(this, notebook);
         }
     }
 

@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
+import { CancellationToken, ExtensionMode, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import {
     IConfigurationService,
@@ -340,7 +340,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 this.pathUtils,
                 this.disposables,
                 this.languageService,
-                this.workspace
+                this.workspace,
+                this.setAsActiveControllerForTests.bind(this)
             );
 
             // Hook up to if this NotebookController is selected or de-selected
@@ -362,12 +363,41 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceError(`Failed to create notebook controller for ${kernelConnection.id}`, ex);
         }
     }
+    private async setAsActiveControllerForTests(controller: VSCodeNotebookController, notebook: NotebookDocument) {
+        // Only when running tests should we force the selection of the kernel.
+        // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
+        if (this.context.extensionMode !== ExtensionMode.Test) {
+            return;
+        }
+        traceInfoIf(
+            IS_CI_SERVER,
+            `Command notebook.selectKernel executing for ${notebook.uri.toString()} ${controller.id}`
+        );
+        await this.commandManager.executeCommand('notebook.selectKernel', {
+            id: controller.id,
+            extension: JVSC_EXTENSION_ID
+        });
+        traceInfoIf(
+            IS_CI_SERVER,
+            `Command notebook.selectKernel exected for ${notebook.uri.toString()} ${controller.id}`
+        );
+        // Used in tests to determine when the controller has been associated with a document.
+        VSCodeNotebookController.kernelAssociatedWithDocument = true;
 
+        // Sometimes the selection doesn't work (after all this is a hack).
+        if (!this.controllerMapping.get(notebook)) {
+            await this.handleOnNotebookControllerSelected({ notebook, controller });
+        }
+    }
     // A new NotebookController has been selected, find the associated notebook document and update it
     private async handleOnNotebookControllerSelected(event: {
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
+        if (this.controllerMapping.get(event.notebook) === event.controller) {
+            // Possible it gets called again in our tests (due to hacks for testing purposes).
+            return;
+        }
         traceInfoIf(IS_CI_SERVER, `Notebook Controller set ${event.notebook.uri.toString()}, ${event.controller.id}`);
         this.widgetCoordinator.setActiveController(event.notebook, event.controller);
         this.controllerMapping.set(event.notebook, event.controller);
