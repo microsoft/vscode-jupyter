@@ -828,7 +828,6 @@ module.exports = {
         'src/client/datascience/debugLocationTracker.ts',
         'src/client/datascience/plotting/plotViewerMessageListener.ts',
         'src/client/datascience/plotting/types.ts',
-        'src/client/datascience/plotting/plotViewer.ts',
         'src/client/datascience/plotting/plotViewerProvider.ts',
         'src/client/datascience/monacoMessages.ts',
         'src/client/datascience/interactive-ipynb/nativeEditorRunByLineListener.ts',
