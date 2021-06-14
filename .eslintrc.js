@@ -335,7 +335,6 @@ module.exports = {
         'src/datascience-ui/history-react/redux/mapping.ts',
         'src/datascience-ui/history-react/redux/reducers/index.ts',
         'src/datascience-ui/history-react/redux/reducers/creation.ts',
-        'src/datascience-ui/history-react/redux/reducers/execution.ts',
         'src/datascience-ui/history-react/redux/reducers/effects.ts',
         'src/datascience-ui/react-common/arePathsSame.ts',
         'src/datascience-ui/react-common/imageButton.tsx',
