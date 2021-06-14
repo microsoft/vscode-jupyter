@@ -21,6 +21,8 @@ import { NotebookControllerManager } from './notebookControllerManager';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
 import { INotebookContentProvider, INotebookControllerManager } from './types';
+import { RendererCommunication } from './outputs/rendererCommunication';
+import { PlotSaveHandler } from './outputs/plotSaveHandler';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<VSCNotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);
@@ -56,5 +58,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
     serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
+    serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        RendererCommunication
+    );
     serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);
 }

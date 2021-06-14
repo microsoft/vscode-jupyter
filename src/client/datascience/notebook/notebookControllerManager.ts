@@ -245,12 +245,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (targetController) {
             traceInfo(`TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`);
             await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
-
-            // When we set the target controller we don't actually get a selected event from our controllers
-            // to get around that when we see affinity here 'force' an event as if a user selected it
-            this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController }).catch(
-                traceError
-            );
         }
     }
 

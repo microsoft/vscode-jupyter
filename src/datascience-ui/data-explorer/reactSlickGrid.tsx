@@ -196,7 +196,7 @@ class ColumnFilter {
             return (v: any) => v !== undefined && (v === n5 || (Number.isNaN(v) && Number.isNaN(n5)));
         } else {
             const n6 = parseFloat(text);
-            return (v: any) => v !== undefined && v === n6;
+            return (v: any) => v !== undefined && parseFloat(v) === n6;
         }
     }
 }
