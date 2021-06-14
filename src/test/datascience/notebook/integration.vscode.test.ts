@@ -13,7 +13,7 @@ import {
 } from '../../../client/common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../../client/common/constants';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../../client/common/types';
-import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerliazer';
+import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerializer';
 import {
     HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING,
     NotebookIntegration

@@ -30,7 +30,7 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
 import type { nbformat } from '@jupyterlab/coreutils';
-import { NotebookSerializer } from './notebookSerliazer';
+import { NotebookSerializer } from './notebookSerializer';
 
 /**
  * Notebook Editor provider used by other parts of DS code.

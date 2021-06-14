@@ -20,7 +20,7 @@ import {
     hasErrorOutput,
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
-import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerliazer';
+import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerializer';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { IS_NON_RAW_NATIVE_TEST } from '../../constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
@@ -189,7 +189,6 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.containsAllKeys(cellMetadata || {}, { metadata: '' }, 'Cell6, metadata');
     });
     test('Saving after clearing should result in execution_count=null in ipynb file', async function () {
-        return this.skip();
         const originalJson = JSON.parse(
             fs.readFileSync(testIPynbWithWithExecCount.fsPath, { encoding: 'utf8' })
         ) as nbformat.INotebookContent;

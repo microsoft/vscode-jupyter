@@ -19,7 +19,7 @@ import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/const
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/cellLanguageService';
 import { nbformat } from '@jupyterlab/coreutils';
-import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerliazer';
+import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerializer';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook ContentProvider', () => {
     let contentProvider: NotebookSerializer;

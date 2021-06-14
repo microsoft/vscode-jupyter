@@ -38,7 +38,7 @@ import {
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 import { getNotebookMetadata } from './helpers/helpers';
-import { NotebookSerializer } from './notebookSerliazer';
+import { NotebookSerializer } from './notebookSerializer';
 import type { nbformat } from '@jupyterlab/coreutils';
 
 export class NotebookEditor implements INotebookEditor {
