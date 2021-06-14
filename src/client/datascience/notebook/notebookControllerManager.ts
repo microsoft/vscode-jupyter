@@ -449,6 +449,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.registeredControllers = this.registeredControllers.filter((regController) => {
                 return regController.id !== controller.id;
             });
+            traceInfoIf(IS_CI_SERVER, `Disposing controller ${controller.id}`);
             controller.dispose();
         });
     }
