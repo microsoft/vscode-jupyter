@@ -120,7 +120,21 @@ suite('DataScience Code Watcher Unit Tests', () => {
             variableQueries: [],
             jupyterCommandLineArguments: [],
             widgetScriptSources: [],
-            interactiveWindowMode: 'single'
+            interactiveWindowMode: 'single',
+            codeLensExpressions: [
+                {
+                    language: 'python',
+                    codeExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+                    markdownExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+                    defaultCellMarker: '# %%'
+                },
+                {
+                    language: 'markdown',
+                    codeExpression: '^(```python\\s*|```\\{code-cell\\}\\s+ipython)',
+                    markdownExpression: '(?!x)x',
+                    defaultCellMarker: '```python'
+                }
+            ]
         });
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
         vscodeNotebook.setup((d) => d.activeNotebookEditor).returns(() => undefined);
@@ -406,7 +420,7 @@ fourth line
 
         jupyterSettings.codeLensExpressions.forEach(function (v) {
             if (v.language == 'python') {
-                v.codeExpression = '(# * code cell)';
+                v.codeExpression = '(# ** code cell)';
                 v.markdownExpression = '(#\\s*\\<markdowncell\\>|#\\s*\\<mymarkdown\\>)';
             }
         });

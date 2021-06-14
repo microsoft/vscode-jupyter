@@ -1560,8 +1560,8 @@
                         },
                         {
                             "language": "markdown",
-                            "codeExpression": "^(```python.*|```\\{code-cell\\}\\s+ipython)",
-                            "markdownExpression": "^(```)",
+                            "codeExpression": "^(```python\\s*|```\\{code-cell\\}\\s+ipython)",
+                            "markdownExpression": "(?!x)x",
                             "defaultCellMarker": "```python"
                         }
                     ]

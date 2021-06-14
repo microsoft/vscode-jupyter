@@ -22,22 +22,24 @@ export class CellMatcher {
             language = PYTHON_LANGUAGE;
         }
 
-        const codeLens = settings?.codeLensExpressions.find((v) => v.language === language);
-        const defaultCellMarker =
+        const codeLens = settings?.codeLensExpressions.find
+            ? settings?.codeLensExpressions.find((v) => v.language === language)
+            : undefined;
+        const backupCellRegex =
             language == MARKDOWN_LANGUAGE ? RegExpValues.MarkdownCellMarker : RegExpValues.PythonCellMarker;
-        const defaultMarkdownMarker =
+        const backupMarkdownRegex =
             language == MARKDOWN_LANGUAGE
                 ? RegExpValues.MarkdownMarkdownCellMarker
                 : RegExpValues.PythonMarkdownCellMarker;
 
-        this.codeMatchRegEx = this.createRegExp(codeLens ? codeLens.codeExpression : undefined, defaultCellMarker);
+        this.codeMatchRegEx = this.createRegExp(codeLens ? codeLens.codeExpression : undefined, backupCellRegex);
         this.markdownMatchRegEx = this.createRegExp(
             codeLens ? codeLens.markdownExpression : undefined,
-            defaultMarkdownMarker
+            backupMarkdownRegex
         );
         this.codeExecRegEx = new RegExp(`${this.codeMatchRegEx.source}(.*)`);
         this.markdownExecRegEx = new RegExp(`${this.markdownMatchRegEx.source}(.*)`);
-        this.defaultCellMarker = codeLens?.defaultCellMarker ? codeLens.defaultCellMarker : '# %%';
+        this.defaultCellMarker = codeLens ? codeLens?.defaultCellMarker : '# %%';
         this.defaultCellMarkerExec = this.createRegExp(`${this.defaultCellMarker}(.*)`, /# %%(.*)/);
     }
 
@@ -46,7 +48,7 @@ export class CellMatcher {
     }
 
     public isMarkdown(code: string): boolean {
-        return !this.codeMatchRegEx.test(code) && this.markdownMatchRegEx.test(code);
+        return this.markdownMatchRegEx.test(code);
     }
 
     public isCode(code: string): boolean {
@@ -54,7 +56,7 @@ export class CellMatcher {
     }
 
     public getCellType(code: string): string {
-        return this.isCode(code) ? 'code' : 'markdown';
+        return this.isMarkdown(code) ? 'markdown' : 'code';
     }
 
     public stripFirstMarker(code: string): string {

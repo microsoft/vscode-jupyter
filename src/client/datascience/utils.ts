@@ -98,9 +98,13 @@ export function translateCellStateFromNative(state: NotebookCellRunState): CellS
 }
 
 export function getLanguageOfResource(res: Uri | undefined): string {
-    if (workspace.textDocuments && res) {
-        const doc = workspace.textDocuments.find((d) => arePathsSame(d.fileName, res.fsPath));
-        return doc?.languageId || PYTHON_LANGUAGE;
+    try {
+        if (workspace.textDocuments && res && workspace.textDocuments.find) {
+            const doc = workspace.textDocuments.find((d) => arePathsSame(d.fileName, res.fsPath));
+            return doc?.languageId || PYTHON_LANGUAGE;
+        }
+    } catch {
+        // Do nothing. Just means no document service available
     }
     return PYTHON_LANGUAGE;
 }

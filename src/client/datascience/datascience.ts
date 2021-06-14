@@ -42,11 +42,23 @@ export class DataScience implements IDataScience {
         this.commandRegistry.register();
 
         const codeLensExpressions = this.configuration.getSettings(undefined).codeLensExpressions;
-        codeLensExpressions.forEach((c) => {
+        if (codeLensExpressions) {
+            codeLensExpressions.forEach((c) => {
+                this.extensionContext.subscriptions.push(
+                    vscode.languages.registerCodeLensProvider(
+                        { language: c.language },
+                        this.dataScienceCodeLensProvider
+                    )
+                );
+            });
+        } else {
             this.extensionContext.subscriptions.push(
-                vscode.languages.registerCodeLensProvider({ language: c.language }, this.dataScienceCodeLensProvider)
+                vscode.languages.registerCodeLensProvider(
+                    { language: PYTHON_LANGUAGE },
+                    this.dataScienceCodeLensProvider
+                )
             );
-        });
+        }
 
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();

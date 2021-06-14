@@ -40,7 +40,6 @@ suite('DataScience Markdown CellMatcher', () => {
         assert.ok(matcher2.isCode('```python'), 'Code not found');
         assert.ok(matcher2.isCode('```python CODE HERE'), 'Code not found');
         assert.ok(matcher2.isCode('```python CODE HERE TOO'), 'Code not found');
-        assert.ok(matcher2.isMarkdown('```'), 'Base markdown is wrong');
         assert.equal(matcher2.exec('```python CODE HERE'), '', 'Should not have a title');
         assert.equal(matcher2.exec('```python CODE HERE FOO'), 'FOO', 'Should have a title');
     });

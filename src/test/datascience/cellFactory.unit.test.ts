@@ -204,31 +204,21 @@ print('some more')`;
 });
 
 /* eslint-disable  */
+
 suite('DataScience Markdown CellFactory', () => {
     test('parsing cells', () => {
         let cells = generateCellsFromString('```python\na=1\na', undefined, 'markdown');
         assert.equal(cells.length, 1, 'Simple cell, not right number found');
-        cells = generateCellsFromString('```\na=1\na\n```\nb=1', undefined, 'markdown');
-        assert.equal(cells.length, 2, 'Split cell, not right number found');
-        cells = generateCellsFromString('```\n# #a=1\n#a', undefined, 'markdown');
-        assert.equal(cells.length, 1, 'Markdown split wrong');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
-        cells = generateCellsFromString("```\n'''\n# a\nb\n'''", undefined, 'markdown');
+        cells = generateCellsFromString('```python\na=1\na\n```python\nb=1', undefined, 'markdown');
+        assert.equal(cells.length, 2, 'Double cell, not right number found');
+        cells = generateCellsFromString("```python\n'''\n# a\nb\n'''", undefined, 'markdown');
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
-        assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCellsFromString('```\n"""\n# a\nb\n"""', undefined, 'markdown');
-        assert.equal(cells.length, 1, 'Markdown cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
-        assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
+        assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
+        assert.equal(cells[0].data.source.length, 5, 'Lines for markdown not emitted');
         cells = generateCellsFromString('```python \n"""\n# a\nb\n"""', undefined, 'markdown');
         assert.equal(cells.length, 1, 'Code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 5, 'Lines for cell not emitted');
-        cells = generateCellsFromString('``` \n"""# a\nb\n"""', undefined, 'markdown');
-        assert.equal(cells.length, 1, 'Markdown cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
-        assert.equal(cells[0].data.source.length, 2, 'Lines for cell not emitted');
 
         // eslint-disable-next-line no-multi-str
         const multilineCode = `\`\`\`python
@@ -286,10 +276,7 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 #
 #   2. Item 2`;
         cells = generateCellsFromString(multilineMarkdown, undefined, 'markdown');
-        assert.equal(cells.length, 1, 'markdown cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
-        assert.equal(cells[0].data.source.length, 20, 'Lines for cell not emitted');
-        assert.equal(cells[0].data.source[17], '          - Item 1-a-3-c\n', 'Lines for markdown not emitted');
+        assert.equal(cells.length, 0, 'markdown cell should not be a cell');
 
         // eslint-disable-next-line no-multi-str
         const multilineQuoteWithOtherDelimiter = `\`\`\`
@@ -300,10 +287,7 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 '''
 `;
         cells = generateCellsFromString(multilineQuoteWithOtherDelimiter, undefined, 'markdown');
-        assert.equal(cells.length, 1, 'markdown cell multline failed');
-        assert.equal(cells[0].data.cell_type, 'markdown', 'markdown cell not generated');
-        assert.equal(cells[0].data.source.length, 3, 'Lines for cell not emitted');
-        assert.equal(cells[0].data.source[2], '""" Not a comment delimiter', 'Lines for markdown not emitted');
+        assert.equal(cells.length, 0, 'markdown cell should not be a cell');
 
         // eslint-disable-next-line no-multi-str
         const multilineQuoteInFunc = `\`\`\`python
