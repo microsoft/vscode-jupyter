@@ -15,6 +15,11 @@
 1. In preview native notebooks interface, contribute `ctrl+enter` keybinding which puts the current cell into control mode instead of leaving it in edit mode after running.
    ([#6198](https://github.com/Microsoft/vscode-jupyter/issues/6198))
 
+### Code Health
+
+1. Fix 'Restarting kernel will cancel cell execution & we can re-run a cell' test.
+   ([#6139](https://github.com/Microsoft/vscode-jupyter/issues/6139))
+
 ## 2021.6.99 (8 June 2021)
 
 ### Enhancements
