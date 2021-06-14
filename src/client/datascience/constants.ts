@@ -204,6 +204,8 @@ export namespace EditorContexts {
 export namespace RegExpValues {
     export const PythonCellMarker = /^(#\s*%%|#\s*\<codecell\>|#\s*In\[\d*?\]|#\s*In\[ \])/;
     export const PythonMarkdownCellMarker = /^(#\s*%%\s*\[markdown\]|#\s*\<markdowncell\>)/;
+    export const MarkdownCellMarker = /^(```python.*|```\\{code-cell\\}\\s+ipython)/;
+    export const MarkdownMarkdownCellMarker = /^(```)/;
     export const CheckJupyterRegEx = IS_WINDOWS ? /^jupyter?\.exe$/ : /^jupyter?$/;
     export const PyKernelOutputRegEx = /.*\s+(.+)$/m;
     export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;

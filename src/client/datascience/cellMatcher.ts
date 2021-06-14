@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { PYTHON_LANGUAGE } from '../common/constants';
+import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../common/constants';
 import '../common/extensions';
 
 import { IJupyterSettings } from '../common/types';
@@ -23,14 +23,17 @@ export class CellMatcher {
         }
 
         const codeLens = settings?.codeLensExpressions.find((v) => v.language === language);
+        const defaultCellMarker =
+            language == MARKDOWN_LANGUAGE ? RegExpValues.MarkdownCellMarker : RegExpValues.PythonCellMarker;
+        const defaultMarkdownMarker =
+            language == MARKDOWN_LANGUAGE
+                ? RegExpValues.MarkdownMarkdownCellMarker
+                : RegExpValues.PythonMarkdownCellMarker;
 
-        this.codeMatchRegEx = this.createRegExp(
-            codeLens ? codeLens.codeExpression : undefined,
-            RegExpValues.PythonCellMarker
-        );
+        this.codeMatchRegEx = this.createRegExp(codeLens ? codeLens.codeExpression : undefined, defaultCellMarker);
         this.markdownMatchRegEx = this.createRegExp(
             codeLens ? codeLens.markdownExpression : undefined,
-            RegExpValues.PythonMarkdownCellMarker
+            defaultMarkdownMarker
         );
         this.codeExecRegEx = new RegExp(`${this.codeMatchRegEx.source}(.*)`);
         this.markdownExecRegEx = new RegExp(`${this.markdownMatchRegEx.source}(.*)`);
@@ -43,7 +46,7 @@ export class CellMatcher {
     }
 
     public isMarkdown(code: string): boolean {
-        return this.markdownMatchRegEx.test(code);
+        return !this.codeMatchRegEx.test(code) && this.markdownMatchRegEx.test(code);
     }
 
     public isCode(code: string): boolean {
@@ -51,7 +54,7 @@ export class CellMatcher {
     }
 
     public getCellType(code: string): string {
-        return this.isMarkdown(code) ? 'markdown' : 'code';
+        return this.isCode(code) ? 'code' : 'markdown';
     }
 
     public stripFirstMarker(code: string): string {
