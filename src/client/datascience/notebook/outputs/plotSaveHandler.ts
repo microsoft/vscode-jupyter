@@ -2,7 +2,6 @@ import { inject, injectable } from 'inversify';
 import { NotebookCellOutput, NotebookEditor, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { swallowExceptions } from '../../../common/utils/decorators';
 import { DataScience } from '../../../common/utils/localize';
 import * as path from 'path';
 import { saveSvgToPdf } from '../../plotting/plotViewer';
