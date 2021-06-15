@@ -2017,6 +2017,7 @@
         "redux": "^4.0.4",
         "redux-logger": "^3.0.6",
         "reflect-metadata": "^0.1.12",
+        "remark-parse": "^5.0.0",
         "request": "^2.87.0",
         "request-progress": "^3.0.0",
         "requirejs": "^2.3.6",
