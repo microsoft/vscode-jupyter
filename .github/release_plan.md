@@ -7,7 +7,7 @@
 
 -   [ ] Update [Component Governance](https://dev.azure.com/vscode-python-datascience/vscode-python-datascience/_componentGovernance) (Click on "microsoft/vscode-jupyter" on that page). Notes are in the OneNote under Python VS Code -> Dev Process -> Component Governance.
     -   [ ] Provide details for any automatically detected npm dependencies
-    -   [ ] Manually add any repository dependencies
+    -   [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
 -   [ ] Create new release branch with format `release-YYYY.MM`
     -   [ ] Create a pull request against `release-YYYY.MM` for changes
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-jupyter/blob/main/package.json) is up-to-date
@@ -23,7 +23,7 @@
     -   [ ] Merge pull request into `release-YYYY.MM`
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
--   [ ] Update `main` post-release
+-   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
     -   [ ] Bump the version number to the next monthly ("YYYY.MM.0") release in the `main` branch
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
@@ -36,6 +36,7 @@
     -   settings changes
     -   etc. (ask the team)
 -   [ ] Schedule a bug bash. Aim for close after freeze so there is still time to fix release bugs before release. Ask teams before bash for specific areas that need testing.
+-   [ ] Is the validation pipeline clear? If not, drive to make sure that it is clear for release. Bug bash can be used to help with this.
 -   [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post. Contact the PM team for this.
 -   [ ] Ask CTI to test the release candidate
 
@@ -56,7 +57,9 @@
     -   [ ] Create pull request against `release-YYYY.MM` (🤖)
     -   [ ] Merge pull request into `release-YYYY.MM`
 -   [ ] Make sure component governance is happy
--   [ ] Turn off automatic uploads for insider builds from main. This prevents stable customers from getting insiders builds as they have the same engine version and higher build numbers.
+-   [ ] [Turn off automatic uploads for insider builds from main](https://github.com/microsoft/vscode-jupyter/blob/f05fedf399d34684b408245ba27bc29aa25c13f6/.github/workflows/build-test.yml#L73). This prevents stable customers from getting insiders builds as they have the same engine version and higher build numbers.
+-   [ ] Do a quick sanity check on the appropriate VS Code version (try to get the candidate build from VS Code, if not available, build the release branch locally, if there's no release branch, use the latest insiders).
+-   [ ] Make sure there is nothing in the validation queue targeting this release that still needs to be validated.
 
 ## Release
 
@@ -66,8 +69,6 @@
         -   [ ] Directly push (PR not required) the commit to the `release-xxxx.xx` branch
         -   [ ] This commit will trigger the `release` stage to run after smoke tests. [Example run](https://github.com/microsoft/vscode-jupyter/actions/runs/702919634)
         -   [ ] For release branches a mail will be sent to verify that the release should be published. Click the `Review pending deployments` button on the mail and deploy from the GitHub page. This will publish the release on the marketplace.
-        -   [ ] A draft [GitHub release](https://github.com/microsoft/vscode-jupyter/releases) entry will have been created. 
-        -   [ ] Update the tag on the release if needed and publish the GitHub release
     -   [ ] For manual (if needed as automatic should be tried first)
         -   [ ] Download the [Release VSIX](https://pvsc.blob.core.windows.net/extension-builds-jupyter/ms-toolsai-jupyter-release.vsix) & Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
         -   [ ] Go to https://marketplace.visualstudio.com/manage/publishers/ms-toolsai?noPrompt=true and upload the VSIX

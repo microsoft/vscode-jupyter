@@ -4,6 +4,9 @@
 
 name: Build and Test
 
+permissions:
+  deployments: write
+
 on:
   pull_request:
     branches:

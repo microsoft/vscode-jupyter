@@ -140,6 +140,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 name: getLocString('DataScience.variableExplorerTypeColumn', 'Type'),
                 type: 'string',
                 width: 120,
+                sortable: true,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
                 headerRenderer: <VariableExplorerHeaderCellFormatter />
             },
@@ -302,6 +303,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     emptyRowsView={VariableExplorerEmptyRowsView}
                     rowRenderer={VariableExplorerRowRenderer}
                     onGridSort={this.sortRows}
+                    sortColumn="name"
+                    sortDirection="ASC"
                 />
             </div>
         );

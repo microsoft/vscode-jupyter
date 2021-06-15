@@ -9,6 +9,7 @@ import {
     ExtensionMode,
     languages,
     NotebookCell,
+    NotebookCellKind,
     NotebookController,
     NotebookControllerAffinity,
     NotebookDocument,
@@ -206,11 +207,14 @@ export class VSCodeNotebookController implements Disposable {
         const isPythonKernel = isPythonKernelConnection(this.kernelConnection);
         const preferredLanguage = isPythonKernel ? PYTHON_LANGUAGE : supportedLanguages[0];
         await Promise.all(
-            notebook.getCells().map(async (cell) => {
-                if (!supportedLanguages.includes(cell.document.languageId)) {
-                    await languages.setTextDocumentLanguage(cell.document, preferredLanguage).then(noop, noop);
-                }
-            })
+            notebook
+                .getCells()
+                .filter((cell) => cell.kind === NotebookCellKind.Code)
+                .map(async (cell) => {
+                    if (!supportedLanguages.includes(cell.document.languageId)) {
+                        await languages.setTextDocumentLanguage(cell.document, preferredLanguage).then(noop, noop);
+                    }
+                })
         );
     }
     private getRendererScripts(): NotebookRendererScript[] {

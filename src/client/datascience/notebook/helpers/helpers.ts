@@ -658,7 +658,9 @@ export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.I
         evalue: value.message,
         // VS Code needs an `Error` object which requires a `stack` property as a string.
         // Its possible the format could change when converting from `traceback` to `string` and back again to `string`
-        traceback: originalError?.traceback || splitMultilineString(value.stack || '')
+        // When .NET stores errors in output (with their .NET kernel),
+        // stack is empty, hence store the message instead of stack (so that somethign gets displayed in ipynb).
+        traceback: originalError?.traceback || splitMultilineString(value.stack || value.message || '')
     };
 }
 
@@ -715,6 +717,20 @@ function convertJupyterOutputToBuffer(mime: string, value: unknown): Buffer {
         return Buffer.from('');
     }
 }
+function convertStreamOutput(output: NotebookCellOutput): JupyterOutput {
+    const outputs = output.items
+        .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
+        .map((opit) => convertOutputMimeToJupyterOutput(opit.mime, opit.data as Uint8Array) as string)
+        .reduceRight<string[]>((prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)), []);
+
+    const streamType = getOutputStreamType(output) || 'stdout';
+
+    return {
+        output_type: 'stream',
+        name: streamType,
+        text: splitMultilineString(outputs.join(''))
+    };
+}
 export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterOutput {
     const customMetadata = output.metadata as CellOutputMetadata | undefined;
     let result: JupyterOutput;
@@ -727,21 +743,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             break;
         }
         case 'stream': {
-            const outputs = output.items
-                .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
-                .map((opit) => convertOutputMimeToJupyterOutput(opit.mime, opit.data as Uint8Array) as string)
-                .reduceRight<string[]>(
-                    (prev, curr) => (Array.isArray(curr) ? prev.concat(...curr) : prev.concat(curr)),
-                    []
-                );
-
-            const streamType = getOutputStreamType(output) || 'stdout';
-
-            result = {
-                output_type: 'stream',
-                name: streamType,
-                text: splitMultilineString(outputs.join(''))
-            };
+            result = convertStreamOutput(output);
             break;
         }
         case 'display_data': {
@@ -783,13 +785,42 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             break;
         }
         default: {
-            const outputType = customMetadata?.outputType || 'unknown';
+            const isError =
+                output.items.length == 1 && output.items.every((item) => item.mime == CellOutputMimeTypes.error);
+            const isStream = output.items.every(
+                (item) => item.mime === CellOutputMimeTypes.stderr || item.mime === CellOutputMimeTypes.stdout
+            );
+
+            if (isError) {
+                return translateCellErrorOutput(output);
+            }
+
+            // In the case of .NET & other kernels, we need to ensure we save ipynb correctly.
+            // Hence if we have stream output, save the output as Jupyter `stream` else `display_data`
+            // Unless we already know its an unknown output type.
+            const outputType: nbformat.OutputType =
+                <nbformat.OutputType>customMetadata?.outputType || (isStream ? 'stream' : 'display_data');
             sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
                 isErrorOutput: outputType === 'error'
             });
-            const unknownOutput: nbformat.IUnrecognizedOutput = {
-                output_type: outputType
-            };
+
+            let unknownOutput: nbformat.IUnrecognizedOutput | nbformat.IDisplayData | nbformat.IStream;
+            if (outputType === 'stream') {
+                // If saving as `stream` ensure the mandatory properties are set.
+                unknownOutput = convertStreamOutput(output);
+            } else if (outputType === 'display_data') {
+                // If saving as `display_data` ensure the mandatory properties are set.
+                const displayData: nbformat.IDisplayData = {
+                    data: {},
+                    metadata: {},
+                    output_type: 'display_data'
+                };
+                unknownOutput = displayData;
+            } else {
+                unknownOutput = {
+                    output_type: outputType
+                };
+            }
             if (customMetadata?.metadata) {
                 unknownOutput.metadata = customMetadata.metadata;
             }

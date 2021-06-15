@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.6.99",
+    "version": "2021.7.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.57.0"
+        "vscode": "1.58.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -809,31 +809,31 @@
                     "command": "jupyter.notebookeditor.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "group": "navigation@1",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel && config.notebook.globalToolbar != true"
                 },
                 {
                     "command": "jupyter.notebookeditor.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
                     "group": "overflow@1",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel && config.notebook.globalToolbar != true"
                 },
                 {
                     "command": "jupyter.openVariableView",
                     "title": "%jupyter.command.jupyter.openVariableView.title%",
                     "group": "navigation@2",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation@3",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "group": "overflow@1000",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
                 }
             ],
             "notebook/toolbar": [
@@ -1792,6 +1792,7 @@
                 "id": "jupyter-notebook-renderer",
                 "entrypoint": "./out/client_renderer/renderers.js",
                 "displayName": "Jupyter Notebook Renderer",
+                "requiresMessaging": "optional",
                 "mimeTypes": [
                     "application/geo+json",
                     "application/vdom.v1+json",
@@ -1924,7 +1925,7 @@
         "hash.js": "^1.1.7",
         "iconv-lite": "^0.4.21",
         "inversify": "^5.0.1",
-        "is-online": "^8.2.1",
+        "is-online": "^9.0.0",
         "jsonc-parser": "^2.0.3",
         "lodash": "^4.17.21",
         "log4js": "^6.1.2",
@@ -1933,7 +1934,7 @@
         "node-fetch": "^2.6.1",
         "node-stream-zip": "^1.6.0",
         "onigasm": "^2.2.2",
-        "pdfkit": "^0.11.0",
+        "pdfkit": "^0.12.1",
         "plotly.js-dist": "^1.58.4",
         "portfinder": "^1.0.25",
         "re-resizable": "~6.5.5",
@@ -2018,7 +2019,6 @@
         "@types/glob": "^5.0.35",
         "@types/html-webpack-plugin": "^3.2.0",
         "@types/iconv-lite": "^0.0.1",
-        "@types/is-online": "^8.1.0",
         "@types/jsdom": "^11.12.0",
         "@types/loadable__component": "^5.10.0",
         "@types/loader-utils": "^1.1.3",
@@ -2029,7 +2029,7 @@
         "@types/nock": "^10.0.3",
         "@types/node": "^10.14.18",
         "@types/node-fetch": "^2.5.7",
-        "@types/pdfkit": "^0.7.36",
+        "@types/pdfkit": "^0.11.0",
         "@types/promisify-node": "^0.4.0",
         "@types/react": "^16.4.14",
         "@types/react-dom": "^16.0.8",

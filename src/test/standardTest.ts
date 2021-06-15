@@ -111,6 +111,8 @@ async function start() {
         extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test', 'index'),
         launchArgs: baseLaunchArgs
             .concat([workspacePath])
+            .concat(['--skip-welcome'])
+            .concat(['--skip-release-notes'])
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
             .concat(['--user-data-dir', userDataDirectory]),
