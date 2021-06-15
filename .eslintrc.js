@@ -934,6 +934,8 @@ module.exports = {
         '@typescript-eslint/no-useless-constructor': 'error',
         '@typescript-eslint/no-var-requires': 'off',
         '@typescript-eslint/no-floating-promises': 'error',
+        '@typescript-eslint/no-unnecessary-condition': 'warn',
+        '@typescript-eslint/strict-boolean-expressions': 'warn',
 
         // Other rules
         'class-methods-use-this': 'off',

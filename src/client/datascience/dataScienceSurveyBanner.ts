@@ -119,7 +119,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             case BannerType.ExperimentNotebookSurvey:
                 if (this.applicationEnvironment.channel === 'stable' && this.useVSCodeNotebookEditorApi) {
                     return this.isEnabledInternal(type);
-                }
+                } // test change
                 break;
             case BannerType.DSSurvey:
                 if (this.applicationEnvironment.channel === 'stable' && !this.useVSCodeNotebookEditorApi) {

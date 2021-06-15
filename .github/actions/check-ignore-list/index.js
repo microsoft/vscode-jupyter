@@ -2,7 +2,7 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 const octokit = require('@octokit/core');
 const plugin = require('@octokit/plugin-paginate-rest');
-const webhooks = require('@octokit/webhooks');
+const cp = require('child_process');
 
 async function getChangedFiles() {
     const payload = github.context.payload;
@@ -53,6 +53,17 @@ async function run() {
 
         if (intersection && intersection.length > 0) {
             core.setFailed(`Files are being ignored that should be linted: ${intersection.join('\n')}`);
+        }
+
+        // Run a set of stricter eslint rules against changed files only
+        core.debug('Running stricter eslint rules on changed files...');
+        let command = `npm run lint:transitional ${changedFiles.join(' ')}`;
+        core.debug(command);
+        let res = cp.execSync(command);
+        core.debug(res.stdout);
+        core.debug(res.stderr);
+        if (res.status !== 0) {
+            core.setFailed(`Stricter eslint rule checks failed.`);
         }
     } catch (error) {
         core.setFailed(error.message);
