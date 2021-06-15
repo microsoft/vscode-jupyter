@@ -36,6 +36,7 @@
     -   settings changes
     -   etc. (ask the team)
 -   [ ] Schedule a bug bash. Aim for close after freeze so there is still time to fix release bugs before release. Ask teams before bash for specific areas that need testing.
+-   [ ] Is the validation pipeline clear? If not, drive to make sure that it is clear for release. Bug bash can be used to help with this.
 -   [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post. Contact the PM team for this.
 -   [ ] Ask CTI to test the release candidate
 
@@ -58,6 +59,7 @@
 -   [ ] Make sure component governance is happy
 -   [ ] [Turn off automatic uploads for insider builds from main](https://github.com/microsoft/vscode-jupyter/blob/f05fedf399d34684b408245ba27bc29aa25c13f6/.github/workflows/build-test.yml#L73). This prevents stable customers from getting insiders builds as they have the same engine version and higher build numbers.
 -   [ ] Do a quick sanity check on the appropriate VS Code version (try to get the candidate build from VS Code, if not available, build the release branch locally, if there's no release branch, use the latest insiders).
+-   [ ] Make sure there is nothing in the validation queue targeting this release that still needs to be validated.
 
 ## Release
 
