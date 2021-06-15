@@ -85,6 +85,7 @@ import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
 import { noop } from '../../common/utils/misc';
+import { IDataWranglerFactory } from '../data-viewing/data-wrangler/types';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -167,6 +168,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         private readonly synchronizer: NativeEditorSynchronizer,
         private editorProvider: INotebookEditorProvider,
         dataExplorerFactory: IDataViewerFactory,
+        dataWranglerFactory: IDataWranglerFactory,
         jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         jupyterVariables: IJupyterVariables,
         jupyterDebugger: IJupyterDebugger,
@@ -198,6 +200,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             jupyterExporter,
             workspaceService,
             dataExplorerFactory,
+            dataWranglerFactory,
             jupyterVariableDataProviderFactory,
             jupyterVariables,
             jupyterDebugger,

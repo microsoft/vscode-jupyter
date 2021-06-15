@@ -40,6 +40,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateNewNotebookUri } from '../common';
 import { Identifiers, Telemetry } from '../constants';
+import { IDataWranglerFactory } from '../data-viewing/data-wrangler/types';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { NativeEditor } from '../interactive-ipynb/nativeEditor';
@@ -253,6 +254,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             this.serviceContainer.get<NativeEditorSynchronizer>(NativeEditorSynchronizer),
             this.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider),
             this.serviceContainer.get<IDataViewerFactory>(IDataViewerFactory),
+            this.serviceContainer.get<IDataWranglerFactory>(IDataWranglerFactory),
             this.serviceContainer.get<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory),
             this.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES),
             this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger),

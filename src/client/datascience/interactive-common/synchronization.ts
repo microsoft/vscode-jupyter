@@ -198,6 +198,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.ShowingIp]: MessageType.other,
     [InteractiveWindowMessages.ShowContinue]: MessageType.other,
     [InteractiveWindowMessages.ShowDataViewer]: MessageType.other,
+    [InteractiveWindowMessages.ShowDataWrangler]: MessageType.other,
     [InteractiveWindowMessages.ShowPlot]: MessageType.other,
     [InteractiveWindowMessages.StartCell]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.StartDebugging]: MessageType.other,

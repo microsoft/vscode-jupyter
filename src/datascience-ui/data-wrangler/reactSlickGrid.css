@@ -1,0 +1,33 @@
+@import url('../data-explorer/reactSlickGrid.css');
+
+.resizable-span {
+    cursor: ew-resize !important;
+    width: 5px !important;
+    z-index: 99999 !important;
+}
+
+.resizable-span:hover {
+    transition: background-color .1s ease-out 0.4s !important;
+}
+
+.resizable-span:hover, .resizable-span:active, .resizable-span:focus, .resizable-span:target {
+    background: var(--vscode-focusBorder) !important;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+.react-grid-container {
+    border: none;
+    margin-left: 8px;
+    width: 100%;
+}
+
+/* Some overrides necessary to get the colors we want */
+.slick-headerrow-column {
+    background-color: var(--vscode-sideBar-background);
+    color: var(--vscode-sideBar-foreground);
+    border-right: 1px solid transparent;
+    border-bottom-color: none;
+}

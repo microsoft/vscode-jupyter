@@ -29,9 +29,9 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
      * @returns Array of columns with normalized type
      */
     private static getNormalizedColumns(
-        columns: { key: string; type: string; describe: string }[]
-    ): { key: string; type: ColumnType; describe: string }[] {
-        return columns.map((column: { key: string; type: string; describe: string }) => {
+        columns: { key: string; type: string; describe?: string }[]
+    ): { key: string; type: ColumnType; describe?: string }[] {
+        return columns.map((column: { key: string; type: string; describe?: string }) => {
             let normalizedType: ColumnType;
             switch (column.type) {
                 case 'bool':
@@ -49,11 +49,14 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 default:
                     normalizedType = ColumnType.String;
             }
-            return {
+            const col = {
                 key: column.key,
-                type: normalizedType,
-                describe: column.describe
-            };
+                type: normalizedType
+            } as { key: string; type: ColumnType; describe?: string };
+            if (column.describe) {
+                col['describe'] = column.describe;
+            }
+            return col;
         });
     }
 
@@ -157,6 +160,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 columnName,
                 this.notebook
             );
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             columns = (dataFrameColumnData as any) as IColsResponse;
         }
         return columns;

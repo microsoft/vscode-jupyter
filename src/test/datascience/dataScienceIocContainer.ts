@@ -35,6 +35,7 @@ import {
     IApplicationShell,
     ICommandManager,
     ICustomEditorService,
+    IDataWranglerProvider,
     IDebugService,
     IDocumentManager,
     IEncryptedStorage,
@@ -313,6 +314,10 @@ import { Extensions } from '../../client/common/application/extensions';
 import { NotebookCreator } from '../../client/datascience/notebook/creation/notebookCreator';
 import { CreationOptionService } from '../../client/datascience/notebook/creation/creationOptionsService';
 import { PythonVariablesRequester } from '../../client/datascience/jupyter/pythonVariableRequester';
+import { IDataWrangler, IDataWranglerFactory } from '../../client/datascience/data-viewing/data-wrangler/types';
+import { DataWrangler } from '../../client/datascience/data-viewing/data-wrangler/dataWrangler';
+import { DataWranglerProvider } from '../../client/datascience/data-viewing/data-wrangler/dataWranglerProvider';
+import { DataWranglerFactory } from '../../client/datascience/data-viewing/data-wrangler/dataWranglerFactory';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -723,6 +728,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);
         this.serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService);
         this.serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
+
+        // Data Wrangler
+        this.serviceManager.add<IDataWrangler>(IDataWrangler, DataWrangler);
+        this.serviceManager.addSingleton<IDataWranglerFactory>(IDataWranglerFactory, DataWranglerFactory);
+        this.serviceManager.addSingleton<IDataWranglerProvider>(IDataWranglerProvider, DataWranglerProvider);
+        this.serviceManager.add<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            DataWranglerProvider
+        );
 
         // No need of reporting progress.
         const progressReporter = mock(ProgressReporter);

@@ -7,8 +7,9 @@ import * as ReactDOM from 'react-dom';
 import { ColumnType, IGetSliceRequest, MaxStringCompare } from '../../client/datascience/data-viewing/types';
 import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
-import './globalJQueryImports';
-import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
+import '../data-explorer/globalJQueryImports';
+import { ReactSlickGridFilterBox } from '../data-explorer/reactSlickGridFilterBox';
+import { Resizable } from 're-resizable';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -37,12 +38,30 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
-import { generateDisplayValue } from './cellFormatter';
-import { getLocString } from '../react-common/locReactSide';
+import { generateDisplayValue } from '../data-explorer/cellFormatter';
+import { ControlPanel } from './controlPanel';
+import './contextMenu.css';
+import { IGetColsResponse } from '../../client/datascience/data-viewing/types';
+
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
 */
+
+enum RowContextMenuItem {
+    DropRow = 'Drop Row',
+    NormalizeRow = 'Normalize Row',
+    DropNA = 'Drop NA',
+    CopyData = 'Copy Cell Data'
+}
+
+enum ColumnContextMenuItem {
+    GetColumnStats = 'Get Column Stats',
+    DropColumns = 'Drop Column',
+    NormalizeColumn = 'Normalize Column',
+    DropNA = 'Remove Missing Values',
+    DropDuplicates = 'Drop Duplicates On Column'
+}
 
 export interface ISlickRow extends Slick.SlickData {
     id: string;
@@ -63,13 +82,19 @@ export interface ISlickGridProps {
     rowsAdded: Slick.Event<ISlickGridAdd>;
     resetGridEvent: Slick.Event<ISlickGridSlice>;
     resizeGridEvent: Slick.Event<void>;
-    columnsUpdated: Slick.Event<Slick.Column<Slick.SlickData>[]>;
+    columnsUpdated: Slick.Event<Slick.Column<ISlickRow>[]>;
+    toggleFilterEvent: Slick.Event<void>;
     filterRowsTooltip: string;
-    forceHeight?: number;
     dataDimensionality: number;
     originalVariableShape: number[] | undefined;
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
+    historyList: any[];
+    histogramData?: IGetColsResponse;
+    currentVariableName: string;
+    forceHeight?: number;
+    monacoTheme: string;
     handleSliceRequest(args: IGetSliceRequest): void;
+    submitCommand(args: { command: string; args: any }): void;
     handleRefreshRequest(): void;
 }
 
@@ -183,6 +208,9 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private columnFilters: Map<string, ColumnFilter> = new Map<string, ColumnFilter>();
     private resizeTimer?: number;
     private autoResizedColumns: boolean = false;
+    private contextMenuRowId: number | undefined;
+    private contextMenuCellId: number | undefined;
+    private contextMenuColumnName: string | undefined;
 
     constructor(props: ISlickGridProps) {
         super(props);
@@ -193,6 +221,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.props.resetGridEvent.subscribe(this.resetGrid);
         this.props.resizeGridEvent.subscribe(this.windowResized);
         this.props.columnsUpdated.subscribe(this.updateColumns);
+        this.props.toggleFilterEvent.subscribe(this.clickFilterButton);
     }
 
     // eslint-disable-next-line
@@ -279,6 +308,72 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Setup the sorting
             grid.onSort.subscribe(this.sort);
 
+            grid.onHeaderContextMenu.subscribe(this.maybeDropColumns);
+            grid.onContextMenu.subscribe(this.maybeDropRows);
+
+            // Data row context menu
+            slickgridJQ('#contextMenu').click((e: any) => {
+                if (
+                    !slickgridJQ(e.target).is('li') ||
+                    !this.state.grid?.getEditorLock().commitCurrentEdit() ||
+                    this.contextMenuCellId === undefined ||
+                    this.contextMenuRowId === undefined
+                ) {
+                    return;
+                }
+                const contextMenuItem = e.target.id;
+                const columnName = this.props.columns[this.contextMenuCellId].name;
+                const cellData = (this.dataView.getItemById(this.contextMenuRowId) as any)[columnName!];
+                switch (contextMenuItem) {
+                    case RowContextMenuItem.DropRow:
+                        return this.props.submitCommand({
+                            command: 'drop',
+                            args: { targets: [this.contextMenuRowId], mode: 'row' }
+                        });
+                    case RowContextMenuItem.CopyData:
+                        void navigator.clipboard.writeText(cellData);
+                        return;
+                    case RowContextMenuItem.NormalizeRow:
+                    case RowContextMenuItem.DropNA:
+                }
+            });
+
+            // Header row context menu
+            slickgridJQ('#headerContextMenu').click((e: any) => {
+                if (!slickgridJQ(e?.currentTarget).is('ul') || !this.state.grid?.getEditorLock().commitCurrentEdit()) {
+                    return;
+                }
+                // Submit a drop column request
+                const contextMenuItem = e?.target?.id;
+                switch (contextMenuItem) {
+                    case ColumnContextMenuItem.GetColumnStats:
+                        return this.props.submitCommand({
+                            command: 'describe',
+                            args: { columnName: this.contextMenuColumnName }
+                        });
+                    case ColumnContextMenuItem.DropColumns:
+                        return this.props.submitCommand({
+                            command: 'drop',
+                            args: { targets: [this.contextMenuColumnName] }
+                        });
+                    case ColumnContextMenuItem.NormalizeColumn:
+                        return this.props.submitCommand({
+                            command: 'normalize',
+                            args: { start: 0, end: 1, target: this.contextMenuColumnName }
+                        });
+                    case ColumnContextMenuItem.DropNA:
+                        return this.props.submitCommand({
+                            command: 'dropna',
+                            args: { subset: this.contextMenuColumnName, target: 0 }
+                        });
+                    case ColumnContextMenuItem.DropDuplicates:
+                        return this.props.submitCommand({
+                            command: 'drop_duplicates',
+                            args: { subset: [this.contextMenuColumnName] }
+                        });
+                }
+            });
+
             // Init to force the actual render.
             grid.init();
 
@@ -329,11 +424,108 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return (
             <div className="outer-container">
-                <div className="react-grid-container" style={style} ref={this.containerRef}></div>
-                <div className="react-grid-measure" ref={this.measureRef} />
+                <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden' }}>
+                    {/* <Resizable 
+                        style={{display: "flex", alignItems: "top", justifyContent: "left", flexDirection: "column", zIndex: 99998 }}
+                        handleClasses={{ right: "resizable-span" }}
+                        defaultSize={{ width: '60%', height }}
+                        enable={{ left:false, top:false, right:true, bottom:false, topRight:false, bottomRight:false, bottomLeft:false, topLeft:false }}
+                        > */}
+                    <div className="react-grid-container" style={style} ref={this.containerRef}></div>
+                    <div className="react-grid-measure" ref={this.measureRef} />
+                    {/* </Resizable> */}
+                    <Resizable
+                        style={{
+                            display: 'flex',
+                            alignItems: 'top',
+                            justifyContent: 'right',
+                            flexDirection: 'column',
+                            zIndex: 99998
+                        }}
+                        handleClasses={{ left: 'resizable-span' }}
+                        defaultSize={{ width: '40%', height: '95%' }}
+                        onResize={() => {
+                            this.props.resizeGridEvent.notify();
+                        }}
+                        enable={{
+                            left: true,
+                            top: false,
+                            right: false,
+                            bottom: false,
+                            topRight: false,
+                            bottomRight: false,
+                            bottomLeft: false,
+                            topLeft: false
+                        }}
+                    >
+                        <ControlPanel
+                            historyList={this.props.historyList}
+                            monacoTheme={this.props.monacoTheme}
+                            histogramData={this.props.histogramData}
+                            data={this.dataView.getItems()}
+                            resizeEvent={this.props.resizeGridEvent}
+                            headers={
+                                this.state.grid
+                                    ?.getColumns()
+                                    .map((c) => c.name)
+                                    .filter((c) => c !== undefined) as string[]
+                            }
+                            currentVariableName={this.props.currentVariableName}
+                            submitCommand={this.props.submitCommand}
+                        />
+                    </Resizable>
+                </div>
+                <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
+                    <li id={ColumnContextMenuItem.GetColumnStats}>{ColumnContextMenuItem.GetColumnStats}</li>
+                    <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>
+                    <li id={ColumnContextMenuItem.NormalizeColumn}>{ColumnContextMenuItem.NormalizeColumn}</li>
+                    <li id={ColumnContextMenuItem.DropNA}>{ColumnContextMenuItem.DropNA}</li>
+                    <li id={ColumnContextMenuItem.DropDuplicates}>{ColumnContextMenuItem.DropDuplicates}</li>
+                </ul>
+                <ul id="contextMenu" style={{ display: 'none', position: 'absolute' }}>
+                    <li id={RowContextMenuItem.DropRow}>{RowContextMenuItem.DropRow}</li>
+                    <li id={RowContextMenuItem.CopyData}>{RowContextMenuItem.CopyData}</li>
+                </ul>
             </div>
         );
     }
+
+    private maybeDropColumns = (e: any, data: Slick.OnHeaderContextMenuEventArgs<ISlickRow>) => {
+        this.contextMenuColumnName = data.column.name;
+        // Don't show context menu for the row numbering column or index column
+        if (data.column.field === 'No.' || data.column.field === 'index') {
+            return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        // Show our context menu
+        slickgridJQ('#headerContextMenu').css('top', e.pageY).css('left', e.pageX).show();
+
+        // If user clicks away from the context menu, hide it
+        slickgridJQ('body').one('click', () => {
+            slickgridJQ('#headerContextMenu').hide();
+            this.contextMenuColumnName = undefined;
+        });
+    };
+
+    private maybeDropRows = (e: any) => {
+        const cell = this.state.grid?.getCellFromEvent(e);
+        if (!cell) {
+            return;
+        }
+        this.contextMenuRowId = cell.row;
+        this.contextMenuCellId = cell.cell;
+        e.preventDefault();
+        e.stopPropagation();
+        // Show our context menu
+        slickgridJQ('#contextMenu').css('top', e.pageY).css('left', e.pageX).show();
+
+        // If user clicks away from the context menu, hide it
+        slickgridJQ('body').one('click', () => {
+            slickgridJQ('#contextMenu').hide();
+            this.contextMenuRowId = undefined;
+        });
+    };
 
     // public for testing
     public sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {
@@ -351,16 +543,16 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private clearAllFilters = () => {
-        // Avoid rerendering if there are no filters
-        if (this.columnFilters.size > 0) {
-            this.columnFilters = new Map();
-            this.dataView.refresh();
-            // Force column headers to rerender by setting columns
-            // and ensure styles don't get messed up after rerender
-            this.autoResizeColumns();
-        }
-    };
+    // private clearAllFilters = () => {
+    //     // Avoid rerendering if there are no filters
+    //     if (this.columnFilters.size > 0) {
+    //         this.columnFilters = new Map();
+    //         this.dataView.refresh();
+    //         // Force column headers to rerender by setting columns
+    //         // and ensure styles don't get messed up after rerender
+    //         this.autoResizeColumns();
+    //     }
+    // };
 
     private styleColumns(columns: Slick.Column<ISlickRow>[]) {
         // Transform columns so they are sortable and stylable
@@ -497,24 +689,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 if (c.field !== this.props.idProperty) {
                     c.width = maxFieldWidth;
                 } else {
-                    c.width = (maxFieldWidth / 5) * 4;
+                    c.width = maxFieldWidth / 2;
                     c.name = '';
-                    c.header = {
-                        buttons: [
-                            {
-                                cssClass: 'codicon codicon-filter codicon-button header-cell-button',
-                                handler: this.clickFilterButton,
-                                tooltip: this.state.showingFilters
-                                    ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
-                                    : getLocString('DataScience.dataViewerShowFilters', 'Show filters')
-                            },
-                            {
-                                cssClass: 'codicon codicon-refresh codicon-button header-cell-button refresh-button',
-                                handler: this.props.handleRefreshRequest,
-                                tooltip: getLocString('DataScience.refreshDataViewer', 'Refresh data viewer')
-                            }
-                        ]
-                    };
                 }
             });
             this.state.grid.setColumns(columns);
@@ -599,28 +775,17 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
-        if (args.column.field === this.props.idProperty) {
-            const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
-            ReactDOM.render(
-                <div
-                    className="codicon codicon-clear-all codicon-button"
-                    onClick={this.clearAllFilters}
-                    title={tooltipText}
-                />,
-                args.node
-            );
-        } else {
-            const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
-            ReactDOM.render(
-                <ReactSlickGridFilterBox
-                    filter={filter ?? ''}
-                    column={args.column}
-                    onChange={this.filterChanged}
-                    fontSize={this.state.fontSize}
-                />,
-                args.node
-            );
-        }
+        const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
+        ReactDOM.render(
+            <ReactSlickGridFilterBox
+                filter={filter ?? ''}
+                column={args.column}
+                onChange={this.filterChanged}
+                fontSize={this.state.fontSize}
+            />,
+            args.node
+        );
+        // }
     };
 
     private compareElements(a: any, b: any, col?: Slick.Column<Slick.SlickData>): number {

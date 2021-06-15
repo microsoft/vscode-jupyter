@@ -70,6 +70,7 @@ export enum InteractiveWindowMessages {
     RemoteReexecuteCode = 'remote_reexecute_code',
     Activate = 'activate',
     ShowDataViewer = 'show_data_explorer',
+    ShowDataWrangler = 'show_data_wrangler',
     GetVariablesRequest = 'get_variables_request',
     GetVariablesResponse = 'get_variables_response',
     VariableExplorerToggle = 'variable_explorer_toggle',
@@ -340,6 +341,11 @@ export interface IInsertCell {
 }
 
 export interface IShowDataViewer {
+    variable: IJupyterVariable;
+    columnSize: number;
+}
+
+export interface IShowDataWrangler {
     variable: IJupyterVariable;
     columnSize: number;
 }
@@ -632,6 +638,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.RemoteReexecuteCode]: IRemoteReexecuteCode;
     public [InteractiveWindowMessages.Activate]: never | undefined;
     public [InteractiveWindowMessages.ShowDataViewer]: IShowDataViewer;
+    public [InteractiveWindowMessages.ShowDataWrangler]: IShowDataWrangler;
     public [InteractiveWindowMessages.GetVariablesRequest]: IJupyterVariablesRequest;
     public [InteractiveWindowMessages.GetVariablesResponse]: IJupyterVariablesResponse;
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;

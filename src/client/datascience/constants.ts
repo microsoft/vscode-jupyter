@@ -74,7 +74,6 @@ export const VSCodeKnownNotebookLanguages: string[] = [
 ];
 
 export namespace Commands {
-    export const UpdateOrCreateDataViewer = 'jupyter.openDataFrameInDataViewer';
     export const RunAllCells = 'jupyter.runallcells';
     export const RunAllCellsAbove = 'jupyter.runallcellsabove';
     export const RunCellAndAllBelow = 'jupyter.runcellandallbelow';
@@ -168,6 +167,10 @@ export namespace Commands {
         'jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow';
     export const NotebookEditorKeybindExecuteCell = 'jupyter.notebookeditor.keybind.executeCell';
     export const NotebookEditorToggleOutput = 'jupyter.notebookeditor.keybind.toggleOutput';
+
+    // Data Wrangler
+    export const UpdateOrCreateDataWrangler = 'jupyter.openDataFrameInDataWrangler';
+    export const RefreshDataWrangler = 'jupyter.refreshDataWrangler';
 }
 
 export namespace CodeLensCommands {
@@ -201,6 +204,7 @@ export namespace EditorContexts {
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
+    export const IsDataWranglerActive = 'jupyter.dataWranglerActive';
     export const HasNativeNotebookOpen = 'jupyter.hasNativeNotebookOpen';
 }
 

@@ -31,6 +31,7 @@ import { noop } from '../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, defaultNotebookFormat, EditorContexts, Identifiers, Telemetry } from '../constants';
+import { IDataWranglerFactory } from '../data-viewing/data-wrangler/types';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { ExportFormat, IExportDialog } from '../export/types';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -121,6 +122,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         workspaceService: IWorkspaceService,
         private interactiveWindowProvider: IInteractiveWindowProvider,
         dataExplorerFactory: IDataViewerFactory,
+        dataWranglerFactory: IDataWranglerFactory,
         jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         jupyterVariables: IJupyterVariables,
         jupyterDebugger: IJupyterDebugger,
@@ -154,6 +156,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             jupyterExporter,
             workspaceService,
             dataExplorerFactory,
+            dataWranglerFactory,
             jupyterVariableDataProviderFactory,
             jupyterVariables,
             jupyterDebugger,
@@ -413,7 +416,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
         // extension contexts
-        if (this.commandManager && this.commandManager.executeCommand) {
+        if (this.commandManager) {
             const interactiveContext = new ContextKey(EditorContexts.HaveInteractive, this.commandManager);
             interactiveContext.set(!this.isDisposed).catch(noop);
             const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);

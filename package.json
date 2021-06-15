@@ -270,12 +270,18 @@
                 "key": "ctrl+r",
                 "mac": "cmd+r",
                 "when": "jupyter.dataViewerActive"
+            },
+            {
+                "command": "jupyter.refreshDataWrangler",
+                "key": "ctrl+r",
+                "mac": "cmd+r",
+                "when": "jupyter.dataWranglerActive"
             }
         ],
         "commands": [
             {
-                "title": "Open DataFrame in Data Viewer",
-                "command": "jupyter.openDataFrameInDataViewer",
+                "title": "Open DataFrame in Data Wrangler",
+                "command": "jupyter.openDataFrameInDataWrangler",
                 "category": "Jupyter"
             },
             {
@@ -767,6 +773,12 @@
                 "title": "%DataScience.refreshDataViewerCommandPalette%",
                 "category": "Jupyter",
                 "enablement": "jupyter.dataViewerActive && isWorkspaceTrusted"
+            },
+            {
+                "command": "jupyter.refreshDataWrangler",
+                "title": "Refresh Data Wrangler",
+                "category": "Jupyter",
+                "enablement": "jupyter.dataWranglerActive && isWorkspaceTrusted"
             }
         ],
         "menus": {
@@ -921,7 +933,7 @@
                     "when": "jupyter.isnativeactive && isWorkspaceTrusted && jupyter.ispythonnotebook && isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.refreshDataViewer",
+                    "command": "jupyter.refreshDataWrangler",
                     "category": "Jupyter",
                     "when": "isWorkspaceTrusted"
                 },

@@ -1,19 +1,5 @@
-.resizable-span {
-    cursor: ew-resize !important;
-    width: 5px !important;
-    z-index: 99999 !important;
-}
-
-.resizable-span:hover {
-    transition: background-color .1s ease-out 0.4s !important;
-}
-
-.resizable-span:hover, .resizable-span:active, .resizable-span:focus, .resizable-span:target {
-    background: var(--vscode-focusBorder) !important;
-}
-
 ::-webkit-scrollbar {
-    width: 10px;
+    width: 20px;
 }
 
 .outer-container {
@@ -23,8 +9,7 @@
 
 .react-grid-container {
     border: none;
-    margin-left: 8px;
-    width: 100%;
+    padding-left: 8px;
 }
 
 .react-grid-measure {
@@ -59,7 +44,6 @@
     background-color: var(--vscode-sideBar-background);
     color: var(--vscode-sideBar-foreground);
     border-right: 1px solid transparent;
-    border-bottom-color: none;
 }
 
 .slick-headerrow-column.ui-state-default {

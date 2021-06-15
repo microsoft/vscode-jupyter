@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import '../../common/extensions';
-import { WebviewPanel, window } from 'vscode';
+
 import { inject, injectable } from 'inversify';
 
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
@@ -30,9 +30,6 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.RefreshDataViewer, this.refreshDataViewer, this)
         );
-        this.disposables.push(
-            this.commandManager.registerCommand(Commands.UpdateOrCreateDataViewer, this.updateOrCreateDataViewer, this)
-        );
     }
 
     public async dispose() {
@@ -42,11 +39,7 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
     }
 
     @captureTelemetry(Telemetry.StartShowDataViewer)
-    public async create(
-        dataProvider: IDataViewerDataProvider,
-        title: string,
-        webviewPanel?: WebviewPanel
-    ): Promise<IDataViewer> {
+    public async create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer> {
         let result: IDataViewer | undefined;
 
         // Create the data explorer
@@ -58,7 +51,7 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
             dataExplorer.onDidChangeDataViewerViewState(this.updateViewStateContext, this, this.disposables);
 
             // Show the window and the data
-            await dataExplorer.showData(dataProvider, title, webviewPanel);
+            await dataExplorer.showData(dataProvider, title);
             result = dataExplorer;
         } finally {
             if (!result) {
@@ -75,54 +68,25 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
 
     private async updateViewStateContext() {
         // A data viewer's view state has changed. Look through our known viewers to see if any are active
-        let hasVisibleViewer = false;
+        let hasActiveViewer = false;
         this.knownViewers.forEach((viewer) => {
-            if (viewer.visible) {
-                hasVisibleViewer = true;
+            if (viewer.active) {
+                hasActiveViewer = true;
             }
         });
-        await this.viewContext.set(hasVisibleViewer);
+        await this.viewContext.set(hasActiveViewer);
     }
 
     // Refresh command is mapped to a keybinding. Refresh
     // is expensive. Ensure we debounce refresh requests
     // in case the user is mashing the refresh shortcut.
     private refreshDataViewer = debounce(() => {
-        // Refresh any visible data viewers. Use visible
-        // instead of active because this allows the user
-        // to see the data viewer update without explicitly
-        // setting focus to the data viewer (which would be
-        // less convenient)
+        // Find the data viewer which is currently active
         for (const viewer of this.knownViewers) {
-            if (viewer.visible) {
+            if (viewer.active) {
+                // There should only be one of these
                 void viewer.refreshData();
             }
         }
     }, 1000);
-
-    private updateOrCreateDataViewer() {
-        // Get the active text editor selection
-        const editor = window.activeTextEditor;
-        if (!editor) return;
-        const document = editor.document;
-        if (!document) return;
-        const position = editor.selection;
-        if (!position) return;
-        // See if a variable exists
-        // Look for an active data viewer
-        if (this.knownViewers.size === 0) {
-            // Create a new data viewer
-        } else {
-            // Reuse an existing data viewer
-            const range = document.getWordRangeAtPosition(position.anchor);
-            if (range) {
-                const word = document.getText(range);
-                for (const viewer of this.knownViewers) {
-                    viewer.updateWithNewVariable(word);
-                }
-            }
-        }
-        // Set its dependencies
-        // Overwrite
-    }
 }

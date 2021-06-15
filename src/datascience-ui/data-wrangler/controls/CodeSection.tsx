@@ -1,6 +1,6 @@
 import * as React from 'react';
-import './HistorySection.css';
 import { Code } from '../../interactive-common/code';
+import './HistorySection.css';
 
 interface IProps {
     currentVariableName: string | undefined;

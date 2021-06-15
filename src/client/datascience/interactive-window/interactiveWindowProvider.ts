@@ -36,6 +36,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands } from '../constants';
+import { IDataWranglerFactory } from '../data-viewing/data-wrangler/types';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { IExportDialog } from '../export/types';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -195,6 +196,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
             this,
             this.serviceContainer.get<IDataViewerFactory>(IDataViewerFactory),
+            this.serviceContainer.get<IDataWranglerFactory>(IDataWranglerFactory),
             this.serviceContainer.get<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory),
             this.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES),
             this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger),

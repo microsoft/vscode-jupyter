@@ -62,6 +62,7 @@ import {
     IRemoteAddCode,
     IRemoteReexecuteCode,
     IShowDataViewer,
+    IShowDataWrangler,
     ISubmitNewCell,
     SysInfoReason,
     VariableExplorerStateKeys
@@ -109,6 +110,7 @@ import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
+import { IDataWranglerFactory } from '../data-viewing/data-wrangler/types';
 
 export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
@@ -162,6 +164,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         protected jupyterExporter: INotebookExporter,
         workspaceService: IWorkspaceService,
         private dataViewerFactory: IDataViewerFactory,
+        private dataWranglerFactory: IDataWranglerFactory,
         private jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         private jupyterVariables: IJupyterVariables,
         private jupyterDebugger: IJupyterDebugger,
@@ -329,6 +332,10 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
             case InteractiveWindowMessages.ShowDataViewer:
                 this.handleMessage(message, payload, this.showDataViewer);
+                break;
+
+            case InteractiveWindowMessages.ShowDataWrangler:
+                this.handleMessage(message, payload, this.showDataWrangler);
                 break;
 
             case InteractiveWindowMessages.GetVariablesRequest:
@@ -1053,6 +1060,23 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         } catch (e) {
             traceError(e);
             sendTelemetryEvent(Telemetry.FailedShowDataViewer);
+            this.applicationShell.showErrorMessage(localize.DataScience.showDataViewerFail()).then(noop, noop);
+        }
+    }
+
+    private async showDataWrangler(request: IShowDataWrangler): Promise<void> {
+        try {
+            if (await this.dataViewerChecker.isRequestedColumnSizeAllowed(request.columnSize, this.owningResource)) {
+                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
+                    request.variable,
+                    this._notebook!
+                );
+                const title: string = `${localize.DataScience.dataExplorerTitle()} - ${request.variable.name}`;
+                await this.dataWranglerFactory.create(jupyterVariableDataProvider, title);
+            }
+        } catch (e) {
+            traceError(e);
+            // sendTelemetryEvent(Telemetry.FailedShowDataViewer);
             this.applicationShell.showErrorMessage(localize.DataScience.showDataViewerFail()).then(noop, noop);
         }
     }

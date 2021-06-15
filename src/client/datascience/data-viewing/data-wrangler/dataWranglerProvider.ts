@@ -1,19 +1,36 @@
 import { injectable, inject, named } from 'inversify';
 import { noop } from 'lodash';
-import { CustomDocument, Event, WebviewPanel, Uri, CustomDocumentEditEvent, EventEmitter, window, NotebookCell, QuickPickOptions, ConfigurationTarget, ProgressLocation, ProgressOptions } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IApplicationShell, ICommandManager, IDataWranglerProvider } from '../../common/application/types';
+import {
+    CustomDocument,
+    Event,
+    WebviewPanel,
+    Uri,
+    CustomDocumentEditEvent,
+    EventEmitter,
+    window,
+    NotebookCell,
+    QuickPickOptions,
+    ConfigurationTarget,
+    ProgressLocation,
+    ProgressOptions
+} from 'vscode';
+import { IExtensionSingleActivationService } from '../../../activation/types';
+import { IApplicationShell, ICommandManager, IDataWranglerProvider } from '../../../common/application/types';
 import * as uuid from 'uuid/v4';
-import { getImportCodeForFileType } from '../commands/commandRegistry';
-import { Commands, Identifiers } from '../constants';
-import { IJupyterVariableDataProviderFactory, INotebookProvider, IJupyterVariables, INotebookEditor } from '../types';
-import { IDataViewerDataProvider, IDataViewerFactory } from './types';
-import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
-import { IConfigurationService } from '../../common/types';
-import { updateCellCode } from '../notebook/helpers/executionHelpers';
+import { getImportCodeForFileType } from '../../commands/commandRegistry';
+import { Commands, Identifiers } from '../../constants';
+import {
+    IJupyterVariableDataProviderFactory,
+    INotebookProvider,
+    IJupyterVariables,
+    INotebookEditor
+} from '../../types';
+import { DataViewerChecker } from '../../interactive-common/dataViewerChecker';
+import { IConfigurationService } from '../../../common/types';
+import { updateCellCode } from '../../notebook/helpers/executionHelpers';
+import { IDataWranglerDataProvider, IDataWranglerFactory } from './types';
 
-
-enum OpenDataViewerSetting {
+enum OpenDataWranglerSetting {
     STANDALONE,
     WITH_JUPYTER_NOTEBOOK,
     WITH_PYTHON_FILE,
@@ -27,13 +44,13 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
     }
     protected readonly _onDidEdit = new EventEmitter<CustomDocumentEditEvent>();
 
-    private dataProviders = new Map<Uri, IDataViewerDataProvider>();
+    private dataProviders = new Map<Uri, IDataWranglerDataProvider>();
     private dataViewerChecker: DataViewerChecker;
 
     constructor(
         @inject(IJupyterVariableDataProviderFactory)
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
+        @inject(IDataWranglerFactory) private readonly dataWranglerFactory: IDataWranglerFactory,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IJupyterVariables)
         @named(Identifiers.KERNEL_VARIABLES)
@@ -42,11 +59,15 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(ICommandManager) private commandManager: ICommandManager
     ) {
-        this.commandManager.registerCommand(Commands.ImportAsDataFrame, this.importFileAsDataFrameFromContextMenu.bind(this));
+        this.commandManager.registerCommand(
+            Commands.ImportAsDataFrame,
+            this.importFileAsDataFrameFromContextMenu.bind(this)
+        );
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
     }
 
     public async activate() {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).registerCustomEditorProvider('jupyter-data-wrangler', this, {
             webviewOptions: {
                 retainContextWhenHidden: true
@@ -81,7 +102,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         }
     }
 
-    private async initialize(file: Uri, source: 'custom_editor' | 'context_menu' ) {
+    private async initialize(file: Uri, source: 'custom_editor' | 'context_menu') {
         let dataCleaningMode = this.configService.getSettings().dataCleaningMode;
 
         if (dataCleaningMode == '') {
@@ -143,7 +164,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         }
 
         let options: ProgressOptions | undefined;
-        let setting: OpenDataViewerSetting | undefined;
+        let setting: OpenDataWranglerSetting | undefined;
 
         switch (dataCleaningMode) {
             case 'standalone': {
@@ -152,7 +173,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                     cancellable: true,
                     title: 'Importing Data and Launching Data Wrangler...'
                 };
-                setting = OpenDataViewerSetting.STANDALONE;
+                setting = OpenDataWranglerSetting.STANDALONE;
 
                 break;
             }
@@ -162,7 +183,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                     cancellable: true,
                     title: 'Importing Data and Launching Data Wrangler with a Jupyter Notebook...'
                 };
-                setting = OpenDataViewerSetting.WITH_JUPYTER_NOTEBOOK;
+                setting = OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK;
 
                 break;
             }
@@ -172,7 +193,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                     cancellable: true,
                     title: 'Importing Data and Launching Data Wrangler with a Python file...'
                 };
-                setting = OpenDataViewerSetting.WITH_PYTHON_FILE;
+                setting = OpenDataWranglerSetting.WITH_PYTHON_FILE;
 
                 break;
             }
@@ -182,7 +203,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                     cancellable: true,
                     title: 'Importing Data and Launching Data Wrangler with an Interactive Window...'
                 };
-                setting = OpenDataViewerSetting.WITH_INTERACTIVE_WINDOW;
+                setting = OpenDataWranglerSetting.WITH_INTERACTIVE_WINDOW;
 
                 break;
             }
@@ -191,12 +212,16 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         if (!options) return;
 
         await this.appShell.withProgress(options, async (_, __) =>
-            this.importAndLaunchDataViewer(file, setting, source)
+            this.importAndLaunchDataWrangler(file, setting, source)
         );
     }
 
-    public async importAndLaunchDataViewer(file: Uri, setting: OpenDataViewerSetting | undefined, source: 'custom_editor' | 'context_menu') {
-        if (setting == OpenDataViewerSetting.STANDALONE) {
+    public async importAndLaunchDataWrangler(
+        file: Uri,
+        setting: OpenDataWranglerSetting | undefined,
+        source: 'custom_editor' | 'context_menu'
+    ) {
+        if (setting == OpenDataWranglerSetting.STANDALONE) {
             const notebook = await this.notebookProvider.getOrCreateNotebook({
                 resource: file,
                 identity: file,
@@ -218,21 +243,22 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                 },
                 notebook
             );
-            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
-                jupyterVariable
-            );
+            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(jupyterVariable);
             jupyterVariableDataProvider.setDependencies(jupyterVariable, notebook);
             this.dataProviders.set(file, jupyterVariableDataProvider);
             // May need to resolve custom editor here
             if (source === 'context_menu') {
                 await this.show(file, undefined);
             }
-        } else if (setting == OpenDataViewerSetting.WITH_JUPYTER_NOTEBOOK) {
-            const notebookEditor: INotebookEditor | undefined = await this.commandManager.executeCommand(Commands.CreateNewNotebook);
+        } else if (setting == OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK) {
+            const notebookEditor: INotebookEditor | undefined = await this.commandManager.executeCommand(
+                Commands.CreateNewNotebook
+            );
             if (!notebookEditor) {
                 return;
             }
             // Add code cell to import dataframe
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const blankCell = (notebookEditor as any).document.cellAt(0) as NotebookCell;
             const code = getImportCodeForFileType(file!.fsPath);
             await updateCellCode(blankCell, code);
@@ -252,27 +278,25 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                 },
                 notebookEditor.notebook
             );
-            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
-                jupyterVariable
-            );
+            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(jupyterVariable);
             jupyterVariableDataProvider.setDependencies(jupyterVariable, notebookEditor.notebook);
             this.dataProviders.set(file, jupyterVariableDataProvider);
             await this.show(file, undefined);
-        } else if (setting == OpenDataViewerSetting.WITH_PYTHON_FILE) {
+        } else if (setting == OpenDataWranglerSetting.WITH_PYTHON_FILE) {
             //TODO
         } else {
             //interactive window
             //TODO
         }
     }
-    
+
     private async show(file: Uri, webviewPanel: WebviewPanel | undefined) {
         const jupyterVariableDataProvider = this.dataProviders.get(file);
         if (!jupyterVariableDataProvider) return;
         const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
         const columnSize = dataFrameInfo?.columns?.length;
         if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
-            await this.dataViewerFactory.create(jupyterVariableDataProvider, 'Data Wrangler', webviewPanel);
+            await this.dataWranglerFactory.create(jupyterVariableDataProvider, 'Data Wrangler', webviewPanel);
         }
     }
 }

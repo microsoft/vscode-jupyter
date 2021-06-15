@@ -34,7 +34,7 @@ import { IAsyncDisposable, IDisposable, IJupyterSettings, InteractiveWindowMode,
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
-import { IDataViewerDataProvider } from './data-viewing/types';
+import { IDataWranglerDataProvider } from './data-viewing/data-wrangler/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
@@ -885,7 +885,7 @@ export interface IJupyterVariable {
     dataDimensionality?: number;
     count: number;
     truncated: boolean;
-    columns?: { key: string; type: string; describe: string }[];
+    columns?: { key: string; type: string; describe?: string }[];
     rowCount?: number;
     indexColumn?: string;
     maximumRowChunkSize?: number;
@@ -894,7 +894,7 @@ export interface IJupyterVariable {
 }
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
-export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
+export interface IJupyterVariableDataProvider extends IDataWranglerDataProvider {
     notebook: INotebook | undefined;
     setDependencies(variable: IJupyterVariable, notebook?: INotebook): void;
 }

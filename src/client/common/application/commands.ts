@@ -93,7 +93,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.save']: [Uri];
     ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
     ['undo']: [];
-    [DSCommands.UpdateOrCreateDataViewer]: [];
     [DSCommands.NotebookEditorInterruptKernel]: [Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
@@ -160,4 +159,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
     [DSCommands.NotebookEditorKeybindSave]: [];
     [DSCommands.NotebookEditorKeybindUndo]: [];
+
+    // Data Wrangler
+    [DSCommands.UpdateOrCreateDataWrangler]: [];
+    [DSCommands.RefreshDataWrangler]: [];
 }

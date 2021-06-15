@@ -175,6 +175,30 @@ def _VSCODE_getDataFrameColumn(df, columnName):
 
 # Function to get info on the passed in data frame
 def _VSCODE_getDataFrameInfo(df):
+    def describe_repeated(col):
+        isduplicate_series = col.duplicated()
+        describe = ""
+        if len(isduplicate_series):
+            isduplicate = isduplicate_series.sum()
+            describe += "\n# repeated\t" + str(isduplicate)
+            describe += "\n% repeated\t" + str(isduplicate / length * 100)[:4] + "%"
+        else:
+            describe += "\n# repeated\t0"
+            describe += "\n% repeated\t0%"
+        return describe
+
+    def describe_null(col):
+        isna_series = col.isna()
+        describe = ""
+        if len(isna_series) != 0:
+            isna = isna_series.sum()
+            describe += "\n# null\t" + str(isna)
+            describe += "\n% null\t" + str(isna / length) + "%"
+        else:
+            describe += "\n# null\t0"
+            describe += "\n% null\t0%"
+        return describe
+
     df = _VSCODE_convertToDataFrame(df)
     rowCount = _VSCODE_getRowCount(df)
 
@@ -214,21 +238,22 @@ def _VSCODE_getDataFrameInfo(df):
         colobj["key"] = column_name
         colobj["name"] = column_name
         colobj["type"] = str(column_type)
-        length = len(df)
-        if column_name != 'index':
-            describe = df[column_name].describe().to_string(header=False)
-            isna = df[column_name].isna().sum()
-            describe += "\n# null\t" + str(isna)
-            describe += "\n% null\t" + str(isna / length) + "%"
-            isduplicate = df[column_name].duplicated().sum()
-            describe += "\n# repeated\t" + str(isduplicate) + "\n"
-            describe += "% repeated\t" + str(isduplicate / length * 100)[:4] + "%"
-        else:
-            describe = df.describe().to_string()
-            isduplicate = df.duplicated().sum()
-            describe += "\n# repeated\t" + str(isduplicate) + "\n"
-            describe += "% repeated\t" + str(isduplicate / length * 100)[:4] + "%"
-        colobj["describe"] = describe
+
+        # Needed for Data Wrangler
+        try:
+            length = len(df)
+            if column_name != "index":
+                col = df.iloc[:, n]
+                describe = col.describe().to_string(header=False)
+                describe += describe_null(col)
+                describe += describe_repeated(col)
+            else:
+                describe = df.describe().to_string()
+                describe += describe_repeated(df)
+            colobj["describe"] = describe
+        except:
+            pass
+
         columns.append(colobj)
 
     # Save this in our target

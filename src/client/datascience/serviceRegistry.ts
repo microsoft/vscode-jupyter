@@ -192,7 +192,10 @@ import { IApplicationEnvironment, IDataWranglerProvider } from '../common/applic
 import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
 import { ExtensionRecommendationService } from './extensionRecommendation';
 import { PythonVariablesRequester } from './jupyter/pythonVariableRequester';
-import { DataWranglerProvider } from './data-viewing/dataWranglerProvider';
+import { DataWranglerProvider } from './data-viewing/data-wrangler/dataWranglerProvider';
+import { IDataWrangler, IDataWranglerFactory } from './data-viewing/data-wrangler/types';
+import { DataWrangler } from './data-viewing/data-wrangler/dataWrangler';
+import { DataWranglerFactory } from './data-viewing/data-wrangler/dataWranglerFactory';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -222,6 +225,9 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
         setSharedProperty('rawKernelSupported', rawService.supported() ? 'true' : 'false');
     }
 
+    // Data Wrangler
+    serviceManager.add<IDataWrangler>(IDataWrangler, DataWrangler);
+    serviceManager.addSingleton<IDataWranglerFactory>(IDataWranglerFactory, DataWranglerFactory);
     serviceManager.addSingleton<IDataWranglerProvider>(IDataWranglerProvider, DataWranglerProvider);
     serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, DataWranglerProvider);
 

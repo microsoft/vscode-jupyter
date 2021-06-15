@@ -33,6 +33,7 @@ function getEntry(bundle) {
             return {
                 plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
                 dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`],
+                dataWrangler: ['babel-polyfill', `./src/datascience-ui/data-wrangler/index.tsx`],
                 variableView: ['babel-polyfill', `./src/datascience-ui/variable-view/index.tsx`]
             };
         case 'ipywidgetsKernel':
@@ -109,6 +110,12 @@ function getPlugins(bundle) {
                         indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'dataExplorer'],
                         filename: 'index.dataExplorer.html'
+                    }),
+                    new HtmlWebpackPlugin({
+                        template: 'src/datascience-ui/data-wrangler/index.html',
+                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                        chunks: ['commons', 'dataExplorer', 'dataWrangler'],
+                        filename: 'index.dataWrangler.html'
                     }),
                     new HtmlWebpackPlugin({
                         template: 'src/datascience-ui/variable-view/index.html',

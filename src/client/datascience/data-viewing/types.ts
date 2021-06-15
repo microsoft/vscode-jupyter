@@ -3,10 +3,9 @@
 'use strict';
 
 import { IDisposable } from '../../common/types';
-import { CssMessages, SharedMessages } from '../messages';
-import { Event, WebviewPanel } from 'vscode';
+import { SharedMessages } from '../messages';
+import { Event } from 'vscode';
 import { SliceOperationSource } from '../../telemetry/constants';
-import { InteractiveWindowMessages, ILoadTmLanguageResponse } from '../interactive-common/interactiveWindowTypes';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -29,12 +28,8 @@ export namespace DataViewerMessages {
     export const GetRowsResponse = 'get_rows_response';
     export const CompletedData = 'complete';
     export const GetSliceRequest = 'get_slice_request';
-    export const SubmitCommand = 'submit_command';
     export const RefreshDataViewer = 'refresh_data_viewer';
     export const SliceEnablementStateChanged = 'slice_enablement_state_changed';
-    export const UpdateHistoryList = 'update_history_list';
-    export const GetHistoryItem = 'get_history_item';
-    export const GetHistogramResponse = 'get_histogram_response';
 }
 
 export interface IGetRowsRequest {
@@ -70,21 +65,12 @@ export type IDataViewerMapping = {
     [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     [DataViewerMessages.CompletedData]: never | undefined;
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
-    [DataViewerMessages.SubmitCommand]: { command: string; args: any };
     [DataViewerMessages.RefreshDataViewer]: never | undefined;
     [DataViewerMessages.SliceEnablementStateChanged]: { newState: boolean };
-    [DataViewerMessages.UpdateHistoryList]: any[] | undefined;
-    [DataViewerMessages.GetHistoryItem]: number | undefined;
-    [DataViewerMessages.GetHistogramResponse]: IGetColsResponse;
-    [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
-    [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
-    [InteractiveWindowMessages.LoadTmLanguageRequest]: string;
-    [InteractiveWindowMessages.LoadTmLanguageResponse]: ILoadTmLanguageResponse;
-    [CssMessages.GetMonacoThemeRequest]: { isDark: boolean };
 };
 
 export interface IDataFrameInfo {
-    columns?: { key: string; type: ColumnType; describe: string }[];
+    columns?: { key: string; type: ColumnType; describe?: string }[];
     indexColumn?: string;
     rowCount?: number;
     shape?: number[];
@@ -99,7 +85,7 @@ export interface IDataFrameInfo {
      * The name of the file that this variable was declared in.
      */
     fileName?: string;
-    sourceFile?: string;
+    sourceFile?: string; // TODOV: Check if they're the same?
 }
 
 export interface IDataViewerDataProvider {
@@ -107,7 +93,6 @@ export interface IDataViewerDataProvider {
     getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo>;
     getAllRows(sliceExpression?: string): Promise<IRowsResponse>;
     getRows(start: number, end: number, sliceExpression?: string): Promise<IRowsResponse>;
-    getCols(columnName: string): Promise<IColsResponse>;
 }
 
 export enum ColumnType {
@@ -118,19 +103,19 @@ export enum ColumnType {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type IRowsResponse = any[];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type IColsResponse = any[];
 
 export const IDataViewerFactory = Symbol('IDataViewerFactory');
 export interface IDataViewerFactory {
-    create(dataProvider: IDataViewerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<IDataViewer>;
+    create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer>;
 }
 
 export const IDataViewer = Symbol('IDataViewer');
 export interface IDataViewer extends IDisposable {
-    readonly visible: boolean;
+    readonly active: boolean;
     readonly onDidDisposeDataViewer: Event<IDataViewer>;
     readonly onDidChangeDataViewerViewState: Event<void>;
-    showData(dataProvider: IDataViewerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<void>;
+    showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
     refreshData(): Promise<void>;
-    updateWithNewVariable(newVariableName: string): Promise<void>;
 }

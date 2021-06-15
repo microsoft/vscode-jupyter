@@ -1,0 +1,59 @@
+@import url("../data-explorer/sliceControl.css");
+
+.slice-data {
+    background-color: var(--vscode-settings-textInputBackground);
+    color: var(--vscode-settings-textInputForeground) !important;
+    padding: 0px 4px 0px 6px;
+    /* input does not inherit font from body */
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    height: 24px;
+    margin: 0px;
+    border: 1px solid var(--vscode-settings-textInputBorder);
+}
+
+.slicing-control {
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    padding-left: 4px;
+    padding-top: 6px !important;
+}
+
+.slice-summary-detail {
+    font-size: 11px;
+    margin: 0;
+    padding-left: 2px;
+}
+
+.slice-form-container {
+    margin-left: 20px;
+}
+
+/* Overrides for Fluent UI controls */
+[class*='ms-Dropdown-label'] {
+    color: var(--vscode-editor-foreground);
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    padding-top: 0;
+}
+
+/* This needs to match VS Code settings dropdowns */
+.dropdownTitleOverrides .ms-Dropdown-title {
+    /* Usually want to avoid !important but in this case
+       it's necessary to ensure that when the dropdown
+       has focus, the default dropdown :focus color (black)
+       is not applied */
+    color: var(--vscode-dropdown-foreground) !important;
+    font-family: var(--vscode-font-family);
+    font-weight: var(--vscode-font-weight);
+    font-size: var(--vscode-font-size);
+    background-color: var(--vscode-dropdown-background);
+    border: 1px solid var(--vscode-dropdown-border) !important;
+    border-radius: 0px;
+    height: 26px;
+    line-height: 26px;
+    width: 150px;
+}
