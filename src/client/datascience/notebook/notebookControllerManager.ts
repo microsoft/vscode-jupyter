@@ -33,7 +33,7 @@ import { INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
-import { JupyterNotebookView } from './constants';
+import { InteractiveWindowView, JupyterNotebookView } from './constants';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { InterpreterPackages } from '../telemetry/interpreterPackages';
@@ -306,9 +306,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Map KernelConnectionMetadata => NotebookController
         const controllers: VSCodeNotebookController[] = [];
         connectionsWithLabel.forEach((value) => {
-            const controller = this.createNotebookController(value.connection, value.label);
-            if (controller) {
-                controllers.push(controller);
+            const controllers = this.createNotebookController(value.connection, value.label);
+            if (controllers) {
+                controllers.push(...controllers);
             }
         });
 
@@ -317,31 +317,34 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private createNotebookController(
         kernelConnection: KernelConnectionMetadata,
         label: string
-    ): VSCodeNotebookController | undefined {
+    ): VSCodeNotebookController[] | undefined {
         try {
             // Create notebook selector
-            const controller = new VSCodeNotebookController(
-                kernelConnection,
-                label,
-                this.notebook,
-                this.commandManager,
-                this.kernelProvider,
-                this.preferredRemoteKernelIdProvider,
-                this.context,
-                this,
-                this.pathUtils,
-                this.disposables,
-                this.languageService,
-                this.workspace
-            );
-
-            // Hook up to if this NotebookController is selected or de-selected
-            controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);
-
-            // We are disposing as documents are closed, but do this as well
-            this.disposables.push(controller);
-
-            return controller;
+            return [[kernelConnection.id, JupyterNotebookView], [`${kernelConnection.id} (Interactive)`, InteractiveWindowView]].map(([id, viewType]) => {
+                const controller = new VSCodeNotebookController(
+                    kernelConnection,
+                    id,
+                    viewType,
+                    label,
+                    this.notebook,
+                    this.commandManager,
+                    this.kernelProvider,
+                    this.preferredRemoteKernelIdProvider,
+                    this.context,
+                    this,
+                    this.pathUtils,
+                    this.disposables,
+                    this.languageService,
+                    this.workspace
+                );
+                // Hook up to if this NotebookController is selected or de-selected
+                controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);
+    
+                // We are disposing as documents are closed, but do this as well
+                this.disposables.push(controller);
+    
+                return controller;
+            });
         } catch (ex) {
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
@@ -430,9 +433,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             });
 
             connectionsWithLabel.forEach((value) => {
-                const controller = this.createNotebookController(value.connection, value.label);
-                if (controller) {
-                    this.registeredControllers.push(controller);
+                const controllers = this.createNotebookController(value.connection, value.label);
+                if (controllers) {
+                    this.registeredControllers.push(...controllers);
                 }
             });
         }

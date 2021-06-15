@@ -35,7 +35,6 @@ import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/k
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
-import { JupyterNotebookView } from './constants';
 import {
     isSameAsTrackedKernelInNotebookMetadata,
     traceCellMessage,
@@ -77,6 +76,8 @@ export class VSCodeNotebookController implements Disposable {
     }
     constructor(
         private readonly kernelConnection: KernelConnectionMetadata,
+        id: string,
+        viewType: string,
         label: string,
         private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
@@ -96,8 +97,8 @@ export class VSCodeNotebookController implements Disposable {
         }>();
 
         this.controller = this.notebookApi.createNotebookController(
-            kernelConnection.id,
-            JupyterNotebookView,
+            id,
+            viewType,
             label,
             this.handleExecution.bind(this),
             this.getRendererScripts()
