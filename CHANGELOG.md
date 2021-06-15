@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.6.999 (11 June 2021)
+## 2021.6.999 (16 June 2021)
 
 ### Fixes
 
@@ -14,6 +14,8 @@
    ([#6037](https://github.com/Microsoft/vscode-jupyter/issues/6037))
 1. In preview native notebooks interface, contribute `ctrl+enter` keybinding which puts the current cell into control mode instead of leaving it in edit mode after running.
    ([#6198](https://github.com/Microsoft/vscode-jupyter/issues/6198))
+1. Fix interrupt button in Native Notebook toolbar.
+   ([#6254](https://github.com/Microsoft/vscode-jupyter/issues/6254))
 
 ### Code Health
 
