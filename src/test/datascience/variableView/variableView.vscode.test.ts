@@ -74,8 +74,7 @@ suite('DataScience - VariableView', () => {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test showing the basic variable view with a value or two
-    test('IANHU Can show VariableView (webview-test)', async function () {
-        //return this.skip();
+    test('Can show VariableView (webview-test)', async function () {
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
@@ -111,8 +110,7 @@ suite('DataScience - VariableView', () => {
         verifyViewVariables(expectedVariables, htmlResult);
     });
 
-    test('IANHU Variable view document switching (webview-test)', async function () {
-        this.timeout(60_000);
+    test('Variable view document switching (webview-test)', async function () {
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
@@ -151,18 +149,6 @@ suite('DataScience - VariableView', () => {
         // Because this document was not open, we need to open the variable view again
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
-        //const coreVariableView2 = await variableViewProvider.activeVariableView;
-        //// eslint-disable-next-line @typescript-eslint/no-explicit-any
-        //const variableView2 = (coreVariableView2 as any) as ITestWebviewHost;
-
-        // Add our message listener
-        //const onMessageListener2 = new OnMessageListener(variableView);
-
-        // const varsDone = createDeferredFromPromise(
-        // onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete)
-        // );
-
         // Execute a second cell on the second document
         await insertCodeCell('test3 = "MYTESTVALUE3"', { index: 1 });
         const cell3 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
@@ -172,9 +158,6 @@ suite('DataScience - VariableView', () => {
         // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
         await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
 
-        //const htmlResult2 = await variableView2?.getHTMLById('variable-view-main-panel');
-        //await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
-
         const htmlResult2 = await variableView?.getHTMLById('variable-view-main-panel');
 
         // Parse the HTML for our expected variables
@@ -183,6 +166,5 @@ suite('DataScience - VariableView', () => {
             { name: 'test3', type: 'str', length: '12', value: ' MYTESTVALUE3' }
         ];
         verifyViewVariables(expectedVariables2, htmlResult2);
-        // Change back to the first document
     });
 });
