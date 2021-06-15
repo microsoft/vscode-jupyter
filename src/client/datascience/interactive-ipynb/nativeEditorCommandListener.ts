@@ -14,6 +14,7 @@ import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands, Telemetry } from '../constants';
 import { IDataScienceCommandListener, IDataScienceErrorHandler, INotebookEditorProvider } from '../types';
+import { isUri } from '../../common/utils/misc';
 
 @injectable()
 export class NativeEditorCommandListener implements IDataScienceCommandListener {
@@ -93,7 +94,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
 
     private interruptKernel(notebookUri: Uri | undefined) {
         // `document` may be undefined if this command is invoked from the command palette.
-        if (notebookUri) {
+        if (isUri(notebookUri)) {
             traceInfo(`Interrupt requested for ${notebookUri.toString()} in nativeEditorCommandListener`);
             traceInfo(`this.provider.activeEditor?.file.toString() = ${this.provider.activeEditor?.file.toString()}`);
             traceInfo(`this.provider.editors = ${this.provider.editors.map((item) => item.file.toString())}`);
