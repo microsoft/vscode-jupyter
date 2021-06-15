@@ -39,6 +39,8 @@ export class MockStatusBarItem implements vscode.StatusBarItem {
     public priority!: number;
     public text!: string;
     public tooltip!: string;
+    // Will merge with tooltip
+    public tooltip2: string | vscode.MarkdownString | undefined;
     public color!: string;
     public command!: string;
     // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
