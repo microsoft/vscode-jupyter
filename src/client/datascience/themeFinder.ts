@@ -11,6 +11,7 @@ import { IFileSystem } from '../common/platform/types';
 
 import { IExtensions } from '../common/types';
 import { getLanguageConfiguration } from '../language/languageConfiguration';
+import { IPairInterface } from './interactive-common/serialization';
 import { IThemeFinder } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -153,13 +154,33 @@ export class ThemeFinder implements IThemeFinder {
             const filePath = path.join(extensionsPath, 'language-configuration.json');
             if (await this.fs.localFileExists(filePath)) {
                 const contents = await this.fs.readLocalFile(filePath);
-                return JSON.parse(contents) as LanguageConfiguration;
+                const config = JSON.parse(contents);
+                // Open close pairs have to be recreated for autoClosingPairs and surroundingPairs
+                const autoClosingPairs = config.autoClosingPairs as IPairInterface[];
+                const surroundingPairs = config.surroundingPairs as IPairInterface[];
+                config.autoClosingPairs = this.fixupPairs(autoClosingPairs);
+                config.surroundingPairs = this.fixupPairs(surroundingPairs);
+                return config;
             }
         } catch {
             // Do nothing if an error
         }
 
         return {};
+    }
+
+    private fixupPairs(pairs: IPairInterface[]): IPairInterface[] {
+        return pairs.map((p) => {
+            if (!p.close && !p.open) {
+                // P must be an array of strings then.
+                const strings = (<unknown>p) as string[];
+                return {
+                    open: strings[0],
+                    close: strings[1]
+                };
+            }
+            return p;
+        });
     }
 
     private async findMatchingLanguages(language: string, rootPath: string): Promise<string | undefined> {
