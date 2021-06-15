@@ -59,7 +59,7 @@ interface IHistoryItem {
     code: string;
 }
 
-const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
+const PREFERRED_VIEWGROUP = 'JupyterDataWranglerPreferredViewColumn';
 const dataWranglerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
 export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> implements IDataWrangler, IDisposable {
@@ -117,7 +117,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
             dataWranglerDir,
             [path.join(dataWranglerDir, 'commons.initial.bundle.js'), path.join(dataWranglerDir, 'dataWrangler.js')],
             localize.DataScience.dataExplorerTitle(),
-            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.Two,
+            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One,
             useCustomEditorApi
         );
         this.onDidDispose(this.dataWranglerDisposed, this);

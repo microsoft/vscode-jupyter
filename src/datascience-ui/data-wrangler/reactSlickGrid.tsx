@@ -266,6 +266,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
             this.dataView.onRowCountChanged.subscribe((_e, _args) => {
                 grid.updateRowCount();
+                if (grid.getDataLength() === 0) {
+                    const canvasElement = grid.getCanvasNode();
+                    canvasElement.innerHTML = '<div class="no-data"><span>No data</span></div>';
+                }
                 grid.render();
             });
 

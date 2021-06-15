@@ -31,3 +31,8 @@
     border-right: 1px solid transparent;
     border-bottom-color: none;
 }
+
+.no-data {
+    margin: 4px;
+    padding: 4px;
+}

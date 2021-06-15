@@ -191,7 +191,7 @@ export class DataWranglerMainPanel extends React.Component<IMainPanelProps, IMai
                     onToggleFilter={() => this.toggleFilterEvent.notify()}
                 />
                 {this.renderSliceControls()}
-                {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
+                {this.state.styleReady && this.renderGrid()}
             </div>
         );
     };
