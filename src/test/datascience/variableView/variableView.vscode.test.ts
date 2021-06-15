@@ -25,7 +25,6 @@ import { verifyViewVariables } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../client/common/logger';
-import { createDeferred, createDeferredFromPromise } from '../../../client/common/utils/async';
 
 suite('DataScience - VariableView', () => {
     let api: IExtensionTestApi;
@@ -75,7 +74,7 @@ suite('DataScience - VariableView', () => {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test showing the basic variable view with a value or two
-    test('Can show VariableView (webview-test)', async function () {
+    test('IANHU Can show VariableView (webview-test)', async function () {
         //return this.skip();
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
@@ -116,7 +115,7 @@ suite('DataScience - VariableView', () => {
         this.timeout(60_000);
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
@@ -145,7 +144,7 @@ suite('DataScience - VariableView', () => {
 
         // Execute a cell on the second document
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 0 });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
         await runCell(cell2);
         await waitForExecutionCompletedSuccessfully(cell2);
 
@@ -160,13 +159,13 @@ suite('DataScience - VariableView', () => {
         // Add our message listener
         //const onMessageListener2 = new OnMessageListener(variableView);
 
-        const varsDone = createDeferredFromPromise(
-            onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete)
-        );
+        // const varsDone = createDeferredFromPromise(
+        // onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete)
+        // );
 
         // Execute a second cell on the second document
         await insertCodeCell('test3 = "MYTESTVALUE3"', { index: 1 });
-        const cell3 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+        const cell3 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
         await runCell(cell3);
         await waitForExecutionCompletedSuccessfully(cell3);
 
@@ -186,7 +185,4 @@ suite('DataScience - VariableView', () => {
         verifyViewVariables(expectedVariables2, htmlResult2);
         // Change back to the first document
     });
-
-    // Long list of variables loads
-    // Open data viewer?
 });
