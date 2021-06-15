@@ -31,7 +31,11 @@ import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Identifiers, LiveShare, LiveShareCommands, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
-import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../jupyter/kernels/helpers';
+import {
+    getDisplayNameOrNameOfKernelConnection,
+    getLanguageInNotebookMetadata,
+    isPythonKernelConnection
+} from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
@@ -50,6 +54,9 @@ import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { KernelSpecNotFoundError } from './kernelSpecNotFoundError';
+import { IPythonExecutionFactory } from '../../../common/process/types';
+import { getResourceType } from '../../common';
+import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -200,7 +207,15 @@ export class HostRawNotebookProvider
                 !kernelConnectionMetadata ||
                 (kernelConnectionMetadata?.kind === 'startUsingKernelSpec' && !kernelConnectionMetadata?.kernelSpec)
             ) {
-                notebookPromise.reject(new KernelSpecNotFoundError());
+                sendTelemetryEvent(Telemetry.KernelSpecNotFoundError, undefined, {
+                    resourceType: getResourceType(resource),
+                    language: getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata)),
+                    kernelConnectionProvided: !!kernelConnection,
+                    notebookMetadataProvided: !!notebookMetadata,
+                    hasKernelSpecInMetadata: !!notebookMetadata?.kernelspec,
+                    kernelConnectionFound: !!kernelConnectionMetadata
+                });
+                notebookPromise.reject(new KernelSpecNotFoundError(notebookMetadata));
             } else {
                 // If a kernel connection was not provided, then we set it up here.
                 if (!kernelConnectionProvided) {
@@ -231,7 +246,8 @@ export class HostRawNotebookProvider
                         this.workspaceService,
                         this.appShell,
                         this.fs,
-                        this.vscodeNotebook
+                        this.vscodeNotebook,
+                        this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
                     );
 
                     // Run initial setup

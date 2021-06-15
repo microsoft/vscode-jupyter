@@ -37,7 +37,7 @@ import * as uuid from 'uuid/v4';
 import { initializeIcons } from '@fluentui/react';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
-const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor']);
+const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);
 const RowNumberColumnName = uuid(); // Unique key for our column containing row numbers
 
 // Our css has to come after in order to override body styles
@@ -71,6 +71,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
     private resetGridEvent: Slick.Event<ISlickGridSlice> = new Slick.Event<ISlickGridSlice>();
+    private resizeGridEvent: Slick.Event<void> = new Slick.Event<void>();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
     private gridColumnUpdateEvent: Slick.Event<Slick.Column<Slick.SlickData>[]> = new Slick.Event<
         Slick.Column<Slick.SlickData>[]
@@ -180,6 +181,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     originalVariableShape={this.state.originalVariableShape}
                     handleSliceRequest={this.handleSliceRequest}
                     onCheckboxToggled={this.handleCheckboxToggle}
+                    onPanelToggled={() => this.resizeGridEvent.notify()}
                 />
             );
         }
@@ -262,6 +264,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 idProperty={RowNumberColumnName}
                 rowsAdded={this.gridAddEvent}
                 resetGridEvent={this.resetGridEvent}
+                resizeGridEvent={this.resizeGridEvent}
                 columnsUpdated={this.gridColumnUpdateEvent}
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
@@ -277,7 +280,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initializeData(payload: any) {
         if (payload) {
-            const variable = payload as IDataFrameInfo & { isSliceDataEnabled: boolean };
+            const variable = payload as IDataFrameInfo;
             if (variable) {
                 const columns = this.generateColumns(variable);
                 const totalRowCount = variable.rowCount ?? 0;
@@ -287,8 +290,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const originalVariableShape = variable.shape ?? this.state.originalVariableShape;
                 const variableName = this.state.variableName ?? variable.name;
                 const fileName = this.state.fileName ?? variable.fileName;
-                const isSliceDataEnabled =
-                    variable.isSliceDataEnabled && SliceableTypes.has(originalVariableType || '');
+                const isSliceDataEnabled = SliceableTypes.has(originalVariableType || '');
                 const sliceExpression = variable.sliceExpression;
 
                 // New data coming in, so reset everything and clear our cache of columns

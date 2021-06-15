@@ -181,14 +181,14 @@ suite('Experimentation service', () => {
     suite('In-experiment check', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const experiment: any = 'Test Experiment - experiment';
-        let telemetryEvents: { eventName: string; properties: object }[] = [];
+        let telemetryEvents: { eventName: string; properties: object | undefined }[] = [];
         let isCachedFlightEnabledStub: sinon.SinonStub;
         let sendTelemetryEventStub: sinon.SinonStub;
 
         setup(() => {
             sendTelemetryEventStub = sinon
                 .stub(Telemetry, 'sendTelemetryEvent')
-                .callsFake((eventName: string, _, properties: object) => {
+                .callsFake((eventName: string, _, properties: object | undefined) => {
                     const telemetry = { eventName, properties };
                     telemetryEvents.push(telemetry);
                 });

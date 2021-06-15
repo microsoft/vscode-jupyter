@@ -3,6 +3,7 @@
 import { inject, injectable } from 'inversify';
 import { ExtensionMode } from 'vscode';
 import { IS_REMOTE_NATIVE_TEST } from '../../../test/constants';
+import { traceError } from '../logger';
 import { IExtensionContext } from '../types';
 import { IEncryptedStorage } from './types';
 
@@ -24,7 +25,11 @@ export class EncryptedStorage implements IEncryptedStorage {
         }
 
         if (!value) {
-            await this.extensionContext.secrets.delete(`${service}.${key}`);
+            try {
+                await this.extensionContext.secrets.delete(`${service}.${key}`);
+            } catch (e) {
+                traceError(e);
+            }
         } else {
             await this.extensionContext.secrets.store(`${service}.${key}`, value);
         }
@@ -34,8 +39,18 @@ export class EncryptedStorage implements IEncryptedStorage {
         if (IS_REMOTE_NATIVE_TEST && this.extensionContext.extensionMode !== ExtensionMode.Production) {
             return this.testingState.get(`${service}#${key}`);
         }
-        // eslint-disable-next-line
-        const val = await this.extensionContext.secrets.get(`${service}.${key}`);
-        return val;
+        try {
+            // eslint-disable-next-line
+            const val = await this.extensionContext.secrets.get(`${service}.${key}`);
+            return val;
+        } catch (e) {
+            // If we get an error trying to get a secret, it might be corrupted. So we delete it.
+            try {
+                await this.extensionContext.secrets.delete(`${service}.${key}`);
+                return;
+            } catch (e) {
+                traceError(e);
+            }
+        }
     }
 }

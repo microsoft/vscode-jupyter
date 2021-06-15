@@ -6,6 +6,7 @@ import type { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
+import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -54,6 +55,7 @@ import {
 import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
 import { IS_CI_SERVER } from '../../../test/ciConstants';
+import { IPythonExecutionFactory } from '../../common/process/types';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -205,7 +207,8 @@ export class JupyterNotebookBase implements INotebook {
         private workspace: IWorkspaceService,
         private applicationService: IApplicationShell,
         private fs: IFileSystem,
-        private readonly vscNotebook: IVSCodeNotebook
+        private readonly vscNotebook: IVSCodeNotebook,
+        private readonly executionFactory: IPythonExecutionFactory
     ) {
         this.sessionStartTime = Date.now();
 
@@ -343,7 +346,8 @@ export class JupyterNotebookBase implements INotebook {
                 await sendTelemetryForPythonKernelExecutable(
                     this,
                     this._resource?.fsPath || this._identity.fsPath,
-                    this._executionInfo.kernelConnectionMetadata
+                    this._executionInfo.kernelConnectionMetadata,
+                    this.executionFactory
                 );
             }
             // Run any startup commands that we specified. Support the old form too
@@ -961,7 +965,7 @@ export class JupyterNotebookBase implements INotebook {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggested;
                 return this.changeDirectoryIfPossible(this._workingDirectory);
-            } else if (launchingFile && (await this.fs.localFileExists(launchingFile))) {
+            } else if (launchingFile && (await this.fs.localDirectoryExists(path.dirname(launchingFile)))) {
                 // Combine the working directory with this file if possible.
                 this._workingDirectory = expandWorkingDir(
                     this._executionInfo.workingDir,

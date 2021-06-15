@@ -4,23 +4,21 @@
 'use strict';
 
 import { assert } from 'chai';
-import { NotebookCellExecutionState } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
-import { hasErrorOutput, NotebookCellStateTracker } from '../../../client/datascience/notebook/helpers/helpers';
-import { IExtensionTestApi } from '../../common';
+import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';
 import {
-    canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     insertCodeCell,
     selectCell,
     startJupyterServer,
-    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
-    createEmptyPythonNotebook
+    createEmptyPythonNotebook,
+    runAllCellsInActiveNotebook,
+    canRunNotebookTests
 } from './helper';
 
 suite('Notebook Editor tests', function () {
@@ -44,7 +42,6 @@ suite('Notebook Editor tests', function () {
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         await startJupyterServer();
-        await trustAllNotebooks();
         await closeActiveWindows();
         await createEmptyPythonNotebook(disposables);
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
@@ -58,59 +55,33 @@ suite('Notebook Editor tests', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test('Run cells above', async function () {
-        return this.skip();
+    test('Toggle selected cells output - O Keybind', async function () {
         // add some cells
         await insertCodeCell('print("0")', { index: 0 });
         await insertCodeCell('print("1")', { index: 1 });
         await insertCodeCell('print("2")', { index: 2 });
 
-        // select second cell
-        await selectCell(vscodeNotebook.activeNotebookEditor?.document!, 1, 1);
+        const firstCell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const secondCell = vscodeNotebook.activeNotebookEditor?.document!.cellAt(1)!;
+        const thirdCell = vscodeNotebook.activeNotebookEditor?.document!.cellAt(2)!;
 
-        // run command
-        await commandManager.executeCommand(
-            Commands.NativeNotebookRunAllCellsAbove,
-            vscodeNotebook.activeNotebookEditor?.document.cells[1]!
-        );
+        // select second and third cell
+        await selectCell(vscodeNotebook.activeNotebookEditor?.document!, 1, 3);
 
-        const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        // run and wait
+        await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(firstCell);
-        const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
-
-        // The first cell should have a runState of Success
-        assert.strictEqual(NotebookCellStateTracker.getCellState(firstCell), NotebookCellExecutionState.Idle);
-        assert.isFalse(hasErrorOutput(firstCell.outputs));
-
-        // The third cell should have an undefined runState
-        assert.strictEqual(NotebookCellStateTracker.getCellState(thirdCell), undefined);
-    });
-
-    test('Run cells below', async function () {
-        return this.skip();
-        // add some cells
-        await insertCodeCell('print("0")', { index: 0 });
-        await insertCodeCell('print("1")', { index: 1 });
-        await insertCodeCell('print("2")', { index: 2 });
-
-        // select second cell
-        await selectCell(vscodeNotebook.activeNotebookEditor?.document!, 1, 1);
-
-        // run command
-        await commandManager.executeCommand(
-            Commands.NativeNotebookRunCellAndAllBelow,
-            vscodeNotebook.activeNotebookEditor?.document.cells[1]!
-        );
-
-        const firstCell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-        const thirdCell = vscodeNotebook.activeNotebookEditor?.document.cells![2]!;
+        await waitForExecutionCompletedSuccessfully(secondCell);
         await waitForExecutionCompletedSuccessfully(thirdCell);
 
-        // The first cell should have an undefined runState
-        assert.strictEqual(NotebookCellStateTracker.getCellState(firstCell), undefined);
+        // execute command
+        await commandManager.executeCommand(Commands.NotebookEditorToggleOutput);
 
-        // The third cell should have a runState of Success
-        assert.strictEqual(NotebookCellStateTracker.getCellState(thirdCell), NotebookCellExecutionState.Idle);
-        assert.isFalse(hasErrorOutput(thirdCell.outputs));
+        // check that the outputs are collapsed
+        await waitForCondition(
+            async () => secondCell?.metadata.outputCollapsed! && thirdCell?.metadata.outputCollapsed!,
+            10000,
+            'Outputs were not collapsed'
+        );
     });
 });

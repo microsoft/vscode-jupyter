@@ -240,13 +240,18 @@ export class JupyterSession extends BaseJupyterSession {
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (kernelConnection?.interpreter && this.connInfo.localLaunch) {
             // Make sure the kernel actually exists and is up to date.
-            await this.kernelService.ensureKernelIsUsable(kernelConnection, cancelToken, disableUI);
+            await this.kernelService.ensureKernelIsUsable(resource, kernelConnection, cancelToken, disableUI);
         }
+
+        // If kernelName is empty this can cause problems for servers that don't
+        // understand that empty kernel name means the default kernel.
+        // See https://github.com/microsoft/vscode-jupyter/issues/5290
+        const kernelName = getNameOfKernelConnection(kernelConnection) ?? this.sessionManager?.specs?.default ?? '';
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
             path: backingFile?.path || `${uuid()}.ipynb`, // Name has to be unique
-            kernelName: getNameOfKernelConnection(kernelConnection) || '', // TODO: This can't be empty. See https://github.com/microsoft/vscode-jupyter/issues/5290
+            kernelName,
             name: uuid(), // This is crucial to distinguish this session from any other.
             serverSettings: serverSettings,
             type: 'notebook'

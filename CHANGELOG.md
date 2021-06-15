@@ -1,6 +1,234 @@
 # Changelog
 
-## 2021.4.0 (31 March 2021)
+## 2021.6.99 (8 June 2021)
+
+### Enhancements
+
+1. Data Viewer Filter Rows must use explicit wildcards to search for substrings in string filters. For example, filtering by "stable" will not show the value "unstable" anymore, but filtering by "*stable" will show "stable" and "unstable".
+   ([#1142](https://github.com/Microsoft/vscode-jupyter/issues/1142))
+1. Sort variables by name and type in variable explorer.
+   ([#4585](https://github.com/Microsoft/vscode-jupyter/issues/4585))
+1. Limit languages dispalyed in the Cell language picker to languages supported by the kernel.
+   ([#5580](https://github.com/Microsoft/vscode-jupyter/issues/5580))
+1. Move native notebooks cell toolbar to the left by default.
+   ([#5605](https://github.com/Microsoft/vscode-jupyter/issues/5605))
+1. Display modal dialog box (so users don't miss this) when IPyKernel (or Jupyter) is missing (required to run Python in Interactive Window or Notebooks).
+   ([#5798](https://github.com/Microsoft/vscode-jupyter/issues/5798))
+1. Add support for [Virtual Workspaces](https://github.com/microsoft/vscode/wiki/Virtual-Workspaces).
+   ([#5803](https://github.com/Microsoft/vscode-jupyter/issues/5803))
+1. Losslessly compressed PNG images to save ~20KB.
+   (thanks [Christopher Yeh](https://github.com/chrisyeh96))
+   ([#5869](https://github.com/Microsoft/vscode-jupyter/issues/5869))
+1. Adopt `notebook/toolbar` contribution point for native notebooks.
+   ([#5954](https://github.com/Microsoft/vscode-jupyter/issues/5954))
+1. Tweak variable view fit and finish to match VS Code.
+   ([#5955](https://github.com/Microsoft/vscode-jupyter/issues/5955))
+1. Replace 'Run cells above' and 'Run cell and below' commands and cell toolbar buttons with VS Code's built-in 'Execute Above Cells' and 'Execute Cell And Below' commands and unified run button.
+   ([#6025](https://github.com/microsoft/vscode-jupyter/issues/6025))
+
+### Fixes
+
+1. Update/reinstall if module such as `IPyKernel` was installed once before or already exists.
+   ([#4758](https://github.com/Microsoft/vscode-jupyter/issues/4758))
+1. Stop listing default kernelspecs in kernel picker.
+   ([#5445](https://github.com/Microsoft/vscode-jupyter/issues/5445))
+1. Store interpreter information in notebook metadata instead of the generated kernelspec name.
+   ([#5612](https://github.com/Microsoft/vscode-jupyter/issues/5612))
+1. Restore the `Run Above/Below` cells command in `Command Palette`.
+   ([#5746](https://github.com/Microsoft/vscode-jupyter/issues/5746))
+1. Migrate 'workbench.editorAssociations' setting to new format.
+   ([#5806](https://github.com/Microsoft/vscode-jupyter/issues/5806))
+1. Add ABCMeta and type to variable explorer exclude list.
+   ([#5865](https://github.com/Microsoft/vscode-jupyter/issues/5865))
+1. Blank Python notebooks do not use active interpreter.
+   ([#5874](https://github.com/Microsoft/vscode-jupyter/issues/5874))
+1. Change language of cell to reflect langauges supported by the selected Kernel.
+   ([#5924](https://github.com/Microsoft/vscode-jupyter/issues/5924))
+1. Resolve issue related to `Interrupt` button vanishing when tabbing across notebooks while a cell is being executed.
+   ([#5925](https://github.com/Microsoft/vscode-jupyter/issues/5925))
+1. Delete encrypted storage in a try catch to avoid errors.
+   ([#5934](https://github.com/Microsoft/vscode-jupyter/issues/5934))
+1. Support new renderer API in Jupyter.
+   ([#5952](https://github.com/Microsoft/vscode-jupyter/issues/5952))
+1. Hide kernels belonging to deleted Python environments from kernel picker.
+   ([#6164](https://github.com/Microsoft/vscode-jupyter/issues/6164))
+
+### Code Health
+
+1. Error category for unsupported kernelspec file args.
+   ([#5492](https://github.com/Microsoft/vscode-jupyter/issues/5492))
+1. Fix basic execution issues with nonConda 'remote' and nonConda 'local' test suites.
+   ([#5660](https://github.com/Microsoft/vscode-jupyter/issues/5660))
+1. Update to new message API for native notebook preloads.
+   ([#5753](https://github.com/Microsoft/vscode-jupyter/issues/5753))
+1. Rename of onDidChangeCellExecutionState.
+   ([#5809](https://github.com/Microsoft/vscode-jupyter/issues/5809))
+1. Fix functional ipywidget tests.
+   ([#5842](https://github.com/Microsoft/vscode-jupyter/issues/5842))
+1. When using remote Jupyter connections pre-fetch kernels only when opening a notebook.
+   ([#5846](https://github.com/Microsoft/vscode-jupyter/issues/5846))
+1. Removed execution isolation script.
+   ([#5931](https://github.com/Microsoft/vscode-jupyter/issues/5931))
+1. VSCode API naming changes for NotebookCellExecution, NotebookRendererScript.
+   ([#6014](https://github.com/Microsoft/vscode-jupyter/issues/6014))
+1. API Changes viewType => notebookType and notebook namespace to notebooks.
+   ([#6046](https://github.com/microsoft/vscode-jupyter/issues/6046))
+1. Update test init code to use window and not notebook for editor properties.
+   ([#6098](https://github.com/Microsoft/vscode-jupyter/issues/6098))
+1. Support the new renderer API in jupyter extension.
+   ([#6118](https://github.com/Microsoft/vscode-jupyter/issues/6118))
+1. Update to new notebookcontroller selection function name.
+   ([#6121](https://github.com/Microsoft/vscode-jupyter/issues/6121))
+1. Inline execution handler change to notebook API.
+   ([#6137](https://github.com/Microsoft/vscode-jupyter/issues/6137))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+## 2021.6.0 (05 May 2021)
+
+### Enhancements
+
+1. Manage contributed Jupyter kernels registration.
+   ([#4490](https://github.com/Microsoft/vscode-jupyter/issues/4490))
+1. Update variable explorer icon.
+   ([#5355](https://github.com/Microsoft/vscode-jupyter/issues/5355))
+1. Add keybind 'O' to toggle the output of all selected cells in a notebook.
+   ([#5425](https://github.com/Microsoft/vscode-jupyter/issues/5425))
+1. Recommend extensions when opening notebooks targeting specific languages.
+   ([#5577](https://github.com/Microsoft/vscode-jupyter/issues/5577))
+
+### Fixes
+
+1. Restore the Intellisense documentation on custom editor notebook.
+   ([#5124](https://github.com/Microsoft/vscode-jupyter/issues/5124))
+1. Upgrade vega-transforms and support vegalite v4.
+   ([#5149](https://github.com/Microsoft/vscode-jupyter/issues/5149))
+1. Add a 10 minute delay to surveys.
+   ([#5261](https://github.com/Microsoft/vscode-jupyter/issues/5261))
+1. Display formatted markdown description for `jupyter.variableQueries` setting in settings UI.
+   ([#5289](https://github.com/Microsoft/vscode-jupyter/issues/5289))
+1. Pass remote Jupyter server's default kernelspec name in remote kernel connection.
+   ([#5290](https://github.com/Microsoft/vscode-jupyter/issues/5290))
+1. Ensure data viewer grid is resized when slice panel is toggled so that horizontal scrollbar remains visible.
+   ([#5309](https://github.com/Microsoft/vscode-jupyter/issues/5309))
+1. When 3rd party CDN downloads need to be enabled for ipywidgets support, display More Info and Enable Downloads buttons instead of embedding them as links in the message.
+   ([#5352](https://github.com/Microsoft/vscode-jupyter/issues/5352))
+1. Fix the output link in the kernel timeout message.
+   ([#5360](https://github.com/Microsoft/vscode-jupyter/issues/5360))
+1. Stop asking users to install ipykernel on autostart, only do it when a cell is run.
+   ([#5368](https://github.com/Microsoft/vscode-jupyter/issues/5368))
+1. Fix for 'Export as Python Script' option not appearing.
+   ([#5403](https://github.com/Microsoft/vscode-jupyter/issues/5403))
+1. Update to remove usage of .cells property from NotebookDocument. Also update TextDocument with notebook property and QuickPick.
+   ([#5417](https://github.com/Microsoft/vscode-jupyter/issues/5417))
+1. Delete extension context secrets if we get an error when getting them.
+   Small fixes on error handling.
+   ([#5419](https://github.com/Microsoft/vscode-jupyter/issues/5419))
+1. When native notebook is untrusted, do not allow cell execution and prompt to trust.
+   ([#5436](https://github.com/Microsoft/vscode-jupyter/issues/5436))
+1. Resize the untrusted icon.
+   ([#5437](https://github.com/Microsoft/vscode-jupyter/issues/5437))
+1. Save notebook metadata in ipynb even if the selected Kernel is provided by some other extension.
+   ([#5460](https://github.com/Microsoft/vscode-jupyter/issues/5460))
+1. Invalidate cached interpreters when Python extension active interpreter changes.
+   ([#5470](https://github.com/Microsoft/vscode-jupyter/issues/5470))
+1. Use interpreter information stored in kernelspec.json file when starting kernels.
+   ([#5495](https://github.com/Microsoft/vscode-jupyter/issues/5495))
+1. Update to new selections API.
+   ([#5515](https://github.com/Microsoft/vscode-jupyter/issues/5515))
+1. CellStatusBarItem update for Native Notebooks. Along with other breaking API changes.
+   ([#5527](https://github.com/Microsoft/vscode-jupyter/issues/5527))
+1. Remove statusbar from Notebook Cells.
+   ([#5541](https://github.com/Microsoft/vscode-jupyter/issues/5541))
+1. Hide Jupyter commands from other types of notebooks.
+   ([#5559](https://github.com/Microsoft/vscode-jupyter/issues/5559))
+1. Update to newest vscode Notebook API changes.
+   ([#5598](https://github.com/Microsoft/vscode-jupyter/issues/5598))
+1. Increase the width of the data viewer scrollbar.
+   ([#5610](https://github.com/Microsoft/vscode-jupyter/issues/5610))
+1. Fix `NameError: name '_VSCODE_InfoImport' is not defined` when attempting to open the data viewer from 2 or more different scopes in a single debug session.
+   ([#5627](https://github.com/Microsoft/vscode-jupyter/issues/5627))
+1. Use active interpreter when starting Kernels for Interactive Window.
+   ([#5628](https://github.com/Microsoft/vscode-jupyter/issues/5628))
+1. Use `download` package to download widget scripts.
+   ([#5633](https://github.com/Microsoft/vscode-jupyter/issues/5633))
+1. Start kernel if not already started when using `Run cells above/below`.
+   ([#5636](https://github.com/Microsoft/vscode-jupyter/issues/5636))
+
+### Code Health
+
+1. Add functional test for large data in data viewer.
+   ([#5207](https://github.com/Microsoft/vscode-jupyter/issues/5207))
+1. Pass `NotebookDocument` when invoking `jupyter.notebookeditor.interruptkernel`.
+   ([#5242](https://github.com/Microsoft/vscode-jupyter/issues/5242))
+1. Remove data slicing experiment feature gate.
+   ([#5399](https://github.com/Microsoft/vscode-jupyter/issues/5399))
+1. Ignore errors throw by VS Code when updating cell output during execution.
+   ([#5446](https://github.com/Microsoft/vscode-jupyter/issues/5446))
+1. Improvements to telemetry used to check if we're not starting the right interpreter (for a Python kernel).
+   ([#5509](https://github.com/Microsoft/vscode-jupyter/issues/5509))
+1. Add telemetry to check if we fail to update kernelspecs with environment variables.
+   ([#5547](https://github.com/Microsoft/vscode-jupyter/issues/5547))
+1. Ensure `canvas` and `playwright-chromium` are setup as optional dependencies in `package.json`.
+   ([#5567](https://github.com/Microsoft/vscode-jupyter/issues/5567))
+1. Fix tests after kernel push changes.
+   ([#5585](https://github.com/Microsoft/vscode-jupyter/issues/5585))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+
+## 2021.5.1 (12 April 2021)
+
+### Code Health
+
+1. Check the responses of prompts for installation of missing packages such as `IPyKernel`.
+   ([#5432](https://github.com/Microsoft/vscode-jupyter/issues/5432))
+
+### Fixes
+
+1. Fix for 'Export as Python Script' option not appearing.
+   ([#5403](https://github.com/Microsoft/vscode-jupyter/issues/5403))
+1. Delete extension context secrets if we get an error when getting them.
+   Small fixes on error handling.
+   ([#5419](https://github.com/Microsoft/vscode-jupyter/issues/5419))
+1. Enable correct plot background for Native Notebooks.
+   ([#5353](https://github.com/Microsoft/vscode-jupyter/issues/5353))
+1. Stop asking users to install ipykernel on autostart, only do it when a cell is ran.
+   ([#5368](https://github.com/microsoft/vscode-jupyter/issues/5368))
+1. Invalidate cached interpreters when Python extension active interpreter changes.
+   ([#5470](https://github.com/microsoft/vscode-jupyter/issues/5470))
+
+## 2021.5.0 (31 March 2021)
 
 ### Enhancements
 

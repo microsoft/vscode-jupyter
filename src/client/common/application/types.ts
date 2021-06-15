@@ -58,18 +58,18 @@ import {
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent,
-    NotebookCellMetadata,
     NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
-    NotebookDocumentFilter,
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
-    NotebookKernel,
-    NotebookKernelProvider
+    NotebookDocumentContentOptions,
+    NotebookRendererScript,
+    NotebookController,
+    NotebookCell
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -815,6 +815,15 @@ export interface IWorkspaceService {
      * @return The full configuration or a subset.
      */
     getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration;
+    /**
+     * When true, the user has explicitly trusted the contents of the workspace.
+     */
+    readonly isTrusted: boolean;
+
+    /**
+     * Event that fires when the current workspace has been trusted.
+     */
+    readonly onDidGrantWorkspaceTrust: Event<void>;
 }
 
 export const ITerminalManager = Symbol('ITerminalManager');
@@ -1556,13 +1565,10 @@ export type NotebookCellChangedEvent =
     | NotebookDocumentMetadataChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
-    readonly onDidChangeActiveNotebookKernel: Event<{
-        document: NotebookDocument;
-        kernel: NotebookKernel | undefined;
-    }>;
     readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
+    readonly onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
     readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     readonly onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
@@ -1572,21 +1578,20 @@ export interface IVSCodeNotebook {
     registerNotebookContentProvider(
         notebookType: string,
         provider: NotebookContentProvider,
-        options?: {
-            /**
-             * Controls if outputs change will trigger notebook document content change and if it will be used in the diff editor
-             * Default to false. If the content provider doesn't persisit the outputs in the file document, this should be set to true.
-             */
-            transientOutputs: boolean;
-            /**
-             * Controls if a meetadata property change will trigger notebook document content change and if it will be used in the diff editor
-             * Default to false. If the content provider doesn't persisit a metadata property in the file document, it should be set to true.
-             */
-            transientMetadata: { [K in keyof NotebookCellMetadata]?: boolean };
-        }
+        options?: NotebookDocumentContentOptions
     ): Disposable;
 
-    registerNotebookKernelProvider(selector: NotebookDocumentFilter, provider: NotebookKernelProvider): Disposable;
+    createNotebookController(
+        id: string,
+        viewType: string,
+        label: string,
+        handler?: (
+            cells: NotebookCell[],
+            notebook: NotebookDocument,
+            controller: NotebookController
+        ) => void | Thenable<void>,
+        rendererScripts?: NotebookRendererScript[]
+    ): NotebookController;
 }
 
 export const IEncryptedStorage = Symbol('IAuthenticationService');

@@ -1,3 +1,7 @@
+::-webkit-scrollbar {
+    width: 20px;
+}
+
 .outer-container {
     width: auto;
     height: 100%;

@@ -13,6 +13,7 @@ import { ProcessService } from '../../../client/common/process/proc';
 import { IDisposable } from '../../../client/common/types';
 import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';
@@ -26,7 +27,6 @@ import {
     runAllCellsInActiveNotebook,
     insertCodeCell,
     startJupyterServer,
-    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToChange,
     waitForKernelToGetAutoSelected
@@ -111,7 +111,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             proc.exec(venvNoRegPythonPath, ['-m', 'pip', 'install', 'ipykernel'])
         ]);
 
-        await trustAllNotebooks();
         await startJupyterServer();
         sinon.restore();
     });
@@ -120,8 +119,15 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         console.log(`Start test ${this.currentTest?.title}`);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        await trustAllNotebooks();
         nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables, venvNoKernelDisplayName);
+        // Update hash in notebook metadata.
+        fs.writeFileSync(
+            nbFile1,
+            fs
+                .readFileSync(nbFile1)
+                .toString('utf8')
+                .replace('<hash>', getInterpreterHash({ path: venvNoKernelPythonPath }))
+        );
         await closeActiveWindows();
         sinon.restore();
         console.log(`Start Test completed ${this.currentTest?.title}`);
@@ -141,7 +147,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Run all cells
         await runAllCellsInActiveNotebook();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
@@ -156,7 +162,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Run all cells
         await runAllCellsInActiveNotebook();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
@@ -173,8 +179,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('print("Hello World")', { index: 1 });
         await runAllCellsInActiveNotebook();
 
-        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
 
         // If it was successfully selected, then we know a Python kernel was correctly selected & managed to run the code.
         await Promise.all([waitForExecutionCompletedSuccessfully(cell1), waitForExecutionCompletedSuccessfully(cell2)]);
@@ -189,7 +195,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Run all cells
         await runAllCellsInActiveNotebook();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
@@ -216,7 +222,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Run all cells
         await runAllCellsInActiveNotebook();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed is not venvkernel
@@ -246,7 +252,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Run all cells
         await runAllCellsInActiveNotebook();
 
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Confirm the executable printed is not venvNoReg

@@ -53,8 +53,7 @@ import {
     INotebookModel,
     INotebookProvider,
     IStatusProvider,
-    IThemeFinder,
-    ITrustService
+    IThemeFinder
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorOldWebView } from './nativeEditorOldWebView';
@@ -224,7 +223,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
             this.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider),
-            this.serviceContainer.get<ITrustService>(ITrustService),
             model,
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),

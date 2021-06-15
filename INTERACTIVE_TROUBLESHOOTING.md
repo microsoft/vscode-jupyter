@@ -58,7 +58,7 @@ https://www.anaconda.com/download
 You can also install Jupyter using pip.
 
 1. python -m pip install --upgrade pip
-1. python -m pip install jupyter
+1. python -m pip install jupyter -U --force-reinstall
 1. Restart VS Code
 1. Pick the Python environment you did the pip install in
 

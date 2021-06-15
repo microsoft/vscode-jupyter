@@ -16,8 +16,8 @@ import {
     runCell,
     insertCodeCell,
     prewarmNotebooks,
-    trustAllNotebooks,
-    waitForExecutionCompletedSuccessfully
+    waitForExecutionCompletedSuccessfully,
+    workAroundVSCodeNotebookStartPages
 } from '../notebook/helper';
 import { OnMessageListener } from '../vscodeTestHelpers';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -47,7 +47,7 @@ suite('DataScience - VariableView', () => {
         if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
-        await trustAllNotebooks();
+        await workAroundVSCodeNotebookStartPages();
         await prewarmNotebooks();
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -79,7 +79,7 @@ suite('DataScience - VariableView', () => {
         //return this.skip();
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
@@ -96,7 +96,7 @@ suite('DataScience - VariableView', () => {
 
         // Send a second cell
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cells![1]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
         await runCell(cell2);
 
         // Wait until our VariablesComplete message to see that we have the new variables and have rendered them

@@ -20,7 +20,7 @@ import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProv
 import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { JupyterNotebookView } from './constants';
-import { NotebookCellLanguageService } from './defaultCellLanguageService';
+import { NotebookCellLanguageService } from './cellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
 
@@ -191,9 +191,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString())!;
         deferred.resolve(editor);
         this.notebookEditorsByUri.set(uri.toString(), editor);
-        if (!model.isTrusted) {
-            await this.commandManager.executeCommand(Commands.TrustNotebook, model.file);
-        }
     }
     private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
         if (!editor) {

@@ -8,6 +8,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 
 import {
     IConfigurationService,
@@ -57,7 +58,8 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         private readonly configurationSettings: IConfigurationService,
         private readonly workspaceService: IWorkspaceService,
         private readonly stateFactory: IPersistentStateFactory,
-        private readonly httpClient: IHttpClient
+        private readonly httpClient: IHttpClient,
+        private readonly factory: IPythonExecutionFactory
     ) {
         this.userConfiguredCDNAtLeastOnce = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce,
@@ -163,12 +165,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         // If we're allowed to use CDN providers, then use them, and use in order of preference.
         if (this.configuredScriptSources.length > 0) {
             scriptProviders.push(
-                new CDNWidgetScriptSourceProvider(
-                    this.configurationSettings,
-                    this.httpClient,
-                    this.localResourceUriConverter,
-                    this.fs
-                )
+                new CDNWidgetScriptSourceProvider(this.configurationSettings, this.localResourceUriConverter, this.fs)
             );
         }
         if (this.notebook.connection && this.notebook.connection.localLaunch) {
@@ -177,7 +174,8 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                     this.notebook,
                     this.localResourceUriConverter,
                     this.fs,
-                    this.interpreterService
+                    this.interpreterService,
+                    this.factory
                 )
             );
         } else {

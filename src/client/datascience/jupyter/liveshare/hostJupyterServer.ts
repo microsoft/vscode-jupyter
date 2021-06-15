@@ -48,6 +48,7 @@ import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
+import { IPythonExecutionFactory } from '../../../common/process/types';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
@@ -279,7 +280,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                     this.workspaceService,
                     this.appService,
                     this.fs,
-                    this.vscodeNotebook
+                    this.vscodeNotebook,
+                    serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
                 );
 
                 // Wait for it to be ready

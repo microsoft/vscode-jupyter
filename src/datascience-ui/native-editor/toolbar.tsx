@@ -50,7 +50,6 @@ export type INativeEditorToolbarProps = INativeEditorDataProps & {
     interruptKernel: typeof actionCreators.interruptKernel;
     selectKernel: typeof actionCreators.selectKernel;
     selectServer: typeof actionCreators.selectServer;
-    launchNotebookTrustPrompt: typeof actionCreators.launchNotebookTrustPrompt;
     isNotebookTrusted: boolean;
 };
 
@@ -120,11 +119,6 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
         const selectServer = () => {
             this.props.selectServer();
             this.props.sendCommand(NativeMouseCommandTelemetry.SelectServer);
-        };
-        const launchNotebookTrustPrompt = () => {
-            if (!this.props.isNotebookTrusted) {
-                this.props.launchNotebookTrustPrompt();
-            }
         };
         const canRunAbove = (selectedInfo.selectedCellIndex ?? -1) > 0;
         const canRunBelow =
@@ -272,7 +266,6 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                         selectKernel={selectKernel}
                         shouldShowTrustMessage={true}
                         isNotebookTrusted={this.props.isNotebookTrusted}
-                        launchNotebookTrustPrompt={launchNotebookTrustPrompt}
                     />
                 </div>
                 <div className="toolbar-divider" />

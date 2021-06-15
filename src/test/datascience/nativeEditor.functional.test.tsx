@@ -31,13 +31,7 @@ import { NativeEditor as NativeEditorWebView } from '../../client/datascience/in
 import { IKernelSpecQuickPickItem, KernelSpecConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import { KeyPrefix } from '../../client/datascience/notebookStorage/nativeEditorStorage';
 import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
-import {
-    ICell,
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookExporter,
-    ITrustService
-} from '../../client/datascience/types';
+import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
 import { concatMultilineString } from '../../datascience-ui/common';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { ExecutionCount } from '../../datascience-ui/interactive-common/executionCount';
@@ -171,16 +165,6 @@ suite('DataScience Native Editor', () => {
                         .returns(() => Promise.resolve(Uri.file('foo.ipynb')));
                     ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
                     tempNotebookFile = await createTemporaryFile('.ipynb');
-                    // Stub trustService.isNotebookTrusted. Some tests do not write to storage,
-                    // so explicitly calling trustNotebook on the tempNotebookFile doesn't work
-                    try {
-                        sinon
-                            .stub(ioc.serviceContainer.get<ITrustService>(ITrustService), 'isNotebookTrusted')
-                            .resolves(true);
-                    } catch (e) {
-                        // eslint-disable-next-line no-console
-                        console.log(`Stub failure ${e}`);
-                    }
                     console.log(`Start Test completed ${this.currentTest?.title}`);
                 });
 
@@ -487,7 +471,7 @@ suite('DataScience Native Editor', () => {
 
                 runMountedTest('Remote kernel can be switched and remembered', async function () {
                     // Turn off raw kernel for this test as it's testing remote
-                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true });
+                    ioc.forceDataScienceSettingsChanged({ disableZMQSupport: true, jupyterServerType: 'remote' });
 
                     const pythonService = await createPythonService(ioc, 2);
 

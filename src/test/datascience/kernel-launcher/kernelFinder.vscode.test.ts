@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as path from 'path';
 import { assert } from 'chai';
 import { Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -11,6 +12,7 @@ import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
+import { traceInfo } from '../../../client/common/logger';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {
@@ -22,8 +24,15 @@ suite('DataScience - Kernels Finder', () => {
         api = await initialize();
         kernelFinder = api.serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder);
         interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        resourceToUse = workspace.workspaceFolders![0].uri;
+        resourceToUse = Uri.file(path.join(workspace.workspaceFolders![0].uri.fsPath, 'test.ipynb'));
     });
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
+    });
+    teardown(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
+    });
+
     test('Can list all kernels', async () => {
         const kernelSpecs = await kernelFinder.listKernels(resourceToUse);
         assert.isArray(kernelSpecs);

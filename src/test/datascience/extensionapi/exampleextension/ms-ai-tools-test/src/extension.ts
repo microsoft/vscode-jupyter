@@ -13,7 +13,6 @@ export async function activate(_context: vscode.ExtensionContext) {
             await jupyter.exports.ready;
         }
         jupyter.exports.registerRemoteServerProvider(new RemoteServerPickerExample());
-        jupyter.exports.registerNewNotebookContent({ defaultCellLanguage: 'julia' });
         vscode.commands.registerCommand(
             'ms-toolsai-test.createBlankNotebook',
             () => void jupyter.exports.createBlankNotebook({ defaultCellLanguage: 'julia' })

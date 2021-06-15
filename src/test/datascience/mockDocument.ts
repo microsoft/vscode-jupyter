@@ -1,7 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEvent, TextLine, Uri } from 'vscode';
+import {
+    EndOfLine,
+    NotebookDocument,
+    Position,
+    Range,
+    TextDocument,
+    TextDocumentContentChangeEvent,
+    TextLine,
+    Uri
+} from 'vscode';
 
 import {
     DefaultWordPattern,
@@ -110,6 +119,9 @@ export class MockDocument implements TextDocument {
     }
     public get lineCount(): number {
         return this._lines.length;
+    }
+    public get notebook(): NotebookDocument | undefined {
+        return undefined;
     }
     public lineAt(position: Position | number): TextLine {
         if (typeof position === 'number') {

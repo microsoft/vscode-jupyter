@@ -7,6 +7,7 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
+import { BaseError } from '../../common/errors/types';
 import { traceInfo } from '../../common/logger';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
@@ -17,6 +18,17 @@ import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService';
 import { IPythonKernelDaemon } from './types';
+
+export class UnsupportedKernelSpec extends BaseError {
+    constructor(args: string[]) {
+        super(
+            'unsupportedKernelSpec',
+            `Unsupported KernelSpec file. args must be [<pythonPath>, '-m', <moduleName>, arg1, arg2, ..]. Provied ${args.join(
+                ' '
+            )}`
+        );
+    }
+}
 
 /**
  * Launches a Python kernel in a daemon.
@@ -49,11 +61,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         const args = kernelSpec.argv.slice();
         const modulePrefixIndex = args.findIndex((item) => item === '-m');
         if (modulePrefixIndex === -1) {
-            throw new Error(
-                `Unsupported KernelSpec file. args must be [<pythonPath>, '-m', <moduleName>, arg1, arg2, ..]. Provied ${args.join(
-                    ' '
-                )}`
-            );
+            throw new UnsupportedKernelSpec(args);
         }
         const moduleName = args[modulePrefixIndex + 1];
         const moduleArgs = args.slice(modulePrefixIndex + 2);

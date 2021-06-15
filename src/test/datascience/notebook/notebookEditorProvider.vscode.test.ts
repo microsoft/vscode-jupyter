@@ -20,8 +20,7 @@ import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    insertMarkdownCell,
-    trustAllNotebooks
+    insertMarkdownCell
 } from './helper';
 
 suite('DataScience - VSCode Notebook (Editor Provider)', function () {
@@ -56,7 +55,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await closeActiveWindows();
-        await trustAllNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
@@ -138,7 +136,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         await commandManager.executeCommand('vscode.open', Uri.file(emptyPyFile));
 
         await activeNotebookChanged.assertFired();
-        assert.isTrue(notebookClosed.fired, 'Unpinned notebook should have been closed when opening another file');
         assert.isUndefined(activeNotebookChanged.second, 'Active Editor should be undefined');
     });
     test('Opening a non-notebook file and toggling between nb & non-notebook will fire necessary events', async function () {

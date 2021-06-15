@@ -24,6 +24,7 @@ import {
     IOpenSettingsAction,
     IScrollAction,
     IShowDataViewerAction,
+    ISortVariablesRequest,
     IVariableExplorerHeight
 } from '../../interactive-common/redux/reducers/types';
 import { IMonacoModelContentChangeEvent } from '../../react-common/monacoHelpers';
@@ -75,6 +76,8 @@ export const actionCreators = {
     submitInput: (code: string, cellId: string): CommonAction<ICodeAction> =>
         createIncomingActionWithPayload(CommonActionType.SUBMIT_INPUT, { code, cellId }),
     toggleVariableExplorer: (): CommonAction => createIncomingAction(CommonActionType.TOGGLE_VARIABLE_EXPLORER),
+    sortVariables: (sortColumn: string, sortAscending: boolean): CommonAction<ISortVariablesRequest> =>
+        createIncomingActionWithPayload(CommonActionType.SORT_VARIABLES, { sortColumn, sortAscending }),
     setVariableExplorerHeight: (containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight> =>
         createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT, { containerHeight, gridHeight }),
     expandAll: (): CommonAction => createIncomingAction(InteractiveWindowMessages.ExpandAll),
@@ -99,12 +102,14 @@ export const actionCreators = {
         newExecutionCount: number,
         refreshCount: number,
         startIndex: number = 0,
-        pageSize: number = 100
+        pageSize: number = 100,
+        sortColumn: string = 'name',
+        sortAscending: boolean = true
     ): CommonAction<IJupyterVariablesRequest> =>
         createIncomingActionWithPayload(CommonActionType.GET_VARIABLE_DATA, {
             executionCount: newExecutionCount,
-            sortColumn: 'name',
-            sortAscending: true,
+            sortColumn: sortColumn,
+            sortAscending: sortAscending,
             startIndex,
             pageSize,
             refreshCount

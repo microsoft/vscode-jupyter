@@ -3,7 +3,16 @@
 'use strict';
 import '../../../common/extensions';
 
-import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEvent, TextLine, Uri } from 'vscode';
+import {
+    EndOfLine,
+    NotebookDocument,
+    Position,
+    Range,
+    TextDocument,
+    TextDocumentContentChangeEvent,
+    TextLine,
+    Uri
+} from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient/node';
 
 import { PYTHON_LANGUAGE } from '../../../common/constants';
@@ -116,6 +125,9 @@ export class IntellisenseDocument implements TextDocument {
     }
     public get lineCount(): number {
         return this._lines.length;
+    }
+    public get notebook(): NotebookDocument | undefined {
+        return undefined;
     }
 
     public lineAt(position: Position | number): TextLine {

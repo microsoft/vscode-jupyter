@@ -12,8 +12,12 @@ const taggers = [
 ];
 export function getErrorTags(stdErrOrStackTrace: string) {
     const tags: string[] = [];
-    stdErrOrStackTrace = stdErrOrStackTrace.toLowerCase();
-    taggers.forEach((tagger) => tagger(stdErrOrStackTrace, tags));
+
+    // This parameter might be either a string or a string array
+    let stdErrOrStackTraceLowered = Array.isArray(stdErrOrStackTrace)
+        ? stdErrOrStackTrace[0].toLowerCase()
+        : stdErrOrStackTrace.toLowerCase();
+    taggers.forEach((tagger) => tagger(stdErrOrStackTraceLowered, tags));
 
     return Array.from(new Set(tags)).join(',');
 }
