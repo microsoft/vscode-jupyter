@@ -29,7 +29,6 @@ suite('DataScience - DataViewer', () => {
     let workspaceService: IWorkspaceService;
     let applicationShell: IApplicationShell;
     let dataProvider: IDataViewerDataProvider;
-
     const title: string = 'Data Viewer - Title';
 
     setup(async () => {
