@@ -186,7 +186,7 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
             this._submitters.push(owner);
         }
 
-        this.loadPromise = this.commandManager.executeCommand('interactive.open') as Thenable<INativeInteractiveWindow>;
+        this.loadPromise = this.commandManager.executeCommand('interactive.open', ViewColumn.Beside) as Thenable<INativeInteractiveWindow>;
 
         // Update the title if possible
         if (this.owner && mode === 'perFile') {
@@ -228,10 +228,10 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
     private async getOrCreateInteractiveEditor(): Promise<NotebookDocument> {
         let { notebookUri } = await this.loadPromise;
         let notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.uri.toString());
-        
+
         // User closed the previous interactive window. Make a new one
         if (!notebookDocument) {
-            ({ notebookUri } = await this.commandManager.executeCommand('interactive.open') as INativeInteractiveWindow);
+            ({ notebookUri } = await this.commandManager.executeCommand('interactive.open', ViewColumn.Beside) as INativeInteractiveWindow);
             notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.uri.toString());
         }
 
