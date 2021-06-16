@@ -275,6 +275,9 @@ export function getNotebookCellMetadata(cell: nbformat.IBaseCell): CellMetadata 
             custom[propertyToClone] = cloneDeep(cell[propertyToClone]) as any;
         }
     });
+    if ('id' in cell && typeof cell.id === 'string') {
+        custom.id = cell.id;
+    }
     return custom;
 }
 
@@ -288,19 +291,26 @@ function createRawCellFromNotebookCell(cell: NotebookCell): nbformat.IRawCell {
     if (cellMetadata?.attachments) {
         rawCell.attachments = cellMetadata.attachments;
     }
+    if (cellMetadata?.id) {
+        rawCell.id = cellMetadata.id;
+    }
     return rawCell;
 }
 
 function createCodeCellFromNotebookCell(cell: NotebookCell): nbformat.ICodeCell {
     const cellMetadata = cell.metadata.custom as CellMetadata | undefined;
     const code = cell.document.getText();
-    return {
+    const codeCell: nbformat.ICodeCell = {
         cell_type: 'code',
         execution_count: cell.executionSummary?.executionOrder ?? null,
         source: splitMultilineString(code),
         outputs: cell.outputs.map(translateCellDisplayOutput),
         metadata: cellMetadata?.metadata || {} // This cannot be empty.
     };
+    if (cellMetadata?.id) {
+        codeCell.id = cellMetadata.id;
+    }
+    return codeCell;
 }
 
 function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
@@ -318,6 +328,9 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkd
     };
     if (cellMetadata?.attachments) {
         markdownCell.attachments = cellMetadata.attachments;
+    }
+    if (cellMetadata?.id) {
+        markdownCell.id = cellMetadata.id;
     }
     return markdownCell;
 }
@@ -593,6 +606,10 @@ type JupyterOutput =
  * This contains the original metadata from the Jupyuter cells.
  */
 export type CellMetadata = {
+    /**
+     * Cell id for notebooks created with the new 4.5 version of nbformat.
+     */
+    id?: string;
     /**
      * Stores attachments for cells.
      */
