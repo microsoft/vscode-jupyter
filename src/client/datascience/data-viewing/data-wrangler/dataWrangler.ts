@@ -450,15 +450,11 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
     }
 
     private getCode() {
-        return this.historyList
-            .map(function (item) {
-                return item.code;
-            })
-            .join('\n');
+        return this.historyList.map((item) => item.code).join('\n');
     }
 
     private getImportCode() {
-        return "import pandas as pd\ndf = pd.read_csv(r'" + this.sourceFile + "')\n";
+        return `import pandas as pd\ndf = pd.read_csv(r'${this.sourceFile}')\n`;
     }
 
     private async generatePythonCode() {
