@@ -838,7 +838,6 @@ module.exports = {
         'src/client/datascience/commands/commandLineSelector.ts',
         'src/client/datascience/cellFactory.ts',
         'src/client/datascience/notebook/notebookEditorCompatibilitySupport.ts',
-        'src/client/datascience/notebook/constants.ts',
         'src/client/datascience/notebook/renderer.ts',
         'src/client/datascience/notebook/survey.ts',
         'src/client/datascience/export/exportToHTML.ts',

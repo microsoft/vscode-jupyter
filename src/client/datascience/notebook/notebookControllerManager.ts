@@ -320,7 +320,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     ): VSCodeNotebookController[] | undefined {
         try {
             // Create notebook selector
-            return [[kernelConnection.id, JupyterNotebookView], [`${kernelConnection.id} (Interactive)`, InteractiveWindowView]].map(([id, viewType]) => {
+            return [
+                [kernelConnection.id, JupyterNotebookView],
+                [`${kernelConnection.id} (Interactive)`, InteractiveWindowView]
+            ].map(([id, viewType]) => {
                 const controller = new VSCodeNotebookController(
                     kernelConnection,
                     id,
@@ -338,11 +341,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     this.workspace
                 );
                 // Hook up to if this NotebookController is selected or de-selected
-                controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);
-    
+                controller.onNotebookControllerSelected(
+                    this.handleOnNotebookControllerSelected,
+                    this,
+                    this.disposables
+                );
+
                 // We are disposing as documents are closed, but do this as well
                 this.disposables.push(controller);
-    
+
                 return controller;
             });
         } catch (ex) {
