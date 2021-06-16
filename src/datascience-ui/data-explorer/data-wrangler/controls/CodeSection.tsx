@@ -1,11 +1,14 @@
 import * as React from 'react';
 import { Code } from '../../../interactive-common/code';
-import './HistorySection.css';
+import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
+import { SidePanelSection } from './SidePanelSection';
+import { Identifiers } from '../../../../client/datascience/constants';
 
 interface IProps {
     currentVariableName: string | undefined;
     code: string;
     monacoTheme: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
 
@@ -20,52 +23,45 @@ export class CodeSection extends React.Component<IProps, IState> {
     }
 
     render() {
-        return (
-            <details
-                open
-                className="slicing-control"
+        const codeComponent = (
+            <div
                 style={{
-                    borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                    paddingTop: '4px',
-                    paddingBottom: '4px',
-                    width: '100%'
+                    marginLeft: '20px',
+                    marginTop: '10px',
+                    marginRight: '20px',
+                    width: '100%',
+                    backgroundColor: 'var(--vscode-editor-background) !important'
                 }}
             >
-                <summary className="slice-summary">
-                    <h3 className="slice-summary-detail">CODE</h3>
-                </summary>
-                <div
-                    style={{
-                        marginLeft: '20px',
-                        marginTop: '10px',
-                        marginRight: '20px',
-                        width: '100%',
-                        backgroundColor: 'var(--vscode-editor-background) !important'
-                    }}
-                >
-                    <Code
-                        code={this.props.code.trimEnd()}
-                        language="python"
-                        readOnly={true}
-                        version={0}
-                        testMode={false}
-                        history={undefined}
-                        showWatermark={false}
-                        monacoTheme={this.props.monacoTheme}
-                        hasFocus={false}
-                        cursorPos={0}
-                        ipLocation={undefined}
-                        onCreated={() => {}}
-                        onChange={() => {}}
-                        disableUndoStack={true}
-                        focusPending={0}
-                        editorOptions={{ renderFinalNewline: false }}
-                        outermostParentClass=""
-                        openLink={() => {}}
-                        font={{ size: 12, family: 'var(--vscode-editor-font-family' }}
-                    />
-                </div>
-            </details>
+                <Code
+                    code={this.props.code.trimEnd()}
+                    language={PYTHON_LANGUAGE}
+                    readOnly={true}
+                    version={0}
+                    testMode={false}
+                    history={undefined}
+                    showWatermark={false}
+                    monacoTheme={this.props.monacoTheme}
+                    codeTheme={Identifiers.GeneratedThemeName}
+                    hasFocus={false}
+                    cursorPos={0}
+                    ipLocation={undefined}
+                    // eslint-disable-next-line @typescript-eslint/no-empty-function
+                    onCreated={() => {}}
+                    // eslint-disable-next-line @typescript-eslint/no-empty-function
+                    onChange={() => {}}
+                    disableUndoStack={true}
+                    focusPending={0}
+                    editorOptions={{ renderFinalNewline: false }}
+                    outermostParentClass=""
+                    // eslint-disable-next-line @typescript-eslint/no-empty-function
+                    openLink={() => {}}
+                    font={{ size: 12, family: 'var(--vscode-editor-font-family' }}
+                    showLineNumbers={false}
+                />
+            </div>
         );
+
+        return <SidePanelSection title="CODE" panel={codeComponent} />;
     }
 }

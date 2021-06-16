@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { HistorySection } from './controls/HistorySection';
 import { ISlickRow } from '../reactSlickGrid';
 
 import './sliceControl.css';
+import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
+import { HistorySection } from './controls/HistorySection';
+import { HistogramSection } from './controls/HistogramSection';
 import { ColumnsSection } from './controls/ColumnsSection';
 import { RowsSection } from './controls/RowsSection';
-import { HistogramSection } from './controls/HistogramSection';
-import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
 import { CodeSection } from './controls/CodeSection';
 
 interface IControlPanelProps {

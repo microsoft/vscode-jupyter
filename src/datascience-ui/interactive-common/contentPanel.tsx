@@ -19,7 +19,6 @@ export interface IContentPanelProps {
     history?: InputHistory;
     testMode?: boolean;
     settings?: IJupyterExtraSettings;
-    codeTheme: string;
     submittedText: boolean;
     skipNextScroll: boolean;
     editable: boolean;

@@ -4,16 +4,13 @@ import * as React from 'react';
 interface IProps {
     headers: string[];
     options: IDropdownOption[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
 
 interface IState {}
 
 export class DropDuplicateRowsSection extends React.Component<IProps, IState> {
-    constructor(props: IProps) {
-        super(props);
-    }
-
     render() {
         return (
             <button

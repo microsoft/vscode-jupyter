@@ -118,7 +118,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableType: undefined,
                 historyList: [],
                 histogramData: undefined,
-                monacoTheme: 'vs-dark'
+                monacoTheme: 'vs-dark',
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -138,7 +138,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableType: undefined,
                 historyList: [],
                 histogramData: undefined,
-                monacoTheme: 'vs-dark'
+                monacoTheme: 'vs-dark',
             };
         }
     }
@@ -153,7 +153,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.sendMessage<IDataWranglerMapping>(CssMessages.GetMonacoThemeRequest, {
             isDark: this.props.baseTheme !== 'vscode-light'
         });
-        // await monacoPromise.promise;
+
         this.postOffice.sendMessage<IDataWranglerMapping>(DataWranglerMessages.Started);
     }
 
@@ -304,7 +304,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             case CssMessages.GetMonacoThemeResponse:
                 console.log('Theme response payload', payload);
-                this.setState({ monacoTheme: payload.theme });
+                this.setState({ monacoTheme: payload.theme.base });
                 break;
 
             default:

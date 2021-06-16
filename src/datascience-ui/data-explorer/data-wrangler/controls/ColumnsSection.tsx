@@ -4,11 +4,13 @@ import { DropColumnsSection } from './DropColumnSection';
 import { DropMissingColumnsSection } from './DropMissingColumnsSection';
 import { NormalizeDataSection } from './NormalizeDataSection';
 import { RenameColumnsSection } from './RenameColumnsSection';
+import { SidePanelSection } from './SidePanelSection';
 import { dropdownStyles } from './styles';
 
 interface IProps {
     headers: string[];
     options: IDropdownOption[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
 
@@ -31,33 +33,23 @@ export class ColumnsSection extends React.Component<IProps, IState> {
     }
 
     render() {
-        return (
-            <details
-                className="slicing-control"
-                style={{
-                    borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                    paddingTop: '4px',
-                    paddingBottom: '4px'
-                }}
-            >
-                <summary className="slice-summary">
-                    <h3 className="slice-summary-detail">COLUMNS</h3>
-                </summary>
-                <div className="slice-form-container" style={{ paddingBottom: '5px', marginTop: '10px' }}>
-                    <Dropdown
-                        responsiveMode={ResponsiveMode.xxxLarge}
-                        label={'Operation'}
-                        style={{ marginRight: '10px', width: '150px', marginBottom: '16px' }}
-                        styles={dropdownStyles}
-                        options={this.generateTransformOperations()}
-                        className="dropdownTitleOverrides"
-                        onChange={this.updateTransformType}
-                        selectedKey={this.state.operationType}
-                    />
-                    {this.renderOperationControls()}
-                </div>
-            </details>
+        const columnsComponent = (
+            <div className="slice-form-container" style={{ paddingBottom: '5px', marginTop: '10px' }}>
+                <Dropdown
+                    responsiveMode={ResponsiveMode.xxxLarge}
+                    label={'Operation'}
+                    style={{ marginRight: '10px', width: '150px', marginBottom: '16px' }}
+                    styles={dropdownStyles}
+                    options={this.generateTransformOperations()}
+                    className="dropdownTitleOverrides"
+                    onChange={this.updateTransformType}
+                    selectedKey={this.state.operationType}
+                />
+                {this.renderOperationControls()}
+            </div>
         );
+
+        return <SidePanelSection title="COLUMNS" panel={columnsComponent} />;
     }
 
     private renderOperationControls = () => {

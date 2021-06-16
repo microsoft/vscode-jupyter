@@ -12,6 +12,7 @@ import { CursorPos, IFont } from './mainState';
 export interface IMarkdownProps {
     markdown: string;
     version: number;
+    codeTheme: string;
     testMode: boolean;
     monacoTheme: string | undefined;
     outermostParentClass: string;
@@ -45,6 +46,7 @@ export class Markdown extends React.Component<IMarkdownProps> {
         return (
             <div className={classes}>
                 <Editor
+                    codeTheme={this.props.codeTheme}
                     readOnly={this.props.readOnly}
                     history={undefined}
                     onCreated={this.props.onCreated}

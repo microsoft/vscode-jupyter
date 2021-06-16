@@ -5,6 +5,7 @@ import { dropdownStyles } from './styles';
 interface IProps {
     headers: string[];
     options: IDropdownOption[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
 
@@ -20,17 +21,6 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
 
     render() {
         return (
-            // <details
-            //     className="slicing-control"
-            //     style={{
-            //         borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-            //         paddingTop: '4px',
-            //         paddingBottom: '4px'
-            //     }}
-            // >
-            //     <summary className="slice-summary">
-            //         <span className="slice-summary-detail">{'DROP COLUMNS'}</span>
-            //     </summary>
             <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
                 <Dropdown
                     responsiveMode={ResponsiveMode.xxxLarge}

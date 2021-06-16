@@ -5,6 +5,7 @@ import { dropdownStyles } from './styles';
 interface IProps {
     headers: string[];
     options: IDropdownOption[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
 

@@ -2,6 +2,7 @@ import * as React from 'react';
 
 interface IProps {
     handleRefreshRequest(): void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
     onToggleFilter(): void;
 }
@@ -75,7 +76,7 @@ export class Toolbar extends React.PureComponent<IProps> {
                     </span>
                     {/* <div className="codicon codicon-notebook codicon-button" title="Open in Notebook" /> */}
                 </div>
-                {/*                 
+                {/*
                     <div
                         className="codicon codicon-window codicon-button"
                         onClick={() => this.props.submitCommand({ command: 'open_interactive_window', args: undefined })}

@@ -2,11 +2,14 @@ import { IList, List } from '@fluentui/react';
 import * as React from 'react';
 import { mergeStyleSets, getTheme, normalize } from 'office-ui-fabric-react/lib/Styling';
 import './HistorySection.css';
+import { SidePanelSection } from './SidePanelSection';
 
 interface IProps {
     headers: string[];
     currentVariableName: string | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     historyList: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
 
@@ -71,7 +74,7 @@ export class HistorySection extends React.Component<IProps, IState> {
         }
     }
 
-    handleDeleteHistoryItem() {}
+    // handleDeleteHistoryItem() {}
 
     viewHistoryItem(index: number | undefined) {
         if (index !== undefined) {
@@ -88,6 +91,7 @@ export class HistorySection extends React.Component<IProps, IState> {
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onRenderCell = (item?: any, index?: number): JSX.Element => {
         const isCurrentStep = (this.state.currentVariableIndex ?? 0) === index!; // df1 corresponds to history item 0
         const className = styles.itemContent + ' history-item' + (isCurrentStep ? ' selected-history-item' : '');
@@ -113,35 +117,23 @@ export class HistorySection extends React.Component<IProps, IState> {
     };
 
     render() {
-        return (
-            <details
-                open
-                className="slicing-control"
-                style={{
-                    borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                    paddingTop: '4px',
-                    paddingBottom: '4px'
-                }}
-            >
-                <summary className="slice-summary">
-                    <h3 className="slice-summary-detail">HISTORY</h3>
-                </summary>
-                {this.props.historyList.length > 0 ? (
-                    <div className={styles.container} style={{ paddingTop: '10px' }} data-is-scrollable>
-                        <List
-                            componentRef={this.listRef}
-                            items={this.props.historyList}
-                            style={{ marginLeft: '5px' }}
-                            className="historyList"
-                            onRenderCell={this.onRenderCell}
-                        />
-                    </div>
-                ) : (
-                    <span style={{ paddingLeft: '19px', display: 'inline-block', paddingTop: '10px' }}>
-                        No transformations applied.
-                    </span>
-                )}
-            </details>
-        );
+        const historyComponent =
+            this.props.historyList.length > 0 ? (
+                <div className={styles.container} style={{ paddingTop: '10px' }} data-is-scrollable>
+                    <List
+                        componentRef={this.listRef}
+                        items={this.props.historyList}
+                        style={{ marginLeft: '5px' }}
+                        className="historyList"
+                        onRenderCell={this.onRenderCell}
+                    />
+                </div>
+            ) : (
+                <span style={{ paddingLeft: '19px', display: 'inline-block', paddingTop: '10px' }}>
+                    No transformations applied.
+                </span>
+            );
+
+        return <SidePanelSection title="HISTORY" panel={historyComponent} />;
     }
 }
