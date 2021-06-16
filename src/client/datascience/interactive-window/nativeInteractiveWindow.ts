@@ -231,7 +231,8 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
 
         // User closed the previous interactive window. Make a new one
         if (!notebookDocument) {
-            ({ notebookUri } = await this.commandManager.executeCommand('interactive.open', ViewColumn.Beside) as INativeInteractiveWindow);
+            this.loadPromise = this.commandManager.executeCommand('interactive.open', ViewColumn.Beside) as Thenable<INativeInteractiveWindow>;
+            ({ notebookUri } = await this.loadPromise);
             notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.uri.toString());
         }
 
