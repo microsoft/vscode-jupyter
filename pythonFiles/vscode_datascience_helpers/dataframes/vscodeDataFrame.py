@@ -193,7 +193,7 @@ def _VSCODE_getDataFrameInfo(df):
         if len(isna_series) != 0:
             isna = isna_series.sum()
             describe += "\n# null\t" + str(isna)
-            describe += "\n% null\t" + str(isna / length) + "%"
+            describe += "\n% null\t" + str(isna / length * 100)[:4] + "%"
         else:
             describe += "\n# null\t0"
             describe += "\n% null\t0%"
