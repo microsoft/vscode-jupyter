@@ -40,6 +40,7 @@ import { IDataViewerFactory } from '../data-viewing/types';
 import { IExportDialog } from '../export/types';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { PostOffice } from '../liveshare/postOffice';
+import { INotebookControllerManager } from '../notebook/types';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
@@ -198,7 +199,8 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             this.serviceContainer.get<KernelSelector>(KernelSelector),
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
             this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
-            this.serviceContainer.get<IExportDialog>(IExportDialog)
+            this.serviceContainer.get<IExportDialog>(IExportDialog),
+            this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager)
         );
         this._windows.push(result);
 

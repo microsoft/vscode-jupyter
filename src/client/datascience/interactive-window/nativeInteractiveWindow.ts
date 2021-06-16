@@ -43,6 +43,7 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { INotebookControllerManager } from '../notebook/types';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import {
     ICell,
@@ -136,7 +137,8 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         selector: KernelSelector,
         private readonly extensionChecker: IPythonExtensionChecker,
         serverStorage: IJupyterServerUriStorage,
-        private readonly exportDialog: IExportDialog
+        private readonly exportDialog: IExportDialog,
+        private readonly notebookControllerManager: INotebookControllerManager
     ) {
         super(
             listeners,
@@ -226,6 +228,10 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
     }
 
     private async getOrCreateInteractiveEditor(): Promise<NotebookDocument> {
+        // Ensure all notebook controllers are loaded so that
+        // interactive window execution requests are properly handled
+        await this.notebookControllerManager.loadNotebookControllers();
+
         let { notebookUri } = await this.loadPromise;
         let notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.uri.toString());
 

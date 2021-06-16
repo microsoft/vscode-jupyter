@@ -121,7 +121,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // Find all the notebook controllers that we have registered
-    private async loadNotebookControllers(): Promise<void> {
+    public async loadNotebookControllers(): Promise<void> {
         if (!this.controllersPromise) {
             this.controllersPromise = this.loadNotebookControllersImpl()
                 .then((controllers) => {
