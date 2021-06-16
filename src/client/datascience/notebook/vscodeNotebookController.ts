@@ -4,7 +4,6 @@
 import { join } from 'path';
 import {
     Disposable,
-    env,
     EventEmitter,
     ExtensionMode,
     languages,
@@ -15,7 +14,6 @@ import {
     NotebookDocument,
     NotebookEditor,
     NotebookRendererScript,
-    UIKind,
     Uri
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
@@ -219,14 +217,13 @@ export class VSCodeNotebookController implements Disposable {
     }
     private getRendererScripts(): NotebookRendererScript[] {
         // Work around for known issue with CodeSpaces
-        const codeSpaceScripts =
-            env.uiKind === UIKind.Web
-                ? [join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js')]
-                : [];
+        // const codeSpaceScripts =
+            // env.uiKind === UIKind.Web
+                // ? [join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js')]
+                // : [];
         return [
-            ...codeSpaceScripts,
+            join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
             join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
-
             join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
             join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')
         ].map((uri) => new NotebookRendererScript(Uri.file(uri)));
