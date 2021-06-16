@@ -59,10 +59,6 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(ICommandManager) private commandManager: ICommandManager
     ) {
-        this.commandManager.registerCommand(
-            Commands.ImportAsDataFrame,
-            this.importFileAsDataFrameFromContextMenu.bind(this)
-        );
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
     }
 
@@ -74,6 +70,20 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
             },
             supportsMultipleEditorsPerDocument: false
         });
+    }
+
+    public async open(): Promise<void> {
+        const filtersObject: { [name: string]: string[] } = {};
+        filtersObject['Data Wrangler'] = ['csv'];
+
+        const uris = await this.appShell.showOpenDialog({
+            canSelectMany: false,
+            filters: filtersObject
+        });
+
+        if (uris && uris.length > 0) {
+            await this.importFileAsDataFrameFromContextMenu(uris[0]);
+        }
     }
 
     /**

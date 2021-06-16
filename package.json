@@ -55,8 +55,6 @@
         "onCommand:jupyter.createnewinteractive",
         "onCommand:jupyter.importnotebook",
         "onCommand:jupyter.importnotebookfile",
-        "onCommand:jupyter.importFileAsDataFrame",
-        "onCommand:jupyter.importFileAsDataFrameFromUrl",
         "onCommand:jupyter.opennotebook",
         "onCommand:jupyter.opennotebookInPreviewEditor",
         "onCommand:jupyter.selectjupyteruri",
@@ -66,6 +64,7 @@
         "onCommand:jupyter.selectjupytercommandline",
         "onCommand:jupyter.openVariableView",
         "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
+        "onCommand:jupyter.openDataWrangler",
         "onNotebook:jupyter-notebook",
         "onCustomEditor:jupyter.notebook.ipynb",
         "onCustomEditor:jupyter-data-wrangler"
@@ -280,8 +279,8 @@
         ],
         "commands": [
             {
-                "title": "Open DataFrame in Data Wrangler",
-                "command": "jupyter.openDataFrameInDataWrangler",
+                "command": "jupyter.openDataWrangler",
+                "title": "Open Data Wrangler",
                 "category": "Jupyter"
             },
             {
@@ -746,16 +745,6 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.importFileAsDataFrame",
-                "title": "Import File as DataFrame",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.importFileAsDataFrameFromUrl",
-                "title": "Import File as DataFrame From Url",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.clearSavedJupyterUris",
                 "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
                 "category": "Jupyter"
@@ -779,6 +768,11 @@
                 "title": "Refresh Data Wrangler",
                 "category": "Jupyter",
                 "enablement": "jupyter.dataWranglerActive && isWorkspaceTrusted"
+            },
+            {
+                "command": "jupyter.openDataWrangler",
+                "title": "Open Data Wrangler",
+                "category": "Jupyter"
             }
         ],
         "menus": {
@@ -908,11 +902,6 @@
                     "when": "resourceLangId == jupyter && isWorkspaceTrusted",
                     "command": "jupyter.importnotebookfile",
                     "group": "Jupyter"
-                },
-                {
-                    "when": "resourceLangId == datafile",
-                    "command": "jupyter.importFileAsDataFrame",
-                    "group": "Jupyter"
                 }
             ],
             "commandPalette": [
@@ -923,7 +912,7 @@
                 },
                 {
                     "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow",
-                    "title": "%DataScience.renderMarkdownAndSelectBelow%",
+                "title": "%DataScience.renderMarkdownAndSelectBelow%",
                     "when": "false"
                 },
                 {
@@ -931,6 +920,11 @@
                     "title": "%jupyter.command.jupyter.exportAsPythonScript.title%",
                     "category": "Jupyter",
                     "when": "jupyter.isnativeactive && isWorkspaceTrusted && jupyter.ispythonnotebook && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.refreshDataViewer",
+                    "category": "Jupyter",
+                    "when": "isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.refreshDataWrangler",

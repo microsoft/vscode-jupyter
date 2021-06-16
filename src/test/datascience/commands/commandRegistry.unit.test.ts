@@ -6,7 +6,7 @@ import { ApplicationShell } from '../../../client/common/application/application
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { DebugService } from '../../../client/common/application/debugService';
 import { DocumentManager } from '../../../client/common/application/documentManager';
-import { ICommandManager, IWorkspaceService } from '../../../client/common/application/types';
+import { ICommandManager, IDataWranglerProvider, IWorkspaceService } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
@@ -50,6 +50,7 @@ suite('DataScience - Commands', () => {
         const serverUriStorage = mock(JupyterServerUriStorage);
         const jupyterVariables = mock(JupyterVariables);
         const workspace = mock<IWorkspaceService>();
+        const dataWrangler = mock<IDataWranglerProvider>();
         when(workspace.isTrusted).thenReturn(true);
         when(workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
         commandRegistry = new CommandRegistry(
@@ -73,7 +74,8 @@ suite('DataScience - Commands', () => {
             instance(jupyterVariables),
             false,
             instance(mock(NotebookCreator)),
-            instance(workspace)
+            instance(workspace),
+            instance(dataWrangler)
         );
     });
 
@@ -110,7 +112,8 @@ suite('DataScience - Commands', () => {
             Commands.DebugStop,
             Commands.DebugCurrentCellPalette,
             Commands.CreateNewNotebook,
-            Commands.ViewJupyterOutput
+            Commands.ViewJupyterOutput,
+            Commands.OpenDataWrangler
         ].forEach((command) => {
             test(`Should register Command ${command}`, () => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any

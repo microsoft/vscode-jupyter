@@ -89,8 +89,6 @@ export namespace Commands {
     export const CreateNewInteractive = 'jupyter.createnewinteractive';
     export const ImportNotebook = 'jupyter.importnotebook';
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
-    export const ImportAsDataFrame = 'jupyter.importFileAsDataFrame';
-    export const ImportAsDataFrameFromUrl = 'jupyter.importFileAsDataFrameFromUrl';
     export const OpenNotebook = 'jupyter.opennotebook';
     export const OpenNotebookInPreviewEditor = 'jupyter.opennotebookInPreviewEditor';
     export const SelectJupyterURI = 'jupyter.selectjupyteruri';
@@ -169,6 +167,7 @@ export namespace Commands {
     export const NotebookEditorToggleOutput = 'jupyter.notebookeditor.keybind.toggleOutput';
 
     // Data Wrangler
+    export const OpenDataWrangler = 'jupyter.openDataWrangler';
     export const UpdateOrCreateDataWrangler = 'jupyter.openDataFrameInDataWrangler';
     export const RefreshDataWrangler = 'jupyter.refreshDataWrangler';
 }
