@@ -256,7 +256,7 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         await workspace.applyEdit(edit);
 
         // Request execution
-        await this.commandManager.executeCommand('notebook.cell.execute', { start: notebookDocument.cellCount - 1, end: notebookDocument.cellCount }, notebookDocument.uri);
+        await this.commandManager.executeCommand('notebook.cell.execute', { ranges: [{ start: notebookDocument.cellCount - 1, end: notebookDocument.cellCount }], document: notebookDocument.uri, autoReveal: true });
         return true;
     }
 
