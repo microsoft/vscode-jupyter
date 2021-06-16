@@ -180,7 +180,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // When a document is opened we need to look for a perferred kernel for it
     private onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
-        if (document.notebookType !== JupyterNotebookView || !this.workspace.isTrusted) {
+        if (document.notebookType !== JupyterNotebookView && document.notebookType !== InteractiveWindowView || !this.workspace.isTrusted) {
             return;
         }
 
@@ -304,7 +304,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         // Map KernelConnectionMetadata => NotebookController
-        const controllers: VSCodeNotebookController[] = [];
+        const allControllers: VSCodeNotebookController[] = [];
         connectionsWithLabel.forEach((value) => {
             const controllers = this.createNotebookController(value.connection, value.label);
             if (controllers) {
@@ -312,7 +312,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
         });
 
-        return controllers;
+        return allControllers;
     }
     private createNotebookController(
         kernelConnection: KernelConnectionMetadata,
@@ -458,7 +458,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     private async notebookKernelChanged(document: NotebookDocument, controller: VSCodeNotebookController) {
         // We're only interested in our Jupyter Notebooks.
-        if (!isJupyterNotebook(document)) {
+        if (!isJupyterNotebook(document) || document.notebookType !== InteractiveWindowView) {
             trackKernelInNotebookMetadata(document, undefined);
             return;
         }
