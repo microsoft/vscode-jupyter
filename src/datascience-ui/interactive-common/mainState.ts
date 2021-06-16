@@ -88,6 +88,7 @@ export type IMainState = {
     loadTotal?: number;
     skipDefault?: boolean;
     testMode?: boolean;
+    codeTheme: string;
     settings?: IJupyterExtraSettings;
     focusPending: number;
     monacoReady: boolean;
@@ -190,6 +191,7 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
             family: "Consolas, 'Courier New', monospace"
         },
         dirty: false,
+        codeTheme: 'Foo',
         settings: defaultSettings,
         focusPending: 0,
         monacoReady: true,

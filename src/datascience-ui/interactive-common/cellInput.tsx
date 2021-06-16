@@ -20,8 +20,8 @@ interface ICellInputProps {
     cellVM: ICellViewModel;
     language: string;
     codeVersion: number;
-    testMode?: boolean;
     codeTheme: string;
+    testMode?: boolean;
     history: InputHistory | undefined;
     showWatermark: boolean;
     monacoTheme: string | undefined;
