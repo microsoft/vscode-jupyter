@@ -3,7 +3,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
 import * as uuid from 'uuid';
-import { CancellationToken, Event, EventEmitter, Memento, NotebookCellData, NotebookCellKind, NotebookRange, Uri, ViewColumn, workspace, WorkspaceEdit } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Memento, NotebookCellData, NotebookCellKind, NotebookDocument, NotebookRange, Uri, ViewColumn, workspace, WorkspaceEdit } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
@@ -64,8 +64,8 @@ import {
     WebViewViewChangeEventArgs
 } from '../types';
 import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
+import { INativeInteractiveWindow } from './types';
 
-type INativeInteractiveWindow = { notebookUri: Uri, inputUri: Uri };
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
 export class NativeInteractiveWindow extends InteractiveBase implements IInteractiveWindowLoadable {
@@ -225,19 +225,38 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         }
     }
 
-    public async addCode(code: string, _file: Uri, _line: number): Promise<boolean> {
-        const { notebookUri } = await this.loadPromise;
-        const edit = new WorkspaceEdit();
-        const notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.uri.toString());
+    private async getOrCreateInteractiveEditor(): Promise<NotebookDocument> {
+        let { notebookUri } = await this.loadPromise;
+        let notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.uri.toString());
+        
+        // User closed the previous interactive window. Make a new one
         if (!notebookDocument) {
-            return true;
+            ({ notebookUri } = await this.commandManager.executeCommand('interactive.open') as INativeInteractiveWindow);
+            notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.uri.toString());
         }
-        edit.replaceNotebookCells(notebookUri, new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount), [
-            new NotebookCellData(NotebookCellKind.Code, code, 'python')
+
+        // We should never get here--this means VS Code failed to create an interactive window
+        if (!notebookDocument) {
+            throw new Error('Failed to get or create interactive window.');
+        }
+
+        return notebookDocument;
+    }
+
+    public async addCode(code: string, _file: Uri, _line: number): Promise<boolean> {
+        // Ensure we always have a notebook document to submit code to
+        const notebookDocument = await this.getOrCreateInteractiveEditor();
+
+        // Insert code cell into NotebookDocument
+        const edit = new WorkspaceEdit();
+        edit.replaceNotebookCells(notebookDocument.uri, new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount), [
+            new NotebookCellData(NotebookCellKind.Code, code, 'python') // TODO generalize to arbitrary languages and cell types
         ]);
         await workspace.applyEdit(edit);
+
+        // Request execution
         await this.commandManager.executeCommand('notebook.cell.execute', { start: notebookDocument.cellCount, end: notebookDocument.cellCount }, notebookDocument.uri);
-        return true; // Hack
+        return true;
     }
 
     public exportCells() {
