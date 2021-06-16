@@ -912,7 +912,7 @@
                 },
                 {
                     "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow",
-                "title": "%DataScience.renderMarkdownAndSelectBelow%",
+                    "title": "%DataScience.renderMarkdownAndSelectBelow%",
                     "when": "false"
                 },
                 {
