@@ -153,7 +153,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
 
             // Now create the actual controllers from our connections
-            const controllers = await this.createNotebookControllers(connections);
+            const controllers = this.createNotebookControllers(connections);
 
             // Send telemetry related to fetching the kernel connections
             sendKernelListTelemetry(
@@ -255,9 +255,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         let preferred: KernelConnectionMetadata | undefined;
 
         if (this.isLocalLaunch) {
-            const preferredConnectionPromise = preferred
-                ? Promise.resolve(preferred)
-                : this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
+            const preferredConnectionPromise = this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
             preferred = await preferredConnectionPromise;
         } else {
             const connection = await this.notebookProvider.connect({
@@ -267,9 +265,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 localOnly: false
             });
 
-            const preferredConnectionPromise = preferred
-                ? Promise.resolve(preferred)
-                : this.remoteKernelFinder.findKernel(document.uri, connection, getNotebookMetadata(document), token);
+            const preferredConnectionPromise = this.remoteKernelFinder.findKernel(document.uri, connection, getNotebookMetadata(document), token);
             preferred = await preferredConnectionPromise;
         }
 
@@ -308,7 +304,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         connectionsWithLabel.forEach((value) => {
             const controllers = this.createNotebookController(value.connection, value.label);
             if (controllers) {
-                controllers.push(...controllers);
+                allControllers.push(...controllers);
             }
         });
 
