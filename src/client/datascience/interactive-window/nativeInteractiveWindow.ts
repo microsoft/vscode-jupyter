@@ -3,7 +3,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
 import * as uuid from 'uuid';
-import { CancellationToken, Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Memento, NotebookCellData, NotebookCellKind, NotebookRange, Uri, ViewColumn, workspace, WorkspaceEdit } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
@@ -65,6 +65,7 @@ import {
 } from '../types';
 import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
 
+type INativeInteractiveWindow = { notebookUri: Uri, inputUri: Uri };
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
 export class NativeInteractiveWindow extends InteractiveBase implements IInteractiveWindowLoadable {
@@ -100,7 +101,7 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
     private _submitters: Uri[] = [];
     private pendingHasCell = new Map<string, Deferred<boolean>>();
     private mode: InteractiveWindowMode = 'multiple';
-    private loadPromise: Thenable<void>;
+    private loadPromise: Thenable<INativeInteractiveWindow>;
     private _kernelConnection?: KernelConnectionMetadata;
 
     constructor(
@@ -185,7 +186,7 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
             this._submitters.push(owner);
         }
 
-        this.loadPromise = this.commandManager.executeCommand('interactive.open');
+        this.loadPromise = this.commandManager.executeCommand('interactive.open') as Thenable<INativeInteractiveWindow>;
 
         // Update the title if possible
         if (this.owner && mode === 'perFile') {
@@ -196,7 +197,8 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
     }
 
     public async show(): Promise<void> {
-        return await this.loadPromise;
+        await this.loadPromise;
+        return;
     }
 
     public dispose() {
@@ -224,7 +226,17 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
     }
 
     public async addCode(code: string, _file: Uri, _line: number): Promise<boolean> {
-        await this.commandManager.executeCommand('interactive.execute', code);
+        const { notebookUri } = await this.loadPromise;
+        const edit = new WorkspaceEdit();
+        const notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.toString());
+        if (!notebookDocument) {
+            return true;
+        }
+        edit.replaceNotebookCells(notebookUri, new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount), [
+            new NotebookCellData(NotebookCellKind.Code, code, 'python')
+        ]);
+        await workspace.applyEdit(edit);
+        await this.commandManager.executeCommand('notebook.cell.execute', { start: notebookDocument.cellCount, end: notebookDocument.cellCount }, notebookDocument.uri);
         return true; // Hack
     }
 
