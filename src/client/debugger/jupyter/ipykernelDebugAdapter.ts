@@ -5,17 +5,16 @@
 
 import * as vscode from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { debugRequest, debugResponse, MessageType, JupyterMessage, DebugMessage } from './messaging';
-import { filter /*, tap*/ } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
+import { debugRequest, debugResponse } from './messaging';
 import * as path from 'path';
 import { IJupyterSession } from '../../datascience/types';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
 
 //---- debug adapter for Jupyter debug protocol
 
-const debugEvents: ReadonlySet<MessageType> = new Set(['debug_request', 'debug_reply', 'debug_event']);
+// const debugEvents: ReadonlySet<MessageType> = new Set(['debug_request', 'debug_reply', 'debug_event']);
 
-const isDebugMessage = (msg: JupyterMessage): msg is DebugMessage => debugEvents.has(msg.header.msg_type);
+// const isDebugMessage = (msg: JupyterMessage): msg is DebugMessage => debugEvents.has(msg.header.msg_type);
 
 /**
  * the XeusDebugAdapter delegates the DAP protocol to the xeus kernel
@@ -25,7 +24,10 @@ export class IpykernelDebugAdapter implements vscode.DebugAdapter {
     private readonly fileToCell = new Map<string, vscode.NotebookCell>();
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new vscode.EventEmitter<vscode.DebugProtocolMessage>();
-    private readonly messageListener: Subscription;
+    private readonly messageListener = new Map<
+        number,
+        Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg>
+    >();
 
     onDidSendMessage: vscode.Event<vscode.DebugProtocolMessage> = this.sendMessage.event;
 
@@ -33,32 +35,7 @@ export class IpykernelDebugAdapter implements vscode.DebugAdapter {
         private session: vscode.DebugSession,
         private notebookDocument: vscode.NotebookDocument,
         private readonly jupyterSession: IJupyterSession
-    ) {
-        this.messageListener = this.jupyterSession
-            .registerMessageHook()
-            .pipe(
-                filter(isDebugMessage)
-                //tap(msg => console.log('<- recv', msg.content)),
-            )
-            .subscribe((evt) => {
-                // map Sources from Xeus to VS Code
-                visitSources(evt.content, (source) => {
-                    if (source && source.path) {
-                        const cell = this.fileToCell.get(source.path);
-                        if (cell) {
-                            source.name = path.basename(cell.document.uri.path);
-                            const cellIndex = cell.notebook.getCells().indexOf(cell);
-                            if (cellIndex >= 0) {
-                                source.name += `, Cell ${cellIndex + 1}`;
-                            }
-                            source.path = cell.document.uri.toString();
-                        }
-                    }
-                });
-
-                this.sendMessage.fire(evt.content);
-            });
-    }
+    ) {}
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
         // console.log('-> send', message);
@@ -82,10 +59,49 @@ export class IpykernelDebugAdapter implements vscode.DebugAdapter {
         });
 
         if (message.type === 'request') {
-            this.kernel.connection.sendRaw(debugRequest(message as DebugProtocol.Request));
+            const request = debugRequest(message as DebugProtocol.Request);
+            const control = this.jupyterSession.requestDebug({
+                seq: request.content.seq,
+                type: 'request',
+                command: request.content.command,
+                arguments: request.content.arguments
+            });
+
+            if (control) {
+                control.onReply = (msg) => {
+                    console.error('------------------' + msg);
+                    visitSources(msg.content, (source) => {
+                        if (source && source.path) {
+                            const cell = this.fileToCell.get(source.path);
+                            if (cell) {
+                                source.name = path.basename(cell.document.uri.path);
+                                const cellIndex = cell.notebook.getCells().indexOf(cell);
+                                if (cellIndex >= 0) {
+                                    source.name += `, Cell ${cellIndex + 1}`;
+                                }
+                                source.path = cell.document.uri.toString();
+                            }
+                        }
+                    });
+
+                    this.sendMessage.fire(msg.content);
+                };
+                control.onIOPub = (msg) => {
+                    console.error('------------------' + msg);
+                };
+                control.onStdin = (msg) => {
+                    console.error('------------------' + msg);
+                };
+                this.messageListener.set(message.seq, control);
+            }
         } else if (message.type === 'response') {
             // responses of reverse requests
-            this.kernel.connection.sendRaw(debugResponse(message as DebugProtocol.Response));
+            const response = debugResponse(message as DebugProtocol.Response);
+            this.jupyterSession.requestDebug({
+                seq: response.content.seq,
+                type: 'request',
+                command: response.content.command
+            });
         } else {
             // cannot send via iopub, no way to handle events even if they existed
             console.assert(false, `Unknown message type to send ${message.type}`);
@@ -93,7 +109,7 @@ export class IpykernelDebugAdapter implements vscode.DebugAdapter {
     }
 
     dispose() {
-        this.messageListener.unsubscribe();
+        this.messageListener.clear();
     }
 
     /**

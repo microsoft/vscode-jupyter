@@ -8,21 +8,24 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable } from '../../common/types';
-import { IpykernelDebugAdapter } from './ipykernelDebugSdapter';
-import { INotebookProvider } from '../../datascience/types';
+import { IpykernelDebugAdapter } from './ipykernelDebugAdapter';
+import { IDebuggingManager, INotebookProvider } from '../../datascience/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
 @injectable()
-export class DebuggingManager {
+export class DebuggingManager implements IDebuggingManager, IExtensionSingleActivationService {
     private notebookToDebugger = new Map<vscode.NotebookDocument, Debugger>();
     private readonly disposables: IDisposable[] = [];
 
     public constructor(
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider
-    ) {
+    ) {}
+
+    public async activate() {
         vscode.debug.breakpoints; // start to fetch breakpoints
 
         this.disposables.push(
@@ -62,11 +65,21 @@ export class DebuggingManager {
                                 new IpykernelDebugAdapter(session, dbg.document, notebook.session)
                             );
                         } else {
-                            dbg.reject(new Error('Kernel appears to have been stopped'));
+                            vscode.window.showInformationMessage('run the kernel');
+                            // dbg.reject(new Error('Kernel appears to have been stopped'));
                         }
                     }
                     // should not happen
                     return;
+                }
+            }),
+
+            vscode.commands.registerCommand('david.toggleDebugging', () => {
+                const editor = vscode.window.activeNotebookEditor;
+                if (editor) {
+                    this.toggleDebugging(editor.document);
+                } else {
+                    vscode.window.showErrorMessage('No active notebook document to debug');
                 }
             })
         );
@@ -114,6 +127,7 @@ export class DebuggingManager {
         let dbg = this.notebookToDebugger.get(doc);
         if (dbg) {
             await dbg.stop();
+            this.notebookToDebugger.delete(doc);
         } else {
             dbg = new Debugger(doc);
             this.notebookToDebugger.set(doc, dbg);

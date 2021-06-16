@@ -313,6 +313,9 @@ export interface IJupyterPasswordConnect {
     getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined>;
 }
 
+export const IDebuggingManager = Symbol('IDebuggingManager');
+export interface IDebuggingManager {}
+
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
@@ -327,6 +330,10 @@ export interface IJupyterSession extends IAsyncDisposable {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+    requestDebug(
+        content: KernelMessage.IDebugRequestMsg['content'],
+        disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined;
     requestComplete(
         content: KernelMessage.ICompleteRequestMsg['content']
     ): Promise<KernelMessage.ICompleteReplyMsg | undefined>;

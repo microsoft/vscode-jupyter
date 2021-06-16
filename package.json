@@ -271,6 +271,12 @@
         ],
         "commands": [
             {
+                "command": "david.toggleDebugging",
+                "title": "Toggle Notebook Debugging",
+                "icon": "$(bug)",
+                "category": "Jupyter"
+            },
+            {
                 "command": "jupyter.viewOutput",
                 "title": "%jupyter.command.jupyter.viewOutput.title%",
                 "category": "Jupyter"
@@ -1845,7 +1851,13 @@
                     "when": "jupyter.hasNativeNotebookOpen"
                 }
             ]
-        }
+        },
+        "debuggers": [
+            {
+              "type": "xeus",
+              "label": "xeus Debug"
+            }
+        ]
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",

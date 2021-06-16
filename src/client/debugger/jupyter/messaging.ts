@@ -21,7 +21,7 @@ export type JupyterMessageHeader<MT extends MessageType> = Omit<nteract.JupyterM
     msg_type: MT;
 };
 
-export type JupyterMessage<MT extends MessageType = MessageType, C = unknown, Channel = 'shell'> = Omit<
+export type JupyterMessage<MT extends MessageType = MessageType, C = unknown, Channel = 'control'> = Omit<
     nteract.JupyterMessage<never, C>,
     'header' | 'channel'
 > & {

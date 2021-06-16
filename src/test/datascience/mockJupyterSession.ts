@@ -139,6 +139,13 @@ export class MockJupyterSession implements IJupyterSession {
         return request;
     }
 
+    public requestDebug(
+        _content: KernelMessage.IDebugRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined {
+        return undefined;
+    }
+
     public requestInspect(
         _content: KernelMessage.IInspectRequestMsg['content']
     ): Promise<KernelMessage.IInspectReplyMsg> {
