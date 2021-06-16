@@ -1,4 +1,4 @@
-@import url('../data-explorer/reactSlickGrid.css');
+@import url('../reactSlickGrid.css');
 
 .resizable-span {
     cursor: ew-resize !important;

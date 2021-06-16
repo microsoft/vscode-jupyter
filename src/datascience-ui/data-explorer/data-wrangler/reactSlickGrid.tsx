@@ -4,11 +4,11 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { ColumnType, IGetSliceRequest, MaxStringCompare } from '../../client/datascience/data-viewing/types';
-import { KeyCodes } from '../react-common/constants';
-import { measureText } from '../react-common/textMeasure';
-import '../data-explorer/globalJQueryImports';
-import { ReactSlickGridFilterBox } from '../data-explorer/reactSlickGridFilterBox';
+import { IGetSliceRequest, MaxStringCompare } from '../../../client/datascience/data-viewing/types';
+import { KeyCodes } from '../../react-common/constants';
+import { measureText } from '../../react-common/textMeasure';
+import '../globalJQueryImports';
+import { ReactSlickGridFilterBox } from '../reactSlickGridFilterBox';
 import { Resizable } from 're-resizable';
 
 /*
@@ -38,10 +38,11 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
-import { generateDisplayValue } from '../data-explorer/cellFormatter';
+import { generateDisplayValue } from '../cellFormatter';
 import { ControlPanel } from './controlPanel';
 import './contextMenu.css';
-import { IGetColsResponse } from '../../client/datascience/data-viewing/types';
+import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
+import { ColumnFilter, ISlickGridAdd, ISlickGridSlice, ISlickRow } from '../reactSlickGrid';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -61,18 +62,6 @@ enum ColumnContextMenuItem {
     NormalizeColumn = 'Normalize Column',
     DropNA = 'Remove Missing Values',
     DropDuplicates = 'Drop Duplicates On Column'
-}
-
-export interface ISlickRow extends Slick.SlickData {
-    id: string;
-}
-
-export interface ISlickGridAdd {
-    newRows: ISlickRow[];
-}
-
-export interface ISlickGridSlice {
-    columns: Slick.Column<Slick.SlickData>[];
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -102,103 +91,6 @@ interface ISlickGridState {
     grid?: Slick.Grid<ISlickRow>;
     showingFilters?: boolean;
     fontSize: number;
-}
-
-class ColumnFilter {
-    private matchFunc: (v: any) => boolean;
-    private nanRegEx = /^\s*nan.*/i;
-    private infRegEx = /^\s*inf.*/i;
-    private negInfRegEx = /^\s*-inf.*/i;
-    private lessThanRegEx = /^\s*<\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf))/i;
-    private lessThanEqualRegEx = /^\s*<=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
-    private greaterThanRegEx = /^\s*>\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
-    private greaterThanEqualRegEx = /^\s*>=\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
-    private equalToRegEx = /^\s*(?:=|==)\s*((?<Number>\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
-
-    constructor(public text: string, column: Slick.Column<Slick.SlickData>) {
-        if (text && text.length > 0) {
-            const columnType = (column as any).type;
-            switch (columnType) {
-                case ColumnType.String:
-                default:
-                    this.matchFunc = (v: any) => !v || this.matchStringWithWildcards(v, text);
-                    break;
-
-                case ColumnType.Number:
-                    this.matchFunc = this.generateNumericOperation(text);
-                    break;
-            }
-        } else {
-            this.matchFunc = (_v: any) => true;
-        }
-    }
-
-    public matches(value: any): boolean {
-        return this.matchFunc(value);
-    }
-
-    // Tries to match entire words instead of possibly trying to match substrings.
-    private matchStringWithWildcards(v: any, text: string): boolean {
-        // boundaryRegEx allows us to check that v matches full string and not substring.
-        // It is similar to \b but works with special characters as well
-        // Modified from https://stackoverflow.com/a/40298937
-        const boundaryRegEx = '(?:(?=[\\S])(?<![\\S])|(?<=[\\S])(?![\\S]))';
-
-        const regEx = text
-            .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Replace special characters in regex with backslashed versions
-            .replace(/\*/g, '.*');
-
-        try {
-            const matchExpr = new RegExp(`${boundaryRegEx}${regEx}${boundaryRegEx}`, 'i');
-            return matchExpr.test(v);
-        } catch (e) {
-            return false;
-        }
-    }
-
-    private extractDigits(text: string, regex: RegExp): number {
-        const match = regex.exec(text);
-        if (match && match.groups) {
-            if (match.groups.Number) {
-                return parseFloat(match.groups.Number);
-            } else if (match.groups.Inf) {
-                return Infinity;
-            } else if (match.groups.NegInf) {
-                return -Infinity;
-            } else if (match.groups.NaN) {
-                return NaN;
-            }
-        }
-        return 0;
-    }
-
-    private generateNumericOperation(text: string): (v: any) => boolean {
-        if (this.nanRegEx.test(text)) {
-            return (v: any) => v !== undefined && Number.isNaN(v);
-        } else if (this.infRegEx.test(text)) {
-            return (v: any) => v !== undefined && v === Infinity;
-        } else if (this.negInfRegEx.test(text)) {
-            return (v: any) => v !== undefined && v === -Infinity;
-        } else if (this.lessThanRegEx.test(text)) {
-            const n1 = this.extractDigits(text, this.lessThanRegEx);
-            return (v: any) => v !== undefined && v < n1;
-        } else if (this.lessThanEqualRegEx.test(text)) {
-            const n2 = this.extractDigits(text, this.lessThanEqualRegEx);
-            return (v: any) => v !== undefined && (v <= n2 || (Number.isNaN(v) && Number.isNaN(n2)));
-        } else if (this.greaterThanRegEx.test(text)) {
-            const n3 = this.extractDigits(text, this.greaterThanRegEx);
-            return (v: any) => v !== undefined && v > n3;
-        } else if (this.greaterThanEqualRegEx.test(text)) {
-            const n4 = this.extractDigits(text, this.greaterThanEqualRegEx);
-            return (v: any) => v !== undefined && (v >= n4 || (Number.isNaN(v) && Number.isNaN(n4)));
-        } else if (this.equalToRegEx.test(text)) {
-            const n5 = this.extractDigits(text, this.equalToRegEx);
-            return (v: any) => v !== undefined && (v === n5 || (Number.isNaN(v) && Number.isNaN(n5)));
-        } else {
-            const n6 = parseFloat(text);
-            return (v: any) => v !== undefined && parseFloat(v) === n6;
-        }
-    }
 }
 
 export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridState> {

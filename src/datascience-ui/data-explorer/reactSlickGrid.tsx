@@ -79,7 +79,7 @@ interface ISlickGridState {
     fontSize: number;
 }
 
-class ColumnFilter {
+export class ColumnFilter {
     private matchFunc: (v: any) => boolean;
     private nanRegEx = /^\s*nan.*/i;
     private infRegEx = /^\s*inf.*/i;

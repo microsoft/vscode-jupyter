@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Code } from '../../interactive-common/code';
+import { Code } from '../../../interactive-common/code';
 import './HistorySection.css';
 
 interface IProps {

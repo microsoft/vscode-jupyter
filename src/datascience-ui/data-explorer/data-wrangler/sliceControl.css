@@ -1,4 +1,4 @@
-@import url("../data-explorer/sliceControl.css");
+@import url("../sliceControl.css");
 
 .slice-data {
     background-color: var(--vscode-settings-textInputBackground);

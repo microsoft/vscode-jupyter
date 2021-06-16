@@ -16,29 +16,30 @@ import {
     IGetRowsResponse,
     IGetSliceRequest,
     IRowsResponse
-} from '../../client/datascience/data-viewing/types';
-import { CssMessages, SharedMessages } from '../../client/datascience/messages';
-import { IJupyterExtraSettings } from '../../client/datascience/types';
-import { getLocString, storeLocStrings } from '../react-common/locReactSide';
-import { IMessageHandler, PostOffice } from '../react-common/postOffice';
-import { Progress } from '../react-common/progress';
-import { StyleInjector } from '../react-common/styleInjector';
-import { cellFormatterFunc } from '../data-explorer/cellFormatter';
-import { ISlickGridAdd, ISlickGridSlice, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
-import { generateTestData } from '../data-explorer/testData';
+} from '../../../client/datascience/data-viewing/types';
+import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
+import { IJupyterExtraSettings } from '../../../client/datascience/types';
+import { getLocString, storeLocStrings } from '../../react-common/locReactSide';
+import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
+import { Progress } from '../../react-common/progress';
+import { StyleInjector } from '../../react-common/styleInjector';
+import { cellFormatterFunc } from '../cellFormatter';
+import { ReactSlickGrid } from './reactSlickGrid';
+import { generateTestData } from '../testData';
 
-import '../react-common/codicon/codicon.css';
-import '../react-common/seti/seti.less';
-import { SliceControl } from '../data-explorer/sliceControl';
+import '../../react-common/codicon/codicon.css';
+import '../../react-common/seti/seti.less';
+import { SliceControl } from '../sliceControl';
 import { debounce } from 'lodash';
 
 import { initializeIcons } from '@fluentui/react';
 import { Toolbar } from './controls/toolbar';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { deserializeLanguageConfiguration } from '../../client/datascience/interactive-common/serialization';
-import { Tokenizer } from '../interactive-common/tokenizer';
-import { createDeferred } from '../../client/common/utils/async';
-import { DataWranglerMessages, IDataWranglerMapping } from '../../client/datascience/data-viewing/data-wrangler/types';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { deserializeLanguageConfiguration } from '../../../client/datascience/interactive-common/serialization';
+import { Tokenizer } from '../../interactive-common/tokenizer';
+import { createDeferred } from '../../../client/common/utils/async';
+import { DataWranglerMessages, IDataWranglerMapping } from '../../../client/datascience/data-viewing/data-wrangler/types';
+import { ISlickGridAdd, ISlickGridSlice, ISlickRow } from '../reactSlickGrid';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);
@@ -75,7 +76,7 @@ interface IMainPanelState {
     monacoTheme: string;
 }
 
-export class DataWranglerMainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
+export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private container: React.Ref<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
