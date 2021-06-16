@@ -228,7 +228,7 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
     public async addCode(code: string, _file: Uri, _line: number): Promise<boolean> {
         const { notebookUri } = await this.loadPromise;
         const edit = new WorkspaceEdit();
-        const notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.toString());
+        const notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.uri.toString());
         if (!notebookDocument) {
             return true;
         }
