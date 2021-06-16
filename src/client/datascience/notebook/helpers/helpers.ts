@@ -560,8 +560,7 @@ function translateDisplayDataOutput(
         items.push(new NotebookCellOutputItem(convertJupyterOutputToBuffer(key, data[key]), key));
     }
 
-    const x = sortOutputItemsBasedOnDisplayOrder(items);
-    return new NotebookCellOutput(x, metadata);
+    return new NotebookCellOutput(sortOutputItemsBasedOnDisplayOrder(items), metadata);
 }
 
 function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
