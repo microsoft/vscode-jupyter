@@ -228,7 +228,12 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                             args: { targets: [this.contextMenuRowId], mode: 'row' }
                         });
                     case RowContextMenuItem.CopyData:
-                        void navigator.clipboard.writeText(cellData);
+                        if (cellData === undefined) {
+                            // This is when you try to copy the slickGrid built-in index
+                            void navigator.clipboard.writeText(this.contextMenuCellId.toString());
+                        } else {
+                            void navigator.clipboard.writeText(cellData);
+                        }
                         return;
                     case RowContextMenuItem.NormalizeRow:
                     case RowContextMenuItem.DropNA:
