@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable } from '../../common/types';
-import { IpykernelDebugAdapter } from './ipykernelDebugAdapter';
+import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { IDebuggingManager, INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 
@@ -52,17 +52,19 @@ export class DebuggingManager implements IDebuggingManager, IExtensionSingleActi
             // factory for xeus debug adapters
             vscode.debug.registerDebugAdapterDescriptorFactory('xeus', {
                 createDebugAdapterDescriptor: async (session) => {
-                    const dbg = this.getDebuggerByUri(session.configuration.__document);
-                    if (dbg) {
+                    const activeDoc = vscode.window.activeNotebookEditor!.document;
+                    const debug = await this.getDebuggerByUri(activeDoc);
+
+                    if (debug) {
                         const notebook = await this.notebookProvider.getOrCreateNotebook({
-                            resource: dbg.document.uri,
-                            identity: dbg.document.uri,
+                            resource: debug.document.uri,
+                            identity: debug.document.uri,
                             getOnly: true
                         });
                         if (notebook && notebook.session) {
-                            dbg.resolve(session);
+                            debug.resolve(session);
                             return new vscode.DebugAdapterInlineImplementation(
-                                new IpykernelDebugAdapter(session, dbg.document, notebook.session)
+                                new KernelDebugAdapter(session, debug.document, notebook.session)
                             );
                         } else {
                             vscode.window.showInformationMessage('run the kernel');
@@ -122,7 +124,7 @@ export class DebuggingManager implements IDebuggingManager, IExtensionSingleActi
         }
     }
 
-    public async toggleDebugging(doc: vscode.NotebookDocument) {
+    private async toggleDebugging(doc: vscode.NotebookDocument) {
         let showBreakpointMargin = false;
         let dbg = this.notebookToDebugger.get(doc);
         if (dbg) {
@@ -142,13 +144,26 @@ export class DebuggingManager implements IDebuggingManager, IExtensionSingleActi
         }
     }
 
-    private getDebuggerByUri(docUri: string): Debugger | undefined {
+    private async getDebuggerByUri(document: vscode.NotebookDocument): Promise<Debugger> {
+        let showBreakpointMargin = false;
+
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
-            if (docUri === doc.uri.toString()) {
+            if (document.uri.toString() === doc.uri.toString()) {
                 return dbg;
             }
         }
-        return undefined;
+
+        const dbg = new Debugger(document);
+        this.notebookToDebugger.set(document, dbg);
+        await this.kernelProvider.get(document.uri); // ensure the kernel is running
+        try {
+            await dbg.session;
+            showBreakpointMargin = true;
+        } catch (err) {
+            vscode.window.showErrorMessage(`Can't start debugging (${err})`);
+        }
+        this.updateDebuggerUI(document, showBreakpointMargin);
+        return dbg;
     }
 
     private updateDebuggerUI(doc: vscode.NotebookDocument, showBreakpointsMargin: boolean) {

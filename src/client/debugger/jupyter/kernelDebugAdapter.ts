@@ -10,17 +10,7 @@ import * as path from 'path';
 import { IJupyterSession } from '../../datascience/types';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 
-//---- debug adapter for Jupyter debug protocol
-
-// const debugEvents: ReadonlySet<MessageType> = new Set(['debug_request', 'debug_reply', 'debug_event']);
-
-// const isDebugMessage = (msg: JupyterMessage): msg is DebugMessage => debugEvents.has(msg.header.msg_type);
-
-/**
- * the XeusDebugAdapter delegates the DAP protocol to the xeus kernel
- * via Jupyter's experimental debug_request, debug_reply, debug_event messages.
- */
-export class IpykernelDebugAdapter implements vscode.DebugAdapter {
+export class KernelDebugAdapter implements vscode.DebugAdapter {
     private readonly fileToCell = new Map<string, vscode.NotebookCell>();
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new vscode.EventEmitter<vscode.DebugProtocolMessage>();
@@ -35,7 +25,7 @@ export class IpykernelDebugAdapter implements vscode.DebugAdapter {
         private session: vscode.DebugSession,
         private notebookDocument: vscode.NotebookDocument,
         private readonly jupyterSession: IJupyterSession
-    ) { }
+    ) {}
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
         // console.log('-> send', message);
@@ -69,16 +59,15 @@ export class IpykernelDebugAdapter implements vscode.DebugAdapter {
 
             if (control) {
                 control.onReply = (msg) => {
-                    console.error('------------------ onReply ------------');
-                    console.error(msg);
                     visitSources(msg.content, (source) => {
+                        console.error('------------------ onReply ------------');
+                        console.error(msg);
                         if (source && source.path) {
                             const cell = this.fileToCell.get(source.path);
                             if (cell) {
                                 source.name = path.basename(cell.document.uri.path);
-                                const cellIndex = cell.notebook.getCells().indexOf(cell);
-                                if (cellIndex >= 0) {
-                                    source.name += `, Cell ${cellIndex + 1}`;
+                                if (cell.index >= 0) {
+                                    source.name += `, Cell ${cell.index + 1}`;
                                 }
                                 source.path = cell.document.uri.toString();
                             }
@@ -88,12 +77,40 @@ export class IpykernelDebugAdapter implements vscode.DebugAdapter {
                     this.sendMessage.fire(msg.content);
                 };
                 control.onIOPub = (msg) => {
-                    console.error('------------------ onIOPub ------------');
-                    console.error(msg);
+                    visitSources(msg.content as DebugProtocol.ProtocolMessage, (source) => {
+                        console.error('------------------ onIOPub ------------');
+                        console.error(msg);
+                        if (source && source.path) {
+                            const cell = this.fileToCell.get(source.path);
+                            if (cell) {
+                                source.name = path.basename(cell.document.uri.path);
+                                if (cell.index >= 0) {
+                                    source.name += `, Cell ${cell.index + 1}`;
+                                }
+                                source.path = cell.document.uri.toString();
+                            }
+                        }
+                    });
+
+                    this.sendMessage.fire(msg.content);
                 };
                 control.onStdin = (msg) => {
-                    console.error('------------------ onStdin ------------');
-                    console.error(msg);
+                    visitSources(msg.content as DebugProtocol.ProtocolMessage, (source) => {
+                        console.error('------------------ onStdin ------------');
+                        console.error(msg);
+                        if (source && source.path) {
+                            const cell = this.fileToCell.get(source.path);
+                            if (cell) {
+                                source.name = path.basename(cell.document.uri.path);
+                                if (cell.index >= 0) {
+                                    source.name += `, Cell ${cell.index + 1}`;
+                                }
+                                source.path = cell.document.uri.toString();
+                            }
+                        }
+                    });
+
+                    this.sendMessage.fire(msg.content);
                 };
                 this.messageListener.set(message.seq, control);
             }
@@ -160,9 +177,9 @@ function visitSources(
                 case 'setBreakpoints':
                     sourceHook((request.arguments as DebugProtocol.SetBreakpointsArguments).source);
                     break;
-                // case 'breakpointLocations':
-                //     sourceHook((request.arguments as DebugProtocol.BreakpointLocationsArguments).source);
-                //     break;
+                case 'breakpointLocations':
+                    sourceHook((request.arguments as DebugProtocol.BreakpointLocationsArguments).source);
+                    break;
                 case 'source':
                     sourceHook((request.arguments as DebugProtocol.SourceArguments).source);
                     break;
