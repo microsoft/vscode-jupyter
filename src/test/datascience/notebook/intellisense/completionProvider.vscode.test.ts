@@ -31,6 +31,7 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
     let completionProvider: NotebookCompletionProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
+        traceInfo(`Start Suite Code Completion via Jupyter`);
         this.timeout(120_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
@@ -41,6 +42,7 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         completionProvider = api.serviceContainer.get<NotebookCompletionProvider>(NotebookCompletionProvider);
+        traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {

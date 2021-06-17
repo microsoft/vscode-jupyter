@@ -65,6 +65,8 @@ export async function closeActiveWindows(disposables: IDisposable[] = []): Promi
     disposeAllDisposables(disposables);
     await closeActiveNotebooks();
     await closeWindowsInternal();
+    // Work around for https://github.com/microsoft/vscode/issues/125211#issuecomment-863592741
+    await sleep(2_000);
 }
 export async function closeActiveNotebooks(): Promise<void> {
     if (!vscode.env.appName.toLowerCase().includes('insiders') || !isANotebookOpen()) {
