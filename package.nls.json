@@ -491,5 +491,6 @@
     "DataScience.sliceMismatchedAxesError": "Expected {0} axes, got {1} in slice expression",
     "DataScience.clearFilters": "Clear all filters",
     "DataScience.defaultNotebookName": "default",
-    "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targetting the language '{1}'"
+    "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targetting the language '{1}'",
+    "DataScience.interactiveClearAllCells": "Clear All"
 }

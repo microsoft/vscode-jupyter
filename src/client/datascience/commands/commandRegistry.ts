@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
+import { CodeLens, ConfigurationTarget, env, NotebookRange, Range, Uri, workspace, WorkspaceEdit } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import {
@@ -149,11 +149,12 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.RunFromLine, this.runFromLine);
         this.registerCommand(Commands.RunFileInInteractiveWindows, this.runFileInteractive);
         this.registerCommand(Commands.DebugFileInInteractiveWindows, this.debugFileInteractive);
+        this.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow);
     }
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);
@@ -244,6 +245,21 @@ export class CommandRegistry implements IDisposable {
         } else {
             return;
         }
+    }
+
+    private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri; }; }): Promise<void> {
+        if (!context) {
+            return;
+        }
+
+        const document = workspace.notebookDocuments.find(document => document.uri.toString() === context.notebookEditor.notebookUri.toString());
+        if (!document) {
+            return;
+        }
+
+        const edit = new WorkspaceEdit();
+        edit.replaceNotebookCells(document.uri, new NotebookRange(0, document.cellCount), []);
+        await workspace.applyEdit(edit);
     }
 
     // Note: see codewatcher.ts where the runcell command args are attached. The reason we don't have any

@@ -55,6 +55,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.NotebookEditorToggleOutput]: [];
     [DSCommands.NotebookEditorKeybindExecuteCell]: [];
     [DSCommands.NotebookEditorKeybindRenderMarkdownAndSelectBelow]: [];
+    [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri; }; }];
     ['notebook.cell.quitEdit']: [];
     ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.cell.collapseCellOutput']: [];
@@ -77,19 +78,19 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['extension.open']: [string];
     ['setContext']: [string, boolean] | ['jupyter.vscode.channel', Channel];
     ['jupyter.reloadVSCode']: [string];
-    ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
+    ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom'; }];
     ['python._loadLanguageServerExtension']: {}[];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
     ['vscode.open']: [Uri];
     ['notebook.execute']: [];
-    ['notebook.cell.execute']: [] | [{ ranges: { start: number; end: number }[], document?: Uri, autoReveal?: boolean }]; // TODO update this
+    ['notebook.cell.execute']: [] | [{ ranges: { start: number; end: number; }[], document?: Uri, autoReveal?: boolean; }]; // TODO update this
     ['notebook.cell.insertCodeCellBelow']: [];
     ['notebook.undo']: [];
     ['notebook.redo']: [];
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
-    ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
+    ['notebook.selectKernel']: [{ id: string; extension: string; }] | [];
     ['undo']: [];
     ['interactive.open']: [ViewColumn];
     ['interactive.execute']: [string];

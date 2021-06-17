@@ -754,6 +754,12 @@
                 "title": "%DataScience.refreshDataViewerCommandPalette%",
                 "category": "Jupyter",
                 "enablement": "jupyter.dataViewerActive && isWorkspaceTrusted"
+            },
+            {
+                "command": "jupyter.interactive.clearAllCells",
+                "title": "%DataScience.interactiveClearAllCells%",
+                "icon": "$(close)",
+                "category": "Jupyter"
             }
         ],
         "menus": {
@@ -861,6 +867,13 @@
                     "command": "jupyter.notebookeditor.export",
                     "group": "navigation@2",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                }
+            ],
+            "interactive/toolbar": [
+                {
+                    "command": "jupyter.interactive.clearAllCells",
+                    "group": "navigation@0",
+                    "when": "isWorkspaceTrusted"
                 }
             ],
             "explorer/context": [
