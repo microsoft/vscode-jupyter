@@ -3,14 +3,12 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
 import * as uuid from 'uuid';
-import { CancellationToken, Event, EventEmitter, Memento, NotebookCellData, NotebookCellKind, NotebookDocument, NotebookRange, Uri, ViewColumn, workspace, WorkspaceEdit } from 'vscode';
+import { CancellationToken, ConfigurationTarget, Event, EventEmitter, NotebookCell, NotebookCellData, NotebookCellKind, NotebookDocument, NotebookRange, Uri, ViewColumn, workspace, WorkspaceEdit } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    ILiveShareApi,
-    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
@@ -20,64 +18,47 @@ import { IFileSystem } from '../../common/platform/types';
 
 import {
     IConfigurationService,
+    IDisposable,
     IDisposableRegistry,
     InteractiveWindowMode,
-    IPersistentStateFactory,
     Resource
 } from '../../common/types';
-import { Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../constants';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Commands, defaultNotebookFormat, EditorContexts, Identifiers, Telemetry } from '../constants';
-import { IDataViewerFactory } from '../data-viewing/types';
+import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
-import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INotebookIdentity,
-    InteractiveWindowMessages,
-    ISubmitNewCell,
-    NotebookModelChange,
-    SysInfoReason
-} from '../interactive-common/interactiveWindowTypes';
-import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
+    ISubmitNewCell} from '../interactive-common/interactiveWindowTypes';
+import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
+import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { InteractiveWindowView } from '../notebook/constants';
 import { INotebookControllerManager } from '../notebook/types';
+import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import {
+    CellState,
     ICell,
-    ICodeCssGenerator,
-    IDataScienceErrorHandler,
     IInteractiveWindow,
     IInteractiveWindowInfo,
-    IInteractiveWindowListener,
     IInteractiveWindowLoadable,
-    IInteractiveWindowProvider,
-    IJupyterDebugger,
-    IJupyterServerUriStorage,
-    IJupyterVariableDataProviderFactory,
-    IJupyterVariables,
     INotebookExporter,
-    INotebookProvider,
+    InterruptResult,
     IStatusProvider,
-    IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
-import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
+import { createInteractiveIdentity } from './identity';
 import { INativeInteractiveWindow } from './types';
 
-const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
-
-export class NativeInteractiveWindow extends InteractiveBase implements IInteractiveWindowLoadable {
+export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
     public get visible(): boolean {
-        return this.viewState.visible;
+        return true; // TODO VS Code needs to provide an API for this
     }
     public get active(): boolean {
-        return this.viewState.active;
+        return true; // TODO VS Code needs to provide an API for this
     }
 
     public get closed(): Event<IInteractiveWindow> {
@@ -95,92 +76,36 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
     public isInteractive = true;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
-    private waitingForExportCells: boolean = false;
-    private trackedJupyterStart: boolean = false;
     private _owner: Uri | undefined;
     private _identity: Uri = createInteractiveIdentity();
     private _submitters: Uri[] = [];
-    private pendingHasCell = new Map<string, Deferred<boolean>>();
     private mode: InteractiveWindowMode = 'multiple';
-    private loadPromise: Thenable<INativeInteractiveWindow>;
     private _kernelConnection?: KernelConnectionMetadata;
+    protected fileInKernel: string | undefined;
+
+    private loadPromise: Thenable<INativeInteractiveWindow>;
+    private kernel: IKernel | undefined;
+    private isDisposed = false;
+    private restartingKernel = false;
+    private loadKernelPromise: Promise<void> | undefined;
 
     constructor(
-        listeners: IInteractiveWindowListener[],
-        liveShare: ILiveShareApi,
-        applicationShell: IApplicationShell,
-        documentManager: IDocumentManager,
-        statusProvider: IStatusProvider,
-        provider: IWebviewPanelProvider,
-        disposables: IDisposableRegistry,
-        cssGenerator: ICodeCssGenerator,
-        themeFinder: IThemeFinder,
-        fs: IFileSystem,
-        configuration: IConfigurationService,
-        commandManager: ICommandManager,
-        jupyterExporter: INotebookExporter,
-        workspaceService: IWorkspaceService,
-        _interactiveWindowProvider: IInteractiveWindowProvider,
-        dataExplorerFactory: IDataViewerFactory,
-        jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        jupyterVariables: IJupyterVariables,
-        jupyterDebugger: IJupyterDebugger,
-        errorHandler: IDataScienceErrorHandler,
-        private readonly stateFactory: IPersistentStateFactory,
-        globalStorage: Memento,
-        workspaceStorage: Memento,
-        notebookProvider: INotebookProvider,
-        useCustomEditorApi: boolean,
+        private readonly applicationShell: IApplicationShell,
+        private readonly documentManager: IDocumentManager,
+        private readonly statusProvider: IStatusProvider,
+        private readonly disposables: IDisposableRegistry,
+        private readonly fs: IFileSystem,
+        private readonly configuration: IConfigurationService,
+        private readonly commandManager: ICommandManager,
+        private readonly jupyterExporter: INotebookExporter,
+        private readonly workspaceService: IWorkspaceService,
         owner: Resource,
         mode: InteractiveWindowMode,
-        title: string | undefined,
-        selector: KernelSelector,
         private readonly extensionChecker: IPythonExtensionChecker,
-        serverStorage: IJupyterServerUriStorage,
         private readonly exportDialog: IExportDialog,
-        private readonly notebookControllerManager: INotebookControllerManager
+        private readonly notebookControllerManager: INotebookControllerManager,
+        private readonly kernelProvider: IKernelProvider
     ) {
-        super(
-            listeners,
-            liveShare,
-            applicationShell,
-            documentManager,
-            provider,
-            disposables,
-            cssGenerator,
-            themeFinder,
-            statusProvider,
-            fs,
-            configuration,
-            jupyterExporter,
-            workspaceService,
-            dataExplorerFactory,
-            jupyterVariableDataProviderFactory,
-            jupyterVariables,
-            jupyterDebugger,
-            errorHandler,
-            commandManager,
-            globalStorage,
-            workspaceStorage,
-            historyReactDir,
-            [
-                path.join(historyReactDir, 'require.js'),
-                path.join(historyReactDir, 'ipywidgets.js'),
-                path.join(historyReactDir, 'monaco.bundle.js'),
-                path.join(historyReactDir, 'commons.initial.bundle.js'),
-                path.join(historyReactDir, 'interactiveWindow.js')
-            ],
-            localize.DataScience.interactiveWindowTitle(),
-            ViewColumn.Two,
-            notebookProvider,
-            useCustomEditorApi,
-            selector,
-            serverStorage
-        );
-
-        // Send a telemetry event to indicate window is opening
-        sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
-
         // Set our owner and first submitter
         this._owner = owner;
         this.mode = mode;
@@ -188,14 +113,25 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
             this._submitters.push(owner);
         }
 
+        // For now, VS Code returns us the NotebookDocument URI and the InputEditor URI from this command
         this.loadPromise = this.commandManager.executeCommand('interactive.open', ViewColumn.Beside) as Thenable<INativeInteractiveWindow>;
 
-        // Update the title if possible
-        if (this.owner && mode === 'perFile') {
-            this.setTitle(getInteractiveWindowTitle(this.owner));
-        } else if (title) {
-            this.setTitle(title);
+        // Listen for when a notebook controller is selected for the NotebookDocument
+        this.notebookControllerManager.onNotebookControllerSelected(this.handleNotebookControllerSelected, this, this.disposables);
+    }
+
+    // Until we get an InteractiveEditor instance back from VS Code we
+    // can't know when the InteractiveEditor is disposed except at the
+    // point when we try to access it. Calling this method may cause this
+    // InteractiveWindow object to dispose itself
+    private async tryGetMatchingNotebookDocument(): Promise<NotebookDocument | undefined> {
+        const { notebookUri } = await this.loadPromise;
+        const notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.uri.toString());
+        if (notebookDocument === undefined) {
+            this.dispose();
+            return undefined;
         }
+        return notebookDocument;
     }
 
     public async show(): Promise<void> {
@@ -204,27 +140,54 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
     }
 
     public dispose() {
-        super.dispose();
-        if (this.notebook) {
-            this.notebook.dispose().ignoreErrors();
+        if (this.kernel) {
+            this.kernel.dispose().ignoreErrors();
         }
         if (this.closedEvent) {
             this.closedEvent.fire(this);
         }
+        this.isDisposed = true;
     }
 
-    public addMessage(message: string): Promise<void> {
-        this.addMessageImpl(message);
-        return Promise.resolve();
+    public async addMessage(message: string): Promise<void> {
+        // Add message to the notebook document
+        const edit = new WorkspaceEdit();
+        const notebookDocument = await this.tryGetMatchingNotebookDocument();
+        if (!notebookDocument) {
+            return;
+        }
+        edit.replaceNotebookCells(notebookDocument.uri, new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount), [
+            new NotebookCellData(NotebookCellKind.Markup, message, 'markdown')
+        ])
+        await workspace.applyEdit(edit);
     }
 
     public changeMode(mode: InteractiveWindowMode): void {
         if (this.mode !== mode) {
             this.mode = mode;
-            if (this.owner && mode === 'perFile') {
-                this.setTitle(getInteractiveWindowTitle(this.owner));
-            }
         }
+    }
+
+    private async handleNotebookControllerSelected(e: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
+        // Ensure the controller was selected for the InteractiveEditor
+        const { notebook } = e;
+        if (notebook.notebookType !== InteractiveWindowView) {
+            return;
+        }
+
+        // Ensure the controller was selected for our notebook
+        const notebookDocument = await this.tryGetMatchingNotebookDocument();
+        if (notebookDocument !== notebook) {
+            return;
+        }
+
+        // Update the cached kernel for this controller
+        this.kernel = this.kernelProvider.getOrCreate(notebookDocument.uri, {
+            metadata: e.controller.connection,
+            controller: e.controller.controller
+        });
+
+        this.loadKernelPromise = this.kernel?.start({ disableUI: false, document: notebookDocument });
     }
 
     private async getOrCreateInteractiveEditor(): Promise<NotebookDocument> {
@@ -236,6 +199,7 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         let notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.uri.toString());
 
         // User closed the previous interactive window. Make a new one
+        // TODO here we should just dispose ourselves
         if (!notebookDocument) {
             this.loadPromise = this.commandManager.executeCommand('interactive.open', ViewColumn.Beside) as Thenable<INativeInteractiveWindow>;
             ({ notebookUri } = await this.loadPromise);
@@ -250,63 +214,8 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         return notebookDocument;
     }
 
-    public async addCode(code: string, _file: Uri, _line: number): Promise<boolean> {
-        // Ensure we always have a notebook document to submit code to
-        const notebookDocument = await this.getOrCreateInteractiveEditor();
-
-        // Insert code cell into NotebookDocument
-        const edit = new WorkspaceEdit();
-        const cell = new NotebookCellData(NotebookCellKind.Code, code, 'python'); // TODO generalize to arbitrary languages and cell types
-        cell.metadata = {
-            interactive: {
-                file: _file.fsPath,
-                line: _line
-            }
-        };
-        edit.replaceNotebookCells(notebookDocument.uri, new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount), [cell]);
-        await workspace.applyEdit(edit);
-
-        // Request execution
-        await this.commandManager.executeCommand('notebook.cell.execute', { ranges: [{ start: notebookDocument.cellCount - 1, end: notebookDocument.cellCount }], document: notebookDocument.uri, autoReveal: true });
-        return true;
-    }
-
-    public exportCells() {
-        // First ask for all cells. Set state to indicate waiting for result
-        this.waitingForExportCells = true;
-
-        // Telemetry will fire when the export function is called.
-        this.postMessage(InteractiveWindowMessages.GetAllCells).ignoreErrors();
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public onMessage(message: string, payload: any) {
-        super.onMessage(message, payload);
-
-        switch (message) {
-            case InteractiveWindowMessages.Export:
-                this.handleMessage(message, payload, this.export);
-                break;
-
-            case InteractiveWindowMessages.ReturnAllCells:
-                this.handleMessage(message, payload, this.handleReturnAllCells);
-                break;
-
-            case InteractiveWindowMessages.UpdateModel:
-                this.handleMessage(message, payload, this.handleModelChange);
-                break;
-
-            case InteractiveWindowMessages.ExportNotebookAs:
-                this.handleMessage(message, payload, this.exportAs);
-                break;
-
-            case InteractiveWindowMessages.HasCellResponse:
-                this.handleMessage(message, payload, this.handleHasCellResponse);
-                break;
-
-            default:
-                break;
-        }
+    public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
+        return this.addOrDebugCode(code, file, line, false);
     }
 
     public async debugCode(code: string, file: Uri, line: number): Promise<boolean> {
@@ -340,17 +249,166 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         return false;
     }
 
-    @captureTelemetry(Telemetry.ExpandAll)
+    // TODO Migrate all of this code into a common command handler
+    public async interruptKernel(): Promise<void> {
+        // trackKernelResourceInformation(this._notebook?.resource, { interruptKernel: true });
+        if (this.kernel && !this.restartingKernel) {
+            const status = this.statusProvider.set(
+                localize.DataScience.interruptKernelStatus(),
+                true,
+                undefined,
+                undefined,
+                this
+            );
+
+            try {
+                // const settings = this.configuration.getSettings(this.owningResource);
+                // const interruptTimeout = settings.jupyterInterruptTimeout;
+
+                const notebookDocument = await this.tryGetMatchingNotebookDocument();
+                if (!notebookDocument) {
+                    return;
+                }
+
+                const result = await this.kernel.interrupt(notebookDocument);
+                status.dispose();
+
+                // We timed out, ask the user if they want to restart instead.
+                if (result === InterruptResult.TimedOut && !this.restartingKernel) {
+                    const message = localize.DataScience.restartKernelAfterInterruptMessage();
+                    const yes = localize.DataScience.restartKernelMessageYes();
+                    const no = localize.DataScience.restartKernelMessageNo();
+                    const v = await this.applicationShell.showInformationMessage(message, yes, no);
+                    if (v === yes) {
+                        await this.restartKernelInternal();
+                    }
+                } else if (result === InterruptResult.Restarted) {
+                    // Uh-oh, keyboard interrupt crashed the kernel.
+                    // this.addSysInfo(SysInfoReason.Interrupt).ignoreErrors(); // This should be handled in kernel.ts
+                }
+            } catch (err) {
+                status.dispose();
+                traceError(err);
+                this.applicationShell.showErrorMessage(err).then(noop, noop);
+            }
+        }
+    }
+
+    // TODO Migrate all of this code into a common command handler
+    public async restartKernel(): Promise<void> {
+        if (this.kernel?.notebook && !this.restartingKernel) {
+            this.restartingKernel = true;
+            this.startProgress();
+
+            try {
+                if (await this.shouldAskForRestart()) {
+                    // Ask the user if they want us to restart or not.
+                    const message = localize.DataScience.restartKernelMessage();
+                    const yes = localize.DataScience.restartKernelMessageYes();
+                    const dontAskAgain = localize.DataScience.restartKernelMessageDontAskAgain();
+                    const no = localize.DataScience.restartKernelMessageNo();
+
+                    const v = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
+                    if (v === dontAskAgain) {
+                        await this.disableAskForRestart();
+                        await this.restartKernelInternal();
+                    } else if (v === yes) {
+                        await this.restartKernelInternal();
+                    }
+                } else {
+                    await this.restartKernelInternal();
+                }
+            } finally {
+                this.restartingKernel = false;
+                this.stopProgress();
+            }
+        }
+    }
+
+    private async shouldAskForRestart(): Promise<boolean> {
+        const settings = this.configuration.getSettings(this.owningResource);
+        return settings && settings.askForKernelRestart === true;
+    }
+
+    private async disableAskForRestart(): Promise<void> {
+        const settings = this.configuration.getSettings(this.owningResource);
+        if (settings) {
+            this.configuration
+                .updateSetting('askForKernelRestart', false, undefined, ConfigurationTarget.Global)
+                .ignoreErrors();
+        }
+    }
+
+    private async restartKernelInternal(): Promise<void> {
+        this.restartingKernel = true;
+        const notebookDocument = await this.tryGetMatchingNotebookDocument();
+
+        // Set our status
+        const status = this.statusProvider.set(
+            localize.DataScience.restartingKernelStatus(),
+            true,
+            undefined,
+            undefined,
+            this
+        );
+
+        try {
+            if (this.kernel && notebookDocument) {
+                await this.kernel.restart(notebookDocument);
+
+                // Reset our file in the kernel.
+                const fileInKernel = this.fileInKernel;
+                this.fileInKernel = undefined;
+                if (fileInKernel) {
+                    await this.setFileInKernel(fileInKernel, undefined);
+                }
+
+                // // Compute if dark or not.
+                // const knownDark = await this.isDark();
+
+                // // Before we run any cells, update the dark setting
+                // await this.kernel?.notebook?.setMatplotLibStyle(knownDark);
+            }
+        } catch (exc) {
+            // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server
+            if (exc instanceof JupyterKernelPromiseFailedError && this.kernel?.notebook) {
+                await this.kernel.dispose();
+                await this.kernel.restart(notebookDocument!);
+            } else {
+                // Show the error message
+                this.applicationShell.showErrorMessage(exc).then(noop, noop);
+                traceError(exc);
+            }
+        } finally {
+            status.dispose();
+            this.restartingKernel = false;
+        }
+    }
+
+    public undoCells() {
+        throw new Error('Method not implemented.');
+    }
+
+    public redoCells() {
+        throw new Error('Method not implemented.');
+    }
+
+    public removeAllCells() {
+        throw new Error('Method not implemented.');
+    }
+
+    public async exportCells() {
+        throw new Error('Method not implemented.');
+    }
+
     public expandAllCells() {
         throw new Error('Method not implemented.');
     }
 
-    @captureTelemetry(Telemetry.CollapseAll)
     public collapseAllCells() {
         throw new Error('Method not implemented.');
     }
 
-    @captureTelemetry(Telemetry.ScrolledToCell)
     public scrollToCell(_id: string): void {
         throw new Error('Method not implemented.');
     }
@@ -370,36 +428,43 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         return undefined;
     }
 
-    protected async addSysInfo(reason: SysInfoReason): Promise<void> {
-        await super.addSysInfo(reason);
-
-        // If `reason == Start`, then this means UI has been updated with the last
-        // pience of informaiotn (which was sys info), and now UI can be deemed as having been loaded.
-        // Marking a UI as having been loaded is done by sending a message `LoadAllCells`, even though we're not loading any cells.
-        // We're merely using existing messages (from NativeEditor).
-        if (reason === SysInfoReason.Start) {
-            this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells: [] }).ignoreErrors();
-        }
-    }
-    protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
-        super.onViewStateChanged(args);
+    protected async onViewStateChanged(_args: WebViewViewChangeEventArgs) {
         this._onDidChangeViewState.fire();
     }
 
-    @captureTelemetry(Telemetry.SubmitCellThroughInput, undefined, false)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    protected async submitNewCell(info: ISubmitNewCell) {
-        // If there's any payload, it has the code and the id
-        if (info && info.code && info.id) {
-            // Send to ourselves.
-            await this.commandManager.executeCommand('interactive.execute', info.code);
-            this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id).ignoreErrors();
-        }
+    protected async submitCode(
+        code: string,
+        _file: string,
+        _line: number,
+        _id?: string,
+        _data?: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell,
+        _debugInfo?: { runByLine: boolean; hashFileName?: string },
+        _cancelToken?: CancellationToken
+    ): Promise<boolean> {
+        // Ensure we always have a notebook document to submit code to
+        const notebookDocument = await this.getOrCreateInteractiveEditor();
+
+        // Make sure our kernel has started before we try to put stuff 
+        await this.loadKernelPromise;
+
+        // Insert code cell into NotebookDocument
+        const edit = new WorkspaceEdit();
+        const notebookCell = new NotebookCellData(NotebookCellKind.Code, code, 'python'); // Look at document.languageId
+        notebookCell.metadata = { inputCollapsed: true }; // Hide the input because code is already visible on the left
+        edit.replaceNotebookCells(notebookDocument.uri, new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount), [
+            notebookCell // TODO generalize to arbitrary languages and cell types
+        ]);
+        await workspace.applyEdit(edit);
+
+        // Request execution
+        await this.commandManager.executeCommand('notebook.cell.execute', { ranges: [{ start: notebookDocument.cellCount - 1, end: notebookDocument.cellCount }], document: notebookDocument.uri, autoReveal: true });
+        return true;
     }
 
     protected get notebookMetadata(): Readonly<nbformat.INotebookMetadata> | undefined {
         return undefined;
     }
+
     protected get kernelConnection(): Readonly<KernelConnectionMetadata> | undefined {
         return this._kernelConnection;
     }
@@ -420,21 +485,19 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
         // extension contexts
-        if (this.commandManager && this.commandManager.executeCommand) {
-            const interactiveContext = new ContextKey(EditorContexts.HaveInteractive, this.commandManager);
-            interactiveContext.set(!this.isDisposed).catch(noop);
-            const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);
-            const redoableContext = new ContextKey(EditorContexts.HaveRedoableCells, this.commandManager);
-            const hasCellSelectedContext = new ContextKey(EditorContexts.HaveCellSelected, this.commandManager);
-            if (info) {
-                interactiveCellsContext.set(info.cellCount > 0).catch(noop);
-                redoableContext.set(info.redoCount > 0).catch(noop);
-                hasCellSelectedContext.set(info.selectedCell ? true : false).catch(noop);
-            } else {
-                interactiveCellsContext.set(false).catch(noop);
-                redoableContext.set(false).catch(noop);
-                hasCellSelectedContext.set(false).catch(noop);
-            }
+        const interactiveContext = new ContextKey(EditorContexts.HaveInteractive, this.commandManager);
+        interactiveContext.set(!this.isDisposed).catch(noop);
+        const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);
+        const redoableContext = new ContextKey(EditorContexts.HaveRedoableCells, this.commandManager);
+        const hasCellSelectedContext = new ContextKey(EditorContexts.HaveCellSelected, this.commandManager);
+        if (info) {
+            interactiveCellsContext.set(info.cellCount > 0).catch(noop);
+            redoableContext.set(info.redoCount > 0).catch(noop);
+            hasCellSelectedContext.set(info.selectedCell ? true : false).catch(noop);
+        } else {
+            interactiveCellsContext.set(false).catch(noop);
+            redoableContext.set(false).catch(noop);
+            hasCellSelectedContext.set(false).catch(noop);
         }
     }
 
@@ -444,9 +507,9 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
 
     protected async setFileInKernel(file: string, cancelToken: CancellationToken | undefined): Promise<void> {
         // If in perFile mode, set only once
-        if (this.mode === 'perFile' && !this.fileInKernel && this.notebook && file !== Identifiers.EmptyFileName) {
+        if (this.mode === 'perFile' && !this.fileInKernel && this.kernel && file !== Identifiers.EmptyFileName) {
             this.fileInKernel = file;
-            await this.notebook.execute(
+            await this.kernel.notebook?.execute(
                 `__file__ = '${file.replace(/\\/g, '\\\\')}'`,
                 file,
                 0,
@@ -457,12 +520,12 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
             this.mode !== 'perFile' &&
-            this.notebook &&
+            this.kernel &&
             file !== Identifiers.EmptyFileName
         ) {
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
-            await this.notebook.execute(
+            await this.kernel.notebook?.execute(
                 `__file__ = '${file.replace(/\\/g, '\\\\')}'`,
                 file,
                 0,
@@ -473,29 +536,10 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         }
     }
 
-    protected ensureConnectionAndNotebook(): Promise<void> {
-        // Keep track of users who have used interactive window in a worksapce folder.
-        // To be used if/when changing workflows related to startup of jupyter.
-        if (!this.trackedJupyterStart) {
-            this.trackedJupyterStart = true;
-            const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
-            store.updateValue(true).ignoreErrors();
-        }
-        return super.ensureConnectionAndNotebook();
-    }
-
     private async addOrDebugCode(code: string, file: Uri, line: number, debug: boolean): Promise<boolean> {
-        if (this.owner && !this.fs.areLocalPathsSame(file.fsPath, this.owner.fsPath)) {
-            sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
-        }
         // Update the owner for this window if not already set
         if (!this._owner) {
             this._owner = file;
-
-            // Update the title if we're in per file mode
-            if (this.mode === 'perFile') {
-                this.setTitle(getInteractiveWindowTitle(file));
-            }
         }
 
         // Add to the list of 'submitters' for this window.
@@ -506,14 +550,10 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         // Make sure our web panel opens.
         await this.show();
 
-        // Tell the webpanel about the new directory.
-        this.updateCwd(path.dirname(file.fsPath));
-
         // Call the internal method.
         return this.submitCode(code, file.fsPath, line, undefined, undefined, debug ? { runByLine: false } : undefined);
     }
 
-    @captureTelemetry(Telemetry.ExportNotebookInteractive, undefined, false)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
     private async export(cells: ICell[]) {
         // Export requires the python extension
@@ -523,16 +563,10 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
 
         // Should be an array of cells
         if (cells && this.exportDialog) {
-            // Indicate busy
-            this.startProgress();
-            try {
-                // Bring up the export file dialog box
-                const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, this.owningResource);
-                if (uri) {
-                    await this.jupyterExporter.exportToFile(cells, uri.fsPath);
-                }
-            } finally {
-                this.stopProgress();
+            // Bring up the export file dialog box
+            const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, this.owningResource);
+            if (uri) {
+                await this.jupyterExporter.exportToFile(cells, uri.fsPath);
             }
         }
     }
@@ -545,8 +579,8 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
-        if (this.notebook) {
-            updateNotebookMetadata(metadata, this.notebook?.getKernelConnection());
+        if (this.kernel) {
+            updateNotebookMetadata(metadata, this.kernel.notebook?.getKernelConnection());
         }
 
         // Turn the cells into a json object
@@ -568,35 +602,43 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
                 contents,
                 this.owningResource,
                 defaultFileName,
-                this.notebook?.getMatchingInterpreter()
+                this.kernel?.notebook?.getMatchingInterpreter()
             )
             .then(noop, noop);
     }
 
-    private handleModelChange(update: NotebookModelChange) {
-        // Send telemetry for delete and delete all. We don't send telemetry for the other updates yet
-        if (update.source === 'user') {
-            if (update.kind === 'remove_all') {
-                sendTelemetryEvent(Telemetry.DeleteAllCells);
-            } else if (update.kind === 'remove') {
-                sendTelemetryEvent(Telemetry.DeleteCell);
-            }
-        }
+    /// The following are implemented only for compliance with the IInteractiveWindow
+    /// interface and can be deleted once the native notebooks API migration is complete.
+
+    public get title() {
+        return '';
+    }
+
+    public startProgress() {
+        noop();
+    }
+
+    public stopProgress() {
+        noop();
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private handleReturnAllCells(cells: ICell[]) {
-        // See what we're waiting for.
-        if (this.waitingForExportCells) {
-            this.export(cells).catch((ex) => traceError('Error exporting:', ex));
-        }
+    public onMessage(_message: string, _payload: any) {
+        noop();
     }
 
-    private handleHasCellResponse(response: { id: string; result: boolean; }) {
-        const deferred = this.pendingHasCell.get(response.id);
-        if (deferred) {
-            deferred.resolve(response.result);
-            this.pendingHasCell.delete(response.id);
-        }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    protected async submitNewCell(_info: ISubmitNewCell) {
+        noop();
+    }
+
+    public createWebviewCellButton(
+        _buttonId: string,
+        _callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
+        _codicon: string,
+        _statusToEnable: CellState[],
+        _tooltip: string
+    ): IDisposable {
+        return { dispose: noop };
     }
 }

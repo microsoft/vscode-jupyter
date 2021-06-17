@@ -9,11 +9,8 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    ILiveShareApi,
-    IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
-import { UseCustomEditorApi } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -25,34 +22,19 @@ import {
     IDisposableRegistry,
     IMemento,
     InteractiveWindowMode,
-    IPersistentStateFactory,
-    Resource,
-    WORKSPACE_MEMENTO
-} from '../../common/types';
+    Resource} from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { Identifiers } from '../constants';
-import { IDataViewerFactory } from '../data-viewing/types';
 import { IExportDialog } from '../export/types';
-import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import {
-    ICodeCssGenerator,
-    IDataScienceErrorHandler,
     IInteractiveWindow,
-    IInteractiveWindowListener,
     IInteractiveWindowLoadable,
     IInteractiveWindowProvider,
-    IJupyterDebugger,
-    IJupyterServerUriStorage,
-    IJupyterVariableDataProviderFactory,
-    IJupyterVariables,
     INotebookExporter,
-    INotebookProvider,
-    IStatusProvider,
-    IThemeFinder
-} from '../types';
+    IStatusProvider} from '../types';
 import { NativeInteractiveWindow } from './nativeInteractiveWindow';
 
 // Export for testing
@@ -118,47 +100,24 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     }
 
     protected create(resource: Resource, mode: InteractiveWindowMode): IInteractiveWindow {
-        const title =
-            mode === 'multiple' || (mode === 'perFile' && !resource)
-                ? localize.DataScience.interactiveWindowTitleFormat().format(`#${this._windows.length + 1}`)
-                : undefined;
-
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
         const result = new NativeInteractiveWindow(
-            this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
-            this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
             this.serviceContainer.get<IStatusProvider>(IStatusProvider),
-            this.serviceContainer.get<IWebviewPanelProvider>(IWebviewPanelProvider),
             this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
-            this.serviceContainer.get<ICodeCssGenerator>(ICodeCssGenerator),
-            this.serviceContainer.get<IThemeFinder>(IThemeFinder),
             this.serviceContainer.get<IFileSystem>(IFileSystem),
             this.serviceContainer.get<IConfigurationService>(IConfigurationService),
             this.serviceContainer.get<ICommandManager>(ICommandManager),
             this.serviceContainer.get<INotebookExporter>(INotebookExporter),
             this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
-            this,
-            this.serviceContainer.get<IDataViewerFactory>(IDataViewerFactory),
-            this.serviceContainer.get<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory),
-            this.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES),
-            this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger),
-            this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
-            this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
-            this.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO),
-            this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
-            this.serviceContainer.get<INotebookProvider>(INotebookProvider),
-            this.serviceContainer.get<boolean>(UseCustomEditorApi),
             resource,
             mode,
-            title,
-            this.serviceContainer.get<KernelSelector>(KernelSelector),
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
-            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
             this.serviceContainer.get<IExportDialog>(IExportDialog),
-            this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager)
+            this.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager),
+            this.serviceContainer.get<IKernelProvider>(IKernelProvider)
         );
         this._windows.push(result);
 

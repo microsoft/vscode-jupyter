@@ -302,7 +302,7 @@ export class NotebookEditor implements INotebookEditor {
 
         const stopWatch = new StopWatch();
         try {
-            await kernel.restart();
+            await kernel.restart(this.document);
             sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.

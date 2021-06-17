@@ -145,324 +145,324 @@ export class NewInteractiveWindow {
         );
     }
     
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-        public async listenForErrors(promise: () => Promise<any>): Promise<any> {
-            let result: any;
-            try {
-                result = await promise();
-                return result;
-            } catch (err) {
-                if (!(err instanceof CancellationError)) {
-                    if (err.message) {
-                        traceError(err.message);
-                        void this.applicationShell.showErrorMessage(err.message);
-                    } else {
-                        traceError(err.toString());
-                        void this.applicationShell.showErrorMessage(err.toString());
-                    }
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    public async listenForErrors(promise: () => Promise<any>): Promise<any> {
+        let result: any;
+        try {
+            result = await promise();
+            return result;
+        } catch (err) {
+            if (!(err instanceof CancellationError)) {
+                if (err.message) {
+                    traceError(err.message);
+                    void this.applicationShell.showErrorMessage(err.message);
                 } else {
-                    traceInfo('Canceled');
+                    traceError(err.toString());
+                    void this.applicationShell.showErrorMessage(err.toString());
+                }
+            } else {
+                traceInfo('Canceled');
+            }
+        }
+        return result;
+    }
+
+    public showInformationMessage(message: string, question?: string): Thenable<string | undefined> {
+        if (question) {
+            return this.applicationShell.showInformationMessage(message, question);
+        } else {
+            return this.applicationShell.showInformationMessage(message);
+        }
+    }
+
+    @captureTelemetry(Telemetry.ExportPythonFileInteractive, undefined, false)
+    public async exportFile(file: Uri): Promise<void> {
+        if (file && file.fsPath && file.fsPath.length > 0) {
+            // If the current file is the active editor, then generate cells from the document.
+            const activeEditor = this.documentManager.activeTextEditor;
+            if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.uri, file)) {
+                const cells = generateCellsFromDocument(
+                    activeEditor.document,
+                    this.configuration.getSettings(activeEditor.document.uri)
+                );
+                if (cells) {
+                    // Bring up the export dialog box
+                    const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, file);
+                    await this.waitForStatus(
+                        async () => {
+                            if (uri) {
+                                let directoryChange;
+                                const settings = this.configuration.getSettings(activeEditor.document.uri);
+                                if (settings.changeDirOnImportExport) {
+                                    directoryChange = uri;
+                                }
+
+                                const notebook = await this.jupyterExporter.translateToNotebook(
+                                    cells,
+                                    directoryChange?.fsPath
+                                );
+                                await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
+                            }
+                        },
+                        localize.DataScience.exportingFormat(),
+                        file.fsPath
+                    );
+                    // When all done, show a notice that it completed.
+                    if (uri && uri.fsPath) {
+                        const openQuestion1 = localize.DataScience.exportOpenQuestion1();
+                        const selection = await this.applicationShell.showInformationMessage(
+                            localize.DataScience.exportDialogComplete().format(uri.fsPath),
+                            openQuestion1
+                        );
+                        if (selection === openQuestion1) {
+                            await this.ipynbProvider.open(uri);
+                        }
+                    }
                 }
             }
-            return result;
         }
-    
-        public showInformationMessage(message: string, question?: string): Thenable<string | undefined> {
-            if (question) {
-                return this.applicationShell.showInformationMessage(message, question);
-            } else {
-                return this.applicationShell.showInformationMessage(message);
-            }
-        }
-    
-        @captureTelemetry(Telemetry.ExportPythonFileInteractive, undefined, false)
-        public async exportFile(file: Uri): Promise<void> {
-            if (file && file.fsPath && file.fsPath.length > 0) {
-                // If the current file is the active editor, then generate cells from the document.
-                const activeEditor = this.documentManager.activeTextEditor;
-                if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.uri, file)) {
-                    const cells = generateCellsFromDocument(
-                        activeEditor.document,
-                        this.configuration.getSettings(activeEditor.document.uri)
-                    );
-                    if (cells) {
-                        // Bring up the export dialog box
-                        const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, file);
+    }
+
+    @captureTelemetry(Telemetry.ExportPythonFileAndOutputInteractive, undefined, false)
+    public async exportFileAndOutput(file: Uri): Promise<Uri | undefined> {
+        if (file && file.fsPath && file.fsPath.length > 0 && (await this.jupyterExecution.isNotebookSupported())) {
+            // If the current file is the active editor, then generate cells from the document.
+            const activeEditor = this.documentManager.activeTextEditor;
+            if (
+                activeEditor &&
+                activeEditor.document &&
+                this.fileSystem.arePathsSame(activeEditor.document.uri, file)
+            ) {
+                const ranges = generateCellRangesFromDocument(activeEditor.document);
+                if (ranges.length > 0) {
+                    // Ask user for path
+                    const output = await this.showExportDialog(file);
+
+                    // If that worked, we need to start a jupyter server to get our output values.
+                    // In the future we could potentially only update changed cells.
+                    if (output) {
+                        // Create a cancellation source so we can cancel starting the jupyter server if necessary
+                        const cancelSource = new CancellationTokenSource();
+
+                        // Then wait with status that lets the user cancel
                         await this.waitForStatus(
-                            async () => {
-                                if (uri) {
-                                    let directoryChange;
-                                    const settings = this.configuration.getSettings(activeEditor.document.uri);
-                                    if (settings.changeDirOnImportExport) {
-                                        directoryChange = uri;
-                                    }
-    
-                                    const notebook = await this.jupyterExporter.translateToNotebook(
-                                        cells,
-                                        directoryChange?.fsPath
+                            () => {
+                                try {
+                                    return this.exportCellsWithOutput(
+                                        ranges,
+                                        activeEditor.document,
+                                        output,
+                                        cancelSource.token
                                     );
-                                    await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
+                                } catch (err) {
+                                    if (!(err instanceof CancellationError)) {
+                                        void this.showInformationMessage(
+                                            localize.DataScience.exportDialogFailed().format(err)
+                                        );
+                                    }
                                 }
+                                return Promise.resolve();
                             },
                             localize.DataScience.exportingFormat(),
-                            file.fsPath
+                            file.fsPath,
+                            () => {
+                                cancelSource.cancel();
+                            }
                         );
+
                         // When all done, show a notice that it completed.
-                        if (uri && uri.fsPath) {
-                            const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                            const selection = await this.applicationShell.showInformationMessage(
-                                localize.DataScience.exportDialogComplete().format(uri.fsPath),
-                                openQuestion1
-                            );
-                            if (selection === openQuestion1) {
-                                await this.ipynbProvider.open(uri);
-                            }
+                        const openQuestion1 = localize.DataScience.exportOpenQuestion1();
+                        const selection = await this.applicationShell.showInformationMessage(
+                            localize.DataScience.exportDialogComplete().format(output.fsPath),
+                            openQuestion1
+                        );
+                        if (selection === openQuestion1) {
+                            await this.ipynbProvider.open(output);
                         }
+                        return output;
                     }
                 }
             }
+        } else {
+            await this.dataScienceErrorHandler.handleError(
+                new JupyterInstallError(
+                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
+                    localize.DataScience.pythonInteractiveHelpLink()
+                )
+            );
         }
-    
-        @captureTelemetry(Telemetry.ExportPythonFileAndOutputInteractive, undefined, false)
-        public async exportFileAndOutput(file: Uri): Promise<Uri | undefined> {
-            if (file && file.fsPath && file.fsPath.length > 0 && (await this.jupyterExecution.isNotebookSupported())) {
-                // If the current file is the active editor, then generate cells from the document.
-                const activeEditor = this.documentManager.activeTextEditor;
-                if (
-                    activeEditor &&
-                    activeEditor.document &&
-                    this.fileSystem.arePathsSame(activeEditor.document.uri, file)
-                ) {
-                    const ranges = generateCellRangesFromDocument(activeEditor.document);
-                    if (ranges.length > 0) {
-                        // Ask user for path
-                        const output = await this.showExportDialog(file);
-    
-                        // If that worked, we need to start a jupyter server to get our output values.
-                        // In the future we could potentially only update changed cells.
-                        if (output) {
-                            // Create a cancellation source so we can cancel starting the jupyter server if necessary
-                            const cancelSource = new CancellationTokenSource();
-    
-                            // Then wait with status that lets the user cancel
-                            await this.waitForStatus(
-                                () => {
-                                    try {
-                                        return this.exportCellsWithOutput(
-                                            ranges,
-                                            activeEditor.document,
-                                            output,
-                                            cancelSource.token
-                                        );
-                                    } catch (err) {
-                                        if (!(err instanceof CancellationError)) {
-                                            void this.showInformationMessage(
-                                                localize.DataScience.exportDialogFailed().format(err)
-                                            );
-                                        }
-                                    }
-                                    return Promise.resolve();
-                                },
-                                localize.DataScience.exportingFormat(),
-                                file.fsPath,
-                                () => {
-                                    cancelSource.cancel();
-                                }
-                            );
-    
-                            // When all done, show a notice that it completed.
-                            const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                            const selection = await this.applicationShell.showInformationMessage(
-                                localize.DataScience.exportDialogComplete().format(output.fsPath),
-                                openQuestion1
-                            );
-                            if (selection === openQuestion1) {
-                                await this.ipynbProvider.open(output);
-                            }
-                            return output;
-                        }
-                    }
-                }
-            } else {
-                await this.dataScienceErrorHandler.handleError(
-                    new JupyterInstallError(
-                        localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
-                        localize.DataScience.pythonInteractiveHelpLink()
-                    )
-                );
-            }
-        }
-    
-        public async exportCellsWithOutput(
-            ranges: { range: Range; title: string }[],
-            document: TextDocument,
-            file: Uri,
-            cancelToken: CancellationToken
-        ): Promise<void> {
-            let notebook: INotebook | undefined;
-            try {
-                const settings = this.configuration.getSettings(document.uri);
-                // Create a new notebook
-                notebook = await this.notebookProvider.getOrCreateNotebook({
-                    identity: createExportInteractiveIdentity(),
-                    resource: file
-                });
-                // If that works, then execute all of the cells.
-                const cells = Array.prototype.concat(
-                    ...(await Promise.all(
-                        ranges.map((r) => {
-                            const code = document.getText(r.range);
-                            return notebook
-                                ? notebook.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken)
-                                : [];
-                        })
-                    ))
-                );
-                // Then save them to the file
-                let directoryChange;
-                if (settings.changeDirOnImportExport) {
-                    directoryChange = file;
-                }
-                const notebookJson = await this.jupyterExporter.translateToNotebook(cells, directoryChange?.fsPath);
-                await this.fileSystem.writeFile(file, JSON.stringify(notebookJson));
-            } finally {
-                if (notebook) {
-                    await notebook.dispose();
-                }
-            }
-        }
-    
-        public async showExportDialog(file: Uri): Promise<Uri | undefined> {
-            // Bring up the save file dialog box
-            return this.exportDialog.showDialog(ExportFormat.ipynb, file);
-        }
-    
-        public undoCells() {
-            const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-            if (interactiveWindow) {
-                interactiveWindow.undoCells();
-            }
-        }
-    
-        public redoCells() {
-            const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-            if (interactiveWindow) {
-                interactiveWindow.redoCells();
-            }
-        }
-    
-        public removeAllCells() {
-            const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-            if (interactiveWindow) {
-                interactiveWindow.removeAllCells();
-            }
-        }
-    
-        public interruptKernel() {
-            const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-            if (interactiveWindow) {
-                interactiveWindow.interruptKernel().ignoreErrors();
-            }
-        }
-    
-        public restartKernel() {
-            const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-            if (interactiveWindow) {
-                interactiveWindow.restartKernel().ignoreErrors();
-            }
-        }
-    
-        public expandAllCells() {
-            const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-            if (interactiveWindow) {
-                interactiveWindow.expandAllCells();
-            }
-        }
-    
-        public collapseAllCells() {
-            const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-            if (interactiveWindow) {
-                interactiveWindow.collapseAllCells();
-            }
-        }
-    
-        public exportCells() {
-            const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-            if (interactiveWindow) {
-                interactiveWindow.exportCells();
-            }
-        }
-    
-        @captureTelemetry(Telemetry.CreateNewInteractive, undefined, false)
-        public async createNewInteractiveWindow(): Promise<void> {
-            await this.interactiveWindowProvider.getOrCreate(undefined);
-        }
-    
-        public waitForStatus<T>(
-            promise: () => Promise<T>,
-            format: string,
-            file?: string,
-            canceled?: () => void,
-            interactiveWindow?: IInteractiveBase
-        ): Promise<T> {
-            const message = file ? format.format(file) : format;
-            return this.statusProvider.waitWithStatus(promise, message, true, undefined, canceled, interactiveWindow);
-        }
-    
-        @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
-        public async importNotebook(): Promise<void> {
-            const filtersKey = localize.DataScience.importDialogFilter();
-            const filtersObject: { [name: string]: string[] } = {};
-            filtersObject[filtersKey] = ['ipynb'];
-    
-            const uris = await this.applicationShell.showOpenDialog({
-                openLabel: localize.DataScience.importDialogTitle(),
-                filters: filtersObject
+    }
+
+    public async exportCellsWithOutput(
+        ranges: { range: Range; title: string }[],
+        document: TextDocument,
+        file: Uri,
+        cancelToken: CancellationToken
+    ): Promise<void> {
+        let notebook: INotebook | undefined;
+        try {
+            const settings = this.configuration.getSettings(document.uri);
+            // Create a new notebook
+            notebook = await this.notebookProvider.getOrCreateNotebook({
+                identity: createExportInteractiveIdentity(),
+                resource: file
             });
-    
-            if (uris && uris.length > 0) {
-                // Don't call the other overload as we'll end up with double telemetry.
-                await this.waitForStatus(
-                    async () => {
-                        const contents = await this.fileSystem.readFile(uris[0]);
-                        await this.exportManager.export(ExportFormat.python, contents, uris[0]);
-                    },
-                    localize.DataScience.importingFormat(),
-                    uris[0].fsPath
-                );
+            // If that works, then execute all of the cells.
+            const cells = Array.prototype.concat(
+                ...(await Promise.all(
+                    ranges.map((r) => {
+                        const code = document.getText(r.range);
+                        return notebook
+                            ? notebook.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken)
+                            : [];
+                    })
+                ))
+            );
+            // Then save them to the file
+            let directoryChange;
+            if (settings.changeDirOnImportExport) {
+                directoryChange = file;
+            }
+            const notebookJson = await this.jupyterExporter.translateToNotebook(cells, directoryChange?.fsPath);
+            await this.fileSystem.writeFile(file, JSON.stringify(notebookJson));
+        } finally {
+            if (notebook) {
+                await notebook.dispose();
             }
         }
-    
-        @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
-        public async importNotebookOnFile(file: Uri): Promise<void> {
-            if (file.fsPath && file.fsPath.length > 0) {
-                await this.waitForStatus(
-                    async () => {
-                        const contents = await this.fileSystem.readFile(file);
-                        await this.exportManager.export(ExportFormat.python, contents, file);
-                    },
-                    localize.DataScience.importingFormat(),
-                    file.fsPath
-                );
-            }
+    }
+
+    public async showExportDialog(file: Uri): Promise<Uri | undefined> {
+        // Bring up the save file dialog box
+        return this.exportDialog.showDialog(ExportFormat.ipynb, file);
+    }
+
+    public undoCells() {
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.undoCells();
         }
-    
-        public async scrollToCell(file: Uri, id: string): Promise<void> {
-            if (id && file) {
-                // Find the interactive windows that have this file as a submitter
-                const possibles = this.interactiveWindowProvider.windows.filter(
-                    (w) => w.submitters.findIndex((s) => this.fileSystem.areLocalPathsSame(s.fsPath, file.fsPath)) >= 0
-                );
-    
-                // Scroll to cell in the one that has the cell. We need this so
-                // we don't activate all of them.
-                // eslint-disable-next-line @typescript-eslint/prefer-for-of
-                for (let i = 0; i < possibles.length; i += 1) {
-                    if (await possibles[i].hasCell(id)) {
-                        possibles[i].scrollToCell(id);
-                        break;
-                    }
+    }
+
+    public redoCells() {
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.redoCells();
+        }
+    }
+
+    public removeAllCells() {
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.removeAllCells();
+        }
+    }
+
+    public interruptKernel() {
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.interruptKernel().ignoreErrors();
+        }
+    }
+
+    public restartKernel() {
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.restartKernel().ignoreErrors();
+        }
+    }
+
+    public expandAllCells() {
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.expandAllCells();
+        }
+    }
+
+    public collapseAllCells() {
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.collapseAllCells();
+        }
+    }
+
+    public exportCells() {
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.exportCells();
+        }
+    }
+
+    @captureTelemetry(Telemetry.CreateNewInteractive, undefined, false)
+    public async createNewInteractiveWindow(): Promise<void> {
+        await this.interactiveWindowProvider.getOrCreate(undefined);
+    }
+
+    public waitForStatus<T>(
+        promise: () => Promise<T>,
+        format: string,
+        file?: string,
+        canceled?: () => void,
+        interactiveWindow?: IInteractiveBase
+    ): Promise<T> {
+        const message = file ? format.format(file) : format;
+        return this.statusProvider.waitWithStatus(promise, message, true, undefined, canceled, interactiveWindow);
+    }
+
+    @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
+    public async importNotebook(): Promise<void> {
+        const filtersKey = localize.DataScience.importDialogFilter();
+        const filtersObject: { [name: string]: string[] } = {};
+        filtersObject[filtersKey] = ['ipynb'];
+
+        const uris = await this.applicationShell.showOpenDialog({
+            openLabel: localize.DataScience.importDialogTitle(),
+            filters: filtersObject
+        });
+
+        if (uris && uris.length > 0) {
+            // Don't call the other overload as we'll end up with double telemetry.
+            await this.waitForStatus(
+                async () => {
+                    const contents = await this.fileSystem.readFile(uris[0]);
+                    await this.exportManager.export(ExportFormat.python, contents, uris[0]);
+                },
+                localize.DataScience.importingFormat(),
+                uris[0].fsPath
+            );
+        }
+    }
+
+    @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
+    public async importNotebookOnFile(file: Uri): Promise<void> {
+        if (file.fsPath && file.fsPath.length > 0) {
+            await this.waitForStatus(
+                async () => {
+                    const contents = await this.fileSystem.readFile(file);
+                    await this.exportManager.export(ExportFormat.python, contents, file);
+                },
+                localize.DataScience.importingFormat(),
+                file.fsPath
+            );
+        }
+    }
+
+    public async scrollToCell(file: Uri, id: string): Promise<void> {
+        if (id && file) {
+            // Find the interactive windows that have this file as a submitter
+            const possibles = this.interactiveWindowProvider.windows.filter(
+                (w) => w.submitters.findIndex((s) => this.fileSystem.areLocalPathsSame(s.fsPath, file.fsPath)) >= 0
+            );
+
+            // Scroll to cell in the one that has the cell. We need this so
+            // we don't activate all of them.
+            // eslint-disable-next-line @typescript-eslint/prefer-for-of
+            for (let i = 0; i < possibles.length; i += 1) {
+                if (await possibles[i].hasCell(id)) {
+                    possibles[i].scrollToCell(id);
+                    break;
                 }
             }
         }
+    }
 }

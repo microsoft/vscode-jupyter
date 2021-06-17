@@ -27,7 +27,7 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { CodeSnippets, Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { getNotebookMetadata } from '../../notebook/helpers/helpers';
+import { addSysInfo, getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
@@ -41,6 +41,7 @@ import {
 import { isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
+import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -68,7 +69,7 @@ export class Kernel implements IKernel {
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
-    private notebook?: INotebook;
+    public notebook?: INotebook; // Temporary
     private _disposed?: boolean;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
@@ -132,7 +133,10 @@ export class Kernel implements IKernel {
         }
         traceInfo(`Interrupt requested ${document.uri}`);
         this.startCancellation.cancel();
-        return this.kernelExecution.interrupt(document, this._notebookPromise);
+        const interruptResultPromise = this.kernelExecution.interrupt(document, this._notebookPromise);
+        await interruptResultPromise;
+        await addSysInfo(SysInfoReason.Interrupt, document, this.notebook);
+        return interruptResultPromise;
     }
     public async dispose(): Promise<void> {
         traceInfo(`Dispose kernel ${this.uri.toString()}`);
@@ -147,7 +151,7 @@ export class Kernel implements IKernel {
         }
         this.kernelExecution.dispose();
     }
-    public async restart(): Promise<void> {
+    public async restart(notebookDocument: NotebookDocument): Promise<void> {
         if (this.restarting) {
             return this.restarting.promise;
         }
@@ -156,6 +160,7 @@ export class Kernel implements IKernel {
             try {
                 await this.notebook.restartKernel(this.launchTimeout);
                 await this.initializeAfterStart();
+                await addSysInfo(SysInfoReason.Restart, notebookDocument, this.notebook);
                 this.restarting.resolve();
             } catch (ex) {
                 this.restarting.reject(ex);
@@ -210,6 +215,7 @@ export class Kernel implements IKernel {
                             // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
                             throw new Error('Kernel has not been started');
                         }
+                        await addSysInfo(SysInfoReason.Start, options.document, this.notebook);
                     } catch (ex) {
                         traceError(`failed to create INotebook in kernel, UI Disabled = ${options.disableUI}`, ex);
                         throw ex;

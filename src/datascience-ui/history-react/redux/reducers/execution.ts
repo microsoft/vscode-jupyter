@@ -117,7 +117,7 @@ export namespace Execution {
 
             // Stick in a new cell at the bottom that's editable and update our state
             // so that the last cell becomes busy
-            return {
+        return {
                 ...arg.prevState,
                 cellVMs: [...arg.prevState.cellVMs, newCell],
                 undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),

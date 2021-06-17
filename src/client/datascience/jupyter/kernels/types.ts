@@ -17,7 +17,7 @@ import type {
 import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
-import type { IJupyterKernel, IJupyterKernelSpec, InterruptResult, KernelSocketInformation } from '../../types';
+import type { IJupyterKernel, IJupyterKernelSpec, INotebook, InterruptResult, KernelSocketInformation } from '../../types';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
@@ -116,6 +116,7 @@ export interface IKernelSelectionListProvider<T extends KernelConnectionMetadata
 
 export interface IKernel extends IAsyncDisposable {
     readonly uri: Uri;
+    readonly notebook?: INotebook;
     readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>;
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
@@ -130,7 +131,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     start(options?: { disableUI?: boolean; document: NotebookDocument }): Promise<void>;
     interrupt(document: NotebookDocument): Promise<InterruptResult>;
-    restart(): Promise<void>;
+    restart(document: NotebookDocument): Promise<void>;
     executeCell(cell: NotebookCell): Promise<void>;
     executeAllCells(document: NotebookDocument): Promise<void>;
 }
