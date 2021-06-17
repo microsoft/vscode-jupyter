@@ -336,7 +336,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                     <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                     <div className="react-grid-measure" ref={this.measureRef} />
                     <Resizable>
-                    {/* <Resizable
+                        {/* <Resizable
                         style={{
                             display: 'flex',
                             alignItems: 'top',
