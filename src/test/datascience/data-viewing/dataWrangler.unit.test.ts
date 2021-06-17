@@ -19,7 +19,6 @@ import { DataWrangler } from '../../../client/datascience/data-viewing/data-wran
 import { IDataWrangler, IDataWranglerDataProvider } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { JupyterVariableDataProvider } from '../../../client/datascience/data-viewing/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from '../../../client/datascience/data-viewing/jupyterVariableDataProviderFactory';
-import { InteractiveWindowProvider } from '../../../client/datascience/interactive-window/interactiveWindowProvider';
 import { KernelVariables } from '../../../client/datascience/jupyter/kernelVariables';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
@@ -35,7 +34,6 @@ suite('DataScience - DataWrangler', () => {
     let workspaceService: IWorkspaceService;
     let applicationShell: IApplicationShell;
     let dataProvider: IDataWranglerDataProvider;
-    let interactiveWindowProvider: InteractiveWindowProvider;
     let commandManager: CommandManager;
     let jupyterVariables: KernelVariables;
     let dataProviderFactory: JupyterVariableDataProviderFactory;
@@ -51,7 +49,6 @@ suite('DataScience - DataWrangler', () => {
         workspaceService = mock(WorkspaceService);
         applicationShell = mock(ApplicationShell);
         dataProvider = mock(JupyterVariableDataProvider);
-        interactiveWindowProvider = mock(InteractiveWindowProvider);
         commandManager = mock(CommandManager);
         jupyterVariables = mock(KernelVariables);
         dataProviderFactory = mock(JupyterVariableDataProviderFactory);
@@ -77,7 +74,6 @@ suite('DataScience - DataWrangler', () => {
             instance(applicationShell),
             false,
             new MockMemento(),
-            instance(interactiveWindowProvider),
             instance(commandManager),
             instance(documentManager),
             instance(jupyterVariables),

@@ -35,7 +35,6 @@ import { Commands, HelpLinks, Identifiers } from '../../constants';
 import { JupyterDataRateLimitError } from '../../jupyter/jupyterDataRateLimitError';
 import {
     ICodeCssGenerator,
-    IInteractiveWindowProvider,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
@@ -51,13 +50,20 @@ import { serializeLanguageConfiguration } from '../../interactive-common/seriali
 import { CssMessages } from '../../messages';
 import { IDataFrameInfo, IGetRowsRequest, IGetSliceRequest } from '../types';
 import { DataWranglerMessageListener } from './dataWranglerMessageListener';
-import { IDataWranglerMapping, IDataWrangler, IDataWranglerDataProvider, DataWranglerMessages } from './types';
-
-interface IHistoryItem {
-    name: string;
-    variableName: string;
-    code: string;
-}
+import {
+    IDataWranglerMapping,
+    IDataWrangler,
+    IDataWranglerDataProvider,
+    DataWranglerMessages,
+    DataWranglerCommands,
+    IRenameColumnsRequest,
+    IHistoryItem,
+    IDropRequest,
+    INormalizeColumnRequest,
+    IFillNaRequest,
+    IDropDuplicatesRequest,
+    IDropNaRequest
+} from './types';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataWranglerPreferredViewColumn';
 const dataWranglerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
@@ -98,7 +104,6 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IJupyterVariables)
@@ -140,12 +145,11 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
             // Then show our web panel. Eventually we need to consume the data
             await super.show(true);
 
-            let dataFrameInfo = await this.prepDataFrameInfo();
+            let dataFrameInfo = await this.getDataFrameInfo();
             this.sourceFile = dataFrameInfo.sourceFile;
 
             // If higher dimensional data, preselect a slice to show
             if (dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
-                this.maybeSendSliceDataDimensionalityTelemetry(dataFrameInfo.shape.length);
                 const slice = preselectedSliceExpression(dataFrameInfo.shape);
                 dataFrameInfo = await this.getDataFrameInfo(slice);
             }
@@ -154,7 +158,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
             this.postMessage(DataWranglerMessages.InitializeData, dataFrameInfo).ignoreErrors();
 
             this.historyList.push({
-                name: 'Imported data',
+                transformation: 'Imported data',
                 code: this.getImportCode(),
                 variableName: 'df'
             });
@@ -271,13 +275,6 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
                 // void sendTelemetryEvent(Telemetry.RefreshDataWrangler);
                 break;
 
-            case DataWranglerMessages.SliceEnablementStateChanged:
-                // TODOV Telemetry
-                // void sendTelemetryEvent(Telemetry.DataWranglerSliceEnablementStateChanged, undefined, {
-                //     newState: payload.newState ? CheckboxState.Checked : CheckboxState.Unchecked
-                // });
-                break;
-
             case InteractiveWindowMessages.LoadTmLanguageRequest:
                 void this.requestTmLanguage(payload);
                 break;
@@ -297,7 +294,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         super.onMessage(message, payload);
     }
 
-    private async requestTmLanguage(languageId: string = 'python') {
+    private async requestTmLanguage(languageId: string = PYTHON_LANGUAGE) {
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
         const languageJson = await this.themeFinder.findTmLanguage(languageId);
@@ -347,32 +344,10 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         return this.dataFrameInfoPromise;
     }
 
-    private async prepDataFrameInfo(): Promise<IDataFrameInfo> {
-        // this.rowsTimer = new StopWatch();
-        const output = await this.getDataFrameInfo();
-
-        // Log telemetry about number of rows
-        try {
-            // TODOV Telemetry
-            // sendTelemetryEvent(Telemetry.ShowDataWrangler, 0, {
-            //     rows: output.rowCount ? output.rowCount : 0,
-            //     columns: output.columns ? output.columns.length : 0
-            // });
-            // Count number of rows to fetch so can send telemetry on how long it took.
-            // this.pendingRowsCount = output.rowCount ? output.rowCount : 0;
-        } catch {
-            noop();
-        }
-
-        return output;
-    }
-
-    // Deprecate this
     private async getAllRows(sliceExpression?: string) {
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
                 const allRows = await this.dataProvider.getAllRows(sliceExpression);
-                // this.pendingRowsCount = 0;
                 return this.postMessage(DataWranglerMessages.GetAllRowsResponse, allRows);
             }
         });
@@ -382,10 +357,6 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
                 const payload = await this.getDataFrameInfo(request.slice);
-                if (payload.shape?.length) {
-                    this.maybeSendSliceDataDimensionalityTelemetry(payload.shape.length);
-                }
-                // sendTelemetryEvent(Telemetry.DataWranglerSliceOperation, undefined, { source: request.source });
                 return this.postMessage(DataWranglerMessages.InitializeData, payload);
             }
         });
@@ -426,26 +397,11 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
             }
             traceError(e);
             this.applicationShell.showErrorMessage(e).then(noop, noop);
-        } finally {
-            // TODOV Telemetry
-            // this.sendElapsedTimeTelemetry();
         }
     }
 
-    // TODOV Telemetry
-    // private sendElapsedTimeTelemetry() {
-    //     if (this.rowsTimer && this.pendingRowsCount === 0) {
-    //         sendTelemetryEvent(Telemetry.ShowDataWrangler, this.rowsTimer.elapsedTime);
-    //     }
-    // }
-
-    private addToHistory(transformation: string, variableName: string, code: string) {
-        const newHistItem = {
-            name: transformation,
-            variableName: variableName,
-            code: code
-        };
-        this.historyList.push(newHistItem);
+    private addToHistory(newHistoryItem: IHistoryItem) {
+        this.historyList.push(newHistoryItem);
         this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
     }
 
@@ -461,7 +417,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         var dataCleanCode = this.getCode();
 
         const doc = await this.documentManager.openTextDocument({
-            language: 'python',
+            language: PYTHON_LANGUAGE,
             content: dataCleanCode
         });
 
@@ -489,123 +445,78 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleCommand(payload: { command: string; args: any }) {
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
+        let historyItem = {} as IHistoryItem;
         let code = '';
-        const currentVariableName = (await this.dataFrameInfoPromise)!.name;
+        const currentVariableName = (await this.dataFrameInfoPromise)!.name ?? '';
         let newVariableName = currentVariableName ?? '';
         const matchingNotebookEditor = this.notebookEditorProvider.editors.find(
             (editor) => editor.notebook?.identity.fsPath === notebook?.identity.fsPath
         );
         let refreshRequired = true;
+
         switch (payload.command) {
-            case 'open_interactive_window':
-                await this.interactiveWindowProvider.getOrCreate(notebook?.resource, notebook);
-                break;
-            case 'export_to_csv':
+            case DataWranglerCommands.ExportToCsv:
                 await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
                 break;
-            case 'export_to_python_script':
+
+            case DataWranglerCommands.ExportToPythonScript:
                 await this.generatePythonCode();
                 break;
-            case 'export_to_notebook':
+
+            case DataWranglerCommands.ExportToNotebook:
                 await this.generateNotebook();
                 break;
-            case 'rename':
-                this.variableCounter += 1;
-                newVariableName = `df${this.variableCounter}`;
-                code = `${newVariableName} = ${currentVariableName}.rename(columns={ "${payload.args.old}": "${payload.args.new}" })\n`;
-                this.addToHistory(
-                    `Renamed column "${payload.args.old}" to "${payload.args.new}"`,
-                    newVariableName,
-                    code
-                );
+
+            case DataWranglerCommands.RenameColumn:
+                historyItem = this.renameColumn(currentVariableName, payload.args as IRenameColumnsRequest);
+                code = historyItem.code;
+                newVariableName = historyItem.variableName;
                 break;
-            case 'drop':
-                this.variableCounter += 1;
-                newVariableName = `df${this.variableCounter}`;
-                const labels = payload.args.targets as string[];
-                if (payload.args.mode === 'row') {
-                    // Drop rows by index
-                    code = `df${this.variableCounter} = ${currentVariableName}.drop(${
-                        '[' + labels.join(', ') + ']'
-                    })\n`;
-                    this.addToHistory(
-                        'Dropped rows(s): ' + labels.map((label) => `${label}`).join(','),
-                        newVariableName,
-                        code
-                    );
-                } else {
-                    // Drop columns by column name
-                    code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${
-                        '[' + labels.map((label) => `"${label}"`).join(', ') + ']'
-                    })\n`;
-                    this.addToHistory(
-                        'Dropped column(s): ' + labels.map((label) => `"${label}"`).join(','),
-                        newVariableName,
-                        code
-                    );
-                }
+
+            case DataWranglerCommands.Drop:
+                historyItem = this.drop(currentVariableName, payload.args as IDropRequest);
+                code = historyItem.code;
+                newVariableName = historyItem.variableName;
                 break;
-            case 'drop_duplicates':
-                this.variableCounter += 1;
-                newVariableName = `df${this.variableCounter}`;
-                if (payload.args?.subset !== undefined) {
-                    const subset = payload.args.subset.map((col: string) => `"${col}"`).join(', ');
-                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates(subset=[${subset}])\n`;
-                    this.addToHistory(`Removed duplicate rows on column(s): ${subset}`, newVariableName, code);
-                } else {
-                    code = `${newVariableName} = ${currentVariableName}.drop_duplicates()\n`;
-                    this.addToHistory('Removed duplicate rows', newVariableName, code);
-                }
+
+            case DataWranglerCommands.DropDuplicates:
+                historyItem = this.dropDuplicates(currentVariableName, payload.args as IDropDuplicatesRequest);
+                code = historyItem.code;
+                newVariableName = historyItem.variableName;
                 break;
-            case 'dropna':
-                this.variableCounter += 1;
-                newVariableName = `df${this.variableCounter}`;
-                if (payload.args.subset !== undefined) {
-                    // This assumes only one column/row at a time
-                    code = `${newVariableName} = ${currentVariableName}.dropna(subset=["${payload.args.subset}"])\n`;
-                    this.addToHistory(
-                        `Dropped rows with missing data in column: "${payload.args.subset}"`,
-                        newVariableName,
-                        code
-                    );
-                } else {
-                    code = `${newVariableName} = ${currentVariableName}.dropna(axis=${payload.args.target})\n`;
-                    this.addToHistory(
-                        payload.args.target == 0
-                            ? 'Dropped rows with missing data'
-                            : 'Dropped columns with missing data',
-                        newVariableName,
-                        code
-                    );
-                }
+
+            case DataWranglerCommands.DropNa:
+                historyItem = this.dropNa(currentVariableName, payload.args as IDropNaRequest);
+                code = historyItem.code;
+                newVariableName = historyItem.variableName;
                 break;
-            case 'pyplot.hist':
+
+            case DataWranglerCommands.PyplotHistogram:
                 refreshRequired = false;
                 code = `import matplotlib.pyplot as plt\nplt.hist(${currentVariableName}["${payload.args.target}"])\n`;
                 break;
-            case 'normalize':
-                const { start, end, target } = payload.args;
-                this.variableCounter += 1;
-                newVariableName = `df${this.variableCounter}`;
-                code = `from sklearn.preprocessing import MinMaxScaler
-scaler = MinMaxScaler(feature_range=(${start}, ${end}))
-${newVariableName} = ${currentVariableName}.copy()
-${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${target}"].values.reshape(-1, 1))\n`;
-                this.addToHistory(`Normalized column: "${target}"`, newVariableName, code);
+
+            case DataWranglerCommands.NormalizeColumn:
+                historyItem = this.normalizeColumn(currentVariableName, payload.args as INormalizeColumnRequest);
+                code = historyItem.code;
+                newVariableName = historyItem.variableName;
                 break;
-            case 'fillna':
-                const { newValue } = payload.args;
-                this.variableCounter += 1;
-                newVariableName = `df${this.variableCounter}`;
-                code = `${newVariableName} = ${currentVariableName}.fillna(${newValue})\n`;
+
+            case DataWranglerCommands.FillNa:
+                historyItem = this.fillNa(currentVariableName, payload.args as IFillNaRequest);
+                code = historyItem.code;
+                newVariableName = historyItem.variableName;
                 break;
-            case DataWranglerMessages.GetHistoryItem:
+
+            case DataWranglerCommands.GetHistoryItem:
                 this.getHistoryItem(payload.args.index).ignoreErrors();
                 break;
-            case 'describe':
+
+            case DataWranglerCommands.Describe:
                 void this.getColumnStats(payload.args.columnName);
                 break;
         }
+
         const dataCleaningMode = this.configService.getSettings().dataCleaningMode;
         if (dataCleaningMode === 'standalone') {
             if (code && notebook !== undefined) {
@@ -646,13 +557,127 @@ ${newVariableName}["${target}"] = scaler.fit_transform(${newVariableName}["${tar
         }
     }
 
-    private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {
-        // TODOV Telemetry
-        // if (!this.sentDataWranglerSliceDimensionalityTelemetry) {
-        //     sendTelemetryEvent(Telemetry.DataWranglerDataDimensionality, undefined, { numberOfDimensions });
-        //     this.sentDataWranglerSliceDimensionalityTelemetry = true;
-        // }
-        numberOfDimensions;
-        return;
+    private renameColumn(currentVariableName: string, req: IRenameColumnsRequest): IHistoryItem {
+        this.variableCounter += 1;
+        const newVariableName = `df${this.variableCounter}`;
+        const code = `${newVariableName} = ${currentVariableName}.rename(columns={ "${req.oldColumnName}": "${req.newColumnName}" })\n`;
+        const historyItem = {
+            transformation: `Renamed column "${req.oldColumnName}" to "${req.newColumnName}"`,
+            variableName: newVariableName,
+            code: code
+        };
+        this.addToHistory(historyItem);
+        return historyItem;
+    }
+
+    private drop(currentVariableName: string, req: IDropRequest): IHistoryItem {
+        this.variableCounter += 1;
+        const newVariableName = `df${this.variableCounter}`;
+        const labels = req.targets;
+        if (req.mode === 'row') {
+            // Drop rows by index
+            const code = `df${this.variableCounter} = ${currentVariableName}.drop(${'[' + labels.join(', ') + ']'})\n`;
+            const historyItem = {
+                transformation: 'Dropped rows(s): ' + labels.map((label) => `${label}`).join(', '),
+                variableName: newVariableName,
+                code: code
+            };
+            this.addToHistory(historyItem);
+            return historyItem;
+        } else {
+            // Drop columns by column name
+            const code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${
+                '[' + labels.map((label) => `"${label}"`).join(', ') + ']'
+            })\n`;
+            const historyItem = {
+                transformation: 'Dropped column(s): ' + labels.map((label) => `"${label}"`).join(', '),
+                variableName: newVariableName,
+                code: code
+            };
+            this.addToHistory(historyItem);
+            return historyItem;
+        }
+    }
+
+    private dropDuplicates(currentVariableName: string, req: IDropDuplicatesRequest): IHistoryItem {
+        this.variableCounter += 1;
+        const newVariableName = `df${this.variableCounter}`;
+
+        if (req.subset !== undefined) {
+            const subset = req.subset.map((col: string) => `"${col}"`).join(', ');
+            const code = `${newVariableName} = ${currentVariableName}.drop_duplicates(subset=[${subset}])\n`;
+            const historyItem = {
+                transformation: `Removed duplicate rows on column(s): ${subset}`,
+                variableName: newVariableName,
+                code: code
+            };
+            this.addToHistory(historyItem);
+            return historyItem;
+        } else {
+            const code = `${newVariableName} = ${currentVariableName}.drop_duplicates()\n`;
+            const historyItem = {
+                transformation: 'Removed duplicate rows',
+                variableName: newVariableName,
+                code: code
+            };
+            this.addToHistory(historyItem);
+            return historyItem;
+        }
+    }
+
+    private dropNa(currentVariableName: string, req: IDropNaRequest): IHistoryItem {
+        this.variableCounter += 1;
+        const newVariableName = `df${this.variableCounter}`;
+
+        if (req.subset !== undefined) {
+            // This assumes only one column/row at a time
+            const code = `${newVariableName} = ${currentVariableName}.dropna(subset=["${req.subset}"])\n`;
+            const historyItem = {
+                transformation: `Dropped rows with missing data in column: "${req.subset}"`,
+                variableName: newVariableName,
+                code: code
+            };
+            this.addToHistory(historyItem);
+            return historyItem;
+        } else {
+            const code = `${newVariableName} = ${currentVariableName}.dropna(axis=${req.target})\n`;
+            const historyItem = {
+                transformation:
+                    req.target == 0 ? 'Dropped rows with missing data' : 'Dropped columns with missing data',
+                variableName: newVariableName,
+                code: code
+            };
+            this.addToHistory(historyItem);
+            return historyItem;
+        }
+    }
+
+    private normalizeColumn(currentVariableName: string, req: INormalizeColumnRequest): IHistoryItem {
+        this.variableCounter += 1;
+        const newVariableName = `df${this.variableCounter}`;
+        const code = `from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler(feature_range=(${req.start}, ${req.end}))
+${newVariableName} = ${currentVariableName}.copy()
+${newVariableName}["${req.target}"] = scaler.fit_transform(${newVariableName}["${req.target}"].values.reshape(-1, 1))\n`;
+        const historyItem = {
+            transformation: `Normalized column: "${req.target}"`,
+            variableName: newVariableName,
+            code: code
+        };
+        this.addToHistory(historyItem);
+        return historyItem;
+    }
+
+    private fillNa(currentVariableName: string, req: IFillNaRequest): IHistoryItem {
+        this.variableCounter += 1;
+        const newVariableName = `df${this.variableCounter}`;
+        const code = `${newVariableName} = ${currentVariableName}.fillna(${req.newValue})\n`;
+        const historyItem = {
+            transformation: `Replaced Na values with: "${req.newValue}"`,
+            variableName: newVariableName,
+            code: code
+        };
+        this.addToHistory(historyItem);
+        return historyItem;
     }
 }

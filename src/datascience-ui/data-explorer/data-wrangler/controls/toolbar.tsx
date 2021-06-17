@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { DataWranglerCommands } from '../../../../client/datascience/data-viewing/data-wrangler/types';
 
 interface IProps {
     handleRefreshRequest(): void;
@@ -37,7 +38,7 @@ export class Toolbar extends React.PureComponent<IProps> {
                 </div>
                 <div
                     style={{ paddingRight: '15px', display: 'inline-block', cursor: 'pointer' }}
-                    onClick={() => this.props.submitCommand({ command: 'export_to_csv', args: null })}
+                    onClick={() => this.props.submitCommand({ command: DataWranglerCommands.ExportToCsv, args: null })}
                 >
                     <div
                         className="codicon codicon-export codicon-button"
@@ -50,7 +51,7 @@ export class Toolbar extends React.PureComponent<IProps> {
                 </div>
                 <div
                     style={{ paddingRight: '15px', display: 'inline-block', cursor: 'pointer' }}
-                    onClick={() => this.props.submitCommand({ command: 'export_to_python_script', args: null })}
+                    onClick={() => this.props.submitCommand({ command: DataWranglerCommands.ExportToPythonScript, args: null })}
                 >
                     <div
                         className="codicon codicon-go-to-file codicon-button"
@@ -64,7 +65,7 @@ export class Toolbar extends React.PureComponent<IProps> {
                 </div>
                 <div
                     style={{ paddingRight: '15px', display: 'inline-block', cursor: 'pointer' }}
-                    onClick={() => this.props.submitCommand({ command: 'export_to_notebook', args: null })}
+                    onClick={() => this.props.submitCommand({ command: DataWranglerCommands.ExportToNotebook, args: null })}
                 >
                     <div
                         className="codicon codicon-notebook codicon-button"

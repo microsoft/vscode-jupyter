@@ -16,6 +16,21 @@ import {
     IRowsResponse
 } from '../types';
 
+export enum DataWranglerCommands {
+    ExportToCsv = 'export_to_csv',
+    ExportToPythonScript = 'export_to_python_script',
+    ExportToNotebook = 'export_to_notebook',
+    RenameColumn = 'rename_column',
+    Drop = 'drop',
+    DropDuplicates = 'drop_duplicates',
+    DropNa = 'drop_na',
+    PyplotHistogram = 'pyplot.hist',
+    NormalizeColumn = 'normalize_column',
+    FillNa = 'fill_na',
+    Describe = 'describe',
+    GetHistoryItem = 'get_history_item'
+}
+
 export namespace DataWranglerMessages {
     export const Started = SharedMessages.Started;
     export const UpdateSettings = SharedMessages.UpdateSettings;
@@ -30,7 +45,6 @@ export namespace DataWranglerMessages {
     export const RefreshDataWrangler = 'refresh_data_viewer'; // TODOV
     export const SliceEnablementStateChanged = 'slice_enablement_state_changed';
     export const UpdateHistoryList = 'update_history_list';
-    export const GetHistoryItem = 'get_history_item';
     export const GetHistogramResponse = 'get_histogram_response';
 }
 
@@ -51,7 +65,6 @@ export type IDataWranglerMapping = {
     [DataWranglerMessages.SliceEnablementStateChanged]: { newState: boolean };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [DataWranglerMessages.UpdateHistoryList]: any[] | undefined;
-    [DataWranglerMessages.GetHistoryItem]: number | undefined;
     [DataWranglerMessages.GetHistogramResponse]: IGetColsResponse;
     [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
@@ -64,7 +77,7 @@ export interface IDataWranglerDataProvider {
     dispose(): void;
     getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo>;
     getAllRows(sliceExpression?: string): Promise<IRowsResponse>;
-    getRows(start: number, end: number, sliceExpression?: string): Promise<IRowsResponse>;
+    getRows(start: Number, end: Number, sliceExpression?: string): Promise<IRowsResponse>;
     getCols(columnName: string): Promise<IColsResponse>;
 }
 
@@ -81,4 +94,38 @@ export interface IDataWrangler extends IDisposable {
     showData(dataProvider: IDataWranglerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<void>;
     refreshData(): Promise<void>;
     updateWithNewVariable(newVariableName: string): Promise<void>;
+}
+
+export interface IHistoryItem {
+    transformation: string;
+    variableName: string;
+    code: string;
+}
+export interface IRenameColumnsRequest {
+    oldColumnName: string;
+    newColumnName: string;
+}
+
+export interface IDropRequest {
+    mode: 'row' | 'column';
+    targets: string[];
+}
+
+export interface IDropDuplicatesRequest {
+    subset?: string[];
+}
+
+export interface IDropNaRequest {
+    subset?: string[];
+    target?: Number;
+}
+
+export interface INormalizeColumnRequest {
+    start: Number;
+    end: Number;
+    target: Number;
+}
+
+export interface IFillNaRequest {
+    newValue: string | Number;
 }

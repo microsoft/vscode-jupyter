@@ -43,6 +43,7 @@ import { ControlPanel } from './controlPanel';
 import './contextMenu.css';
 import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
 import { ColumnFilter, ISlickGridAdd, ISlickGridSlice, ISlickRow } from '../reactSlickGrid';
+import { DataWranglerCommands } from '../../../client/datascience/data-viewing/data-wrangler/types';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -223,7 +224,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 switch (contextMenuItem) {
                     case RowContextMenuItem.DropRow:
                         return this.props.submitCommand({
-                            command: 'drop',
+                            command: DataWranglerCommands.Drop,
                             args: { targets: [this.contextMenuRowId], mode: 'row' }
                         });
                     case RowContextMenuItem.CopyData:
@@ -244,28 +245,28 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 switch (contextMenuItem) {
                     case ColumnContextMenuItem.GetColumnStats:
                         return this.props.submitCommand({
-                            command: 'describe',
+                            command: DataWranglerCommands.Describe,
                             args: { columnName: this.contextMenuColumnName }
                         });
                     case ColumnContextMenuItem.DropColumns:
                         return this.props.submitCommand({
-                            command: 'drop',
+                            command: DataWranglerCommands.Drop,
                             args: { targets: [this.contextMenuColumnName] }
                         });
                     case ColumnContextMenuItem.NormalizeColumn:
                         return this.props.submitCommand({
-                            command: 'normalize',
+                            command: DataWranglerCommands.NormalizeColumn,
                             args: { start: 0, end: 1, target: this.contextMenuColumnName }
                         });
                     case ColumnContextMenuItem.DropNA:
                         return this.props.submitCommand({
-                            command: 'dropna',
+                            command: DataWranglerCommands.DropNa,
                             args: { subset: this.contextMenuColumnName, target: 0 }
                         });
                     case ColumnContextMenuItem.DropDuplicates:
                         return this.props.submitCommand({
-                            command: 'drop_duplicates',
-                            args: { subset: [this.contextMenuColumnName] }
+                            command: DataWranglerCommands.DropDuplicates,
+                            args: { subset: [this.contextMenuColumnName], mode: 'column' }
                         });
                 }
             });

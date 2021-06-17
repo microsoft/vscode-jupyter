@@ -3,6 +3,7 @@ import * as React from 'react';
 import { mergeStyleSets, getTheme, normalize } from 'office-ui-fabric-react/lib/Styling';
 import './HistorySection.css';
 import { SidePanelSection } from './SidePanelSection';
+import { DataWranglerCommands } from '../../../../client/datascience/data-viewing/data-wrangler/types';
 
 interface IProps {
     headers: string[];
@@ -79,7 +80,7 @@ export class HistorySection extends React.Component<IProps, IState> {
     viewHistoryItem(index: number | undefined) {
         if (index !== undefined) {
             this.props.submitCommand({
-                command: 'get_history_item',
+                command: DataWranglerCommands.GetHistoryItem,
                 args: {
                     index
                 }
@@ -109,7 +110,7 @@ export class HistorySection extends React.Component<IProps, IState> {
                     title={"Remove step"}
                 /> */}
                     <span style={{ verticalAlign: 'middle' }} title={`Click to view intermediate state`}>
-                        {item.name}
+                        {item.transformation}
                     </span>
                 </div>
             </div>

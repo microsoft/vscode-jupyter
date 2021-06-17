@@ -38,7 +38,7 @@ import { InteractiveWindowMessages } from '../../../client/datascience/interacti
 import { deserializeLanguageConfiguration } from '../../../client/datascience/interactive-common/serialization';
 import { Tokenizer } from '../../interactive-common/tokenizer';
 import { createDeferred } from '../../../client/common/utils/async';
-import { DataWranglerMessages, IDataWranglerMapping } from '../../../client/datascience/data-viewing/data-wrangler/types';
+import { DataWranglerCommands, DataWranglerMessages, IDataWranglerMapping } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow } from '../reactSlickGrid';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
@@ -475,7 +475,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 sliceExpression: this.state.sliceExpression
             });
         } else {
-            this.submitCommand({ command: 'describe', args: { columnName: this.lastDescribeRequestColumnName } });
+            this.submitCommand({ command: DataWranglerCommands.Describe, args: { columnName: this.lastDescribeRequestColumnName } });
         }
     }
 
@@ -615,7 +615,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private submitCommand = (arg: { command: string; args: any }) => {
-        if (arg.command === 'describe') {
+        if (arg.command === DataWranglerCommands.Describe) {
             console.log('Describe', arg);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.lastDescribeRequestColumnName = (arg.args as any).columnName;
