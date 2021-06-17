@@ -70,11 +70,8 @@ const dataWranglerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', '
 @injectable()
 export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> implements IDataWrangler, IDisposable {
     private dataProvider: IDataWranglerDataProvider | undefined;
-    // private rowsTimer: StopWatch | undefined;
-    // private pendingRowsCount: number = 0;
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
     private currentSliceExpression: string | undefined;
-    // private sentDataWranglerSliceDimensionalityTelemetry = false;
     private variableCounter = 0;
     private existingDisposable: Disposable | undefined;
     private historyList: IHistoryItem[] = [];
@@ -457,6 +454,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         switch (payload.command) {
             case DataWranglerCommands.ExportToCsv:
                 await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
+                throw new Error('Not Implemented');
                 break;
 
             case DataWranglerCommands.ExportToPythonScript:
@@ -604,6 +602,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         const newVariableName = `df${this.variableCounter}`;
 
         if (req.subset !== undefined) {
+            // Drop duplicates in a column
             const subset = req.subset.map((col: string) => `"${col}"`).join(', ');
             const code = `${newVariableName} = ${currentVariableName}.drop_duplicates(subset=[${subset}])\n`;
             const historyItem = {
@@ -614,6 +613,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
             this.addToHistory(historyItem);
             return historyItem;
         } else {
+            // Drop duplicate rows
             const code = `${newVariableName} = ${currentVariableName}.drop_duplicates()\n`;
             const historyItem = {
                 transformation: 'Removed duplicate rows',

@@ -27,17 +27,6 @@ export class Toolbar extends React.PureComponent<IProps> {
             >
                 <div
                     style={{ paddingRight: '15px', display: 'inline-block', cursor: 'pointer' }}
-                    onClick={() => this.props.handleRefreshRequest()}
-                >
-                    <div
-                        className="codicon codicon-refresh codicon-button"
-                        style={{ verticalAlign: 'middle' }}
-                        title="Refresh data"
-                    />
-                    <span style={{ verticalAlign: 'middle', paddingLeft: '4px', paddingBottom: '4px' }}>Refresh</span>
-                </div>
-                <div
-                    style={{ paddingRight: '15px', display: 'inline-block', cursor: 'pointer' }}
                     onClick={() => this.props.submitCommand({ command: DataWranglerCommands.ExportToCsv, args: null })}
                 >
                     <div
@@ -63,7 +52,7 @@ export class Toolbar extends React.PureComponent<IProps> {
                     </span>
                     {/* <div className="codicon codicon-notebook codicon-button" title="Open in Notebook" /> */}
                 </div>
-                <div
+                {/* <div
                     style={{ paddingRight: '15px', display: 'inline-block', cursor: 'pointer' }}
                     onClick={() => this.props.submitCommand({ command: DataWranglerCommands.ExportToNotebook, args: null })}
                 >
@@ -75,8 +64,8 @@ export class Toolbar extends React.PureComponent<IProps> {
                     <span style={{ verticalAlign: 'middle', paddingLeft: '4px', paddingBottom: '4px' }}>
                         Open as Jupyter notebook
                     </span>
-                    {/* <div className="codicon codicon-notebook codicon-button" title="Open in Notebook" /> */}
-                </div>
+                    {/* <div className="codicon codicon-notebook codicon-button" title="Open in Notebook" />
+                </div> */}
                 {/*
                     <div
                         className="codicon codicon-window codicon-button"
