@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import * as uuid from 'uuid/v4';
-import { ConfigurationTarget, Event, EventEmitter, Memento, Uri } from 'vscode';
-import * as vsls from 'vsls/vscode';
+import { ConfigurationTarget, Event, EventEmitter, Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 
 import {
@@ -31,15 +29,13 @@ import {
     Resource,
     WORKSPACE_MEMENTO
 } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { Identifiers, LiveShare, LiveShareCommands } from '../constants';
+import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { IExportDialog } from '../export/types';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
-import { PostOffice } from '../liveshare/postOffice';
 import { INotebookControllerManager } from '../notebook/types';
 import {
     ICodeCssGenerator,
@@ -58,11 +54,6 @@ import {
     IThemeFinder
 } from '../types';
 import { NativeInteractiveWindow } from './nativeInteractiveWindow';
-
-interface ISyncData {
-    count: number;
-    waitable: Deferred<void>;
-}
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -84,12 +75,8 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
-    private postOffice: PostOffice;
-    private id: string;
-    private pendingSyncs: Map<string, ISyncData> = new Map<string, ISyncData>();
     private _windows: IInteractiveWindowLoadable[] = [];
     constructor(
-        @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
@@ -100,24 +87,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         asyncRegistry.push(this);
-
-        // Create a post office so we can make sure interactive windows are created at the same time
-        // on both sides.
-        this.postOffice = new PostOffice(LiveShare.InteractiveWindowProviderService, liveShare);
-
-        // Listen for peer changes
-        this.postOffice.peerCountChanged((n) => this.onPeerCountChanged(n));
-
-        // Listen for messages so we force a create on both sides.
-        this.postOffice
-            .registerCallback(LiveShareCommands.interactiveWindowCreate, this.onRemoteCreate, this)
-            .ignoreErrors();
-        this.postOffice
-            .registerCallback(LiveShareCommands.interactiveWindowCreateSync, this.onRemoteSync, this)
-            .ignoreErrors();
-
-        // Make a unique id so we can tell who sends a message
-        this.id = uuid();
     }
 
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
@@ -139,24 +108,13 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         return result;
     }
 
-    public dispose(): Promise<void> {
-        return this.postOffice.dispose();
+    public async dispose(): Promise<void> {
+        return noop();
     }
 
-    public async synchronize(window: IInteractiveWindow): Promise<void> {
-        // Create a new pending wait if necessary
-        if (this.postOffice.peerCount > 0 || this.postOffice.role === vsls.Role.Guest) {
-            const key = window.identity.toString();
-            const owner = window.owner?.toString();
-            const waitable = createDeferred<void>();
-            this.pendingSyncs.set(key, { count: this.postOffice.peerCount, waitable });
-
-            // Make sure all providers have an active interactive window
-            await this.postOffice.postCommand(LiveShareCommands.interactiveWindowCreate, this.id, key, owner);
-
-            // Wait for the waitable to be signaled or the peer count on the post office to change
-            await waitable.promise;
-        }
+    public async synchronize(_window: IInteractiveWindow): Promise<void> {
+        // TODO delete this method entirely
+        noop();
     }
 
     protected create(resource: Resource, mode: InteractiveWindowMode): IInteractiveWindow {
@@ -286,52 +244,12 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         });
     }
 
+    // TODO: we don't currently have a way to know when the VS Code InteractiveEditor
+    // view state changes. Requires API (interactive.open should return the InteractiveEditorPanel) 
     private raiseOnDidChangeActiveInteractiveWindow() {
         // Update last active window (remember changes to the active window)
         this.lastActiveInteractiveWindow = this.activeWindow ? this.activeWindow : this.lastActiveInteractiveWindow;
         this._onDidChangeActiveInteractiveWindow.fire(this.activeWindow);
-    }
-    private onPeerCountChanged(newCount: number) {
-        // If we're losing peers, resolve all syncs
-        if (newCount < this.postOffice.peerCount) {
-            this.pendingSyncs.forEach((v) => v.waitable.resolve());
-            this.pendingSyncs.clear();
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async onRemoteCreate(...args: any[]) {
-        // Should be 3 args, the originator of the create, the key, and the owner. Key isn't used here
-        // but it is passed through to the response.
-        if (args.length > 1 && args[0].toString() !== this.id) {
-            // The other side is creating a interactive window. Create on this side. We don't need to show
-            // it as the running of new code should do that.
-            const owner = args[2] ? Uri.parse(args[2].toString()) : undefined;
-            const mode = await this.getInteractiveMode(owner);
-            if (!this.get(owner, mode)) {
-                this.create(owner, mode);
-            }
-
-            // Tell the requestor that we got its message (it should be waiting for all peers to sync)
-            this.postOffice.postCommand(LiveShareCommands.interactiveWindowCreateSync, ...args).ignoreErrors();
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private onRemoteSync(...args: any[]) {
-        // Should be 3 args, the originator of the create, the key, and the owner (owner used on other call)
-        if (args.length > 1 && args[0].toString() === this.id) {
-            // Update our pending wait count on the matching pending sync
-            const key = args[1].toString();
-            const sync = this.pendingSyncs.get(key);
-            if (sync) {
-                sync.count -= 1;
-                if (sync.count <= 0) {
-                    sync.waitable.resolve();
-                    this.pendingSyncs.delete(key);
-                }
-            }
-        }
     }
 
     private onInteractiveWindowClosed = (interactiveWindow: IInteractiveWindow) => {
