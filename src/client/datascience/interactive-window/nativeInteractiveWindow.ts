@@ -256,9 +256,14 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
 
         // Insert code cell into NotebookDocument
         const edit = new WorkspaceEdit();
-        edit.replaceNotebookCells(notebookDocument.uri, new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount), [
-            new NotebookCellData(NotebookCellKind.Code, code, 'python') // TODO generalize to arbitrary languages and cell types
-        ]);
+        const cell = new NotebookCellData(NotebookCellKind.Code, code, 'python'); // TODO generalize to arbitrary languages and cell types
+        cell.metadata = {
+            interactive: {
+                file: _file.fsPath,
+                line: _line
+            }
+        };
+        edit.replaceNotebookCells(notebookDocument.uri, new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount), [cell]);
         await workspace.applyEdit(edit);
 
         // Request execution
@@ -587,7 +592,7 @@ export class NativeInteractiveWindow extends InteractiveBase implements IInterac
         }
     }
 
-    private handleHasCellResponse(response: { id: string; result: boolean }) {
+    private handleHasCellResponse(response: { id: string; result: boolean; }) {
         const deferred = this.pendingHasCell.get(response.id);
         if (deferred) {
             deferred.resolve(response.result);

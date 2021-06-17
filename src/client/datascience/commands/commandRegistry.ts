@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, ConfigurationTarget, env, NotebookCell, NotebookRange, Range, Uri, workspace, WorkspaceEdit } from 'vscode';
+import { CodeLens, ConfigurationTarget, env, NotebookCell, NotebookRange, Position, Range, Selection, TextEditor, Uri, ViewColumn, workspace, WorkspaceEdit } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import {
@@ -151,6 +151,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.DebugFileInInteractiveWindows, this.debugFileInteractive);
         this.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow);
         this.registerCommand(Commands.InteractiveRemoveCell, this.removeCellInInteractiveWindow);
+        this.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow);
     }
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
@@ -268,6 +269,32 @@ export class CommandRegistry implements IDisposable {
             const edit = new WorkspaceEdit();
             edit.replaceNotebookCells(context.notebook.uri, new NotebookRange(context.index, context.index + 1), []);
             await workspace.applyEdit(edit);
+        }
+    }
+
+    private async goToCodeInInteractiveWindow(context?: NotebookCell) {
+        if (context && context.metadata?.interactive) {
+            const file = context.metadata.interactive.file;
+            const line = context.metadata.interactive.line;
+
+            let editor: TextEditor | undefined;
+
+            if (await this.fs.localFileExists(file)) {
+                editor = await this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One });
+            } else {
+                // File URI isn't going to work. Look through the active text documents
+                editor = this.documentManager.visibleTextEditors.find((te) => te.document.fileName === file);
+                if (editor) {
+                    editor.show();
+                }
+            }
+
+            // If we found the editor change its selection
+            if (editor) {
+                editor.revealRange(new Range(line, 0, line, 0));
+                editor.selection = new Selection(new Position(line, 0), new Position(line, 0));
+            }
+
         }
     }
 

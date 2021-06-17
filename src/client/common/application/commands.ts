@@ -57,6 +57,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.NotebookEditorKeybindRenderMarkdownAndSelectBelow]: [];
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri; }; }];
     [DSCommands.InteractiveRemoveCell]: [NotebookCell];
+    [DSCommands.InteractiveGoToCode]: [NotebookCell];
     ['notebook.cell.quitEdit']: [];
     ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.cell.collapseCellOutput']: [];

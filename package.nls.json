@@ -493,5 +493,6 @@
     "DataScience.defaultNotebookName": "default",
     "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targetting the language '{1}'",
     "DataScience.interactiveClearAllCells": "Clear All",
-    "DataScience.interactiveRemoveCell": "Remove Cell"
+    "DataScience.interactiveRemoveCell": "Remove Cell",
+    "DataScience.interactiveGoToCode": "Go to code"
 }
