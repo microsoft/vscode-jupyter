@@ -25,6 +25,7 @@ import { verifyViewVariables } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../client/common/logger';
+import { sleep } from '../../core';
 
 suite('DataScience - VariableView', function () {
     let api: IExtensionTestApi;
@@ -49,6 +50,8 @@ suite('DataScience - VariableView', function () {
             return this.skip();
         }
         await workAroundVSCodeNotebookStartPages();
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+        await sleep(5_000);
         await prewarmNotebooks();
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);

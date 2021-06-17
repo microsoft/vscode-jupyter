@@ -289,6 +289,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private onDidCloseNotebookDocument(document: NotebookDocument) {
         // When we close a document, cancel any preferred searches in progress
         if (this.findPreferredInProgress.has(document)) {
+            traceInfoIf(IS_CI_SERVER, `Notebook closed event handled widget coordinator ${document.uri.toString()}`);
             this.findPreferredInProgress.get(document)?.cancel();
         }
 

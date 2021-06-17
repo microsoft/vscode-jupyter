@@ -1055,7 +1055,7 @@ declare module 'vscode' {
 		/**
 		 * A message that should be rendered when hovering over the decoration.
 		 */
-		hoverMessage?: MarkedString | MarkedString[];
+		hoverMessage?: MarkdownString | (MarkdownString | MarkedString)[] | MarkedString;
 
 		/**
 		 * Render options applied to the current decoration. For performance reasons, keep the
@@ -1862,8 +1862,7 @@ declare module 'vscode' {
 		modal?: boolean;
 
 		/**
-		 * Human-readable detail message that is rendered less prominent. _Note_ that detail
-		 * is only shown for {@link MessageOptions.modal modal} messages.
+		 * Human-readable detail message that is rendered less prominent.
 		 */
 		detail?: string;
 	}
@@ -2569,8 +2568,8 @@ declare module 'vscode' {
 	 * The MarkdownString represents human-readable text that supports formatting via the
 	 * markdown syntax. Standard markdown is supported, also tables, but no embedded html.
 	 *
-	 * When created with `supportThemeIcons` then rendering of {@link ThemeIcon theme icons} via
-	 * the `$(<name>)`-syntax is supported.
+	 * Rendering of {@link ThemeIcon theme icons} via the `$(<name>)`-syntax is supported
+	 * when the {@link MarkdownString.supportThemeIcons `supportThemeIcons`} is set to `true`.
 	 */
 	export class MarkdownString {
 
@@ -2588,7 +2587,7 @@ declare module 'vscode' {
 		/**
 		 * Indicates that this markdown string can contain {@link ThemeIcon ThemeIcons}, e.g. `$(zap)`.
 		 */
-		readonly supportThemeIcons?: boolean;
+		supportThemeIcons?: boolean;
 
 		/**
 		 * Creates a new markdown string with the given value.
@@ -2625,7 +2624,7 @@ declare module 'vscode' {
 	 *
 	 * @deprecated This type is deprecated, please use {@link MarkdownString `MarkdownString`} instead.
 	 */
-	export type MarkedString = MarkdownString | string | { language: string; value: string };
+	export type MarkedString = string | { language: string; value: string };
 
 	/**
 	 * A hover represents additional information for a symbol or word. Hovers are
@@ -2636,7 +2635,7 @@ declare module 'vscode' {
 		/**
 		 * The contents of this hover.
 		 */
-		contents: MarkedString[];
+		contents: (MarkdownString | MarkedString)[];
 
 		/**
 		 * The range to which this hover applies. When missing, the
@@ -2651,7 +2650,7 @@ declare module 'vscode' {
 		 * @param contents The contents of the hover.
 		 * @param range The range to which the hover applies.
 		 */
-		constructor(contents: MarkedString | MarkedString[], range?: Range);
+		constructor(contents: MarkdownString | (MarkdownString | MarkedString)[] | MarkedString, range?: Range);
 	}
 
 	/**
@@ -11803,9 +11802,9 @@ declare module 'vscode' {
 	}
 
 	/**
-	 * NotebookData is the raw representation of notebooks.
+	 * Raw representation of a notebook.
 	 *
-	 * Extensions are responsible to create {@link NotebookData `NotebookData`} so that the editor
+	 * Extensions are responsible for creating {@link NotebookData `NotebookData`} so that the editor
 	 * can create a {@link NotebookDocument `NotebookDocument`}.
 	 *
 	 * @see {@link NotebookSerializer}

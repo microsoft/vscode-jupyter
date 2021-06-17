@@ -189,6 +189,8 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
         assert.containsAllKeys(cellMetadata || {}, { metadata: '' }, 'Cell6, metadata');
     });
     test('Saving after clearing should result in execution_count=null in ipynb file', async function () {
+        // https://github.com/microsoft/vscode/issues/121807
+        return this.skip();
         const originalJson = JSON.parse(
             fs.readFileSync(testIPynbWithWithExecCount.fsPath, { encoding: 'utf8' })
         ) as nbformat.INotebookContent;

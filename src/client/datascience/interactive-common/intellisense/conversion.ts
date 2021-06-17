@@ -304,7 +304,8 @@ export function convertToMonacoHover(
 ): monacoEditor.languages.Hover {
     if (result) {
         return {
-            contents: convertToMonacoMarkdown(result.contents),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            contents: convertToMonacoMarkdown(result.contents as any),
             range: convertToMonacoRange(result.range)
         };
     }
