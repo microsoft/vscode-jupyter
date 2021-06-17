@@ -193,6 +193,11 @@
                 "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow"
             },
             {
+                "key": "shift+enter",
+                "when": "resourceScheme == 'vscode-interactive'",
+                "command": "interactive.execute"
+            },
+            {
                 "command": "jupyter.insertCellBelowPosition",
                 "key": "ctrl+; s",
                 "when": "editorTextFocus && jupyter.hascodecells && !notebookEditorFocused"
