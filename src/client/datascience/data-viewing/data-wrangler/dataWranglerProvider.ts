@@ -19,16 +19,16 @@ import { IApplicationShell, ICommandManager, IDataWranglerProvider } from '../..
 import * as uuid from 'uuid/v4';
 import { getImportCodeForFileType } from '../../commands/commandRegistry';
 import { Commands, Identifiers } from '../../constants';
-import {
-    IJupyterVariableDataProviderFactory,
-    INotebookProvider,
-    IJupyterVariables,
-    INotebookEditor
-} from '../../types';
+import { INotebookProvider, IJupyterVariables, INotebookEditor } from '../../types';
 import { DataViewerChecker } from '../../interactive-common/dataViewerChecker';
 import { IConfigurationService } from '../../../common/types';
 import { updateCellCode } from '../../notebook/helpers/executionHelpers';
-import { IDataWranglerDataProvider, IDataWranglerFactory, OpenDataWranglerSetting } from './types';
+import {
+    IDataWranglerDataProvider,
+    IDataWranglerFactory,
+    IDataWranglerJupyterVariableDataProviderFactory,
+    OpenDataWranglerSetting
+} from './types';
 
 @injectable()
 export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSingleActivationService {
@@ -41,8 +41,8 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
     private dataViewerChecker: DataViewerChecker;
 
     constructor(
-        @inject(IJupyterVariableDataProviderFactory)
-        private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
+        @inject(IDataWranglerJupyterVariableDataProviderFactory)
+        private readonly dataWranglerJupyterVariableDataProviderFactory: IDataWranglerJupyterVariableDataProviderFactory,
         @inject(IDataWranglerFactory) private readonly dataWranglerFactory: IDataWranglerFactory,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IJupyterVariables)
@@ -208,7 +208,9 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                 },
                 notebook
             );
-            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(jupyterVariable);
+            const jupyterVariableDataProvider = await this.dataWranglerJupyterVariableDataProviderFactory.create(
+                jupyterVariable
+            );
             jupyterVariableDataProvider.setDependencies(jupyterVariable, notebook);
             this.dataProviders.set(file, jupyterVariableDataProvider);
             // May need to resolve custom editor here
@@ -243,7 +245,9 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                 },
                 notebookEditor.notebook
             );
-            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(jupyterVariable);
+            const jupyterVariableDataProvider = await this.dataWranglerJupyterVariableDataProviderFactory.create(
+                jupyterVariable
+            );
             jupyterVariableDataProvider.setDependencies(jupyterVariable, notebookEditor.notebook);
             this.dataProviders.set(file, jupyterVariableDataProvider);
             await this.show(file, undefined);

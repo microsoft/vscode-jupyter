@@ -31,7 +31,10 @@ import { noop } from '../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, defaultNotebookFormat, EditorContexts, Identifiers, Telemetry } from '../constants';
-import { IDataWranglerFactory } from '../data-viewing/data-wrangler/types';
+import {
+    IDataWranglerFactory,
+    IDataWranglerJupyterVariableDataProviderFactory
+} from '../data-viewing/data-wrangler/types';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { ExportFormat, IExportDialog } from '../export/types';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -124,6 +127,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         dataExplorerFactory: IDataViewerFactory,
         dataWranglerFactory: IDataWranglerFactory,
         jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
+        dataWranglerJupyterVariableDataProviderFactory: IDataWranglerJupyterVariableDataProviderFactory,
         jupyterVariables: IJupyterVariables,
         jupyterDebugger: IJupyterDebugger,
         errorHandler: IDataScienceErrorHandler,
@@ -158,6 +162,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             dataExplorerFactory,
             dataWranglerFactory,
             jupyterVariableDataProviderFactory,
+            dataWranglerJupyterVariableDataProviderFactory,
             jupyterVariables,
             jupyterDebugger,
             errorHandler,

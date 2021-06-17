@@ -35,8 +35,6 @@ import { Commands, HelpLinks, Identifiers } from '../../constants';
 import { JupyterDataRateLimitError } from '../../jupyter/jupyterDataRateLimitError';
 import {
     ICodeCssGenerator,
-    IJupyterVariableDataProvider,
-    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditorProvider,
     IThemeFinder,
@@ -63,7 +61,9 @@ import {
     IFillNaRequest,
     IDropDuplicatesRequest,
     IDropNaRequest,
-    OpenDataWranglerSetting
+    OpenDataWranglerSetting,
+    IDataWranglerJupyterVariableDataProvider,
+    IDataWranglerJupyterVariableDataProviderFactory
 } from './types';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataWranglerPreferredViewColumn';
@@ -107,7 +107,8 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         @inject(IJupyterVariables)
         @named(Identifiers.KERNEL_VARIABLES)
         private kernelVariableProvider: IJupyterVariables,
-        @inject(IJupyterVariableDataProviderFactory) private dataProviderFactory: IJupyterVariableDataProviderFactory,
+        @inject(IDataWranglerJupyterVariableDataProviderFactory)
+        private dataProviderFactory: IDataWranglerJupyterVariableDataProviderFactory,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
     ) {
         super(
@@ -169,7 +170,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
     }
 
     public async updateWithNewVariable(newVariableName: string) {
-        const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
+        const notebook = (this.dataProvider as IDataWranglerJupyterVariableDataProvider).notebook;
 
         // Generate a variable
         const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
@@ -442,7 +443,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleCommand(payload: { command: string; args: any }) {
-        const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
+        const notebook = (this.dataProvider as IDataWranglerJupyterVariableDataProvider).notebook;
         let historyItem = {} as IHistoryItem;
         let code = '';
         const currentVariableName = (await this.dataFrameInfoPromise)!.name ?? '';

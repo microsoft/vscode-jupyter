@@ -16,9 +16,9 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { IConfigurationService } from '../../../client/common/types';
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataWrangler } from '../../../client/datascience/data-viewing/data-wrangler/dataWrangler';
+import { DataWranglerJupyterVariableDataProviderFactory } from '../../../client/datascience/data-viewing/data-wrangler/dataWranglerJupyterVariableDataProviderFactory';
 import { IDataWrangler, IDataWranglerDataProvider } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { JupyterVariableDataProvider } from '../../../client/datascience/data-viewing/jupyterVariableDataProvider';
-import { JupyterVariableDataProviderFactory } from '../../../client/datascience/data-viewing/jupyterVariableDataProviderFactory';
 import { KernelVariables } from '../../../client/datascience/jupyter/kernelVariables';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
@@ -36,7 +36,7 @@ suite('DataScience - DataWrangler', () => {
     let dataProvider: IDataWranglerDataProvider;
     let commandManager: CommandManager;
     let jupyterVariables: KernelVariables;
-    let dataProviderFactory: JupyterVariableDataProviderFactory;
+    let dataProviderFactory: DataWranglerJupyterVariableDataProviderFactory;
     let notebookEditorProvider: NotebookEditorProvider;
 
     const title: string = 'Data Wrangler - Title';
@@ -51,7 +51,7 @@ suite('DataScience - DataWrangler', () => {
         dataProvider = mock(JupyterVariableDataProvider);
         commandManager = mock(CommandManager);
         jupyterVariables = mock(KernelVariables);
-        dataProviderFactory = mock(JupyterVariableDataProviderFactory);
+        dataProviderFactory = mock(DataWranglerJupyterVariableDataProviderFactory);
         notebookEditorProvider = mock(NotebookEditorProvider);
         const documentManager = mock(DocumentManager);
         const settings = mock(JupyterSettings);

@@ -9,12 +9,14 @@ import { InteractiveWindowMessages, ILoadTmLanguageResponse } from '../../intera
 import {
     IColsResponse,
     IDataFrameInfo,
+    IDataViewerDataProvider,
     IGetColsResponse,
     IGetRowsRequest,
     IGetRowsResponse,
     IGetSliceRequest,
     IRowsResponse
 } from '../types';
+import { IJupyterVariable, INotebook } from '../../types';
 
 export enum OpenDataWranglerSetting {
     STANDALONE = 'standalone',
@@ -80,11 +82,7 @@ export type IDataWranglerMapping = {
     [CssMessages.GetMonacoThemeRequest]: { isDark: boolean };
 };
 
-export interface IDataWranglerDataProvider {
-    dispose(): void;
-    getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo>;
-    getAllRows(sliceExpression?: string): Promise<IRowsResponse>;
-    getRows(start: Number, end: Number, sliceExpression?: string): Promise<IRowsResponse>;
+export interface IDataWranglerDataProvider extends IDataViewerDataProvider {
     getCols(columnName: string): Promise<IColsResponse>;
 }
 
@@ -101,6 +99,19 @@ export interface IDataWrangler extends IDisposable {
     showData(dataProvider: IDataWranglerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<void>;
     refreshData(): Promise<void>;
     updateWithNewVariable(newVariableName: string): Promise<void>;
+}
+
+export const IDataWranglerJupyterVariableDataProviderFactory = Symbol(
+    'IDataWranglerJupyterVariableDataProviderFactory'
+);
+export interface IDataWranglerJupyterVariableDataProviderFactory {
+    create(variable: IJupyterVariable, notebook?: INotebook): Promise<IDataWranglerJupyterVariableDataProvider>;
+}
+
+export const IDataWranglerJupyterVariableDataProvider = Symbol('IDataWranglerJupyterVariableDataProvider');
+export interface IDataWranglerJupyterVariableDataProvider extends IDataWranglerDataProvider {
+    notebook: INotebook | undefined;
+    setDependencies(variable: IJupyterVariable, notebook?: INotebook): void;
 }
 
 export interface IHistoryItem {
