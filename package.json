@@ -760,6 +760,12 @@
                 "title": "%DataScience.interactiveClearAllCells%",
                 "icon": "$(close)",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.interactive.removeCell",
+                "title": "%DataScience.interactiveRemoveCell%",
+                "icon": "$(close)",
+                "category": "Jupyter"
             }
         ],
         "menus": {
@@ -873,6 +879,13 @@
                 {
                     "command": "jupyter.interactive.clearAllCells",
                     "group": "navigation@0",
+                    "when": "isWorkspaceTrusted"
+                }
+            ],
+            "interactive/cell/title": [
+                {
+                    "command": "jupyter.interactive.removeCell",
+                    "group": "inline@0",
                     "when": "isWorkspaceTrusted"
                 }
             ],

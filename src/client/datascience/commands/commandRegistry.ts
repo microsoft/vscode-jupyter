@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, ConfigurationTarget, env, NotebookRange, Range, Uri, workspace, WorkspaceEdit } from 'vscode';
+import { CodeLens, ConfigurationTarget, env, NotebookCell, NotebookRange, Range, Uri, workspace, WorkspaceEdit } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import {
@@ -150,6 +150,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.RunFileInInteractiveWindows, this.runFileInteractive);
         this.registerCommand(Commands.DebugFileInInteractiveWindows, this.debugFileInteractive);
         this.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow);
+        this.registerCommand(Commands.InteractiveRemoveCell, this.removeCellInInteractiveWindow);
     }
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
@@ -260,6 +261,14 @@ export class CommandRegistry implements IDisposable {
         const edit = new WorkspaceEdit();
         edit.replaceNotebookCells(document.uri, new NotebookRange(0, document.cellCount), []);
         await workspace.applyEdit(edit);
+    }
+
+    private async removeCellInInteractiveWindow(context?: NotebookCell) {
+        if (context) {
+            const edit = new WorkspaceEdit();
+            edit.replaceNotebookCells(context.notebook.uri, new NotebookRange(context.index, context.index + 1), []);
+            await workspace.applyEdit(edit);
+        }
     }
 
     // Note: see codewatcher.ts where the runcell command args are attached. The reason we don't have any

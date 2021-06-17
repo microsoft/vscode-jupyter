@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, Position, TextDocument, Uri, ViewColumn } from 'vscode';
+import { CancellationToken, NotebookCell, Position, TextDocument, Uri, ViewColumn } from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
@@ -56,6 +56,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.NotebookEditorKeybindExecuteCell]: [];
     [DSCommands.NotebookEditorKeybindRenderMarkdownAndSelectBelow]: [];
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri; }; }];
+    [DSCommands.InteractiveRemoveCell]: [NotebookCell];
     ['notebook.cell.quitEdit']: [];
     ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.cell.collapseCellOutput']: [];

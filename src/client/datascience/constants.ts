@@ -166,6 +166,7 @@ export namespace Commands {
     export const NotebookEditorKeybindExecuteCell = 'jupyter.notebookeditor.keybind.executeCell';
     export const NotebookEditorToggleOutput = 'jupyter.notebookeditor.keybind.toggleOutput';
     export const InteractiveClearAll = 'jupyter.interactive.clearAllCells';
+    export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
 }
 
 export namespace CodeLensCommands {
