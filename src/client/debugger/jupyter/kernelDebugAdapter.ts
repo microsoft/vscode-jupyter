@@ -129,6 +129,7 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
     }
 
     dispose() {
+        this.messageListener.forEach((ml) => ml.dispose());
         this.messageListener.clear();
     }
 
