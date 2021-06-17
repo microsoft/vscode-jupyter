@@ -16,6 +16,13 @@ import {
     IRowsResponse
 } from '../types';
 
+export enum OpenDataWranglerSetting {
+    STANDALONE = 'standalone',
+    WITH_JUPYTER_NOTEBOOK = 'jupyter_notebook'
+    // WITH_PYTHON_FILE,
+    // WITH_INTERACTIVE_WINDOW
+}
+
 export enum DataWranglerCommands {
     ExportToCsv = 'export_to_csv',
     ExportToPythonScript = 'export_to_python_script',

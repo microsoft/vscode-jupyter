@@ -28,14 +28,7 @@ import {
 import { DataViewerChecker } from '../../interactive-common/dataViewerChecker';
 import { IConfigurationService } from '../../../common/types';
 import { updateCellCode } from '../../notebook/helpers/executionHelpers';
-import { IDataWranglerDataProvider, IDataWranglerFactory } from './types';
-
-enum OpenDataWranglerSetting {
-    STANDALONE,
-    WITH_JUPYTER_NOTEBOOK,
-    WITH_PYTHON_FILE,
-    WITH_INTERACTIVE_WINDOW
-}
+import { IDataWranglerDataProvider, IDataWranglerFactory, OpenDataWranglerSetting } from './types';
 
 @injectable()
 export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSingleActivationService {
@@ -135,37 +128,19 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
             const selection = await this.appShell.showQuickPick(qpitems, qpoptions);
             switch (selection?.label) {
                 case 'Open Just the Data Wrangler':
-                    dataCleaningMode = 'standalone';
+                    dataCleaningMode = OpenDataWranglerSetting.STANDALONE;
                     await this.configService.updateSetting(
                         'dataCleaningMode',
-                        'standalone',
+                        OpenDataWranglerSetting.STANDALONE,
                         undefined,
                         ConfigurationTarget.Global
                     );
                     break;
                 case 'Open Data Wrangler With Jupyter Notebook':
-                    dataCleaningMode = 'jupyter_notebook';
+                    dataCleaningMode = OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK;
                     await this.configService.updateSetting(
                         'dataCleaningMode',
-                        'jupyter_notebook',
-                        undefined,
-                        ConfigurationTarget.Global
-                    );
-                    break;
-                case 'Open with Python file':
-                    dataCleaningMode = 'python_file';
-                    await this.configService.updateSetting(
-                        'dataCleaningMode',
-                        'python_file',
-                        undefined,
-                        ConfigurationTarget.Global
-                    );
-                    break;
-                case 'Open with an Interactive Python session':
-                    dataCleaningMode = 'interactive_window';
-                    await this.configService.updateSetting(
-                        'dataCleaningMode',
-                        'interactive_window',
+                        OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK,
                         undefined,
                         ConfigurationTarget.Global
                     );
@@ -177,7 +152,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         let setting: OpenDataWranglerSetting | undefined;
 
         switch (dataCleaningMode) {
-            case 'standalone': {
+            case OpenDataWranglerSetting.STANDALONE: {
                 options = {
                     location: ProgressLocation.Notification,
                     cancellable: true,
@@ -187,33 +162,13 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
 
                 break;
             }
-            case 'jupyter_notebook': {
+            case OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK: {
                 options = {
                     location: ProgressLocation.Notification,
                     cancellable: true,
                     title: 'Importing Data and Launching Data Wrangler with a Jupyter Notebook...'
                 };
                 setting = OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK;
-
-                break;
-            }
-            case 'python_file': {
-                options = {
-                    location: ProgressLocation.Notification,
-                    cancellable: true,
-                    title: 'Importing Data and Launching Data Wrangler with a Python file...'
-                };
-                setting = OpenDataWranglerSetting.WITH_PYTHON_FILE;
-
-                break;
-            }
-            case 'interactive_window': {
-                options = {
-                    location: ProgressLocation.Notification,
-                    cancellable: true,
-                    title: 'Importing Data and Launching Data Wrangler with an Interactive Window...'
-                };
-                setting = OpenDataWranglerSetting.WITH_INTERACTIVE_WINDOW;
 
                 break;
             }
@@ -292,11 +247,6 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
             jupyterVariableDataProvider.setDependencies(jupyterVariable, notebookEditor.notebook);
             this.dataProviders.set(file, jupyterVariableDataProvider);
             await this.show(file, undefined);
-        } else if (setting == OpenDataWranglerSetting.WITH_PYTHON_FILE) {
-            //TODO
-        } else {
-            //interactive window
-            //TODO
         }
     }
 

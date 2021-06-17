@@ -62,7 +62,8 @@ import {
     INormalizeColumnRequest,
     IFillNaRequest,
     IDropDuplicatesRequest,
-    IDropNaRequest
+    IDropNaRequest,
+    OpenDataWranglerSetting
 } from './types';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataWranglerPreferredViewColumn';
@@ -516,7 +517,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         }
 
         const dataCleaningMode = this.configService.getSettings().dataCleaningMode;
-        if (dataCleaningMode === 'standalone') {
+        if (dataCleaningMode === OpenDataWranglerSetting.STANDALONE) {
             if (code && notebook !== undefined) {
                 void notebook?.execute(code, '', 0, uuid()).then(async () => {
                     if (this.existingDisposable) {
@@ -525,7 +526,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
                     await this.updateWithNewVariable(newVariableName);
                 });
             }
-        } else if (dataCleaningMode === 'jupyter_notebook') {
+        } else if (dataCleaningMode === OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK) {
             if (code && matchingNotebookEditor !== undefined) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 let cells = (matchingNotebookEditor as any).document.getCells();
