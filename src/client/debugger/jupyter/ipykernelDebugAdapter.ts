@@ -35,7 +35,7 @@ export class IpykernelDebugAdapter implements vscode.DebugAdapter {
         private session: vscode.DebugSession,
         private notebookDocument: vscode.NotebookDocument,
         private readonly jupyterSession: IJupyterSession
-    ) {}
+    ) { }
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
         // console.log('-> send', message);
@@ -69,7 +69,8 @@ export class IpykernelDebugAdapter implements vscode.DebugAdapter {
 
             if (control) {
                 control.onReply = (msg) => {
-                    console.error('------------------' + msg);
+                    console.error('------------------ onReply ------------');
+                    console.error(msg);
                     visitSources(msg.content, (source) => {
                         if (source && source.path) {
                             const cell = this.fileToCell.get(source.path);
@@ -87,10 +88,12 @@ export class IpykernelDebugAdapter implements vscode.DebugAdapter {
                     this.sendMessage.fire(msg.content);
                 };
                 control.onIOPub = (msg) => {
-                    console.error('------------------' + msg);
+                    console.error('------------------ onIOPub ------------');
+                    console.error(msg);
                 };
                 control.onStdin = (msg) => {
-                    console.error('------------------' + msg);
+                    console.error('------------------ onStdin ------------');
+                    console.error(msg);
                 };
                 this.messageListener.set(message.seq, control);
             }
