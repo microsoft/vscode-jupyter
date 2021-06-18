@@ -5,7 +5,7 @@
 
 import * as vscode from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { debugRequest, debugResponse } from './messaging';
+import { randomBytes } from 'crypto';
 import * as path from 'path';
 import { IJupyterSession } from '../../datascience/types';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
@@ -227,3 +227,50 @@ function visitSources(
             break;
     }
 }
+
+const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugRequestMsg => {
+    return {
+        channel: 'control',
+        header: {
+            msg_id: randomBytes(8).toString('hex'),
+            date: new Date().toISOString(),
+            version: '5.2',
+            msg_type: 'debug_request',
+            username: 'vscode',
+            session: randomBytes(8).toString('hex')
+        },
+        metadata: {},
+        parent_header: {},
+        content: {
+            seq: message.seq,
+            type: 'request',
+            command: message.command,
+            arguments: message.arguments
+        }
+    };
+};
+
+const debugResponse = (message: DebugProtocol.Response): KernelMessage.IDebugReplyMsg => {
+    return {
+        channel: 'control',
+        header: {
+            msg_id: randomBytes(8).toString('hex'),
+            date: new Date().toISOString(),
+            version: '5.2',
+            msg_type: 'debug_reply',
+            username: 'vscode',
+            session: randomBytes(8).toString('hex')
+        },
+        metadata: {},
+        parent_header: {},
+        content: {
+            seq: message.seq,
+            type: 'response',
+            request_seq: message.request_seq,
+            success: message.success,
+            command: message.command,
+            message: message.message,
+            body: message.body
+        }
+    };
+};
