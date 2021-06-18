@@ -3,8 +3,6 @@
 import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 
-export const INotebookContentProvider = Symbol('INotebookContentProvider');
-
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 
 export const INotebookControllerManager = Symbol('INotebookControllerManager');

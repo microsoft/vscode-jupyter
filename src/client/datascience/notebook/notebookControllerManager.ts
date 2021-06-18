@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
+import { CancellationToken, ExtensionMode, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import {
     IConfigurationService,
@@ -30,7 +30,7 @@ import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProv
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { INotebookProvider } from '../types';
-import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
+import { getNotebookMetadata, isJupyterNotebook, updateNotebookDocumentMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
 import { JupyterNotebookView } from './constants';
@@ -41,6 +41,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { testOnlyMethod } from '../../common/utils/decorators';
+import { IS_CI_SERVER } from '../../../test/ciConstants';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -109,9 +110,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Look up what NotebookController is currently selected for the given notebook document
     public getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined {
-        if (this.controllerMapping.has(document)) {
-            return this.controllerMapping.get(document);
-        }
+        return this.controllerMapping.get(document);
     }
 
     // Function to expose currently registered controllers to test code only
@@ -211,7 +210,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Set the controller for this notebook document
     private async setController(document: NotebookDocument, cancelToken: CancellationToken) {
         // Prep so that we can track the selected controller for this document
-        this.controllerMapping.set(document, undefined);
+        traceInfoIf(IS_CI_SERVER, `Clear controller mapping for ${document.uri.toString()}`);
+        this.controllerMapping.delete(document);
 
         return this.findPreferredKernel(document, cancelToken).then(async (preferredConnection) => {
             if (cancelToken.isCancellationRequested) {
@@ -227,6 +227,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     } found for NotebookDocument: ${document.uri.toString()}`
                 );
                 this.setPreferredController(document, preferredConnection).catch(traceError);
+            } else {
+                traceInfoIf(
+                    IS_CI_SERVER,
+                    `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`
+                );
             }
         });
     }
@@ -245,6 +250,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (targetController) {
             traceInfo(`TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`);
             await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+        } else {
+            traceInfoIf(
+                IS_CI_SERVER,
+                `TargetController nof found ID: ${kernelConnection.id} for document ${document.uri.toString()}`
+            );
         }
     }
 
@@ -279,13 +289,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private onDidCloseNotebookDocument(document: NotebookDocument) {
         // When we close a document, cancel any preferred searches in progress
         if (this.findPreferredInProgress.has(document)) {
+            traceInfoIf(IS_CI_SERVER, `Notebook closed event handled widget coordinator ${document.uri.toString()}`);
             this.findPreferredInProgress.get(document)?.cancel();
         }
 
         // Remove from our current selection tracking list
-        if (this.controllerMapping.has(document)) {
-            this.controllerMapping.delete(document);
-        }
+        this.controllerMapping.delete(document);
     }
 
     private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]): VSCodeNotebookController[] {
@@ -332,7 +341,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 this.pathUtils,
                 this.disposables,
                 this.languageService,
-                this.workspace
+                this.workspace,
+                this.setAsActiveControllerForTests.bind(this)
             );
 
             // Hook up to if this NotebookController is selected or de-selected
@@ -354,22 +364,56 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceError(`Failed to create notebook controller for ${kernelConnection.id}`, ex);
         }
     }
+    /**
+     * In our tests, preferred controllers are setup as the active controller.
+     *
+     * This method is called on when running tests, else in the real world,
+     * users need to select a kernel (preferred is on top of the list).
+     */
+    private async setAsActiveControllerForTests(controller: VSCodeNotebookController, notebook: NotebookDocument) {
+        // Only when running tests should we force the selection of the kernel.
+        // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
+        if (this.context.extensionMode !== ExtensionMode.Test) {
+            return;
+        }
+        traceInfoIf(
+            IS_CI_SERVER,
+            `Command notebook.selectKernel executing for ${notebook.uri.toString()} ${controller.id}`
+        );
+        await this.commandManager.executeCommand('notebook.selectKernel', {
+            id: controller.id,
+            extension: JVSC_EXTENSION_ID
+        });
+        traceInfoIf(
+            IS_CI_SERVER,
+            `Command notebook.selectKernel exected for ${notebook.uri.toString()} ${controller.id}`
+        );
+        // Used in tests to determine when the controller has been associated with a document.
+        VSCodeNotebookController.kernelAssociatedWithDocument = true;
 
+        // Sometimes the selection doesn't work (after all this is a hack).
+        if (!this.controllerMapping.get(notebook)) {
+            await this.handleOnNotebookControllerSelected({ notebook, controller });
+        }
+    }
     // A new NotebookController has been selected, find the associated notebook document and update it
     private async handleOnNotebookControllerSelected(event: {
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
-        this.widgetCoordinator.setActiveController(event.notebook, event.controller);
-        if (this.controllerMapping.has(event.notebook)) {
-            this.controllerMapping.set(event.notebook, event.controller);
-
-            // Now actually handle the change
-            await this.notebookKernelChanged(event.notebook, event.controller);
-
-            // Now notify out that we have updated a notebooks controller
-            this._onNotebookControllerSelected.fire(event);
+        if (this.controllerMapping.get(event.notebook) === event.controller) {
+            // Possible it gets called again in our tests (due to hacks for testing purposes).
+            return;
         }
+        traceInfoIf(IS_CI_SERVER, `Notebook Controller set ${event.notebook.uri.toString()}, ${event.controller.id}`);
+        this.widgetCoordinator.setActiveController(event.notebook, event.controller);
+        this.controllerMapping.set(event.notebook, event.controller);
+
+        // Now actually handle the change
+        await this.notebookKernelChanged(event.notebook, event.controller);
+
+        // Now notify out that we have updated a notebooks controller
+        this._onNotebookControllerSelected.fire(event);
     }
 
     private async getKernelConnectionMetadata(token: CancellationToken): Promise<KernelConnectionMetadata[]> {
@@ -442,6 +486,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.registeredControllers = this.registeredControllers.filter((regController) => {
                 return regController.id !== controller.id;
             });
+            traceInfoIf(IS_CI_SERVER, `Disposing controller ${controller.id}`);
             controller.dispose();
         });
     }
@@ -449,7 +494,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private async notebookKernelChanged(document: NotebookDocument, controller: VSCodeNotebookController) {
         // We're only interested in our Jupyter Notebooks.
         if (!isJupyterNotebook(document)) {
-            trackKernelInNotebookMetadata(document, undefined);
             return;
         }
         const selectedKernelConnectionMetadata = controller.connection;
@@ -513,7 +557,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.interpreterPackages.trackPackages(selectedKernelConnectionMetadata.interpreter);
         }
 
-        trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
+        // Before we start the notebook, make sure the metadata is set to this new kernel.
+        await updateNotebookDocumentMetadata(document, selectedKernelConnectionMetadata);
 
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
@@ -524,10 +569,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             metadata: selectedKernelConnectionMetadata,
             controller: controller.controller
         });
-        traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}}`);
-
-        // Before we start the notebook, make sure the metadata is set to this new kernel.
-        trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
+        traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}`);
 
         // Auto start the local kernels.
         // if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {

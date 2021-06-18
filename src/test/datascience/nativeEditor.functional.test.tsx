@@ -807,8 +807,8 @@ df.head()`;
                         .setup((cmd) =>
                             cmd.executeCommand(
                                 Commands.Export,
-                                model.getContent(),
-                                model.file,
+                                model!.getContent(),
+                                model!.file,
                                 undefined,
                                 editor.notebook?.getMatchingInterpreter()
                             )
@@ -2244,7 +2244,7 @@ df.head()`;
                             assert.equal(wrapper.find('NativeCell').length, 4);
                             // Verify our model is correct
                             assert.equal(
-                                notebookEditor?.model.cellCount,
+                                notebookEditor?.model?.cellCount,
                                 4,
                                 'Undo is not changing cell count in model'
                             );
@@ -2272,7 +2272,7 @@ df.head()`;
                             assert.equal(wrapper.find('NativeCell').length, 3);
                             // Verify our model is correct
                             assert.equal(
-                                notebookEditor?.model.cellCount,
+                                notebookEditor?.model?.cellCount,
                                 3,
                                 'Undo is not changing cell count in model'
                             );
@@ -2290,7 +2290,7 @@ df.head()`;
                             assert.equal(wrapper.find('NativeCell').length, 4);
                             // Verify our model is correct
                             assert.equal(
-                                notebookEditor?.model.cellCount,
+                                notebookEditor?.model?.cellCount,
                                 4,
                                 'Redo is not changing cell count in model'
                             );
@@ -2307,7 +2307,7 @@ df.head()`;
 
                             // Verify our model is correct
                             assert.equal(
-                                notebookEditor?.model.cellCount,
+                                notebookEditor?.model?.cellCount,
                                 3,
                                 'Undo is not changing cell count in model'
                             );

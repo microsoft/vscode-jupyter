@@ -606,7 +606,8 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     readonly file: Uri;
     readonly visible: boolean;
     readonly active: boolean;
-    readonly model: INotebookModel;
+    readonly model?: INotebookModel;
+    readonly notebookMetadata: nbformat.INotebookMetadata | undefined;
     notebook?: INotebook;
     show(): Promise<void>;
     runAllCells(): void;
@@ -620,6 +621,7 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
     syncAllCells(): Promise<void>;
+    getContent(): string;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');

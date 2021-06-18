@@ -25,14 +25,17 @@ import { verifyViewVariables } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../client/common/logger';
+import { sleep } from '../../core';
 
-suite('DataScience - VariableView', () => {
+suite('DataScience - VariableView', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
     let variableViewProvider: ITestVariableViewProvider;
     let vscodeNotebook: IVSCodeNotebook;
+    this.timeout(120_000);
     suiteSetup(async function () {
+        traceInfo(`Start Test Suite`);
         this.timeout(120_000);
         api = await initialize();
 
@@ -47,6 +50,8 @@ suite('DataScience - VariableView', () => {
             return this.skip();
         }
         await workAroundVSCodeNotebookStartPages();
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+        await sleep(5_000);
         await prewarmNotebooks();
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -54,6 +59,7 @@ suite('DataScience - VariableView', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        traceInfo(`Start Test Suite (completed)`);
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);

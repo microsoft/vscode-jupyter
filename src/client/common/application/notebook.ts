@@ -8,18 +8,23 @@ import {
     EventEmitter,
     notebooks,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
-    NotebookContentProvider,
     NotebookController,
+    NotebookData,
     NotebookDocument,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookRendererScript,
     window,
     workspace,
-    NotebookCell
+    NotebookCell,
+    NotebookSerializer,
+    NotebookDocumentContentOptions,
+    Uri,
+    NotebookDocumentShowOptions
 } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../constants';
 import { IDisposableRegistry } from '../types';
+import { isUri } from '../utils/misc';
 import { IApplicationEnvironment, IVSCodeNotebook, NotebookCellChangedEvent } from './types';
 
 @injectable()
@@ -78,16 +83,41 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             this.onDidChangeNotebookDocument = this.createDisposableEventEmitter<NotebookCellChangedEvent>();
         }
     }
-    public registerNotebookContentProvider(
-        notebookType: string,
-        provider: NotebookContentProvider,
-        options?: {
-            transientOutputs: boolean;
-            transientCellMetadata?: { [x: string]: boolean | undefined } | undefined;
-            transientDocumentMetadata?: { [x: string]: boolean | undefined } | undefined;
+    public async openNotebookDocument(uri: Uri): Promise<NotebookDocument>;
+    public async openNotebookDocument(viewType: string, content?: NotebookData): Promise<NotebookDocument>;
+    public async openNotebookDocument(viewOrUri: Uri | string, content?: NotebookData): Promise<NotebookDocument> {
+        if (typeof viewOrUri === 'string') {
+            return workspace.openNotebookDocument(viewOrUri, content);
+        } else {
+            return workspace.openNotebookDocument(viewOrUri);
         }
+    }
+
+    public async showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Promise<NotebookEditor>;
+    public async showNotebookDocument(
+        document: NotebookDocument,
+        options?: NotebookDocumentShowOptions
+    ): Promise<NotebookEditor>;
+    public async showNotebookDocument(
+        uriOrDocument: Uri | NotebookDocument,
+        options?: NotebookDocumentShowOptions
+    ): Promise<NotebookEditor> {
+        if (isUri(uriOrDocument)) {
+            return window.showNotebookDocument(uriOrDocument, options);
+        } else {
+            return window.showNotebookDocument(uriOrDocument, options);
+        }
+    }
+
+    public registerNotebookSerializer(
+        notebookType: string,
+        serializer: NotebookSerializer,
+        options?: NotebookDocumentContentOptions
     ): Disposable {
-        return workspace.registerNotebookContentProvider(notebookType, provider, options);
+        return workspace.registerNotebookSerializer(notebookType, serializer, options, {
+            displayName: 'Jupyter',
+            filenamePattern: ['*.ipynb']
+        });
     }
     public createNotebookController(
         id: string,
