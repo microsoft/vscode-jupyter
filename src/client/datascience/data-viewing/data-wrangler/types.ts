@@ -2,19 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IDisposable } from '../../../common/types';
-import { CssMessages, SharedMessages } from '../../messages';
 import { Event, WebviewPanel } from 'vscode';
-import { InteractiveWindowMessages, ILoadTmLanguageResponse } from '../../interactive-common/interactiveWindowTypes';
-import {
-    IDataFrameInfo,
-    IDataViewerDataProvider,
-    IGetColsResponse,
-    IGetRowsRequest,
-    IGetRowsResponse,
-    IGetSliceRequest,
-    IRowsResponse
-} from '../types';
+import { IDisposable } from '../../../common/types';
+import { IDataViewerDataProvider } from '../types';
 
 export enum OpenDataWranglerSetting {
     STANDALONE = 'standalone',
@@ -39,46 +29,12 @@ export enum DataWranglerCommands {
 }
 
 export namespace DataWranglerMessages {
-    export const Started = SharedMessages.Started;
-    export const UpdateSettings = SharedMessages.UpdateSettings;
-    export const InitializeData = 'init';
-    export const GetAllRowsRequest = 'get_all_rows_request';
-    export const GetAllRowsResponse = 'get_all_rows_response';
-    export const GetRowsRequest = 'get_rows_request';
-    export const GetRowsResponse = 'get_rows_response';
-    export const CompletedData = 'complete';
-    export const GetSliceRequest = 'get_slice_request';
     export const SubmitCommand = 'submit_command';
     export const RefreshDataWrangler = 'refresh_data_viewer'; // TODOV
     export const SliceEnablementStateChanged = 'slice_enablement_state_changed';
     export const UpdateHistoryList = 'update_history_list';
     export const GetHistogramResponse = 'get_histogram_response';
 }
-
-// Map all messages to specific payloads
-export type IDataWranglerMapping = {
-    [DataWranglerMessages.Started]: never | undefined;
-    [DataWranglerMessages.UpdateSettings]: string;
-    [DataWranglerMessages.InitializeData]: IDataFrameInfo;
-    [DataWranglerMessages.GetAllRowsRequest]: never | undefined | string;
-    [DataWranglerMessages.GetAllRowsResponse]: IRowsResponse;
-    [DataWranglerMessages.GetRowsRequest]: IGetRowsRequest;
-    [DataWranglerMessages.GetRowsResponse]: IGetRowsResponse;
-    [DataWranglerMessages.CompletedData]: never | undefined;
-    [DataWranglerMessages.GetSliceRequest]: IGetSliceRequest;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [DataWranglerMessages.SubmitCommand]: { command: string; args: any };
-    [DataWranglerMessages.RefreshDataWrangler]: never | undefined;
-    [DataWranglerMessages.SliceEnablementStateChanged]: { newState: boolean };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [DataWranglerMessages.UpdateHistoryList]: any[] | undefined;
-    [DataWranglerMessages.GetHistogramResponse]: IGetColsResponse;
-    [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
-    [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
-    [InteractiveWindowMessages.LoadTmLanguageRequest]: string;
-    [InteractiveWindowMessages.LoadTmLanguageResponse]: ILoadTmLanguageResponse;
-    [CssMessages.GetMonacoThemeRequest]: { isDark: boolean };
-};
 
 export const IDataWranglerFactory = Symbol('IDataWranglerFactory');
 export interface IDataWranglerFactory {

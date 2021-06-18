@@ -517,6 +517,6 @@
     "DataScience.dataWranglerWithJupyterNotebook": "Open Data Wrangler with Jupyter Notebook",
     "DataScience.dataWranglerStandaloneLoading": "Importing Data and Launching Data Wrangler...",
     "DataScience.dataWranglerWithJupyterNotebookLoading": "Importing Data and Launching Data Wrangler with a Jupyter Notebook...",
-    "DataScience.dataWranglerTitle": "Data Wrangler - {0}",
+    "DataScience.dataWranglerTitle": "Data Wrangler",
     "DataScience.dataWranglerFailedToShowMessage": "Failed to create the Data Wrangler. Check the Jupyter tab of the Output window for more info."
 }

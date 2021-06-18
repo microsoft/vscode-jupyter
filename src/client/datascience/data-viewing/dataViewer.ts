@@ -36,12 +36,12 @@ const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
 const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
 export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements IDataViewer, IDisposable {
-    private dataProvider: IDataViewerDataProvider | undefined;
-    private rowsTimer: StopWatch | undefined;
-    private pendingRowsCount: number = 0;
-    private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
-    private currentSliceExpression: string | undefined;
-    private sentDataViewerSliceDimensionalityTelemetry = false;
+    protected dataProvider: IDataViewerDataProvider | undefined;
+    protected rowsTimer: StopWatch | undefined;
+    protected pendingRowsCount: number = 0;
+    protected dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
+    protected currentSliceExpression: string | undefined;
+    protected sentDataViewerSliceDimensionalityTelemetry = false;
 
     public get active() {
         return !!this.webPanel?.isActive();
@@ -59,14 +59,22 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     private _onDidChangeDataViewerViewState = new EventEmitter<void>();
 
     constructor(
-        @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
+        @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
+        dir: string = dataExplorerDir,
+        jsFilePath: string[] = [
+            path.join(dataExplorerDir, 'commons.initial.bundle.js'),
+            path.join(dataExplorerDir, 'dataExplorer.js')
+        ],
+        title: string = localize.DataScience.dataExplorerTitle(),
+        preferredViewGroup: string = PREFERRED_VIEWGROUP,
+        defaultViewColumn: ViewColumn = ViewColumn.One
     ) {
         super(
             configuration,
@@ -75,10 +83,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             themeFinder,
             workspaceService,
             (c, v, d) => new DataViewerMessageListener(c, v, d),
-            dataExplorerDir,
-            [path.join(dataExplorerDir, 'commons.initial.bundle.js'), path.join(dataExplorerDir, 'dataExplorer.js')],
-            localize.DataScience.dataExplorerTitle(),
-            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One,
+            dir,
+            jsFilePath,
+            title,
+            globalMemento.get(preferredViewGroup) ?? defaultViewColumn,
             useCustomEditorApi
         );
         this.onDidDispose(this.dataViewerDisposed, this);
@@ -92,23 +100,27 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             // Load the web panel using our current directory as we don't expect to load any other files
             await super.loadWebview(process.cwd()).catch(traceError);
 
-            super.setTitle(title);
-
-            // Then show our web panel. Eventually we need to consume the data
-            await super.show(true);
-
-            let dataFrameInfo = await this.prepDataFrameInfo();
-
-            // If higher dimensional data, preselect a slice to show
-            if (dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
-                this.maybeSendSliceDataDimensionalityTelemetry(dataFrameInfo.shape.length);
-                const slice = preselectedSliceExpression(dataFrameInfo.shape);
-                dataFrameInfo = await this.getDataFrameInfo(slice);
-            }
-
-            // Send a message with our data
-            this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+            await this.showInitialData(title);
         }
+    }
+
+    protected async showInitialData(title: string) {
+        super.setTitle(title);
+
+        // Then show our web panel. Eventually we need to consume the data
+        await super.show(true);
+
+        let dataFrameInfo = await this.prepDataFrameInfo();
+
+        // If higher dimensional data, preselect a slice to show
+        if (dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
+            this.maybeSendSliceDataDimensionalityTelemetry(dataFrameInfo.shape.length);
+            const slice = preselectedSliceExpression(dataFrameInfo.shape);
+            dataFrameInfo = await this.getDataFrameInfo(slice);
+        }
+
+        // Send a message with our data
+        this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
     }
 
     private dataViewerDisposed() {

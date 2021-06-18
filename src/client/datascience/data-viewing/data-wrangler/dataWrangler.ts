@@ -28,30 +28,23 @@ import {
 } from '../../../common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../../common/constants';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
-import { GLOBAL_MEMENTO, IConfigurationService, IDisposable, IMemento, Resource } from '../../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposable, IMemento } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
-import { noop } from '../../../common/utils/misc';
-import { Commands, HelpLinks, Identifiers } from '../../constants';
-import { JupyterDataRateLimitError } from '../../jupyter/jupyterDataRateLimitError';
+import { Commands, Identifiers } from '../../constants';
 import {
     ICodeCssGenerator,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditorProvider,
-    IThemeFinder,
-    WebViewViewChangeEventArgs
+    IThemeFinder
 } from '../../types';
-import { WebviewPanelHost } from '../../webviews/webviewPanelHost';
-import { isValidSliceExpression, preselectedSliceExpression } from '../../../../datascience-ui/data-explorer/helpers';
 import { addNewCellAfter, updateCellCode } from '../../notebook/helpers/executionHelpers';
 import { InteractiveWindowMessages } from '../../interactive-common/interactiveWindowTypes';
 import { serializeLanguageConfiguration } from '../../interactive-common/serialization';
 import { CssMessages } from '../../messages';
-import { IDataFrameInfo, IDataViewerDataProvider, IGetRowsRequest, IGetSliceRequest } from '../types';
-import { DataWranglerMessageListener } from './dataWranglerMessageListener';
+import { DataViewerMessages, IDataViewerDataProvider } from '../types';
 import {
-    IDataWranglerMapping,
     IDataWrangler,
     DataWranglerMessages,
     DataWranglerCommands,
@@ -65,14 +58,12 @@ import {
     OpenDataWranglerSetting
 } from './types';
 import { DataScience } from '../../../common/utils/localize';
+import { DataViewer } from '../dataViewer';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataWranglerPreferredViewColumn';
 const dataWranglerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
-export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> implements IDataWrangler, IDisposable {
-    private dataProvider: IDataViewerDataProvider | undefined;
-    private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
-    private currentSliceExpression: string | undefined;
+export class DataWrangler extends DataViewer implements IDataWrangler, IDisposable {
     private variableCounter = 0;
     private existingDisposable: Disposable | undefined;
     private historyList: IHistoryItem[] = [];
@@ -94,12 +85,12 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
     private _onDidChangeDataWranglerViewState = new EventEmitter<void>();
 
     constructor(
-        @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
+        @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IApplicationShell) private applicationShell: IApplicationShell,
+        @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
         @inject(ICommandManager) private commandManager: ICommandManager,
@@ -117,12 +108,14 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
             cssGenerator,
             themeFinder,
             workspaceService,
-            (c, v, d) => new DataWranglerMessageListener(c, v, d),
+            applicationShell,
+            useCustomEditorApi,
+            globalMemento,
             dataWranglerDir,
             [path.join(dataWranglerDir, 'commons.initial.bundle.js'), path.join(dataWranglerDir, 'dataWrangler.js')],
-            localize.DataScience.dataExplorerTitle(),
-            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One,
-            useCustomEditorApi
+            localize.DataScience.dataWranglerTitle(),
+            PREFERRED_VIEWGROUP,
+            ViewColumn.Two
         );
         this.onDidDispose(this.dataWranglerDisposed, this);
     }
@@ -130,7 +123,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
     public async showData(
         dataProvider: IDataViewerDataProvider,
         title: string,
-        webviewPanel: WebviewPanel
+        webviewPanel?: WebviewPanel
     ): Promise<void> {
         if (!this.isDisposed) {
             // Save the data provider
@@ -139,22 +132,8 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
             // Load the web panel using our current directory as we don't expect to load any other files
             await super.loadWebview(process.cwd(), webviewPanel).catch(traceError);
 
-            super.setTitle(title);
-
-            // Then show our web panel. Eventually we need to consume the data
-            await super.show(true);
-
-            let dataFrameInfo = await this.getDataFrameInfo();
-            this.sourceFile = dataFrameInfo.sourceFile;
-
-            // If higher dimensional data, preselect a slice to show
-            if (dataFrameInfo.shape && dataFrameInfo.shape.length > 2) {
-                const slice = preselectedSliceExpression(dataFrameInfo.shape);
-                dataFrameInfo = await this.getDataFrameInfo(slice);
-            }
-
-            // Send a message with our data
-            this.postMessage(DataWranglerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+            // Use Data Viewer logic to show initial data
+            await this.showInitialData(title);
 
             this.historyList.push({
                 transformation: 'Imported data',
@@ -195,7 +174,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         const dataFrameInfo = await this.dataFrameInfoPromise;
         super.setTitle(`Data Wrangler`);
 
-        this.postMessage(DataWranglerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+        this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
     }
 
     public async getHistoryItem(index: number) {
@@ -204,74 +183,15 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         void this.updateWithNewVariable(variableName);
     }
 
-    public async refreshData() {
-        const currentSliceExpression = this.currentSliceExpression;
-        // Clear our cached info promise
-        this.dataFrameInfoPromise = undefined;
-        // Then send a refresh data payload
-        // At this point, variable shape or type may have changed
-        // such that previous slice expression is no longer valid
-        let dataFrameInfo = await this.getDataFrameInfo(undefined, true);
-        // Check whether the previous slice expression is valid WRT the new shape
-        if (currentSliceExpression !== undefined && dataFrameInfo.shape !== undefined) {
-            if (isValidSliceExpression(currentSliceExpression, dataFrameInfo.shape)) {
-                dataFrameInfo = await this.getDataFrameInfo(currentSliceExpression);
-            } else {
-                // Previously applied slice expression isn't valid anymore
-                // Generate a preselected slice
-                const newSlice = preselectedSliceExpression(dataFrameInfo.shape);
-                dataFrameInfo = await this.getDataFrameInfo(newSlice);
-            }
-        }
-        traceInfo(`Refreshing data viewer for variable ${dataFrameInfo.name}`);
-        // Send a message with our data
-        this.postMessage(DataWranglerMessages.InitializeData, dataFrameInfo).ignoreErrors();
-    }
-
-    public dispose(): void {
-        super.dispose();
-
-        if (this.dataProvider) {
-            // Call dispose on the data provider
-            this.dataProvider.dispose();
-            this.dataProvider = undefined;
-        }
-    }
-
-    protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
-        if (args.current.active && args.current.visible && args.previous.active && args.current.visible) {
-            await this.globalMemento.update(PREFERRED_VIEWGROUP, this.webPanel?.viewColumn);
-        }
-        this._onDidChangeDataWranglerViewState.fire();
-    }
-
-    protected get owningResource(): Resource {
-        return undefined;
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
-            case DataWranglerMessages.GetAllRowsRequest:
-                this.getAllRows(payload as string).ignoreErrors();
-                break;
-
-            case DataWranglerMessages.GetRowsRequest:
-                this.getRowChunk(payload as IGetRowsRequest).ignoreErrors();
-                break;
-
-            case DataWranglerMessages.GetSliceRequest:
-                this.getSlice(payload as IGetSliceRequest).ignoreErrors();
-                break;
-
             case DataWranglerMessages.SubmitCommand:
                 this.handleCommand(payload).ignoreErrors();
                 break;
 
             case DataWranglerMessages.RefreshDataWrangler:
                 this.refreshData().ignoreErrors();
-                // TODOV Telemetry
-                // void sendTelemetryEvent(Telemetry.RefreshDataWrangler);
                 break;
 
             case InteractiveWindowMessages.LoadTmLanguageRequest:
@@ -290,6 +210,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
                 break;
         }
 
+        // Some messages will be handled by DataViewer
         super.onMessage(message, payload);
     }
 
@@ -329,73 +250,6 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
                 traceWarning('Onigasm file not found. Colorization will not be available.');
                 this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
             }
-        }
-    }
-
-    private getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo> {
-        // If requesting a new slice, refresh our cached info promise
-        if (!this.dataFrameInfoPromise || sliceExpression !== this.currentSliceExpression) {
-            this.dataFrameInfoPromise = this.dataProvider
-                ? this.dataProvider.getDataFrameInfo(sliceExpression, isRefresh)
-                : Promise.resolve({});
-            this.currentSliceExpression = sliceExpression;
-        }
-        return this.dataFrameInfoPromise;
-    }
-
-    private async getAllRows(sliceExpression?: string) {
-        return this.wrapRequest(async () => {
-            if (this.dataProvider) {
-                const allRows = await this.dataProvider.getAllRows(sliceExpression);
-                return this.postMessage(DataWranglerMessages.GetAllRowsResponse, allRows);
-            }
-        });
-    }
-
-    private getSlice(request: IGetSliceRequest) {
-        return this.wrapRequest(async () => {
-            if (this.dataProvider) {
-                const payload = await this.getDataFrameInfo(request.slice);
-                return this.postMessage(DataWranglerMessages.InitializeData, payload);
-            }
-        });
-    }
-
-    private getRowChunk(request: IGetRowsRequest) {
-        return this.wrapRequest(async () => {
-            if (this.dataProvider) {
-                const dataFrameInfo = await this.getDataFrameInfo(request.sliceExpression);
-                const rows = await this.dataProvider.getRows(
-                    request.start,
-                    Math.min(request.end, dataFrameInfo.rowCount ? dataFrameInfo.rowCount : 0),
-                    request.sliceExpression
-                );
-                return this.postMessage(DataWranglerMessages.GetRowsResponse, {
-                    rows,
-                    start: request.start,
-                    end: request.end
-                });
-            }
-        });
-    }
-
-    private async wrapRequest(func: () => Promise<void>) {
-        try {
-            return func();
-        } catch (e) {
-            if (e instanceof JupyterDataRateLimitError) {
-                traceError(e);
-                const actionTitle = localize.DataScience.pythonInteractiveHelpLink();
-                this.applicationShell.showErrorMessage(e.toString(), actionTitle).then((v) => {
-                    // User clicked on the link, open it.
-                    if (v === actionTitle) {
-                        this.applicationShell.openUrl(HelpLinks.JupyterDataRateHelpLink);
-                    }
-                }, noop);
-                this.dispose();
-            }
-            traceError(e);
-            this.applicationShell.showErrorMessage(e).then(noop, noop);
         }
     }
 

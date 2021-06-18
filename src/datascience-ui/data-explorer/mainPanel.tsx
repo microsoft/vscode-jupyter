@@ -427,6 +427,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Set of columns to update based on this batch of rows
         const columnsToUpdate = new Set<string>();
         // Make sure we have an index field and all rows have an item
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const normalizedRows = rows.map((r: any | undefined, idx: number) => {
             if (!r) {
                 r = {};
@@ -467,6 +468,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             columns
                 .filter((column) => column.name && columnsToUpdate.has(column.name))
                 .forEach((column) => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (column as any).type = ColumnType.Number;
                 });
             this.updateColumns(columns);
@@ -480,6 +482,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private updateRows(newRows: ISlickRow[]) {
         if (this.updateTimeout !== undefined) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             clearTimeout(this.updateTimeout as any);
             this.updateTimeout = undefined;
         }

@@ -3,9 +3,11 @@
 'use strict';
 
 import { IDisposable } from '../../common/types';
-import { SharedMessages } from '../messages';
-import { Event } from 'vscode';
+import { CssMessages, SharedMessages } from '../messages';
+import { Event, WebviewPanel } from 'vscode';
 import { SliceOperationSource } from '../../telemetry/constants';
+import { DataWranglerMessages } from './data-wrangler/types';
+import { ILoadTmLanguageResponse, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -67,6 +69,20 @@ export type IDataViewerMapping = {
     [DataViewerMessages.GetSliceRequest]: IGetSliceRequest;
     [DataViewerMessages.RefreshDataViewer]: never | undefined;
     [DataViewerMessages.SliceEnablementStateChanged]: { newState: boolean };
+
+    // For Data Wrangler specifically
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [DataWranglerMessages.SubmitCommand]: { command: string; args: any };
+    [DataWranglerMessages.RefreshDataWrangler]: never | undefined;
+    [DataWranglerMessages.SliceEnablementStateChanged]: { newState: boolean };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [DataWranglerMessages.UpdateHistoryList]: any[] | undefined;
+    [DataWranglerMessages.GetHistogramResponse]: IGetColsResponse;
+    [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
+    [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
+    [InteractiveWindowMessages.LoadTmLanguageRequest]: string;
+    [InteractiveWindowMessages.LoadTmLanguageResponse]: ILoadTmLanguageResponse;
+    [CssMessages.GetMonacoThemeRequest]: { isDark: boolean };
 };
 
 export interface IDataFrameInfo {
@@ -118,6 +134,7 @@ export interface IDataViewer extends IDisposable {
     readonly active: boolean;
     readonly onDidDisposeDataViewer: Event<IDataViewer>;
     readonly onDidChangeDataViewerViewState: Event<void>;
-    showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
+
+    showData(dataProvider: IDataViewerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<void>;
     refreshData(): Promise<void>;
 }

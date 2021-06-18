@@ -11,7 +11,9 @@ import {
     CellFetchSizeFirst,
     CellFetchSizeSubsequent,
     ColumnType,
+    DataViewerMessages,
     IDataFrameInfo,
+    IDataViewerMapping,
     IGetColsResponse,
     IGetRowsResponse,
     IGetSliceRequest,
@@ -41,7 +43,6 @@ import { createDeferred } from '../../../client/common/utils/async';
 import {
     DataWranglerCommands,
     DataWranglerMessages,
-    IDataWranglerMapping
 } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow } from '../reactSlickGrid';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
@@ -152,13 +153,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.addHandler(this);
 
         // Tell the dataviewer code we have started.
-        this.postOffice.sendMessage<IDataWranglerMapping>(InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
-        this.postOffice.sendMessage<IDataWranglerMapping>(InteractiveWindowMessages.LoadTmLanguageRequest);
-        this.postOffice.sendMessage<IDataWranglerMapping>(CssMessages.GetMonacoThemeRequest, {
+        this.postOffice.sendMessage<IDataViewerMapping>(InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
+        this.postOffice.sendMessage<IDataViewerMapping>(InteractiveWindowMessages.LoadTmLanguageRequest);
+        this.postOffice.sendMessage<IDataViewerMapping>(CssMessages.GetMonacoThemeRequest, {
             isDark: this.props.baseTheme !== 'vscode-light'
         });
 
-        this.postOffice.sendMessage<IDataWranglerMapping>(DataWranglerMessages.Started);
+        this.postOffice.sendMessage<IDataViewerMapping>(DataViewerMessages.Started);
     }
 
     public componentWillUnmount() {
@@ -175,7 +176,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // can guarantee our render will run before somebody checks our rendered output.
         if (this.state.totalRowCount && this.state.totalRowCount === this.state.fetchedRowCount && !this.sentDone) {
             this.sentDone = true;
-            this.sendMessage(DataWranglerMessages.CompletedData);
+            this.sendMessage(DataViewerMessages.CompletedData);
         }
 
         const progressBar = this.state.totalRowCount > this.state.fetchedRowCount ? <Progress /> : undefined;
@@ -244,15 +245,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
-            case DataWranglerMessages.InitializeData:
+            case DataViewerMessages.InitializeData:
                 this.initializeData(payload);
                 break;
 
-            case DataWranglerMessages.GetAllRowsResponse:
+            case DataViewerMessages.GetAllRowsResponse:
                 this.handleGetAllRowsResponse(payload as IRowsResponse);
                 break;
 
-            case DataWranglerMessages.GetRowsResponse:
+            case DataViewerMessages.GetRowsResponse:
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
 
@@ -424,7 +425,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Instead, do them one at a time.
         const chunkEnd = startIndex + Math.min(this.rowFetchSizeFirst, endIndex);
         const chunkStart = startIndex;
-        this.sendMessage(DataWranglerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd, sliceExpression });
+        this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd, sliceExpression });
     }
 
     private handleGetHistogram(response: IGetColsResponse) {
@@ -473,7 +474,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (newFetched < this.state.totalRowCount) {
             const chunkStart = response.end;
             const chunkEnd = Math.min(chunkStart + this.rowFetchSizeSubsequent, this.state.totalRowCount);
-            this.sendMessage(DataWranglerMessages.GetRowsRequest, {
+            this.sendMessage(DataViewerMessages.GetRowsRequest, {
                 start: chunkStart,
                 end: chunkEnd,
                 sliceExpression: this.state.sliceExpression
@@ -580,7 +581,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return normalizedRows;
     }
 
-    private sendMessage<M extends IDataWranglerMapping, T extends keyof M>(type: T, payload?: M[T]) {
+    private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 
@@ -602,7 +603,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleSliceRequest = (args: IGetSliceRequest) => {
         // Fetching a slice is expensive so debounce requests
-        this.debounceRequest(DataWranglerMessages.GetSliceRequest, args);
+        this.debounceRequest(DataViewerMessages.GetSliceRequest, args);
     };
 
     private handleRefreshRequest = () => {

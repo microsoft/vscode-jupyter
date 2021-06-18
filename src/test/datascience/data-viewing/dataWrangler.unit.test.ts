@@ -67,8 +67,8 @@ suite('DataScience - DataWrangler', () => {
         when(dataProvider.getDataFrameInfo(anything(), anything())).thenResolve({});
 
         dataWrangler = new DataWrangler(
-            instance(webPanelProvider),
             instance(configService),
+            instance(webPanelProvider),
             instance(codeCssGenerator),
             instance(themeFinder),
             instance(workspaceService),

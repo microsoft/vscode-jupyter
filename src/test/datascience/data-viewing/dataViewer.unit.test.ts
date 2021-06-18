@@ -51,8 +51,8 @@ suite('DataScience - DataViewer', () => {
         when(dataProvider.getDataFrameInfo(anything(), anything())).thenResolve({});
 
         dataViewer = new DataViewer(
-            instance(webPanelProvider),
             instance(configService),
+            instance(webPanelProvider),
             instance(codeCssGenerator),
             instance(themeFinder),
             instance(workspaceService),
