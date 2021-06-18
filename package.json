@@ -271,8 +271,8 @@
         ],
         "commands": [
             {
-                "command": "david.toggleDebugging",
-                "title": "Toggle Notebook Debugging",
+                "command": "jupyter.debugCell",
+                "title": "Debug Cell",
                 "icon": "$(bug)",
                 "category": "Jupyter"
             },
@@ -1854,8 +1854,8 @@
         },
         "debuggers": [
             {
-                "type": "xeus",
-                "label": "xeus Debug"
+                "type": "kernel",
+                "label": "Kernel Debug"
             }
         ]
     },

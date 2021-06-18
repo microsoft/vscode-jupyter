@@ -48,8 +48,8 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                 this.fixBreakpoints(document);
             }),
 
-            // factory for xeus debug adapters
-            vscode.debug.registerDebugAdapterDescriptorFactory('xeus', {
+            // factory for kernel debug adapters
+            vscode.debug.registerDebugAdapterDescriptorFactory('kernel', {
                 createDebugAdapterDescriptor: async (session) => {
                     const activeDoc = vscode.window.activeNotebookEditor!.document;
                     const debug = await this.getDebuggerByUri(activeDoc);
@@ -172,7 +172,7 @@ class Debugger {
 
             vscode.debug
                 .startDebugging(undefined, {
-                    type: 'xeus',
+                    type: 'kernel',
                     name: `${path.basename(document.uri.toString())}`,
                     request: 'attach',
                     internalConsoleOptions: 'neverOpen',

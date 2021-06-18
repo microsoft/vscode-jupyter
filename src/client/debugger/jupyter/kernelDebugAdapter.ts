@@ -43,8 +43,8 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
             }
         }
 
-        // map Source paths from VS Code to Xeus
-        visitSources(message, (source) => {
+        // map Source paths from VS Code to Ipykernel temp files
+        this.getMessageSourceAndHookIt(message, (source) => {
             if (source && source.path) {
                 const p = this.cellToFile.get(source.path);
                 if (p) {
@@ -64,7 +64,7 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
 
             if (control) {
                 control.onReply = (msg) => {
-                    visitSources(msg.content, (source) => {
+                    this.getMessageSourceAndHookIt(msg.content, (source) => {
                         if (source && source.path) {
                             const cell = this.fileToCell.get(source.path);
                             if (cell) {
@@ -80,7 +80,7 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
                     this.sendMessage.fire(msg.content);
                 };
                 control.onIOPub = (msg) => {
-                    visitSources(msg.content as DebugProtocol.ProtocolMessage, (source) => {
+                    this.getMessageSourceAndHookIt(msg.content as DebugProtocol.ProtocolMessage, (source) => {
                         if (source && source.path) {
                             const cell = this.fileToCell.get(source.path);
                             if (cell) {
@@ -96,7 +96,7 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
                     this.sendMessage.fire(msg.content);
                 };
                 control.onStdin = (msg) => {
-                    visitSources(msg.content as DebugProtocol.ProtocolMessage, (source) => {
+                    this.getMessageSourceAndHookIt(msg.content as DebugProtocol.ProtocolMessage, (source) => {
                         if (source && source.path) {
                             const cell = this.fileToCell.get(source.path);
                             if (cell) {
@@ -148,83 +148,82 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
             }
         }
     }
-}
 
-// this vistor could be moved into the DAP npm module (it must be kept in sync with the DAP spec)
-function visitSources(
-    msg: DebugProtocol.ProtocolMessage,
-    sourceHook: (source: DebugProtocol.Source | undefined) => void
-): void {
-    switch (msg.type) {
-        case 'event':
-            const event = msg as DebugProtocol.Event;
-            switch (event.event) {
-                case 'output':
-                    sourceHook((event as DebugProtocol.OutputEvent).body.source);
-                    break;
-                case 'loadedSource':
-                    sourceHook((event as DebugProtocol.LoadedSourceEvent).body.source);
-                    break;
-                case 'breakpoint':
-                    sourceHook((event as DebugProtocol.BreakpointEvent).body.breakpoint.source);
-                    break;
-                default:
-                    break;
-            }
-            break;
-        case 'request':
-            const request = msg as DebugProtocol.Request;
-            switch (request.command) {
-                case 'setBreakpoints':
-                    sourceHook((request.arguments as DebugProtocol.SetBreakpointsArguments).source);
-                    break;
-                case 'breakpointLocations':
-                    sourceHook((request.arguments as DebugProtocol.BreakpointLocationsArguments).source);
-                    break;
-                case 'source':
-                    sourceHook((request.arguments as DebugProtocol.SourceArguments).source);
-                    break;
-                case 'gotoTargets':
-                    sourceHook((request.arguments as DebugProtocol.GotoTargetsArguments).source);
-                    break;
-                default:
-                    break;
-            }
-            break;
-        case 'response':
-            const response = msg as DebugProtocol.Response;
-            if (response.success && response.body) {
-                switch (response.command) {
-                    case 'stackTrace':
-                        (response as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((frame) =>
-                            sourceHook(frame.source)
-                        );
+    private getMessageSourceAndHookIt(
+        msg: DebugProtocol.ProtocolMessage,
+        sourceHook: (source: DebugProtocol.Source | undefined) => void
+    ): void {
+        switch (msg.type) {
+            case 'event':
+                const event = msg as DebugProtocol.Event;
+                switch (event.event) {
+                    case 'output':
+                        sourceHook((event as DebugProtocol.OutputEvent).body.source);
                         break;
-                    case 'loadedSources':
-                        (response as DebugProtocol.LoadedSourcesResponse).body.sources.forEach((source) =>
-                            sourceHook(source)
-                        );
+                    case 'loadedSource':
+                        sourceHook((event as DebugProtocol.LoadedSourceEvent).body.source);
                         break;
-                    case 'scopes':
-                        (response as DebugProtocol.ScopesResponse).body.scopes.forEach((scope) =>
-                            sourceHook(scope.source)
-                        );
-                        break;
-                    case 'setFunctionBreakpoints':
-                        (response as DebugProtocol.SetFunctionBreakpointsResponse).body.breakpoints.forEach((bp) =>
-                            sourceHook(bp.source)
-                        );
-                        break;
-                    case 'setBreakpoints':
-                        (response as DebugProtocol.SetBreakpointsResponse).body.breakpoints.forEach((bp) =>
-                            sourceHook(bp.source)
-                        );
+                    case 'breakpoint':
+                        sourceHook((event as DebugProtocol.BreakpointEvent).body.breakpoint.source);
                         break;
                     default:
                         break;
                 }
-            }
-            break;
+                break;
+            case 'request':
+                const request = msg as DebugProtocol.Request;
+                switch (request.command) {
+                    case 'setBreakpoints':
+                        sourceHook((request.arguments as DebugProtocol.SetBreakpointsArguments).source);
+                        break;
+                    case 'breakpointLocations':
+                        sourceHook((request.arguments as DebugProtocol.BreakpointLocationsArguments).source);
+                        break;
+                    case 'source':
+                        sourceHook((request.arguments as DebugProtocol.SourceArguments).source);
+                        break;
+                    case 'gotoTargets':
+                        sourceHook((request.arguments as DebugProtocol.GotoTargetsArguments).source);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case 'response':
+                const response = msg as DebugProtocol.Response;
+                if (response.success && response.body) {
+                    switch (response.command) {
+                        case 'stackTrace':
+                            (response as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((frame) =>
+                                sourceHook(frame.source)
+                            );
+                            break;
+                        case 'loadedSources':
+                            (response as DebugProtocol.LoadedSourcesResponse).body.sources.forEach((source) =>
+                                sourceHook(source)
+                            );
+                            break;
+                        case 'scopes':
+                            (response as DebugProtocol.ScopesResponse).body.scopes.forEach((scope) =>
+                                sourceHook(scope.source)
+                            );
+                            break;
+                        case 'setFunctionBreakpoints':
+                            (response as DebugProtocol.SetFunctionBreakpointsResponse).body.breakpoints.forEach((bp) =>
+                                sourceHook(bp.source)
+                            );
+                            break;
+                        case 'setBreakpoints':
+                            (response as DebugProtocol.SetBreakpointsResponse).body.breakpoints.forEach((bp) =>
+                                sourceHook(bp.source)
+                            );
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                break;
+        }
     }
 }
 
