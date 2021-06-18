@@ -169,7 +169,7 @@ export namespace Commands {
     export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
     export const InteractiveGoToCode = 'jupyter.interactive.goToCode';
     export const InteractiveExportFileAsNotebook = 'jupyter.interactive.exportfileasnotebook';
-    export const InteractiveExportAs = 'jupyter.interactive.exportAs';
+    export const InteractiveExportAs = 'jupyter.interactive.exportas';
 }
 
 export namespace CodeLensCommands {

@@ -24,7 +24,7 @@ import {
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { generateCellsFromDocument } from '../cellFactory';
+import { generateCells, generateCellsFromDocument } from '../cellFactory';
 import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
 import {
@@ -116,28 +116,27 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             this._submitters.push(owner);
         }
 
-        this.notebookControllerManager.onNotebookControllerSelected(async (e: { notebook: NotebookDocument, controller: VSCodeNotebookController }) => {
+        this.notebookControllerManager.onNotebookControllerSelected((e: { notebook: NotebookDocument, controller: VSCodeNotebookController }) => {
             if (e.notebook.uri.toString() !== this._notebookUri.toString()) {
                 return;
             }
             
             // Clear cached variables when the selected controller for this document changes
-            e.controller.controller.onDidChangeSelectedNotebooks(async (selectedEvent: { notebook: NotebookDocument, selected: boolean }) => {
-                const isMatchingNotebook = selectedEvent.notebook.uri.toString() === this._notebookUri.toString();
-                if (selectedEvent.selected === false && isMatchingNotebook) {
+            e.controller.controller.onDidChangeSelectedNotebooks((selectedEvent: { notebook: NotebookDocument, selected: boolean }) => {
+                if (selectedEvent.selected === false) {
                     this.kernelLoadPromise = undefined;
                     this.kernel = undefined;
                     this.notebookController = undefined;
-                } else if (selectedEvent.selected === true && isMatchingNotebook) {
-                    // Try to initialize a real kernel ASAP
-                    await this.ensureKernel(e.notebook, e.controller);
+                } else {
+                    this.registerKernel(e.notebook, e.controller);
                 }
             });
 
+            this.registerKernel(e.notebook, e.controller);
         });
     }
 
-    private async ensureKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
+    private registerKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
         const kernel = this.kernelProvider.getOrCreate(notebookDocument.uri, {
             metadata: controller.connection,
             controller: controller.controller
@@ -145,7 +144,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         this.kernelLoadPromise = kernel?.start({ disableUI: false, document: notebookDocument });
         this.kernel = kernel;
         this.notebookController = controller;
-        await this.kernelLoadPromise;
     }
 
     // Until we get an InteractiveEditor instance back from VS Code we
@@ -441,8 +439,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return true;
         }
         
-        await this.ensureKernel(notebookDocument, this.notebookController);
-
+        this.registerKernel(notebookDocument, this.notebookController);
+        await this.kernelLoadPromise;
 
         // Insert code cell into NotebookDocument
         const edit = new WorkspaceEdit();
@@ -586,7 +584,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return;
         }
 
-        const cells = notebookDocument.getCells().reduce((cells: ICell[], cell) => cells.concat(generateCellsFromDocument(cell.document)), []);
+        const cells = notebookDocument.getCells().reduce((cells: ICell[], cell) => {
+            const generatedCells = generateCells(undefined, cell.document.getText(), '', 0, false, uuid());
+            return cells.concat(generatedCells);
+        }, []);
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };

@@ -633,7 +633,7 @@
                     "light": "resources/light/interrupt.svg",
                     "dark": "resources/dark/interrupt.svg"
                 },
-                "enablement": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
+                "enablement": "notebookType == 'interactive' || notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
             },
             {
                 "command": "jupyter.notebookeditor.restartkernel",
@@ -644,7 +644,7 @@
                     "light": "resources/light/restart-kernel.svg",
                     "dark": "resources/dark/restart-kernel.svg"
                 },
-                "enablement": "jupyter.notebookeditor.canrestartNotebookkernel && isWorkspaceTrusted"
+                "enablement": "notebookType == 'interactive' || jupyter.notebookeditor.canrestartNotebookkernel && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
