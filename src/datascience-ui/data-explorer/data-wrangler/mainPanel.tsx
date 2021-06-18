@@ -42,7 +42,7 @@ import { Tokenizer } from '../../interactive-common/tokenizer';
 import { createDeferred } from '../../../client/common/utils/async';
 import {
     DataWranglerCommands,
-    DataWranglerMessages,
+    DataWranglerMessages
 } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow } from '../reactSlickGrid';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
