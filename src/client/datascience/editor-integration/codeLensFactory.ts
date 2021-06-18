@@ -353,6 +353,12 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         commandName: string,
         isFirst: boolean
     ): CodeLens | undefined {
+        // Do not generate interactive window codelenses
+        // for TextDocuments which are part of NotebookDocuments
+        if (document.notebook !== undefined) {
+            return;
+        }
+
         // We only support specific commands
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.
