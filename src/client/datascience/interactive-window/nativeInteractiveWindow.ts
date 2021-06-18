@@ -29,12 +29,12 @@ import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '..
 import { ExportFormat, IExportDialog } from '../export/types';
 import {
     INotebookIdentity,
-    ISubmitNewCell} from '../interactive-common/interactiveWindowTypes';
+    ISubmitNewCell
+} from '../interactive-common/interactiveWindowTypes';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
 import { INotebookControllerManager } from '../notebook/types';
-import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import {
     CellState,
@@ -87,13 +87,11 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private kernel: IKernel | undefined;
     private isDisposed = false;
     private restartingKernel = false;
-    private loadKernelPromise: Promise<void> | undefined;
 
     constructor(
         private readonly applicationShell: IApplicationShell,
         private readonly documentManager: IDocumentManager,
         private readonly statusProvider: IStatusProvider,
-        private readonly disposables: IDisposableRegistry,
         private readonly fs: IFileSystem,
         private readonly configuration: IConfigurationService,
         private readonly commandManager: ICommandManager,
@@ -115,9 +113,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
         // For now, VS Code returns us the NotebookDocument URI and the InputEditor URI from this command
         this.loadPromise = this.commandManager.executeCommand('interactive.open', ViewColumn.Beside) as Thenable<INativeInteractiveWindow>;
-
-        // Listen for when a notebook controller is selected for the NotebookDocument
-        this.notebookControllerManager.onNotebookControllerSelected(this.handleNotebookControllerSelected, this, this.disposables);
     }
 
     // Until we get an InteractiveEditor instance back from VS Code we
@@ -168,34 +163,39 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    private async handleNotebookControllerSelected(e: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
-        // Ensure the controller was selected for the InteractiveEditor
-        const { notebook } = e;
-        if (notebook.notebookType !== InteractiveWindowView) {
-            return;
-        }
-
-        // Ensure the controller was selected for our notebook
-        const notebookDocument = await this.tryGetMatchingNotebookDocument();
-        if (notebookDocument !== notebook) {
-            return;
-        }
-
-        // Update the cached kernel for this controller
-        this.kernel = this.kernelProvider.getOrCreate(notebookDocument.uri, {
-            metadata: e.controller.connection,
-            controller: e.controller.controller
-        });
-
-        this.loadKernelPromise = this.kernel?.start({ disableUI: false, document: notebookDocument });
-    }
-
     private async getOrCreateInteractiveEditor(): Promise<NotebookDocument> {
         // Ensure all notebook controllers are loaded so that
         // interactive window execution requests are properly handled
         await this.notebookControllerManager.loadNotebookControllers();
 
         let { notebookUri } = await this.loadPromise;
+
+        const loadKernelPromise = new Promise<void>(resolve => {
+            const listener = this.notebookControllerManager.onNotebookControllerSelected(async e => {
+                const { notebook } = e;
+                if (notebook.notebookType !== InteractiveWindowView) {
+                    return;
+                }
+
+                // Ensure the controller was selected for our notebook
+                const notebookDocument = await this.tryGetMatchingNotebookDocument();
+                if (notebookDocument !== notebook) {
+                    return;
+                }
+
+                // Update the cached kernel for this controller
+                const kernel = this.kernelProvider.getOrCreate(notebookDocument.uri, {
+                    metadata: e.controller.connection,
+                    controller: e.controller.controller
+                });
+
+                await kernel?.start({ disableUI: false, document: notebookDocument });
+                this.kernel = kernel;
+                resolve();
+                listener.dispose();
+            });
+        });
+
         let notebookDocument = workspace.notebookDocuments.find((document) => notebookUri.toString() === document.uri.toString());
 
         // User closed the previous interactive window. Make a new one
@@ -209,6 +209,11 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // We should never get here--this means VS Code failed to create an interactive window
         if (!notebookDocument) {
             throw new Error('Failed to get or create interactive window.');
+        }
+
+        if (!this.kernel || this.kernel.notebook?.resource?.toString() !== notebookDocument.uri.toString()) {
+            // Make sure our kernel has started before we try to put stuff 
+            await loadKernelPromise;
         }
 
         return notebookDocument;
@@ -443,9 +448,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     ): Promise<boolean> {
         // Ensure we always have a notebook document to submit code to
         const notebookDocument = await this.getOrCreateInteractiveEditor();
-
-        // Make sure our kernel has started before we try to put stuff 
-        await this.loadKernelPromise;
 
         // Insert code cell into NotebookDocument
         const edit = new WorkspaceEdit();

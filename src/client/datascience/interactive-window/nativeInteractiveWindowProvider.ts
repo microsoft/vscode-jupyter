@@ -106,7 +106,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
             this.serviceContainer.get<IStatusProvider>(IStatusProvider),
-            this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
             this.serviceContainer.get<IFileSystem>(IFileSystem),
             this.serviceContainer.get<IConfigurationService>(IConfigurationService),
             this.serviceContainer.get<ICommandManager>(ICommandManager),
