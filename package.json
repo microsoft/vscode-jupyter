@@ -788,7 +788,7 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.interactive.export",
+                "command": "jupyter.interactive.exportas",
                 "title": "Export As",
                 "icon": "$(export)",
                 "category": "Jupyter"
@@ -925,7 +925,7 @@
                     "when": "isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.interactive.export",
+                    "command": "jupyter.interactive.exportas",
                     "group": "navigation@5",
                     "when": "isWorkspaceTrusted"
                 }

@@ -561,7 +561,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return;
         }
 
-        const cells = notebookDocument.getCells().reduce((cells: ICell[], cell) => cells.concat(generateCellsFromDocument(cell.document)), []);
+        const cells = notebookDocument.getCells().reduce((cells: ICell[], cell) => {
+            const generatedCells = generateCells(undefined, cell.document.getText(), '', 0, false, uuid());
+            return cells.concat(generatedCells);
+        }, []);
 
         // Should be an array of cells
         if (cells && this.exportDialog) {
