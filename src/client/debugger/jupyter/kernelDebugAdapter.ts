@@ -74,7 +74,7 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
         private readonly jupyterSession: IJupyterSession
     ) {
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
-            // tslint:disable-next-line:no-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((msg.content as any).event === 'stopped') {
                 this.sendMessage.fire(msg.content);
             }
