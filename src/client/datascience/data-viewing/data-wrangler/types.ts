@@ -16,7 +16,6 @@ import {
     IGetSliceRequest,
     IRowsResponse
 } from '../types';
-import { IJupyterVariable, INotebook } from '../../types';
 
 export enum OpenDataWranglerSetting {
     STANDALONE = 'standalone',
@@ -88,7 +87,7 @@ export interface IDataWranglerDataProvider extends IDataViewerDataProvider {
 
 export const IDataWranglerFactory = Symbol('IDataWranglerFactory');
 export interface IDataWranglerFactory {
-    create(dataProvider: IDataWranglerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<IDataWrangler>;
+    create(dataProvider: IDataViewerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<IDataWrangler>;
 }
 
 export const IDataWrangler = Symbol('IDataWrangler');
@@ -96,22 +95,9 @@ export interface IDataWrangler extends IDisposable {
     readonly visible: boolean;
     readonly onDidDisposeDataWrangler: Event<IDataWrangler>;
     readonly onDidChangeDataWranglerViewState: Event<void>;
-    showData(dataProvider: IDataWranglerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<void>;
+    showData(dataProvider: IDataViewerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<void>;
     refreshData(): Promise<void>;
     updateWithNewVariable(newVariableName: string): Promise<void>;
-}
-
-export const IDataWranglerJupyterVariableDataProviderFactory = Symbol(
-    'IDataWranglerJupyterVariableDataProviderFactory'
-);
-export interface IDataWranglerJupyterVariableDataProviderFactory {
-    create(variable: IJupyterVariable, notebook?: INotebook): Promise<IDataWranglerJupyterVariableDataProvider>;
-}
-
-export const IDataWranglerJupyterVariableDataProvider = Symbol('IDataWranglerJupyterVariableDataProvider');
-export interface IDataWranglerJupyterVariableDataProvider extends IDataWranglerDataProvider {
-    notebook: INotebook | undefined;
-    setDependencies(variable: IJupyterVariable, notebook?: INotebook): void;
 }
 
 export interface IHistoryItem {

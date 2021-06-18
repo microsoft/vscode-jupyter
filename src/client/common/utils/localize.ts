@@ -1066,6 +1066,11 @@ export namespace DataScience {
         'DataScience.dataWranglerWithJupyterNotebookLoading',
         'Importing Data and Launching Data Wrangler with a Jupyter Notebook...'
     );
+    export const dataWranglerTitle = localize('DataScience.dataWranglerTitle', 'Data Wrangler - {0}');
+    export const dataWranglerFailedToShowMessage = localize(
+        'DataScience.dataWranglerFailedToShowMessage',
+        'Failed to create the Data Wrangler. Check the Jupyter tab of the Output window for more info.'
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

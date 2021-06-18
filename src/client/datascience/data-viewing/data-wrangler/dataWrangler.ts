@@ -35,6 +35,8 @@ import { Commands, HelpLinks, Identifiers } from '../../constants';
 import { JupyterDataRateLimitError } from '../../jupyter/jupyterDataRateLimitError';
 import {
     ICodeCssGenerator,
+    IJupyterVariableDataProvider,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditorProvider,
     IThemeFinder,
@@ -46,12 +48,11 @@ import { addNewCellAfter, updateCellCode } from '../../notebook/helpers/executio
 import { InteractiveWindowMessages } from '../../interactive-common/interactiveWindowTypes';
 import { serializeLanguageConfiguration } from '../../interactive-common/serialization';
 import { CssMessages } from '../../messages';
-import { IDataFrameInfo, IGetRowsRequest, IGetSliceRequest } from '../types';
+import { IDataFrameInfo, IDataViewerDataProvider, IGetRowsRequest, IGetSliceRequest } from '../types';
 import { DataWranglerMessageListener } from './dataWranglerMessageListener';
 import {
     IDataWranglerMapping,
     IDataWrangler,
-    IDataWranglerDataProvider,
     DataWranglerMessages,
     DataWranglerCommands,
     IRenameColumnsRequest,
@@ -61,9 +62,7 @@ import {
     IFillNaRequest,
     IDropDuplicatesRequest,
     IDropNaRequest,
-    OpenDataWranglerSetting,
-    IDataWranglerJupyterVariableDataProvider,
-    IDataWranglerJupyterVariableDataProviderFactory
+    OpenDataWranglerSetting
 } from './types';
 import { DataScience } from '../../../common/utils/localize';
 
@@ -71,7 +70,7 @@ const PREFERRED_VIEWGROUP = 'JupyterDataWranglerPreferredViewColumn';
 const dataWranglerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
 export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> implements IDataWrangler, IDisposable {
-    private dataProvider: IDataWranglerDataProvider | undefined;
+    private dataProvider: IDataViewerDataProvider | undefined;
     private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
     private currentSliceExpression: string | undefined;
     private variableCounter = 0;
@@ -108,8 +107,8 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         @inject(IJupyterVariables)
         @named(Identifiers.KERNEL_VARIABLES)
         private kernelVariableProvider: IJupyterVariables,
-        @inject(IDataWranglerJupyterVariableDataProviderFactory)
-        private dataProviderFactory: IDataWranglerJupyterVariableDataProviderFactory,
+        @inject(IJupyterVariableDataProviderFactory)
+        private dataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
     ) {
         super(
@@ -129,7 +128,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
     }
 
     public async showData(
-        dataProvider: IDataWranglerDataProvider,
+        dataProvider: IDataViewerDataProvider,
         title: string,
         webviewPanel: WebviewPanel
     ): Promise<void> {
@@ -171,7 +170,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
     }
 
     public async updateWithNewVariable(newVariableName: string) {
-        const notebook = (this.dataProvider as IDataWranglerJupyterVariableDataProvider).notebook;
+        const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
 
         // Generate a variable
         const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
@@ -434,7 +433,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
     }
 
     private async getColumnStats(columnName: string) {
-        if (this.dataProvider && columnName !== undefined) {
+        if (this.dataProvider && this.dataProvider.getCols && columnName !== undefined) {
             const columnData = await this.dataProvider.getCols(columnName);
             void this.postMessage(DataWranglerMessages.GetHistogramResponse, {
                 cols: columnData,
@@ -445,7 +444,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleCommand(payload: { command: string; args: any }) {
-        const notebook = (this.dataProvider as IDataWranglerJupyterVariableDataProvider).notebook;
+        const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
         let historyItem = {} as IHistoryItem;
         let code = '';
         const currentVariableName = (await this.dataFrameInfoPromise)!.name ?? '';

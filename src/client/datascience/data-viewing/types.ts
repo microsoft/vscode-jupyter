@@ -88,11 +88,13 @@ export interface IDataFrameInfo {
     sourceFile?: string; // TODOV: Check if they're the same?
 }
 
+// Used by DataViewer and DataWrangler
 export interface IDataViewerDataProvider {
     dispose(): void;
     getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo>;
     getAllRows(sliceExpression?: string): Promise<IRowsResponse>;
     getRows(start: number, end: number, sliceExpression?: string): Promise<IRowsResponse>;
+    getCols?(columnName: string): Promise<IColsResponse>;
 }
 
 export enum ColumnType {

@@ -16,9 +16,10 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { IConfigurationService } from '../../../client/common/types';
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataWrangler } from '../../../client/datascience/data-viewing/data-wrangler/dataWrangler';
-import { DataWranglerJupyterVariableDataProviderFactory } from '../../../client/datascience/data-viewing/data-wrangler/dataWranglerJupyterVariableDataProviderFactory';
-import { IDataWrangler, IDataWranglerDataProvider } from '../../../client/datascience/data-viewing/data-wrangler/types';
+import { IDataWrangler } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { JupyterVariableDataProvider } from '../../../client/datascience/data-viewing/jupyterVariableDataProvider';
+import { JupyterVariableDataProviderFactory } from '../../../client/datascience/data-viewing/jupyterVariableDataProviderFactory';
+import { IDataViewerDataProvider } from '../../../client/datascience/data-viewing/types';
 import { KernelVariables } from '../../../client/datascience/jupyter/kernelVariables';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
@@ -33,10 +34,10 @@ suite('DataScience - DataWrangler', () => {
     let themeFinder: IThemeFinder;
     let workspaceService: IWorkspaceService;
     let applicationShell: IApplicationShell;
-    let dataProvider: IDataWranglerDataProvider;
+    let dataProvider: IDataViewerDataProvider;
     let commandManager: CommandManager;
     let jupyterVariables: KernelVariables;
-    let dataProviderFactory: DataWranglerJupyterVariableDataProviderFactory;
+    let dataProviderFactory: JupyterVariableDataProviderFactory;
     let notebookEditorProvider: NotebookEditorProvider;
 
     const title: string = 'Data Wrangler - Title';
@@ -51,7 +52,7 @@ suite('DataScience - DataWrangler', () => {
         dataProvider = mock(JupyterVariableDataProvider);
         commandManager = mock(CommandManager);
         jupyterVariables = mock(KernelVariables);
-        dataProviderFactory = mock(DataWranglerJupyterVariableDataProviderFactory);
+        dataProviderFactory = mock(JupyterVariableDataProviderFactory);
         notebookEditorProvider = mock(NotebookEditorProvider);
         const documentManager = mock(DocumentManager);
         const settings = mock(JupyterSettings);

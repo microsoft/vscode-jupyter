@@ -31,10 +31,7 @@ import { createDeferred } from '../../common/utils/async';
 import { isNotebookCell, noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { Commands, Identifiers } from '../constants';
-import {
-    IDataWranglerFactory,
-    IDataWranglerJupyterVariableDataProviderFactory
-} from '../data-viewing/data-wrangler/types';
+import { IDataWranglerFactory } from '../data-viewing/data-wrangler/types';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -218,9 +215,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<IDataViewerFactory>(IDataViewerFactory),
             this.serviceContainer.get<IDataWranglerFactory>(IDataWranglerFactory),
             this.serviceContainer.get<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory),
-            this.serviceContainer.get<IDataWranglerJupyterVariableDataProviderFactory>(
-                IDataWranglerJupyterVariableDataProviderFactory
-            ),
             this.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES),
             this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger),
             this.serviceContainer.get<INotebookImporter>(INotebookImporter),

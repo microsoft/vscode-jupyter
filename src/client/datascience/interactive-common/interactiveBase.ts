@@ -110,10 +110,7 @@ import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
-import {
-    IDataWranglerFactory,
-    IDataWranglerJupyterVariableDataProviderFactory
-} from '../data-viewing/data-wrangler/types';
+import { IDataWranglerFactory } from '../data-viewing/data-wrangler/types';
 
 export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
@@ -169,7 +166,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         private dataViewerFactory: IDataViewerFactory,
         private dataWranglerFactory: IDataWranglerFactory,
         private jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        private dataWranglerJupyterVariableDataProviderFactory: IDataWranglerJupyterVariableDataProviderFactory,
         private jupyterVariables: IJupyterVariables,
         private jupyterDebugger: IJupyterDebugger,
         protected errorHandler: IDataScienceErrorHandler,
@@ -1071,20 +1067,20 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     private async showDataWrangler(request: IShowDataWrangler): Promise<void> {
         try {
             if (await this.dataViewerChecker.isRequestedColumnSizeAllowed(request.columnSize, this.owningResource)) {
-                const dataWranglerJupyterVariableDataProvider = await this.dataWranglerJupyterVariableDataProviderFactory.create(
+                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     request.variable,
                     this._notebook!
                 );
-                const title: string = `Data Wrangler - ${request.variable.name}`;
-                await this.dataWranglerFactory.create(dataWranglerJupyterVariableDataProvider, title);
+                const title: string = localize.DataScience.dataWranglerFailedToShowMessage().format(
+                    request.variable.name
+                );
+                await this.dataWranglerFactory.create(jupyterVariableDataProvider, title);
             }
         } catch (e) {
             traceError(e);
             // sendTelemetryEvent(Telemetry.FailedShowDataViewer);
             this.applicationShell
-                .showErrorMessage(
-                    'Failed to create the Data Wrangler. Check the Jupyter tab of the Output window for more info.'
-                )
+                .showErrorMessage(localize.DataScience.dataWranglerFailedToShowMessage())
                 .then(noop, noop);
         }
     }

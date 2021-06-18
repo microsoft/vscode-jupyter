@@ -46,10 +46,7 @@ import {
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import {
-    IDataWranglerFactory,
-    IDataWranglerJupyterVariableDataProviderFactory
-} from '../data-viewing/data-wrangler/types';
+import { IDataWranglerFactory } from '../data-viewing/data-wrangler/types';
 
 export enum AskForSaveResult {
     Yes,
@@ -88,7 +85,6 @@ export class NativeEditorOldWebView extends NativeEditor {
         dataExplorerFactory: IDataViewerFactory,
         dataWranglerFactory: IDataWranglerFactory,
         jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        dataWranglerJupyterVariableDataProviderFactory: IDataWranglerJupyterVariableDataProviderFactory,
         jupyterVariables: IJupyterVariables,
         jupyterDebugger: IJupyterDebugger,
         importer: INotebookImporter,
@@ -125,7 +121,6 @@ export class NativeEditorOldWebView extends NativeEditor {
             dataExplorerFactory,
             dataWranglerFactory,
             jupyterVariableDataProviderFactory,
-            dataWranglerJupyterVariableDataProviderFactory,
             jupyterVariables,
             jupyterDebugger,
             importer,
