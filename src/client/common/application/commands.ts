@@ -36,8 +36,8 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.UndoCells]: [];
     [DSCommands.RedoCells]: [];
     [DSCommands.RemoveAllCells]: [];
-    [DSCommands.InterruptKernel]: [];
-    [DSCommands.RestartKernel]: [];
+    [DSCommands.InterruptKernel]: [{ notebookEditor: { notebookUri: Uri; }; } | undefined];
+    [DSCommands.RestartKernel]: [{ notebookEditor: { notebookUri: Uri; }; } | undefined];
     [DSCommands.NotebookEditorUndoCells]: [];
     [DSCommands.NotebookEditorRedoCells]: [];
     [DSCommands.NotebookEditorRemoveAllCells]: [];
@@ -58,8 +58,8 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri; }; }];
     [DSCommands.InteractiveRemoveCell]: [NotebookCell];
     [DSCommands.InteractiveGoToCode]: [NotebookCell];
-    [DSCommands.InteractiveExportFileAsNotebook]: [];
-    [DSCommands.InteractiveExportAs]: [];
+    [DSCommands.InteractiveExportFileAsNotebook]: [{ notebookEditor: { notebookUri: Uri; }; }];
+    [DSCommands.InteractiveExportAs]: [{ notebookEditor: { notebookUri: Uri; }; }];
     ['notebook.cell.quitEdit']: [];
     ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.cell.collapseCellOutput']: [];

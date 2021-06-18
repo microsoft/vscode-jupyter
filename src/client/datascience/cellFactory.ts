@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import * as uuid from 'uuid/v4';
-import { NotebookDocument, Range, TextDocument, Uri } from 'vscode';
+import { Range, TextDocument, Uri } from 'vscode';
 
 import { parseForComments } from '../../datascience-ui/common';
 import { createCodeCell, createMarkdownCell } from '../../datascience-ui/common/cellFactory';
