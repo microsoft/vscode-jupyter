@@ -34,7 +34,7 @@ import {
 import { createExportInteractiveIdentity } from './identity';
 
 @injectable()
-export class NewInteractiveWindow {
+export class NewInteractiveWindowCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
@@ -124,10 +124,18 @@ export class NewInteractiveWindow {
             commandManager.registerCommand(Commands.RemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.InterruptKernel, (context?: { notebookEditor: { notebookUri: Uri; } }) => this.interruptKernel(context?.notebookEditor.notebookUri))
+            commandManager.registerCommand(
+                Commands.InterruptKernel,
+                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                    this.interruptKernel(context?.notebookEditor.notebookUri)
+            )
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.RestartKernel, (context?: { notebookEditor: { notebookUri: Uri; } }) => this.restartKernel(context?.notebookEditor.notebookUri))
+            commandManager.registerCommand(
+                Commands.RestartKernel,
+                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                    this.restartKernel(context?.notebookEditor.notebookUri)
+            )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.ExpandAllCells, () => this.expandAllCells())
@@ -139,10 +147,17 @@ export class NewInteractiveWindow {
             commandManager.registerCommand(Commands.ExportOutputAsNotebook, () => this.exportCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.InteractiveExportFileAsNotebook, (context?: { notebookEditor: { notebookUri: Uri; } }) => this.export(context?.notebookEditor.notebookUri))
+            commandManager.registerCommand(
+                Commands.InteractiveExportFileAsNotebook,
+                (context?: { notebookEditor: { notebookUri: Uri } }) => this.export(context?.notebookEditor.notebookUri)
+            )
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.InteractiveExportAs, (context?: { notebookEditor: { notebookUri: Uri; } }) => this.exportAs(context?.notebookEditor.notebookUri))
+            commandManager.registerCommand(
+                Commands.InteractiveExportAs,
+                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                    this.exportAs(context?.notebookEditor.notebookUri)
+            )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.ScrollToCell, (file: Uri, id: string) =>
@@ -150,7 +165,7 @@ export class NewInteractiveWindow {
             )
         );
     }
-    
+
     /* eslint-disable @typescript-eslint/no-explicit-any */
     public async listenForErrors(promise: () => Promise<any>): Promise<any> {
         let result: any;
@@ -365,14 +380,18 @@ export class NewInteractiveWindow {
     }
 
     public interruptKernel(uri?: Uri) {
-        const interactiveWindow = uri ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString()) : this.interactiveWindowProvider.activeWindow;
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.interruptKernel().ignoreErrors();
         }
     }
 
     public restartKernel(uri?: Uri) {
-        const interactiveWindow = uri ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString()) : this.interactiveWindowProvider.activeWindow;
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.restartKernel().ignoreErrors();
         }
@@ -400,14 +419,18 @@ export class NewInteractiveWindow {
     }
 
     public exportAs(uri?: Uri) {
-        const interactiveWindow = uri ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString()) : this.interactiveWindowProvider.activeWindow;
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.exportAs();
         }
     }
 
     public export(uri?: Uri) {
-        const interactiveWindow = uri ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString()) : this.interactiveWindowProvider.activeWindow;
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.export();
         }

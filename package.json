@@ -684,12 +684,16 @@
             {
                 "command": "jupyter.expandallcells",
                 "title": "%jupyter.command.jupyter.expandallcells.title%",
-                "category": "Jupyter"
+                "shortTitle": "%jupyter.command.jupyter.expandallcells.shorttitle%",
+                "category": "Jupyter",
+                "icon": "$(expand-all)"
             },
             {
                 "command": "jupyter.collapseallcells",
                 "title": "%jupyter.command.jupyter.collapseallcells.title%",
-                "category": "Jupyter"
+                "shortTitle": "%jupyter.command.jupyter.collapseallcells.shorttitle%",
+                "category": "Jupyter",
+                "icon": "$(collapse-all)"
             },
             {
                 "command": "jupyter.addcellbelow",
@@ -784,12 +788,12 @@
             {
                 "command": "jupyter.interactive.exportfileasnotebook",
                 "title": "Export to Notebook",
-                "icon": "$(notebook)",
+                "icon": "$(save-as)",
                 "category": "Jupyter"
             },
             {
                 "command": "jupyter.interactive.exportas",
-                "title": "Export As",
+                "title": "%DataScience.notebookExportAs%",
                 "icon": "$(export)",
                 "category": "Jupyter"
             }
@@ -927,6 +931,16 @@
                 {
                     "command": "jupyter.interactive.exportas",
                     "group": "navigation@5",
+                    "when": "isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.expandallcells",
+                    "group": "navigation@6",
+                    "when": "isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.collapseallcells",
+                    "group": "navigation@7",
                     "when": "isWorkspaceTrusted"
                 }
             ],

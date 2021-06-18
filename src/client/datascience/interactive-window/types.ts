@@ -3,4 +3,4 @@
 
 import { Uri } from 'vscode';
 
-export type INativeInteractiveWindow = { notebookUri: Uri, inputUri: Uri };
+export type INativeInteractiveWindow = { notebookUri: Uri; inputUri: Uri };

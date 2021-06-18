@@ -95,6 +95,8 @@
     "jupyter.command.jupyter.restartkernel.shorttitle": "Restart",
     "jupyter.command.jupyter.expandallcells.title": "Expand All Interactive Cells",
     "jupyter.command.jupyter.collapseallcells.title": "Collapse All Interactive Cells",
+    "jupyter.command.jupyter.expandallcells.shorttitle": "Expand All",
+    "jupyter.command.jupyter.collapseallcells.shorttitle": "Collapse All",
     "jupyter.command.jupyter.addcellbelow.title": "Add Empty Cell to File",
     "jupyter.command.jupyter.scrolltocell.title": "Scroll Cell Into View",
     "jupyter.command.jupyter.createnewnotebook.title": "Create New Blank Notebook",

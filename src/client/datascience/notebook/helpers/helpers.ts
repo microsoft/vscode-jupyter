@@ -896,15 +896,11 @@ export function findAssociatedNotebookDocument(cellUri: Uri, vscodeNotebook: IVS
     );
 }
 
-export function appendMarkdownCell(notebookDocument: NotebookDocument, contents: string) {
-    return chainWithPendingUpdates(notebookDocument, (edit) => {
-        edit.replaceNotebookCells(notebookDocument.uri, new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount), [
-            new NotebookCellData(NotebookCellKind.Markup, contents, MARKDOWN_LANGUAGE)
-        ])
-    });
-}
-
-export async function addSysInfo(reason: SysInfoReason, notebookDocument: NotebookDocument, notebook: INotebook | undefined) {
+export async function addSysInfo(
+    reason: SysInfoReason,
+    notebookDocument: NotebookDocument,
+    notebook: INotebook | undefined
+) {
     if (notebookDocument.notebookType !== InteractiveWindowView || notebook === undefined) {
         return;
     }
@@ -925,8 +921,20 @@ export async function addSysInfo(reason: SysInfoReason, notebookDocument: Notebo
             if (connectionString && connectionString.length) {
                 cell.messages.unshift(connectionString);
             }
-        }
 
-        await appendMarkdownCell(notebookDocument, cell.messages.join('\n\n'));
+            return chainWithPendingUpdates(notebookDocument, (edit) => {
+                const markdownCell = new NotebookCellData(
+                    NotebookCellKind.Markup,
+                    cell.messages.join('\n\n'),
+                    MARKDOWN_LANGUAGE
+                );
+                markdownCell.metadata = { isSysInfoCell: true };
+                edit.replaceNotebookCells(
+                    notebookDocument.uri,
+                    new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
+                    [markdownCell]
+                );
+            });
+        }
     }
 }

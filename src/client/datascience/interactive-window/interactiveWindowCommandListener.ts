@@ -6,16 +6,16 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import { workspace } from 'vscode';
 import { IDataScienceCommandListener } from '../types';
-import { NewInteractiveWindow } from './newInteractiveWindowCommandListener';
-import { OldInteractiveWindow } from './oldInteractiveWindowCommandListener';
+import { NewInteractiveWindowCommandListener } from './newInteractiveWindowCommandListener';
+import { OldInteractiveWindowCommandListener } from './oldInteractiveWindowCommandListener';
 import { ICommandManager } from '../../common/application/types';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
     constructor(
-        @inject(OldInteractiveWindow) private oldListener: OldInteractiveWindow,
-        @inject(NewInteractiveWindow) private newListener: NewInteractiveWindow
-    ) { }
+        @inject(OldInteractiveWindowCommandListener) private oldListener: OldInteractiveWindowCommandListener,
+        @inject(NewInteractiveWindowCommandListener) private newListener: NewInteractiveWindowCommandListener
+    ) {}
 
     public register(commandManager: ICommandManager) {
         const interactiveConfiguration = workspace.getConfiguration('interactive.experiments');

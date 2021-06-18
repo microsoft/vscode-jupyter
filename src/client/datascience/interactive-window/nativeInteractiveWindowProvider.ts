@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Event, EventEmitter, Memento, NotebookDocument, Uri, ViewColumn } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 
 import {
@@ -22,22 +22,16 @@ import {
     IDisposableRegistry,
     IMemento,
     InteractiveWindowMode,
-    Resource} from '../../common/types';
+    Resource
+} from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
-import { InteractiveWindowView } from '../notebook/constants';
 import { INotebookControllerManager } from '../notebook/types';
-import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
-import {
-    IInteractiveWindow,
-    IInteractiveWindowProvider,
-    INotebookExporter,
-    IStatusProvider} from '../types';
+import { IInteractiveWindow, IInteractiveWindowProvider, INotebookExporter, IStatusProvider } from '../types';
 import { NativeInteractiveWindow } from './nativeInteractiveWindow';
-import { INativeInteractiveWindow } from './types';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -69,13 +63,10 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
     ) {
         asyncRegistry.push(this);
-
-        this.notebookControllerManager.onNotebookControllerSelected(this.handleNotebookControllerSelected, this, this.disposables);
     }
 
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
@@ -91,8 +82,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         let result = this.get(resource, mode) as IInteractiveWindow;
         if (!result) {
             // No match. Create a new item.
-            const { notebookUri } = await this.commandManager.executeCommand('interactive.open', ViewColumn.Beside) as INativeInteractiveWindow;
-            result = this.create(resource, mode, notebookUri);
+            result = this.create(resource, mode, undefined);
         }
 
         return result;
@@ -107,7 +97,11 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         noop();
     }
 
-    protected create(resource: Resource, mode: InteractiveWindowMode, notebookUri: Uri): NativeInteractiveWindow {
+    protected create(
+        resource: Resource,
+        mode: InteractiveWindowMode,
+        notebookUri: Uri | undefined
+    ): NativeInteractiveWindow {
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
         const result = new NativeInteractiveWindow(
@@ -145,38 +139,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         this._onDidCreateInteractiveWindow.fire(result);
 
         return result;
-    }
-
-    private async handleNotebookControllerSelected(e: { notebook: NotebookDocument, controller: VSCodeNotebookController }) {
-        // For now, VS Code does not provide a way to query the window for activeInteractiveEditors
-        // or the workspace for activeInteractiveDocuments (?). However, it is now possible for an
-        // InteractiveEditor to be created via a builtin VS Code command i.e. without the Jupyter
-        // extension's involvement, in which case the Jupyter extension only becomes aware of the
-        // InteractiveEditor's existence when a Jupyter-contributed controller is selected for the
-        // InteractiveEditor. Even if the InteractiveEditor wasn't created through the Jupyter
-        // extension, our commands will continue to appear in the interactive toolbar and we need
-        // to make sure they work. Therefore we should sign up for controller selection events and create
-        // corresponding InteractiveWindows in order to handle kernel restart, interrupt, export etc.
-        if (e.notebook.notebookType !== InteractiveWindowView) {
-            return;
-        }
-
-        let interactiveWindow = this._windows.find((interactiveWindow) => interactiveWindow.notebookUri.toString() === e.notebook.toString());
-
-        if (interactiveWindow === undefined) {
-            // Ask for a configuration change if appropriate
-            const mode = await this.getInteractiveMode(undefined); // TODO VS Code doesn't look at this setting
-            interactiveWindow = this.create(undefined, mode, e.notebook.uri);
-        }
-
-        interactiveWindow.notebookController = e.controller;
-
-        // Ensure the kernel starts ASAP
-        const kernel = this.kernelProvider.getOrCreate(e.notebook.uri, {
-            metadata: e.controller.connection,
-            controller: e.controller.controller
-        });
-        await kernel?.start({ disableUI: false, document: e.notebook });
     }
 
     private async getInteractiveMode(resource: Resource): Promise<InteractiveWindowMode> {
@@ -244,7 +206,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     }
 
     // TODO: we don't currently have a way to know when the VS Code InteractiveEditor
-    // view state changes. Requires API (interactive.open should return the InteractiveEditorPanel) 
+    // view state changes. Requires API (interactive.open should return the InteractiveEditorPanel)
     private raiseOnDidChangeActiveInteractiveWindow() {
         // Update last active window (remember changes to the active window)
         this.lastActiveInteractiveWindow = this.activeWindow ? this.activeWindow : this.lastActiveInteractiveWindow;

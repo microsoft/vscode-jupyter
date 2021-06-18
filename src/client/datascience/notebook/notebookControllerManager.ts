@@ -181,7 +181,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // When a document is opened we need to look for a perferred kernel for it
     private onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
-        if (document.notebookType !== JupyterNotebookView && document.notebookType !== InteractiveWindowView || !this.workspace.isTrusted) {
+        if (
+            (document.notebookType !== JupyterNotebookView && document.notebookType !== InteractiveWindowView) ||
+            !this.workspace.isTrusted
+        ) {
             return;
         }
 
@@ -256,7 +259,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         let preferred: KernelConnectionMetadata | undefined;
 
         if (this.isLocalLaunch) {
-            const preferredConnectionPromise = this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
+            const preferredConnectionPromise = this.localKernelFinder.findKernel(
+                document.uri,
+                getNotebookMetadata(document),
+                token
+            );
             preferred = await preferredConnectionPromise;
         } else {
             const connection = await this.notebookProvider.connect({
@@ -266,7 +273,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 localOnly: false
             });
 
-            const preferredConnectionPromise = this.remoteKernelFinder.findKernel(document.uri, connection, getNotebookMetadata(document), token);
+            const preferredConnectionPromise = this.remoteKernelFinder.findKernel(
+                document.uri,
+                connection,
+                getNotebookMetadata(document),
+                token
+            );
             preferred = await preferredConnectionPromise;
         }
 

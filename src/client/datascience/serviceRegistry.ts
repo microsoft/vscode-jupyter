@@ -192,8 +192,8 @@ import { IApplicationEnvironment } from '../common/application/types';
 import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
 import { ExtensionRecommendationService } from './extensionRecommendation';
 import { PythonVariablesRequester } from './jupyter/pythonVariableRequester';
-import { OldInteractiveWindow } from './interactive-window/oldInteractiveWindowCommandListener';
-import { NewInteractiveWindow } from './interactive-window/newInteractiveWindowCommandListener';
+import { OldInteractiveWindowCommandListener } from './interactive-window/oldInteractiveWindowCommandListener';
+import { NewInteractiveWindowCommandListener } from './interactive-window/newInteractiveWindowCommandListener';
 import { workspace } from 'vscode';
 import { NativeInteractiveWindowProvider } from './interactive-window/nativeInteractiveWindowProvider';
 
@@ -274,8 +274,8 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
-    serviceManager.addSingleton<OldInteractiveWindow>(OldInteractiveWindow, OldInteractiveWindow);
-    serviceManager.addSingleton<NewInteractiveWindow>(NewInteractiveWindow, NewInteractiveWindow);
+    serviceManager.addSingleton<OldInteractiveWindowCommandListener>(OldInteractiveWindowCommandListener, OldInteractiveWindowCommandListener);
+    serviceManager.addSingleton<NewInteractiveWindowCommandListener>(NewInteractiveWindowCommandListener, NewInteractiveWindowCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);
@@ -296,7 +296,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, NativeInteractiveWindowProvider);
     } else {
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-    };
+    }
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);

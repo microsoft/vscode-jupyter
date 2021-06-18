@@ -4,7 +4,21 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, ConfigurationTarget, env, NotebookCell, NotebookRange, Position, Range, Selection, TextEditor, Uri, ViewColumn, workspace, WorkspaceEdit } from 'vscode';
+import {
+    CodeLens,
+    ConfigurationTarget,
+    env,
+    NotebookCell,
+    NotebookRange,
+    Position,
+    Range,
+    Selection,
+    TextEditor,
+    Uri,
+    ViewColumn,
+    workspace,
+    WorkspaceEdit
+} from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import {
@@ -156,7 +170,7 @@ export class CommandRegistry implements IDisposable {
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);
@@ -249,12 +263,14 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri; }; }): Promise<void> {
+    private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
         if (!context) {
             return;
         }
 
-        const document = workspace.notebookDocuments.find(document => document.uri.toString() === context.notebookEditor.notebookUri.toString());
+        const document = workspace.notebookDocuments.find(
+            (document) => document.uri.toString() === context.notebookEditor.notebookUri.toString()
+        );
         if (!document) {
             return;
         }
@@ -294,7 +310,6 @@ export class CommandRegistry implements IDisposable {
                 editor.revealRange(new Range(line, 0, line, 0));
                 editor.selection = new Selection(new Position(line, 0), new Position(line, 0));
             }
-
         }
     }
 

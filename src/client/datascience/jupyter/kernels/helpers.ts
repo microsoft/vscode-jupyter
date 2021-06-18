@@ -78,7 +78,10 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
     return `${spec.id || ''}.${specName}.${spec.interpreterPath || spec.path}.${interpreter?.path || ''}`;
 }
 
-export function getSysInfoReasonHeader(reason: SysInfoReason, connection: KernelConnectionMetadata | undefined): string {
+export function getSysInfoReasonHeader(
+    reason: SysInfoReason,
+    connection: KernelConnectionMetadata | undefined
+): string {
     const displayName = getDisplayNameOrNameOfKernelConnection(connection);
     switch (reason) {
         case SysInfoReason.Start:

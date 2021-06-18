@@ -3,7 +3,21 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
 import * as uuid from 'uuid';
-import { CancellationToken, ConfigurationTarget, Event, EventEmitter, NotebookCell, NotebookCellData, NotebookCellKind, NotebookDocument, NotebookRange, Uri, workspace, WorkspaceEdit } from 'vscode';
+import {
+    CancellationToken,
+    ConfigurationTarget,
+    Event,
+    EventEmitter,
+    NotebookCell,
+    NotebookCellData,
+    NotebookCellKind,
+    NotebookDocument,
+    NotebookRange,
+    Uri,
+    ViewColumn,
+    workspace,
+    WorkspaceEdit
+} from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
@@ -11,26 +25,20 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../common/application/types';
+import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
-import {
-    IConfigurationService,
-    IDisposable,
-    InteractiveWindowMode,
-    Resource
-} from '../../common/types';
+import { IConfigurationService, IDisposable, InteractiveWindowMode, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { generateCells, generateCellsFromDocument } from '../cellFactory';
+import { generateCells } from '../cellFactory';
+import { CellMatcher } from '../cellMatcher';
 import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
-import {
-    INotebookIdentity,
-    ISubmitNewCell
-} from '../interactive-common/interactiveWindowTypes';
+import { INotebookIdentity, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
@@ -49,6 +57,7 @@ import {
     WebViewViewChangeEventArgs
 } from '../types';
 import { createInteractiveIdentity } from './identity';
+import { INativeInteractiveWindow } from './types';
 
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -73,7 +82,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get identity(): Uri {
         return this._identity;
     }
-    public get notebookUri(): Uri {
+    public get notebookUri(): Uri | undefined {
         return this._notebookUri;
     }
     public isInteractive = true;
@@ -91,6 +100,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private restartingKernel = false;
     private kernel: IKernel | undefined;
     private kernelLoadPromise: Promise<void> | undefined;
+    private interactiveOpenPromise: Thenable<void> | undefined;
 
     constructor(
         private readonly applicationShell: IApplicationShell,
@@ -105,7 +115,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         mode: InteractiveWindowMode,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly exportDialog: IExportDialog,
-        private _notebookUri: Uri, // This remains the same for the lifetime of the InteractiveWindow object
+        private _notebookUri: Uri | undefined, // This remains the same for the lifetime of the InteractiveWindow object
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly kernelProvider: IKernelProvider
     ) {
@@ -116,24 +126,34 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             this._submitters.push(owner);
         }
 
-        this.notebookControllerManager.onNotebookControllerSelected((e: { notebook: NotebookDocument, controller: VSCodeNotebookController }) => {
-            if (e.notebook.uri.toString() !== this._notebookUri.toString()) {
-                return;
-            }
-            
-            // Clear cached variables when the selected controller for this document changes
-            e.controller.controller.onDidChangeSelectedNotebooks((selectedEvent: { notebook: NotebookDocument, selected: boolean }) => {
-                if (selectedEvent.selected === false) {
-                    this.kernelLoadPromise = undefined;
-                    this.kernel = undefined;
-                    this.notebookController = undefined;
-                } else {
-                    this.registerKernel(e.notebook, e.controller);
+        this.notebookControllerManager.onNotebookControllerSelected(
+            (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
+                if (this._notebookUri !== undefined && e.notebook.uri.toString() !== this._notebookUri.toString()) {
+                    return;
                 }
-            });
 
-            this.registerKernel(e.notebook, e.controller);
-        });
+                // Clear cached kernel when the selected controller for this document changes
+                e.controller.controller.onDidChangeSelectedNotebooks(
+                    (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
+                        if (selectedEvent.selected === false) {
+                            this.kernelLoadPromise = undefined;
+                            this.kernel = undefined;
+                            this.notebookController = undefined;
+                        } else {
+                            this.registerKernel(e.notebook, e.controller);
+                        }
+                    }
+                );
+
+                this.registerKernel(e.notebook, e.controller);
+            }
+        );
+
+        this.interactiveOpenPromise = this.commandManager
+            .executeCommand('interactive.open', ViewColumn.Beside)
+            .then((result) => {
+                this._notebookUri = (result as INativeInteractiveWindow).notebookUri;
+            });
     }
 
     private registerKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
@@ -151,7 +171,11 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     // point when we try to access it. Calling this method may cause this
     // InteractiveWindow object to dispose itself
     private async tryGetMatchingNotebookDocument(): Promise<NotebookDocument | undefined> {
-        const notebookDocument = workspace.notebookDocuments.find((document) => this._notebookUri.toString() === document.uri.toString());
+        await this.interactiveOpenPromise;
+
+        const notebookDocument = workspace.notebookDocuments.find(
+            (document) => this._notebookUri?.toString() === document.uri.toString()
+        );
         if (notebookDocument === undefined) {
             this.dispose();
             return undefined;
@@ -180,9 +204,11 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         if (!notebookDocument) {
             return;
         }
-        edit.replaceNotebookCells(notebookDocument.uri, new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount), [
-            new NotebookCellData(NotebookCellKind.Markup, message, 'markdown')
-        ])
+        edit.replaceNotebookCells(
+            notebookDocument.uri,
+            new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
+            [new NotebookCellData(NotebookCellKind.Markup, message, 'markdown')]
+        );
         await workspace.applyEdit(edit);
     }
 
@@ -377,29 +403,37 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public expandAllCells() {
-        this.tryGetMatchingNotebookDocument().then((notebookDocument) => {
-            if (notebookDocument) {
-                return chainWithPendingUpdates(notebookDocument, (edit) => {
-                    notebookDocument.getCells().forEach((cell, index) => {
-                        const metadata = { ...(cell.metadata || {}), inputCollapsed: false, outputCollapsed: false };
-                        edit.replaceNotebookCellMetadata(notebookDocument.uri, index, metadata);
+        this.tryGetMatchingNotebookDocument()
+            .then((notebookDocument) => {
+                if (notebookDocument) {
+                    return chainWithPendingUpdates(notebookDocument, (edit) => {
+                        notebookDocument.getCells().forEach((cell, index) => {
+                            const metadata = {
+                                ...(cell.metadata || {}),
+                                inputCollapsed: false,
+                                outputCollapsed: false
+                            };
+                            edit.replaceNotebookCellMetadata(notebookDocument.uri, index, metadata);
+                        });
                     });
-                })
-            }
-        }).then(noop, noop);
+                }
+            })
+            .then(noop, noop);
     }
 
     public collapseAllCells() {
-        this.tryGetMatchingNotebookDocument().then((notebookDocument) => {
-            if (notebookDocument) {
-                return chainWithPendingUpdates(notebookDocument, (edit) => {
-                    notebookDocument.getCells().forEach((cell, index) => {
-                        const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: false };
-                        edit.replaceNotebookCellMetadata(notebookDocument.uri, index, metadata);
+        this.tryGetMatchingNotebookDocument()
+            .then((notebookDocument) => {
+                if (notebookDocument) {
+                    return chainWithPendingUpdates(notebookDocument, (edit) => {
+                        notebookDocument.getCells().forEach((cell, index) => {
+                            const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: false };
+                            edit.replaceNotebookCellMetadata(notebookDocument.uri, index, metadata);
+                        });
                     });
-                })
-            }
-        }).then(noop, noop);
+                }
+            })
+            .then(noop, noop);
     }
 
     public scrollToCell(_id: string): void {
@@ -438,21 +472,39 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         if (!notebookDocument || !this.notebookController) {
             return true;
         }
-        
+
         this.registerKernel(notebookDocument, this.notebookController);
         await this.kernelLoadPromise;
 
+        // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
+        const settings = this.configuration.getSettings();
+        const cellMatcher = new CellMatcher(settings);
+        const strippedCode = cellMatcher.stripFirstMarker(code);
+        const interactiveWindowCellTitle = cellMatcher.exec(code);
+        const isMarkdown = cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
+
         // Insert code cell into NotebookDocument
         const edit = new WorkspaceEdit();
-        const notebookCell = new NotebookCellData(NotebookCellKind.Code, code, 'python'); // Look at document.languageId
-        notebookCell.metadata = { inputCollapsed: true }; // Hide the input because code is already visible on the left
-        edit.replaceNotebookCells(notebookDocument.uri, new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount), [
-            notebookCell // TODO generalize to arbitrary languages and cell types
-        ]);
+        const language = workspace.textDocuments.find((document) => document.uri.toString() === this.owner?.toString())
+            ?.languageId ?? PYTHON_LANGUAGE;
+        const notebookCell = new NotebookCellData(isMarkdown ? NotebookCellKind.Markup : NotebookCellKind.Code, strippedCode, isMarkdown ? MARKDOWN_LANGUAGE : language);
+        notebookCell.metadata = { interactiveWindowCellTitle };
+
+        edit.replaceNotebookCells(
+            notebookDocument.uri,
+            new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
+            [
+                notebookCell // TODO generalize to arbitrary languages and cell types
+            ]
+        );
         await workspace.applyEdit(edit);
 
         // Request execution
-        await this.commandManager.executeCommand('notebook.cell.execute', { ranges: [{ start: notebookDocument.cellCount - 1, end: notebookDocument.cellCount }], document: notebookDocument.uri, autoReveal: true });
+        await this.commandManager.executeCommand('notebook.cell.execute', {
+            ranges: [{ start: notebookDocument.cellCount - 1, end: notebookDocument.cellCount }],
+            document: notebookDocument.uri,
+            autoReveal: true
+        });
         return true;
     }
 
@@ -562,6 +614,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         const cells = notebookDocument.getCells().reduce((cells: ICell[], cell) => {
+            // Skip sysinfo cells when exporting
+            if (cell.metadata.isSysInfoCell) {
+                return cells;
+            }
             const generatedCells = generateCells(undefined, cell.document.getText(), '', 0, false, uuid());
             return cells.concat(generatedCells);
         }, []);
@@ -588,7 +644,16 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         const cells = notebookDocument.getCells().reduce((cells: ICell[], cell) => {
-            const generatedCells = generateCells(undefined, cell.document.getText(), '', 0, false, uuid());
+            // Skip sysinfo cells when exporting
+            if (cell.metadata.isSysInfoCell) {
+                return cells;
+            }
+            // Reinstate cell structure
+            let code = cell.document.getText();
+            if (cell.metadata.interactiveWindowCellTitle !== undefined) {
+                code = cell.metadata.interactiveWindowCellTitle + '\n' + code;
+            }
+            const generatedCells = generateCells(undefined, code, '', 0, false, uuid());
             return cells.concat(generatedCells);
         }, []);
 
