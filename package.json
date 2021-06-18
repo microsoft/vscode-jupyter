@@ -886,6 +886,26 @@
                     "command": "jupyter.interactive.clearAllCells",
                     "group": "navigation@0",
                     "when": "isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.restartkernel",
+                    "group": "navigation@1",
+                    "when": "isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.interruptkernel",
+                    "group": "navigation@2",
+                    "when": "isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.interactive.exportfileasnotebook",
+                    "group": "navigation@4",
+                    "when": "isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.interactive.export",
+                    "group": "navigation@5",
+                    "when": "isWorkspaceTrusted"
                 }
             ],
             "interactive/cell/title": [

@@ -563,6 +563,8 @@ export interface IInteractiveWindow extends IInteractiveBase {
     collapseAllCells(): void;
     exportCells(): void;
     scrollToCell(id: string): void;
+    exportAs(cells?: ICell[]): void;
+    export(cells?: ICell[]): void;
 }
 
 export interface IInteractiveWindowLoadable extends IInteractiveWindow {

@@ -58,6 +58,8 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri; }; }];
     [DSCommands.InteractiveRemoveCell]: [NotebookCell];
     [DSCommands.InteractiveGoToCode]: [NotebookCell];
+    [DSCommands.InteractiveExportFileAsNotebook]: [];
+    [DSCommands.InteractiveExportAs]: [];
     ['notebook.cell.quitEdit']: [];
     ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.cell.collapseCellOutput']: [];

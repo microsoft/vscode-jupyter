@@ -139,6 +139,12 @@ export class NewInteractiveWindow {
             commandManager.registerCommand(Commands.ExportOutputAsNotebook, () => this.exportCells())
         );
         this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.InteractiveExportFileAsNotebook, () => this.export())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.InteractiveExportAs, () => this.exportAs())
+        );
+        this.disposableRegistry.push(
             commandManager.registerCommand(Commands.ScrollToCell, (file: Uri, id: string) =>
                 this.scrollToCell(file, id)
             )
@@ -390,6 +396,20 @@ export class NewInteractiveWindow {
         const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.exportCells();
+        }
+    }
+
+    public exportAs() {
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.exportAs();
+        }
+    }
+
+    public export() {
+        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.export();
         }
     }
 

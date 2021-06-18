@@ -25,6 +25,7 @@ import {
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { generateCellsFromDocument } from '../cellFactory';
 import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
 import {
@@ -34,6 +35,7 @@ import {
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
+import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { INotebookControllerManager } from '../notebook/types';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import {
@@ -267,9 +269,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             );
 
             try {
-                // const settings = this.configuration.getSettings(this.owningResource);
-                // const interruptTimeout = settings.jupyterInterruptTimeout;
-
                 const notebookDocument = await this.tryGetMatchingNotebookDocument();
                 if (!notebookDocument) {
                     return;
@@ -407,11 +406,29 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public expandAllCells() {
-        throw new Error('Method not implemented.');
+        this.tryGetMatchingNotebookDocument().then((notebookDocument) => {
+            if (notebookDocument) {
+                return chainWithPendingUpdates(notebookDocument, (edit) => {
+                    notebookDocument.getCells().forEach((cell, index) => {
+                        const metadata = { ...(cell.metadata || {}), inputCollapsed: false, outputCollapsed: false };
+                        edit.replaceNotebookCellMetadata(notebookDocument.uri, index, metadata);
+                    });
+                })
+            }
+        }).then(noop, noop);
     }
 
     public collapseAllCells() {
-        throw new Error('Method not implemented.');
+        this.tryGetMatchingNotebookDocument().then((notebookDocument) => {
+            if (notebookDocument) {
+                return chainWithPendingUpdates(notebookDocument, (edit) => {
+                    notebookDocument.getCells().forEach((cell, index) => {
+                        const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: false };
+                        edit.replaceNotebookCellMetadata(notebookDocument.uri, index, metadata);
+                    });
+                })
+            }
+        }).then(noop, noop);
     }
 
     public scrollToCell(_id: string): void {
@@ -557,11 +574,18 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
-    private async export(cells: ICell[]) {
+    public async export() {
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
+
+        const notebookDocument = await this.tryGetMatchingNotebookDocument();
+        if (!notebookDocument) {
+            return;
+        }
+
+        const cells = notebookDocument.getCells().reduce((cells: ICell[], cell) => cells.concat(generateCellsFromDocument(cell.document)), []);
 
         // Should be an array of cells
         if (cells && this.exportDialog) {
@@ -573,11 +597,18 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    private async exportAs(cells: ICell[]) {
+    public async exportAs() {
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
+
+        const notebookDocument = await this.tryGetMatchingNotebookDocument();
+        if (!notebookDocument) {
+            return;
+        }
+
+        const cells = notebookDocument.getCells().reduce((cells: ICell[], cell) => cells.concat(generateCellsFromDocument(cell.document)), []);
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
