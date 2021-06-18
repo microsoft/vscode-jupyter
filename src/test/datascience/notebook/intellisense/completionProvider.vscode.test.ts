@@ -11,6 +11,7 @@ import { IDisposable } from '../../../../client/common/types';
 import { getTextOutputValue } from '../../../../client/datascience/notebook/helpers/helpers';
 import { NotebookCompletionProvider } from '../../../../client/datascience/notebook/intellisense/completionProvider';
 import { IExtensionTestApi } from '../../../common';
+import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
 import {
     canRunNotebookTests,
