@@ -772,6 +772,18 @@
                 "title": "%DataScience.interactiveGoToCode%",
                 "icon": "$(go-to-file)",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.interactive.exportfileasnotebook",
+                "title": "Export to Notebook",
+                "icon": "$(notebook)",
+                "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.interactive.export",
+                "title": "Export As",
+                "icon": "$(export)",
+                "category": "Jupyter"
             }
         ],
         "menus": {
@@ -890,11 +902,13 @@
                 {
                     "command": "jupyter.restartkernel",
                     "group": "navigation@1",
+                    "shortTitle": "Restart",
                     "when": "isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.interruptkernel",
                     "group": "navigation@2",
+                    "shortTitle": "Restart",
                     "when": "isWorkspaceTrusted"
                 },
                 {
