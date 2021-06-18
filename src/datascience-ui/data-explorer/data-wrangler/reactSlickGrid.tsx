@@ -39,7 +39,7 @@ import 'slickgrid/slick.grid.css';
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
 import { generateDisplayValue } from '../cellFormatter';
-import { ControlPanel } from './controlPanel';
+// import { ControlPanel } from './controlPanel';
 import './contextMenu.css';
 import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
 import { ColumnFilter, ISlickGridAdd, ISlickGridSlice, ISlickRow } from '../reactSlickGrid';
@@ -335,7 +335,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                         > */}
                     <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                     <div className="react-grid-measure" ref={this.measureRef} />
-                        <Resizable
+                    <Resizable>
+                        {/* <Resizable
                         style={{
                             display: 'flex',
                             alignItems: 'top',
@@ -373,7 +374,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                             }
                             currentVariableName={this.props.currentVariableName}
                             submitCommand={this.props.submitCommand}
-                        />
+                        /> */}
                     </Resizable>
                 </div>
                 <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
