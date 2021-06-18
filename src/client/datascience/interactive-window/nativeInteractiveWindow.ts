@@ -77,6 +77,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         return this._notebookUri;
     }
     public isInteractive = true;
+    public notebookController: VSCodeNotebookController | undefined;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private _owner: Uri | undefined;
@@ -88,7 +89,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     private isDisposed = false;
     private restartingKernel = false;
-    private notebookController: VSCodeNotebookController | undefined;
     private kernel: IKernel | undefined;
     private kernelLoadPromise: Promise<void> | undefined;
 

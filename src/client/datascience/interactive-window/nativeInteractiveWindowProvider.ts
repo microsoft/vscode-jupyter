@@ -107,7 +107,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         noop();
     }
 
-    protected create(resource: Resource, mode: InteractiveWindowMode, notebookUri: Uri): IInteractiveWindow {
+    protected create(resource: Resource, mode: InteractiveWindowMode, notebookUri: Uri): NativeInteractiveWindow {
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
         const result = new NativeInteractiveWindow(
@@ -161,13 +161,15 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             return;
         }
 
-        const existingInteractiveWindow = this._windows.find((interactiveWindow) => interactiveWindow.notebookUri.toString() === e.notebook.toString());
+        let interactiveWindow = this._windows.find((interactiveWindow) => interactiveWindow.notebookUri.toString() === e.notebook.toString());
 
-        if (existingInteractiveWindow === undefined) {
+        if (interactiveWindow === undefined) {
             // Ask for a configuration change if appropriate
             const mode = await this.getInteractiveMode(undefined); // TODO VS Code doesn't look at this setting
-            this.create(undefined, mode, e.notebook.uri);
+            interactiveWindow = this.create(undefined, mode, e.notebook.uri);
         }
+
+        interactiveWindow.notebookController = e.controller;
 
         // Ensure the kernel starts ASAP
         const kernel = this.kernelProvider.getOrCreate(e.notebook.uri, {

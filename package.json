@@ -616,12 +616,20 @@
                 "command": "jupyter.interruptkernel",
                 "title": "%jupyter.command.jupyter.interruptkernel.title%",
                 "category": "Jupyter",
+                "icon": {
+                    "light": "resources/light/interrupt.svg",
+                    "dark": "resources/dark/interrupt.svg"
+                },
                 "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.restartkernel",
                 "title": "%jupyter.command.jupyter.restartkernel.title%",
                 "category": "Jupyter",
+                "icon": {
+                    "light": "resources/light/restart-kernel.svg",
+                    "dark": "resources/dark/restart-kernel.svg"
+                },
                 "enablement": "isWorkspaceTrusted"
             },
             {
@@ -633,7 +641,7 @@
                     "light": "resources/light/interrupt.svg",
                     "dark": "resources/dark/interrupt.svg"
                 },
-                "enablement": "notebookType == 'interactive' || notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
+                "enablement": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
             },
             {
                 "command": "jupyter.notebookeditor.restartkernel",
@@ -644,7 +652,7 @@
                     "light": "resources/light/restart-kernel.svg",
                     "dark": "resources/dark/restart-kernel.svg"
                 },
-                "enablement": "notebookType == 'interactive' || jupyter.notebookeditor.canrestartNotebookkernel && isWorkspaceTrusted"
+                "enablement": "jupyter.notebookeditor.canrestartNotebookkernel && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
@@ -900,13 +908,13 @@
                     "when": "isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.notebookeditor.restartkernel",
+                    "command": "jupyter.restartkernel",
                     "group": "navigation@1",
                     "shortTitle": "Restart",
                     "when": "isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.notebookeditor.interruptkernel",
+                    "command": "jupyter.interruptkernel",
                     "group": "navigation@2",
                     "shortTitle": "Restart",
                     "when": "isWorkspaceTrusted"
