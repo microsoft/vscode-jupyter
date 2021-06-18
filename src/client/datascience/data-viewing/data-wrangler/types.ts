@@ -7,7 +7,6 @@ import { CssMessages, SharedMessages } from '../../messages';
 import { Event, WebviewPanel } from 'vscode';
 import { InteractiveWindowMessages, ILoadTmLanguageResponse } from '../../interactive-common/interactiveWindowTypes';
 import {
-    IColsResponse,
     IDataFrameInfo,
     IDataViewerDataProvider,
     IGetColsResponse,
@@ -80,10 +79,6 @@ export type IDataWranglerMapping = {
     [InteractiveWindowMessages.LoadTmLanguageResponse]: ILoadTmLanguageResponse;
     [CssMessages.GetMonacoThemeRequest]: { isDark: boolean };
 };
-
-export interface IDataWranglerDataProvider extends IDataViewerDataProvider {
-    getCols(columnName: string): Promise<IColsResponse>;
-}
 
 export const IDataWranglerFactory = Symbol('IDataWranglerFactory');
 export interface IDataWranglerFactory {

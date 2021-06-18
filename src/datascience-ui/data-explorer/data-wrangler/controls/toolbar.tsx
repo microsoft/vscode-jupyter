@@ -40,9 +40,7 @@ export class Toolbar extends React.PureComponent<IProps> {
                 </div>
                 <div
                     style={{ paddingRight: '15px', display: 'inline-block', cursor: 'pointer' }}
-                    onClick={() =>
-                        this.props.submitCommand({ command: DataWranglerCommands.ExportToPythonScript, args: null })
-                    }
+                    onClick={() => this.props.submitCommand({ command: DataWranglerCommands.ExportToPythonScript, args: null })}
                 >
                     <div
                         className="codicon codicon-go-to-file codicon-button"

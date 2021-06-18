@@ -8,10 +8,11 @@ import { inject, injectable } from 'inversify';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { Commands, EditorContexts } from '../../constants';
-import { IDataWrangler, IDataWranglerDataProvider, IDataWranglerFactory } from './types';
+import { IDataWrangler, IDataWranglerFactory } from './types';
 import { ICommandManager } from '../../../common/application/types';
 import { ContextKey } from '../../../common/contextKey';
 import { debounce } from 'lodash';
+import { IDataViewerDataProvider } from '../types';
 
 @injectable()
 export class DataWranglerFactory implements IDataWranglerFactory, IAsyncDisposable {
@@ -46,7 +47,7 @@ export class DataWranglerFactory implements IDataWranglerFactory, IAsyncDisposab
 
     // @captureTelemetry(Telemetry.StartShowDataWrangler)
     public async create(
-        dataProvider: IDataWranglerDataProvider,
+        dataProvider: IDataViewerDataProvider,
         title: string,
         webviewPanel?: WebviewPanel
     ): Promise<IDataWrangler> {
