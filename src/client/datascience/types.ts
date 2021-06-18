@@ -319,6 +319,7 @@ export interface IDebuggingManager {}
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
+    onIOPubMessageSignal: Event<KernelMessage.IIOPubMessage>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;

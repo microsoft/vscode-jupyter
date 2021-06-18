@@ -34,7 +34,6 @@ export class DebuggingManager implements IDebuggingManager, IExtensionSingleActi
                 for (const [doc, dbg] of this.notebookToDebugger.entries()) {
                     if (dbg && session === (await dbg.session)) {
                         this.notebookToDebugger.delete(doc);
-                        this.updateDebuggerUI(doc, false);
                         break;
                     }
                 }
@@ -125,7 +124,6 @@ export class DebuggingManager implements IDebuggingManager, IExtensionSingleActi
     }
 
     private async toggleDebugging(doc: vscode.NotebookDocument) {
-        let showBreakpointMargin = false;
         let dbg = this.notebookToDebugger.get(doc);
         if (dbg) {
             await dbg.stop();
@@ -136,17 +134,13 @@ export class DebuggingManager implements IDebuggingManager, IExtensionSingleActi
             await this.kernelProvider.get(doc.uri); // ensure the kernel is running
             try {
                 await dbg.session;
-                showBreakpointMargin = true;
             } catch (err) {
                 vscode.window.showErrorMessage(`Can't start debugging (${err})`);
             }
-            this.updateDebuggerUI(doc, showBreakpointMargin);
         }
     }
 
     private async getDebuggerByUri(document: vscode.NotebookDocument): Promise<Debugger> {
-        let showBreakpointMargin = false;
-
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (document.uri.toString() === doc.uri.toString()) {
                 return dbg;
@@ -156,22 +150,12 @@ export class DebuggingManager implements IDebuggingManager, IExtensionSingleActi
         const dbg = new Debugger(document);
         this.notebookToDebugger.set(document, dbg);
         await this.kernelProvider.get(document.uri); // ensure the kernel is running
-        try {
-            await dbg.session;
-            showBreakpointMargin = true;
-        } catch (err) {
-            vscode.window.showErrorMessage(`Can't start debugging (${err})`);
-        }
-        this.updateDebuggerUI(document, showBreakpointMargin);
+        // try {
+        //     await dbg.session;
+        // } catch (err) {
+        //     vscode.window.showErrorMessage(`Can't start debugging (${err})`);
+        // }
         return dbg;
-    }
-
-    private updateDebuggerUI(doc: vscode.NotebookDocument, showBreakpointsMargin: boolean) {
-        for (const cell of doc.getCells()) {
-            if (cell.kind === vscode.NotebookCellKind.Code) {
-                cell.metadata.breakpointMargin = showBreakpointsMargin;
-            }
-        }
     }
 }
 

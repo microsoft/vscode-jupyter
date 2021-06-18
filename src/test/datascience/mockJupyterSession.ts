@@ -60,6 +60,9 @@ export class MockJupyterSession implements IJupyterSession {
         }
         return this.onStatusChangedEvent.event;
     }
+    public get onIOPubMessageSignal(): Event<KernelMessage.IIOPubMessage> {
+        return new EventEmitter<KernelMessage.IIOPubMessage>().event;
+    }
     public get status(): ServerStatus {
         return this._status;
     }

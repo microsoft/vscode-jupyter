@@ -25,11 +25,16 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
         private session: vscode.DebugSession,
         private notebookDocument: vscode.NotebookDocument,
         private readonly jupyterSession: IJupyterSession
-    ) {}
+    ) {
+        const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
+            if ((msg.content as any).event === 'stopped') {
+                this.sendMessage.fire(msg.content);
+            }
+        };
+        this.jupyterSession.onIOPubMessageSignal(iopubHandler);
+    }
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
-        // console.log('-> send', message);
-
         // intercept 'setBreakpoints' request
         if (message.type === 'request' && (message as DebugProtocol.Request).command === 'setBreakpoints') {
             const args = (message as DebugProtocol.Request).arguments;
@@ -60,8 +65,6 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
             if (control) {
                 control.onReply = (msg) => {
                     visitSources(msg.content, (source) => {
-                        console.error('------------------ onReply ------------');
-                        console.error(msg);
                         if (source && source.path) {
                             const cell = this.fileToCell.get(source.path);
                             if (cell) {
@@ -78,8 +81,6 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
                 };
                 control.onIOPub = (msg) => {
                     visitSources(msg.content as DebugProtocol.ProtocolMessage, (source) => {
-                        console.error('------------------ onIOPub ------------');
-                        console.error(msg);
                         if (source && source.path) {
                             const cell = this.fileToCell.get(source.path);
                             if (cell) {
@@ -96,8 +97,6 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
                 };
                 control.onStdin = (msg) => {
                     visitSources(msg.content as DebugProtocol.ProtocolMessage, (source) => {
-                        console.error('------------------ onStdin ------------');
-                        console.error(msg);
                         if (source && source.path) {
                             const cell = this.fileToCell.get(source.path);
                             if (cell) {
@@ -141,8 +140,9 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
         if (cell) {
             try {
                 const response = await this.session.customRequest('dumpCell', { code: cell.document.getText() });
-                this.fileToCell.set(response.sourcePath, cell);
-                this.cellToFile.set(cell.document.uri.toString(), response.sourcePath);
+                const norm = path.normalize(response.sourcePath);
+                this.fileToCell.set(norm, cell);
+                this.cellToFile.set(cell.document.uri.toString(), norm);
             } catch (err) {
                 console.log(err);
             }
