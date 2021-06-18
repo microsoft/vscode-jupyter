@@ -17,7 +17,6 @@ import {
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { IApplicationShell, ICommandManager, IDataWranglerProvider } from '../../../common/application/types';
 import * as uuid from 'uuid/v4';
-import * as path from 'path';
 import { Commands, Identifiers } from '../../constants';
 import { INotebookProvider, IJupyterVariables, INotebookEditor } from '../../types';
 import { DataViewerChecker } from '../../interactive-common/dataViewerChecker';
@@ -29,6 +28,7 @@ import {
     IDataWranglerJupyterVariableDataProviderFactory,
     OpenDataWranglerSetting
 } from './types';
+import { DataScience } from '../../../common/utils/localize';
 
 @injectable()
 export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSingleActivationService {
@@ -265,25 +265,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
     }
 
     private getImportCodeForFileType(filepath: string) {
-        const fileExtension = path.extname(filepath);
-        let code = 'import pandas as pd\n';
-        switch (fileExtension) {
-            case '.csv':
-                code += `df = pd.read_csv(r"${filepath}")`;
-                break;
-            case '.xlsx': // TODO dependency check for openpyxl
-                code += `df = pd.read_excel(r"${filepath}")`;
-                break;
-            case '.parquet':
-                code += `df = pd.read_parquet(r"${filepath}")`;
-                break;
-            case '.sql': // TODO UI for remote data sources
-                code += `df = pd.read_sql(r"${filepath}")`;
-                break;
-            case '.feather': // TODO UI for remote data sources
-                code += `df = pd.read_feather(r"${filepath}")`;
-                break;
-        }
+        const code = DataScience.dataWranglerImportCode().format(filepath);
         return code;
     }
 }

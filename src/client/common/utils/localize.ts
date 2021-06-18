@@ -1049,6 +1049,10 @@ export namespace DataScience {
         'DataScience.dataWranglerPyPlotHistogram',
         "import matplotlib.pyplot as plt\nplt.hist({0}['{1}'])\n"
     );
+    export const dataWranglerImportCode = localize(
+        'DataScience.dataWranglerImportCode',
+        "import pandas as pd\r\ndf = pd.read_csv(r'{0}')\n"
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

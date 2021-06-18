@@ -410,7 +410,8 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
     }
 
     private getImportCode() {
-        return `import pandas as pd\ndf = pd.read_csv(r'${this.sourceFile}')\n`;
+        const code = DataScience.dataWranglerImportCode().format(this.sourceFile ?? '');
+        return code;
     }
 
     private async generatePythonCode() {
