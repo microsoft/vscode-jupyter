@@ -65,6 +65,7 @@ import {
     IDataWranglerJupyterVariableDataProvider,
     IDataWranglerJupyterVariableDataProviderFactory
 } from './types';
+import { DataScience } from '../../../common/utils/localize';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataWranglerPreferredViewColumn';
 const dataWranglerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
@@ -493,7 +494,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
 
             case DataWranglerCommands.PyplotHistogram:
                 refreshRequired = false;
-                code = `import matplotlib.pyplot as plt\nplt.hist(${currentVariableName}["${payload.args.target}"])\n`;
+                code = DataScience.dataWranglerPyplotHistogramCode().format(currentVariableName, payload.args.target);
                 break;
 
             case DataWranglerCommands.NormalizeColumn:
@@ -560,9 +561,17 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
     private renameColumn(currentVariableName: string, req: IRenameColumnsRequest): IHistoryItem {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
-        const code = `${newVariableName} = ${currentVariableName}.rename(columns={ "${req.oldColumnName}": "${req.newColumnName}" })\n`;
+        const code = DataScience.dataWranglerRenameColumnCode().format(
+            newVariableName,
+            currentVariableName,
+            req.oldColumnName,
+            req.newColumnName
+        );
         const historyItem = {
-            transformation: `Renamed column "${req.oldColumnName}" to "${req.newColumnName}"`,
+            transformation: DataScience.dataWranglerRenameColumnTransformation().format(
+                req.oldColumnName,
+                req.newColumnName
+            ),
             variableName: newVariableName,
             code: code
         };
@@ -576,9 +585,14 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
         const labels = req.targets;
         if (req.mode === 'row') {
             // Drop rows by index
-            const code = `df${this.variableCounter} = ${currentVariableName}.drop(${'[' + labels.join(', ') + ']'})\n`;
+            const rowNums = labels.join(', ');
+            const code = DataScience.dataWranglerDropRowCode().format(
+                newVariableName,
+                currentVariableName,
+                `[${rowNums}]`
+            );
             const historyItem = {
-                transformation: 'Dropped rows(s): ' + labels.map((label) => `${label}`).join(', '),
+                transformation: DataScience.dataWranglerDropRowTransformation().format(rowNums),
                 variableName: newVariableName,
                 code: code
             };
@@ -586,11 +600,14 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
             return historyItem;
         } else {
             // Drop columns by column name
-            const code = `df${this.variableCounter} = ${currentVariableName}.drop(columns=${
-                '[' + labels.map((label) => `"${label}"`).join(', ') + ']'
-            })\n`;
+            const columnNames = labels.map((label) => `'${label}'`).join(', ');
+            const code = DataScience.dataWranglerDropColumnCode().format(
+                newVariableName,
+                currentVariableName,
+                `[${columnNames}]`
+            );
             const historyItem = {
-                transformation: 'Dropped column(s): ' + labels.map((label) => `"${label}"`).join(', '),
+                transformation: DataScience.dataWranglerDropColumnTransformation().format(columnNames),
                 variableName: newVariableName,
                 code: code
             };
@@ -605,10 +622,14 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
 
         if (req.subset !== undefined) {
             // Drop duplicates in a column
-            const subset = req.subset.map((col: string) => `"${col}"`).join(', ');
-            const code = `${newVariableName} = ${currentVariableName}.drop_duplicates(subset=[${subset}])\n`;
+            const subset = req.subset.map((col: string) => `'${col}'`).join(', ');
+            const code = DataScience.dataWranglerDropDuplicatesRowsOnColumnCode().format(
+                newVariableName,
+                currentVariableName,
+                subset
+            );
             const historyItem = {
-                transformation: `Removed duplicate rows on column(s): ${subset}`,
+                transformation: DataScience.dataWranglerDropDuplicatesRowsOnColumnTransformation().format(subset),
                 variableName: newVariableName,
                 code: code
             };
@@ -616,9 +637,9 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
             return historyItem;
         } else {
             // Drop duplicate rows
-            const code = `${newVariableName} = ${currentVariableName}.drop_duplicates()\n`;
+            const code = DataScience.dataWranglerDropDuplicatesRowsCode().format(newVariableName, currentVariableName);
             const historyItem = {
-                transformation: 'Removed duplicate rows',
+                transformation: DataScience.dataWranglerDropDuplicatesRowsTransformation(),
                 variableName: newVariableName,
                 code: code
             };
@@ -633,19 +654,30 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
 
         if (req.subset !== undefined) {
             // This assumes only one column/row at a time
-            const code = `${newVariableName} = ${currentVariableName}.dropna(subset=["${req.subset}"])\n`;
+            const subset = req.subset.map((col: string) => `'${col}'`).join(', ');
+            const code = DataScience.dataWranglerDropNaRowsOnColumnCode().format(
+                newVariableName,
+                currentVariableName,
+                subset
+            );
             const historyItem = {
-                transformation: `Dropped rows with missing data in column: "${req.subset}"`,
+                transformation: DataScience.dataWranglerDropNaRowsOnColumnTransformation().format(subset),
                 variableName: newVariableName,
                 code: code
             };
             this.addToHistory(historyItem);
             return historyItem;
         } else {
-            const code = `${newVariableName} = ${currentVariableName}.dropna(axis=${req.target})\n`;
+            const code = DataScience.dataWranglerDropNaCode().format(
+                newVariableName,
+                currentVariableName,
+                req.target?.toString() ?? ''
+            );
             const historyItem = {
                 transformation:
-                    req.target == 0 ? 'Dropped rows with missing data' : 'Dropped columns with missing data',
+                    req.target == 0
+                        ? DataScience.dataWranglerDropNaRowsTransformation()
+                        : DataScience.dataWranglerDropNaColumnsTransformation(),
                 variableName: newVariableName,
                 code: code
             };
@@ -657,12 +689,18 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
     private normalizeColumn(currentVariableName: string, req: INormalizeColumnRequest): IHistoryItem {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
-        const code = `from sklearn.preprocessing import MinMaxScaler
-scaler = MinMaxScaler(feature_range=(${req.start}, ${req.end}))
-${newVariableName} = ${currentVariableName}.copy()
-${newVariableName}["${req.target}"] = scaler.fit_transform(${newVariableName}["${req.target}"].values.reshape(-1, 1))\n`;
+        const code = DataScience.dataWranglerNormalizeColumnCode().format(
+            req.start.toString(),
+            req.end.toString(),
+            newVariableName,
+            currentVariableName,
+            newVariableName,
+            req.target,
+            newVariableName,
+            req.target
+        );
         const historyItem = {
-            transformation: `Normalized column: "${req.target}"`,
+            transformation: DataScience.dataWranglerNormalizeColumnTransformation().format(req.target),
             variableName: newVariableName,
             code: code
         };
@@ -673,9 +711,13 @@ ${newVariableName}["${req.target}"] = scaler.fit_transform(${newVariableName}["$
     private fillNa(currentVariableName: string, req: IFillNaRequest): IHistoryItem {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
-        const code = `${newVariableName} = ${currentVariableName}.fillna(${req.newValue})\n`;
+        const code = DataScience.dataWranglerFillNaCode().format(
+            newVariableName,
+            currentVariableName,
+            req.newValue.toString()
+        );
         const historyItem = {
-            transformation: `Replaced Na values with: "${req.newValue}"`,
+            transformation: DataScience.dataWranglerFillNaTransformation().format(req.newValue.toString()),
             variableName: newVariableName,
             code: code
         };

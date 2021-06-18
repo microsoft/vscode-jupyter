@@ -141,7 +141,7 @@ export interface IDropNaRequest {
 export interface INormalizeColumnRequest {
     start: Number;
     end: Number;
-    target: Number;
+    target: string;
 }
 
 export interface IFillNaRequest {

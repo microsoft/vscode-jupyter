@@ -36,11 +36,10 @@ export class CustomEditorService implements ICustomEditorService, IExtensionSing
         if (this.useCustomEditorApi) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (vscode.window as any).registerCustomEditorProvider(viewType, provider, options);
-        } else if (!this.useCustomEditorApi) {
+        } else {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return (vscode.window as any).registerCustomEditorProvider(viewType, new InvalidCustomEditor(), options);
         }
-        throw new Error();
     }
 
     public async openEditor(file: vscode.Uri, viewType: string): Promise<void> {

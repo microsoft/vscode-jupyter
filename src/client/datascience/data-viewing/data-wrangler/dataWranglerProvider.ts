@@ -17,7 +17,7 @@ import {
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { IApplicationShell, ICommandManager, IDataWranglerProvider } from '../../../common/application/types';
 import * as uuid from 'uuid/v4';
-import { getImportCodeForFileType } from '../../commands/commandRegistry';
+import * as path from 'path';
 import { Commands, Identifiers } from '../../constants';
 import { INotebookProvider, IJupyterVariables, INotebookEditor } from '../../types';
 import { DataViewerChecker } from '../../interactive-common/dataViewerChecker';
@@ -192,7 +192,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                 identity: file,
                 disableUI: true
             });
-            const code = getImportCodeForFileType(file!.fsPath);
+            const code = this.getImportCodeForFileType(file!.fsPath);
             await notebook?.execute(code, '', 0, uuid(), undefined, true);
             const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
                 {
@@ -227,7 +227,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
             // Add code cell to import dataframe
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const blankCell = (notebookEditor as any).document.cellAt(0) as NotebookCell;
-            const code = getImportCodeForFileType(file!.fsPath);
+            const code = this.getImportCodeForFileType(file!.fsPath);
             await updateCellCode(blankCell, code);
             // Run the cells
             await this.commandManager.executeCommand('notebook.cell.execute');
@@ -262,5 +262,28 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
             await this.dataWranglerFactory.create(jupyterVariableDataProvider, 'Data Wrangler', webviewPanel);
         }
+    }
+
+    private getImportCodeForFileType(filepath: string) {
+        const fileExtension = path.extname(filepath);
+        let code = 'import pandas as pd\n';
+        switch (fileExtension) {
+            case '.csv':
+                code += `df = pd.read_csv(r"${filepath}")`;
+                break;
+            case '.xlsx': // TODO dependency check for openpyxl
+                code += `df = pd.read_excel(r"${filepath}")`;
+                break;
+            case '.parquet':
+                code += `df = pd.read_parquet(r"${filepath}")`;
+                break;
+            case '.sql': // TODO UI for remote data sources
+                code += `df = pd.read_sql(r"${filepath}")`;
+                break;
+            case '.feather': // TODO UI for remote data sources
+                code += `df = pd.read_feather(r"${filepath}")`;
+                break;
+        }
+        return code;
     }
 }
