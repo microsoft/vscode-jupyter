@@ -479,7 +479,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
         const settings = this.configuration.getSettings();
         const cellMatcher = new CellMatcher(settings);
-        const strippedCode = cellMatcher.stripFirstMarker(code);
+        const strippedCode = cellMatcher.stripFirstMarker(code).trimStart();
         const interactiveWindowCellTitle = cellMatcher.exec(code);
         const isMarkdown = cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
 
