@@ -117,17 +117,17 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
 
             const qpitems = [
                 {
-                    label: 'Open Just the Data Wrangler',
+                    label: DataScience.dataWranglerStandalone(),
                     picked: true
                 },
                 {
-                    label: 'Open Data Wrangler With Jupyter Notebook'
+                    label: DataScience.dataWranglerWithJupyterNotebook()
                 }
             ];
 
             const selection = await this.appShell.showQuickPick(qpitems, qpoptions);
             switch (selection?.label) {
-                case 'Open Just the Data Wrangler':
+                case DataScience.dataWranglerStandalone():
                     dataCleaningMode = OpenDataWranglerSetting.STANDALONE;
                     await this.configService.updateSetting(
                         'dataCleaningMode',
@@ -136,7 +136,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                         ConfigurationTarget.Global
                     );
                     break;
-                case 'Open Data Wrangler With Jupyter Notebook':
+                case DataScience.dataWranglerWithJupyterNotebook():
                     dataCleaningMode = OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK;
                     await this.configService.updateSetting(
                         'dataCleaningMode',
@@ -156,7 +156,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                 options = {
                     location: ProgressLocation.Notification,
                     cancellable: true,
-                    title: 'Importing Data and Launching Data Wrangler...'
+                    title: DataScience.dataWranglerStandaloneLoading()
                 };
                 setting = OpenDataWranglerSetting.STANDALONE;
 
@@ -166,7 +166,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
                 options = {
                     location: ProgressLocation.Notification,
                     cancellable: true,
-                    title: 'Importing Data and Launching Data Wrangler with a Jupyter Notebook...'
+                    title: DataScience.dataWranglerWithJupyterNotebookLoading()
                 };
                 setting = OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK;
 

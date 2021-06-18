@@ -1053,6 +1053,19 @@ export namespace DataScience {
         'DataScience.dataWranglerImportCode',
         "import pandas as pd\r\ndf = pd.read_csv(r'{0}')\n"
     );
+    export const dataWranglerStandalone = localize('DataScience.dataWranglerStandalone', 'Open just the Data Wrangler');
+    export const dataWranglerWithJupyterNotebook = localize(
+        'DataScience.dataWranglerWithJupyterNotebook',
+        'Open Data Wrangler with Jupyter Notebook'
+    );
+    export const dataWranglerStandaloneLoading = localize(
+        'DataScience.dataWranglerStandaloneLoading',
+        'Importing Data and Launching Data Wrangler...'
+    );
+    export const dataWranglerWithJupyterNotebookLoading = localize(
+        'DataScience.dataWranglerWithJupyterNotebookLoading',
+        'Importing Data and Launching Data Wrangler with a Jupyter Notebook...'
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
