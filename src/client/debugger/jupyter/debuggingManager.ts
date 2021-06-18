@@ -12,6 +12,46 @@ import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 
+class Debugger {
+    private resolveFunc?: (value: vscode.DebugSession) => void;
+    private rejectFunc?: (reason?: Error) => void;
+
+    readonly session: Promise<vscode.DebugSession>;
+
+    constructor(public readonly document: vscode.NotebookDocument) {
+        this.session = new Promise<vscode.DebugSession>((resolve, reject) => {
+            this.resolveFunc = resolve;
+            this.rejectFunc = reject;
+
+            vscode.debug
+                .startDebugging(undefined, {
+                    type: 'kernel',
+                    name: `${path.basename(document.uri.toString())}`,
+                    request: 'attach',
+                    internalConsoleOptions: 'neverOpen',
+                    __document: document.uri.toString()
+                })
+                .then(undefined, reject);
+        });
+    }
+
+    resolve(session: vscode.DebugSession) {
+        if (this.resolveFunc) {
+            this.resolveFunc(session);
+        }
+    }
+
+    reject(reason: Error) {
+        if (this.rejectFunc) {
+            this.rejectFunc(reason);
+        }
+    }
+
+    async stop() {
+        void vscode.debug.stopDebugging(await this.session);
+    }
+}
+
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
@@ -66,7 +106,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                                 new KernelDebugAdapter(session, debug.document, notebook.session)
                             );
                         } else {
-                            vscode.window.showInformationMessage('run the kernel');
+                            void vscode.window.showInformationMessage('run the kernel');
                         }
                     }
                     // Should not happen, debug sessions should start only from the cell toolbar command
@@ -77,9 +117,9 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             vscode.commands.registerCommand('jupyter.debugCell', () => {
                 const editor = vscode.window.activeNotebookEditor;
                 if (editor) {
-                    this.toggleDebugging(editor.document);
+                    void this.toggleDebugging(editor.document);
                 } else {
-                    vscode.window.showErrorMessage('No active notebook document to debug');
+                    void vscode.window.showErrorMessage('No active notebook document to debug');
                 }
             })
         );
@@ -134,7 +174,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             try {
                 await dbg.session;
             } catch (err) {
-                vscode.window.showErrorMessage(`Can't start debugging (${err})`);
+                void vscode.window.showErrorMessage(`Can't start debugging (${err})`);
             }
         }
     }
@@ -145,45 +185,5 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                 return dbg;
             }
         }
-    }
-}
-
-class Debugger {
-    private resolveFunc?: (value: vscode.DebugSession) => void;
-    private rejectFunc?: (reason?: Error) => void;
-
-    readonly session: Promise<vscode.DebugSession>;
-
-    constructor(public readonly document: vscode.NotebookDocument) {
-        this.session = new Promise<vscode.DebugSession>((resolve, reject) => {
-            this.resolveFunc = resolve;
-            this.rejectFunc = reject;
-
-            vscode.debug
-                .startDebugging(undefined, {
-                    type: 'kernel',
-                    name: `${path.basename(document.uri.toString())}`,
-                    request: 'attach',
-                    internalConsoleOptions: 'neverOpen',
-                    __document: document.uri.toString()
-                })
-                .then(undefined, reject);
-        });
-    }
-
-    resolve(session: vscode.DebugSession) {
-        if (this.resolveFunc) {
-            this.resolveFunc(session);
-        }
-    }
-
-    reject(reason: Error) {
-        if (this.rejectFunc) {
-            this.rejectFunc(reason);
-        }
-    }
-
-    async stop() {
-        vscode.debug.stopDebugging(await this.session);
     }
 }

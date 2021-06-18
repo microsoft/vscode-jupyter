@@ -10,6 +10,53 @@ import * as path from 'path';
 import { IJupyterSession } from '../../datascience/types';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 
+const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugRequestMsg => {
+    return {
+        channel: 'control',
+        header: {
+            msg_id: randomBytes(8).toString('hex'),
+            date: new Date().toISOString(),
+            version: '5.2',
+            msg_type: 'debug_request',
+            username: 'vscode',
+            session: randomBytes(8).toString('hex')
+        },
+        metadata: {},
+        parent_header: {},
+        content: {
+            seq: message.seq,
+            type: 'request',
+            command: message.command,
+            arguments: message.arguments
+        }
+    };
+};
+
+const debugResponse = (message: DebugProtocol.Response): KernelMessage.IDebugReplyMsg => {
+    return {
+        channel: 'control',
+        header: {
+            msg_id: randomBytes(8).toString('hex'),
+            date: new Date().toISOString(),
+            version: '5.2',
+            msg_type: 'debug_reply',
+            username: 'vscode',
+            session: randomBytes(8).toString('hex')
+        },
+        metadata: {},
+        parent_header: {},
+        content: {
+            seq: message.seq,
+            type: 'response',
+            request_seq: message.request_seq,
+            success: message.success,
+            command: message.command,
+            message: message.message,
+            body: message.body
+        }
+    };
+};
+
 export class KernelDebugAdapter implements vscode.DebugAdapter {
     private readonly fileToCell = new Map<string, vscode.NotebookCell>();
     private readonly cellToFile = new Map<string, string>();
@@ -27,6 +74,7 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
         private readonly jupyterSession: IJupyterSession
     ) {
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
+            // tslint:disable-next-line:no-any
             if ((msg.content as any).event === 'stopped') {
                 this.sendMessage.fire(msg.content);
             }
@@ -227,50 +275,3 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
         }
     }
 }
-
-const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugRequestMsg => {
-    return {
-        channel: 'control',
-        header: {
-            msg_id: randomBytes(8).toString('hex'),
-            date: new Date().toISOString(),
-            version: '5.2',
-            msg_type: 'debug_request',
-            username: 'vscode',
-            session: randomBytes(8).toString('hex')
-        },
-        metadata: {},
-        parent_header: {},
-        content: {
-            seq: message.seq,
-            type: 'request',
-            command: message.command,
-            arguments: message.arguments
-        }
-    };
-};
-
-const debugResponse = (message: DebugProtocol.Response): KernelMessage.IDebugReplyMsg => {
-    return {
-        channel: 'control',
-        header: {
-            msg_id: randomBytes(8).toString('hex'),
-            date: new Date().toISOString(),
-            version: '5.2',
-            msg_type: 'debug_reply',
-            username: 'vscode',
-            session: randomBytes(8).toString('hex')
-        },
-        metadata: {},
-        parent_header: {},
-        content: {
-            seq: message.seq,
-            type: 'response',
-            request_seq: message.request_seq,
-            success: message.success,
-            command: message.command,
-            message: message.message,
-            body: message.body
-        }
-    };
-};
