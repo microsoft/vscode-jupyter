@@ -313,9 +313,6 @@ export interface IJupyterPasswordConnect {
     getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined>;
 }
 
-export const IDebuggingManager = Symbol('IDebuggingManager');
-export interface IDebuggingManager {}
-
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;

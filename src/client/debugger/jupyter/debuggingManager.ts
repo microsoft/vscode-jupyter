@@ -9,14 +9,14 @@ import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
-import { IDebuggingManager, INotebookProvider } from '../../datascience/types';
+import { INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
 @injectable()
-export class DebuggingManager implements IDebuggingManager, IExtensionSingleActivationService {
+export class DebuggingManager implements IExtensionSingleActivationService {
     private notebookToDebugger = new Map<vscode.NotebookDocument, Debugger>();
     private readonly disposables: IDisposable[] = [];
 
