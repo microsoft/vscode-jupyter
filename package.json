@@ -900,13 +900,13 @@
                     "when": "isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.restartkernel",
+                    "command": "jupyter.notebookeditor.restartkernel",
                     "group": "navigation@1",
                     "shortTitle": "Restart",
                     "when": "isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.interruptkernel",
+                    "command": "jupyter.notebookeditor.interruptkernel",
                     "group": "navigation@2",
                     "shortTitle": "Restart",
                     "when": "isWorkspaceTrusted"

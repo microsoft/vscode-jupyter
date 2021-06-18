@@ -88,6 +88,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     private isDisposed = false;
     private restartingKernel = false;
+    private notebookController: VSCodeNotebookController | undefined;
     private kernel: IKernel | undefined;
     private kernelLoadPromise: Promise<void> | undefined;
 
@@ -121,15 +122,18 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             }
             
             // Clear cached variables when the selected controller for this document changes
-            e.controller.controller.onDidChangeSelectedNotebooks((e: { notebook: NotebookDocument, selected: boolean }) => {
-                if (e.selected === false && e.notebook.uri.toString() !== this._notebookUri.toString()) {
+            e.controller.controller.onDidChangeSelectedNotebooks(async (selectedEvent: { notebook: NotebookDocument, selected: boolean }) => {
+                const isMatchingNotebook = selectedEvent.notebook.uri.toString() === this._notebookUri.toString();
+                if (selectedEvent.selected === false && isMatchingNotebook) {
                     this.kernelLoadPromise = undefined;
                     this.kernel = undefined;
+                    this.notebookController = undefined;
+                } else if (selectedEvent.selected === true && isMatchingNotebook) {
+                    // Try to initialize a real kernel ASAP
+                    await this.ensureKernel(e.notebook, e.controller);
                 }
             });
 
-            // Try to initialize a real kernel ASAP
-            await this.ensureKernel(e.notebook, e.controller);
         });
     }
 
@@ -138,9 +142,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             metadata: controller.connection,
             controller: controller.controller
         });
-        this.kernelLoadPromise =  kernel?.start({ disableUI: false, document: notebookDocument });
-        await this.kernelLoadPromise;
+        this.kernelLoadPromise = kernel?.start({ disableUI: false, document: notebookDocument });
         this.kernel = kernel;
+        this.notebookController = controller;
+        await this.kernelLoadPromise;
     }
 
     // Until we get an InteractiveEditor instance back from VS Code we
@@ -431,14 +436,13 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         _debugInfo?: { runByLine: boolean; hashFileName?: string },
         _cancelToken?: CancellationToken
     ): Promise<boolean> {
-        await this.kernelLoadPromise;
-
-        // Ensure we always have a notebook document to submit code to
         const notebookDocument = await this.tryGetMatchingNotebookDocument();
-
-        if (!notebookDocument) {
+        if (!notebookDocument || !this.notebookController) {
             return true;
         }
+        
+        await this.ensureKernel(notebookDocument, this.notebookController);
+
 
         // Insert code cell into NotebookDocument
         const edit = new WorkspaceEdit();
