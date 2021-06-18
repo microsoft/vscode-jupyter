@@ -615,6 +615,7 @@
             {
                 "command": "jupyter.interruptkernel",
                 "title": "%jupyter.command.jupyter.interruptkernel.title%",
+                "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
                 "category": "Jupyter",
                 "icon": {
                     "light": "resources/light/interrupt.svg",
@@ -625,6 +626,7 @@
             {
                 "command": "jupyter.restartkernel",
                 "title": "%jupyter.command.jupyter.restartkernel.title%",
+                "shortTitle": "%jupyter.command.jupyter.restartkernel.shorttitle%",
                 "category": "Jupyter",
                 "icon": {
                     "light": "resources/light/restart-kernel.svg",
@@ -914,13 +916,11 @@
                 {
                     "command": "jupyter.restartkernel",
                     "group": "navigation@1",
-                    "shortTitle": "Restart",
                     "when": "isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.interruptkernel",
                     "group": "navigation@2",
-                    "shortTitle": "Restart",
                     "when": "isWorkspaceTrusted"
                 },
                 {
