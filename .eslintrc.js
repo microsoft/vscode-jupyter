@@ -829,7 +829,6 @@ module.exports = {
         'src/client/datascience/interactive-ipynb/nativeEditorRunByLineListener.ts',
         'src/client/datascience/interactive-ipynb/nativeEditorSynchronizer.ts',
         'src/client/datascience/interactive-ipynb/autoSaveService.ts',
-        'src/client/datascience/editor-integration/decorator.ts',
         'src/client/datascience/editor-integration/cellhashprovider.ts',
         'src/client/datascience/commands/commandLineSelector.ts',
         'src/client/datascience/cellFactory.ts',

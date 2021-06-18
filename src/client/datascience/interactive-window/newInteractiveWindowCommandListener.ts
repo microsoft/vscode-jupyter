@@ -5,7 +5,7 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Range, TextDocument, Uri } from 'vscode';
+import { NotebookCell, NotebookRange, Position, Range, Selection, TextDocument, TextEditor, Uri, ViewColumn, workspace, WorkspaceEdit } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
@@ -164,6 +164,9 @@ export class NewInteractiveWindowCommandListener {
                 this.scrollToCell(file, id)
             )
         );
+        this.disposableRegistry.push(commandManager.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow, this));
+        this.disposableRegistry.push(commandManager.registerCommand(Commands.InteractiveRemoveCell, this.removeCellInInteractiveWindow, this));
+        this.disposableRegistry.push(commandManager.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow, this));
     }
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -505,6 +508,56 @@ export class NewInteractiveWindowCommandListener {
                     possibles[i].scrollToCell(id);
                     break;
                 }
+            }
+        }
+    }
+
+    private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
+        if (!context) {
+            return;
+        }
+
+        const document = workspace.notebookDocuments.find(
+            (document) => document.uri.toString() === context.notebookEditor.notebookUri.toString()
+        );
+        if (!document) {
+            return;
+        }
+
+        const edit = new WorkspaceEdit();
+        edit.replaceNotebookCells(document.uri, new NotebookRange(0, document.cellCount), []);
+        await workspace.applyEdit(edit);
+    }
+
+    private async removeCellInInteractiveWindow(context?: NotebookCell) {
+        if (context) {
+            const edit = new WorkspaceEdit();
+            edit.replaceNotebookCells(context.notebook.uri, new NotebookRange(context.index, context.index + 1), []);
+            await workspace.applyEdit(edit);
+        }
+    }
+
+    private async goToCodeInInteractiveWindow(context?: NotebookCell) {
+        if (context && context.metadata?.interactive) {
+            const file = context.metadata.interactive.file;
+            const line = context.metadata.interactive.line;
+
+            let editor: TextEditor | undefined;
+
+            if (await this.fileSystem.localFileExists(file)) {
+                editor = await this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One });
+            } else {
+                // File URI isn't going to work. Look through the active text documents
+                editor = this.documentManager.visibleTextEditors.find((te) => te.document.fileName === file);
+                if (editor) {
+                    editor.show();
+                }
+            }
+
+            // If we found the editor change its selection
+            if (editor) {
+                editor.revealRange(new Range(line, 0, line, 0));
+                editor.selection = new Selection(new Position(line, 0), new Position(line, 0));
             }
         }
     }

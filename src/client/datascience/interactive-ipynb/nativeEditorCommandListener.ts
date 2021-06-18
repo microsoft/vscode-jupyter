@@ -118,7 +118,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     private async restartKernel() {
         const activeEditor = this.provider.activeEditor;
         if (activeEditor) {
-            return await activeEditor.restartKernel().catch(traceError.bind('Failed to restart kernel'));
+            await activeEditor.restartKernel().catch(traceError.bind('Failed to restart kernel'));
         }
     }
 
