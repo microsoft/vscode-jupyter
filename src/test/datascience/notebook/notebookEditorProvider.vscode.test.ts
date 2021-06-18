@@ -14,7 +14,7 @@ import { JupyterNotebookView } from '../../../client/datascience/notebook/consta
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
 import {
     canRunNotebookTests,
@@ -44,6 +44,10 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         api = await initialize();
+        if (IS_REMOTE_NATIVE_TEST) {
+            // https://github.com/microsoft/vscode-jupyter/issues/6331
+            return this.skip();
+        }
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
