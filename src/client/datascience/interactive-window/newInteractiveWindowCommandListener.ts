@@ -5,7 +5,19 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { NotebookCell, NotebookRange, Position, Range, Selection, TextDocument, TextEditor, Uri, ViewColumn, workspace, WorkspaceEdit } from 'vscode';
+import {
+    NotebookCell,
+    NotebookRange,
+    Position,
+    Range,
+    Selection,
+    TextDocument,
+    TextEditor,
+    Uri,
+    ViewColumn,
+    workspace,
+    WorkspaceEdit
+} from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
@@ -164,9 +176,15 @@ export class NewInteractiveWindowCommandListener {
                 this.scrollToCell(file, id)
             )
         );
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow, this));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.InteractiveRemoveCell, this.removeCellInInteractiveWindow, this));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow, this));
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow, this)
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.InteractiveRemoveCell, this.removeCellInInteractiveWindow, this)
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow, this)
+        );
     }
 
     /* eslint-disable @typescript-eslint/no-explicit-any */

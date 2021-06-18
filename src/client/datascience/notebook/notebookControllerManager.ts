@@ -596,4 +596,3 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
 }
-

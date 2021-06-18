@@ -485,9 +485,14 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
         // Insert code cell into NotebookDocument
         const edit = new WorkspaceEdit();
-        const language = workspace.textDocuments.find((document) => document.uri.toString() === this.owner?.toString())
-            ?.languageId ?? PYTHON_LANGUAGE;
-        const notebookCell = new NotebookCellData(isMarkdown ? NotebookCellKind.Markup : NotebookCellKind.Code, strippedCode, isMarkdown ? MARKDOWN_LANGUAGE : language);
+        const language =
+            workspace.textDocuments.find((document) => document.uri.toString() === this.owner?.toString())
+                ?.languageId ?? PYTHON_LANGUAGE;
+        const notebookCell = new NotebookCellData(
+            isMarkdown ? NotebookCellKind.Markup : NotebookCellKind.Code,
+            strippedCode,
+            isMarkdown ? MARKDOWN_LANGUAGE : language
+        );
         notebookCell.metadata = { interactiveWindowCellTitle };
 
         edit.replaceNotebookCells(
@@ -648,12 +653,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             if (cell.metadata.isSysInfoCell) {
                 return cells;
             }
-            // Reinstate cell structure
-            let code = cell.document.getText();
-            if (cell.metadata.interactiveWindowCellTitle !== undefined) {
-                code = cell.metadata.interactiveWindowCellTitle + '\n' + code;
-            }
-            const generatedCells = generateCells(undefined, code, '', 0, false, uuid());
+            // TODO Reinstate cell structure + comments from cell metadata
+            // let code = cell.document.getText();
+            // if (cell.metadata.interactiveWindowCellTitle !== undefined) {
+            //     code = cell.metadata.interactiveWindowCellTitle + '\n' + code;
+            // }
+            const generatedCells = generateCells(undefined, cell.document.getText(), '', 0, false, uuid());
             return cells.concat(generatedCells);
         }, []);
 
