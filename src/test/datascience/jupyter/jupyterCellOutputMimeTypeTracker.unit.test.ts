@@ -7,7 +7,7 @@ import { expect } from 'chai';
 // eslint-disable-next-line
 import rewiremock from 'rewiremock';
 import { instance, mock, when } from 'ts-mockito';
-import { EventEmitter, Uri } from 'vscode';
+import { EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { getNamesAndValues } from '../../utils/enum';
 import { Telemetry } from '../../../client/datascience/constants';
 import { NativeEditor } from '../../../client/datascience/interactive-ipynb/nativeEditor';
@@ -16,6 +16,9 @@ import { NativeEditorProvider } from '../../../client/datascience/notebookStorag
 import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
 import { CellState, ICell, INotebookEditor } from '../../../client/datascience/types';
 import { getTelemetrySafeHashedString } from '../../../client/telemetry/helpers';
+import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { IDisposable } from '../../../client/common/types';
+import { disposeAllDisposables } from '../../../client/common/helpers';
 
 suite('DataScience - Cell Output Mimetype Tracker', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;
@@ -24,6 +27,7 @@ suite('DataScience - Cell Output Mimetype Tracker', () => {
     let nativeProvider: NativeEditorProvider;
     let openedNotebookEmitter: EventEmitter<INotebookEditor>;
     let clock: fakeTimers.InstalledClock;
+    let disposables: IDisposable[] = [];
     class Reporter {
         public static telemetrySent: [string, Record<string, string>][] = [];
         public static expectHashes(props: {}[]) {
@@ -54,12 +58,17 @@ suite('DataScience - Cell Output Mimetype Tracker', () => {
 
         rewiremock.enable();
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
-
-        outputMimeTypeTracker = new CellOutputMimeTypeTracker(instance(nativeProvider));
+        const vscNb = mock<IVSCodeNotebook>();
+        const onDidOpenCloseNbEvent = new EventEmitter<NotebookDocument>();
+        disposables.push(onDidOpenCloseNbEvent);
+        when(vscNb.onDidOpenNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
+        when(vscNb.onDidCloseNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
+        outputMimeTypeTracker = new CellOutputMimeTypeTracker(instance(nativeProvider), instance(vscNb), disposables);
         clock = fakeTimers.install();
         await outputMimeTypeTracker.activate();
     });
     teardown(() => {
+        disposeAllDisposables(disposables);
         clock.uninstall();
         process.env.VSC_JUPYTER_UNIT_TEST = oldValueOfVSC_JUPYTER_UNIT_TEST;
         process.env.VSC_JUPYTER_CI_TEST = oldValueOfVSC_JUPYTER_CI_TEST;

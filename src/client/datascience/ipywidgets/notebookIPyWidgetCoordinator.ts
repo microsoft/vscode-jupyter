@@ -146,7 +146,13 @@ export class NotebookIPyWidgetCoordinator {
     private initializeNotebookCommunication(editor: NotebookEditor) {
         const notebook = editor.document;
         const controller = this.selectedNotebookController.get(notebook);
-        if (this.notebookCommunications.has(editor) || !controller) {
+        if (!controller) {
+            traceInfo(
+                `No controller, hence notebook communications cannot be initialized for editor ${editor.document.uri.toString()}`
+            );
+            return;
+        }
+        if (this.notebookCommunications.has(editor)) {
             traceInfo(`notebook communications already initialized for editor ${editor.document.uri.toString()}`);
             return;
         }

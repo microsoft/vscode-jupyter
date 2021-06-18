@@ -30,8 +30,8 @@ export class OpenNotebookBanner implements IExtensionSingleActivationService {
     private async openedNotebook(editor: INotebookEditor) {
         if (
             !this.pythonExtensionChecker.isPythonExtensionInstalled &&
-            editor.model.metadata?.kernelspec &&
-            isPythonNotebook(editor.model.metadata) &&
+            editor.notebookMetadata?.kernelspec &&
+            isPythonNotebook(editor.notebookMetadata) &&
             !isUntitledFile(editor.file)
         ) {
             await this.pythonExtensionChecker.showPythonExtensionInstallRecommendedPrompt();
