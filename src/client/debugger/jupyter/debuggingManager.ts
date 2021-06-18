@@ -52,7 +52,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             vscode.debug.registerDebugAdapterDescriptorFactory('kernel', {
                 createDebugAdapterDescriptor: async (session) => {
                     const activeDoc = vscode.window.activeNotebookEditor!.document;
-                    const debug = await this.getDebuggerByUri(activeDoc);
+                    const debug = this.getDebuggerByUri(activeDoc);
 
                     if (debug) {
                         const notebook = await this.notebookProvider.getOrCreateNotebook({
@@ -67,15 +67,14 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                             );
                         } else {
                             vscode.window.showInformationMessage('run the kernel');
-                            // dbg.reject(new Error('Kernel appears to have been stopped'));
                         }
                     }
-                    // should not happen
+                    // Should not happen, debug sessions should start only from the cell toolbar command
                     return;
                 }
             }),
 
-            vscode.commands.registerCommand('david.toggleDebugging', () => {
+            vscode.commands.registerCommand('jupyter.debugCell', () => {
                 const editor = vscode.window.activeNotebookEditor;
                 if (editor) {
                     this.toggleDebugging(editor.document);
@@ -140,22 +139,12 @@ export class DebuggingManager implements IExtensionSingleActivationService {
         }
     }
 
-    private async getDebuggerByUri(document: vscode.NotebookDocument): Promise<Debugger> {
+    private getDebuggerByUri(document: vscode.NotebookDocument): Debugger | undefined {
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (document.uri.toString() === doc.uri.toString()) {
                 return dbg;
             }
         }
-
-        const dbg = new Debugger(document);
-        this.notebookToDebugger.set(document, dbg);
-        await this.kernelProvider.get(document.uri); // ensure the kernel is running
-        // try {
-        //     await dbg.session;
-        // } catch (err) {
-        //     vscode.window.showErrorMessage(`Can't start debugging (${err})`);
-        // }
-        return dbg;
     }
 }
 
