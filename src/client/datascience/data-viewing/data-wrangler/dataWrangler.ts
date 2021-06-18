@@ -382,7 +382,7 @@ export class DataWrangler extends WebviewPanelHost<IDataWranglerMapping> impleme
 
     private async wrapRequest(func: () => Promise<void>) {
         try {
-            return await func();
+            return func();
         } catch (e) {
             if (e instanceof JupyterDataRateLimitError) {
                 traceError(e);

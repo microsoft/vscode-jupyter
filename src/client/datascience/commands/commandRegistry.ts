@@ -483,9 +483,9 @@ export class CommandRegistry implements IDisposable {
 
     private async createNewNotebook(): Promise<INotebookEditor | undefined> {
         if (this.useNativeNotebook) {
-            return await this.nativeNotebookCreator.createNewNotebook();
+            return this.nativeNotebookCreator.createNewNotebook();
         } else {
-            return await this.notebookEditorProvider.createNew();
+            return this.notebookEditorProvider.createNew();
         }
     }
 
