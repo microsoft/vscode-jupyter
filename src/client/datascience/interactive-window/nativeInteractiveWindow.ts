@@ -34,7 +34,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable, InteractiveWindowMode, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { generateCells } from '../cellFactory';
+import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
@@ -47,7 +47,6 @@ import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import {
     CellState,
-    ICell,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowLoadable,
@@ -480,7 +479,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const settings = this.configuration.getSettings();
         const cellMatcher = new CellMatcher(settings);
         const strippedCode = cellMatcher.stripFirstMarker(code).trimStart();
-        const interactiveWindowCellTitle = cellMatcher.exec(code);
+        const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
         const isMarkdown = cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
 
         // Insert code cell into NotebookDocument
@@ -493,7 +492,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             strippedCode,
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
-        notebookCell.metadata = { interactiveWindowCellTitle };
+        notebookCell.metadata = { interactiveWindowCellMarker };
 
         edit.replaceNotebookCells(
             notebookDocument.uri,
@@ -618,14 +617,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return;
         }
 
-        const cells = notebookDocument.getCells().reduce((cells: ICell[], cell) => {
-            // Skip sysinfo cells when exporting
-            if (cell.metadata.isSysInfoCell) {
-                return cells;
-            }
-            const generatedCells = generateCells(undefined, cell.document.getText(), '', 0, false, uuid());
-            return cells.concat(generatedCells);
-        }, []);
+        const cells = generateCellsFromNotebookDocument(notebookDocument);
 
         // Should be an array of cells
         if (cells && this.exportDialog) {
@@ -648,19 +640,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return;
         }
 
-        const cells = notebookDocument.getCells().reduce((cells: ICell[], cell) => {
-            // Skip sysinfo cells when exporting
-            if (cell.metadata.isSysInfoCell) {
-                return cells;
-            }
-            // TODO Reinstate cell structure + comments from cell metadata
-            // let code = cell.document.getText();
-            // if (cell.metadata.interactiveWindowCellTitle !== undefined) {
-            //     code = cell.metadata.interactiveWindowCellTitle + '\n' + code;
-            // }
-            const generatedCells = generateCells(undefined, cell.document.getText(), '', 0, false, uuid());
-            return cells.concat(generatedCells);
-        }, []);
+        const cells = generateCellsFromNotebookDocument(notebookDocument);
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
