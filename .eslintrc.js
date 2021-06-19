@@ -819,7 +819,6 @@ module.exports = {
         'src/client/datascience/interactive-common/intellisense/wordHelper.ts',
         'src/client/datascience/interactive-common/intellisense/intellisenseLine.ts',
         'src/client/datascience/jupyterUriProviderWrapper.ts',
-        'src/client/datascience/cellMatcher.ts',
         'src/client/datascience/notebookStorage/notebookModelEditEvent.ts',
         'src/client/datascience/debugLocationTracker.ts',
         'src/client/datascience/plotting/plotViewerMessageListener.ts',
