@@ -60,7 +60,6 @@ import { NativeEditorRunByLineListener } from './interactive-ipynb/nativeEditorR
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
 import { NativeEditorViewTracker } from './interactive-ipynb/nativeEditorViewTracker';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
-import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
 import { IPyWidgetMessageDispatcherFactory } from './ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { WebviewIPyWidgetCoordinator } from './ipywidgets/webviewIPyWidgetCoordinator';
@@ -192,8 +191,8 @@ import { IApplicationEnvironment } from '../common/application/types';
 import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
 import { ExtensionRecommendationService } from './extensionRecommendation';
 import { PythonVariablesRequester } from './jupyter/pythonVariableRequester';
-import { OldInteractiveWindowCommandListener } from './interactive-window/oldInteractiveWindowCommandListener';
-import { NewInteractiveWindowCommandListener } from './interactive-window/newInteractiveWindowCommandListener';
+import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
+import { NativeInteractiveWindowCommandListener } from './interactive-window/nativeInteractiveWindowCommandListener';
 import { workspace } from 'vscode';
 import { NativeInteractiveWindowProvider } from './interactive-window/nativeInteractiveWindowProvider';
 
@@ -274,9 +273,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
-    serviceManager.addSingleton<OldInteractiveWindowCommandListener>(OldInteractiveWindowCommandListener, OldInteractiveWindowCommandListener);
-    serviceManager.addSingleton<NewInteractiveWindowCommandListener>(NewInteractiveWindowCommandListener, NewInteractiveWindowCommandListener);
-    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
@@ -294,8 +290,10 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     const interactiveConfiguration = workspace.getConfiguration('interactive.experiments');
     if (interactiveConfiguration.get<boolean | undefined>('enable') === true) {
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, NativeInteractiveWindowProvider);
+        serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
     } else {
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+        serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
     }
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);

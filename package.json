@@ -788,14 +788,15 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.interactive.exportfileasnotebook",
-                "title": "Export to Notebook",
+                "command": "jupyter.interactive.exportasnotebook",
+                "title": "%DataScience.exportAsNotebook%",
+                "shortTitle": "%DataScience.exportAsNotebook.shorttitle%",
                 "icon": "$(save-as)",
                 "category": "Jupyter"
             },
             {
                 "command": "jupyter.interactive.exportas",
-                "title": "%DataScience.notebookExportAs%",
+                "title": "%DataScience.notebookExport%",
                 "icon": "$(export)",
                 "category": "Jupyter"
             }
@@ -924,7 +925,7 @@
                     "when": "isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.interactive.exportfileasnotebook",
+                    "command": "jupyter.interactive.exportasnotebook",
                     "group": "navigation@4",
                     "when": "isWorkspaceTrusted"
                 },
@@ -1285,12 +1286,14 @@
                 {
                     "command": "jupyter.expandallcells",
                     "title": "%jupyter.command.jupyter.expandallcells.title%",
+                    "shortTitle": "%jupyter.command.jupyter.expandallcells.shorttitle%",
                     "category": "Jupyter",
                     "when": "jupyter.isinteractiveactive"
                 },
                 {
                     "command": "jupyter.collapseallcells",
                     "title": "%jupyter.command.jupyter.collapseallcells.title%",
+                    "shortTitle": "%jupyter.command.jupyter.collapseallcells.shorttitle%",
                     "category": "Jupyter",
                     "when": "jupyter.isinteractiveactive"
                 },

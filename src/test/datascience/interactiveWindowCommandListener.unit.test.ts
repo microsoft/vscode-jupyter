@@ -22,7 +22,7 @@ import { ExportDialog } from '../../client/datascience/export/exportDialog';
 import { ExportFormat, IExportDialog, IExportManager } from '../../client/datascience/export/types';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { OldInteractiveWindowCommandListener } from '../../client/datascience/interactive-window/oldInteractiveWindowCommandListener';
+import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
@@ -98,7 +98,7 @@ suite('Interactive window command listener', async () => {
         return new FunctionMatcher(func);
     }
 
-    function createCommandListener(): OldInteractiveWindowCommandListener {
+    function createCommandListener(): InteractiveWindowCommandListener {
         notebookEditorProvider = mock(NativeEditorProvider);
         jupyterExecution = mock(JupyterExecutionFactory);
         applicationShell = mock(ApplicationShell);
@@ -201,7 +201,7 @@ suite('Interactive window command listener', async () => {
 
         const notebookProvider = mock(NotebookProvider);
 
-        const result = new OldInteractiveWindowCommandListener(
+        const result = new InteractiveWindowCommandListener(
             disposableRegistry,
             instance(interactiveWindowProvider),
             instance(notebookExporter),

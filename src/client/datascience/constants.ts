@@ -168,7 +168,7 @@ export namespace Commands {
     export const InteractiveClearAll = 'jupyter.interactive.clearAllCells';
     export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
     export const InteractiveGoToCode = 'jupyter.interactive.goToCode';
-    export const InteractiveExportFileAsNotebook = 'jupyter.interactive.exportfileasnotebook';
+    export const InteractiveExportAsNotebook = 'jupyter.interactive.exportasnotebook';
     export const InteractiveExportAs = 'jupyter.interactive.exportas';
 }
 

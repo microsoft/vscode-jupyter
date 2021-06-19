@@ -46,7 +46,7 @@ import {
 import { createExportInteractiveIdentity } from './identity';
 
 @injectable()
-export class NewInteractiveWindowCommandListener {
+export class NativeInteractiveWindowCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
@@ -160,7 +160,7 @@ export class NewInteractiveWindowCommandListener {
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
-                Commands.InteractiveExportFileAsNotebook,
+                Commands.InteractiveExportAsNotebook,
                 (context?: { notebookEditor: { notebookUri: Uri } }) => this.export(context?.notebookEditor.notebookUri)
             )
         );
