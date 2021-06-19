@@ -356,9 +356,9 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         // Do not generate interactive window codelenses for TextDocuments which are part of NotebookDocuments
         // and do not generate debug codelenses for new interactive window (not properly supported yet)
         if (
-            document.notebook !== undefined ||
             (commandName.includes('debug') &&
-                workspace.getConfiguration('interactive.experiments').get('enable') === true)
+                workspace.getConfiguration('interactive.experiments')?.get('enable') === true) ||
+            workspace.notebookDocuments.find((notebook) => notebook.uri.toString() === document.uri.toString())
         ) {
             return;
         }
