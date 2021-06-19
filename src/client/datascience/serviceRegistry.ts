@@ -290,10 +290,10 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     const interactiveConfiguration = workspace.getConfiguration('interactive.experiments');
     if (interactiveConfiguration.get<boolean | undefined>('enable') === true) {
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, NativeInteractiveWindowProvider);
-        serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
+        serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
     } else {
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-        serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
+        serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
     }
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);

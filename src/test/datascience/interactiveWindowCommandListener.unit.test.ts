@@ -21,8 +21,8 @@ import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/e
 import { ExportDialog } from '../../client/datascience/export/exportDialog';
 import { ExportFormat, IExportDialog, IExportManager } from '../../client/datascience/export/types';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
-import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
+import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
