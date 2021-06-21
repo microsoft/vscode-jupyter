@@ -30,7 +30,13 @@ import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
-import { IConfigurationService, IDisposable, IDisposableRegistry, InteractiveWindowMode, Resource } from '../../common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IDisposableRegistry,
+    InteractiveWindowMode,
+    Resource
+} from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCellsFromNotebookDocument } from '../cellFactory';
@@ -134,7 +140,11 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 const controllerChangeListener = e.controller.controller.onDidChangeSelectedNotebooks(
                     (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
                         // Controller was deselected for this InteractiveWindow's NotebookDocument
-                        if (selectedEvent.selected === false && this._notebookUri !== undefined && selectedEvent.notebook.uri.toString() === this._notebookUri.toString()) {
+                        if (
+                            selectedEvent.selected === false &&
+                            this._notebookUri !== undefined &&
+                            selectedEvent.notebook.uri.toString() === this._notebookUri.toString()
+                        ) {
                             this.kernelLoadPromise = undefined;
                             this.kernel = undefined;
                             this.notebookController = undefined;

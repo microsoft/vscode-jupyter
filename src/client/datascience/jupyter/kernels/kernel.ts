@@ -12,8 +12,11 @@ import {
     Event,
     EventEmitter,
     NotebookCell,
+    NotebookCellData,
+    NotebookCellKind,
     NotebookController,
     NotebookDocument,
+    NotebookRange,
     Uri
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
@@ -27,7 +30,7 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { CodeSnippets, Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
-import { addSysInfo, getNotebookMetadata } from '../../notebook/helpers/helpers';
+import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
@@ -38,10 +41,13 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
-import { isPythonKernelConnection } from './helpers';
+import { getSysInfoReasonHeader, isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
+import { MARKDOWN_LANGUAGE } from '../../../common/constants';
+import { InteractiveWindowView } from '../../notebook/constants';
+import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -142,7 +148,6 @@ export class Kernel implements IKernel {
         this.startCancellation.cancel();
         const interruptResultPromise = this.kernelExecution.interrupt(document, this._notebookPromise);
         await interruptResultPromise;
-        await addSysInfo(SysInfoReason.Interrupt, document, this.notebook);
         return interruptResultPromise;
     }
     public async dispose(): Promise<void> {
@@ -166,8 +171,7 @@ export class Kernel implements IKernel {
             this.restarting = createDeferred<void>();
             try {
                 await this.notebook.restartKernel(this.launchTimeout);
-                await this.initializeAfterStart();
-                await addSysInfo(SysInfoReason.Restart, notebookDocument, this.notebook);
+                await this.initializeAfterStart(SysInfoReason.Restart, notebookDocument);
                 this.restarting.resolve();
             } catch (ex) {
                 this.restarting.reject(ex);
@@ -222,12 +226,11 @@ export class Kernel implements IKernel {
                             // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
                             throw new Error('Kernel has not been started');
                         }
-                        await addSysInfo(SysInfoReason.Start, options.document, this.notebook);
                     } catch (ex) {
                         traceError(`failed to create INotebook in kernel, UI Disabled = ${options.disableUI}`, ex);
                         throw ex;
                     }
-                    await this.initializeAfterStart();
+                    await this.initializeAfterStart(SysInfoReason.Start, options.document);
                     sendKernelTelemetryEvent(
                         this.uri,
                         Telemetry.PerceivedJupyterStartupNotebook,
@@ -271,7 +274,7 @@ export class Kernel implements IKernel {
         );
     }
 
-    private async initializeAfterStart() {
+    private async initializeAfterStart(reason: SysInfoReason, notebookDocument: NotebookDocument) {
         if (!this.notebook) {
             return;
         }
@@ -309,7 +312,10 @@ export class Kernel implements IKernel {
         }
         await this.notebook
             .requestKernelInfo()
-            .then((item) => (this._info = item.content))
+            .then(async (item) => {
+                this._info = item.content;
+                await this.addSysInfoForInteractive(reason, notebookDocument, item);
+            })
             .catch(traceWarning.bind('Failed to request KernelInfo'));
         await this.notebook.waitForIdle(this.launchTimeout);
     }
@@ -317,6 +323,54 @@ export class Kernel implements IKernel {
     private disableJedi() {
         if (isPythonKernelConnection(this.kernelConnectionMetadata) && this.notebook) {
             this.notebook.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
+        }
+    }
+
+    /**
+     *
+     * After a kernel state change, update the interactive window with a sys info cell
+     * indicating the new connection info
+     * @param reason The reason for kernel state change
+     * @param notebookDocument The document to add a sys info Markdown cell to
+     * @param info The kernel info to include in the sys info message
+     */
+    private async addSysInfoForInteractive(
+        reason: SysInfoReason,
+        notebookDocument: NotebookDocument,
+        info: KernelMessage.IInfoReplyMsg
+    ) {
+        if (notebookDocument.notebookType !== InteractiveWindowView || this.notebook === undefined) {
+            return;
+        }
+
+        const message = getSysInfoReasonHeader(reason, this.kernelConnectionMetadata);
+        const sysInfoMessages = [(info.content as KernelMessage.IInfoReply)?.banner.split('\n').join('\n\n')];
+        if (sysInfoMessages) {
+            // Connection string only for our initial start, not restart or interrupt
+            let connectionString: string = '';
+            if (reason === SysInfoReason.Start) {
+                connectionString = this.connection?.displayName || '';
+            }
+
+            // Update our sys info with our locally applied data.
+            sysInfoMessages.unshift(message);
+            if (connectionString && connectionString.length) {
+                sysInfoMessages.unshift(connectionString);
+            }
+
+            return chainWithPendingUpdates(notebookDocument, (edit) => {
+                const markdownCell = new NotebookCellData(
+                    NotebookCellKind.Markup,
+                    sysInfoMessages.join('\n\n'),
+                    MARKDOWN_LANGUAGE
+                );
+                markdownCell.metadata = { isSysInfoCell: true };
+                edit.replaceNotebookCells(
+                    notebookDocument.uri,
+                    new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
+                    [markdownCell]
+                );
+            });
         }
     }
 }
