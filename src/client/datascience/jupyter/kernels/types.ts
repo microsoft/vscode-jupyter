@@ -130,9 +130,10 @@ export interface IKernel extends IAsyncDisposable {
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     start(options?: { disableUI?: boolean; document: NotebookDocument }): Promise<void>;
     interrupt(document: NotebookDocument): Promise<InterruptResult>;
-    restart(): Promise<void>;
+    restart(document: NotebookDocument): Promise<void>;
     executeCell(cell: NotebookCell): Promise<void>;
     executeAllCells(document: NotebookDocument): Promise<void>;
+    executeHidden(code: string, file: string, document: NotebookDocument): Promise<void>;
 }
 
 export type KernelOptions = { metadata: KernelConnectionMetadata; controller: NotebookController };

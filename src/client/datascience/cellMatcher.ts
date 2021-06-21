@@ -57,6 +57,14 @@ export class CellMatcher {
         return code;
     }
 
+    public getFirstMarker(code: string): string | undefined {
+        const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
+
+        if (lines.length > 0 && (this.isCode(lines[0]) || this.isMarkdown(lines[0]))) {
+            return lines[0];
+        }
+    }
+
     public exec(code: string): string | undefined {
         let result: RegExpExecArray | null = null;
         if (this.defaultCellMarkerExec.test(code)) {

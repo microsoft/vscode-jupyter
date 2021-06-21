@@ -33,7 +33,7 @@ import { INotebookProvider } from '../types';
 import { getNotebookMetadata, isJupyterNotebook, updateNotebookDocumentMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
-import { JupyterNotebookView } from './constants';
+import { InteractiveWindowView, JupyterNotebookView } from './constants';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { InterpreterPackages } from '../telemetry/interpreterPackages';
@@ -41,6 +41,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { testOnlyMethod } from '../../common/utils/decorators';
+import { noop } from '../../common/utils/misc';
 import { IS_CI_SERVER } from '../../../test/ciConstants';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -120,7 +121,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // Find all the notebook controllers that we have registered
-    private async loadNotebookControllers(): Promise<void> {
+    public async loadNotebookControllers(): Promise<void> {
         if (!this.controllersPromise) {
             this.controllersPromise = this.loadNotebookControllersImpl()
                 .then((controllers) => {
@@ -152,7 +153,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
 
             // Now create the actual controllers from our connections
-            const controllers = await this.createNotebookControllers(connections);
+            const controllers = this.createNotebookControllers(connections);
 
             // Send telemetry related to fetching the kernel connections
             sendKernelListTelemetry(
@@ -179,7 +180,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // When a document is opened we need to look for a perferred kernel for it
     private onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
-        if (document.notebookType !== JupyterNotebookView || !this.workspace.isTrusted) {
+        if (
+            (document.notebookType !== JupyterNotebookView && document.notebookType !== InteractiveWindowView) ||
+            !this.workspace.isTrusted
+        ) {
             return;
         }
 
@@ -265,9 +269,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         let preferred: KernelConnectionMetadata | undefined;
 
         if (this.isLocalLaunch) {
-            const preferredConnectionPromise = preferred
-                ? Promise.resolve(preferred)
-                : this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
+            const preferredConnectionPromise = this.localKernelFinder.findKernel(
+                document.uri,
+                getNotebookMetadata(document),
+                token
+            );
             preferred = await preferredConnectionPromise;
         } else {
             const connection = await this.notebookProvider.connect({
@@ -277,9 +283,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 localOnly: false
             });
 
-            const preferredConnectionPromise = preferred
-                ? Promise.resolve(preferred)
-                : this.remoteKernelFinder.findKernel(document.uri, connection, getNotebookMetadata(document), token);
+            const preferredConnectionPromise = this.remoteKernelFinder.findKernel(
+                document.uri,
+                connection,
+                getNotebookMetadata(document),
+                token
+            );
             preferred = await preferredConnectionPromise;
         }
 
@@ -313,45 +322,55 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         // Map KernelConnectionMetadata => NotebookController
-        const controllers: VSCodeNotebookController[] = [];
+        const allControllers: VSCodeNotebookController[] = [];
         connectionsWithLabel.forEach((value) => {
-            const controller = this.createNotebookController(value.connection, value.label);
-            if (controller) {
-                controllers.push(controller);
+            const controllers = this.createNotebookController(value.connection, value.label);
+            if (controllers) {
+                allControllers.push(...controllers);
             }
         });
 
-        return controllers;
+        return allControllers;
     }
     private createNotebookController(
         kernelConnection: KernelConnectionMetadata,
         label: string
-    ): VSCodeNotebookController | undefined {
+    ): VSCodeNotebookController[] | undefined {
         try {
             // Create notebook selector
-            const controller = new VSCodeNotebookController(
-                kernelConnection,
-                label,
-                this.notebook,
-                this.commandManager,
-                this.kernelProvider,
-                this.preferredRemoteKernelIdProvider,
-                this.context,
-                this,
-                this.pathUtils,
-                this.disposables,
-                this.languageService,
-                this.workspace,
-                this.setAsActiveControllerForTests.bind(this)
-            );
+            return [
+                [kernelConnection.id, JupyterNotebookView],
+                [`${kernelConnection.id} (Interactive)`, InteractiveWindowView]
+            ].map(([id, viewType]) => {
+                const controller = new VSCodeNotebookController(
+                    kernelConnection,
+                    id,
+                    viewType,
+                    label,
+                    this.notebook,
+                    this.commandManager,
+                    this.kernelProvider,
+                    this.preferredRemoteKernelIdProvider,
+                    this.context,
+                    this,
+                    this.pathUtils,
+                    this.disposables,
+                    this.languageService,
+                    this.workspace,
+                    this.setAsActiveControllerForTests.bind(this)
+                );
+                // Hook up to if this NotebookController is selected or de-selected
+                controller.onNotebookControllerSelected(
+                    this.handleOnNotebookControllerSelected,
+                    this,
+                    this.disposables
+                );
 
-            // Hook up to if this NotebookController is selected or de-selected
-            controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);
+                // We are disposing as documents are closed, but do this as well
+                this.disposables.push(controller);
 
-            // We are disposing as documents are closed, but do this as well
-            this.disposables.push(controller);
-
-            return controller;
+                return controller;
+            });
         } catch (ex) {
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
@@ -474,9 +493,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             });
 
             connectionsWithLabel.forEach((value) => {
-                const controller = this.createNotebookController(value.connection, value.label);
-                if (controller) {
-                    this.registeredControllers.push(controller);
+                const controllers = this.createNotebookController(value.connection, value.label);
+                if (controllers) {
+                    this.registeredControllers.push(...controllers);
                 }
             });
         }
@@ -493,7 +512,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     private async notebookKernelChanged(document: NotebookDocument, controller: VSCodeNotebookController) {
         // We're only interested in our Jupyter Notebooks.
-        if (!isJupyterNotebook(document)) {
+        if (!isJupyterNotebook(document) || document.notebookType !== InteractiveWindowView) {
             return;
         }
         const selectedKernelConnectionMetadata = controller.connection;
@@ -572,8 +591,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}`);
 
         // Auto start the local kernels.
-        // if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
-        //     await newKernel.start({ disableUI: true, document }).catch(noop);
-        // }
+        if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
+            await newKernel.start({ disableUI: true, document }).catch(noop);
+        }
     }
 }
