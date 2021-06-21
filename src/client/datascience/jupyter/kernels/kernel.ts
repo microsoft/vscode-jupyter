@@ -69,7 +69,7 @@ export class Kernel implements IKernel {
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
-    public notebook?: INotebook; // Temporary
+    private notebook?: INotebook;
     private _disposed?: boolean;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
@@ -119,6 +119,13 @@ export class Kernel implements IKernel {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document });
         const promise = this.kernelExecution.executeAllCells(notebookPromise, document);
+        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
+        await promise;
+    }
+    public async executeHidden(code: string, file: string, document: NotebookDocument) {
+        const stopWatch = new StopWatch();
+        const notebookPromise = this.startNotebook({ disableUI: false, document });
+        const promise = this.notebook!.execute(code, file, 0, uuid(), undefined, true);
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         await promise;
     }

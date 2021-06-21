@@ -789,7 +789,7 @@
             },
             {
                 "command": "jupyter.interactive.exportasnotebook",
-                "title": "%DataScience.exportAsNotebook%",
+                "title": "%DataScience.exportDialogTitle%",
                 "shortTitle": "%DataScience.exportAsNotebook.shorttitle%",
                 "icon": "$(save-as)",
                 "category": "Jupyter"

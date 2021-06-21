@@ -133,7 +133,6 @@
     "DataScience.exportDialogFailed": "Failed to export notebook. {0}",
     "DataScience.exportOpenQuestion1": "Open in editor",
     "DataScience.notebookExport": "Export",
-    "DataScience.exportAsNotebook": "Export To Jupyter Notebook",
     "DataScience.exportAsNotebook.shorttitle": "Save",
     "DataScience.exportAs": "Export As",
     "DataScience.notebookExportAs": "Export As",

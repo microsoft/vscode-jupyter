@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
-import * as uuid from 'uuid';
 import {
     CancellationToken,
     ConfigurationTarget,
@@ -41,7 +40,6 @@ import { ExportFormat, IExportDialog } from '../export/types';
 import { INotebookIdentity, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
@@ -296,7 +294,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     // TODO Migrate all of this code into a common command handler
     public async restartKernel(): Promise<void> {
-        if (this.kernel?.notebook && !this.restartingKernel) {
+        if (this.kernel && !this.restartingKernel) {
             this.restartingKernel = true;
             this.startProgress();
 
@@ -360,7 +358,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 const fileInKernel = this.fileInKernel;
                 this.fileInKernel = undefined;
                 if (fileInKernel) {
-                    await this.setFileInKernel(fileInKernel, undefined);
+                    // TODO this should really be done in the IKernel itself
+                    await this.setFileInKernel(fileInKernel, notebookDocument);
                 }
 
                 // // Compute if dark or not.
@@ -371,7 +370,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             }
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server
-            if (exc instanceof JupyterKernelPromiseFailedError && this.kernel?.notebook) {
+            if (exc instanceof JupyterKernelPromiseFailedError && this.kernel) {
                 await this.kernel.dispose();
                 await this.kernel.restart(notebookDocument!);
             } else {
@@ -403,18 +402,18 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     public expandAllCells() {
         this.tryGetMatchingNotebookDocument()
-            .then((notebookDocument) => {
+            .then(async (notebookDocument) => {
                 if (notebookDocument) {
-                    return chainWithPendingUpdates(notebookDocument, (edit) => {
-                        notebookDocument.getCells().forEach((cell, index) => {
-                            const metadata = {
-                                ...(cell.metadata || {}),
-                                inputCollapsed: false,
-                                outputCollapsed: false
-                            };
-                            edit.replaceNotebookCellMetadata(notebookDocument.uri, index, metadata);
-                        });
+                    const edit = new WorkspaceEdit();
+                    notebookDocument.getCells().forEach((cell, index) => {
+                        const metadata = {
+                            ...(cell.metadata || {}),
+                            inputCollapsed: false,
+                            outputCollapsed: false
+                        };
+                        edit.replaceNotebookCellMetadata(notebookDocument.uri, index, metadata);
                     });
+                    return workspace.applyEdit(edit);
                 }
             })
             .then(noop, noop);
@@ -422,14 +421,14 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     public collapseAllCells() {
         this.tryGetMatchingNotebookDocument()
-            .then((notebookDocument) => {
+            .then(async (notebookDocument) => {
                 if (notebookDocument) {
-                    return chainWithPendingUpdates(notebookDocument, (edit) => {
-                        notebookDocument.getCells().forEach((cell, index) => {
-                            const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: false };
-                            edit.replaceNotebookCellMetadata(notebookDocument.uri, index, metadata);
-                        });
+                    const edit = new WorkspaceEdit();
+                    notebookDocument.getCells().forEach((cell, index) => {
+                        const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: false };
+                        edit.replaceNotebookCellMetadata(notebookDocument.uri, index, metadata);
                     });
+                    return workspace.applyEdit(edit);
                 }
             })
             .then(noop, noop);
@@ -552,22 +551,11 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
-        this.dispose();
-    }
-
-    protected async setFileInKernel(file: string, cancelToken: CancellationToken | undefined): Promise<void> {
+    protected async setFileInKernel(file: string, notebookDocument: NotebookDocument): Promise<void> {
         // If in perFile mode, set only once
         if (this.mode === 'perFile' && !this.fileInKernel && this.kernel && file !== Identifiers.EmptyFileName) {
             this.fileInKernel = file;
-            await this.kernel.notebook?.execute(
-                `__file__ = '${file.replace(/\\/g, '\\\\')}'`,
-                file,
-                0,
-                uuid(),
-                cancelToken,
-                true
-            );
+            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, notebookDocument);
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
             this.mode !== 'perFile' &&
@@ -576,14 +564,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         ) {
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
-            await this.kernel.notebook?.execute(
-                `__file__ = '${file.replace(/\\/g, '\\\\')}'`,
-                file,
-                0,
-                uuid(),
-                cancelToken,
-                true
-            );
+            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, notebookDocument);
         }
     }
 
@@ -667,7 +648,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 contents,
                 this.owningResource,
                 defaultFileName,
-                this.kernel?.notebook?.getMatchingInterpreter()
+                this.kernel?.kernelConnectionMetadata.interpreter
             )
             .then(noop, noop);
     }
