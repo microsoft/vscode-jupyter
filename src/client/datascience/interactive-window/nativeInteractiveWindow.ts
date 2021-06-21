@@ -645,7 +645,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
         if (this.kernel) {
-            updateNotebookMetadata(metadata, this.kernel.notebook?.getKernelConnection());
+            updateNotebookMetadata(metadata, this.kernel.kernelConnectionMetadata);
         }
 
         // Turn the cells into a json object

@@ -358,7 +358,9 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         if (
             (commandName.includes('debug') &&
                 workspace.getConfiguration('interactive.experiments')?.get('enable') === true) ||
-            workspace.notebookDocuments.find((notebook) => notebook.uri.toString() === document.uri.toString())
+            workspace.notebookDocuments.find(
+                (notebook) => notebook.uri.toString() === document.notebook?.uri.toString()
+            )
         ) {
             return;
         }

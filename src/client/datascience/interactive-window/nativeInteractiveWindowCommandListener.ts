@@ -188,7 +188,7 @@ export class NativeInteractiveWindowCommandListener {
     }
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
-    public async listenForErrors(promise: () => Promise<any>): Promise<any> {
+    private async listenForErrors(promise: () => Promise<any>): Promise<any> {
         let result: any;
         try {
             result = await promise();
@@ -209,7 +209,7 @@ export class NativeInteractiveWindowCommandListener {
         return result;
     }
 
-    public showInformationMessage(message: string, question?: string): Thenable<string | undefined> {
+    private showInformationMessage(message: string, question?: string): Thenable<string | undefined> {
         if (question) {
             return this.applicationShell.showInformationMessage(message, question);
         } else {
@@ -218,7 +218,7 @@ export class NativeInteractiveWindowCommandListener {
     }
 
     @captureTelemetry(Telemetry.ExportPythonFileInteractive, undefined, false)
-    public async exportFile(file: Uri): Promise<void> {
+    private async exportFile(file: Uri): Promise<void> {
         if (file && file.fsPath && file.fsPath.length > 0) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
@@ -266,7 +266,7 @@ export class NativeInteractiveWindowCommandListener {
     }
 
     @captureTelemetry(Telemetry.ExportPythonFileAndOutputInteractive, undefined, false)
-    public async exportFileAndOutput(file: Uri): Promise<Uri | undefined> {
+    private async exportFileAndOutput(file: Uri): Promise<Uri | undefined> {
         if (file && file.fsPath && file.fsPath.length > 0 && (await this.jupyterExecution.isNotebookSupported())) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
@@ -335,7 +335,7 @@ export class NativeInteractiveWindowCommandListener {
         }
     }
 
-    public async exportCellsWithOutput(
+    private async exportCellsWithOutput(
         ranges: { range: Range; title: string }[],
         document: TextDocument,
         file: Uri,
@@ -374,33 +374,33 @@ export class NativeInteractiveWindowCommandListener {
         }
     }
 
-    public async showExportDialog(file: Uri): Promise<Uri | undefined> {
+    private async showExportDialog(file: Uri): Promise<Uri | undefined> {
         // Bring up the save file dialog box
         return this.exportDialog.showDialog(ExportFormat.ipynb, file);
     }
 
-    public undoCells() {
+    private undoCells() {
         const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.undoCells();
         }
     }
 
-    public redoCells() {
+    private redoCells() {
         const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.redoCells();
         }
     }
 
-    public removeAllCells() {
+    private removeAllCells() {
         const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.removeAllCells();
         }
     }
 
-    public interruptKernel(uri?: Uri) {
+    private interruptKernel(uri?: Uri) {
         const interactiveWindow = uri
             ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
@@ -409,7 +409,7 @@ export class NativeInteractiveWindowCommandListener {
         }
     }
 
-    public restartKernel(uri?: Uri) {
+    private restartKernel(uri?: Uri) {
         const interactiveWindow = uri
             ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
@@ -418,28 +418,28 @@ export class NativeInteractiveWindowCommandListener {
         }
     }
 
-    public expandAllCells() {
+    private expandAllCells() {
         const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.expandAllCells();
         }
     }
 
-    public collapseAllCells() {
+    private collapseAllCells() {
         const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.collapseAllCells();
         }
     }
 
-    public exportCells() {
+    private exportCells() {
         const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.exportCells();
         }
     }
 
-    public exportAs(uri?: Uri) {
+    private exportAs(uri?: Uri) {
         const interactiveWindow = uri
             ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
@@ -448,7 +448,7 @@ export class NativeInteractiveWindowCommandListener {
         }
     }
 
-    public export(uri?: Uri) {
+    private export(uri?: Uri) {
         const interactiveWindow = uri
             ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
@@ -458,11 +458,11 @@ export class NativeInteractiveWindowCommandListener {
     }
 
     @captureTelemetry(Telemetry.CreateNewInteractive, undefined, false)
-    public async createNewInteractiveWindow(): Promise<void> {
+    private async createNewInteractiveWindow(): Promise<void> {
         await this.interactiveWindowProvider.getOrCreate(undefined);
     }
 
-    public waitForStatus<T>(
+    private waitForStatus<T>(
         promise: () => Promise<T>,
         format: string,
         file?: string,
@@ -474,7 +474,7 @@ export class NativeInteractiveWindowCommandListener {
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
-    public async importNotebook(): Promise<void> {
+    private async importNotebook(): Promise<void> {
         const filtersKey = localize.DataScience.importDialogFilter();
         const filtersObject: { [name: string]: string[] } = {};
         filtersObject[filtersKey] = ['ipynb'];
@@ -498,7 +498,7 @@ export class NativeInteractiveWindowCommandListener {
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
-    public async importNotebookOnFile(file: Uri): Promise<void> {
+    private async importNotebookOnFile(file: Uri): Promise<void> {
         if (file.fsPath && file.fsPath.length > 0) {
             await this.waitForStatus(
                 async () => {
@@ -511,7 +511,7 @@ export class NativeInteractiveWindowCommandListener {
         }
     }
 
-    public async scrollToCell(file: Uri, id: string): Promise<void> {
+    private async scrollToCell(file: Uri, id: string): Promise<void> {
         if (id && file) {
             // Find the interactive windows that have this file as a submitter
             const possibles = this.interactiveWindowProvider.windows.filter(
