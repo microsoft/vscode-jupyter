@@ -358,6 +358,7 @@ export class Kernel implements IKernel {
                 sysInfoMessages.unshift(connectionString);
             }
 
+            // Append a markdown cell containing the sys info to the end of the NotebookDocument
             return chainWithPendingUpdates(notebookDocument, (edit) => {
                 const markdownCell = new NotebookCellData(
                     NotebookCellKind.Markup,
