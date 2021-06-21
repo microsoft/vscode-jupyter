@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { ColumnType, IGetSliceRequest, MaxStringCompare } from '../../client/datascience/data-viewing/types';
+import { ColumnType, IGetColsResponse, IGetSliceRequest, MaxStringCompare } from '../../client/datascience/data-viewing/types';
 import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import './globalJQueryImports';
@@ -39,6 +39,7 @@ import 'slickgrid/slick.grid.css';
 import './reactSlickGrid.css';
 import { generateDisplayValue } from './cellFormatter';
 import { getLocString } from '../react-common/locReactSide';
+import { IHistoryItem } from '../../client/datascience/data-viewing/data-wrangler/types';
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
@@ -71,6 +72,14 @@ export interface ISlickGridProps {
     isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
     handleSliceRequest(args: IGetSliceRequest): void;
     handleRefreshRequest(): void;
+
+    // For Data Wrangler
+    monacoTheme?: string;
+    historyList?: IHistoryItem[];
+    histogramData?: IGetColsResponse;
+    currentVariableName?: string;
+    toggleFilterEvent?: Slick.Event<void>;
+    submitCommand?(args: { command: string; args: any }): void;
 }
 
 interface ISlickGridState {
@@ -177,10 +186,10 @@ export class ColumnFilter {
 }
 
 export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridState> {
-    private containerRef: React.RefObject<HTMLDivElement>;
-    private measureRef: React.RefObject<HTMLDivElement>;
-    private dataView: Slick.Data.DataView<ISlickRow> = new Slick.Data.DataView();
-    private columnFilters: Map<string, ColumnFilter> = new Map<string, ColumnFilter>();
+    protected containerRef: React.RefObject<HTMLDivElement>;
+    protected measureRef: React.RefObject<HTMLDivElement>;
+    protected dataView: Slick.Data.DataView<ISlickRow> = new Slick.Data.DataView();
+    protected columnFilters: Map<string, ColumnFilter> = new Map<string, ColumnFilter>();
     private resizeTimer?: number;
     private autoResizedColumns: boolean = false;
 
@@ -237,6 +246,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
             this.dataView.onRowCountChanged.subscribe((_e, _args) => {
                 grid.updateRowCount();
+                if (grid.getDataLength() === 0) {
+                    const canvasElement = grid.getCanvasNode();
+                    canvasElement.innerHTML = '<div class="no-data"><span>No data</span></div>';
+                }
                 grid.render();
             });
 
@@ -362,7 +375,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private styleColumns(columns: Slick.Column<ISlickRow>[]) {
+    protected styleColumns(columns: Slick.Column<ISlickRow>[]) {
         // Transform columns so they are sortable and stylable
         return columns.map((c) => {
             c.sortable = true;
@@ -376,7 +389,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     // These adjustments for the row height come from trial and error, by changing the font size in VS code,
     // opening a new Data Viewer, and making sure the data is visible
     // They were tested up to a font size of 60, and the row height still allows the content to be seen
-    private getAppropiateRowHeight(fontSize: number): number {
+    protected getAppropiateRowHeight(fontSize: number): number {
         switch (true) {
             case fontSize < 15:
                 return fontSize + 4 + 8; // +8 for padding
@@ -391,7 +404,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     // If the slickgrid gets focus and nothing is selected select the first item
     // so that you can keyboard navigate from there
-    private slickgridFocus = (_e: any): void => {
+    protected slickgridFocus = (_e: any): void => {
         if (this.state.grid) {
             if (!this.state.grid.getActiveCell()) {
                 this.state.grid.setActiveCell(0, 1);
@@ -399,7 +412,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private slickgridHandleKeyDown = (e: KeyboardEvent): void => {
+    protected slickgridHandleKeyDown = (e: KeyboardEvent): void => {
         let handled: boolean = false;
 
         // Defined here:
@@ -453,7 +466,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private updateCssStyles = () => {
+    protected updateCssStyles = () => {
         if (this.state.grid && this.containerRef.current) {
             const gridName = (this.state.grid as any).getUID() as string;
             const document = this.containerRef.current.ownerDocument;
@@ -470,7 +483,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private windowResized = () => {
+    protected windowResized = () => {
         if (this.resizeTimer) {
             clearTimeout(this.resizeTimer);
         }
@@ -487,7 +500,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private autoResizeColumns() {
+    protected autoResizeColumns() {
         if (this.state.grid) {
             const fontString = this.computeFont();
             const columns = this.state.grid.getColumns();
@@ -527,14 +540,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     }
 
-    private clickFilterButton = () => {
+    protected clickFilterButton = () => {
         this.setState({ showingFilters: !this.state.showingFilters });
         // Force column headers to rerender by setting columns
         // and ensure styles don't get messed up after rerender
         this.autoResizeColumns();
     };
 
-    private computeFont(): string | null {
+    protected computeFont(): string | null {
         if (this.containerRef.current) {
             const style = getComputedStyle(this.containerRef.current);
             return style ? style.font : null;
@@ -583,7 +596,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private filter(item: any, _args: any): boolean {
+    protected filter(item: any, _args: any): boolean {
         const fields = Array.from(this.columnFilters.keys());
         for (const field of fields) {
             if (field) {
@@ -598,7 +611,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         return true;
     }
 
-    private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
+    protected renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
         if (args.column.field === this.props.idProperty) {
             const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
             ReactDOM.render(

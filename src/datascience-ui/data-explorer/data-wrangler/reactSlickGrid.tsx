@@ -4,8 +4,6 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { IGetSliceRequest, MaxStringCompare } from '../../../client/datascience/data-viewing/types';
-import { KeyCodes } from '../../react-common/constants';
 import { measureText } from '../../react-common/textMeasure';
 import '../globalJQueryImports';
 import { ReactSlickGridFilterBox } from '../reactSlickGridFilterBox';
@@ -38,11 +36,8 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
-import { generateDisplayValue } from '../cellFormatter';
-// import { ControlPanel } from './controlPanel';
 import './contextMenu.css';
-import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
-import { ColumnFilter, ISlickGridAdd, ISlickGridSlice, ISlickRow } from '../reactSlickGrid';
+import { ISlickGridProps, ISlickRow, ReactSlickGrid } from '../reactSlickGrid';
 import { DataWranglerCommands } from '../../../client/datascience/data-viewing/data-wrangler/types';
 
 /*
@@ -64,43 +59,7 @@ enum ColumnContextMenuItem {
     DropNA = 'Remove Missing Values',
     DropDuplicates = 'Drop Duplicates On Column'
 }
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export interface ISlickGridProps {
-    idProperty: string;
-    columns: Slick.Column<ISlickRow>[];
-    rowsAdded: Slick.Event<ISlickGridAdd>;
-    resetGridEvent: Slick.Event<ISlickGridSlice>;
-    resizeGridEvent: Slick.Event<void>;
-    columnsUpdated: Slick.Event<Slick.Column<ISlickRow>[]>;
-    toggleFilterEvent: Slick.Event<void>;
-    filterRowsTooltip: string;
-    dataDimensionality: number;
-    originalVariableShape: number[] | undefined;
-    isSliceDataEnabled: boolean; // Feature flag. This should eventually be removed
-    historyList: any[];
-    histogramData?: IGetColsResponse;
-    currentVariableName: string;
-    forceHeight?: number;
-    monacoTheme: string;
-    handleSliceRequest(args: IGetSliceRequest): void;
-    submitCommand(args: { command: string; args: any }): void;
-    handleRefreshRequest(): void;
-}
-
-interface ISlickGridState {
-    grid?: Slick.Grid<ISlickRow>;
-    showingFilters?: boolean;
-    fontSize: number;
-}
-
-export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridState> {
-    private containerRef: React.RefObject<HTMLDivElement>;
-    private measureRef: React.RefObject<HTMLDivElement>;
-    private dataView: Slick.Data.DataView<ISlickRow> = new Slick.Data.DataView();
-    private columnFilters: Map<string, ColumnFilter> = new Map<string, ColumnFilter>();
-    private resizeTimer?: number;
-    private autoResizedColumns: boolean = false;
+export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     private contextMenuRowId: number | undefined;
     private contextMenuCellId: number | undefined;
     private contextMenuColumnName: string | undefined;
@@ -108,16 +67,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     constructor(props: ISlickGridProps) {
         super(props);
         this.state = { fontSize: 15, showingFilters: true };
-        this.containerRef = React.createRef<HTMLDivElement>();
-        this.measureRef = React.createRef<HTMLDivElement>();
-        this.props.rowsAdded.subscribe(this.addedRows);
-        this.props.resetGridEvent.subscribe(this.resetGrid);
-        this.props.resizeGridEvent.subscribe(this.windowResized);
-        this.props.columnsUpdated.subscribe(this.updateColumns);
-        this.props.toggleFilterEvent.subscribe(this.clickFilterButton);
+        if (this.props.toggleFilterEvent) {
+            this.props.toggleFilterEvent.subscribe(this.clickFilterButton);
+        }
     }
 
     // eslint-disable-next-line
+    // This version is very similar to the one in data viewer's reactSlickGrid.tsx
+    // but with some things added onto the grid
     public componentDidMount = () => {
         window.addEventListener('resize', this.windowResized);
 
@@ -209,6 +166,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             grid.onContextMenu.subscribe(this.maybeDropRows);
 
             // Data row context menu
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             slickgridJQ('#contextMenu').click((e: any) => {
                 if (
                     !slickgridJQ(e.target).is('li') ||
@@ -220,13 +178,17 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 }
                 const contextMenuItem = e.target.id;
                 const columnName = this.props.columns[this.contextMenuCellId].name;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const cellData = (this.dataView.getItemById(this.contextMenuRowId) as any)[columnName!];
                 switch (contextMenuItem) {
                     case RowContextMenuItem.DropRow:
-                        return this.props.submitCommand({
-                            command: DataWranglerCommands.Drop,
-                            args: { targets: [this.contextMenuRowId], mode: 'row' }
-                        });
+                        if (this.props.submitCommand) {
+                            return this.props.submitCommand({
+                                command: DataWranglerCommands.Drop,
+                                args: { targets: [this.contextMenuRowId], mode: 'row' }
+                            });
+                        }
+                        return;
                     case RowContextMenuItem.CopyData:
                         if (cellData === undefined) {
                             // This is when you try to copy the slickGrid built-in index
@@ -241,38 +203,41 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             });
 
             // Header row context menu
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             slickgridJQ('#headerContextMenu').click((e: any) => {
                 if (!slickgridJQ(e?.currentTarget).is('ul') || !this.state.grid?.getEditorLock().commitCurrentEdit()) {
                     return;
                 }
                 // Submit a drop column request
                 const contextMenuItem = e?.target?.id;
-                switch (contextMenuItem) {
-                    case ColumnContextMenuItem.GetColumnStats:
-                        return this.props.submitCommand({
-                            command: DataWranglerCommands.Describe,
-                            args: { columnName: this.contextMenuColumnName }
-                        });
-                    case ColumnContextMenuItem.DropColumns:
-                        return this.props.submitCommand({
-                            command: DataWranglerCommands.Drop,
-                            args: { targets: [this.contextMenuColumnName] }
-                        });
-                    case ColumnContextMenuItem.NormalizeColumn:
-                        return this.props.submitCommand({
-                            command: DataWranglerCommands.NormalizeColumn,
-                            args: { start: 0, end: 1, target: this.contextMenuColumnName }
-                        });
-                    case ColumnContextMenuItem.DropNA:
-                        return this.props.submitCommand({
-                            command: DataWranglerCommands.DropNa,
-                            args: { subset: this.contextMenuColumnName, target: 0 }
-                        });
-                    case ColumnContextMenuItem.DropDuplicates:
-                        return this.props.submitCommand({
-                            command: DataWranglerCommands.DropDuplicates,
-                            args: { subset: [this.contextMenuColumnName], mode: 'column' }
-                        });
+                if (this.props.submitCommand) {
+                    switch (contextMenuItem) {
+                        case ColumnContextMenuItem.GetColumnStats:
+                            return this.props.submitCommand({
+                                command: DataWranglerCommands.Describe,
+                                args: { columnName: this.contextMenuColumnName }
+                            });
+                        case ColumnContextMenuItem.DropColumns:
+                            return this.props.submitCommand({
+                                command: DataWranglerCommands.Drop,
+                                args: { targets: [this.contextMenuColumnName] }
+                            });
+                        case ColumnContextMenuItem.NormalizeColumn:
+                            return this.props.submitCommand({
+                                command: DataWranglerCommands.NormalizeColumn,
+                                args: { start: 0, end: 1, target: this.contextMenuColumnName }
+                            });
+                        case ColumnContextMenuItem.DropNA:
+                            return this.props.submitCommand({
+                                command: DataWranglerCommands.DropNa,
+                                args: { subset: this.contextMenuColumnName, target: 0 }
+                            });
+                        case ColumnContextMenuItem.DropDuplicates:
+                            return this.props.submitCommand({
+                                command: DataWranglerCommands.DropDuplicates,
+                                args: { subset: [this.contextMenuColumnName], mode: 'column' }
+                            });
+                    }
                 }
             });
 
@@ -291,29 +256,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         // Act like a resize happened to refresh the layout.
         this.windowResized();
-    };
-
-    public componentWillUnmount = () => {
-        if (this.resizeTimer) {
-            window.clearTimeout(this.resizeTimer);
-        }
-        window.removeEventListener('resize', this.windowResized);
-        if (this.state.grid) {
-            this.state.grid.destroy();
-        }
-    };
-
-    public componentDidUpdate = (_prevProps: ISlickGridProps) => {
-        if (this.state.showingFilters && this.state.grid) {
-            this.state.grid.setHeaderRowVisibility(true);
-        } else if (this.state.showingFilters === false && this.state.grid) {
-            this.state.grid.setHeaderRowVisibility(false);
-        }
-        // Dynamically modify the styles that the slickGrid generates for the rows.
-        // It's eliminating some of the height
-        if (this.state.grid && this.containerRef.current) {
-            this.updateCssStyles();
-        }
     };
 
     public render() {
@@ -392,6 +334,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private maybeDropColumns = (e: any, data: Slick.OnHeaderContextMenuEventArgs<ISlickRow>) => {
         this.contextMenuColumnName = data.column.name;
         // Don't show context menu for the row numbering column or index column
@@ -410,6 +353,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         });
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private maybeDropRows = (e: any) => {
         const cell = this.state.grid?.getCellFromEvent(e);
         if (!cell) {
@@ -429,159 +373,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         });
     };
 
-    // public for testing
-    public sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {
-        // Note: dataView.fastSort is an IE workaround. Not necessary.
-        this.dataView.sort((l: any, r: any) => this.compareElements(l, r, args.sortCol), args.sortAsc);
-        args.grid.invalidateAllRows();
-        args.grid.render();
-    };
-
-    // Public for testing
-    public filterChanged = (text: string, column: Slick.Column<Slick.SlickData>) => {
-        if (column && column.field) {
-            this.columnFilters.set(column.field, new ColumnFilter(text, column));
-            this.dataView.refresh();
-        }
-    };
-
-    // private clearAllFilters = () => {
-    //     // Avoid rerendering if there are no filters
-    //     if (this.columnFilters.size > 0) {
-    //         this.columnFilters = new Map();
-    //         this.dataView.refresh();
-    //         // Force column headers to rerender by setting columns
-    //         // and ensure styles don't get messed up after rerender
-    //         this.autoResizeColumns();
-    //     }
-    // };
-
-    private styleColumns(columns: Slick.Column<ISlickRow>[]) {
-        // Transform columns so they are sortable and stylable
-        return columns.map((c) => {
-            c.sortable = true;
-            c.editor = readonlyCellEditor;
-            c.headerCssClass = 'react-grid-header-cell';
-            c.cssClass = 'react-grid-cell';
-            return c;
-        });
-    }
-
-    // These adjustments for the row height come from trial and error, by changing the font size in VS code,
-    // opening a new Data Viewer, and making sure the data is visible
-    // They were tested up to a font size of 60, and the row height still allows the content to be seen
-    private getAppropiateRowHeight(fontSize: number): number {
-        switch (true) {
-            case fontSize < 15:
-                return fontSize + 4 + 8; // +8 for padding
-            case fontSize < 20:
-                return fontSize + 8 + 8; // +8 for padding
-            case fontSize < 30:
-                return fontSize + 10 + 8; // +8 for padding
-            default:
-                return fontSize + 12 + 8; // +8 for padding
-        }
-    }
-
-    // If the slickgrid gets focus and nothing is selected select the first item
-    // so that you can keyboard navigate from there
-    private slickgridFocus = (_e: any): void => {
-        if (this.state.grid) {
-            if (!this.state.grid.getActiveCell()) {
-                this.state.grid.setActiveCell(0, 1);
-            }
-        }
-    };
-
-    private slickgridHandleKeyDown = (e: KeyboardEvent): void => {
-        let handled: boolean = false;
-
-        // Defined here:
-        // https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/Grid_Role#Keyboard_interactions
-
-        if (this.state.grid) {
-            // The slickgrid version of jquery populates keyCode not code, so use the numerical values here
-            switch (e.keyCode) {
-                case KeyCodes.LeftArrow:
-                    this.state.grid.navigateLeft();
-                    handled = true;
-                    break;
-                case KeyCodes.UpArrow:
-                    this.state.grid.navigateUp();
-                    handled = true;
-                    break;
-                case KeyCodes.RightArrow:
-                    this.state.grid.navigateRight();
-                    handled = true;
-                    break;
-                case KeyCodes.DownArrow:
-                    this.state.grid.navigateDown();
-                    handled = true;
-                    break;
-                case KeyCodes.PageUp:
-                    this.state.grid.navigatePageUp();
-                    handled = true;
-                    break;
-                case KeyCodes.PageDown:
-                    this.state.grid.navigatePageDown();
-                    handled = true;
-                    break;
-                case KeyCodes.End:
-                    e.ctrlKey ? this.state.grid.navigateBottom() : this.state.grid.navigateRowEnd();
-                    handled = true;
-                    break;
-                case KeyCodes.Home:
-                    e.ctrlKey ? this.state.grid.navigateTop() : this.state.grid.navigateRowStart();
-                    handled = true;
-                    break;
-                default:
-            }
-        }
-
-        if (handled) {
-            // Don't let the parent / browser do stuff if we handle it
-            // otherwise we'll both move the cell selection and scroll the window
-            // with up and down keys
-            e.stopPropagation();
-            e.preventDefault();
-        }
-    };
-
-    private updateCssStyles = () => {
-        if (this.state.grid && this.containerRef.current) {
-            const gridName = (this.state.grid as any).getUID() as string;
-            const document = this.containerRef.current.ownerDocument;
-            if (document) {
-                const cssOverrideNode = document.createElement('style');
-                const rule = `.${gridName} .slick-cell {height: ${this.getAppropiateRowHeight(
-                    this.state.fontSize
-                )}px;}`;
-                cssOverrideNode.setAttribute('type', 'text/css');
-                cssOverrideNode.setAttribute('rel', 'stylesheet');
-                cssOverrideNode.appendChild(document.createTextNode(rule));
-                document.head.appendChild(cssOverrideNode);
-            }
-        }
-    };
-
-    private windowResized = () => {
-        if (this.resizeTimer) {
-            clearTimeout(this.resizeTimer);
-        }
-        this.resizeTimer = window.setTimeout(this.updateGridSize, 10);
-    };
-
-    private updateGridSize = () => {
-        if (this.state.grid && this.containerRef.current && this.measureRef.current) {
-            // We use a div at the bottom to figure out our expected height. Slickgrid isn't
-            // so good without a specific height set in the style.
-            const height = this.measureRef.current.offsetTop - this.containerRef.current.offsetTop;
-            this.containerRef.current.style.height = `${this.props.forceHeight ? this.props.forceHeight : height}px`;
-            this.state.grid.resizeCanvas();
-        }
-    };
-
-    private autoResizeColumns() {
+    protected autoResizeColumns() {
         if (this.state.grid) {
             const fontString = this.computeFont();
             const columns = this.state.grid.getColumns();
@@ -605,78 +397,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     }
 
-    private clickFilterButton = () => {
-        this.setState({ showingFilters: !this.state.showingFilters });
-        // Force column headers to rerender by setting columns
-        // and ensure styles don't get messed up after rerender
-        this.autoResizeColumns();
-    };
-
-    private computeFont(): string | null {
-        if (this.containerRef.current) {
-            const style = getComputedStyle(this.containerRef.current);
-            return style ? style.font : null;
-        }
-        return null;
-    }
-
-    private resetGrid = (_e: Slick.EventData, data: ISlickGridSlice) => {
-        this.dataView.setItems([]);
-        const styledColumns = this.styleColumns(data.columns);
-        this.setColumns(styledColumns);
-    };
-
-    private updateColumns = (_e: Slick.EventData, newColumns: Slick.Column<Slick.SlickData>[]) => {
-        this.setColumns(newColumns);
-        this.state.grid?.render(); // We might be able to skip this rerender?
-    };
-
-    private setColumns = (newColumns: Slick.Column<Slick.SlickData>[]) => {
-        // HACK: SlickGrid header row does not rerender if its visibility is false when columns
-        // are updated, and this causes the header to simply not show up when clicking the
-        // filter button after we update the grid column headers on receiving a slice response.
-        // The solution is to force the header row to become visible just before sending our slice request.
-        this.state.grid?.setHeaderRowVisibility(true);
-        this.state.grid?.setColumns(newColumns);
-        this.autoResizeColumns();
-    };
-
-    private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
-        // Add all of these new rows into our data.
-        this.dataView.beginUpdate();
-        for (const row of data.newRows) {
-            this.dataView.addItem(row);
-        }
-
-        // Update columns if we haven't already
-        if (!this.autoResizedColumns) {
-            this.autoResizedColumns = true;
-            this.autoResizeColumns();
-        }
-
-        this.dataView.endUpdate();
-
-        // This should cause a rowsChanged event in the dataview that will
-        // refresh the grid.
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private filter(item: any, _args: any): boolean {
-        const fields = Array.from(this.columnFilters.keys());
-        for (const field of fields) {
-            if (field) {
-                const filter = this.columnFilters.get(field);
-                if (filter) {
-                    if (!filter.matches(item[field])) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
+    protected renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
         const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
         ReactDOM.render(
             <ReactSlickGridFilterBox
@@ -689,114 +410,4 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         );
         // }
     };
-
-    private compareElements(a: any, b: any, col?: Slick.Column<Slick.SlickData>): number {
-        if (col) {
-            const sortColumn = col.field;
-            if (sortColumn && col.hasOwnProperty('type')) {
-                const columnType = (col as any).type;
-                const isStringColumn = columnType === 'string' || columnType === 'object';
-                if (isStringColumn) {
-                    const aVal = a[sortColumn] ? a[sortColumn].toString() : '';
-                    const bVal = b[sortColumn] ? b[sortColumn].toString() : '';
-                    const aStr = aVal ? aVal.substring(0, Math.min(aVal.length, MaxStringCompare)) : aVal;
-                    const bStr = bVal ? bVal.substring(0, Math.min(bVal.length, MaxStringCompare)) : bVal;
-                    return aStr.localeCompare(bStr);
-                } else {
-                    const aVal = a[sortColumn];
-                    const bVal = b[sortColumn];
-                    return aVal === bVal ? 0 : aVal > bVal ? 1 : -1;
-                }
-            }
-        }
-
-        // No sort column, try index column
-        if (a.hasOwnProperty(this.props.idProperty) && b.hasOwnProperty(this.props.idProperty)) {
-            const sortColumn = this.props.idProperty;
-            const aVal = a[sortColumn];
-            const bVal = b[sortColumn];
-            return aVal === bVal ? 0 : aVal > bVal ? 1 : -1;
-        }
-
-        return -1;
-    }
-}
-
-// Modified version of https://github.com/6pac/SlickGrid/blob/master/slick.editors.js#L24
-// with some fixes to get things working in our context
-function readonlyCellEditor(this: any, args: any) {
-    var $input: any;
-    var defaultValue: any;
-
-    this.init = function init() {
-        $input = slickgridJQ("<input type=text class='editor-text'/>")
-            .appendTo(args.container)
-            .on('keydown.nav', handleKeyDown)
-            .focus();
-    };
-
-    this.destroy = function destroy() {
-        $input.remove();
-    };
-
-    this.focus = function focus() {
-        $input.focus();
-    };
-
-    this.isValueChanged = function isValueChanged() {
-        return false;
-    };
-
-    this.loadValue = function loadValue(item: any) {
-        defaultValue = generateDisplayValue(item[args.column.field]);
-        $input.val(defaultValue);
-        $input[0].defaultValue = defaultValue;
-    };
-
-    this.applyValue = function applyValue() {
-        // Noop as we never want to overwrite the cell's value.
-        // Defined to avoid polluting the console with typeerrors
-    };
-
-    this.validate = function validate() {
-        return {
-            valid: true,
-            msg: null
-        };
-    };
-
-    this.serializeValue = function serializeValue() {
-        // Defined to avoid polluting the console with typeerrors
-        return $input.val();
-    };
-
-    function handleKeyDown(this: any, e: JQueryKeyEventObject) {
-        var cursorPosition = this.selectionStart;
-        var textLength = this.value.length;
-        // In the original SlickGrid TextEditor this references
-        // $.ui.keyDown.LEFT which is undefined, so couldn't use
-        // that out of the box if we wanted to allow the user
-        // to move their cursor within the focused input element
-        if (
-            (e.keyCode === KeyCodes.LeftArrow && cursorPosition > 0) ||
-            (e.keyCode === KeyCodes.RightArrow && cursorPosition < textLength - 1) ||
-            (e.ctrlKey && e.keyCode === KeyCodes.X)
-        ) {
-            e.stopImmediatePropagation();
-        }
-        // Readonly input elements do not have a cursor, but we want the user to be able
-        // to navigate the cell via cursor and left/right arrows. Solution is to make
-        // the input editable, but suppress printable keys or keys which would modify
-        // the input
-        if (
-            e.key.length === 1 ||
-            e.keyCode === KeyCodes.Backspace ||
-            e.keyCode === KeyCodes.Delete ||
-            e.keyCode === KeyCodes.Insert
-        ) {
-            e.preventDefault();
-        }
-    }
-
-    this.init();
 }

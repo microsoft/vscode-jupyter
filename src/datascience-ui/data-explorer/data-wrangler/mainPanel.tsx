@@ -26,7 +26,7 @@ import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { Progress } from '../../react-common/progress';
 import { StyleInjector } from '../../react-common/styleInjector';
 import { cellFormatterFunc } from '../cellFormatter';
-import { ReactSlickGrid } from './reactSlickGrid';
+import { DataWranglerReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from '../testData';
 
 import '../../react-common/codicon/codicon.css';
@@ -96,7 +96,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private rowFetchSizeSubsequent: number = 0;
     private rowFetchSizeAll: number = 0;
     // Just used for testing.
-    private grid: React.RefObject<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
+    private grid: React.RefObject<DataWranglerReactSlickGrid> = React.createRef<DataWranglerReactSlickGrid>();
     private updateTimeout?: NodeJS.Timer | number;
     private columnsContainingInfOrNaN = new Set<string>();
     private lastDescribeRequestColumnName: string | undefined;
@@ -339,7 +339,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private renderGrid() {
         const filterRowsTooltip = getLocString('DataScience.filterRowsTooltip', 'Click to filter');
         return (
-            <ReactSlickGrid
+            <DataWranglerReactSlickGrid
                 ref={this.grid}
                 columns={this.state.gridColumns}
                 idProperty={RowNumberColumnName}
