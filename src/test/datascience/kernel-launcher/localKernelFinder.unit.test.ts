@@ -205,6 +205,7 @@ import { LocalPythonKernelFinder } from '../../../client/datascience/kernel-laun
             const envVarsProvider = mock(EnvironmentVariablesProvider);
             when(envVarsProvider.getEnvironmentVariables()).thenResolve({});
             extensionChecker = mock(PythonExtensionChecker);
+            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
             // Setup file system to return correct values.
             when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
