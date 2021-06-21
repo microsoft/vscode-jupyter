@@ -27,11 +27,11 @@ export function isInsiders() {
 
 let jupyterServerStarted = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function initialize(): Promise<IExtensionTestApi> {
+export async function initialize(preWarmJupyterServer = true): Promise<IExtensionTestApi> {
     await initializePython();
     const api = await activateExtension();
     // Ensure we start jupyter server before opening any notebooks or the like.
-    if (!jupyterServerStarted) {
+    if (!jupyterServerStarted && preWarmJupyterServer) {
         jupyterServerStarted = true;
         await startJupyterServer((api as unknown) as IExtensionTestApi);
     }
