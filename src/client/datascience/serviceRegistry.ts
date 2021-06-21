@@ -195,6 +195,9 @@ import { InteractiveWindowCommandListener } from './interactive-window/interacti
 import { NativeInteractiveWindowCommandListener } from './interactive-window/nativeInteractiveWindowCommandListener';
 import { workspace } from 'vscode';
 import { NativeInteractiveWindowProvider } from './interactive-window/nativeInteractiveWindowProvider';
+import { JupyterPaths } from './kernel-launcher/jupyterPaths';
+import { LocalNonPythonKernelFinder } from './kernel-launcher/localNonPythonKernelFinder';
+import { LocalPythonKernelFinder } from './kernel-launcher/localPythonkernelFinder';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -264,6 +267,9 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
     serviceManager.addSingleton<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService, KernelEnvironmentVariablesService);
     serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
+    serviceManager.addSingleton<JupyterPaths>(JupyterPaths, JupyterPaths);
+    serviceManager.addSingleton<LocalNonPythonKernelFinder>(LocalNonPythonKernelFinder, LocalNonPythonKernelFinder);
+    serviceManager.addSingleton<LocalPythonKernelFinder>(LocalPythonKernelFinder, LocalPythonKernelFinder);
     serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
     serviceManager.addSingleton<CellOutputMimeTypeTracker>(CellOutputMimeTypeTracker, CellOutputMimeTypeTracker, undefined, [IExtensionSingleActivationService, INotebookExecutionLogger]);
     serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);

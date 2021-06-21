@@ -31,6 +31,9 @@ import { arePathsSame } from '../../common';
 import { Uri } from 'vscode';
 import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
 import { IExtensions } from '../../../client/common/types';
+import { LocalNonPythonKernelFinder } from '../../../client/datascience/kernel-launcher/localNonPythonKernelFinder';
+import { JupyterPaths } from '../../../client/datascience/kernel-launcher/jupyterPaths';
+import { LocalPythonKernelFinder } from '../../../client/datascience/kernel-launcher/localPythonkernelFinder';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -248,15 +251,19 @@ import { IExtensions } from '../../../client/common/types';
             });
             when(fs.localDirectoryExists(anything())).thenResolve(true);
 
+            const jupyterPaths = new JupyterPaths(instance(platformService), pathUtils, instance(envVarsProvider));
             kernelFinder = new LocalKernelFinder(
                 instance(interpreterService),
-                instance(platformService),
-                instance(fs),
-                pathUtils,
-                instance(workspaceService),
-                instance(envVarsProvider),
                 instance(extensionChecker),
-                instance(extensions)
+                instance(extensions),
+                new LocalNonPythonKernelFinder(instance(fs), instance(workspaceService), jupyterPaths),
+                new LocalPythonKernelFinder(
+                    instance(interpreterService),
+                    instance(fs),
+                    instance(workspaceService),
+                    jupyterPaths
+                ),
+                jupyterPaths
             );
         });
         teardown(() => {
