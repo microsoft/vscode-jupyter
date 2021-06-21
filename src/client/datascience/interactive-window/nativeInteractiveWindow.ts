@@ -30,7 +30,7 @@ import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
-import { IConfigurationService, IDisposable, InteractiveWindowMode, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, InteractiveWindowMode, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCellsFromNotebookDocument } from '../cellFactory';
@@ -114,7 +114,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         private readonly exportDialog: IExportDialog,
         private _notebookUri: Uri | undefined, // This remains the same for the lifetime of the InteractiveWindow object
         private readonly notebookControllerManager: INotebookControllerManager,
-        private readonly kernelProvider: IKernelProvider
+        private readonly kernelProvider: IKernelProvider,
+        private readonly disposables: IDisposableRegistry
     ) {
         // Set our owner and first submitter
         this._owner = owner;
@@ -130,20 +131,24 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 }
 
                 // Clear cached kernel when the selected controller for this document changes
-                e.controller.controller.onDidChangeSelectedNotebooks(
+                const controllerChangeListener = e.controller.controller.onDidChangeSelectedNotebooks(
                     (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
-                        if (selectedEvent.selected === false) {
+                        // Controller was deselected for this InteractiveWindow's NotebookDocument
+                        if (selectedEvent.selected === false && this._notebookUri !== undefined && selectedEvent.notebook.uri.toString() === this._notebookUri.toString()) {
                             this.kernelLoadPromise = undefined;
                             this.kernel = undefined;
                             this.notebookController = undefined;
-                        } else {
-                            this.registerKernel(e.notebook, e.controller);
+                            controllerChangeListener.dispose();
                         }
-                    }
+                    },
+                    this,
+                    this.disposables
                 );
 
                 this.registerKernel(e.notebook, e.controller);
-            }
+            },
+            this,
+            this.disposables
         );
 
         this.interactiveOpenPromise = this.commandManager
@@ -471,7 +476,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return true;
         }
 
-        this.registerKernel(notebookDocument, this.notebookController);
         await this.kernelLoadPromise;
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files

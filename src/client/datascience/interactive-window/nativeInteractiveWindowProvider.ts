@@ -122,7 +122,8 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             this.serviceContainer.get<IExportDialog>(IExportDialog),
             notebookUri,
             this.notebookControllerManager,
-            this.kernelProvider
+            this.kernelProvider,
+            this.disposables
         );
         this._windows.push(result);
 
