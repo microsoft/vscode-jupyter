@@ -31,7 +31,6 @@ export enum DataWranglerCommands {
 export namespace DataWranglerMessages {
     export const SubmitCommand = 'submit_command';
     export const RefreshDataWrangler = 'refresh_data_viewer'; // TODOV
-    export const SliceEnablementStateChanged = 'slice_enablement_state_changed';
     export const UpdateHistoryList = 'update_history_list';
     export const GetHistogramResponse = 'get_histogram_response';
 }

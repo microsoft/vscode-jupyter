@@ -74,7 +74,6 @@ export type IDataViewerMapping = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [DataWranglerMessages.SubmitCommand]: { command: string; args: any };
     [DataWranglerMessages.RefreshDataWrangler]: never | undefined;
-    [DataWranglerMessages.SliceEnablementStateChanged]: { newState: boolean };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [DataWranglerMessages.UpdateHistoryList]: any[] | undefined;
     [DataWranglerMessages.GetHistogramResponse]: IGetColsResponse;
