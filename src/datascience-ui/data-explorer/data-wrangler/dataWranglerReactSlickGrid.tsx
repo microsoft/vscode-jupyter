@@ -35,7 +35,7 @@ import 'slickgrid/plugins/slick.headerbuttons';
 import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
-import './reactSlickGrid.css';
+import './dataWranglerReactSlickGrid.css';
 import './contextMenu.css';
 import { ISlickGridProps, ISlickRow, ReactSlickGrid } from '../reactSlickGrid';
 import { DataWranglerCommands } from '../../../client/datascience/data-viewing/data-wrangler/types';

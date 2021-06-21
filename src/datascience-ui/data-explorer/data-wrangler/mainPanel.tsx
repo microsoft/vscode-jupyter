@@ -26,7 +26,7 @@ import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { Progress } from '../../react-common/progress';
 import { StyleInjector } from '../../react-common/styleInjector';
 import { cellFormatterFunc } from '../cellFormatter';
-import { DataWranglerReactSlickGrid } from './reactSlickGrid';
+import { DataWranglerReactSlickGrid } from './dataWranglerReactSlickGrid';
 import { generateTestData } from '../testData';
 
 import '../../react-common/codicon/codicon.css';
