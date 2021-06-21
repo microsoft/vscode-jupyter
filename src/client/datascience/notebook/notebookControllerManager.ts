@@ -197,29 +197,28 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 await this.updateRemoteConnections(preferredSearchToken.token);
             }
 
-            await this.findPreferredKernel(document, preferredSearchToken.token)
-                .then(async (preferredConnection) => {
-                    if (preferredSearchToken.token.isCancellationRequested) {
-                        traceInfo('Find preferred kernel cancelled');
-                        return;
-                    }
+            const preferredConnection = await this.findPreferredKernel(document, preferredSearchToken.token);
 
-                    // If we found a preferred kernel, set the association on the NotebookController
-                    if (preferredConnection) {
-                        traceInfo(
-                            `PreferredConnection: ${
-                                preferredConnection.id
-                            } found for NotebookDocument: ${document.uri.toString()}`
-                        );
-                        this.setPreferredController(document, preferredConnection).catch(traceError);
-                    } else {
-                        traceInfoIf(
-                            IS_CI_SERVER,
-                            `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`
-                        );
-                    }
-                })
-                .catch((error) => traceError(error));
+            // If we found a preferred kernel, set the association on the NotebookController
+            if (preferredSearchToken.token.isCancellationRequested) {
+                traceInfo('Find preferred kernel cancelled');
+                return;
+            }
+            if (!preferredConnection) {
+                traceInfoIf(
+                    IS_CI_SERVER,
+                    `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`
+                );
+                return;
+            }
+
+            traceInfo(
+                `PreferredConnection: ${preferredConnection.id} found for NotebookDocument: ${document.uri.toString()}`
+            );
+            // No need to await on this, we're done with the search, this can happen in the background.
+            this.setPreferredController(document, preferredConnection).catch(traceError);
+        } catch (ex) {
+            traceError('Failed to find & set preferred controllers', ex);
         } finally {
             // Make sure that we clear our finding in progress when done
             this.findPreferredInProgress.delete(document);
