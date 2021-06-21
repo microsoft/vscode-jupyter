@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../common/constants';
 import '../common/extensions';
 
 import { IJupyterSettings } from '../common/types';
@@ -16,18 +17,45 @@ export class CellMatcher {
     private defaultCellMarker: string;
     private defaultCellMarkerExec: RegExp;
 
-    constructor(settings?: IJupyterSettings) {
-        this.codeMatchRegEx = this.createRegExp(
-            settings ? settings.codeRegularExpression : undefined,
-            RegExpValues.PythonCellMarker
-        );
-        this.markdownMatchRegEx = this.createRegExp(
-            settings ? settings.markdownRegularExpression : undefined,
-            RegExpValues.PythonMarkdownCellMarker
-        );
+    constructor(language: string | undefined, settings?: IJupyterSettings) {
+        if (!language) {
+            language = PYTHON_LANGUAGE;
+        }
+
+        const codeLens = settings?.codeLensExpressions.find
+            ? settings?.codeLensExpressions.find((v) => v.language === language)
+            : undefined;
+
+        // Use either the old or new settings based on if different and the language is python.
+        const codeExpression =
+            language == PYTHON_LANGUAGE &&
+            settings?.codeRegularExpression &&
+            settings?.codeRegularExpression !== RegExpValues.PythonCellMarker.source
+                ? settings?.codeRegularExpression
+                : codeLens?.codeExpression;
+        const markdownExpression =
+            language == PYTHON_LANGUAGE &&
+            settings?.markdownRegularExpression &&
+            settings?.markdownRegularExpression !== RegExpValues.PythonMarkdownCellMarker.source
+                ? settings?.markdownRegularExpression
+                : codeLens?.markdownExpression;
+        const defaultExpression =
+            language == PYTHON_LANGUAGE && settings?.defaultCellMarker && settings?.defaultCellMarker !== '# %%'
+                ? settings?.defaultCellMarker
+                : codeLens?.defaultCellMarker;
+
+        const backupCellRegex =
+            language == MARKDOWN_LANGUAGE ? RegExpValues.MarkdownCellMarker : RegExpValues.PythonCellMarker;
+        const backupMarkdownRegex =
+            language == MARKDOWN_LANGUAGE
+                ? RegExpValues.MarkdownMarkdownCellMarker
+                : RegExpValues.PythonMarkdownCellMarker;
+
+        this.codeMatchRegEx = this.createRegExp(codeExpression, backupCellRegex);
+        this.markdownMatchRegEx = this.createRegExp(markdownExpression, backupMarkdownRegex);
         this.codeExecRegEx = new RegExp(`${this.codeMatchRegEx.source}(.*)`);
         this.markdownExecRegEx = new RegExp(`${this.markdownMatchRegEx.source}(.*)`);
-        this.defaultCellMarker = settings?.defaultCellMarker ? settings.defaultCellMarker : '# %%';
+        this.defaultCellMarker = defaultExpression ? defaultExpression : '# %%';
         this.defaultCellMarkerExec = this.createRegExp(`${this.defaultCellMarker}(.*)`, /# %%(.*)/);
     }
 

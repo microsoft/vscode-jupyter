@@ -137,8 +137,6 @@ suite('Interactive window command listener', async () => {
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             variableExplorerExclude: 'module;function;builtin_function_or_method',
-            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             enablePlotViewer: true,
             runStartupCommands: '',
             debugJustMyCode: true,
@@ -270,7 +268,7 @@ suite('Interactive window command listener', async () => {
                 )
             )
             .returns(() => {
-                return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid()));
+                return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid(), doc.languageId));
             });
 
         when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));

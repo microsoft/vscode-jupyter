@@ -15,6 +15,7 @@ import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
 import {
+    ICodeLensExpressions,
     IExperiments,
     ILoggingSettings,
     InteractiveWindowMode,
@@ -84,6 +85,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public defaultCellMarker: string = '';
     public themeMatplotlibPlots: boolean = false;
     public variableQueries: IVariableQuery[] = [];
+    public codeLensExpressions: ICodeLensExpressions[] = [];
     public disableJupyterAutoStart: boolean = false;
     public jupyterCommandLineArguments: string[] = [];
     public widgetScriptSources: WidgetCDNs[] = [];

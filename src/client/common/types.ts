@@ -132,9 +132,9 @@ export interface IJupyterSettings {
     readonly maxOutputSize: number;
     readonly enableScrollingForCellOutputs: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;
-    readonly markdownRegularExpression: string;
-    readonly codeRegularExpression: string;
     readonly allowLiveShare: boolean;
+    readonly markdownRegularExpression: string | undefined;
+    readonly codeRegularExpression: string | undefined;
     readonly errorBackgroundColor: string;
     readonly ignoreVscodeTheme: boolean;
     readonly variableExplorerExclude: string;
@@ -158,10 +158,11 @@ export interface IJupyterSettings {
     readonly runMagicCommands: string;
     readonly runStartupCommands: string | string[];
     readonly debugJustMyCode: boolean;
-    readonly defaultCellMarker: string;
     readonly verboseLogging: boolean;
+    readonly defaultCellMarker: string | undefined;
     readonly themeMatplotlibPlots: boolean;
     readonly variableQueries: IVariableQuery[];
+    readonly codeLensExpressions: ICodeLensExpressions[];
     readonly disableJupyterAutoStart: boolean;
     readonly jupyterCommandLineArguments: string[];
     readonly widgetScriptSources: WidgetCDNs[];
@@ -206,6 +207,13 @@ export interface IVariableQuery {
     language: string;
     query: string;
     parseExpr: string;
+}
+
+export interface ICodeLensExpressions {
+    language: string;
+    codeExpression: string;
+    markdownExpression: string;
+    defaultCellMarker: string;
 }
 
 export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';

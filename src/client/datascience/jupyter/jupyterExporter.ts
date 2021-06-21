@@ -110,7 +110,7 @@ export class JupyterExporter implements INotebookExporter {
         };
 
         // Create an object for matching cell definitions
-        const matcher = new CellMatcher(this.configService.getSettings());
+        const matcher = new CellMatcher(undefined, this.configService.getSettings());
 
         // Combine this into a JSON object
         return {

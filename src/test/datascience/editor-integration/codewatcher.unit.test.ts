@@ -113,8 +113,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             variableExplorerExclude: 'module;function;builtin_function_or_method',
-            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             enableCellCodeLens: true,
             enablePlotViewer: true,
             runStartupCommands: '',
@@ -122,7 +120,24 @@ suite('DataScience Code Watcher Unit Tests', () => {
             variableQueries: [],
             jupyterCommandLineArguments: [],
             widgetScriptSources: [],
-            interactiveWindowMode: 'single'
+            interactiveWindowMode: 'single',
+            codeLensExpressions: [
+                {
+                    language: 'python',
+                    codeExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+                    markdownExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+                    defaultCellMarker: '# %%'
+                },
+                {
+                    language: 'markdown',
+                    codeExpression: '^(```python\\s*|```\\{code-cell\\}\\s+ipython)',
+                    markdownExpression: '(?!x)x',
+                    defaultCellMarker: '```python'
+                }
+            ],
+            codeRegularExpression: undefined,
+            markdownRegularExpression: undefined,
+            defaultCellMarker: undefined
         });
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
         vscodeNotebook.setup((d) => d.activeNotebookEditor).returns(() => undefined);
@@ -365,9 +380,12 @@ fourth line
 
 # <mymarkdown>
 # fifth line`;
-        jupyterSettings.codeRegularExpression = '(#\\s*\\<foobar\\>|#\\s*\\<baz\\>)';
-        jupyterSettings.markdownRegularExpression = '(#\\s*\\<markdowncell\\>|#\\s*\\<mymarkdown\\>)';
-
+        jupyterSettings.codeLensExpressions.forEach(function (v) {
+            if (v.language == 'python') {
+                v.codeExpression = '(#\\s*\\<foobar\\>|#\\s*\\<baz\\>)';
+                v.markdownExpression = '(#\\s*\\<markdowncell\\>|#\\s*\\<mymarkdown\\>)';
+            }
+        });
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
@@ -402,8 +420,51 @@ fourth line
 
 # <mymarkdown>
 # fifth line`;
-        jupyterSettings.codeRegularExpression = '# * code cell)';
-        jupyterSettings.markdownRegularExpression = '(#\\s*\\<markdowncell\\>|#\\s*\\<mymarkdown\\>)';
+
+        jupyterSettings.codeLensExpressions.forEach(function (v) {
+            if (v.language == 'python') {
+                v.codeExpression = '(# ** code cell)';
+                v.markdownExpression = '(#\\s*\\<markdowncell\\>|#\\s*\\<mymarkdown\\>)';
+            }
+        });
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Verify meta data
+        expect(codeWatcher.uri?.fsPath).to.be.equal(fileName, 'File name of CodeWatcher does not match');
+        expect(codeWatcher.getVersion()).to.be.equal(version, 'File version of CodeWatcher does not match');
+
+        // Verify code lenses
+        const codeLenses = codeWatcher.getCodeLenses();
+        expect(codeLenses.length).to.be.equal(14, 'Incorrect count of code lenses');
+
+        verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
+        verifyCodeLensesAtPosition(codeLenses, 6, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 12, new Range(9, 0, 10, 12), false, true);
+
+        // Verify function calls
+        document.verifyAll();
+    });
+
+    test('Make sure old settings still work', () => {
+        const fileName = Uri.file('test.py').fsPath;
+        const version = 1;
+        const inputText = `first line
+second line
+
+# <mydelimiter>
+third line
+
+# <mydelimiter>
+fourth line
+
+# <mydelimiterformarkdown>
+# fifth line`;
+
+        jupyterSettings.codeRegularExpression = '# <mydelimiter>';
+        jupyterSettings.markdownRegularExpression = '# <mydelimiterformarkdown>';
 
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
 
@@ -988,7 +1049,11 @@ testing2`;
         expect(contexts.get(EditorContexts.HasCodeCells)).to.be.equal(true, 'Code cells context not set');
 
         // Change settings
-        jupyterSettings.codeRegularExpression = '#%%%.*dude';
+        jupyterSettings.codeLensExpressions.forEach(function (v) {
+            if (v.language == 'python') {
+                v.codeExpression = '#%%%.*dude';
+            }
+        });
         jupyterSettings.fireChangeEvent();
         result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
@@ -998,7 +1063,11 @@ testing2`;
         expect(contexts.get(EditorContexts.HasCodeCells)).to.be.equal(false, 'Code cells context not set');
 
         // Change settings to empty
-        jupyterSettings.codeRegularExpression = '';
+        jupyterSettings.codeLensExpressions.forEach(function (v) {
+            if (v.language == 'python') {
+                v.codeExpression = '';
+            }
+        });
         jupyterSettings.fireChangeEvent();
         result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;

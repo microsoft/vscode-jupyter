@@ -5,7 +5,7 @@ import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
+import { PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import '../common/extensions';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from '../common/types';
@@ -41,9 +41,24 @@ export class DataScience implements IDataScience {
     public async activate(): Promise<void> {
         this.commandRegistry.register();
 
-        this.extensionContext.subscriptions.push(
-            vscode.languages.registerCodeLensProvider(PYTHON_ALLFILES, this.dataScienceCodeLensProvider)
-        );
+        const codeLensExpressions = this.configuration.getSettings(undefined).codeLensExpressions;
+        if (codeLensExpressions) {
+            codeLensExpressions.forEach((c) => {
+                this.extensionContext.subscriptions.push(
+                    vscode.languages.registerCodeLensProvider(
+                        { language: c.language },
+                        this.dataScienceCodeLensProvider
+                    )
+                );
+            });
+        } else {
+            this.extensionContext.subscriptions.push(
+                vscode.languages.registerCodeLensProvider(
+                    { language: PYTHON_LANGUAGE },
+                    this.dataScienceCodeLensProvider
+                )
+            );
+        }
 
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
@@ -71,7 +86,7 @@ export class DataScience implements IDataScience {
         const settings = this.configuration.getSettings(undefined);
         const ownsSelection = settings.sendSelectionToInteractiveWindow;
         const editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);
-        editorContext.set(ownsSelection).catch();
+        void editorContext.set(ownsSelection).catch();
     };
 
     private onChangedActiveTextEditor() {
@@ -82,9 +97,9 @@ export class DataScience implements IDataScience {
         if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
             // Inform the editor context that we have cells, fire and forget is ok on the promise here
             // as we don't care to wait for this context to be set and we can't do anything if it fails
-            editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings())).catch();
+            void editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings())).catch();
         } else {
-            editorContext.set(false).catch();
+            void editorContext.set(false).catch();
         }
     }
 
