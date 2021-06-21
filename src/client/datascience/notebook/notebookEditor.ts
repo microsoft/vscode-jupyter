@@ -305,7 +305,9 @@ export class NotebookEditor implements INotebookEditor {
         const stopWatch = new StopWatch();
         try {
             await kernel.restart();
+            this.resetExecutionState();
             sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
+            this.resetExecutionState();
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
@@ -356,6 +358,28 @@ export class NotebookEditor implements INotebookEditor {
             this.configurationService
                 .updateSetting('askForKernelRestart', false, undefined, ConfigurationTarget.Global)
                 .ignoreErrors();
+        }
+    }
+    private resetExecutionState() {
+        // After kernel restart, clear timer and check mark for VS Code notebooks only.
+        // This is intended to provide a clearer visual indication that the kernel has
+        // been restarted
+        if (!this.vscodeNotebook.activeNotebookEditor) {
+            return;
+        }
+        const notebook = this.vscodeNotebook.activeNotebookEditor.document;
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            chainWithPendingUpdates(editor.document, (edit) => {
+                const newCells = notebook.getCells().map((cell) => {
+                    return new NotebookCellData(
+                        cell.kind,
+                        cell.document.getText(),
+                        cell.document.languageId
+                    );
+                });
+                edit.replaceNotebookCells(editor.document.uri, new NotebookRange(0, notebook.cellCount), newCells);
+            }).then(noop, noop);
         }
     }
 }
