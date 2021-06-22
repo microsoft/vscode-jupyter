@@ -104,7 +104,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         }
     }
 
-    protected async showInitialData(title: string) {
+    protected async showInitialData(title: string): Promise<IDataFrameInfo> {
         super.setTitle(title);
 
         // Then show our web panel. Eventually we need to consume the data
@@ -121,6 +121,9 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
 
         // Send a message with our data
         this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+
+        // Return for data wrangler to use
+        return dataFrameInfo;
     }
 
     private dataViewerDisposed() {
