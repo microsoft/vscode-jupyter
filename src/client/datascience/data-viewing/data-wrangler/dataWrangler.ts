@@ -368,7 +368,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
                 break;
 
             case DataWranglerCommands.Describe:
-                void this.getColumnStats(payload.args.columnName);
+                await this.getColumnStats(payload.args.columnName);
                 break;
         }
 

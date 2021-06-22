@@ -174,14 +174,4 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
             this.variable = await this.variableManager.getDataFrameInfo(this.variable, this.notebook);
         }
     }
-
-    // // Apply an operation and return the updated variable value to the UI
-    // public async applyOperation() {
-    //     const code = this.generateCodeSnippetForOperation();
-    //     await this.notebook!.execute(code, this.notebook!.identity.fsPath, 0, '', undefined, true);
-    // }
-
-    // private generateCodeSnippetForOperation(): string {
-
-    // }
 }
