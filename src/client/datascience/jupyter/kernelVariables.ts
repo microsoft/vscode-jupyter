@@ -166,20 +166,6 @@ export class KernelVariables implements IJupyterVariables {
         return {};
     }
 
-    public async getDataFrameAsCsv(
-        variableName: string,
-        notebook: INotebook,
-        token?: CancellationToken
-    ): Promise<string> {
-        const language = getKernelConnectionLanguage(notebook?.getKernelConnection()) || PYTHON_LANGUAGE;
-        const variableRequester = this.variableRequesters.get(language);
-
-        if (variableRequester && variableRequester.getDataFrameAsCsv) {
-            return variableRequester.getDataFrameAsCsv(variableName, notebook, token);
-        }
-        return '';
-    }
-
     public async getFullVariable(
         targetVariable: IJupyterVariable,
         notebook: INotebook,
