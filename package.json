@@ -761,7 +761,7 @@
                 "shortTitle": "%jupyter.command.jupyter.openVariableView.shorttitle%",
                 "icon": "$(variable-group)",
                 "category": "Jupyter",
-                "enablement": "notebookType == jupyter-notebook && !jupyter.variableViewVisible && isWorkspaceTrusted"
+                "enablement": "notebookType == jupyter-notebook  && !jupyter.variableViewVisible && isWorkspaceTrusted || notebookType == interactive && !jupyter.variableViewVisible && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.refreshDataViewer",
@@ -922,6 +922,11 @@
                 {
                     "command": "jupyter.interruptkernel",
                     "group": "navigation@2",
+                    "when": "isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.openVariableView",
+                    "group": "navigation@3",
                     "when": "isWorkspaceTrusted"
                 },
                 {

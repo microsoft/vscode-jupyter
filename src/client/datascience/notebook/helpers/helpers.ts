@@ -28,7 +28,7 @@ import { Telemetry } from '../../constants';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
 import { IJupyterKernelSpec } from '../../types';
-import { JupyterNotebookView } from '../constants';
+import { InteractiveWindowView, JupyterNotebookView } from '../constants';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -48,9 +48,9 @@ export function isJupyterNotebook(document: NotebookDocument): boolean;
 export function isJupyterNotebook(viewType: string): boolean;
 export function isJupyterNotebook(option: NotebookDocument | string) {
     if (typeof option === 'string') {
-        return option === JupyterNotebookView;
+        return option === JupyterNotebookView || option === InteractiveWindowView;
     } else {
-        return option.notebookType === JupyterNotebookView;
+        return option.notebookType === JupyterNotebookView || option.notebookType === InteractiveWindowView;
     }
 }
 
@@ -258,7 +258,7 @@ function isEmptyVendoredMimeType(outputItem: NotebookCellOutputItem) {
     if (outputItem.mime.startsWith('application/vnd.')) {
         try {
             return Buffer.from(outputItem.data).toString().length === 0;
-        } catch {}
+        } catch { }
     }
     return false;
 }
@@ -313,8 +313,7 @@ export class NotebookCellStateTracker implements IDisposable {
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfo(
-        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
-            cell.executionSummary?.executionOrder
+        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${cell.executionSummary?.executionOrder
         }. ${message}`
     );
 }
