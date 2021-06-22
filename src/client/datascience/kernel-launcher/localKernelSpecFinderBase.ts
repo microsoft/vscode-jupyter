@@ -39,7 +39,6 @@ export abstract class LocalKernelSpecFinderBase {
     ) {}
 
     // Search all our local file system locations for installed kernel specs and return them
-    @captureTelemetry(Telemetry.KernelListingPerf)
     protected async listKernelsWithCache(
         resource: Resource,
         finder: () => Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>
@@ -91,9 +90,7 @@ export abstract class LocalKernelSpecFinderBase {
             }
 
             // ! as the has and set above verify that we have a return here
-            const kernels = await this.workspaceToMetadata.get(workspaceFolderId)!;
-            sendKernelListTelemetry(resource, kernels);
-            return kernels;
+            return this.workspaceToMetadata.get(workspaceFolderId)!;
         } catch (e) {
             traceError(`List kernels failed`, e);
             throw e;
