@@ -75,7 +75,7 @@ export abstract class LocalKernelFinderBase {
             sendKernelListTelemetry(resource, kernels);
             return kernels;
         } catch (e) {
-            traceError(`List kernels failed: ${e} ${e.stack}`);
+            traceError(`List kernels failed`, e);
             throw e;
         }
     }

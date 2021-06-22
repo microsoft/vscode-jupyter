@@ -5,8 +5,6 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { getKernelId } from '../jupyter/kernels/helpers';
@@ -38,13 +36,6 @@ export class LocalNonPythonKernelFinder extends LocalKernelFinderBase {
         const distinctKernelMetadata = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
         await Promise.all(
             kernelSpecs
-                .filter((kernelspec) => {
-                    if (kernelspec.language === PYTHON_LANGUAGE) {
-                        traceInfo(`Hiding Python kernel spec ${kernelspec.display_name}, ${kernelspec.argv[0]}`);
-                        return false;
-                    }
-                    return true;
-                })
                 .map(
                     (k) =>
                         <KernelSpecConnectionMetadata>{

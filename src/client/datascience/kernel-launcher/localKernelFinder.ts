@@ -105,12 +105,23 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
         try {
-            const [nonPythonKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
+            let [nonPythonKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
                 this.nonPythonkernelFinder.listKernels(resource, cancelToken),
                 this.extensionChecker.isPythonExtensionInstalled
                     ? this.pythonKernelFinder.listKernels(resource, cancelToken)
                     : []
             ]);
+
+            // If python extension is installed, then ignore Python kernels kernels returned by kernelspec finder.
+            if (!this.extensionChecker.isPythonExtensionInstalled) {
+                nonPythonKernelSpecs = nonPythonKernelSpecs.filter(({ kernelSpec }) => {
+                    if (kernelSpec.language === PYTHON_LANGUAGE) {
+                        traceInfo(`Hiding Python kernel spec ${kernelSpec.display_name}, ${kernelSpec.argv[0]}`);
+                        return false;
+                    }
+                    return true;
+                });
+            }
 
             const kernels = [...nonPythonKernelSpecs, ...pythonRelatedKernelSpecs].filter(({ kernelSpec }) => {
                 // Disable xeus python for now.

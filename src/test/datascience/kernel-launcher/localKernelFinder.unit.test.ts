@@ -272,7 +272,8 @@ import { LocalPythonKernelFinder } from '../../../client/datascience/kernel-laun
         });
         test('Kernels found on disk', async () => {
             const kernels = await kernelFinder.listKernels(undefined);
-            assert.ok(kernels.length >= 3, 'Not enough kernels returned');
+            console.error(JSON.stringify(kernels));
+            assert.isAtLeast(kernels.length, 3, 'Not enough kernels returned');
             assert.ok(
                 kernels.find((k) => getDisplayNameOrNameOfKernelConnection(k) === 'Python 3 on Disk'),
                 'Python 3 kernel not found'
