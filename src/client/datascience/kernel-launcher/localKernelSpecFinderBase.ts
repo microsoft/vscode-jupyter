@@ -7,17 +7,14 @@ import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { ReadWrite, Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../constants';
 import { getInterpreterKernelSpecName, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
-import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
 
@@ -38,63 +35,61 @@ export abstract class LocalKernelSpecFinderBase {
         @inject(IWorkspaceService) protected readonly workspaceService: IWorkspaceService
     ) {}
 
-    // Search all our local file system locations for installed kernel specs and return them
+    @traceDecorators.error('List kernels failed')
     protected async listKernelsWithCache(
         resource: Resource,
         finder: () => Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        try {
-            // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
-            const workspaceFolderId =
-                this.workspaceService.getWorkspaceFolderIdentifier(
-                    resource,
-                    resource?.fsPath || this.workspaceService.rootPath
-                ) || 'root';
+        // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
+        const workspaceFolderId =
+            this.workspaceService.getWorkspaceFolderIdentifier(
+                resource,
+                resource?.fsPath || this.workspaceService.rootPath
+            ) || 'root';
 
-            // If we have not already searched for this resource, then generate the search
-            if (workspaceFolderId && !this.workspaceToMetadata.has(workspaceFolderId)) {
-                this.workspaceToMetadata.set(
-                    workspaceFolderId,
-                    finder().then((items) => {
-                        const distinctKernelMetadata = new Map<
-                            string,
-                            KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-                        >();
-                        traceInfoIf(
-                            !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                            `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(
-                                items,
-                                undefined,
-                                4
-                            )}`
-                        );
-                        items.map((kernelSpec) => {
-                            // Check if we have already seen this.
-                            if (!distinctKernelMetadata.has(kernelSpec.id)) {
-                                distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
-                            }
-                        });
-
-                        // Sort them so that the active interpreter comes first (if we have one for it).
-                        // This allows searches to prioritize this kernel first. If you sort for
-                        // a UI do it after this function is called.
-                        return Array.from(distinctKernelMetadata.values()).sort((a, b) => {
-                            if (a.kernelSpec?.display_name === b.kernelSpec?.display_name) {
-                                return 0;
-                            } else {
-                                return 1;
-                            }
-                        });
-                    })
-                );
-            }
-
-            // ! as the has and set above verify that we have a return here
-            return this.workspaceToMetadata.get(workspaceFolderId)!;
-        } catch (e) {
-            traceError(`List kernels failed`, e);
-            throw e;
+        // If we have not already searched for this resource, then generate the search
+        const promise = this.workspaceToMetadata.get(workspaceFolderId);
+        if (promise) {
+            return promise;
         }
+
+        this.workspaceToMetadata.set(
+            workspaceFolderId,
+            finder().then((items) => {
+                const distinctKernelMetadata = new Map<
+                    string,
+                    KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+                >();
+                traceInfoIf(
+                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                    `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(
+                        items,
+                        undefined,
+                        4
+                    )}`
+                );
+                items.map((kernelSpec) => {
+                    // Check if we have already seen this.
+                    if (!distinctKernelMetadata.has(kernelSpec.id)) {
+                        distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
+                    }
+                });
+
+                // Sort them so that the active interpreter comes first (if we have one for it).
+                // This allows searches to prioritize this kernel first. If you sort for
+                // a UI do it after this function is called.
+                return Array.from(distinctKernelMetadata.values()).sort((a, b) => {
+                    if (a.kernelSpec?.display_name === b.kernelSpec?.display_name) {
+                        return 0;
+                    } else {
+                        return 1;
+                    }
+                });
+            })
+        );
+
+        // ! as the has and set above verify that we have a return here
+        return this.workspaceToMetadata.get(workspaceFolderId)!;
     }
 
     /**
