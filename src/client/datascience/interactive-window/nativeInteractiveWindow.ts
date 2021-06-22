@@ -5,6 +5,7 @@ import * as path from 'path';
 import {
     CancellationToken,
     ConfigurationTarget,
+    Disposable,
     Event,
     EventEmitter,
     NotebookCell,
@@ -15,7 +16,10 @@ import {
     Uri,
     ViewColumn,
     workspace,
-    WorkspaceEdit
+    WorkspaceEdit,
+    window,
+    commands,
+    TextDocument
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
@@ -62,6 +66,71 @@ import {
 import { createInteractiveIdentity } from './identity';
 import { INativeInteractiveWindow } from './types';
 
+class InteractiveEditor {
+    constructor(
+        readonly notebookDocument: NotebookDocument,
+        readonly inputDocument: TextDocument | undefined,
+    ) {
+    }
+}
+
+class InteractiveEditorsManager {
+    private _disposables: Disposable[] = [];
+    private _editors: InteractiveEditor[] = [];
+    private _activeEditor: InteractiveEditor | undefined = undefined;
+    private _onDidChangeActiveInteractiveEditor = new EventEmitter<InteractiveEditor | undefined>();
+    onDidChangeActiveInteractiveEditor: Event<InteractiveEditor | undefined> = this._onDidChangeActiveInteractiveEditor.event;
+
+    get interactiveEditors() {
+        return this._editors;
+    }
+
+    get activeInteractiveEditor() {
+        return this._activeEditor;
+    }
+
+    set activeInteractiveEditor(newEditor: InteractiveEditor | undefined) {
+        if (this._activeEditor !== newEditor) {
+            this._activeEditor = newEditor;
+            this._onDidChangeActiveInteractiveEditor.fire(this._activeEditor);
+        }
+    }
+
+    constructor() {
+        this._disposables = [];
+
+        this._disposables.push(workspace.onDidCloseNotebookDocument(_ => {
+            this._update();
+        }));
+
+        this._disposables.push(window.onDidChangeActiveNotebookEditor(_ => {
+            this._update();
+        }));
+
+        this._update();
+    }
+
+    async createEditor() {
+        const ret = (await commands.executeCommand('interactive.open', ViewColumn.Beside)) as INativeInteractiveWindow;
+        const inputDocument = workspace.textDocuments.find(document => document.uri.toString() === ret.inputUri.toString());
+        const notebookDocument = workspace.notebookDocuments.find(document => document.uri.toString() === ret.notebookUri.toString())!;
+        const editor = new InteractiveEditor(notebookDocument, inputDocument);
+        this._editors.push(editor);
+
+        this._update();
+        return editor;
+    }
+
+    private _update() {
+        this._editors = this._editors.filter(editor => {
+            return workspace.notebookDocuments.find(doc => doc === editor.notebookDocument);
+        });
+
+        const activeNotebookEditor = window.activeNotebookEditor;
+        this.activeInteractiveEditor = this._editors.find(editor => editor.notebookDocument === activeNotebookEditor?.document);
+    }
+}
+
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
@@ -104,6 +173,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private kernel: IKernel | undefined;
     private kernelLoadPromise: Promise<void> | undefined;
     private interactiveOpenPromise: Thenable<void> | undefined;
+    private _interactiveEditorManager: InteractiveEditorsManager | undefined = undefined;
 
     constructor(
         private readonly applicationShell: IApplicationShell,
@@ -129,6 +199,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         if (owner) {
             this._submitters.push(owner);
         }
+
+        this._interactiveEditorManager = new InteractiveEditorsManager();
 
         this.notebookControllerManager.onNotebookControllerSelected(
             (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
@@ -161,10 +233,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             this.disposables
         );
 
-        this.interactiveOpenPromise = this.commandManager
-            .executeCommand('interactive.open', ViewColumn.Beside)
+        this.interactiveOpenPromise = this._interactiveEditorManager.createEditor()
             .then((result) => {
-                this._notebookUri = (result as INativeInteractiveWindow).notebookUri;
+                this._notebookUri = result.notebookDocument.uri;
             });
     }
 
