@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Event, EventEmitter, Memento, Uri } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Memento, Uri, workspace, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 
 import {
@@ -54,6 +54,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private _windows: NativeInteractiveWindow[] = [];
+    private _activeWindow: NativeInteractiveWindow | undefined = undefined;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -62,15 +63,25 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
     ) {
         asyncRegistry.push(this);
+
+        this.disposables.push(workspace.onDidCloseNotebookDocument(_ => {
+            this.update();
+        }));
+
+        this.disposables.push(window.onDidChangeActiveNotebookEditor(_ => {
+            this.update();
+        }));
+
+        this.update();
     }
 
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
-        if (!this.workspace.isTrusted) {
+        if (!this.workspaceService.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
             // The commands the like should be disabled.
             throw new Error('Worksapce not trusted');
@@ -207,6 +218,26 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             }
             return false;
         });
+    }
+
+    private update() {
+        const windows: NativeInteractiveWindow[] = [];
+
+        this._windows.forEach(win => {
+            const notebookDocument = workspace.notebookDocuments.find(
+                (document) => win.notebookUri?.toString() === document.uri.toString()
+            );
+            if (notebookDocument === undefined) {
+                win.dispose();
+            } else {
+                windows.push(win);
+            }
+        });
+
+        this._windows = windows;
+        const activeNotebookEditor = window.activeNotebookEditor;
+        this._activeWindow = this._windows.find(win => win.notebookUri?.toString() === activeNotebookEditor?.document.uri.toString());
+
     }
 
     // TODO: we don't currently have a way to know when the VS Code InteractiveEditor
