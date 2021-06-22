@@ -113,6 +113,7 @@ import { LocalPythonKernelFinder } from '../../../client/datascience/kernel-laun
             displayName: 'Conda Environment',
             path: '/usr/bin/conda/python3',
             sysPrefix: 'conda',
+            envName: 'condaEnv1',
             envType: EnvironmentType.Conda
         };
         const pyEnvPython3spec: Kernel.ISpecModel = {
@@ -567,6 +568,31 @@ import { LocalPythonKernelFinder } from '../../../client/datascience/kernel-laun
                         orig_nbformat: 2
                     });
                     assert.equal(kernel?.interpreter, activeInterpreter);
+                });
+                test('Return conda interpreter if we have conda env name as kernelspec name in notebook metadata', async () => {
+                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                    when(interpreterService.getInterpreters(anything())).thenResolve([
+                        python3Interpreter,
+                        condaEnvironment,
+                        python2Interpreter,
+                        condaEnvironmentBase
+                    ]);
+                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+
+                    let kernel = await kernelFinder.findKernel(Uri.file('wow.ipynb'), {
+                        language_info: { name: PYTHON_LANGUAGE },
+                        orig_nbformat: 4,
+                        kernelspec: {
+                            display_name: condaEnvironment.envName!,
+                            name: condaEnvironment.envName!
+                        }
+                    });
+                    assert.equal(
+                        kernel?.kernelSpec?.language,
+                        'python',
+                        'No python kernel found matching notebook metadata'
+                    );
+                    assert.deepEqual(kernel?.interpreter, condaEnvironment, 'Should match conda env');
                 });
                 test('Can match (exactly) based on notebook metadata (metadata contains kernelspec name that we generated)', async () => {
                     when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {

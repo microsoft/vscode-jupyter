@@ -18,7 +18,7 @@ import { IJupyterKernelSpec } from '../types';
 import { LocalKernelFinderBase } from './localFinderBase';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths';
 
-const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
+export const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
 
 @injectable()
 export class LocalPythonKernelFinder extends LocalKernelFinderBase {
