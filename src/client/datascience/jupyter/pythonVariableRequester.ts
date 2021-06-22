@@ -85,6 +85,28 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         return this.deserializeJupyterResultColumn(results);
     }
 
+    public async getDataFrameAsCsv(
+        variableName: string,
+        notebook: INotebook,
+        token?: CancellationToken
+    ): Promise<string> {
+        // Import the data frame script directory if we haven't already
+        await this.importDataFrameScripts(notebook);
+
+        // Then execute a call to get the info and turn it into JSON
+        const results = await notebook.execute(
+            `print(${variableName}.to_csv(index=False))`,
+            Identifiers.EmptyFileName,
+            0,
+            uuid(),
+            token,
+            true
+        );
+
+        // Combine with the original result (the call only returns the new fields)
+        return this.extractJupyterResultText(results);
+    }
+
     public async getVariableProperties(
         word: string,
         notebook: INotebook,

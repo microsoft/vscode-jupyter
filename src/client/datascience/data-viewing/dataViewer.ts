@@ -64,7 +64,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IApplicationShell) private applicationShell: IApplicationShell,
+        @inject(IApplicationShell) protected applicationShell: IApplicationShell,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
         dir: string = dataExplorerDir,

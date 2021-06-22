@@ -7,6 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import * as fsextra from 'fs-extra';
+import * as fs from 'fs';
 import {
     Disposable,
     EventEmitter,
@@ -36,6 +37,7 @@ import {
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
+    INotebook,
     INotebookEditorProvider,
     IThemeFinder
 } from '../../types';
@@ -267,6 +269,23 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         return code;
     }
 
+    private async exportToCsv(variableName: string, notebook?: INotebook) {
+        if (this.kernelVariableProvider.getDataFrameAsCsv !== undefined && notebook) {
+            console.log('before');
+            await this.kernelVariableProvider.getDataFrameAsCsv(variableName, notebook).then(async (csvText) => {
+                console.log(csvText);
+                await this.applicationShell
+                    .showSaveDialog({ saveLabel: 'Save CSV', filters: { CSV: ['csv'] } })
+                    .then((fileInfo) => {
+                        if (fileInfo !== undefined) {
+                            fs.writeFileSync(fileInfo.fsPath, csvText[0]);
+                        }
+                    });
+            });
+            console.log('AAAAAAAAAAAAAA');
+        }
+    }
+
     private async generatePythonCode() {
         var dataCleanCode = this.getCode();
 
@@ -310,8 +329,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
         switch (payload.command) {
             case DataWranglerCommands.ExportToCsv:
-                await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
-                throw new Error('Not Implemented');
+                await this.exportToCsv(currentVariableName, notebook);
                 break;
 
             case DataWranglerCommands.ExportToPythonScript:
