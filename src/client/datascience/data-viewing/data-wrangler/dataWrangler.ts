@@ -11,12 +11,12 @@ import {
     Disposable,
     EventEmitter,
     Memento,
-    notebooks as vscNotebook,
     NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
     ViewColumn,
-    WebviewPanel
+    WebviewPanel,
+    notebooks as vscNotebook,
+    NotebookCellExecutionStateChangeEvent,
+    NotebookCellExecutionState
 } from 'vscode';
 
 import {
@@ -68,6 +68,11 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     private existingDisposable: Disposable | undefined;
     private historyList: IHistoryItem[] = [];
     private sourceFile: string | undefined;
+    private commands = new Map<
+        DataWranglerCommands,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (args: any, currentVariableName: string) => Promise<IHistoryItem | void>
+    >();
 
     public get visible() {
         return !!this.webPanel?.isVisible();
@@ -118,6 +123,19 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             ViewColumn.Two
         );
         this.onDidDispose(this.dataWranglerDisposed, this);
+
+        this.commands.set(DataWranglerCommands.Describe, this.getColumnStats.bind(this));
+        // this.commands.set(DataWranglerCommands.ExportToCsv, this);
+        this.commands.set(DataWranglerCommands.ExportToPythonScript, this.generatePythonCode.bind(this));
+        this.commands.set(DataWranglerCommands.ExportToNotebook, this.generateNotebook.bind(this));
+        this.commands.set(DataWranglerCommands.RenameColumn, this.renameColumn.bind(this));
+        this.commands.set(DataWranglerCommands.Drop, this.drop.bind(this));
+        this.commands.set(DataWranglerCommands.DropDuplicates, this.dropDuplicates.bind(this));
+        this.commands.set(DataWranglerCommands.DropNa, this.dropNa.bind(this));
+        this.commands.set(DataWranglerCommands.NormalizeColumn, this.normalizeColumn.bind(this));
+        this.commands.set(DataWranglerCommands.FillNa, this.fillNa.bind(this));
+        this.commands.set(DataWranglerCommands.GetHistoryItem, this.getHistoryItem.bind(this));
+        // this.commands.set(DataWranglerCommands.PyplotHistogram, this
     }
 
     public async showData(
@@ -136,7 +154,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             await this.showInitialData(title);
 
             this.historyList.push({
-                transformation: 'Imported data',
+                transformation: DataScience.dataWranglerImportTransformation(),
                 code: this.getImportCode(),
                 variableName: 'df'
             });
@@ -299,7 +317,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleCommand(payload: { command: string; args: any }) {
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
-        let historyItem = {} as IHistoryItem;
         let code = '';
         const currentVariableName = (await this.dataFrameInfoPromise)!.name ?? '';
         let newVariableName = currentVariableName ?? '';
@@ -308,68 +325,13 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         );
         let refreshRequired = true;
 
-        switch (payload.command) {
-            case DataWranglerCommands.ExportToCsv:
-                await notebook?.execute(`${currentVariableName}.to_csv("./cleaned.csv", index=False)`, '', 0, uuid());
-                throw new Error('Not Implemented');
-                break;
-
-            case DataWranglerCommands.ExportToPythonScript:
-                await this.generatePythonCode();
-                break;
-
-            case DataWranglerCommands.ExportToNotebook:
-                await this.generateNotebook();
-                break;
-
-            case DataWranglerCommands.RenameColumn:
-                historyItem = this.renameColumn(currentVariableName, payload.args as IRenameColumnsRequest);
+        const cmd = this.commands.get(payload.command as DataWranglerCommands);
+        if (cmd) {
+            const historyItem = await cmd(payload.args, currentVariableName);
+            if (historyItem) {
                 code = historyItem.code;
                 newVariableName = historyItem.variableName;
-                break;
-
-            case DataWranglerCommands.Drop:
-                historyItem = this.drop(currentVariableName, payload.args as IDropRequest);
-                code = historyItem.code;
-                newVariableName = historyItem.variableName;
-                break;
-
-            case DataWranglerCommands.DropDuplicates:
-                historyItem = this.dropDuplicates(currentVariableName, payload.args as IDropDuplicatesRequest);
-                code = historyItem.code;
-                newVariableName = historyItem.variableName;
-                break;
-
-            case DataWranglerCommands.DropNa:
-                historyItem = this.dropNa(currentVariableName, payload.args as IDropNaRequest);
-                code = historyItem.code;
-                newVariableName = historyItem.variableName;
-                break;
-
-            case DataWranglerCommands.PyplotHistogram:
-                refreshRequired = false;
-                code = DataScience.dataWranglerPyplotHistogramCode().format(currentVariableName, payload.args.target);
-                break;
-
-            case DataWranglerCommands.NormalizeColumn:
-                historyItem = this.normalizeColumn(currentVariableName, payload.args as INormalizeColumnRequest);
-                code = historyItem.code;
-                newVariableName = historyItem.variableName;
-                break;
-
-            case DataWranglerCommands.FillNa:
-                historyItem = this.fillNa(currentVariableName, payload.args as IFillNaRequest);
-                code = historyItem.code;
-                newVariableName = historyItem.variableName;
-                break;
-
-            case DataWranglerCommands.GetHistoryItem:
-                this.getHistoryItem(payload.args.index).ignoreErrors();
-                break;
-
-            case DataWranglerCommands.Describe:
-                await this.getColumnStats(payload.args.columnName);
-                break;
+            }
         }
 
         const dataCleaningMode = this.configService.getSettings().dataCleaningMode;
@@ -412,7 +374,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         }
     }
 
-    private renameColumn(currentVariableName: string, req: IRenameColumnsRequest): IHistoryItem {
+    private async renameColumn(req: IRenameColumnsRequest, currentVariableName: string): Promise<IHistoryItem> {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
         const code = DataScience.dataWranglerRenameColumnCode().format(
@@ -433,7 +395,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         return historyItem;
     }
 
-    private drop(currentVariableName: string, req: IDropRequest): IHistoryItem {
+    private async drop(req: IDropRequest, currentVariableName: string): Promise<IHistoryItem> {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
         const labels = req.targets;
@@ -470,7 +432,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         }
     }
 
-    private dropDuplicates(currentVariableName: string, req: IDropDuplicatesRequest): IHistoryItem {
+    private async dropDuplicates(req: IDropDuplicatesRequest, currentVariableName: string): Promise<IHistoryItem> {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
 
@@ -502,7 +464,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         }
     }
 
-    private dropNa(currentVariableName: string, req: IDropNaRequest): IHistoryItem {
+    private async dropNa(req: IDropNaRequest, currentVariableName: string): Promise<IHistoryItem> {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
 
@@ -540,7 +502,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         }
     }
 
-    private normalizeColumn(currentVariableName: string, req: INormalizeColumnRequest): IHistoryItem {
+    private async normalizeColumn(req: INormalizeColumnRequest, currentVariableName: string): Promise<IHistoryItem> {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
         const code = DataScience.dataWranglerNormalizeColumnCode().format(
@@ -562,7 +524,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         return historyItem;
     }
 
-    private fillNa(currentVariableName: string, req: IFillNaRequest): IHistoryItem {
+    private async fillNa(req: IFillNaRequest, currentVariableName: string): Promise<IHistoryItem> {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
         const code = DataScience.dataWranglerFillNaCode().format(
