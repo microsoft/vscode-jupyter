@@ -13,9 +13,6 @@ import { IJupyterKernelSpec } from '../types';
 import { LocalKernelFinderBase } from './localFinderBase';
 import { JupyterPaths } from './jupyterPaths';
 
-// This class searches for a kernel that matches the given kernel name.
-// First it searches on a global persistent state, then on the installed python interpreters,
-// and finally on the default locations that jupyter installs kernels on.
 @injectable()
 export class LocalNonPythonKernelFinder extends LocalKernelFinderBase {
     constructor(

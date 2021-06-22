@@ -29,6 +29,8 @@ export class JupyterPaths {
      */
     public async getKernelSpecRootPath(): Promise<string | undefined> {
         if (this.platformService.isWindows) {
+            // On windows the path is not correct if we combine those variables.
+            // It won't point to a path that you can actually read from.
             return tryGetRealPath(path.join(this.pathUtils.home, winJupyterPath));
         } else if (this.platformService.isMac) {
             return path.join(this.pathUtils.home, macJupyterPath);
