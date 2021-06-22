@@ -92,6 +92,19 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
             }
         }
 
+        // after attaching, send a 'debugInfo' request
+        // reset breakpoints and continue stopped threads if there are any
+        // we do this in case the kernel is stopped when we attach
+        // This might happen if VS Code or the extension host crashes
+        if (message.type === 'request' && (message as DebugProtocol.Request).command === 'attach') {
+            await this.debugInfo();
+        }
+
+        // after disconnecting, hide the breakpoint margin
+        if (message.type === 'request' && (message as DebugProtocol.Request).command === 'disconnect') {
+            void vscode.commands.executeCommand('notebook.toggleBreakpointMargin', this.notebookDocument);
+        }
+
         // map Source paths from VS Code to Ipykernel temp files
         this.getMessageSourceAndHookIt(message, (source) => {
             if (source && source.path) {
@@ -196,6 +209,38 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
                 console.log(err);
             }
         }
+    }
+
+    private async debugInfo(): Promise<void> {
+        const response = await this.session.customRequest('debugInfo');
+
+        // If there's breakpoints at this point, delete them
+        if (response.breakpoints.lenght > 0) {
+            this.jupyterSession.requestDebug({
+                seq: 0,
+                type: 'request',
+                command: 'setBreakpoints',
+                arguments: {
+                    source: {
+                        path: response.breakpoints[0].source
+                    },
+                    breakpoints: []
+                }
+            });
+        }
+
+        // If there's stopped threads at this point, continue them all
+        const stoppedThreads: number[] = response.stoppedThreads;
+        stoppedThreads.forEach((thread: number) => {
+            this.jupyterSession.requestDebug({
+                seq: 0,
+                type: 'request',
+                command: 'continue',
+                arguments: {
+                    threadId: thread
+                }
+            });
+        });
     }
 
     private getMessageSourceAndHookIt(

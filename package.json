@@ -862,6 +862,11 @@
                     "command": "jupyter.notebookeditor.export",
                     "group": "navigation@2",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.debugCell",
+                    "group": "navigation@3",
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
                 }
             ],
             "explorer/context": [

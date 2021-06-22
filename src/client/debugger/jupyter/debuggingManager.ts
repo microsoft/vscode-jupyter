@@ -11,6 +11,7 @@ import { IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 
 class Debugger {
     private resolveFunc?: (value: vscode.DebugSession) => void;
@@ -92,6 +93,12 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             vscode.debug.registerDebugAdapterDescriptorFactory('kernel', {
                 createDebugAdapterDescriptor: async (session) => {
                     const activeDoc = vscode.window.activeNotebookEditor!.document;
+                    // ensure the kernel is running
+                    const kernel = this.kernelProvider.get(activeDoc.uri);
+                    if (kernel && kernel.status === ServerStatus.NotStarted) {
+                        await kernel.start({ document: activeDoc });
+                    }
+
                     const debug = this.getDebuggerByUri(activeDoc);
 
                     if (debug) {
@@ -117,7 +124,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             vscode.commands.registerCommand('jupyter.debugCell', () => {
                 const editor = vscode.window.activeNotebookEditor;
                 if (editor) {
-                    void this.toggleDebugging(editor.document);
+                    void this.startDebugging(editor.document);
                 } else {
                     void vscode.window.showErrorMessage('No active notebook document to debug');
                 }
@@ -162,17 +169,17 @@ export class DebuggingManager implements IExtensionSingleActivationService {
         }
     }
 
-    private async toggleDebugging(doc: vscode.NotebookDocument) {
+    private async startDebugging(doc: vscode.NotebookDocument) {
         let dbg = this.notebookToDebugger.get(doc);
-        if (dbg) {
-            await dbg.stop();
-            this.notebookToDebugger.delete(doc);
-        } else {
+        if (!dbg) {
             dbg = new Debugger(doc);
             this.notebookToDebugger.set(doc, dbg);
-            await this.kernelProvider.get(doc.uri); // ensure the kernel is running
+
             try {
                 await dbg.session;
+
+                // toggle the breakpoint margin
+                void vscode.commands.executeCommand('notebook.toggleBreakpointMargin', doc);
             } catch (err) {
                 void vscode.window.showErrorMessage(`Can't start debugging (${err})`);
             }
