@@ -25,7 +25,8 @@ export enum DataWranglerCommands {
     NormalizeColumn = 'normalize_column',
     FillNa = 'fill_na',
     Describe = 'describe',
-    GetHistoryItem = 'get_history_item'
+    GetHistoryItem = 'get_history_item',
+    CoerceColumn = 'coerce_column'
 }
 
 export namespace DataWranglerMessages {
@@ -82,4 +83,9 @@ export interface INormalizeColumnRequest {
 
 export interface IFillNaRequest {
     newValue: string | Number;
+}
+
+export interface ICoerceColumnRequest {
+    columnName: string;
+    newType: string;
 }

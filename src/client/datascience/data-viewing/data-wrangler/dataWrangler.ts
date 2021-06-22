@@ -55,7 +55,8 @@ import {
     IFillNaRequest,
     IDropDuplicatesRequest,
     IDropNaRequest,
-    OpenDataWranglerSetting
+    OpenDataWranglerSetting,
+    ICoerceColumnRequest
 } from './types';
 import { DataScience } from '../../../common/utils/localize';
 import { DataViewer } from '../dataViewer';
@@ -135,6 +136,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         this.commands.set(DataWranglerCommands.NormalizeColumn, this.normalizeColumn.bind(this));
         this.commands.set(DataWranglerCommands.FillNa, this.fillNa.bind(this));
         this.commands.set(DataWranglerCommands.GetHistoryItem, this.getHistoryItem.bind(this));
+        this.commands.set(DataWranglerCommands.CoerceColumn, this.coerceColumn.bind(this));
         // this.commands.set(DataWranglerCommands.PyplotHistogram, this
     }
 
@@ -368,6 +370,20 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
                 );
             }
         }
+    }
+
+    private async coerceColumn(req: ICoerceColumnRequest, currentVariableName: string): Promise<IHistoryItem> {
+        this.variableCounter += 1;
+        const newVariableName = `df${this.variableCounter}`;
+        // TODOV: What to do if it fails?
+        const code = `${newVariableName} = ${currentVariableName}.astype({'${req.columnName}': '${req.newType}'})`;
+        const historyItem = {
+            transformation: `Coerced type of column ${req.columnName} to ${req.newType}`,
+            variableName: newVariableName,
+            code: code
+        };
+        this.addToHistory(historyItem);
+        return historyItem;
     }
 
     private async renameColumn(req: IRenameColumnsRequest, currentVariableName: string): Promise<IHistoryItem> {

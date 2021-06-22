@@ -39,6 +39,8 @@ import './dataWranglerReactSlickGrid.css';
 import './contextMenu.css';
 import { ISlickGridProps, ISlickRow, ReactSlickGrid } from '../reactSlickGrid';
 import { DataWranglerCommands } from '../../../client/datascience/data-viewing/data-wrangler/types';
+import { ControlPanel } from './controlPanel';
+import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -266,6 +268,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
               }
             : {};
 
+
         return (
             <div className="outer-container">
                 <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden' }}>
@@ -277,8 +280,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                         > */}
                     <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                     <div className="react-grid-measure" ref={this.measureRef} />
-                    <Resizable>
-                        {/* <Resizable
+                        <Resizable
                         style={{
                             display: 'flex',
                             alignItems: 'top',
@@ -302,10 +304,12 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             topLeft: false
                         }}
                     >
+                        {/* Because we extend data viewer, we added data wrangler attributes into the data viewer
+                        interface and made them optional so we have to use ?? here */}
                         <ControlPanel
-                            historyList={this.props.historyList}
-                            monacoTheme={this.props.monacoTheme}
-                            histogramData={this.props.histogramData}
+                            historyList={this.props.historyList ?? []}
+                            monacoTheme={this.props.monacoTheme ?? ""}
+                            histogramData={this.props.histogramData ?? {} as IGetColsResponse}
                             data={this.dataView.getItems()}
                             resizeEvent={this.props.resizeGridEvent}
                             headers={
@@ -314,9 +318,11 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                                     .map((c) => c.name)
                                     .filter((c) => c !== undefined) as string[]
                             }
-                            currentVariableName={this.props.currentVariableName}
-                            submitCommand={this.props.submitCommand}
-                        /> */}
+                            currentVariableName={this.props.currentVariableName ?? ""}
+                            /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-function */
+                            submitCommand={this.props.submitCommand ?? ((_data: {command: string, args: any}) => {})}
+                            /* eslint-enable no-return-assign, no-param-reassign */
+                        />
                     </Resizable>
                 </div>
                 <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
