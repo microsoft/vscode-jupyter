@@ -151,11 +151,12 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             await super.loadWebview(process.cwd(), webviewPanel).catch(traceError);
 
             // Use Data Viewer logic to show initial data
-            await this.showInitialData(title);
+            const dataFrameInfo = await this.showInitialData(title);
+            this.sourceFile = dataFrameInfo.sourceFile;
 
             this.historyList.push({
                 transformation: DataScience.dataWranglerImportTransformation(),
-                code: this.getImportCode(),
+                code: DataScience.dataWranglerImportCode().format(this.sourceFile ?? 'broken'),
                 variableName: 'df'
             });
             this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
@@ -278,11 +279,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
     private getCode() {
         return this.historyList.map((item) => item.code).join('\n');
-    }
-
-    private getImportCode() {
-        const code = DataScience.dataWranglerImportCode().format(this.sourceFile ?? '');
-        return code;
     }
 
     private async generatePythonCode() {
