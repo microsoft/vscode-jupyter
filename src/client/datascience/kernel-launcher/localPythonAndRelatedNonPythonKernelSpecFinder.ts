@@ -12,38 +12,86 @@ import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { createInterpreterKernelSpec, getKernelId } from '../jupyter/kernels/helpers';
+import { createInterpreterKernelSpec, getKernelId, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
-import { LocalKernelFinderBase } from './localFinderBase';
+import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths';
+import { IPythonExtensionChecker } from '../../api/types';
+import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
 
 export const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
 
+/**
+ * Returns all Python kernels and any related kernels registered in the python environment.
+ * If Python extension is not installed, this will return all Python kernels registered globally.
+ * If Python extension is intalled,
+ *     - This will return Python kernels regsitered by us in global locations.
+ *     - This will return Python interpreters that can be started as kernels.
+ *     - This will return any non-python kernels that are registered in Python environments (e.g. Java kernels within a conda environment)
+ */
 @injectable()
-export class LocalPythonKernelFinder extends LocalKernelFinderBase {
+export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelSpecFinderBase {
     constructor(
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
+        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(LocalKnownPathKernelSpecFinder)
+        private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder
     ) {
         super(fs, workspaceService);
     }
-    protected async listKernelsImplementation(
+    public async listKernelSpecs(resource: Resource, cancelToken?: CancellationToken) {
+        return this.listKernelsWithCache(resource, () => this.listKernelsImplementation(resource, cancelToken));
+    }
+    private async listKernelsImplementation(
         resource: Resource,
+        cancelToken?: CancellationToken
+    ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+        const interpreters = await this.interpreterService.getInterpreters(resource);
+        // If we don't have Python extension installed or don't discover any Python interpreters
+        // then list all of the global python kernel specs.
+        if (interpreters.length === 0 || !this.extensionChecker.isPythonExtensionInstalled) {
+            return this.listGlobalPythonKernelSpecs(cancelToken);
+        } else {
+            return this.listPythonAndRelatedNonPythonKernelSpecs(resource, interpreters, cancelToken);
+        }
+    }
+    private async listGlobalPythonKernelSpecs(
+        cancelToken?: CancellationToken
+    ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+        const kernelSpecs = await this.kernelSpecsFromKnownLocations.listKernelSpecs(true, cancelToken);
+        return kernelSpecs.filter((item) => item.kernelSpec.language === PYTHON_LANGUAGE);
+    }
+    /**
+     * If user has python extension installed, then we'll not list any of the globally registered Python kernels.
+     * They are too ambiguous (because we have no idea what Python environment they are related to).
+     *
+     * Some python environments like conda can have non-python kernel specs as well, this will return those as well.
+     * Those kernels can only be started within the context of the Python environment.
+     * I.e. first actiavte the python environment, then attempt to start those non-python environments.
+     * This is because some python environments setup environment variables required by these non-python kernels (e.g. path to Java executable or the like.
+     */
+    private async listPythonAndRelatedNonPythonKernelSpecs(
+        resource: Resource,
+        interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         const rootSpecPathPromise = this.jupyterPaths.getKernelSpecRootPath();
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(resource);
-        const interpreters = await this.interpreterService.getInterpreters(resource);
         // First find the on disk kernel specs and interpreters
-        const [kernelSpecs, rootSpecPath, activeInterpreter] = await Promise.all([
+        const [kernelSpecs, rootSpecPath, activeInterpreter, globalKernelSpecs] = await Promise.all([
             this.findKernelSpecsInInterpreters(interpreters, cancelToken),
             rootSpecPathPromise,
-            activeInterpreterPromise
+            activeInterpreterPromise,
+            this.listGlobalPythonKernelSpecs(cancelToken)
         ]);
 
+        const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
+            isKernelRegisteredByUs(item.kernelSpec)
+        );
         // Copy the interpreter list. We need to filter out those items
         // which have matched one or more kernelspecs
         let filteredInterpreters = [...interpreters];
@@ -57,7 +105,7 @@ export class LocalPythonKernelFinder extends LocalKernelFinderBase {
         // Then go through all of the kernels and generate their metadata
         const distinctKernelMetadata = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
         await Promise.all(
-            kernelSpecs
+            [...kernelSpecs, ...globalPythonKernelSpecsRegisteredByUs.map((item) => item.kernelSpec)]
                 .filter((kernelspec) => {
                     if (
                         kernelspec.language === PYTHON_LANGUAGE &&
@@ -237,17 +285,14 @@ export class LocalPythonKernelFinder extends LocalKernelFinderBase {
             return false;
         });
     }
-
     private async findKernelSpecsInInterpreters(
         interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
-        let results: IJupyterKernelSpec[] = [];
-
         // Find all the possible places to look for this resource
         const paths = await this.findKernelPathsOfAllInterpreters(interpreters);
-        const searchResults = await this.kernelGlobSearch(paths, cancelToken);
-
+        const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
+        let results: IJupyterKernelSpec[] = [];
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds

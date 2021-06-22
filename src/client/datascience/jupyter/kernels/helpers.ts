@@ -37,7 +37,7 @@ import { Uri } from 'vscode';
 import { getResourceType } from '../../common';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
-import { isDefaultPythonKernelSpecName } from '../../kernel-launcher/localPythonkernelFinder';
+import { isDefaultPythonKernelSpecName } from '../../kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 
 // Helper functions for dealing with kernels and kernelspecs
 

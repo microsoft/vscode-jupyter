@@ -23,8 +23,8 @@ import { getResourceType } from '../common';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
-import { LocalPythonKernelFinder } from './localPythonkernelFinder';
-import { LocalNonPythonKernelFinder } from './localNonPythonKernelFinder';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder';
+import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
 import { JupyterPaths } from './jupyterPaths';
 
 // This class searches for a kernel that matches the given kernel name.
@@ -36,8 +36,9 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(LocalNonPythonKernelFinder) private readonly nonPythonkernelFinder: LocalNonPythonKernelFinder,
-        @inject(LocalPythonKernelFinder) private readonly pythonKernelFinder: LocalPythonKernelFinder,
+        @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonkernelFinder: LocalKnownPathKernelSpecFinder,
+        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
+        private readonly pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
     ) {}
     @traceDecorators.verbose('Find kernel spec')
@@ -105,25 +106,12 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
         try {
-            let [nonPythonKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
-                this.nonPythonkernelFinder.listKernels(resource, cancelToken),
-                this.extensionChecker.isPythonExtensionInstalled
-                    ? this.pythonKernelFinder.listKernels(resource, cancelToken)
-                    : []
+            let [globalKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
+                this.nonPythonkernelFinder.listKernelSpecs(false, cancelToken),
+                this.pythonKernelFinder.listKernelSpecs(resource, cancelToken)
             ]);
 
-            // If python extension is installed, then ignore Python kernels kernels returned by kernelspec finder.
-            if (!this.extensionChecker.isPythonExtensionInstalled) {
-                nonPythonKernelSpecs = nonPythonKernelSpecs.filter(({ kernelSpec }) => {
-                    if (kernelSpec.language === PYTHON_LANGUAGE) {
-                        traceInfo(`Hiding Python kernel spec ${kernelSpec.display_name}, ${kernelSpec.argv[0]}`);
-                        return false;
-                    }
-                    return true;
-                });
-            }
-
-            const kernels = [...nonPythonKernelSpecs, ...pythonRelatedKernelSpecs].filter(({ kernelSpec }) => {
+            const kernels = [...globalKernelSpecs, ...pythonRelatedKernelSpecs].filter(({ kernelSpec }) => {
                 // Disable xeus python for now.
                 if (kernelSpec.argv[0].toLowerCase().endsWith('xpython')) {
                     traceInfo(`Hiding xeus kernelspec`);

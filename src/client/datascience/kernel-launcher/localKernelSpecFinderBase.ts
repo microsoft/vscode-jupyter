@@ -22,7 +22,7 @@ import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
 
 @injectable()
-export abstract class LocalKernelFinderBase {
+export abstract class LocalKernelSpecFinderBase {
     private cache?: KernelSpecFileWithContainingInterpreter[];
     // Store our results when listing all possible kernelspecs for a resource
     private workspaceToMetadata = new Map<
@@ -40,9 +40,9 @@ export abstract class LocalKernelFinderBase {
 
     // Search all our local file system locations for installed kernel specs and return them
     @captureTelemetry(Telemetry.KernelListingPerf)
-    public async listKernels(
+    protected async listKernelsWithCache(
         resource: Resource,
-        cancelToken?: CancellationToken
+        finder: () => Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         try {
             // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
@@ -56,7 +56,11 @@ export abstract class LocalKernelFinderBase {
             if (workspaceFolderId && !this.workspaceToMetadata.has(workspaceFolderId)) {
                 this.workspaceToMetadata.set(
                     workspaceFolderId,
-                    this.listKernelsImplementation(resource, cancelToken).then((items) => {
+                    finder().then((items) => {
+                        const distinctKernelMetadata = new Map<
+                            string,
+                            KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+                        >();
                         traceInfoIf(
                             !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
                             `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(
@@ -65,7 +69,23 @@ export abstract class LocalKernelFinderBase {
                                 4
                             )}`
                         );
-                        return items;
+                        items.map((kernelSpec) => {
+                            // Check if we have already seen this.
+                            if (!distinctKernelMetadata.has(kernelSpec.id)) {
+                                distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
+                            }
+                        });
+
+                        // Sort them so that the active interpreter comes first (if we have one for it).
+                        // This allows searches to prioritize this kernel first. If you sort for
+                        // a UI do it after this function is called.
+                        return Array.from(distinctKernelMetadata.values()).sort((a, b) => {
+                            if (a.kernelSpec?.display_name === b.kernelSpec?.display_name) {
+                                return 0;
+                            } else {
+                                return 1;
+                            }
+                        });
                     })
                 );
             }
@@ -79,10 +99,6 @@ export abstract class LocalKernelFinderBase {
             throw e;
         }
     }
-    protected abstract listKernelsImplementation(
-        resource: Resource,
-        cancelToken?: CancellationToken
-    ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>;
 
     /**
      * Load the IJupyterKernelSpec for a given spec path, check the ones that we have already loaded first
@@ -165,7 +181,7 @@ export abstract class LocalKernelFinderBase {
         return kernelSpec;
     }
     // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
-    protected async kernelGlobSearch(
+    protected async findKernelSpecsInPaths(
         paths: (string | { interpreter: PythonEnvironment; kernelSearchPath: string })[],
         cancelToken?: CancellationToken
     ): Promise<KernelSpecFileWithContainingInterpreter[]> {

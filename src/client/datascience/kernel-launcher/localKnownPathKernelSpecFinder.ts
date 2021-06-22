@@ -6,15 +6,20 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { Resource } from '../../common/types';
 import { getKernelId } from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
-import { LocalKernelFinderBase } from './localFinderBase';
+import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { JupyterPaths } from './jupyterPaths';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 
+/**
+ * This class searches for kernels on the file system in well known paths documented by Jupyter.
+ * This will return Python, Julia, R etc kernels.
+ * Returns all kernels regardless of whether Python extension is installed or not.
+ */
 @injectable()
-export class LocalNonPythonKernelFinder extends LocalKernelFinderBase {
+export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
     constructor(
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
@@ -22,17 +27,24 @@ export class LocalNonPythonKernelFinder extends LocalKernelFinderBase {
     ) {
         super(fs, workspaceService);
     }
-    protected async listKernelsImplementation(
-        _resource: Resource,
+    /**
+     * @param {boolean} includePythonKernels Include/exclude Python kernels in the result.
+     */
+    public async listKernelSpecs(
+        includePythonKernels: boolean,
         cancelToken?: CancellationToken
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        // First find the on disk kernel specs and interpreters
-        const kernelSpecs = await this.findKernelSpecs(cancelToken);
+        return this.listKernelsWithCache(undefined, async () => {
+            // First find the on disk kernel specs and interpreters
+            const kernelSpecs = await this.findKernelSpecs(cancelToken);
 
-        // Then go through all of the kernels and generate their metadata
-        const distinctKernelMetadata = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
-        await Promise.all(
-            kernelSpecs
+            return kernelSpecs
+                .filter((item) => {
+                    if (includePythonKernels) {
+                        return true;
+                    }
+                    return item.language !== PYTHON_LANGUAGE;
+                })
                 .map(
                     (k) =>
                         <KernelSpecConnectionMetadata>{
@@ -41,24 +53,7 @@ export class LocalNonPythonKernelFinder extends LocalKernelFinderBase {
                             interpreter: undefined,
                             id: getKernelId(k)
                         }
-                )
-                .map((kernelSpec: KernelSpecConnectionMetadata) => {
-                    // Check if we have already seen this.
-                    if (!distinctKernelMetadata.has(kernelSpec.id)) {
-                        distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
-                    }
-                })
-        );
-
-        // Sort them so that the active interpreter comes first (if we have one for it).
-        // This allows searches to prioritize this kernel first. If you sort for
-        // a UI do it after this function is called.
-        return Array.from(distinctKernelMetadata.values()).sort((a, b) => {
-            if (a.kernelSpec?.display_name === b.kernelSpec?.display_name) {
-                return 0;
-            } else {
-                return 1;
-            }
+                );
         });
     }
 
@@ -67,7 +62,7 @@ export class LocalNonPythonKernelFinder extends LocalKernelFinderBase {
 
         // Find all the possible places to look for this resource
         const paths = await this.jupyterPaths.getKernelSpecRootPaths(cancelToken);
-        const searchResults = await this.kernelGlobSearch(paths, cancelToken);
+        const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
 
         await Promise.all(
             searchResults.map(async (resultPath) => {
