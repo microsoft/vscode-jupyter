@@ -178,7 +178,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // When a document is opened we need to look for a perferred kernel for it
-    private onDidOpenNotebookDocument(document: NotebookDocument) {
+    private async onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
         if (
             (document.notebookType !== JupyterNotebookView && document.notebookType !== InteractiveWindowView) ||
@@ -191,53 +191,42 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const preferredSearchToken = new CancellationTokenSource();
         this.findPreferredInProgress.set(document, preferredSearchToken);
 
-        if (!this.isLocalLaunch) {
-            // For a remote connection check for new live kernel models before we find preferred
-            this.updateRemoteConnections(preferredSearchToken.token)
-                .then(() => {
-                    this.setController(document, preferredSearchToken.token).catch((error) => {
-                        traceError(error);
-                    });
-                })
-                .finally(() => {
-                    // Make sure that we clear our finding in progress when done
-                    this.findPreferredInProgress.delete(document);
-                });
-        } else {
-            this.setController(document, preferredSearchToken.token).finally(() => {
-                // Make sure that we clear our finding in progress when done
-                this.findPreferredInProgress.delete(document);
-            });
-        }
-    }
-
-    // Set the controller for this notebook document
-    private async setController(document: NotebookDocument, cancelToken: CancellationToken) {
         // Prep so that we can track the selected controller for this document
         traceInfoIf(IS_CI_SERVER, `Clear controller mapping for ${document.uri.toString()}`);
         this.controllerMapping.delete(document);
 
-        return this.findPreferredKernel(document, cancelToken).then(async (preferredConnection) => {
-            if (cancelToken.isCancellationRequested) {
+        try {
+            if (!this.isLocalLaunch) {
+                // For a remote connection check for new live kernel models before we find preferred
+                await this.updateRemoteConnections(preferredSearchToken.token);
+            }
+
+            const preferredConnection = await this.findPreferredKernel(document, preferredSearchToken.token);
+
+            // If we found a preferred kernel, set the association on the NotebookController
+            if (preferredSearchToken.token.isCancellationRequested) {
                 traceInfo('Find preferred kernel cancelled');
                 return;
             }
-
-            // If we found a preferred kernel, set the association on the NotebookController
-            if (preferredConnection) {
-                traceInfo(
-                    `PreferredConnection: ${
-                        preferredConnection.id
-                    } found for NotebookDocument: ${document.uri.toString()}`
-                );
-                this.setPreferredController(document, preferredConnection).catch(traceError);
-            } else {
+            if (!preferredConnection) {
                 traceInfoIf(
                     IS_CI_SERVER,
                     `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`
                 );
+                return;
             }
-        });
+
+            traceInfo(
+                `PreferredConnection: ${preferredConnection.id} found for NotebookDocument: ${document.uri.toString()}`
+            );
+            // No need to await on this, we're done with the search, this can happen in the background.
+            this.setPreferredController(document, preferredConnection).catch(traceError);
+        } catch (ex) {
+            traceError('Failed to find & set preferred controllers', ex);
+        } finally {
+            // Make sure that we clear our finding in progress when done
+            this.findPreferredInProgress.delete(document);
+        }
     }
 
     // For the given document, find the notebook controller that matches this kernel connection and associate the two
