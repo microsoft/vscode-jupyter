@@ -169,7 +169,7 @@ export interface IJupyterSettings {
     readonly interactiveWindowMode: InteractiveWindowMode;
     readonly disableZMQSupport: boolean;
     readonly variableTooltipFields: IVariableTooltipFields;
-    readonly dataCleaningMode: string;
+    readonly dataWrangler: IDataWranglerSettings;
 }
 
 export interface IVariableTooltipFields {
@@ -413,4 +413,8 @@ export interface IExperimentService {
     inExperiment(experimentName: Experiments): Promise<boolean>;
     getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
     logExperiments(): void;
+}
+
+export interface IDataWranglerSettings {
+    sidePanelSections: string[];
 }

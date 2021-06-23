@@ -15,6 +15,7 @@ import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
 import {
+    IDataWranglerSettings,
     IExperiments,
     ILoggingSettings,
     InteractiveWindowMode,
@@ -92,12 +93,12 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     public verboseLogging: boolean = false;
-    public dataCleaningMode: string = '';
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
             Tensor: ['shape', 'dtype', 'device']
         }
     };
+    public dataWrangler: IDataWranglerSettings = { sidePanelSections: [] };
     // Privates should start with _ so that they are not read from the settings.json
     private _changeEmitter = new EventEmitter<void>();
     private _workspaceRoot: Resource;

@@ -1367,14 +1367,24 @@
             "type": "object",
             "title": "Jupyter",
             "properties": {
-                "jupyter.dataCleaningMode": {
-                    "type": "string",
-                    "enum": [
-                        "standalone",
-                        "jupyter_notebook",
-                        "python_file",
-                        "interactive_window"
-                    ]
+                "jupyter.dataWrangler.sidePanelSections": {
+                    "type": "array",
+                    "default": [
+                        "summary",
+                        "columns",
+                        "rows",
+                        "history",
+                        "code"
+                    ],
+                    "items": {
+                        "enum": [
+                            "summary",
+                            "columns",
+                            "rows",
+                            "history",
+                            "code"
+                        ]
+                    }
                 },
                 "jupyter.experiments.enabled": {
                     "type": "boolean",
@@ -1784,11 +1794,7 @@
             {
                 "id": "datafile",
                 "extensions": [
-                    ".csv",
-                    ".parquet",
-                    ".sql",
-                    ".feather",
-                    ".xlsx"
+                    ".csv"
                 ]
             },
             {

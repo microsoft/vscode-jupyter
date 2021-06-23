@@ -79,6 +79,7 @@ interface IMainPanelState {
     historyList: [];
     histogramData?: IGetColsResponse;
     monacoTheme: string;
+    sidePanels: string[];
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -123,7 +124,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableType: undefined,
                 historyList: [],
                 histogramData: undefined,
-                monacoTheme: 'vs-dark'
+                monacoTheme: 'vs-dark',
+                sidePanels: []
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -143,7 +145,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableType: undefined,
                 historyList: [],
                 histogramData: undefined,
-                monacoTheme: 'vs-dark'
+                monacoTheme: 'vs-dark',
+                sidePanels: []
             };
         }
     }
@@ -255,6 +258,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             case DataViewerMessages.GetRowsResponse:
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
+                break;
+
+            case DataWranglerMessages.SetSidePanels:
+                this.setSidePanels(payload);
                 break;
 
             case DataWranglerMessages.GetHistogramResponse:
@@ -426,6 +433,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const chunkEnd = startIndex + Math.min(this.rowFetchSizeFirst, endIndex);
         const chunkStart = startIndex;
         this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd, sliceExpression });
+    }
+
+    private setSidePanels(response: string[]) {
+        this.setState({sidePanels: response});
     }
 
     private handleGetHistogram(response: IGetColsResponse) {

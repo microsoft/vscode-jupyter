@@ -55,7 +55,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.NotebookEditorToggleOutput]: [];
     [DSCommands.NotebookEditorKeybindExecuteCell]: [];
     [DSCommands.NotebookEditorKeybindRenderMarkdownAndSelectBelow]: [];
-    [DSCommands.OpenDataWrangler]: [];
     ['notebook.cell.quitEdit']: [];
     ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.cell.collapseCellOutput']: [];

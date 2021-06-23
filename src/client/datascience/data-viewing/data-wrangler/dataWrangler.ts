@@ -44,7 +44,8 @@ import {
     IFillNaRequest,
     IDropDuplicatesRequest,
     IDropNaRequest,
-    IPlotHistogramReq
+    IPlotHistogramReq,
+    IGetColumnStatsReq
 } from './types';
 import { DataScience } from '../../../common/utils/localize';
 import { DataViewer } from '../dataViewer';
@@ -136,6 +137,9 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
             // Load the web panel using our current directory as we don't expect to load any other files
             await super.loadWebview(process.cwd(), webviewPanel).catch(traceError);
+
+            const wantedPanels = this.configService.getSettings().dataWrangler.sidePanelSections;
+            this.postMessage(DataWranglerMessages.UpdateHistoryList, wantedPanels).ignoreErrors();
 
             // Use Data Viewer logic to show initial data
             const dataFrameInfo = await this.showInitialData(title);
@@ -291,12 +295,12 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         return { code: code } as IHistoryItem;
     }
 
-    private async getColumnStats(columnName: string) {
-        if (this.dataProvider && this.dataProvider.getCols && columnName !== undefined) {
-            const columnData = await this.dataProvider.getCols(columnName);
+    private async getColumnStats(req: IGetColumnStatsReq) {
+        if (this.dataProvider && this.dataProvider.getCols && req.columnName !== undefined) {
+            const columnData = await this.dataProvider.getCols(req.columnName);
             void this.postMessage(DataWranglerMessages.GetHistogramResponse, {
                 cols: columnData,
-                columnName: columnName
+                columnName: req.columnName
             });
         }
     }
