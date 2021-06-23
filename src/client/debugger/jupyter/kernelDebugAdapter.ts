@@ -87,16 +87,13 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
     }
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
-        // console.error(message);
         // intercept 'setBreakpoints' request
-        // TODO: have a static list of ran cells, and dump them all when debugging starts
         if (message.type === 'request' && (message as DebugProtocol.Request).command === 'setBreakpoints') {
             const args = (message as DebugProtocol.Request).arguments;
             if (args.source && args.source.path && args.source.path.indexOf('vscode-notebook-cell:') === 0) {
                 await this.dumpCell(args.source.path);
             }
         }
-        // this.dumpAllCells();
 
         // after attaching, send a 'debugInfo' request
         // reset breakpoints and continue stopped threads if there are any
