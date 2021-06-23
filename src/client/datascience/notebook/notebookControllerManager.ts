@@ -84,6 +84,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     get onNotebookControllerSelected() {
         return this._onNotebookControllerSelected.event;
     }
+    public getSelectedNotebookController(notebook: NotebookDocument) {
+        return Array.from(this.registeredControllers.values()).find((item) => item.isAssociatedWithDocument(notebook));
+    }
 
     public activate() {
         // Sign up for document either opening or closing
