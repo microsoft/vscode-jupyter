@@ -516,7 +516,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
         notebookCellData.metadata = { interactiveWindowCellMarker };
-
         edit.replaceNotebookCells(
             notebookDocument.uri,
             new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
@@ -525,13 +524,17 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             ]
         );
         await workspace.applyEdit(edit);
-        const notebookCell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
 
+        const notebookCell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
         let result = true;
 
         // Request execution
         if (!debugInfo) {
-            await this.kernel?.executeCell(notebookCell);
+            await this.commandManager.executeCommand('notebook.cell.execute', {
+                ranges: [{ start: notebookDocument.cellCount - 1, end: notebookDocument.cellCount }],
+                document: notebookDocument.uri,
+                autoReveal: true
+            });
         } else {
             const notebook = this.kernel?.notebook;
             if (!notebook) {
