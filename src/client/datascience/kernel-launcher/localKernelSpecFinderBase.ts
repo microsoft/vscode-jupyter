@@ -22,7 +22,7 @@ type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment
 export abstract class LocalKernelSpecFinderBase {
     private cache?: KernelSpecFileWithContainingInterpreter[];
     // Store our results when listing all possible kernelspecs for a resource
-    private workspaceToMetadata = new Map<
+    private kernelSpecCache = new Map<
         string,
         Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>
     >();
@@ -37,24 +37,17 @@ export abstract class LocalKernelSpecFinderBase {
 
     @traceDecorators.error('List kernels failed')
     protected async listKernelsWithCache(
-        resource: Resource,
+        cacheKey: string,
         finder: () => Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
-        const workspaceFolderId =
-            this.workspaceService.getWorkspaceFolderIdentifier(
-                resource,
-                resource?.fsPath || this.workspaceService.rootPath
-            ) || 'root';
-
         // If we have already searched for this resource, then use that.
-        const promise = this.workspaceToMetadata.get(workspaceFolderId);
+        const promise = this.kernelSpecCache.get(cacheKey);
         if (promise) {
             return promise;
         }
 
-        this.workspaceToMetadata.set(
-            workspaceFolderId,
+        this.kernelSpecCache.set(
+            cacheKey,
             finder().then((items) => {
                 const distinctKernelMetadata = new Map<
                     string,
@@ -62,7 +55,7 @@ export abstract class LocalKernelSpecFinderBase {
                 >();
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Kernel specs for ${resource?.toString() || 'undefined'} are \n ${JSON.stringify(
+                    `Kernel specs for ${cacheKey?.toString() || 'undefined'} are \n ${JSON.stringify(
                         items,
                         undefined,
                         4
@@ -86,7 +79,7 @@ export abstract class LocalKernelSpecFinderBase {
         );
 
         // ! as the has and set above verify that we have a return here
-        return this.workspaceToMetadata.get(workspaceFolderId)!;
+        return this.kernelSpecCache.get(cacheKey)!;
     }
 
     /**

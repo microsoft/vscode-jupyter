@@ -34,9 +34,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
         includePythonKernels: boolean,
         cancelToken?: CancellationToken
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        // The resource is used as the key, in this case the key will vary based on the flag.
-        const key = Uri.file(includePythonKernels ? 'true' : 'false');
-        return this.listKernelsWithCache(key, async () => {
+        return this.listKernelsWithCache(includePythonKernels ? 'IncludePython' : 'ExcludePython', async () => {
             // First find the on disk kernel specs and interpreters
             const kernelSpecs = await this.findKernelSpecs(cancelToken);
 
