@@ -161,12 +161,17 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                             k.metadata?.interpreter?.path &&
                             k.metadata?.interpreter?.path !== activeInterpreter?.path
                         ) {
-                            interpreter = await this.interpreterService
-                                .getInterpreterDetails(k.metadata?.interpreter?.path)
-                                .catch((ex) => {
-                                    traceError(`Failed to get interpreter details for Kernel Spec ${k.specFile}`, ex);
-                                    return interpreter;
-                                });
+                            try {
+                                interpreter = await this.interpreterService.getInterpreterDetails(
+                                    k.metadata?.interpreter?.path
+                                );
+                            } catch (ex) {
+                                traceError(
+                                    `Failed to get interpreter details for Kernel Spec ${k.specFile} with interpreter path ${k.metadata?.interpreter?.path}`,
+                                    ex
+                                );
+                                return;
+                            }
                         }
                         const result: KernelSpecConnectionMetadata = {
                             kind: 'startUsingKernelSpec',
@@ -178,9 +183,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     }
                 })
                 .map(async (item) => {
-                    const kernelSpec: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata = await item;
+                    const kernelSpec:
+                        | undefined
+                        | KernelSpecConnectionMetadata
+                        | PythonKernelConnectionMetadata = await item;
                     // Check if we have already seen this.
-                    if (!distinctKernelMetadata.has(kernelSpec.id)) {
+                    if (kernelSpec && !distinctKernelMetadata.has(kernelSpec.id)) {
                         distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
                     }
                 })
@@ -202,15 +210,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             })
         ];
 
-        // Sort them so that the active interpreter comes first (if we have one for it).
-        // This allows searches to prioritize this kernel first. If you sort for
-        // a UI do it after this function is called.
         return results.sort((a, b) => {
-            if (a.kernelSpec?.display_name === b.kernelSpec?.display_name) {
+            if (a.kernelSpec.display_name.toUpperCase() === b.kernelSpec.display_name.toUpperCase()) {
                 return 0;
             } else if (
                 a.interpreter?.path === activeInterpreter?.path &&
-                a.kernelSpec?.display_name === activeInterpreter?.displayName
+                a.kernelSpec.display_name.toUpperCase() === activeInterpreter?.displayName?.toUpperCase()
             ) {
                 return -1;
             } else {

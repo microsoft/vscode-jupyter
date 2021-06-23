@@ -9,9 +9,9 @@ import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { ReadWrite, Resource } from '../../common/types';
+import { ReadWrite } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { getInterpreterKernelSpecName, isKernelRegisteredByUs } from '../jupyter/kernels/helpers';
+import { getInterpreterKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
@@ -69,8 +69,12 @@ export abstract class LocalKernelSpecFinderBase {
                 });
 
                 return Array.from(distinctKernelMetadata.values()).sort((a, b) => {
-                    if (a.kernelSpec?.display_name === b.kernelSpec?.display_name) {
+                    const nameA = a.kernelSpec.display_name.toUpperCase();
+                    const nameB = b.kernelSpec.display_name.toUpperCase();
+                    if (nameA === nameB) {
                         return 0;
+                    } else if (nameA < nameB) {
+                        return -1;
                     } else {
                         return 1;
                     }
@@ -152,11 +156,7 @@ export abstract class LocalKernelSpecFinderBase {
 
         // Possible user deleted the underlying kernel.
         const interpreterPath = interpreter?.path || kernelJson?.metadata?.interpreter?.path;
-        if (
-            isKernelRegisteredByUs(kernelSpec) &&
-            interpreterPath &&
-            !(await this.fs.localFileExists(interpreterPath))
-        ) {
+        if (interpreterPath && !(await this.fs.localFileExists(interpreterPath))) {
             return;
         }
 

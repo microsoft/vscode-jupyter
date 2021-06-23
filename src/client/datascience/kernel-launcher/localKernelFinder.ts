@@ -106,12 +106,12 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
         try {
-            let [globalKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
+            let [nonPythonKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
                 this.nonPythonkernelFinder.listKernelSpecs(false, cancelToken),
                 this.pythonKernelFinder.listKernelSpecs(resource, cancelToken)
             ]);
 
-            const kernels = [...globalKernelSpecs, ...pythonRelatedKernelSpecs].filter(({ kernelSpec }) => {
+            const kernels = [...nonPythonKernelSpecs, ...pythonRelatedKernelSpecs].filter(({ kernelSpec }) => {
                 // Disable xeus python for now.
                 if (kernelSpec.argv[0].toLowerCase().endsWith('xpython')) {
                     traceInfo(`Hiding xeus kernelspec`);

@@ -3,7 +3,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { getKernelId } from '../jupyter/kernels/helpers';
