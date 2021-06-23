@@ -3,6 +3,7 @@ import { Memento, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { UseCustomEditorApi } from '../../common/constants';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { INotebookEditor, INotebookEditorProvider } from '../types';
 
 const MEMENTO_KEY = 'nativeEditorViewTracking';
@@ -50,9 +51,9 @@ export class NativeEditorViewTracker implements IExtensionSingleActivationServic
         const fileKey = editor.file.toString();
 
         // Skip untitled files. They have to be changed first.
-        if (!list.includes(fileKey) && (!editor.model.isUntitled || editor.isDirty)) {
-            this.workspaceMemento.update(MEMENTO_KEY, [...list, fileKey]);
-        } else if (editor.model.isUntitled && editor.model) {
+        if (!list.includes(fileKey) && (!editor.isUntitled || editor.isDirty)) {
+            this.workspaceMemento.update(MEMENTO_KEY, [...list, fileKey]).then(noop, noop);
+        } else if (editor.isUntitled && editor.model) {
             editor.model.changed(this.onUntitledChanged.bind(this, editor.file));
         }
     }
@@ -61,7 +62,7 @@ export class NativeEditorViewTracker implements IExtensionSingleActivationServic
         const list = this.workspaceMemento.get<string[]>(MEMENTO_KEY) || [];
         const fileKey = file.toString();
         if (!list.includes(fileKey)) {
-            this.workspaceMemento.update(MEMENTO_KEY, [...list, fileKey]);
+            this.workspaceMemento.update(MEMENTO_KEY, [...list, fileKey]).then(noop, noop);
         }
     }
 
@@ -74,10 +75,12 @@ export class NativeEditorViewTracker implements IExtensionSingleActivationServic
         const fileKey = editor.file.toString();
         if (!this.editorProvider.editors.find((e) => e.file.toString() === fileKey && e !== editor)) {
             const list = this.workspaceMemento.get<string[]>(MEMENTO_KEY) || [];
-            this.workspaceMemento.update(
-                MEMENTO_KEY,
-                list.filter((e) => e !== fileKey)
-            );
+            this.workspaceMemento
+                .update(
+                    MEMENTO_KEY,
+                    list.filter((e) => e !== fileKey)
+                )
+                .then(noop, noop);
         }
     }
 }

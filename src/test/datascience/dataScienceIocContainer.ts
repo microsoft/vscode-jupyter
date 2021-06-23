@@ -314,6 +314,9 @@ import { Extensions } from '../../client/common/application/extensions';
 import { NotebookCreator } from '../../client/datascience/notebook/creation/notebookCreator';
 import { CreationOptionService } from '../../client/datascience/notebook/creation/creationOptionsService';
 import { PythonVariablesRequester } from '../../client/datascience/jupyter/pythonVariableRequester';
+import { LocalKnownPathKernelSpecFinder } from '../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
+import { JupyterPaths } from '../../client/datascience/kernel-launcher/jupyterPaths';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 import { IDataWrangler, IDataWranglerFactory } from '../../client/datascience/data-viewing/data-wrangler/types';
 import { DataWrangler } from '../../client/datascience/data-viewing/data-wrangler/dataWrangler';
 import { DataWranglerProvider } from '../../client/datascience/data-viewing/data-wrangler/dataWranglerProvider';
@@ -905,6 +908,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             );
             this.serviceManager.addSingleton<JupyterKernelService>(JupyterKernelService, JupyterKernelService);
             this.serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
+            this.serviceManager.addSingleton<JupyterPaths>(JupyterPaths, JupyterPaths);
+            this.serviceManager.addSingleton<LocalKnownPathKernelSpecFinder>(
+                LocalKnownPathKernelSpecFinder,
+                LocalKnownPathKernelSpecFinder
+            );
+            this.serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinder>(
+                LocalPythonAndRelatedNonPythonKernelSpecFinder,
+                LocalPythonAndRelatedNonPythonKernelSpecFinder
+            );
             this.serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);

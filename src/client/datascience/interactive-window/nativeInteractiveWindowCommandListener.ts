@@ -5,7 +5,19 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Range, TextDocument, Uri } from 'vscode';
+import {
+    NotebookCell,
+    NotebookRange,
+    Position,
+    Range,
+    Selection,
+    TextDocument,
+    TextEditor,
+    Uri,
+    ViewColumn,
+    workspace,
+    WorkspaceEdit
+} from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
@@ -34,7 +46,7 @@ import {
 import { createExportInteractiveIdentity } from './identity';
 
 @injectable()
-export class InteractiveWindowCommandListener {
+export class NativeInteractiveWindowCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
@@ -124,10 +136,18 @@ export class InteractiveWindowCommandListener {
             commandManager.registerCommand(Commands.RemoveAllCells, () => this.removeAllCells())
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.InterruptKernel, () => this.interruptKernel())
+            commandManager.registerCommand(
+                Commands.InterruptKernel,
+                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                    this.interruptKernel(context?.notebookEditor.notebookUri)
+            )
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.RestartKernel, () => this.restartKernel())
+            commandManager.registerCommand(
+                Commands.RestartKernel,
+                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                    this.restartKernel(context?.notebookEditor.notebookUri)
+            )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.ExpandAllCells, () => this.expandAllCells())
@@ -139,9 +159,31 @@ export class InteractiveWindowCommandListener {
             commandManager.registerCommand(Commands.ExportOutputAsNotebook, () => this.exportCells())
         );
         this.disposableRegistry.push(
+            commandManager.registerCommand(
+                Commands.InteractiveExportAsNotebook,
+                (context?: { notebookEditor: { notebookUri: Uri } }) => this.export(context?.notebookEditor.notebookUri)
+            )
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(
+                Commands.InteractiveExportAs,
+                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                    this.exportAs(context?.notebookEditor.notebookUri)
+            )
+        );
+        this.disposableRegistry.push(
             commandManager.registerCommand(Commands.ScrollToCell, (file: Uri, id: string) =>
                 this.scrollToCell(file, id)
             )
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.InteractiveClearAll, this.clearAllCellsInInteractiveWindow, this)
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.InteractiveRemoveCell, this.removeCellInInteractiveWindow, this)
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow, this)
         );
     }
 
@@ -358,15 +400,19 @@ export class InteractiveWindowCommandListener {
         }
     }
 
-    private interruptKernel() {
-        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+    private interruptKernel(uri?: Uri) {
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.interruptKernel().ignoreErrors();
         }
     }
 
-    private restartKernel() {
-        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+    private restartKernel(uri?: Uri) {
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.restartKernel().ignoreErrors();
         }
@@ -390,6 +436,24 @@ export class InteractiveWindowCommandListener {
         const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.exportCells();
+        }
+    }
+
+    private exportAs(uri?: Uri) {
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.exportAs();
+        }
+    }
+
+    private export(uri?: Uri) {
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
+        if (interactiveWindow) {
+            interactiveWindow.export();
         }
     }
 
@@ -462,6 +526,56 @@ export class InteractiveWindowCommandListener {
                     possibles[i].scrollToCell(id);
                     break;
                 }
+            }
+        }
+    }
+
+    private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
+        if (!context) {
+            return;
+        }
+
+        const document = workspace.notebookDocuments.find(
+            (document) => document.uri.toString() === context.notebookEditor.notebookUri.toString()
+        );
+        if (!document) {
+            return;
+        }
+
+        const edit = new WorkspaceEdit();
+        edit.replaceNotebookCells(document.uri, new NotebookRange(0, document.cellCount), []);
+        await workspace.applyEdit(edit);
+    }
+
+    private async removeCellInInteractiveWindow(context?: NotebookCell) {
+        if (context) {
+            const edit = new WorkspaceEdit();
+            edit.replaceNotebookCells(context.notebook.uri, new NotebookRange(context.index, context.index + 1), []);
+            await workspace.applyEdit(edit);
+        }
+    }
+
+    private async goToCodeInInteractiveWindow(context?: NotebookCell) {
+        if (context && context.metadata?.interactive) {
+            const file = context.metadata.interactive.file;
+            const line = context.metadata.interactive.line;
+
+            let editor: TextEditor | undefined;
+
+            if (await this.fileSystem.localFileExists(file)) {
+                editor = await this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One });
+            } else {
+                // File URI isn't going to work. Look through the active text documents
+                editor = this.documentManager.visibleTextEditors.find((te) => te.document.fileName === file);
+                if (editor) {
+                    editor.show();
+                }
+            }
+
+            // If we found the editor change its selection
+            if (editor) {
+                editor.revealRange(new Range(line, 0, line, 0));
+                editor.selection = new Selection(new Position(line, 0), new Position(line, 0));
             }
         }
     }

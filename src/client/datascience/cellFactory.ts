@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import * as uuid from 'uuid/v4';
-import { Range, TextDocument, Uri } from 'vscode';
+import { NotebookDocument, Range, TextDocument, Uri } from 'vscode';
 
 import { parseForComments } from '../../datascience-ui/common';
 import { createCodeCell, createMarkdownCell } from '../../datascience-ui/common/cellFactory';
@@ -192,4 +192,21 @@ export function generateCellsFromDocument(document: TextDocument, settings?: IJu
             return generateCells(settings, code, '', cr.range.start.line, false, uuid());
         })
     );
+}
+
+export function generateCellsFromNotebookDocument(notebookDocument: NotebookDocument): ICell[] {
+    return notebookDocument.getCells().reduce((cells: ICell[], cell) => {
+        // Skip sysinfo cells when exporting
+        if (cell.metadata.isSysInfoCell) {
+            return cells;
+        }
+
+        // Reinstate cell structure + comments from cell metadata
+        let code = cell.document.getText();
+        if (cell.metadata.interactiveWindowCellMarker !== undefined) {
+            code = cell.metadata.interactiveWindowCellMarker + '\n' + code;
+        }
+        const generatedCells = generateCells(undefined, code, '', 0, false, uuid());
+        return cells.concat(generatedCells);
+    }, []);
 }
