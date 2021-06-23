@@ -95,6 +95,8 @@
     "jupyter.command.jupyter.restartkernel.shorttitle": "Restart",
     "jupyter.command.jupyter.expandallcells.title": "Expand All Interactive Cells",
     "jupyter.command.jupyter.collapseallcells.title": "Collapse All Interactive Cells",
+    "jupyter.command.jupyter.expandallcells.shorttitle": "Expand",
+    "jupyter.command.jupyter.collapseallcells.shorttitle": "Collapse",
     "jupyter.command.jupyter.addcellbelow.title": "Add Empty Cell to File",
     "jupyter.command.jupyter.scrolltocell.title": "Scroll Cell Into View",
     "jupyter.command.jupyter.createnewnotebook.title": "Create New Blank Notebook",
@@ -130,6 +132,9 @@
     "DataScience.exportDialogComplete": "Notebook written to {0}",
     "DataScience.exportDialogFailed": "Failed to export notebook. {0}",
     "DataScience.exportOpenQuestion1": "Open in editor",
+    "DataScience.notebookExport": "Export",
+    "DataScience.exportAsNotebook.shorttitle": "Save",
+    "DataScience.exportAs": "Export As",
     "DataScience.notebookExportAs": "Export As",
     "DataScience.notebookExportAs.shorttitle": "Export",
     "DataScience.exportAsQuickPickPlaceholder": "Export As...",
@@ -491,5 +496,8 @@
     "DataScience.sliceMismatchedAxesError": "Expected {0} axes, got {1} in slice expression",
     "DataScience.clearFilters": "Clear all filters",
     "DataScience.defaultNotebookName": "default",
-    "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targetting the language '{1}'"
+    "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targetting the language '{1}'",
+    "DataScience.interactiveClearAllCells": "Clear All",
+    "DataScience.interactiveRemoveCell": "Remove Cell",
+    "DataScience.interactiveGoToCode": "Go to code"
 }

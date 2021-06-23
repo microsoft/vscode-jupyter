@@ -165,6 +165,11 @@ export namespace Commands {
         'jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow';
     export const NotebookEditorKeybindExecuteCell = 'jupyter.notebookeditor.keybind.executeCell';
     export const NotebookEditorToggleOutput = 'jupyter.notebookeditor.keybind.toggleOutput';
+    export const InteractiveClearAll = 'jupyter.interactive.clearAllCells';
+    export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
+    export const InteractiveGoToCode = 'jupyter.interactive.goToCode';
+    export const InteractiveExportAsNotebook = 'jupyter.interactive.exportasnotebook';
+    export const InteractiveExportAs = 'jupyter.interactive.exportas';
 }
 
 export namespace CodeLensCommands {

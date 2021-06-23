@@ -12,7 +12,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { generateNewNotebookUri } from '../common';
 import { IModelLoadOptions, INotebookModel, INotebookModelSynchronization, INotebookStorage } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
-import { VSCodeNotebookModel } from './vscNotebookModel';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 
@@ -55,9 +54,6 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
 
         const oldUri = model.file;
         await this.storage.saveAs(model, targetResource);
-        if (model instanceof VSCodeNotebookModel) {
-            return;
-        }
         this.trackModel(model);
         this.storageAndModels.delete(oldUri.toString());
         this.storageAndModels.set(targetResource.toString(), Promise.resolve(model));

@@ -57,7 +57,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
     }
     private onEditorOpened(editor: INotebookEditor): void {
         this.openedNotebookCount += 1;
-        if (editor.model?.isUntitled) {
+        if (editor.isUntitled) {
             this.notebookCount += 1;
         }
         if (!this.executedNotebooksIndexedByUri.has(editor.file.fsPath) && editor.executed) {

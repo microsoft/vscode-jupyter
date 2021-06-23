@@ -234,7 +234,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Sign up for dirty events
         this._model.changed(this.modelChanged.bind(this));
     }
-
+    public getContent() {
+        return this.model.getContent();
+    }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
         // Possible webview has been closed (and we'retrying to save just as user closed the webview editor).

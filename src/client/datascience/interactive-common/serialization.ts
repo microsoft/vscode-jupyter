@@ -43,6 +43,12 @@ export interface ILanguageConfigurationDto {
         }[];
     };
 }
+
+export interface IPairInterface {
+    open: string;
+    close: string;
+    notIn?: string[];
+}
 // Copied most of this from VS code directly.
 
 function regExpFlags(regexp: RegExp): string {

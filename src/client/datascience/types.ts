@@ -556,6 +556,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly submitters: Uri[];
     readonly identity: Uri;
     readonly title: string;
+    readonly notebookUri?: Uri;
     closed: Event<IInteractiveWindow>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
@@ -570,6 +571,8 @@ export interface IInteractiveWindow extends IInteractiveBase {
     collapseAllCells(): void;
     exportCells(): void;
     scrollToCell(id: string): void;
+    exportAs(cells?: ICell[]): void;
+    export(cells?: ICell[]): void;
 }
 
 export interface IInteractiveWindowLoadable extends IInteractiveWindow {
@@ -613,7 +616,8 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     readonly file: Uri;
     readonly visible: boolean;
     readonly active: boolean;
-    readonly model: INotebookModel;
+    readonly model?: INotebookModel;
+    readonly notebookMetadata: nbformat.INotebookMetadata | undefined;
     notebook?: INotebook;
     show(): Promise<void>;
     runAllCells(): void;
@@ -627,6 +631,7 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
     syncAllCells(): Promise<void>;
+    getContent(): string;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');

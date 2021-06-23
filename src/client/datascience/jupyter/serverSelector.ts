@@ -16,6 +16,7 @@ import {
     InputStep,
     IQuickPickParameters
 } from '../../common/utils/multiStepInput';
+import { traceDecorators } from '../../logging';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../constants';
 import {
@@ -53,6 +54,7 @@ export class JupyterServerSelector {
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
+    @traceDecorators.error('Failed to select Jupyter Uri')
     public selectJupyterURI(
         allowLocal: boolean,
         commandSource: SelectJupyterUriCommandSource = 'nonUser'
