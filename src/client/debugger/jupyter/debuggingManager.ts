@@ -12,6 +12,7 @@ import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { IDebuggingCellMap, INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
+import { INotebookControllerManager } from '../../datascience/notebook/types';
 
 class Debugger {
     private resolveFunc?: (value: vscode.DebugSession) => void;
@@ -64,7 +65,8 @@ export class DebuggingManager implements IExtensionSingleActivationService {
     public constructor(
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
-        @inject(IDebuggingCellMap) private debuggingCellMap: IDebuggingCellMap
+        @inject(IDebuggingCellMap) private debuggingCellMap: IDebuggingCellMap,
+        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
     ) {}
 
     public async activate() {
@@ -96,12 +98,8 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             vscode.debug.registerDebugAdapterDescriptorFactory('kernel', {
                 createDebugAdapterDescriptor: async (session) => {
                     const activeDoc = vscode.window.activeNotebookEditor!.document;
-                    // ensure the kernel is running
-                    const kernel = this.kernelProvider.get(activeDoc.uri);
-                    if (kernel && kernel.status === ServerStatus.NotStarted) {
-                        await kernel.start({ document: activeDoc });
-                    }
 
+                    await this.ensureKernelIsRunning(activeDoc);
                     const debug = this.getDebuggerByUri(activeDoc);
 
                     if (debug) {
@@ -194,6 +192,22 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             if (document.uri.toString() === doc.uri.toString()) {
                 return dbg;
             }
+        }
+    }
+
+    private async ensureKernelIsRunning(doc: vscode.NotebookDocument): Promise<void> {
+        await this.notebookControllerManager.loadNotebookControllers();
+        const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
+
+        let kernel = this.kernelProvider.get(doc.uri);
+        if (!kernel && controller) {
+            kernel = this.kernelProvider.getOrCreate(doc.uri, {
+                metadata: controller.connection,
+                controller: controller?.controller
+            });
+        }
+        if (kernel && kernel.status === ServerStatus.NotStarted) {
+            await kernel.start({ document: doc });
         }
     }
 }
