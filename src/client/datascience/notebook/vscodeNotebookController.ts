@@ -158,14 +158,11 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     // Handle the execution of notebook cell
-    private async handleExecution(cells: NotebookCell[]) {
+    private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
             traceInfo('No cells passed to handleExecution');
             return;
         }
-        // Get our target document
-        const targetNotebook = cells[0].notebook;
-
         // When we receive a cell execute request, first ensure that the notebook is trusted.
         // If it isn't already trusted, block execution until the user trusts it.
         if (!this.workspace.isTrusted) {
@@ -173,7 +170,7 @@ export class VSCodeNotebookController implements Disposable {
         }
         // Notebook is trusted. Continue to execute cells
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
-        await Promise.all(cells.map((cell) => this.executeCell(targetNotebook, cell)));
+        await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
         if (this.associatedDocuments.has(event.notebook) && event.selected) {
@@ -182,18 +179,26 @@ export class VSCodeNotebookController implements Disposable {
         }
         if (!event.selected) {
             this.associatedDocuments.delete(event.notebook);
+            return;
         }
+        // We're only interested in our Notebooks.
+        if (!isJupyterNotebook(event.notebook) || event.notebook.notebookType !== InteractiveWindowView) {
+            return;
+        }
+        if (!this.workspace.isTrusted) {
+            return;
+        }
+
         traceInfoIf(isCI, `Notebook Controller set ${event.notebook.uri.toString()}, ${this.id}`);
-        this.widgetCoordinator.setActiveController(event.notebook, this);
+        this.associatedDocuments.add(event.notebook);
 
         // Now actually handle the change
-        await this.notebookKernelChanged(event.notebook);
+        this.widgetCoordinator.setActiveController(event.notebook, this);
+        await this.onDidSelectController(event.notebook);
+        await this.updateCellLanguages(event.notebook);
 
         // If this NotebookController was selected, fire off the event
-        if (event.selected) {
-            await this.updateCellLanguages(event.notebook);
-            this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
-        }
+        this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
     }
     /**
      * Scenario 1:
@@ -315,17 +320,8 @@ export class VSCodeNotebookController implements Disposable {
         handlerDisposables.push({ dispose: () => statusChangeDisposable.dispose() });
         handlerDisposables.push({ dispose: () => kernelDisposedDisposable?.dispose() });
     }
-    private async notebookKernelChanged(document: NotebookDocument) {
-        // We're only interested in our Jupyter Notebooks.
-        if (!isJupyterNotebook(document) || document.notebookType !== InteractiveWindowView) {
-            return;
-        }
+    private async onDidSelectController(document: NotebookDocument) {
         const selectedKernelConnectionMetadata = this.connection;
-
-        if (!this.workspace.isTrusted) {
-            return;
-        }
-
         const existingKernel = this.kernelProvider.get(document.uri);
         if (
             existingKernel &&
