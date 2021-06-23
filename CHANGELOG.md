@@ -1,5 +1,12 @@
 # Changelog
 
+## 2021.6.9999 (23 June 2021)
+
+### Fixes
+
+1. Resolve DataFrame horizontal scrollbar issue on Jupyter side. 
+   ([#6354](https://github.com/Microsoft/vscode-jupyter/issues/6354))
+
 ## 2021.6.999 (16 June 2021)
 
 ### Fixes
