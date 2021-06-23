@@ -7,17 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import * as fsextra from 'fs-extra';
-import {
-    Disposable,
-    EventEmitter,
-    Memento,
-    NotebookCell,
-    ViewColumn,
-    WebviewPanel,
-    notebooks as vscNotebook,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookCellExecutionState
-} from 'vscode';
+import { Disposable, EventEmitter, Memento, NotebookCell, ViewColumn, WebviewPanel } from 'vscode';
 
 import {
     IApplicationShell,
@@ -36,10 +26,9 @@ import {
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
-    INotebookEditorProvider,
     IThemeFinder
 } from '../../types';
-import { addNewCellAfter, updateCellCode } from '../../notebook/helpers/executionHelpers';
+import { updateCellCode } from '../../notebook/helpers/executionHelpers';
 import { InteractiveWindowMessages } from '../../interactive-common/interactiveWindowTypes';
 import { serializeLanguageConfiguration } from '../../interactive-common/serialization';
 import { CssMessages } from '../../messages';
@@ -55,7 +44,7 @@ import {
     IFillNaRequest,
     IDropDuplicatesRequest,
     IDropNaRequest,
-    OpenDataWranglerSetting
+    IPlotHistogramReq
 } from './types';
 import { DataScience } from '../../../common/utils/localize';
 import { DataViewer } from '../dataViewer';
@@ -104,8 +93,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         @named(Identifiers.KERNEL_VARIABLES)
         private kernelVariableProvider: IJupyterVariables,
         @inject(IJupyterVariableDataProviderFactory)
-        private dataProviderFactory: IJupyterVariableDataProviderFactory,
-        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
+        private dataProviderFactory: IJupyterVariableDataProviderFactory
     ) {
         super(
             configuration,
@@ -120,12 +108,11 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             [path.join(dataWranglerDir, 'commons.initial.bundle.js'), path.join(dataWranglerDir, 'dataWrangler.js')],
             localize.DataScience.dataWranglerTitle(),
             PREFERRED_VIEWGROUP,
-            ViewColumn.Two
+            ViewColumn.One
         );
         this.onDidDispose(this.dataWranglerDisposed, this);
 
         this.commands.set(DataWranglerCommands.Describe, this.getColumnStats.bind(this));
-        // this.commands.set(DataWranglerCommands.ExportToCsv, this);
         this.commands.set(DataWranglerCommands.ExportToPythonScript, this.generatePythonCode.bind(this));
         this.commands.set(DataWranglerCommands.ExportToNotebook, this.generateNotebook.bind(this));
         this.commands.set(DataWranglerCommands.RenameColumn, this.renameColumn.bind(this));
@@ -135,7 +122,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         this.commands.set(DataWranglerCommands.NormalizeColumn, this.normalizeColumn.bind(this));
         this.commands.set(DataWranglerCommands.FillNa, this.fillNa.bind(this));
         this.commands.set(DataWranglerCommands.GetHistoryItem, this.getHistoryItem.bind(this));
-        // this.commands.set(DataWranglerCommands.PyplotHistogram, this
+        this.commands.set(DataWranglerCommands.PyplotHistogram, this.plotHistogram.bind(this));
     }
 
     public async showData(
@@ -197,8 +184,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
     public async getHistoryItem(index: number) {
         const variableName = this.historyList[index].variableName;
-
-        void this.updateWithNewVariable(variableName);
+        await this.updateWithNewVariable(variableName);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -304,6 +290,11 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         await updateCellCode(blankCell, dataCleanCode);
     }
 
+    private async plotHistogram(req: IPlotHistogramReq, currentVariableName: string): Promise<IHistoryItem> {
+        const code = DataScience.dataWranglerPyplotHistogramCode().format(currentVariableName, req.target);
+        return { code: code } as IHistoryItem;
+    }
+
     private async getColumnStats(columnName: string) {
         if (this.dataProvider && this.dataProvider.getCols && columnName !== undefined) {
             const columnData = await this.dataProvider.getCols(columnName);
@@ -320,11 +311,8 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         let code = '';
         const currentVariableName = (await this.dataFrameInfoPromise)!.name ?? '';
         let newVariableName = currentVariableName ?? '';
-        const matchingNotebookEditor = this.notebookEditorProvider.editors.find(
-            (editor) => editor.notebook?.identity.fsPath === notebook?.identity.fsPath
-        );
-        let refreshRequired = true;
 
+        // Get and run data wrangler command
         const cmd = this.commands.get(payload.command as DataWranglerCommands);
         if (cmd) {
             const historyItem = await cmd(payload.args, currentVariableName);
@@ -334,43 +322,14 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             }
         }
 
-        const dataCleaningMode = this.configService.getSettings().dataCleaningMode;
-        if (dataCleaningMode === OpenDataWranglerSetting.STANDALONE) {
-            if (code && notebook !== undefined) {
-                void notebook?.execute(code, '', 0, uuid()).then(async () => {
-                    if (this.existingDisposable) {
-                        this.existingDisposable.dispose();
-                    }
-                    await this.updateWithNewVariable(newVariableName);
-                });
-            }
-        } else if (dataCleaningMode === OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK) {
-            if (code && matchingNotebookEditor !== undefined) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                let cells = (matchingNotebookEditor as any).document.getCells();
-                let lastCell = cells[cells.length - 1] as NotebookCell;
-                await addNewCellAfter(lastCell, '');
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                cells = (matchingNotebookEditor as any).document.getCells();
-                lastCell = cells[cells.length - 1] as NotebookCell;
-                await updateCellCode(lastCell, code);
+        // Execute python command
+        if (code && notebook !== undefined) {
+            void notebook?.execute(code, '', 0, uuid()).then(async () => {
                 if (this.existingDisposable) {
                     this.existingDisposable.dispose();
                 }
-                this.existingDisposable = vscNotebook.onDidChangeNotebookCellExecutionState(
-                    async (e: NotebookCellExecutionStateChangeEvent) => {
-                        if (e.state === NotebookCellExecutionState.Idle && refreshRequired) {
-                            await this.updateWithNewVariable(newVariableName);
-                        }
-                    }
-                );
-
-                await this.commandManager.executeCommand(
-                    'notebook.cell.execute',
-                    { start: lastCell.index, end: lastCell.notebook.cellCount },
-                    lastCell.notebook.uri
-                );
-            }
+                await this.updateWithNewVariable(newVariableName);
+            });
         }
     }
 
