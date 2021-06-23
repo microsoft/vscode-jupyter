@@ -8,26 +8,16 @@ import {
     CustomDocumentEditEvent,
     EventEmitter,
     window,
-    NotebookCell,
-    QuickPickOptions,
-    ConfigurationTarget,
-    ProgressLocation,
-    ProgressOptions
+    ProgressLocation
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../activation/types';
-import { IApplicationShell, ICommandManager, IDataWranglerProvider } from '../../../common/application/types';
+import { IApplicationShell, IDataWranglerProvider } from '../../../common/application/types';
 import * as uuid from 'uuid/v4';
-import { Commands, Identifiers } from '../../constants';
-import {
-    INotebookProvider,
-    IJupyterVariables,
-    INotebookEditor,
-    IJupyterVariableDataProviderFactory
-} from '../../types';
+import { Identifiers } from '../../constants';
+import { INotebookProvider, IJupyterVariables, IJupyterVariableDataProviderFactory } from '../../types';
 import { DataViewerChecker } from '../../interactive-common/dataViewerChecker';
 import { IConfigurationService } from '../../../common/types';
-import { updateCellCode } from '../../notebook/helpers/executionHelpers';
-import { IDataWranglerFactory, OpenDataWranglerSetting } from './types';
+import { IDataWranglerFactory } from './types';
 import { DataScience } from '../../../common/utils/localize';
 import { IDataViewerDataProvider } from '../types';
 
@@ -49,9 +39,8 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         @inject(IJupyterVariables)
         @named(Identifiers.KERNEL_VARIABLES)
         private kernelVariableProvider: IJupyterVariables,
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(ICommandManager) private commandManager: ICommandManager
+        @inject(IConfigurationService) configService: IConfigurationService,
+        @inject(IApplicationShell) private appShell: IApplicationShell
     ) {
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
     }
@@ -107,146 +96,42 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
     }
 
     private async initialize(file: Uri, source: 'custom_editor' | 'context_menu') {
-        let dataCleaningMode = this.configService.getSettings().dataCleaningMode;
+        const options = {
+            location: ProgressLocation.Notification,
+            cancellable: true,
+            title: DataScience.dataWranglerStandaloneLoading()
+        };
 
-        if (dataCleaningMode == '') {
-            const qpoptions: QuickPickOptions = {
-                ignoreFocusOut: false,
-                matchOnDescription: true,
-                matchOnDetail: true
-            };
-
-            const qpitems = [
-                {
-                    label: DataScience.dataWranglerStandalone(),
-                    picked: true
-                },
-                {
-                    label: DataScience.dataWranglerWithJupyterNotebook()
-                }
-            ];
-
-            const selection = await this.appShell.showQuickPick(qpitems, qpoptions);
-            switch (selection?.label) {
-                case DataScience.dataWranglerStandalone():
-                    dataCleaningMode = OpenDataWranglerSetting.STANDALONE;
-                    await this.configService.updateSetting(
-                        'dataCleaningMode',
-                        OpenDataWranglerSetting.STANDALONE,
-                        undefined,
-                        ConfigurationTarget.Global
-                    );
-                    break;
-                case DataScience.dataWranglerWithJupyterNotebook():
-                    dataCleaningMode = OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK;
-                    await this.configService.updateSetting(
-                        'dataCleaningMode',
-                        OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK,
-                        undefined,
-                        ConfigurationTarget.Global
-                    );
-                    break;
-            }
-        }
-
-        let options: ProgressOptions | undefined;
-        let setting: OpenDataWranglerSetting | undefined;
-
-        switch (dataCleaningMode) {
-            case OpenDataWranglerSetting.STANDALONE: {
-                options = {
-                    location: ProgressLocation.Notification,
-                    cancellable: true,
-                    title: DataScience.dataWranglerStandaloneLoading()
-                };
-                setting = OpenDataWranglerSetting.STANDALONE;
-
-                break;
-            }
-            case OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK: {
-                options = {
-                    location: ProgressLocation.Notification,
-                    cancellable: true,
-                    title: DataScience.dataWranglerWithJupyterNotebookLoading()
-                };
-                setting = OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK;
-
-                break;
-            }
-        }
-
-        if (!options) return;
-
-        await this.appShell.withProgress(options, async (_, __) =>
-            this.importAndLaunchDataWrangler(file, setting, source)
-        );
+        await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataWrangler(file, source));
     }
 
-    public async importAndLaunchDataWrangler(
-        file: Uri,
-        setting: OpenDataWranglerSetting | undefined,
-        source: 'custom_editor' | 'context_menu'
-    ) {
-        if (setting == OpenDataWranglerSetting.STANDALONE) {
-            const notebook = await this.notebookProvider.getOrCreateNotebook({
-                resource: file,
-                identity: file,
-                disableUI: true
-            });
-            const code = this.getImportCodeForFileType(file!.fsPath);
-            await notebook?.execute(code, '', 0, uuid(), undefined, true);
-            const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
-                {
-                    name: 'df',
-                    value: '',
-                    supportsDataExplorer: true,
-                    type: 'DataFrame',
-                    size: 0,
-                    shape: '',
-                    count: 0,
-                    truncated: true,
-                    sourceFile: file?.fsPath
-                },
-                notebook
-            );
-            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(jupyterVariable);
-            jupyterVariableDataProvider.setDependencies(jupyterVariable, notebook);
-            this.dataProviders.set(file, jupyterVariableDataProvider);
-            // May need to resolve custom editor here
-            if (source === 'context_menu') {
-                await this.show(file, undefined);
-            }
-        } else if (setting == OpenDataWranglerSetting.WITH_JUPYTER_NOTEBOOK) {
-            const notebookEditor: INotebookEditor | undefined = await this.commandManager.executeCommand(
-                Commands.CreateNewNotebook
-            );
-            if (!notebookEditor) {
-                return;
-            }
-            // Add code cell to import dataframe
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const blankCell = (notebookEditor as any).document.cellAt(0) as NotebookCell;
-            const code = this.getImportCodeForFileType(file!.fsPath);
-            await updateCellCode(blankCell, code);
-            // Run the cells
-            await this.commandManager.executeCommand('notebook.cell.execute');
-            const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
-                {
-                    name: 'df',
-                    value: '',
-                    supportsDataExplorer: true,
-                    type: 'DataFrame',
-                    size: 0,
-                    shape: '',
-                    count: 0,
-                    truncated: true,
-                    sourceFile: file?.fsPath
-                },
-                notebookEditor.notebook
-            );
-            const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(jupyterVariable);
-            jupyterVariableDataProvider.setDependencies(jupyterVariable, notebookEditor.notebook);
-            this.dataProviders.set(file, jupyterVariableDataProvider);
+    public async importAndLaunchDataWrangler(file: Uri, source: 'custom_editor' | 'context_menu') {
+        const notebook = await this.notebookProvider.getOrCreateNotebook({
+            resource: file,
+            identity: file,
+            disableUI: true
+        });
+        const code = this.getImportCodeForFileType(file!.fsPath);
+        await notebook?.execute(code, '', 0, uuid(), undefined, true);
+        const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
+            {
+                name: 'df',
+                value: '',
+                supportsDataExplorer: true,
+                type: 'DataFrame',
+                size: 0,
+                shape: '',
+                count: 0,
+                truncated: true,
+                sourceFile: file?.fsPath
+            },
+            notebook
+        );
+        const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(jupyterVariable);
+        jupyterVariableDataProvider.setDependencies(jupyterVariable, notebook);
+        this.dataProviders.set(file, jupyterVariableDataProvider);
+        // May need to resolve custom editor here
+        if (source === 'context_menu') {
             await this.show(file, undefined);
         }
     }
@@ -257,7 +142,11 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
         const columnSize = dataFrameInfo?.columns?.length;
         if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
-            await this.dataWranglerFactory.create(jupyterVariableDataProvider, 'Data Wrangler', webviewPanel);
+            await this.dataWranglerFactory.create(
+                jupyterVariableDataProvider,
+                DataScience.dataExplorerTitle(),
+                webviewPanel
+            );
         }
     }
 

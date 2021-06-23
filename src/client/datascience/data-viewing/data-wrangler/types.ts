@@ -7,8 +7,8 @@ import { IDisposable } from '../../../common/types';
 import { IDataViewerDataProvider } from '../types';
 
 export enum OpenDataWranglerSetting {
-    STANDALONE = 'standalone',
-    WITH_JUPYTER_NOTEBOOK = 'jupyter_notebook'
+    STANDALONE = 'standalone'
+    // WITH_JUPYTER_NOTEBOOK = 'jupyter_notebook'
     // WITH_PYTHON_FILE,
     // WITH_INTERACTIVE_WINDOW
 }
@@ -59,6 +59,10 @@ export interface IHistoryItem {
 export interface IRenameColumnsRequest {
     oldColumnName: string;
     newColumnName: string;
+}
+
+export interface IPlotHistogramReq {
+    target: string;
 }
 
 export interface IDropRequest {
