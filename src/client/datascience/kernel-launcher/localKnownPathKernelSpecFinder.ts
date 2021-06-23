@@ -3,7 +3,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { getKernelId } from '../jupyter/kernels/helpers';
@@ -34,7 +34,9 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
         includePythonKernels: boolean,
         cancelToken?: CancellationToken
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        return this.listKernelsWithCache(undefined, async () => {
+        // The resource is used as the key, in this case the key will vary based on the flag.
+        const key = Uri.file(includePythonKernels ? 'true' : 'false');
+        return this.listKernelsWithCache(key, async () => {
             // First find the on disk kernel specs and interpreters
             const kernelSpecs = await this.findKernelSpecs(cancelToken);
 
