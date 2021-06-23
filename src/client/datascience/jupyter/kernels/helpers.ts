@@ -28,7 +28,7 @@ import { DataScience } from '../../../common/utils/localize';
 import { Settings, Telemetry } from '../../constants';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { traceInfo, traceInfoIf } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIf } from '../../../common/logger';
 import { getInterpreterHash } from '../../../pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../../../telemetry/helpers';
 import { IS_CI_SERVER } from '../../../../test/ciConstants';
@@ -36,6 +36,8 @@ import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { Uri } from 'vscode';
 import { getResourceType } from '../../common';
 import { IPythonExecutionFactory } from '../../../common/process/types';
+import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
+import { isDefaultPythonKernelSpecName } from '../../kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -76,6 +78,28 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
     }
     return `${spec.id || ''}.${specName}.${spec.interpreterPath || spec.path}.${interpreter?.path || ''}`;
 }
+
+export function getSysInfoReasonHeader(
+    reason: SysInfoReason,
+    connection: KernelConnectionMetadata | undefined
+): string {
+    const displayName = getDisplayNameOrNameOfKernelConnection(connection);
+    switch (reason) {
+        case SysInfoReason.Start:
+        case SysInfoReason.New:
+            return DataScience.startedNewKernelHeader().format(displayName);
+        case SysInfoReason.Restart:
+            return DataScience.restartedKernelHeader().format(displayName);
+        case SysInfoReason.Interrupt:
+            return DataScience.pythonInterruptFailedHeader();
+        case SysInfoReason.Connect:
+            return DataScience.connectKernelHeader().format(displayName);
+        default:
+            traceError('Invalid SysInfoReason');
+            return '';
+    }
+}
+
 export function getDisplayNameOrNameOfKernelConnection(
     kernelConnection: KernelConnectionMetadata | undefined,
     defaultValue: string = ''
@@ -338,6 +362,11 @@ export function findPreferredKernel(
     preferredInterpreter: PythonEnvironment | undefined,
     remoteKernelPreferredProvider: PreferredRemoteKernelIdProvider | undefined
 ): KernelConnectionMetadata | undefined {
+    traceInfo(
+        `Find preferred kernel for ${resource?.toString()} with metadata ${JSON.stringify(
+            notebookMetadata || {}
+        )} & preferred interpreter ${JSON.stringify(preferredInterpreter || {})}`
+    );
     let index = -1;
 
     // First try remote
@@ -465,6 +494,18 @@ export function findPreferredKernel(
 
                 // See if the display name already matches.
                 if (spec.display_name && spec.display_name === notebookMetadata?.kernelspec?.display_name) {
+                    score += 16;
+                }
+                // See if the name of the environments match (kernel name == environment name).
+                // At this point we dont care about version numbers of the Python environments.
+                // E.g. assume user opens notebook with metadata pointing to kernelspec with the name `condaPytoch`,
+                // & the user has such an environment (with the same name), then its a match.
+                if (
+                    metadata.interpreter?.envName &&
+                    metadata.interpreter?.envName === notebookMetadata?.kernelspec?.name &&
+                    nbMetadataLanguage === PYTHON_LANGUAGE &&
+                    !notebookMetadata?.kernelspec?.name.toLowerCase().match(isDefaultPythonKernelSpecName)
+                ) {
                     score += 16;
                 }
 

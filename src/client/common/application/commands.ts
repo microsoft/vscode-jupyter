@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
+import { CancellationToken, NotebookCell, Position, TextDocument, Uri, ViewColumn } from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
@@ -36,8 +36,8 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.UndoCells]: [];
     [DSCommands.RedoCells]: [];
     [DSCommands.RemoveAllCells]: [];
-    [DSCommands.InterruptKernel]: [];
-    [DSCommands.RestartKernel]: [];
+    [DSCommands.InterruptKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
+    [DSCommands.RestartKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
     [DSCommands.NotebookEditorUndoCells]: [];
     [DSCommands.NotebookEditorRedoCells]: [];
     [DSCommands.NotebookEditorRemoveAllCells]: [];
@@ -55,7 +55,11 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.NotebookEditorToggleOutput]: [];
     [DSCommands.NotebookEditorKeybindExecuteCell]: [];
     [DSCommands.NotebookEditorKeybindRenderMarkdownAndSelectBelow]: [];
-    [DSCommands.OpenDataWrangler]: [];
+    [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri } }];
+    [DSCommands.InteractiveRemoveCell]: [NotebookCell];
+    [DSCommands.InteractiveGoToCode]: [NotebookCell];
+    [DSCommands.InteractiveExportAsNotebook]: [{ notebookEditor: { notebookUri: Uri } }];
+    [DSCommands.InteractiveExportAs]: [{ notebookEditor: { notebookUri: Uri } }];
     ['notebook.cell.quitEdit']: [];
     ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.cell.collapseCellOutput']: [];
@@ -83,7 +87,9 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
     ['vscode.open']: [Uri];
     ['notebook.execute']: [];
-    ['notebook.cell.execute']: [] | [{ start: number; end: number }, Uri];
+    ['notebook.cell.execute']:
+        | []
+        | [{ ranges: { start: number; end: number }[]; document?: Uri; autoReveal?: boolean }]; // TODO update this
     ['notebook.cell.insertCodeCellBelow']: [];
     ['notebook.undo']: [];
     ['notebook.redo']: [];
@@ -92,6 +98,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.save']: [Uri];
     ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
     ['undo']: [];
+    ['interactive.open']: [ViewColumn];
+    ['interactive.execute']: [string];
     [DSCommands.NotebookEditorInterruptKernel]: [Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];

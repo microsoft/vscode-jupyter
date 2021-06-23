@@ -21,7 +21,6 @@ import { JupyterVariableDataProvider } from '../../../client/datascience/data-vi
 import { JupyterVariableDataProviderFactory } from '../../../client/datascience/data-viewing/jupyterVariableDataProviderFactory';
 import { IDataViewerDataProvider } from '../../../client/datascience/data-viewing/types';
 import { KernelVariables } from '../../../client/datascience/jupyter/kernelVariables';
-import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
 import { ICodeCssGenerator, IThemeFinder } from '../../../client/datascience/types';
 import { MockMemento } from '../../mocks/mementos';
@@ -38,7 +37,6 @@ suite('DataScience - DataWrangler', () => {
     let commandManager: CommandManager;
     let jupyterVariables: KernelVariables;
     let dataProviderFactory: JupyterVariableDataProviderFactory;
-    let notebookEditorProvider: NotebookEditorProvider;
 
     const title: string = 'Data Wrangler - Title';
 
@@ -53,7 +51,6 @@ suite('DataScience - DataWrangler', () => {
         commandManager = mock(CommandManager);
         jupyterVariables = mock(KernelVariables);
         dataProviderFactory = mock(JupyterVariableDataProviderFactory);
-        notebookEditorProvider = mock(NotebookEditorProvider);
         const documentManager = mock(DocumentManager);
         const settings = mock(JupyterSettings);
         const settingsChangedEvent = new EventEmitter<void>();
@@ -78,8 +75,7 @@ suite('DataScience - DataWrangler', () => {
             instance(commandManager),
             instance(documentManager),
             instance(jupyterVariables),
-            instance(dataProviderFactory),
-            instance(notebookEditorProvider)
+            instance(dataProviderFactory)
         );
     });
     test('Data Wrangler showData calls gets dataFrame info from data provider', async () => {

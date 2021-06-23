@@ -4,7 +4,6 @@
 import { join } from 'path';
 import {
     Disposable,
-    env,
     EventEmitter,
     ExtensionMode,
     languages,
@@ -15,11 +14,10 @@ import {
     NotebookDocument,
     NotebookEditor,
     NotebookRendererScript,
-    UIKind,
     Uri
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
-import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
@@ -35,13 +33,7 @@ import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/k
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
-import { JupyterNotebookView } from './constants';
-import {
-    isSameAsTrackedKernelInNotebookMetadata,
-    traceCellMessage,
-    trackKernelInfoInNotebookMetadata,
-    trackKernelInNotebookMetadata
-} from './helpers/helpers';
+import { traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
 import { INotebookControllerManager } from './types';
 
 export class VSCodeNotebookController implements Disposable {
@@ -77,6 +69,8 @@ export class VSCodeNotebookController implements Disposable {
     }
     constructor(
         private readonly kernelConnection: KernelConnectionMetadata,
+        id: string,
+        viewType: string,
         label: string,
         private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
@@ -87,7 +81,11 @@ export class VSCodeNotebookController implements Disposable {
         private readonly pathUtils: IPathUtils,
         disposableRegistry: IDisposableRegistry,
         private readonly languageService: NotebookCellLanguageService,
-        private readonly workspace: IWorkspaceService
+        private readonly workspace: IWorkspaceService,
+        private readonly setAsActiveControllerForTests: (
+            controller: VSCodeNotebookController,
+            notebook: NotebookDocument
+        ) => Promise<void>
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -96,8 +94,8 @@ export class VSCodeNotebookController implements Disposable {
         }>();
 
         this.controller = this.notebookApi.createNotebookController(
-            kernelConnection.id,
-            JupyterNotebookView,
+            id,
+            viewType,
             label,
             this.handleExecution.bind(this),
             this.getRendererScripts()
@@ -135,17 +133,10 @@ export class VSCodeNotebookController implements Disposable {
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         traceInfo(`Setting controller affinity for ${notebook.uri.toString()} ${this.id}`);
         this.controller.updateNotebookAffinity(notebook, affinity);
-        // Only on CI Server.
+        // Only when running tests should we force the selection of the kernel.
+        // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
         if (this.context.extensionMode === ExtensionMode.Test) {
-            traceInfo(`Force selection of controller for ${notebook.uri.toString()} ${this.id}`);
-            await this.commandManager.executeCommand('notebook.selectKernel', {
-                id: this.id,
-                extension: JVSC_EXTENSION_ID
-            });
-            traceInfo(
-                `VSCodeNotebookController.kernelAssociatedWithDocument set for ${notebook.uri.toString()} ${this.id}`
-            );
-            VSCodeNotebookController.kernelAssociatedWithDocument = true;
+            await this.setAsActiveControllerForTests(this, notebook);
         }
     }
 
@@ -172,13 +163,6 @@ export class VSCodeNotebookController implements Disposable {
         if (event.selected) {
             await this.updateCellLanguages(event.notebook);
             this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
-        } else {
-            // If this controller was what was previously selected, then wipe that information out.
-            // This happens when user selects our controller & then selects another controller e.g. (.NET Extension).
-            // If the user selects one of our controllers (kernels), then this gets initialized elsewhere.
-            if (isSameAsTrackedKernelInNotebookMetadata(event.notebook, this.connection)) {
-                trackKernelInNotebookMetadata(event.notebook, undefined);
-            }
         }
     }
     /**
@@ -218,15 +202,9 @@ export class VSCodeNotebookController implements Disposable {
         );
     }
     private getRendererScripts(): NotebookRendererScript[] {
-        // Work around for known issue with CodeSpaces
-        const codeSpaceScripts =
-            env.uiKind === UIKind.Web
-                ? [join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js')]
-                : [];
         return [
-            ...codeSpaceScripts,
+            join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
             join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
-
             join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
             join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')
         ].map((uri) => new NotebookRendererScript(Uri.file(uri)));
@@ -282,7 +260,7 @@ export class VSCodeNotebookController implements Disposable {
             kernelSocket = item;
             saveKernelInfo();
         });
-        const statusChangeDisposable = kernel.onStatusChanged(() => {
+        const statusChangeDisposable = kernel.onStatusChanged(async () => {
             if (kernel.disposed || !kernel.info) {
                 return;
             }
@@ -292,7 +270,7 @@ export class VSCodeNotebookController implements Disposable {
                 // Disregard if we've changed kernels
                 return;
             }
-            trackKernelInfoInNotebookMetadata(doc, kernel.info);
+            await updateNotebookDocumentMetadata(doc, kernel.kernelConnectionMetadata, kernel.info);
             if (this.kernelConnection.kind === 'startUsingKernelSpec') {
                 if (kernel.info.status === 'ok') {
                     saveKernelInfo();
