@@ -159,8 +159,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                             this.kernel = undefined;
                             this.notebookController = undefined;
                             controllerChangeListener.dispose();
-                        } else {
-                            this.registerKernel(e.notebook, e.controller);
                         }
                     },
                     this,
