@@ -172,6 +172,18 @@ function buildConfiguration(bundle) {
                         'client',
                         'datascience',
                         'notebook',
+                        'cssStyles',
+                        'tableStyles.js'
+                    ),
+                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                },
+                {
+                    from: path.join(
+                        constants.ExtensionRootDir,
+                        'src',
+                        'client',
+                        'datascience',
+                        'notebook',
                         'fontAwesomeLoader.js'
                     ),
                     to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
