@@ -5,7 +5,15 @@ import type { KernelMessage } from '@jupyterlab/services';
 import * as hashjs from 'hash.js';
 import { inject, injectable, multiInject, optional } from 'inversify';
 import stripAnsi from 'strip-ansi';
-import { Event, EventEmitter, NotebookCell, Position, Range, TextDocumentChangeEvent, TextDocumentContentChangeEvent } from 'vscode';
+import {
+    Event,
+    EventEmitter,
+    NotebookCell,
+    Position,
+    Range,
+    TextDocumentChangeEvent,
+    TextDocumentContentChangeEvent
+} from 'vscode';
 
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { IDebugService, IDocumentManager } from '../../common/application/types';

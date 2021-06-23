@@ -364,7 +364,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IDebuggingCellMap>(IDebuggingCellMap, DebuggingCellMap);
     serviceManager.addBinding(IDebuggingCellMap, INotebookExecutionLogger);
 
-
     registerNotebookTypes(serviceManager);
     registerContextTypes(serviceManager);
 }
