@@ -65,6 +65,7 @@ import {
 } from '../types';
 import { createInteractiveIdentity } from './identity';
 import { INativeInteractiveWindow } from './types';
+import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
 
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -507,31 +508,28 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const language =
             workspace.textDocuments.find((document) => document.uri.toString() === this.owner?.toString())
                 ?.languageId ?? PYTHON_LANGUAGE;
-        const notebookCell = new NotebookCellData(
+        const notebookCellData = new NotebookCellData(
             isMarkdown ? NotebookCellKind.Markup : NotebookCellKind.Code,
             strippedCode,
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
-        notebookCell.metadata = { interactiveWindowCellMarker };
+        notebookCellData.metadata = { interactiveWindowCellMarker };
 
         edit.replaceNotebookCells(
             notebookDocument.uri,
             new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
             [
-                notebookCell // TODO generalize to arbitrary languages and cell types
+                notebookCellData // TODO generalize to arbitrary languages and cell types
             ]
         );
         await workspace.applyEdit(edit);
+        const notebookCell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
 
         let result = true;
 
         // Request execution
         if (!debugInfo) {
-            await this.commandManager.executeCommand('notebook.cell.execute', {
-                ranges: [{ start: notebookDocument.cellCount - 1, end: notebookDocument.cellCount }],
-                document: notebookDocument.uri,
-                autoReveal: true
-            });
+            await this.kernel?.executeCell(notebookCell);
         } else {
             const notebook = this.kernel?.notebook;
             if (!notebook) {
@@ -564,15 +562,18 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 const owningResource = this.owningResource;
                 // await this.kernel?.executeHidden(code, file, notebookDocument);
                 const observable = this.kernel!.notebook!.executeObservable(code, file, line, id ?? uuid(), false);
+                const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(notebookCell);
+                temporaryExecution?.start();
 
                 // Sign up for cell changes
                 observable.subscribe(
-                    (cells: ICell[]) => {
+                    async (cells: ICell[]) => {
                         // Combine the cell data with the possible input data (so we don't lose anything that might have already been in the cells)
                         const combined = cells.map(this.combineData.bind(undefined, data));
-
+                        
                         // Then send the combined output to the UI
-                        this.updateNotebookCells(combined, notebookDocument);
+                        const converted = (combined[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
+                        await temporaryExecution.replaceOutput(converted);
 
                         // Any errors will move our result to false (if allowed)
                         if (this.configuration.getSettings(owningResource).stopOnError) {
@@ -584,6 +585,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                         if (!(error instanceof CancellationError)) {
                             this.applicationShell.showErrorMessage(error.toString()).then(noop, noop);
                         }
+                    },
+                    () => {
+                        temporaryExecution.end(result);
+                        finishedAddingCode.resolve();
                     }
                 );
 
@@ -639,10 +644,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             redoableContext.set(false).catch(noop);
             hasCellSelectedContext.set(false).catch(noop);
         }
-    }
-
-    private updateNotebookCells(_cells: ICell[], _notebookDocument: NotebookDocument) {
-        noop();
     }
 
     private combineData(
