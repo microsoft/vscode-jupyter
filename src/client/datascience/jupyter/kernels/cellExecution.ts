@@ -394,7 +394,7 @@ export class CellExecution {
         await this.executeCodeCell(code, session, loggers);
         loggers.forEach((l) => {
             if (l.nativePostExecute) {
-                l.nativePostExecute(this.cell);
+                void l.nativePostExecute(this.cell);
             }
         });
     }
