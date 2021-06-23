@@ -51,7 +51,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
 
-    private cancelToken: CancellationTokenSource | undefined;
     private readonly isLocalLaunch: boolean;
     private wasPythonInstalledWhenFetchingControllers?: boolean;
     constructor(
