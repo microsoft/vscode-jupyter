@@ -17,24 +17,37 @@ import {
     Uri
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { isCI, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
-import { traceInfo } from '../../common/logger';
-import { IDisposable, IDisposableRegistry, IExtensionContext, IPathUtils } from '../../common/types';
+import { traceInfo, traceInfoIf } from '../../common/logger';
+import {
+    IConfigurationService,
+    IDisposable,
+    IDisposableRegistry,
+    IExtensionContext,
+    IPathUtils
+} from '../../common/types';
+import { testOnlyMethod } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
 import { ConsoleForegroundColors } from '../../logging/_global';
-import { Commands } from '../constants';
+import { sendNotebookOrKernelLanguageTelemetry } from '../common';
+import { Commands, Telemetry } from '../constants';
+import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
+import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
 import {
+    areKernelConnectionsEqual,
     getDescriptionOfKernelConnection,
     getDetailOfKernelConnection,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
+import { InterpreterPackages } from '../telemetry/interpreterPackages';
+import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
-import { traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
-import { INotebookControllerManager } from './types';
+import { InteractiveWindowView } from './constants';
+import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{
@@ -67,6 +80,11 @@ export class VSCodeNotebookController implements Disposable {
     get onDidReceiveMessage() {
         return this.controller.onDidReceiveMessage;
     }
+    @testOnlyMethod()
+    public isAssociatedWithDocument(doc: NotebookDocument) {
+        return this.associatedDocuments.has(doc);
+    }
+    private readonly associatedDocuments = new WeakSet<NotebookDocument>();
     constructor(
         private readonly kernelConnection: KernelConnectionMetadata,
         id: string,
@@ -77,15 +95,14 @@ export class VSCodeNotebookController implements Disposable {
         private readonly kernelProvider: IKernelProvider,
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         private readonly context: IExtensionContext,
-        private readonly notebookControllerManager: INotebookControllerManager,
         private readonly pathUtils: IPathUtils,
         disposableRegistry: IDisposableRegistry,
         private readonly languageService: NotebookCellLanguageService,
         private readonly workspace: IWorkspaceService,
-        private readonly setAsActiveControllerForTests: (
-            controller: VSCodeNotebookController,
-            notebook: NotebookDocument
-        ) => Promise<void>
+        private readonly localOrRemoteKernel: 'local' | 'remote',
+        private readonly interpreterPackages: InterpreterPackages,
+        private readonly configuration: IConfigurationService,
+        private readonly widgetCoordinator: NotebookIPyWidgetCoordinator
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -136,7 +153,7 @@ export class VSCodeNotebookController implements Disposable {
         // Only when running tests should we force the selection of the kernel.
         // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
         if (this.context.extensionMode === ExtensionMode.Test) {
-            await this.setAsActiveControllerForTests(this, notebook);
+            await this.setAsActiveControllerForTests(notebook);
         }
     }
 
@@ -159,6 +176,19 @@ export class VSCodeNotebookController implements Disposable {
         await Promise.all(cells.map((cell) => this.executeCell(targetNotebook, cell)));
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
+        if (this.associatedDocuments.has(event.notebook) && event.selected) {
+            // Possible it gets called again in our tests (due to hacks for testing purposes).
+            return;
+        }
+        if (!event.selected) {
+            this.associatedDocuments.delete(event.notebook);
+        }
+        traceInfoIf(isCI, `Notebook Controller set ${event.notebook.uri.toString()}, ${this.id}`);
+        this.widgetCoordinator.setActiveController(event.notebook, this);
+
+        // Now actually handle the change
+        await this.notebookKernelChanged(event.notebook);
+
         // If this NotebookController was selected, fire off the event
         if (event.selected) {
             await this.updateCellLanguages(event.notebook);
@@ -265,9 +295,8 @@ export class VSCodeNotebookController implements Disposable {
                 return;
             }
 
-            const documentConnection = this.notebookControllerManager.getSelectedNotebookController(doc);
-            if (!documentConnection || documentConnection.id !== this.id) {
-                // Disregard if we've changed kernels
+            // Disregard if we've changed kernels (i.e. if this controller is no longer associated with the document)
+            if (!this.associatedDocuments.has(doc)) {
                 return;
             }
             await updateNotebookDocumentMetadata(doc, kernel.kernelConnectionMetadata, kernel.info);
@@ -285,5 +314,116 @@ export class VSCodeNotebookController implements Disposable {
         handlerDisposables.push({ dispose: () => subscriptionDisposables.unsubscribe() });
         handlerDisposables.push({ dispose: () => statusChangeDisposable.dispose() });
         handlerDisposables.push({ dispose: () => kernelDisposedDisposable?.dispose() });
+    }
+    private async notebookKernelChanged(document: NotebookDocument) {
+        // We're only interested in our Jupyter Notebooks.
+        if (!isJupyterNotebook(document) || document.notebookType !== InteractiveWindowView) {
+            return;
+        }
+        const selectedKernelConnectionMetadata = this.connection;
+
+        if (!this.workspace.isTrusted) {
+            return;
+        }
+
+        const existingKernel = this.kernelProvider.get(document.uri);
+        if (
+            existingKernel &&
+            areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
+        ) {
+            traceInfo('Switch kernel did not change kernel.');
+            return;
+        }
+        switch (this.connection.kind) {
+            case 'startUsingPythonInterpreter':
+                sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, PYTHON_LANGUAGE);
+                break;
+            case 'connectToLiveKernel':
+                sendNotebookOrKernelLanguageTelemetry(
+                    Telemetry.SwitchToExistingKernel,
+                    this.connection.kernelModel.language
+                );
+                break;
+            case 'startUsingKernelSpec':
+                sendNotebookOrKernelLanguageTelemetry(
+                    Telemetry.SwitchToExistingKernel,
+                    this.connection.kernelSpec.language
+                );
+                break;
+            default:
+            // We don't know as its the default kernel on Jupyter server.
+        }
+        trackKernelResourceInformation(document.uri, { kernelConnection: this.connection });
+        sendKernelTelemetryEvent(document.uri, Telemetry.SwitchKernel);
+        // If we have an existing kernel, then we know for a fact the user is changing the kernel.
+        // Else VSC is just setting a kernel for a notebook after it has opened.
+        if (existingKernel) {
+            const telemetryEvent =
+                this.localOrRemoteKernel === 'local'
+                    ? Telemetry.SelectLocalJupyterKernel
+                    : Telemetry.SelectRemoteJupyterKernel;
+            sendKernelTelemetryEvent(document.uri, telemetryEvent);
+            this.notebookApi.notebookEditors
+                .filter((editor) => editor.document === document)
+                .forEach((editor) =>
+                    this.postMessage(
+                        { message: IPyWidgetMessages.IPyWidgets_onKernelChanged, payload: undefined },
+                        editor
+                    )
+                );
+        }
+        if (selectedKernelConnectionMetadata.interpreter) {
+            this.interpreterPackages.trackPackages(selectedKernelConnectionMetadata.interpreter);
+        }
+
+        // Before we start the notebook, make sure the metadata is set to this new kernel.
+        await updateNotebookDocumentMetadata(document, selectedKernelConnectionMetadata);
+
+        // Make this the new kernel (calling this method will associate the new kernel with this Uri).
+        // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
+        // This will dispose any existing (older kernels) associated with this notebook.
+        // This way other parts of extension have access to this kernel immediately after event is handled.
+        // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
+        const newKernel = this.kernelProvider.getOrCreate(document.uri, {
+            metadata: selectedKernelConnectionMetadata,
+            controller: this.controller
+        });
+        traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}`);
+
+        // Auto start the local kernels.
+        if (
+            newKernel &&
+            !this.configuration.getSettings(undefined).disableJupyterAutoStart &&
+            this.localOrRemoteKernel === 'local'
+        ) {
+            await newKernel.start({ disableUI: true, document }).catch(noop);
+        }
+    }
+    /**
+     * In our tests, preferred controllers are setup as the active controller.
+     *
+     * This method is called on when running tests, else in the real world,
+     * users need to select a kernel (preferred is on top of the list).
+     */
+    private async setAsActiveControllerForTests(notebook: NotebookDocument) {
+        // Only when running tests should we force the selection of the kernel.
+        // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
+        if (this.context.extensionMode !== ExtensionMode.Test) {
+            return;
+        }
+        traceInfoIf(isCI, `Command notebook.selectKernel executing for ${notebook.uri.toString()} ${this.id}`);
+        await this.commandManager.executeCommand('notebook.selectKernel', {
+            id: this.id,
+            extension: JVSC_EXTENSION_ID
+        });
+        traceInfoIf(isCI, `Command notebook.selectKernel exected for ${notebook.uri.toString()} ${this.id}`);
+        // Used in tests to determine when the controller has been associated with a document.
+        VSCodeNotebookController.kernelAssociatedWithDocument = true;
+
+        // Sometimes the selection doesn't work (after all this is a hack).
+        if (!this.associatedDocuments.has(notebook)) {
+            this.associatedDocuments.add(notebook);
+            this._onNotebookControllerSelected.fire({ notebook, controller: this });
+        }
     }
 }
