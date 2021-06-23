@@ -139,6 +139,7 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
+    IDebuggingCellMap,
     IDebugLocationTracker,
     IHoverProvider,
     IInteractiveWindow,
@@ -193,6 +194,7 @@ import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoor
 import { ExtensionRecommendationService } from './extensionRecommendation';
 import { PythonVariablesRequester } from './jupyter/pythonVariableRequester';
 import { DebuggingManager } from '../debugger/jupyter/debuggingManager';
+import { DebuggingCellMap } from '../debugger/jupyter/debuggingCellMap';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -350,6 +352,9 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ExtensionRecommendationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebuggingManager);
+    serviceManager.addSingleton<IDebuggingCellMap>(IDebuggingCellMap, DebuggingCellMap);
+    serviceManager.addBinding(IDebuggingCellMap, INotebookExecutionLogger);
+
 
     registerNotebookTypes(serviceManager);
     registerContextTypes(serviceManager);

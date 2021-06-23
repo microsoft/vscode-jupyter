@@ -4,8 +4,10 @@
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
+import { NotebookCell } from 'vscode';
 import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry } from '../constants';
@@ -40,6 +42,10 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         if (!silent && cell.data.cell_type === 'code') {
             this.scheduleCheck(this.createCellKey(cell), this.checkCell.bind(this, cell));
         }
+    }
+
+    public async nativePostExecute(_cell: NotebookCell): Promise<void> {
+        noop();
     }
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.

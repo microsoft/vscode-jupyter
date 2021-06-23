@@ -5,7 +5,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import * as hashjs from 'hash.js';
 import { inject, injectable, multiInject, optional } from 'inversify';
 import stripAnsi from 'strip-ansi';
-import { Event, EventEmitter, Position, Range, TextDocumentChangeEvent, TextDocumentContentChangeEvent } from 'vscode';
+import { Event, EventEmitter, NotebookCell, Position, Range, TextDocumentChangeEvent, TextDocumentContentChangeEvent } from 'vscode';
 
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { IDebugService, IDocumentManager } from '../../common/application/types';
@@ -128,6 +128,10 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
     }
 
     public async postExecute(_cell: ICell, _silent: boolean): Promise<void> {
+        noop();
+    }
+
+    public async nativePostExecute(_cell: NotebookCell): Promise<void> {
         noop();
     }
 

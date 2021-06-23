@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { randomBytes } from 'crypto';
 import * as path from 'path';
-import { IJupyterSession } from '../../datascience/types';
+import { IDebuggingCellMap, IJupyterSession } from '../../datascience/types';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 
 const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugRequestMsg => {
@@ -71,18 +71,23 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
     constructor(
         private session: vscode.DebugSession,
         private notebookDocument: vscode.NotebookDocument,
-        private readonly jupyterSession: IJupyterSession
+        private readonly jupyterSession: IJupyterSession,
+        private cellMap: IDebuggingCellMap
     ) {
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((msg.content as any).event === 'stopped') {
+                console.error(msg);
                 this.sendMessage.fire(msg.content);
             }
         };
         this.jupyterSession.onIOPubMessageSignal(iopubHandler);
+
+        this.dumpCellsThatRanBeforeDebuggingBegan();
     }
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
+        // console.error(message);
         // intercept 'setBreakpoints' request
         // TODO: have a static list of ran cells, and dump them all when debugging starts
         if (message.type === 'request' && (message as DebugProtocol.Request).command === 'setBreakpoints') {
@@ -91,6 +96,7 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
                 await this.dumpCell(args.source.path);
             }
         }
+        // this.dumpAllCells();
 
         // after attaching, send a 'debugInfo' request
         // reset breakpoints and continue stopped threads if there are any
@@ -192,6 +198,12 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
     dispose() {
         this.messageListener.forEach((ml) => ml.dispose());
         this.messageListener.clear();
+    }
+
+    private async dumpCellsThatRanBeforeDebuggingBegan() {
+        this.cellMap.getCellsAnClearQueue(this.notebookDocument).forEach(async (cell) => {
+            await this.dumpCell(cell.document.uri.toString());
+        });
     }
 
     /**

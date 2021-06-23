@@ -9,7 +9,7 @@ import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
-import { INotebookProvider } from '../../datascience/types';
+import { IDebuggingCellMap, INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 
@@ -63,7 +63,8 @@ export class DebuggingManager implements IExtensionSingleActivationService {
 
     public constructor(
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(IDebuggingCellMap) private debuggingCellMap: IDebuggingCellMap
     ) {}
 
     public async activate() {
@@ -74,6 +75,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             vscode.debug.onDidTerminateDebugSession(async (session) => {
                 for (const [doc, dbg] of this.notebookToDebugger.entries()) {
                     if (dbg && session === (await dbg.session)) {
+                        this.debuggingCellMap.getCellsAnClearQueue(doc);
                         this.notebookToDebugger.delete(doc);
                         break;
                     }
@@ -82,6 +84,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
 
             // track closing of notebooks documents
             vscode.workspace.onDidCloseNotebookDocument(async (document) => {
+                this.debuggingCellMap.getCellsAnClearQueue(document);
                 const dbg = this.notebookToDebugger.get(document);
                 if (dbg) {
                     await dbg.stop();
@@ -110,7 +113,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                         if (notebook && notebook.session) {
                             debug.resolve(session);
                             return new vscode.DebugAdapterInlineImplementation(
-                                new KernelDebugAdapter(session, debug.document, notebook.session)
+                                new KernelDebugAdapter(session, debug.document, notebook.session, this.debuggingCellMap)
                             );
                         } else {
                             void vscode.window.showInformationMessage('run the kernel');
@@ -121,7 +124,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                 }
             }),
 
-            vscode.commands.registerCommand('jupyter.debugCell', () => {
+            vscode.commands.registerCommand('jupyter.debugNotebook', () => {
                 const editor = vscode.window.activeNotebookEditor;
                 if (editor) {
                     void this.startDebugging(editor.document);

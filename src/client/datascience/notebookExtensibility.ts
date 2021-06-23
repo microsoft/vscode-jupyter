@@ -41,6 +41,9 @@ export class NotebookExtensibility implements INotebookExecutionLogger, INoteboo
             }
         }
     }
+    public async nativePostExecute(_cell: NotebookCell): Promise<void> {
+        noop();
+    }
     public onKernelStarted(resource: Uri): void {
         this.kernelStateChange.fire({
             resource,

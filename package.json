@@ -271,10 +271,11 @@
         ],
         "commands": [
             {
-                "command": "jupyter.debugCell",
-                "title": "Debug Cell",
+                "command": "jupyter.debugNotebook",
+                "title": "Debug",
                 "icon": "$(bug)",
-                "category": "Jupyter"
+                "category": "Jupyter",
+                "enablement": "notebookKernelCount > 0"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -864,7 +865,7 @@
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.debugCell",
+                    "command": "jupyter.debugNotebook",
                     "group": "navigation@3",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
                 }

@@ -71,6 +71,10 @@ export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
         noop();
     }
 
+    public async nativePostExecute(_cell: vscode.NotebookCell): Promise<void> {
+        noop();
+    }
+
     public provideHover(
         document: vscode.TextDocument,
         position: vscode.Position,

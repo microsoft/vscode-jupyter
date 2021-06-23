@@ -18,6 +18,7 @@ import {
     HoverProvider,
     LanguageConfiguration,
     NotebookCell,
+    NotebookDocument,
     QuickPickItem,
     Range,
     TextDocument,
@@ -272,6 +273,7 @@ export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean, language: string, resource: Uri): Promise<void>;
+    nativePostExecute(cell: NotebookCell): Promise<void>;
     onKernelStarted(resource: Uri): void;
     onKernelRestarted(resource: Uri): void;
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
@@ -1482,4 +1484,9 @@ export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchroni
  */
 export interface INotebookModelSynchronization {
     syncAllCells(model: INotebookModel): Promise<void>;
+}
+
+export const IDebuggingCellMap = Symbol('IDebuggingCellMap');
+export interface IDebuggingCellMap {
+    getCellsAnClearQueue(doc: NotebookDocument): NotebookCell[];
 }

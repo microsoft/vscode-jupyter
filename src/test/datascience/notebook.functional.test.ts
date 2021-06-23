@@ -12,7 +12,7 @@ import { SemVer } from 'semver';
 import { Readable, Writable } from 'stream';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as uuid from 'uuid/v4';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, NotebookCell, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
@@ -1187,6 +1187,10 @@ plt.show()`,
                                 outputs.push(data);
                             }
                         }
+                    }
+
+                    public async nativePostExecute(_cell: NotebookCell): Promise<void> {
+                        noop();
                     }
                 }
                 ioc.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, Logger);

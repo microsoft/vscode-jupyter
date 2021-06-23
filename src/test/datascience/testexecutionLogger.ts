@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { injectable } from 'inversify';
+import { NotebookCell } from 'vscode';
 import { traceInfo } from '../../client/common/logger';
 import { noop } from '../../client/common/utils/misc';
 import { traceCellResults } from '../../client/datascience/common';
@@ -19,6 +20,10 @@ export class TestExecutionLogger implements INotebookExecutionLogger {
     public postExecute(cell: ICell, _silent: boolean): Promise<void> {
         traceCellResults(`Cell Execution complete for ${cell.id}\n`, [cell]);
         return Promise.resolve();
+    }
+
+    public async nativePostExecute(_cell: NotebookCell): Promise<void> {
+        noop();
     }
     public onKernelStarted() {
         // Do nothing on started
