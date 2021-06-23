@@ -55,7 +55,6 @@ export class CellOutputMimeTypeTracker
             this.scheduleCheck(this.createCellKey(cell), this.checkCell.bind(this, cell));
         }
     }
-
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
         this.notebookEditorProvider.editors.forEach((e) => this.onOpenedOrClosedNotebook(e));
