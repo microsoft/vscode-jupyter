@@ -37,11 +37,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(LocalKnownPathKernelSpecFinder)
         private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder
     ) {
-        super(fs, workspaceService);
+        super(fs, workspaceService, extensionChecker);
     }
     public async listKernelSpecs(resource: Resource, cancelToken?: CancellationToken) {
         // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
@@ -50,7 +50,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 resource,
                 resource?.fsPath || this.workspaceService.rootPath
             ) || 'root';
-        return this.listKernelsWithCache(workspaceFolderId, () =>
+        return this.listKernelsWithCache(workspaceFolderId, true, () =>
             this.listKernelsImplementation(resource, cancelToken)
         );
     }
@@ -73,7 +73,14 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         cancelToken?: CancellationToken
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         const kernelSpecs = await this.kernelSpecsFromKnownLocations.listKernelSpecs(true, cancelToken);
-        return kernelSpecs.filter((item) => item.kernelSpec.language === PYTHON_LANGUAGE);
+        return (
+            kernelSpecs
+                .filter((item) => item.kernelSpec.language === PYTHON_LANGUAGE)
+                // If there are any kernels that we regsitered (then don't return them).
+                // Those were registered by us to start kernels from Jupyter extension (not stuff that user created).
+                // We should only return global kernels the user created themselves, others will appear when searching for interprters.
+                .filter((item) => !isKernelRegisteredByUs(item.kernelSpec))
+        );
     }
     /**
      * If user has python extension installed, then we'll not list any of the globally registered Python kernels.

@@ -256,7 +256,8 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/
             const nonPythonKernelSpecFinder = new LocalKnownPathKernelSpecFinder(
                 instance(fs),
                 instance(workspaceService),
-                jupyterPaths
+                jupyterPaths,
+                instance(extensionChecker)
             );
             kernelFinder = new LocalKernelFinder(
                 instance(interpreterService),
