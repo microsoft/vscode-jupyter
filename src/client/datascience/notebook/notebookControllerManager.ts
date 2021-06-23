@@ -12,8 +12,7 @@ import {
     IDisposableRegistry,
     IExtensionContext,
     IExtensions,
-    IPathUtils,
-    Resource
+    IPathUtils
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Telemetry } from '../constants';
