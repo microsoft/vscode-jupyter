@@ -15,7 +15,6 @@ import {
     NotebookDocument,
     NotebookRange,
     Uri,
-    ViewColumn,
     workspace,
     WorkspaceEdit
 } from 'vscode';
@@ -66,7 +65,6 @@ import {
     WebViewViewChangeEventArgs
 } from '../types';
 import { createInteractiveIdentity } from './identity';
-import { INativeInteractiveWindow } from './types';
 import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
 
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
@@ -92,8 +90,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get identity(): Uri {
         return this._identity;
     }
-    public get notebookUri(): Uri | undefined {
-        return this._notebookUri;
+    public get notebookUri(): Uri {
+        return this.notebookDocument.uri;
     }
     public isInteractive = true;
     public notebookController: VSCodeNotebookController | undefined;
@@ -110,7 +108,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private restartingKernel = false;
     private kernel: IKernel | undefined;
     private kernelLoadPromise: Promise<void> | undefined;
-    private interactiveOpenPromise: Thenable<void>;
     private initialControllerSelected: Deferred<void>;
 
     constructor(
@@ -126,7 +123,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         mode: InteractiveWindowMode,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly exportDialog: IExportDialog,
-        private _notebookUri: Uri | undefined, // This remains the same for the lifetime of the InteractiveWindow object
+        private notebookDocument: NotebookDocument, // This remains the same for the lifetime of the InteractiveWindow object
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly kernelProvider: IKernelProvider,
         private readonly disposables: IDisposableRegistry,
@@ -141,20 +138,29 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
         this.initialControllerSelected = createDeferred<void>();
 
+        // Immediately try to find a selected controller for our NotebookDocument,
+        // as it's possible that a selection event fired before our ctor was able to run
+        const controller = this.notebookControllerManager.getSelectedNotebookController(this.notebookDocument);
+        if (controller !== undefined) {
+            this.registerKernel(this.notebookDocument, controller);
+        }
+
+        // Ensure we hear about any controller changes so we can update our cache accordingly
         this.notebookControllerManager.onNotebookControllerSelected(
             (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
-                if (this._notebookUri !== undefined && e.notebook.uri.toString() !== this._notebookUri.toString()) {
+                if (e.notebook.uri.toString() !== this.notebookDocument.uri.toString()) {
                     return;
                 }
 
                 // Clear cached kernel when the selected controller for this document changes
-                const controllerChangeListener = e.controller.controller.onDidChangeSelectedNotebooks(
+                const controllerChangeListener = (
+                    this.notebookController || e.controller
+                ).controller.onDidChangeSelectedNotebooks(
                     (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
                         // Controller was deselected for this InteractiveWindow's NotebookDocument
                         if (
                             selectedEvent.selected === false &&
-                            this._notebookUri !== undefined &&
-                            selectedEvent.notebook.uri.toString() === this._notebookUri.toString()
+                            selectedEvent.notebook.uri.toString() === this.notebookDocument.uri.toString()
                         ) {
                             this.kernelLoadPromise = undefined;
                             this.kernel = undefined;
@@ -172,12 +178,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             this,
             this.disposables
         );
-
-        this.interactiveOpenPromise = this.commandManager
-            .executeCommand('interactive.open', ViewColumn.Beside)
-            .then((result) => {
-                this._notebookUri = (result as INativeInteractiveWindow).notebookUri;
-            });
     }
 
     private registerKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
@@ -195,10 +195,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     // point when we try to access it. Calling this method may cause this
     // InteractiveWindow object to dispose itself
     private async tryGetMatchingNotebookDocument(): Promise<NotebookDocument | undefined> {
-        await this.interactiveOpenPromise;
-
         const notebookDocument = workspace.notebookDocuments.find(
-            (document) => this._notebookUri?.toString() === document.uri.toString()
+            (document) => this.notebookDocument.uri.toString() === document.uri.toString()
         );
 
         return notebookDocument;
