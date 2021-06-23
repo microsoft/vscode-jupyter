@@ -3,6 +3,8 @@ import { NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { noop } from '../../common/utils/misc';
 import { ICell, IDebuggingCellMap, INotebookExecutionLogger } from '../../datascience/types';
 
+// Keep a log of cells that were ran per notebook, so that the kernelDebugAdapter.ts
+// can pass them to the kernel when debugging starts and keep track of breakpoints and 'stopped' events
 @injectable()
 export class DebuggingCellMap implements IDebuggingCellMap, INotebookExecutionLogger {
     private static cellsToDump = new Map<NotebookDocument, NotebookCell[]>();
