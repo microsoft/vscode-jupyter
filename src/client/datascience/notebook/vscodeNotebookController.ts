@@ -182,7 +182,7 @@ export class VSCodeNotebookController implements Disposable {
             return;
         }
         // We're only interested in our Notebooks.
-        if (!isJupyterNotebook(event.notebook) || event.notebook.notebookType !== InteractiveWindowView) {
+        if (!isJupyterNotebook(event.notebook) && event.notebook.notebookType !== InteractiveWindowView) {
             return;
         }
         if (!this.workspace.isTrusted) {
