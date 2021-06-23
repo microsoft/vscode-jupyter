@@ -899,7 +899,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 LocalKnownPathKernelSpecFinder,
                 LocalKnownPathKernelSpecFinder
             );
-            this.serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinder>(LocalPythonAndRelatedNonPythonKernelSpecFinder, LocalPythonAndRelatedNonPythonKernelSpecFinder);
+            this.serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinder>(
+                LocalPythonAndRelatedNonPythonKernelSpecFinder,
+                LocalPythonAndRelatedNonPythonKernelSpecFinder
+            );
             this.serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
