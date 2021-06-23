@@ -16,7 +16,8 @@ import {
     Uri,
     ViewColumn,
     workspace,
-    WorkspaceEdit} from 'vscode';
+    WorkspaceEdit
+} from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
@@ -140,7 +141,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         this.initialControllerSelected = createDeferred<void>();
 
         this.notebookControllerManager.onNotebookControllerSelected(
-            (e: { notebook: NotebookDocument, controller: VSCodeNotebookController }) => {
+            (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
                 if (this._notebookUri !== undefined && e.notebook.uri.toString() !== this._notebookUri.toString()) {
                     return;
                 }
@@ -541,7 +542,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
             try {
                 const finishedAddingCode = createDeferred<void>();
-        
+
                 // Before we try to execute code make sure that we have an initial directory set
                 // Normally set via the workspace, but we might not have one here if loading a single loose file
                 if (file !== Identifiers.EmptyFileName) {
@@ -565,7 +566,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 const owningResource = this.owningResource;
                 // await this.kernel?.executeHidden(code, file, notebookDocument);
                 const observable = this.kernel!.notebook!.executeObservable(code, file, line, id ?? uuid(), false);
-                const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(notebookCell);
+                const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(
+                    notebookCell
+                );
                 temporaryExecution?.start();
 
                 // Sign up for cell changes
@@ -573,9 +576,11 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                     async (cells: ICell[]) => {
                         // Combine the cell data with the possible input data (so we don't lose anything that might have already been in the cells)
                         const combined = cells.map(this.combineData.bind(undefined, data));
-                        
+
                         // Then send the combined output to the UI
-                        const converted = (combined[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
+                        const converted = (combined[0].data as nbformat.ICodeCell).outputs.map(
+                            cellOutputToVSCCellOutput
+                        );
                         await temporaryExecution.replaceOutput(converted);
 
                         // Any errors will move our result to false (if allowed)

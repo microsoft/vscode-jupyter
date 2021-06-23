@@ -17,7 +17,13 @@ import type {
 import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
-import type { IJupyterKernel, IJupyterKernelSpec, INotebook, InterruptResult, KernelSocketInformation } from '../../types';
+import type {
+    IJupyterKernel,
+    IJupyterKernelSpec,
+    INotebook,
+    InterruptResult,
+    KernelSocketInformation
+} from '../../types';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 

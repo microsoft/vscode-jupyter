@@ -30,7 +30,13 @@ import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
-import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterDebugger, INotebookExporter, IStatusProvider } from '../types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    IJupyterDebugger,
+    INotebookExporter,
+    IStatusProvider
+} from '../types';
 import { NativeInteractiveWindow } from './nativeInteractiveWindow';
 
 // Export for testing
@@ -69,13 +75,17 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     ) {
         asyncRegistry.push(this);
 
-        this.disposables.push(workspace.onDidCloseNotebookDocument(_ => {
-            this.update();
-        }));
+        this.disposables.push(
+            workspace.onDidCloseNotebookDocument((_) => {
+                this.update();
+            })
+        );
 
-        this.disposables.push(window.onDidChangeActiveNotebookEditor(_ => {
-            this.update();
-        }));
+        this.disposables.push(
+            window.onDidChangeActiveNotebookEditor((_) => {
+                this.update();
+            })
+        );
 
         this.update();
     }
@@ -224,7 +234,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     private update() {
         const windows: NativeInteractiveWindow[] = [];
 
-        this._windows.forEach(win => {
+        this._windows.forEach((win) => {
             const notebookDocument = workspace.notebookDocuments.find(
                 (document) => win.notebookUri?.toString() === document.uri.toString()
             );
@@ -237,8 +247,9 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
 
         this._windows = windows;
         const activeNotebookEditor = window.activeNotebookEditor;
-        this._activeWindow = this._windows.find(win => win.notebookUri?.toString() === activeNotebookEditor?.document.uri.toString());
-
+        this._activeWindow = this._windows.find(
+            (win) => win.notebookUri?.toString() === activeNotebookEditor?.document.uri.toString()
+        );
     }
 
     // TODO: we don't currently have a way to know when the VS Code InteractiveEditor
