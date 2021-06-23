@@ -273,7 +273,7 @@ export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean, language: string, resource: Uri): Promise<void>;
-    nativePostExecute(cell: NotebookCell): Promise<void>;
+    nativePostExecute?(cell: NotebookCell): Promise<void>;
     onKernelStarted(resource: Uri): void;
     onKernelRestarted(resource: Uri): void;
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
@@ -318,7 +318,7 @@ export interface IJupyterPasswordConnect {
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
-    onIOPubMessageSignal: Event<KernelMessage.IIOPubMessage>;
+    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;

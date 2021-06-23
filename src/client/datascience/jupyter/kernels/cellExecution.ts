@@ -392,7 +392,11 @@ export class CellExecution {
         const code = this.cell.document.getText();
         traceCellMessage(this.cell, 'Send code for execution');
         await this.executeCodeCell(code, session, loggers);
-        loggers.forEach((l) => l.nativePostExecute(this.cell));
+        loggers.forEach((l) => {
+            if (l.nativePostExecute) {
+                l.nativePostExecute(this.cell);
+            }
+        });
     }
 
     private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {

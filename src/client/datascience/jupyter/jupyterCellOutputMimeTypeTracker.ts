@@ -4,8 +4,7 @@
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
-import { noop } from '../../common/utils/misc';
-import { NotebookCell, NotebookCellKind, NotebookDocument } from 'vscode';
+import { NotebookCellKind, NotebookDocument } from 'vscode';
 import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
@@ -57,9 +56,6 @@ export class CellOutputMimeTypeTracker
         }
     }
 
-    public async nativePostExecute(_cell: NotebookCell): Promise<void> {
-        noop();
-    }
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
         this.notebookEditorProvider.editors.forEach((e) => this.onOpenedOrClosedNotebook(e));

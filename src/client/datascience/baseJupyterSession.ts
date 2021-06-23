@@ -63,7 +63,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
         return this.onStatusChangedEvent.event;
     }
-    public get onIOPubMessageSignal(): Event<KernelMessage.IIOPubMessage> {
+    public get onIOPubMessage(): Event<KernelMessage.IIOPubMessage> {
         if (!this.ioPubEventEmitter) {
             this.ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
         }
