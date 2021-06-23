@@ -38,7 +38,7 @@ import {
     InteractiveWindowMode,
     Resource
 } from '../../common/types';
-import { createDeferred } from '../../common/utils/async';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCellsFromNotebookDocument } from '../cellFactory';
@@ -108,7 +108,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private restartingKernel = false;
     private kernel: IKernel | undefined;
     private kernelLoadPromise: Promise<void> | undefined;
-    private interactiveOpenPromise: Thenable<void> | undefined;
+    private interactiveOpenPromise: Thenable<void>;
+    private initialControllerSelected: Deferred<void>;
 
     constructor(
         private readonly applicationShell: IApplicationShell,
@@ -136,8 +137,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             this._submitters.push(owner);
         }
 
+        this.initialControllerSelected = createDeferred<void>();
+
         this.notebookControllerManager.onNotebookControllerSelected(
-            (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
+            (e: { notebook: NotebookDocument, controller: VSCodeNotebookController }) => {
                 if (this._notebookUri !== undefined && e.notebook.uri.toString() !== this._notebookUri.toString()) {
                     return;
                 }
@@ -164,6 +167,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 );
 
                 this.registerKernel(e.notebook, e.controller);
+                this.initialControllerSelected.resolve();
             },
             this,
             this.disposables
@@ -196,10 +200,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const notebookDocument = workspace.notebookDocuments.find(
             (document) => this._notebookUri?.toString() === document.uri.toString()
         );
-        if (notebookDocument === undefined) {
-            this.dispose();
-            return undefined;
-        }
+
         return notebookDocument;
     }
 
@@ -489,11 +490,13 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         debugInfo?: { runByLine: boolean; hashFileName?: string },
         _cancelToken?: CancellationToken
     ): Promise<boolean> {
+        // Ensure we have a controller to execute code against
+        // and a NotebookDocument to add the NotebookCell to
         const notebookDocument = await this.tryGetMatchingNotebookDocument();
+        await this.initialControllerSelected.promise;
         if (!notebookDocument || !this.notebookController) {
-            return true;
+            return false;
         }
-
         await this.kernelLoadPromise;
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
