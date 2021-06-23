@@ -5,6 +5,6 @@ tableStyleSheet.innerHTML = `#container > div > div:not(.preview) > div {overflo
 document.body.appendChild(tableStyleSheet);
 var dataframes = document.getElementsByClassName('dataframe');
 for(i=0;i<dataframes.length;i++) {
-    dataframes[0].parentElement.style.width = '100%';
-    dataframes[0].parentElement.style.overflowX = 'auto';
+    dataframes[i].parentElement.style.width = '100%';
+    dataframes[i].parentElement.style.overflowX = 'auto';
 }
