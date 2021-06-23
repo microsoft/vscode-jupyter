@@ -30,7 +30,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebookExporter, IStatusProvider } from '../types';
+import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterDebugger, INotebookExporter, IStatusProvider } from '../types';
 import { NativeInteractiveWindow } from './nativeInteractiveWindow';
 
 // Export for testing
@@ -45,7 +45,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         return this._onDidCreateInteractiveWindow.event;
     }
     public get activeWindow(): IInteractiveWindow | undefined {
-        return this._windows.find((w) => w.active && w.visible);
+        return this._activeWindow;
     }
     public get windows(): ReadonlyArray<IInteractiveWindow> {
         return this._windows;
@@ -134,7 +134,8 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             notebookUri,
             this.notebookControllerManager,
             this.kernelProvider,
-            this.disposables
+            this.disposables,
+            this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger)
         );
         this._windows.push(result);
 
@@ -227,7 +228,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             const notebookDocument = workspace.notebookDocuments.find(
                 (document) => win.notebookUri?.toString() === document.uri.toString()
             );
-            if (notebookDocument === undefined) {
+            if (win.notebookUri !== undefined && notebookDocument === undefined) {
                 win.dispose();
             } else {
                 windows.push(win);
