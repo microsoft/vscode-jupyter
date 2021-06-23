@@ -47,7 +47,7 @@ export abstract class LocalKernelSpecFinderBase {
                 resource?.fsPath || this.workspaceService.rootPath
             ) || 'root';
 
-        // If we have not already searched for this resource, then generate the search
+        // If we have already searched for this resource, then use that.
         const promise = this.workspaceToMetadata.get(workspaceFolderId);
         if (promise) {
             return promise;
