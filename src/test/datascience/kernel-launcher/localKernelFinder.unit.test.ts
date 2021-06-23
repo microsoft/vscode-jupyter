@@ -35,7 +35,7 @@ import { JupyterPaths } from '../../../client/datascience/kernel-launcher/jupyte
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 
 [false, true].forEach((isWindows) => {
-    suite.only(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
+    suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let kernelFinder: ILocalKernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;

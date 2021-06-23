@@ -8,7 +8,6 @@ export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 export const INotebookControllerManager = Symbol('INotebookControllerManager');
 export interface INotebookControllerManager {
     readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: VSCodeNotebookController }>;
-    getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
     loadNotebookControllers(): Promise<void>;
     // Marked test only, just for tests to access registered controllers
     registeredNotebookControllers(): VSCodeNotebookController[];
