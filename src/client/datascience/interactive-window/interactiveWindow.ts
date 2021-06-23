@@ -511,7 +511,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
     @captureTelemetry(Telemetry.ExportNotebookInteractive, undefined, false)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
-    private async export(cells: ICell[]) {
+    public async export(cells: ICell[]) {
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
@@ -533,7 +533,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    private async exportAs(cells: ICell[]) {
+    public async exportAs(cells: ICell[]) {
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();

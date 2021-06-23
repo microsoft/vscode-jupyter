@@ -23,6 +23,8 @@ export class NotebookModelSynchronization implements INotebookModelSynchronizati
     }
 
     private getOwner(model: INotebookModel): INotebookEditor | undefined {
-        return this.notebookEditorProvider.editors.find((e) => this.fs.arePathsSame(e.model.file, model.file));
+        return this.notebookEditorProvider.editors.find(
+            (e) => e.model && this.fs.arePathsSame(e.model.file, model.file)
+        );
     }
 }

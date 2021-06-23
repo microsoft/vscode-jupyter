@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, Uri } from 'vscode';
+import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, Uri, workspace } from 'vscode';
 
 import { IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { traceWarning } from '../../common/logger';
@@ -353,6 +353,18 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         commandName: string,
         isFirst: boolean
     ): CodeLens | undefined {
+        // Do not generate interactive window codelenses for TextDocuments which are part of NotebookDocuments
+        // and do not generate debug codelenses for new interactive window (not properly supported yet)
+        if (
+            (commandName.includes('debug') &&
+                workspace.getConfiguration('interactive.experiments')?.get('enable') === true) ||
+            workspace.notebookDocuments.find(
+                (notebook) => notebook.uri.toString() === document.notebook?.uri.toString()
+            )
+        ) {
+            return;
+        }
+
         // We only support specific commands
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.
