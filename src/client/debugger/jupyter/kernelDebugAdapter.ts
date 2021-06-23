@@ -83,7 +83,7 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
         };
         this.jupyterSession.onIOPubMessageSignal(iopubHandler);
 
-        this.dumpCellsThatRanBeforeDebuggingBegan();
+        void this.dumpCellsThatRanBeforeDebuggingBegan();
     }
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
