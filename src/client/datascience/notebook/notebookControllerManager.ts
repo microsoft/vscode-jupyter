@@ -51,10 +51,6 @@ import { IS_CI_SERVER } from '../../../test/ciConstants';
 export class NotebookControllerManager implements INotebookControllerManager, IExtensionSyncActivationService {
     // Keep tabs on which controller is selected relative to each notebook document
     private controllerMapping = new WeakMap<NotebookDocument, VSCodeNotebookController | undefined>();
-
-    // When opening a document, track our find preferred search so that we can cancel if needed
-    private findPreferredInProgress = new WeakMap<NotebookDocument, CancellationTokenSource>();
-
     private readonly _onNotebookControllerSelected: EventEmitter<{
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
@@ -189,19 +185,41 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Keep track of a token per document so that we can cancel the search if the doc is closed
         const preferredSearchToken = new CancellationTokenSource();
-        this.findPreferredInProgress.set(document, preferredSearchToken);
+        const disposable = this.notebook.onDidCloseNotebookDocument(
+            (e) => (e === document ? preferredSearchToken.cancel() : undefined),
+            this,
+            this.disposables
+        );
 
         // Prep so that we can track the selected controller for this document
         traceInfoIf(IS_CI_SERVER, `Clear controller mapping for ${document.uri.toString()}`);
         this.controllerMapping.delete(document);
+        const loadControllersPromise = this.loadNotebookControllers();
 
         try {
-            if (!this.isLocalLaunch) {
+            let preferredConnection: KernelConnectionMetadata | undefined;
+            if (this.isLocalLaunch) {
+                preferredConnection = await this.localKernelFinder.findKernel(
+                    document.uri,
+                    getNotebookMetadata(document),
+                    preferredSearchToken.token
+                );
+            } else {
                 // For a remote connection check for new live kernel models before we find preferred
                 await this.updateRemoteConnections(preferredSearchToken.token);
+                const connection = await this.notebookProvider.connect({
+                    getOnly: false,
+                    resource: document.uri,
+                    disableUI: false,
+                    localOnly: false
+                });
+                preferredConnection = await this.remoteKernelFinder.findKernel(
+                    document.uri,
+                    connection,
+                    getNotebookMetadata(document),
+                    preferredSearchToken.token
+                );
             }
-
-            const preferredConnection = await this.findPreferredKernel(document, preferredSearchToken.token);
 
             // If we found a preferred kernel, set the association on the NotebookController
             if (preferredSearchToken.token.isCancellationRequested) {
@@ -219,78 +237,30 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceInfo(
                 `PreferredConnection: ${preferredConnection.id} found for NotebookDocument: ${document.uri.toString()}`
             );
-            // No need to await on this, we're done with the search, this can happen in the background.
-            this.setPreferredController(document, preferredConnection).catch(traceError);
+            // Wait for our controllers to be loaded before we try to set a preferred on
+            // can happen if a document is opened quick and we have not yet loaded our controllers
+            await loadControllersPromise;
+            const targetController = this.registeredControllers.find((value) =>
+                areKernelConnectionsEqual(preferredConnection, value.connection)
+            );
+
+            if (targetController) {
+                traceInfo(`TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`);
+                await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+            } else {
+                traceInfoIf(
+                    IS_CI_SERVER,
+                    `TargetController nof found ID: ${preferredConnection.id} for document ${document.uri.toString()}`
+                );
+            }
         } catch (ex) {
             traceError('Failed to find & set preferred controllers', ex);
         } finally {
-            // Make sure that we clear our finding in progress when done
-            this.findPreferredInProgress.delete(document);
+            disposable.dispose();
         }
-    }
-
-    // For the given document, find the notebook controller that matches this kernel connection and associate the two
-    private async setPreferredController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata) {
-        // Wait for our controllers to be loaded before we try to set a preferred on
-        // can happen if a document is opened quick and we have not yet loaded our controllers
-        await this.loadNotebookControllers();
-
-        const targetController = this.registeredControllers.find((value) => {
-            // Check for a connection match
-            return areKernelConnectionsEqual(kernelConnection, value.connection);
-        });
-
-        if (targetController) {
-            traceInfo(`TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`);
-            await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
-        } else {
-            traceInfoIf(
-                IS_CI_SERVER,
-                `TargetController nof found ID: ${kernelConnection.id} for document ${document.uri.toString()}`
-            );
-        }
-    }
-
-    private async findPreferredKernel(
-        document: NotebookDocument,
-        token: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined> {
-        let preferred: KernelConnectionMetadata | undefined;
-
-        if (this.isLocalLaunch) {
-            const preferredConnectionPromise = this.localKernelFinder.findKernel(
-                document.uri,
-                getNotebookMetadata(document),
-                token
-            );
-            preferred = await preferredConnectionPromise;
-        } else {
-            const connection = await this.notebookProvider.connect({
-                getOnly: false,
-                resource: document.uri,
-                disableUI: false,
-                localOnly: false
-            });
-
-            const preferredConnectionPromise = this.remoteKernelFinder.findKernel(
-                document.uri,
-                connection,
-                getNotebookMetadata(document),
-                token
-            );
-            preferred = await preferredConnectionPromise;
-        }
-
-        return preferred;
     }
 
     private onDidCloseNotebookDocument(document: NotebookDocument) {
-        // When we close a document, cancel any preferred searches in progress
-        if (this.findPreferredInProgress.has(document)) {
-            traceInfoIf(IS_CI_SERVER, `Notebook closed event handled widget coordinator ${document.uri.toString()}`);
-            this.findPreferredInProgress.get(document)?.cancel();
-        }
-
         // Remove from our current selection tracking list
         this.controllerMapping.delete(document);
     }
