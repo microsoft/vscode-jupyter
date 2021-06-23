@@ -64,12 +64,13 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // If we don't have Python extension installed or don't discover any Python interpreters
         // then list all of the global python kernel specs.
         if (interpreters.length === 0 || !this.extensionChecker.isPythonExtensionInstalled) {
-            return this.listGlobalPythonKernelSpecs(cancelToken);
+            return this.listGlobalPythonKernelSpecs(false, cancelToken);
         } else {
             return this.listPythonAndRelatedNonPythonKernelSpecs(resource, interpreters, cancelToken);
         }
     }
     private async listGlobalPythonKernelSpecs(
+        includeKernelsRegisteredByUs: boolean,
         cancelToken?: CancellationToken
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         const kernelSpecs = await this.kernelSpecsFromKnownLocations.listKernelSpecs(true, cancelToken);
@@ -79,7 +80,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 // If there are any kernels that we regsitered (then don't return them).
                 // Those were registered by us to start kernels from Jupyter extension (not stuff that user created).
                 // We should only return global kernels the user created themselves, others will appear when searching for interprters.
-                .filter((item) => !isKernelRegisteredByUs(item.kernelSpec))
+                .filter((item) => (includeKernelsRegisteredByUs ? true : !isKernelRegisteredByUs(item.kernelSpec)))
         );
     }
     /**
@@ -103,7 +104,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             this.findKernelSpecsInInterpreters(interpreters, cancelToken),
             rootSpecPathPromise,
             activeInterpreterPromise,
-            this.listGlobalPythonKernelSpecs(cancelToken)
+            this.listGlobalPythonKernelSpecs(true, cancelToken)
         ]);
 
         const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
