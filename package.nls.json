@@ -515,9 +515,7 @@
     "DataScience.dataWranglerImportCode": "import pandas as pd\r\ndf = pd.read_csv(r'{0}')\n",
     "DataScience.DataWranglerImportTransformation": "Imported data",
     "DataScience.dataWranglerStandalone": "Open just the Data Wrangler",
-    "DataScience.dataWranglerWithJupyterNotebook": "Open Data Wrangler with Jupyter Notebook",
     "DataScience.dataWranglerStandaloneLoading": "Importing Data and Launching Data Wrangler...",
-    "DataScience.dataWranglerWithJupyterNotebookLoading": "Importing Data and Launching Data Wrangler with a Jupyter Notebook...",
     "DataScience.dataWranglerTitle": "Data Wrangler",
     "DataScience.dataWranglerFailedToShowMessage": "Failed to create the Data Wrangler. Check the Jupyter tab of the Output window for more info."
 }

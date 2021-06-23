@@ -13,6 +13,14 @@ export enum OpenDataWranglerSetting {
     // WITH_INTERACTIVE_WINDOW
 }
 
+export enum SidePanelSections {
+    Summary = 'summary',
+    Columns = 'columns',
+    Rows = 'rows',
+    History = 'history',
+    Code = 'code'
+}
+
 export enum DataWranglerCommands {
     ExportToCsv = 'export_to_csv',
     ExportToPythonScript = 'export_to_python_script',
@@ -31,9 +39,10 @@ export enum DataWranglerCommands {
 
 export namespace DataWranglerMessages {
     export const SubmitCommand = 'submit_command';
-    export const RefreshDataWrangler = 'refresh_data_viewer'; // TODOV
+    export const RefreshDataWrangler = 'refresh_data_wrangler'; // TODOV
     export const UpdateHistoryList = 'update_history_list';
     export const GetHistogramResponse = 'get_histogram_response';
+    export const SetSidePanels = 'set_side_panels';
 }
 
 export const IDataWranglerFactory = Symbol('IDataWranglerFactory');
@@ -63,6 +72,10 @@ export interface IRenameColumnsRequest {
 
 export interface IPlotHistogramReq {
     target: string;
+}
+
+export interface IGetColumnStatsReq {
+    columnName: string;
 }
 
 export interface IDropRequest {
