@@ -1349,6 +1349,7 @@ export interface IKernelDependencyService {
         disableUI?: boolean
     ): Promise<void>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+    areDebuggingDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }
 
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');

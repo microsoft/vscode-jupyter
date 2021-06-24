@@ -920,7 +920,7 @@
                 {
                     "command": "jupyter.debugNotebook",
                     "group": "navigation@3",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canDebug"
                 }
             ],
             "interactive/toolbar": [

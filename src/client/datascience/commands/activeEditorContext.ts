@@ -18,6 +18,7 @@ import { isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
+    IKernelDependencyService,
     INotebook,
     INotebookEditor,
     INotebookEditorProvider,
@@ -35,6 +36,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private pythonOrInteractiveOrNativeContext: ContextKey;
     private canRestartNotebookKernelContext: ContextKey;
     private canInterruptNotebookKernelContext: ContextKey;
+    private canDebug: ContextKey;
     private hasNativeNotebookCells: ContextKey;
     private isPythonFileActive: boolean = false;
     private isPythonNotebook: ContextKey;
@@ -49,7 +51,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(UseVSCodeNotebookEditorApi) private readonly inNativeNotebookExperiment: boolean,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(IKernelDependencyService) private dependencyService: IKernelDependencyService
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -61,6 +64,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             EditorContexts.CanInterruptNotebookKernel,
             this.commandManager
         );
+        this.canDebug = new ContextKey(EditorContexts.CanDebug, this.commandManager);
         this.interactiveContext = new ContextKey(EditorContexts.IsInteractiveActive, this.commandManager);
         this.interactiveOrNativeContext = new ContextKey(
             EditorContexts.IsInteractiveOrNativeActive,
@@ -144,12 +148,20 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         if (activeEditor) {
             this.notebookProvider
                 .getOrCreateNotebook({ identity: activeEditor.file, resource: activeEditor.file, getOnly: true })
-                .then((nb) => {
+                .then(async (nb) => {
                     if (activeEditor === this.notebookEditorProvider.activeEditor) {
                         const canStart = nb && nb.status !== ServerStatus.NotStarted;
                         this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
                         const canInterrupt = nb && nb.status === ServerStatus.Busy;
                         this.canInterruptNotebookKernelContext.set(!!canInterrupt).ignoreErrors();
+
+                        this.canDebug.set(false).ignoreErrors();
+                        const interpreter = nb?.getMatchingInterpreter();
+                        if (interpreter) {
+                            this.canDebug
+                                .set(await this.dependencyService.areDebuggingDependenciesInstalled(interpreter))
+                                .ignoreErrors();
+                        }
                     }
                 })
                 .catch(
@@ -158,6 +170,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         } else {
             this.canRestartNotebookKernelContext.set(false).ignoreErrors();
             this.canInterruptNotebookKernelContext.set(false).ignoreErrors();
+            this.canDebug.set(false).ignoreErrors();
         }
     }
     private onDidKernelStatusChange({ notebook }: { status: ServerStatus; notebook: INotebook }) {

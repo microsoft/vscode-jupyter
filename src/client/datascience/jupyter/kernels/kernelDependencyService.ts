@@ -80,6 +80,21 @@ export class KernelDependencyService implements IKernelDependencyService {
     public areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
         return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
     }
+
+    // The requirement for debugging is ipykernel v6 or newer
+    public areDebuggingDependenciesInstalled(
+        interpreter: PythonEnvironment,
+        _token?: CancellationToken
+    ): Promise<boolean> {
+        return this.installer.getVersion(Product.ipykernel, interpreter).then((version) => {
+            if (version) {
+                const versionSplit = version.split('.');
+                const mainVersionNumber = Number(versionSplit[0]);
+                return mainVersionNumber >= 6;
+            }
+            return false;
+        });
+    }
     private handleKernelDependencyResponse(
         resource: Resource,
         response: KernelInterpreterDependencyResponse,

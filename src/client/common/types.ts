@@ -86,6 +86,7 @@ export interface IInstaller {
         cancel?: CancellationToken,
         reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse>;
+    getVersion(product: Product, resource?: InterpreterUri): Promise<string | undefined>;
     isInstalled(product: Product, resource: InterpreterUri): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
