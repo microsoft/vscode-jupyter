@@ -6,8 +6,8 @@ import { IDisposable } from '../../common/types';
 import { CssMessages, SharedMessages } from '../messages';
 import { Event, WebviewPanel } from 'vscode';
 import { SliceOperationSource } from '../../telemetry/constants';
-import { DataWranglerMessages } from './data-wrangler/types';
 import { ILoadTmLanguageResponse, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { DataWranglerMessages } from './data-wrangler/types';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
