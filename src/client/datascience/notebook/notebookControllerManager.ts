@@ -43,6 +43,8 @@ import { IS_CI_SERVER } from '../../../test/ciConstants';
  */
 @injectable()
 export class NotebookControllerManager implements INotebookControllerManager, IExtensionSyncActivationService {
+    // Keep tabs on which controller is selected relative to each notebook document
+    private controllerMapping = new WeakMap<NotebookDocument, VSCodeNotebookController | undefined>();
     private readonly _onNotebookControllerSelected: EventEmitter<{
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
@@ -90,9 +92,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     public activate() {
         // Sign up for document either opening or closing
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
+        this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
 
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
+    }
+
+    public getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined {
+        return this.controllerMapping.get(document);
     }
 
     // Function to expose currently registered controllers to test code only
@@ -178,6 +185,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Prep so that we can track the selected controller for this document
         traceInfoIf(IS_CI_SERVER, `Clear controller mapping for ${document.uri.toString()}`);
+        this.controllerMapping.delete(document);
         const loadControllersPromise = this.loadNotebookControllers();
 
         try {
@@ -242,6 +250,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         } finally {
             disposable.dispose();
         }
+    }
+
+    private onDidCloseNotebookDocument(document: NotebookDocument) {
+        // Remove from our current selection tracking list
+        this.controllerMapping.delete(document);
     }
 
     private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]): VSCodeNotebookController[] {
@@ -328,6 +341,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
+        this.controllerMapping.set(event.notebook, event.controller);
         // Now notify out that we have updated a notebooks controller
         this._onNotebookControllerSelected.fire(event);
     }
