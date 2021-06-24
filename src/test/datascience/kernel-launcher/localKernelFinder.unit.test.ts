@@ -35,7 +35,7 @@ import { JupyterPaths } from '../../../client/datascience/kernel-launcher/jupyte
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
 
-[false].forEach((isWindows) => {
+[false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let kernelFinder: ILocalKernelFinder;
         let interpreterService: IInterpreterService;
