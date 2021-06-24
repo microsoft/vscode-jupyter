@@ -144,7 +144,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
             await this.dataWranglerFactory.create(
                 jupyterVariableDataProvider,
-                DataScience.dataExplorerTitle(),
+                DataScience.dataWranglerTitle(),
                 webviewPanel
             );
         }

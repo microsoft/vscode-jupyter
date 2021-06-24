@@ -158,6 +158,8 @@ def _VSCODE_getDataFrameRows(df, start, end):
 
 # Function to retrieve a set of rows for a data frame
 def _VSCODE_getDataFrameColumn(df, columnName):
+    if columnName not in df:
+        return []
     df = _VSCODE_convertToDataFrame(df)
     # Turn into JSON using pandas. We use pandas because it's about 3 orders of magnitude faster to turn into JSON
     try:
