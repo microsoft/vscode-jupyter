@@ -5,6 +5,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
+import { IPythonExtensionChecker } from '../../api/types';
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
@@ -24,7 +25,11 @@ export abstract class LocalKernelSpecFinderBase {
     // Store our results when listing all possible kernelspecs for a resource
     private kernelSpecCache = new Map<
         string,
-        Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>
+        {
+            usesPython: boolean;
+            wasPythonExtInstalled: boolean;
+            promise: Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>;
+        }
     >();
 
     // Store any json file that we have loaded from disk before
@@ -32,58 +37,68 @@ export abstract class LocalKernelSpecFinderBase {
 
     constructor(
         @inject(IFileSystem) protected readonly fs: IFileSystem,
-        @inject(IWorkspaceService) protected readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) protected readonly workspaceService: IWorkspaceService,
+        protected readonly extensionChecker: IPythonExtensionChecker
     ) {}
 
+    /**
+     * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.
+     * If for instance first Python Extension isn't installed, then we call this again, after installing it, then the cache will be blown away
+     */
     @traceDecorators.error('List kernels failed')
     protected async listKernelsWithCache(
         cacheKey: string,
+        dependsOnPythonExtension: boolean,
         finder: () => Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         // If we have already searched for this resource, then use that.
-        const promise = this.kernelSpecCache.get(cacheKey);
-        if (promise) {
-            return promise;
+        const result = this.kernelSpecCache.get(cacheKey);
+        if (result) {
+            // If python extension is now installed & was not installed previously, then ignore the previous cache.
+            if (
+                result.usesPython &&
+                result.wasPythonExtInstalled === this.extensionChecker.isPythonExtensionInstalled
+            ) {
+                return result.promise;
+            } else if (!result.usesPython) {
+                return result.promise;
+            }
         }
+        const promise = finder().then((items) => {
+            const distinctKernelMetadata = new Map<
+                string,
+                KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+            >();
+            traceInfoIf(
+                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                `Kernel specs for ${cacheKey?.toString() || 'undefined'} are \n ${JSON.stringify(items, undefined, 4)}`
+            );
+            items.map((kernelSpec) => {
+                // Check if we have already seen this.
+                if (!distinctKernelMetadata.has(kernelSpec.id)) {
+                    distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
+                }
+            });
 
-        this.kernelSpecCache.set(
-            cacheKey,
-            finder().then((items) => {
-                const distinctKernelMetadata = new Map<
-                    string,
-                    KernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-                >();
-                traceInfoIf(
-                    !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                    `Kernel specs for ${cacheKey?.toString() || 'undefined'} are \n ${JSON.stringify(
-                        items,
-                        undefined,
-                        4
-                    )}`
-                );
-                items.map((kernelSpec) => {
-                    // Check if we have already seen this.
-                    if (!distinctKernelMetadata.has(kernelSpec.id)) {
-                        distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
-                    }
-                });
-
-                return Array.from(distinctKernelMetadata.values()).sort((a, b) => {
-                    const nameA = a.kernelSpec.display_name.toUpperCase();
-                    const nameB = b.kernelSpec.display_name.toUpperCase();
-                    if (nameA === nameB) {
-                        return 0;
-                    } else if (nameA < nameB) {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
-                });
-            })
-        );
+            return Array.from(distinctKernelMetadata.values()).sort((a, b) => {
+                const nameA = a.kernelSpec.display_name.toUpperCase();
+                const nameB = b.kernelSpec.display_name.toUpperCase();
+                if (nameA === nameB) {
+                    return 0;
+                } else if (nameA < nameB) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            });
+        });
+        // Keep track of whether Python extension was installed or not when fetching this list of kernels.
+        // Next time if its installed then we can ignore this cache.
+        const wasPythonExtInstalled = this.extensionChecker.isPythonExtensionInstalled;
+        this.kernelSpecCache.set(cacheKey, { usesPython: dependsOnPythonExtension, promise, wasPythonExtInstalled });
 
         // ! as the has and set above verify that we have a return here
-        return this.kernelSpecCache.get(cacheKey)!;
+        return this.kernelSpecCache.get(cacheKey)!.promise;
     }
 
     /**

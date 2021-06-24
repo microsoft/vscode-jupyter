@@ -17,7 +17,11 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     getLanguageInNotebookMetadata
 } from '../jupyter/kernels/helpers';
-import { LocalKernelConnectionMetadata } from '../jupyter/kernels/types';
+import {
+    KernelSpecConnectionMetadata,
+    LocalKernelConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../jupyter/kernels/types';
 import { ILocalKernelFinder } from './types';
 import { getResourceType } from '../common';
 import { isPythonNotebook } from '../notebook/helpers/helpers';
@@ -99,43 +103,47 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         }
     }
 
-    // Search all our local file system locations for installed kernel specs and return them
+    public async listNonPythonKernels(cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]> {
+        return this.filterKernels(await this.nonPythonkernelFinder.listKernelSpecs(false, cancelToken));
+    }
+
+    /**
+     * Search all our local file system locations for installed kernel specs and return them
+     */
     @captureTelemetry(Telemetry.KernelListingPerf)
+    @traceDecorators.error('List kernels failed')
     public async listKernels(
         resource: Resource,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata[]> {
-        try {
-            let [nonPythonKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
-                this.nonPythonkernelFinder.listKernelSpecs(false, cancelToken),
-                this.pythonKernelFinder.listKernelSpecs(resource, cancelToken)
-            ]);
+        let [nonPythonKernelSpecs, pythonRelatedKernelSpecs] = await Promise.all([
+            this.nonPythonkernelFinder.listKernelSpecs(false, cancelToken),
+            this.pythonKernelFinder.listKernelSpecs(resource, cancelToken)
+        ]);
 
-            const kernels = [...nonPythonKernelSpecs, ...pythonRelatedKernelSpecs].filter(({ kernelSpec }) => {
-                // Disable xeus python for now.
-                if (kernelSpec.argv[0].toLowerCase().endsWith('xpython')) {
-                    traceInfo(`Hiding xeus kernelspec`);
-                    return false;
-                }
-                const extensionId = kernelSpec.metadata?.vscode?.extension_id;
-                if (extensionId && this.extensions.getExtension(extensionId)) {
-                    traceInfo(`Hiding kernelspec ${kernelSpec.display_name}, better support by ${extensionId}`);
-                    return false;
-                }
-                return true;
-            });
-
-            sendKernelListTelemetry(resource, kernels);
-            return kernels;
-        } catch (e) {
-            traceError(`List kernels failed: ${e} ${e.stack}`);
-            throw e;
-        }
+        const kernels = this.filterKernels(nonPythonKernelSpecs.concat(pythonRelatedKernelSpecs));
+        sendKernelListTelemetry(resource, kernels);
+        return kernels;
     }
 
     // This should return a WRITABLE place that jupyter will look for a kernel as documented
     // here: https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
     public async getKernelSpecRootPath(): Promise<string | undefined> {
         return this.jupyterPaths.getKernelSpecRootPath();
+    }
+    private filterKernels(kernels: (KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]) {
+        return kernels.filter(({ kernelSpec }) => {
+            // Disable xeus python for now.
+            if (kernelSpec.argv[0].toLowerCase().endsWith('xpython')) {
+                traceInfo(`Hiding xeus kernelspec`);
+                return false;
+            }
+            const extensionId = kernelSpec.metadata?.vscode?.extension_id;
+            if (extensionId && this.extensions.getExtension(extensionId)) {
+                traceInfo(`Hiding kernelspec ${kernelSpec.display_name}, better support by ${extensionId}`);
+                return false;
+            }
+            return true;
+        });
     }
 }
