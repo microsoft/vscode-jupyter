@@ -148,7 +148,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // Ensure we hear about any controller changes so we can update our cache accordingly
         this.notebookControllerManager.onNotebookControllerSelected(
             (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
-                if (e.notebook.uri.toString() !== this.notebookDocument.uri.toString()) {
+                if (e.notebook !== this.notebookDocument) {
                     return;
                 }
 
@@ -160,7 +160,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                         // Controller was deselected for this InteractiveWindow's NotebookDocument
                         if (
                             selectedEvent.selected === false &&
-                            selectedEvent.notebook.uri.toString() === this.notebookDocument.uri.toString()
+                            selectedEvent.notebook === this.notebookDocument
                         ) {
                             this.kernelLoadPromise = undefined;
                             this.kernel = undefined;
@@ -196,7 +196,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     // InteractiveWindow object to dispose itself
     private async tryGetMatchingNotebookDocument(): Promise<NotebookDocument | undefined> {
         const notebookDocument = workspace.notebookDocuments.find(
-            (document) => this.notebookDocument.uri.toString() === document.uri.toString()
+            (document) => this.notebookDocument === document
         );
 
         return notebookDocument;
@@ -226,7 +226,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         edit.replaceNotebookCells(
             notebookDocument.uri,
             new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
-            [new NotebookCellData(NotebookCellKind.Markup, message, 'markdown')]
+            [new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE)]
         );
         await workspace.applyEdit(edit);
     }
