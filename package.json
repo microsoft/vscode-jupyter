@@ -797,7 +797,10 @@
             {
                 "command": "jupyter.interactive.exportas",
                 "title": "%DataScience.notebookExport%",
-                "icon": "$(export)",
+                "icon": {
+                    "light": "resources/light/export_to_python.svg",
+                    "dark": "resources/dark/export_to_python.svg"
+                },
                 "category": "Jupyter"
             }
         ],
