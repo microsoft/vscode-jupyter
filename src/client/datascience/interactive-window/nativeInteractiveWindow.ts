@@ -4,7 +4,6 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
 import {
     CancellationError,
-    commands,
     ConfigurationTarget,
     Event,
     EventEmitter,
@@ -596,7 +595,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.kernelLoadPromise;
 
         // ensure editor is opened/focused
-        await commands.executeCommand('interactive.open', undefined, notebookDocument.uri);
+        await this.commandManager.executeCommand('interactive.open', undefined, notebookDocument.uri);
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
         const settings = this.configuration.getSettings();

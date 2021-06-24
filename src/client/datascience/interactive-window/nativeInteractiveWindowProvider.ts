@@ -127,7 +127,8 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
 
         const { notebookUri } = (await this.commandManager.executeCommand(
             'interactive.open',
-            ViewColumn.Beside
+            ViewColumn.Beside,
+            undefined
         )) as INativeInteractiveWindow;
         const notebookDocument = workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === notebookUri.toString()
