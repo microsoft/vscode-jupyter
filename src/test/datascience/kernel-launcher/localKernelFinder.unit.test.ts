@@ -33,6 +33,7 @@ import { IExtensions } from '../../../client/common/types';
 import { LocalKnownPathKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
 import { JupyterPaths } from '../../../client/datascience/kernel-launcher/jupyterPaths';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
+import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -256,7 +257,8 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/
             const nonPythonKernelSpecFinder = new LocalKnownPathKernelSpecFinder(
                 instance(fs),
                 instance(workspaceService),
-                jupyterPaths
+                jupyterPaths,
+                instance(extensionChecker)
             );
             kernelFinder = new LocalKernelFinder(
                 instance(interpreterService),
@@ -293,11 +295,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/
             when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
             const kernels = await kernelFinder.listKernels(undefined);
 
-            assert.isAtLeast(kernels.length, 3, 'Not enough kernels returned');
-            assert.ok(
-                kernels.find((k) => getDisplayNameOrNameOfKernelConnection(k) === 'Python 3 on Disk'),
-                'Python 3 kernel not found'
-            );
+            assert.isAtLeast(kernels.length, 2, 'Not enough kernels returned');
             assert.ok(
                 kernels.find((k) => getDisplayNameOrNameOfKernelConnection(k) === 'Python 2 on Disk'),
                 'Python 2 kernel not found'
@@ -658,25 +656,25 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/
                     assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
                     assert.deepEqual(kernel?.interpreter, pyEnvInterpreter, 'Should start using PyEnv');
 
-                    // // Find based on interpreter hash in metadata
-                    // kernel = await kernelFinder.findKernel(Uri.file('test.ipynb'), {
-                    //     kernelspec: {
-                    //         display_name: 'Something',
-                    //         name: 'python3'
-                    //     },
-                    //     interpreter: {
-                    //         hash: getInterpreterHash({ path: condaEnvironmentBase.path })
-                    //     },
-                    //     language_info: { name: PYTHON_LANGUAGE },
-                    //     orig_nbformat: 4
-                    // });
-                    // assert.equal(
-                    //     kernel?.kernelSpec?.language,
-                    //     'python',
-                    //     'No kernel found matching default notebook metadata'
-                    // );
-                    // assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
-                    // assert.deepEqual(kernel?.interpreter, condaEnvironmentBase, 'Should start using PyEnv');
+                    // Find based on interpreter hash in metadata
+                    kernel = await kernelFinder.findKernel(Uri.file('test.ipynb'), {
+                        kernelspec: {
+                            display_name: 'Something',
+                            name: 'python3'
+                        },
+                        interpreter: {
+                            hash: getInterpreterHash({ path: condaEnvironmentBase.path })
+                        },
+                        language_info: { name: PYTHON_LANGUAGE },
+                        orig_nbformat: 4
+                    });
+                    assert.equal(
+                        kernel?.kernelSpec?.language,
+                        'python',
+                        'No kernel found matching default notebook metadata'
+                    );
+                    assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
+                    assert.deepEqual(kernel?.interpreter, condaEnvironmentBase, 'Should start using PyEnv');
                 });
                 test('Can match (exactly) based on notebook metadata (metadata contains kernelspec name that we generated using the new algorightm)', async () => {
                     when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
