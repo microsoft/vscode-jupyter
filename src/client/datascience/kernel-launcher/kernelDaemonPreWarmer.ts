@@ -4,17 +4,12 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument, NotebookCell } from 'vscode';
+import { NotebookDocument } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
-import { isUntitledFile } from '../../common/utils/misc';
-import { isPythonKernelConnection } from '../jupyter/kernels/helpers';
-import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers';
-import { INotebookControllerManager } from '../notebook/types';
 import {
     IInteractiveWindowProvider,
     INotebookCreationTracker,
@@ -36,8 +31,7 @@ export class KernelDaemonPreWarmer {
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
     public async activate(_resource: Resource): Promise<void> {
         // Check to see if raw notebooks are supported
@@ -88,23 +82,23 @@ export class KernelDaemonPreWarmer {
     }
 
     // Handle opening of native documents
-    private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
-        // It could be anything, lets not make any assumptions.
-        if (isUntitledFile(doc.uri) || !isJupyterNotebook(doc)) {
-            return;
-        }
-        const kernelConnection = this.controllerManager.getSelectedNotebookController(doc)?.connection;
-        const isPythonKernel = kernelConnection ? isPythonKernelConnection(kernelConnection) : false;
-        const notebookMetadata = isPythonNotebook(getNotebookMetadata(doc));
-        if (
-            isPythonKernel ||
-            notebookMetadata ||
-            doc.getCells().some((cell: NotebookCell) => {
-                return cell.document.languageId === PYTHON_LANGUAGE;
-            })
-        ) {
-            await this.preWarmKernelDaemonPool();
-        }
+    private async onDidOpenNotebookDocument(_doc: NotebookDocument): Promise<void> {
+        // // It could be anything, lets not make any assumptions.
+        // if (isUntitledFile(doc.uri) || !isJupyterNotebook(doc)) {
+        //     return;
+        // }
+        // const kernelConnection = this.controllerManager.getSelectedNotebookController(doc)?.connection;
+        // const isPythonKernel = kernelConnection ? isPythonKernelConnection(kernelConnection) : false;
+        // const notebookMetadata = isPythonNotebook(getNotebookMetadata(doc));
+        // if (
+        //     isPythonKernel ||
+        //     notebookMetadata ||
+        //     doc.getCells().some((cell: NotebookCell) => {
+        //         return cell.document.languageId === PYTHON_LANGUAGE;
+        //     })
+        // ) {
+        //     await this.preWarmKernelDaemonPool();
+        // }
     }
 
     private shouldPreWarmDaemonPool(lastTime?: Date) {
