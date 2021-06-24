@@ -158,10 +158,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 ).controller.onDidChangeSelectedNotebooks(
                     (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
                         // Controller was deselected for this InteractiveWindow's NotebookDocument
-                        if (
-                            selectedEvent.selected === false &&
-                            selectedEvent.notebook === this.notebookDocument
-                        ) {
+                        if (selectedEvent.selected === false && selectedEvent.notebook === this.notebookDocument) {
                             this.kernelLoadPromise = undefined;
                             this.kernel = undefined;
                             this.notebookController = undefined;
@@ -261,7 +258,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 }
             }
         }
-        
+
         let result = true;
 
         // Call the internal method if we were able to save
@@ -274,35 +271,33 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             }
             try {
                 const finishedAddingCode = createDeferred<void>();
-    
+
                 // Before we try to execute code make sure that we have an initial directory set
                 // Normally set via the workspace, but we might not have one here if loading a single loose file
                 if (file !== Identifiers.EmptyFileName) {
                     await notebook.setLaunchingFile(file);
                 }
-    
+
                 await this.jupyterDebugger.startDebugging(notebook);
-    
+
                 // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
                 await this.setFileInKernel(file, this.notebookDocument);
-    
+
                 const owningResource = this.owningResource;
-                const id = uuid()
+                const id = uuid();
                 const observable = this.kernel!.notebook!.executeObservable(code, file, line, id, false);
                 const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(
                     notebookCell
                 );
                 temporaryExecution?.start();
-    
+
                 // Sign up for cell changes
                 observable.subscribe(
                     async (cells: ICell[]) => {
                         // Then send the combined output to the UI
-                        const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(
-                            cellOutputToVSCCellOutput
-                        );
+                        const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
                         await temporaryExecution.replaceOutput(converted);
-    
+
                         // Any errors will move our result to false (if allowed)
                         if (this.configuration.getSettings(owningResource).stopOnError) {
                             result = result && cells.find((c) => c.state === CellState.error) === undefined;
@@ -319,7 +314,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                         finishedAddingCode.resolve();
                     }
                 );
-    
+
                 // Wait for the cell to finish
                 await finishedAddingCode.promise;
                 traceInfo(`Finished execution for ${id}`);
@@ -639,7 +634,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
-
         const cells = generateCellsFromNotebookDocument(this.notebookDocument);
 
         // Should be an array of cells
@@ -657,7 +651,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
-
 
         const cells = generateCellsFromNotebookDocument(this.notebookDocument);
 
