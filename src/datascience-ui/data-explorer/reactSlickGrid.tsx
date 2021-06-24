@@ -9,6 +9,9 @@ import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import './globalJQueryImports';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
+import { generateDisplayValue } from './cellFormatter';
+import { getLocString } from '../react-common/locReactSide';
+import { IHistoryItem } from '../../client/datascience/data-viewing/data-wrangler/types';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -37,9 +40,7 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
-import { generateDisplayValue } from './cellFormatter';
-import { getLocString } from '../react-common/locReactSide';
-import { IHistoryItem } from '../../client/datascience/data-viewing/data-wrangler/types';
+
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`

@@ -34,7 +34,8 @@ export enum DataWranglerCommands {
     FillNa = 'fill_na',
     Describe = 'describe',
     GetHistoryItem = 'get_history_item',
-    CoerceColumn = 'coerce_column'
+    CoerceColumn = 'coerce_column',
+    ReplaceAllColumn = 'replace_all_column'
 }
 
 export namespace DataWranglerMessages {
@@ -65,37 +66,47 @@ export interface IHistoryItem {
     variableName: string;
     code: string;
 }
-export interface IRenameColumnsRequest {
-    oldColumnName: string;
-    newColumnName: string;
+
+export interface IGetHistoryItem {
+    index: number;
 }
 
 export interface IPlotHistogramReq {
-    target: string;
+    targetColumn: string;
 }
 
 export interface IGetColumnStatsReq {
-    columnName: string;
+    targetColumn: string;
 }
 
+export interface IRenameColumnsRequest {
+    targetColumn: string;
+    newColumnName: string;
+}
+
+export interface IReplaceAllColumnsRequest {
+    targetColumns: string[];
+    oldValue: string | number | undefined;
+    newValue: string | number | undefined;
+}
 export interface IDropRequest {
-    mode: 'row' | 'column';
-    targets: string[];
+    targetColumns?: string[];
+    rowIndex?: number;
 }
 
 export interface IDropDuplicatesRequest {
-    subset?: string[];
+    targetColumns?: string[];
 }
 
 export interface IDropNaRequest {
-    subset?: string[];
-    target?: Number;
+    targetColumns?: string[];
+    target?: 'row' | 'column';
 }
 
 export interface INormalizeColumnRequest {
     start: Number;
     end: Number;
-    target: string;
+    targetColumn: string;
 }
 
 export interface IFillNaRequest {
@@ -103,6 +114,6 @@ export interface IFillNaRequest {
 }
 
 export interface ICoerceColumnRequest {
-    columnName: string;
+    targetColumns: string[];
     newType: string;
 }

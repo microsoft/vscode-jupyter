@@ -1,22 +1,24 @@
 import * as React from 'react';
-import { DataWranglerCommands, IRenameColumnsRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
+import { DataWranglerCommands, IReplaceAllColumnsRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
 
 interface IProps {
-    selectedColumn: string;
+    selectedColumns: string[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
     setColumns(cols: number[]): void;
 }
 
 interface IState {
-    newColumnName: string | undefined;
+    oldValue: string | number;
+    newValue: string | number;
 }
 
-export class RenameColumnsSection extends React.Component<IProps, IState> {
+export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
         this.state = {
-            newColumnName: ''
+            oldValue: '',
+            newValue: ''
         };
     }
 
@@ -24,23 +26,32 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
         return (
             <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', width: '100px' }}>
+                    <span>{'Replace all values of:'}</span>
+                    <input
+                        value={this.state.oldValue}
+                        onChange={this.handleChangeOldValue}
+                        className={'slice-data'}
+                        style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
+                        autoComplete="on"
+                    />
                     <span>{'To:'}</span>
                     <input
-                        value={this.state.newColumnName}
-                        onChange={this.handleChange}
+                        value={this.state.newValue}
+                        onChange={this.handleChangeNewValue}
                         className={'slice-data'}
                         style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
                         autoComplete="on"
                     />
                     <button
                         onClick={() => {
-                            if (this.state.newColumnName) {
+                            if (this.state.oldValue && this.state.newValue) {
                                 this.props.submitCommand({
-                                    command: DataWranglerCommands.RenameColumn,
+                                    command: DataWranglerCommands.ReplaceAllColumn,
                                     args: {
-                                        targetColumn: this.props.selectedColumn,
-                                        newColumnName: this.state.newColumnName
-                                    } as IRenameColumnsRequest
+                                        targetColumns: this.props.selectedColumns,
+                                        oldValue: this.state.oldValue,
+                                        newValue: this.state.newValue
+                                    } as IReplaceAllColumnsRequest
                                 });
                                 this.props.setColumns([]);
                             }
@@ -63,7 +74,11 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
         );
     }
 
-    private handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({ newColumnName: event.currentTarget.value });
+    private handleChangeOldValue = (event: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({ oldValue: event.currentTarget.value });
+    };
+
+    private handleChangeNewValue = (event: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({ newValue: event.currentTarget.value });
     };
 }

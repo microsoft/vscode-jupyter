@@ -38,7 +38,7 @@ import 'slickgrid/slick.grid.css';
 import './dataWranglerReactSlickGrid.css';
 import './contextMenu.css';
 import { ISlickGridProps, ISlickRow, ReactSlickGrid } from '../reactSlickGrid';
-import { DataWranglerCommands } from '../../../client/datascience/data-viewing/data-wrangler/types';
+import { DataWranglerCommands, IDropDuplicatesRequest, IDropNaRequest, IDropRequest, INormalizeColumnRequest } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { ControlPanel } from './controlPanel';
 import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
 
@@ -49,8 +49,6 @@ Slick grid MUST be imported after we load jQuery and other stuff from `./globalJ
 
 enum RowContextMenuItem {
     DropRow = 'Drop Row',
-    NormalizeRow = 'Normalize Row',
-    DropNA = 'Drop NA',
     CopyData = 'Copy Cell Data'
 }
 
@@ -187,7 +185,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                         if (this.props.submitCommand) {
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.Drop,
-                                args: { targets: [this.contextMenuRowId], mode: 'row' }
+                                args: { rowIndex: this.contextMenuRowId, mode: 'row' } as IDropRequest
                             });
                         }
                         return;
@@ -199,8 +197,6 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             void navigator.clipboard.writeText(cellData);
                         }
                         return;
-                    case RowContextMenuItem.NormalizeRow:
-                    case RowContextMenuItem.DropNA:
                 }
             });
 
@@ -214,30 +210,25 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 const contextMenuItem = e?.target?.id;
                 if (this.props.submitCommand) {
                     switch (contextMenuItem) {
-                        case ColumnContextMenuItem.GetColumnStats:
-                            return this.props.submitCommand({
-                                command: DataWranglerCommands.Describe,
-                                args: { columnName: this.contextMenuColumnName }
-                            });
                         case ColumnContextMenuItem.DropColumns:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.Drop,
-                                args: { targets: [this.contextMenuColumnName] }
+                                args: { targetColumns: [this.contextMenuColumnName] } as IDropRequest
                             });
                         case ColumnContextMenuItem.NormalizeColumn:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.NormalizeColumn,
-                                args: { start: 0, end: 1, target: this.contextMenuColumnName }
+                                args: { start: 0, end: 1, targetColumn: this.contextMenuColumnName } as INormalizeColumnRequest
                             });
                         case ColumnContextMenuItem.DropNA:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.DropNa,
-                                args: { subset: this.contextMenuColumnName, target: 0 }
+                                args: { targetColumns: [this.contextMenuColumnName] } as IDropNaRequest
                             });
                         case ColumnContextMenuItem.DropDuplicates:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.DropDuplicates,
-                                args: { subset: [this.contextMenuColumnName], mode: 'column' }
+                                args: { targetColumns: [this.contextMenuColumnName] } as IDropDuplicatesRequest
                             });
                     }
                 }

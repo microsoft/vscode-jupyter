@@ -1,18 +1,16 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
-import { DataWranglerCommands } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
+import { DataWranglerCommands, ICoerceColumnRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
 import { dropdownStyles } from '../styles';
 
 interface IProps {
-    headers: string[];
-    options: IDropdownOption[];
+    selectedColumns: string[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
+    setColumns(cols: number[]): void;
 }
 
 interface IState {
-    columnCoerceTargetKey: number | undefined;
-    columnCoerceTargetText: string | undefined;
     newColumnType: string | undefined;
 }
 
@@ -20,32 +18,32 @@ export class CoerceColumnsSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
         this.state = {
-            columnCoerceTargetKey: 1,
-            columnCoerceTargetText: '',
             newColumnType: ''
         };
+    }
+
+    private getCoercableTypes() {
+        const coercableTypes = ['string', 'float', 'bool', 'int'];
+        const coercableOptions = [];
+        for (let i = 0; i < coercableTypes.length; i++) {
+            const option = {key: i, text: coercableTypes[i]};
+            coercableOptions.push(option);
+        }
+        return coercableOptions;
     }
 
     render() {
         return (
             <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', width: '100px' }}>
+                    <span>{'To:'}</span>
                     <Dropdown
                         responsiveMode={ResponsiveMode.xxxLarge}
-                        label={'Coerce column:'}
                         style={{ marginRight: '10px', width: '150px', marginBottom: '16px' }}
                         styles={dropdownStyles}
-                        options={this.props.options}
+                        options={this.getCoercableTypes()}
                         className="dropdownTitleOverrides"
-                        onChange={this.updateRenameTarget}
-                    />
-                    <span>{'To:'}</span>
-                    <input
-                        value={this.state.newColumnType}
-                        onChange={this.handleChange}
-                        className={'slice-data'}
-                        style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
-                        autoComplete="on"
+                        onChange={this.updateTypeTarget}
                     />
                     <button
                         onClick={() => {
@@ -53,9 +51,9 @@ export class CoerceColumnsSection extends React.Component<IProps, IState> {
                                 this.props.submitCommand({
                                     command: DataWranglerCommands.CoerceColumn,
                                     args: {
-                                        columnName: this.state.columnCoerceTargetText,
+                                        targetColumns: this.props.selectedColumns,
                                         newType: this.state.newColumnType
-                                    }
+                                    } as ICoerceColumnRequest
                                 });
                             }
                         }}
@@ -77,11 +75,8 @@ export class CoerceColumnsSection extends React.Component<IProps, IState> {
         );
     }
 
-    private updateRenameTarget = (_data: React.FormEvent, option: IDropdownOption | undefined) => {
-        console.log('Update coerce target', option);
-        this.setState({ columnCoerceTargetKey: option?.key as number, columnCoerceTargetText: option?.text });
-    };
-    private handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({ newColumnType: event.currentTarget.value });
+    private updateTypeTarget = (_data: React.FormEvent, option: IDropdownOption | undefined) => {
+        console.log('Update coerce type', option);
+        this.setState({ newColumnType: option?.text });
     };
 }
