@@ -27,7 +27,6 @@ import {
     IExtensionContext,
     IPathUtils
 } from '../../common/types';
-import { testOnlyMethod } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
 import { ConsoleForegroundColors } from '../../logging/_global';
 import { sendNotebookOrKernelLanguageTelemetry } from '../common';
@@ -80,7 +79,6 @@ export class VSCodeNotebookController implements Disposable {
     get onDidReceiveMessage() {
         return this.controller.onDidReceiveMessage;
     }
-    @testOnlyMethod()
     public isAssociatedWithDocument(doc: NotebookDocument) {
         return this.associatedDocuments.has(doc);
     }
