@@ -768,7 +768,7 @@
                 "shortTitle": "%jupyter.command.jupyter.openVariableView.shorttitle%",
                 "icon": "$(variable-group)",
                 "category": "Jupyter",
-                "enablement": "notebookType == jupyter-notebook && !jupyter.variableViewVisible && isWorkspaceTrusted"
+                "enablement": "notebookType == jupyter-notebook  && !jupyter.variableViewVisible && isWorkspaceTrusted || notebookType == interactive && !jupyter.variableViewVisible && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.refreshDataViewer",
@@ -804,7 +804,10 @@
             {
                 "command": "jupyter.interactive.exportas",
                 "title": "%DataScience.notebookExport%",
-                "icon": "$(export)",
+                "icon": {
+                    "light": "resources/light/export_to_python.svg",
+                    "dark": "resources/dark/export_to_python.svg"
+                },
                 "category": "Jupyter"
             }
         ],
@@ -934,6 +937,11 @@
                 {
                     "command": "jupyter.interruptkernel",
                     "group": "navigation@2",
+                    "when": "isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.openVariableView",
+                    "group": "navigation@3",
                     "when": "isWorkspaceTrusted"
                 },
                 {

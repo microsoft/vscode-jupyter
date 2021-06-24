@@ -265,13 +265,14 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     // Send a select kernel on the active notebook editor
     void commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
     const isRightKernel = () => {
-        if (!vscodeNotebook.activeNotebookEditor) {
+        const doc = vscodeNotebook.activeNotebookEditor?.document;
+        if (!doc) {
             return false;
         }
 
-        const selectedController = notebookControllerManager.getSelectedNotebookController(
-            vscodeNotebook.activeNotebookEditor.document
-        );
+        const selectedController = notebookControllerManager
+            .registeredNotebookControllers()
+            .find((item) => item.isAssociatedWithDocument(doc));
         if (!selectedController) {
             return false;
         }
@@ -301,9 +302,13 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     let selectedController: VSCodeNotebookController;
     await waitForCondition(
         async () => {
-            const controller = notebookControllerManager.getSelectedNotebookController(
-                vscodeNotebook.activeNotebookEditor?.document!
-            );
+            const doc = vscodeNotebook.activeNotebookEditor?.document;
+            if (!doc) {
+                return false;
+            }
+            const controller = notebookControllerManager
+                .registeredNotebookControllers()
+                .find((item) => item.isAssociatedWithDocument(doc));
             if (controller) {
                 selectedController = controller;
             }
