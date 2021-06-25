@@ -29,6 +29,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
+import { getInterpreterKernelSpecName } from '../jupyter/kernels/helpers';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
 import { INotebookControllerManager } from '../notebook/types';
@@ -128,24 +129,11 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         // Ensure all our controllers are registered with VS Code
         await this.notebookControllerManager.loadNotebookControllers();
 
-        // Fetch the active interpreter and use the matching controller
-        const api = await this.pythonApi.getApi();
-        const activeInterpreter = await api.getActiveInterpreter();
-        const preferredController = this.notebookControllerManager
-            .registeredNotebookControllers()
-            .find((controller) => {
-                return (
-                    controller.connection.interpreter?.path === activeInterpreter?.path &&
-                    // We have to register each of our kernels as two controllers
-                    // because controllers are currently per-viewtype
-                    controller.controller.notebookType === InteractiveWindowView
-                );
-            });
         // When this is not undefined, VS Code will always pick this controller for the interactive window
         // When this is undefined, VS Code will fallback to its own cached notebook-controller association
         // If VS Code does not have a cached association, the user will be asked to select a kernel from the
         // kernel picker quickpick UI
-        const preferredControllerId = `${JVSC_EXTENSION_ID}/${preferredController?.id}`;
+        const preferredControllerId = await this.getControllerForInteractiveWindow();
 
         const { notebookUri } = (await this.commandManager.executeCommand(
             'interactive.open',
@@ -265,6 +253,45 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             }
             return false;
         });
+    }
+
+    private async getControllerForInteractiveWindow(): Promise<string | undefined> {
+        // Fetch the active interpreter and use the matching controller
+        const api = await this.pythonApi.getApi();
+        const activeInterpreter = await api.getActiveInterpreter();
+        const interpreterControllers = this.notebookControllerManager.registeredNotebookControllers().filter(
+            (controller) =>
+                // We register each of our kernels as two controllers
+                // because controllers are currently per-viewtype. Find
+                // the one for the interactive viewtype for now
+                controller.controller.notebookType === InteractiveWindowView
+        );
+
+        // First try to match on the kernelSpec name. This is supposed to uniquely
+        // identify the active interpreter.
+        const kernelSpecName = getInterpreterKernelSpecName(activeInterpreter);
+        let preferredController = interpreterControllers.find((controller) => {
+            return (
+                controller.connection.kind === 'startUsingPythonInterpreter' &&
+                controller.connection.kernelSpec.name === kernelSpecName
+            );
+        });
+
+        // We do some deduplication of old kernelspecs which may result in matches
+        // being hidden, so just in case the first search on the kernelSpecName fails to
+        // return a match, fall back to matching on the interpreter path. Note that we
+        // don't want to start with just the naive path match below, because it's possible to
+        // have multiple kernelspecs associated with the same Python interpreter path.
+        if (preferredController === undefined) {
+            preferredController = interpreterControllers.find((controller) => {
+                return (
+                    controller.connection.kind === 'startUsingPythonInterpreter' &&
+                    controller.connection.interpreter?.path === activeInterpreter?.path
+                );
+            });
+        }
+
+        return preferredController !== undefined ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
     }
 
     private update() {
