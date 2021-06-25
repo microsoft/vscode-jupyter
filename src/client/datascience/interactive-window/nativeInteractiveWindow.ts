@@ -589,8 +589,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     private async addNotebookCell(code: string): Promise<NotebookCell> {
         // Ensure we have a controller to execute code against
-        // and a NotebookDocument to add the NotebookCell to
-        const notebookDocument = this.notebookDocument;
         if (!this.notebookController) {
             await this.commandManager.executeCommand('notebook.selectKernel');
         }
@@ -601,7 +599,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.commandManager.executeCommand(
             'interactive.open',
             undefined,
-            notebookDocument.uri,
+            this.notebookDocument.uri,
             this.notebookController!.id
         );
 
@@ -624,14 +622,14 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         );
         notebookCellData.metadata = { interactiveWindowCellMarker };
         edit.replaceNotebookCells(
-            notebookDocument.uri,
-            new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
+            this.notebookDocument.uri,
+            new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),
             [
                 notebookCellData // TODO generalize to arbitrary languages and cell types
             ]
         );
         await workspace.applyEdit(edit);
-        return notebookDocument.cellAt(notebookDocument.cellCount - 1);
+        return this.notebookDocument.cellAt(this.notebookDocument.cellCount - 1);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
