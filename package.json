@@ -280,7 +280,7 @@
                 "title": "Debug",
                 "icon": "$(bug)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0"
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -1969,8 +1969,8 @@
         },
         "debuggers": [
             {
-                "type": "kernel",
-                "label": "Kernel Debug"
+                "type": "Python Kernel",
+                "label": "Python Kernel Debug"
             }
         ]
     },

@@ -4,7 +4,16 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as vscode from 'vscode';
+import {
+    debug,
+    Location,
+    NotebookDocument,
+    workspace,
+    Uri,
+    DebugAdapterInlineImplementation,
+    DebugSession,
+    SourceBreakpoint
+} from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable } from '../../common/types';
@@ -15,22 +24,25 @@ import { ServerStatus } from '../../../datascience-ui/interactive-common/mainSta
 import { INotebookControllerManager } from '../../datascience/notebook/types';
 import { ContextKey } from '../../common/contextKey';
 import { EditorContexts } from '../../datascience/constants';
-import { ICommandManager } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { traceError } from '../../common/logger';
+import { DataScience } from '../../common/utils/localize';
+import { Commands as DSCommands } from '../../datascience/constants';
 
 class Debugger {
-    private resolveFunc?: (value: vscode.DebugSession) => void;
+    private resolveFunc?: (value: DebugSession) => void;
     private rejectFunc?: (reason?: Error) => void;
 
-    readonly session: Promise<vscode.DebugSession>;
+    readonly session: Promise<DebugSession>;
 
-    constructor(public readonly document: vscode.NotebookDocument) {
-        this.session = new Promise<vscode.DebugSession>((resolve, reject) => {
+    constructor(public readonly document: NotebookDocument) {
+        this.session = new Promise<DebugSession>((resolve, reject) => {
             this.resolveFunc = resolve;
             this.rejectFunc = reject;
 
-            vscode.debug
+            debug
                 .startDebugging(undefined, {
-                    type: 'kernel',
+                    type: 'Python Kernel',
                     name: `${path.basename(document.uri.toString())}`,
                     request: 'attach',
                     internalConsoleOptions: 'neverOpen',
@@ -40,7 +52,7 @@ class Debugger {
         });
     }
 
-    resolve(session: vscode.DebugSession) {
+    resolve(session: DebugSession) {
         if (this.resolveFunc) {
             this.resolveFunc(session);
         }
@@ -53,7 +65,7 @@ class Debugger {
     }
 
     async stop() {
-        void vscode.debug.stopDebugging(await this.session);
+        void debug.stopDebugging(await this.session);
     }
 }
 
@@ -63,7 +75,7 @@ class Debugger {
 @injectable()
 export class DebuggingManager implements IExtensionSingleActivationService {
     private debuggingInProgress: ContextKey;
-    private notebookToDebugger = new Map<vscode.NotebookDocument, Debugger>();
+    private notebookToDebugger = new Map<NotebookDocument, Debugger>();
     private readonly disposables: IDisposable[] = [];
 
     public constructor(
@@ -71,18 +83,20 @@ export class DebuggingManager implements IExtensionSingleActivationService {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IDebuggingCellMap) private debuggingCellMap: IDebuggingCellMap,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
     ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.updateToolbar(false);
     }
 
     public async activate() {
-        vscode.debug.breakpoints; // start to fetch breakpoints
+        debug.breakpoints; // start to fetch breakpoints
 
         this.disposables.push(
             // track termination of debug sessions
-            vscode.debug.onDidTerminateDebugSession(async (session) => {
+            debug.onDidTerminateDebugSession(async (session) => {
                 this.updateToolbar(false);
                 for (const [doc, dbg] of this.notebookToDebugger.entries()) {
                     if (dbg && session === (await dbg.session)) {
@@ -94,7 +108,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             }),
 
             // track closing of notebooks documents
-            vscode.workspace.onDidCloseNotebookDocument(async (document) => {
+            workspace.onDidCloseNotebookDocument(async (document) => {
                 this.debuggingCellMap.getCellsAnClearQueue(document);
                 const dbg = this.notebookToDebugger.get(document);
                 if (dbg) {
@@ -105,78 +119,88 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             }),
 
             // factory for kernel debug adapters
-            vscode.debug.registerDebugAdapterDescriptorFactory('kernel', {
+            debug.registerDebugAdapterDescriptorFactory('Python Kernel', {
                 createDebugAdapterDescriptor: async (session) => {
-                    const activeDoc = vscode.window.activeNotebookEditor!.document;
+                    if (this.vscNotebook.activeNotebookEditor) {
+                        const activeDoc = this.vscNotebook.activeNotebookEditor.document;
 
-                    await this.ensureKernelIsRunning(activeDoc);
-                    const debug = this.getDebuggerByUri(activeDoc);
+                        await this.ensureKernelIsRunning(activeDoc);
+                        const debug = this.getDebuggerByUri(activeDoc);
 
-                    if (debug) {
-                        const notebook = await this.notebookProvider.getOrCreateNotebook({
-                            resource: debug.document.uri,
-                            identity: debug.document.uri,
-                            getOnly: true
-                        });
-                        if (notebook && notebook.session) {
-                            debug.resolve(session);
-                            return new vscode.DebugAdapterInlineImplementation(
-                                new KernelDebugAdapter(session, debug.document, notebook.session, this.debuggingCellMap)
-                            );
-                        } else {
-                            void vscode.window.showInformationMessage('run the kernel');
+                        if (debug) {
+                            const notebook = await this.notebookProvider.getOrCreateNotebook({
+                                resource: debug.document.uri,
+                                identity: debug.document.uri,
+                                getOnly: true
+                            });
+                            if (notebook && notebook.session) {
+                                debug.resolve(session);
+                                return new DebugAdapterInlineImplementation(
+                                    new KernelDebugAdapter(
+                                        session,
+                                        debug.document,
+                                        notebook.session,
+                                        this.debuggingCellMap,
+                                        this.commandManager
+                                    )
+                                );
+                            } else {
+                                void this.appShell.showInformationMessage(DataScience.kernelWasNotStarted());
+                            }
                         }
                     }
-                    // Should not happen, debug sessions should start only from the cell toolbar command
+                    traceError('Debug sessions should start only from the cell toolbar command');
                     return;
                 }
             }),
 
-            vscode.commands.registerCommand('jupyter.debugNotebook', () => {
-                const editor = vscode.window.activeNotebookEditor;
+            this.commandManager.registerCommand(DSCommands.DebugNotebook, () => {
+                const editor = this.vscNotebook.activeNotebookEditor;
                 if (editor) {
                     this.updateToolbar(true);
                     void this.startDebugging(editor.document);
                 } else {
-                    void vscode.window.showErrorMessage('No active notebook document to debug');
+                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
                 }
             })
         );
     }
 
-    private fixBreakpoints(doc: vscode.NotebookDocument) {
-        const map = new Map<string, vscode.Uri>();
+    // update the fragment part of the cell uri for moved cells, and create new breakpoints with the updated cell positions
+    private fixBreakpoints(doc: NotebookDocument) {
+        const movedCells = new Map<string, Uri>();
 
-        doc.getCells().forEach((cell, ix) => {
+        // find moved cells and store a fixed index
+        doc.getCells().forEach((cell, index) => {
             const pos = parseInt(cell.document.uri.fragment);
-            if (pos !== ix) {
-                map.set(
-                    cell.document.uri.toString(),
-                    cell.document.uri.with({ fragment: ix.toString().padStart(8, '0') })
+            if (pos !== index) {
+                movedCells.set(
+                    cell.document.uri.toString(), // old uri
+                    cell.document.uri.with({ fragment: index.toString().padStart(8, '0') }) // updated uri
                 );
             }
         });
 
-        if (map.size > 0) {
-            const addBpts: vscode.SourceBreakpoint[] = [];
-            const removeBpt: vscode.SourceBreakpoint[] = [];
-            for (const b of vscode.debug.breakpoints) {
-                if (b instanceof vscode.SourceBreakpoint) {
-                    const s = map.get(b.location.uri.toString());
-                    if (s) {
-                        removeBpt.push(b);
-                        const loc = new vscode.Location(s, b.location.range);
-                        addBpts.push(
-                            new vscode.SourceBreakpoint(loc /*, b.enabled, b.condition, b.hitCondition, b.logMessage*/)
-                        );
+        // if cells were moved, find their corresponding breakpoints
+        // delete them and replace them with a new breakpoint with the updated cell location
+        if (movedCells.size > 0) {
+            const addBpts: SourceBreakpoint[] = [];
+            const removeBpt: SourceBreakpoint[] = [];
+            for (const breakpoint of debug.breakpoints) {
+                if (breakpoint instanceof SourceBreakpoint) {
+                    const updatedUri = movedCells.get(breakpoint.location.uri.toString());
+                    if (updatedUri) {
+                        removeBpt.push(breakpoint);
+                        const loc = new Location(updatedUri, breakpoint.location.range);
+                        addBpts.push(new SourceBreakpoint(loc));
                     }
                 }
             }
             if (removeBpt.length > 0) {
-                vscode.debug.removeBreakpoints(removeBpt);
+                debug.removeBreakpoints(removeBpt);
             }
             if (addBpts.length > 0) {
-                vscode.debug.addBreakpoints(addBpts);
+                debug.addBreakpoints(addBpts);
             }
         }
     }
@@ -185,7 +209,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
         this.debuggingInProgress.set(debugging).ignoreErrors();
     }
 
-    private async startDebugging(doc: vscode.NotebookDocument) {
+    private async startDebugging(doc: NotebookDocument) {
         let dbg = this.notebookToDebugger.get(doc);
         if (!dbg) {
             dbg = new Debugger(doc);
@@ -195,22 +219,23 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                 await dbg.session;
 
                 // toggle the breakpoint margin
-                void vscode.commands.executeCommand('notebook.toggleBreakpointMargin', doc);
+                void this.commandManager.executeCommand('notebook.toggleBreakpointMargin', doc);
             } catch (err) {
-                void vscode.window.showErrorMessage(`Can't start debugging (${err})`);
+                traceError(`Can't start debugging (${err})`);
+                void this.appShell.showErrorMessage(DataScience.cantStartDebugging());
             }
         }
     }
 
-    private getDebuggerByUri(document: vscode.NotebookDocument): Debugger | undefined {
+    private getDebuggerByUri(document: NotebookDocument): Debugger | undefined {
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
-            if (document.uri.toString() === doc.uri.toString()) {
+            if (document === doc) {
                 return dbg;
             }
         }
     }
 
-    private async ensureKernelIsRunning(doc: vscode.NotebookDocument): Promise<void> {
+    private async ensureKernelIsRunning(doc: NotebookDocument): Promise<void> {
         await this.notebookControllerManager.loadNotebookControllers();
         const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
 

@@ -973,6 +973,12 @@ export namespace DataScience {
         'DataScience.recommendExtensionForNotebook',
         "The {0} extension is recommended for notebooks targetting the language '{1}'."
     );
+    export const kernelWasNotStarted = localize(
+        'DataScience.kernelWasNotStarted',
+        'Kernel was not started. A kernel session is needed to start debugging.'
+    );
+    export const noNotebookToDebug = localize('DataScience.noNotebookToDebug', 'No active notebook document to debug.');
+    export const cantStartDebugging = localize('DataScience.cantStartDebugging', "Can't start debugging.");
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

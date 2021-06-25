@@ -3,12 +3,21 @@
 
 'use strict';
 
-import * as vscode from 'vscode';
+import {
+    NotebookDocument,
+    DebugSession,
+    DebugAdapter,
+    NotebookCell,
+    Event,
+    EventEmitter,
+    DebugProtocolMessage
+} from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { randomBytes } from 'crypto';
 import * as path from 'path';
 import { IDebuggingCellMap, IJupyterSession } from '../../datascience/types';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { ICommandManager } from '../../common/application/types';
 
 const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugRequestMsg => {
     return {
@@ -57,27 +66,49 @@ const debugResponse = (message: DebugProtocol.Response): KernelMessage.IDebugRep
     };
 };
 
-export class KernelDebugAdapter implements vscode.DebugAdapter {
-    private readonly fileToCell = new Map<string, vscode.NotebookCell>();
+interface dumpCellResponse {
+    sourcePath: string; // filename for the dumped source
+}
+
+interface debugInfoResponse {
+    isStarted: boolean; // whether the debugger is started,
+    hashMethod: string; // the hash method for code cell. Default is 'Murmur2',
+    hashSeed: string; // the seed for the hashing of code cells,
+    tmpFilePrefix: string; // prefix for temporary file names
+    tmpFileSuffix: string; // suffix for temporary file names
+    breakpoints: debugInfoResponseBreakpoint[]; // breakpoints currently registered in the debugger.
+    stoppedThreads: number[]; // threads in which the debugger is currently in a stopped state
+}
+
+interface debugInfoResponseBreakpoint {
+    source: string; // source file
+    breakpoints: DebugProtocol.SourceBreakpoint[]; // list of breakpoints for that source file
+}
+
+// For info on the custom requests implemented by jupyter see:
+// https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
+// https://jupyter-client.readthedocs.io/en/stable/messaging.html#additions-to-the-dap
+export class KernelDebugAdapter implements DebugAdapter {
+    private readonly fileToCell = new Map<string, NotebookCell>();
     private readonly cellToFile = new Map<string, string>();
-    private readonly sendMessage = new vscode.EventEmitter<vscode.DebugProtocolMessage>();
+    private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private readonly messageListener = new Map<
         number,
         Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg>
     >();
 
-    onDidSendMessage: vscode.Event<vscode.DebugProtocolMessage> = this.sendMessage.event;
+    onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
 
     constructor(
-        private session: vscode.DebugSession,
-        private notebookDocument: vscode.NotebookDocument,
+        private session: DebugSession,
+        private notebookDocument: NotebookDocument,
         private readonly jupyterSession: IJupyterSession,
-        private cellMap: IDebuggingCellMap
+        private cellMap: IDebuggingCellMap,
+        private commandManager: ICommandManager
     ) {
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((msg.content as any).event === 'stopped') {
-                console.error(msg);
                 this.sendMessage.fire(msg.content);
             }
         };
@@ -105,15 +136,15 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
 
         // after disconnecting, hide the breakpoint margin
         if (message.type === 'request' && (message as DebugProtocol.Request).command === 'disconnect') {
-            void vscode.commands.executeCommand('notebook.toggleBreakpointMargin', this.notebookDocument);
+            void this.commandManager.executeCommand('notebook.toggleBreakpointMargin', this.notebookDocument);
         }
 
         // map Source paths from VS Code to Ipykernel temp files
         this.getMessageSourceAndHookIt(message, (source) => {
             if (source && source.path) {
-                const p = this.cellToFile.get(source.path);
-                if (p) {
-                    source.path = p;
+                const path = this.cellToFile.get(source.path);
+                if (path) {
+                    source.path = path;
                 }
             }
         });
@@ -128,54 +159,8 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
             });
 
             if (control) {
-                control.onReply = (msg) => {
-                    this.getMessageSourceAndHookIt(msg.content, (source) => {
-                        if (source && source.path) {
-                            const cell = this.fileToCell.get(source.path);
-                            if (cell) {
-                                source.name = path.basename(cell.document.uri.path);
-                                if (cell.index >= 0) {
-                                    source.name += `, Cell ${cell.index + 1}`;
-                                }
-                                source.path = cell.document.uri.toString();
-                            }
-                        }
-                    });
-
-                    this.sendMessage.fire(msg.content);
-                };
-                control.onIOPub = (msg) => {
-                    this.getMessageSourceAndHookIt(msg.content as DebugProtocol.ProtocolMessage, (source) => {
-                        if (source && source.path) {
-                            const cell = this.fileToCell.get(source.path);
-                            if (cell) {
-                                source.name = path.basename(cell.document.uri.path);
-                                if (cell.index >= 0) {
-                                    source.name += `, Cell ${cell.index + 1}`;
-                                }
-                                source.path = cell.document.uri.toString();
-                            }
-                        }
-                    });
-
-                    this.sendMessage.fire(msg.content);
-                };
-                control.onStdin = (msg) => {
-                    this.getMessageSourceAndHookIt(msg.content as DebugProtocol.ProtocolMessage, (source) => {
-                        if (source && source.path) {
-                            const cell = this.fileToCell.get(source.path);
-                            if (cell) {
-                                source.name = path.basename(cell.document.uri.path);
-                                if (cell.index >= 0) {
-                                    source.name += `, Cell ${cell.index + 1}`;
-                                }
-                                source.path = cell.document.uri.toString();
-                            }
-                        }
-                    });
-
-                    this.sendMessage.fire(msg.content);
-                };
+                control.onReply = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
+                control.onIOPub = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
                 this.messageListener.set(message.seq, control);
             }
         } else if (message.type === 'response') {
@@ -203,15 +188,13 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
         });
     }
 
-    /**
-     * Dump content of given cell into a tmp file and return path to file.
-     */
+    // Dump content of given cell into a tmp file and return path to file.
     private async dumpCell(uri: string): Promise<void> {
         const cell = this.notebookDocument.getCells().find((c) => c.document.uri.toString() === uri);
         if (cell) {
             try {
                 const response = await this.session.customRequest('dumpCell', { code: cell.document.getText() });
-                const norm = path.normalize(response.sourcePath);
+                const norm = path.normalize((response as dumpCellResponse).sourcePath);
                 this.fileToCell.set(norm, cell);
                 this.cellToFile.set(cell.document.uri.toString(), norm);
             } catch (err) {
@@ -223,24 +206,24 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
     private async debugInfo(): Promise<void> {
         const response = await this.session.customRequest('debugInfo');
 
-        // If there's breakpoints at this point, delete them
-        if (response.breakpoints.lenght > 0) {
-            this.jupyterSession.requestDebug({
+        // If there's breakpoints at this point, send a message to VS Code to keep them
+        (response as debugInfoResponse).breakpoints.forEach((breakpoint) => {
+            const message: DebugProtocol.SetBreakpointsRequest = {
                 seq: 0,
                 type: 'request',
                 command: 'setBreakpoints',
                 arguments: {
                     source: {
-                        path: response.breakpoints[0].source
+                        path: breakpoint.source
                     },
-                    breakpoints: []
+                    breakpoints: breakpoint.breakpoints
                 }
-            });
-        }
+            };
+            this.sendMessage.fire(message);
+        });
 
         // If there's stopped threads at this point, continue them all
-        const stoppedThreads: number[] = response.stoppedThreads;
-        stoppedThreads.forEach((thread: number) => {
+        (response as debugInfoResponse).stoppedThreads.forEach((thread: number) => {
             this.jupyterSession.requestDebug({
                 seq: 0,
                 type: 'request',
@@ -250,6 +233,23 @@ export class KernelDebugAdapter implements vscode.DebugAdapter {
                 }
             });
         });
+    }
+
+    private controlCallback(message: DebugProtocol.ProtocolMessage): void {
+        this.getMessageSourceAndHookIt(message as DebugProtocol.ProtocolMessage, (source) => {
+            if (source && source.path) {
+                const cell = this.fileToCell.get(source.path);
+                if (cell) {
+                    source.name = path.basename(cell.document.uri.path);
+                    if (cell.index >= 0) {
+                        source.name += `, Cell ${cell.index + 1}`;
+                    }
+                    source.path = cell.document.uri.toString();
+                }
+            }
+        });
+
+        this.sendMessage.fire(message);
     }
 
     private getMessageSourceAndHookIt(

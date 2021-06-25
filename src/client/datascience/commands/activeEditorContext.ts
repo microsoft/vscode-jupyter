@@ -164,7 +164,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         } else {
             this.canRestartNotebookKernelContext.set(false).ignoreErrors();
             this.canInterruptNotebookKernelContext.set(false).ignoreErrors();
-            this.canDebug.set(false).ignoreErrors();
         }
     }
     private onDidKernelStatusChange({ notebook }: { status: ServerStatus; notebook: INotebook }) {
