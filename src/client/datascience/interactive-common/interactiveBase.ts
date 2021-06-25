@@ -5,9 +5,7 @@ import '../../common/extensions';
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
-import * as fsextra from 'fs-extra';
 import * as os from 'os';
-import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
@@ -35,8 +33,8 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
-import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
+import { traceError, traceInfo } from '../../common/logger';
 
 import { isNil } from 'lodash';
 import { IFileSystem } from '../../common/platform/types';
@@ -108,7 +106,6 @@ import { translateCellToNative } from '../utils';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
-import { serializeLanguageConfiguration } from './serialization';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { IDataWranglerFactory } from '../data-viewing/data-wrangler/types';
 
@@ -1571,45 +1568,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         const uriString = uri.toString();
         if (uriString in value) {
             return value[uriString];
-        }
-    }
-
-    private async requestTmLanguage(languageId: string) {
-        // Get the contents of the appropriate tmLanguage file.
-        traceInfo('Request for tmlanguage file.');
-        const languageJson = await this.themeFinder.findTmLanguage(languageId);
-        const languageConfiguration = serializeLanguageConfiguration(
-            await this.themeFinder.findLanguageConfiguration(languageId)
-        );
-        const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
-        const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
-        this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, {
-            languageJSON: languageJson ?? '',
-            languageConfiguration,
-            extensions,
-            scopeName,
-            languageId
-        }).ignoreErrors();
-    }
-
-    private async requestOnigasm(): Promise<void> {
-        // Look for the file next or our current file (this is where it's installed in the vsix)
-        let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
-        traceInfo(`Request for onigasm file at ${filePath}`);
-        if (await fsextra.pathExists(filePath)) {
-            const contents = await fsextra.readFile(filePath);
-            this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
-        } else {
-            // During development it's actually in the node_modules folder
-            filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
-            traceInfo(`Backup request for onigasm file at ${filePath}`);
-            if (await fsextra.pathExists(filePath)) {
-                const contents = await fsextra.readFile(filePath);
-                this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
-            } else {
-                traceWarning('Onigasm file not found. Colorization will not be available.');
-                this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
-            }
         }
     }
 

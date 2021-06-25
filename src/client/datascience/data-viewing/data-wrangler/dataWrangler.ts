@@ -6,7 +6,6 @@ import '../../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import * as fsextra from 'fs-extra';
 import { Disposable, EventEmitter, Memento, NotebookCell, ViewColumn, WebviewPanel } from 'vscode';
 
 import {
@@ -17,7 +16,7 @@ import {
     IDocumentManager
 } from '../../../common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../../common/constants';
-import { traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { traceError } from '../../../common/logger';
 import { GLOBAL_MEMENTO, IConfigurationService, IDisposable, IMemento } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { Commands, Identifiers } from '../../constants';
@@ -30,7 +29,6 @@ import {
 } from '../../types';
 import { updateCellCode } from '../../notebook/helpers/executionHelpers';
 import { InteractiveWindowMessages } from '../../interactive-common/interactiveWindowTypes';
-import { serializeLanguageConfiguration } from '../../interactive-common/serialization';
 import { CssMessages } from '../../messages';
 import { ColumnType, DataViewerMessages, IDataViewerDataProvider } from '../types';
 import {
@@ -226,45 +224,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
         // Some messages will be handled by DataViewer
         super.onMessage(message, payload);
-    }
-
-    private async requestTmLanguage(languageId: string = PYTHON_LANGUAGE) {
-        // Get the contents of the appropriate tmLanguage file.
-        traceInfo('Request for tmlanguage file.');
-        const languageJson = await this.themeFinder.findTmLanguage(languageId);
-        const languageConfiguration = serializeLanguageConfiguration(
-            await this.themeFinder.findLanguageConfiguration(languageId)
-        );
-        const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
-        const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
-        this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, {
-            languageJSON: languageJson ?? '',
-            languageConfiguration,
-            extensions,
-            scopeName,
-            languageId
-        }).ignoreErrors();
-    }
-
-    private async requestOnigasm(): Promise<void> {
-        // Look for the file next or our current file (this is where it's installed in the vsix)
-        let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
-        traceInfo(`Request for onigasm file at ${filePath}`);
-        if (await fsextra.pathExists(filePath)) {
-            const contents = await fsextra.readFile(filePath);
-            this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
-        } else {
-            // During development it's actually in the node_modules folder
-            filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
-            traceInfo(`Backup request for onigasm file at ${filePath}`);
-            if (await fsextra.pathExists(filePath)) {
-                const contents = await fsextra.readFile(filePath);
-                this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
-            } else {
-                traceWarning('Onigasm file not found. Colorization will not be available.');
-                this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
-            }
-        }
     }
 
     private addToHistory(newHistoryItem: IHistoryItem) {

@@ -4,7 +4,12 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { ColumnType, IGetColsResponse, IGetSliceRequest, MaxStringCompare } from '../../client/datascience/data-viewing/types';
+import {
+    ColumnType,
+    IGetColsResponse,
+    IGetSliceRequest,
+    MaxStringCompare
+} from '../../client/datascience/data-viewing/types';
 import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import './globalJQueryImports';
@@ -612,7 +617,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         return true;
     }
 
-    protected renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
+    protected renderFilterCell = (
+        _e: Slick.EventData,
+        args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>
+    ) => {
         if (args.column.field === this.props.idProperty) {
             const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
             ReactDOM.render(

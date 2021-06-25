@@ -21,7 +21,8 @@ export class Toolbar extends React.PureComponent<IProps> {
                     flexDirection: 'row',
                     fontFamily: 'var(--vscode-font-family)',
                     fontSize: 'var(--vscode-font-size)',
-                    // fontWeight: 'var(--vscode-font-weight)',
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    fontWeight: 'var(--vscode-font-weight)' as any,
                     justifyContent: 'start'
                 }}
             >
@@ -52,33 +53,7 @@ export class Toolbar extends React.PureComponent<IProps> {
                     <span style={{ verticalAlign: 'middle', paddingLeft: '4px', paddingBottom: '4px' }}>
                         Open as Python script
                     </span>
-                    {/* <div className="codicon codicon-notebook codicon-button" title="Open in Notebook" /> */}
                 </div>
-                {/* <div
-                    style={{ paddingRight: '15px', display: 'inline-block', cursor: 'pointer' }}
-                    onClick={() => this.props.submitCommand({ command: DataWranglerCommands.ExportToNotebook, args: null })}
-                >
-                    <div
-                        className="codicon codicon-notebook codicon-button"
-                        style={{ verticalAlign: 'middle' }}
-                        title="Open as Jupyter notebook"
-                    />
-                    <span style={{ verticalAlign: 'middle', paddingLeft: '4px', paddingBottom: '4px' }}>
-                        Open as Jupyter notebook
-                    </span>
-                    {/* <div className="codicon codicon-notebook codicon-button" title="Open in Notebook" />
-                </div> */}
-                {/*
-                    <div
-                        className="codicon codicon-window codicon-button"
-                        onClick={() => this.props.submitCommand({ command: 'open_interactive_window', args: undefined })}
-                        title="Open in Interactive Window"
-                    /> */}
-                {/* <div
-                    className="codicon codicon-filter codicon-button"
-                    onClick={() => this.props.onToggleFilter()}
-                    title="Toggle filters"
-                /> */}
             </div>
         );
     }
