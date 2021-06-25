@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Event, EventEmitter, Memento, workspace, window, ViewColumn } from 'vscode';
-import { IPythonExtensionChecker } from '../../api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 
 import {
     IApplicationShell,
@@ -11,6 +11,7 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../common/application/types';
+import { JVSC_EXTENSION_ID } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -29,6 +30,7 @@ import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
+import { InteractiveWindowView } from '../notebook/constants';
 import { INotebookControllerManager } from '../notebook/types';
 import {
     IInteractiveWindow,
@@ -74,7 +76,8 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider
     ) {
         asyncRegistry.push(this);
 
@@ -125,10 +128,30 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         // Ensure all our controllers are registered with VS Code
         await this.notebookControllerManager.loadNotebookControllers();
 
+        // Fetch the active interpreter and use the matching controller
+        const api = await this.pythonApi.getApi();
+        const activeInterpreter = await api.getActiveInterpreter();
+        const preferredController = this.notebookControllerManager
+            .registeredNotebookControllers()
+            .find((controller) => {
+                return (
+                    controller.connection.interpreter?.path === activeInterpreter?.path &&
+                    // We have to register each of our kernels as two controllers
+                    // because controllers are currently per-viewtype
+                    controller.controller.notebookType === InteractiveWindowView
+                );
+            });
+        // When this is not undefined, VS Code will always pick this controller for the interactive window
+        // When this is undefined, VS Code will fallback to its own cached notebook-controller association
+        // If VS Code does not have a cached association, the user will be asked to select a kernel from the
+        // kernel picker quickpick UI
+        const preferredControllerId = `${JVSC_EXTENSION_ID}/${preferredController?.id}`;
+
         const { notebookUri } = (await this.commandManager.executeCommand(
             'interactive.open',
             ViewColumn.Beside,
-            undefined
+            undefined,
+            preferredControllerId
         )) as INativeInteractiveWindow;
         const notebookDocument = workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === notebookUri.toString()

@@ -591,11 +591,14 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // Ensure we have a controller to execute code against
         // and a NotebookDocument to add the NotebookCell to
         const notebookDocument = this.notebookDocument;
+        if (!this.notebookController) {
+            await this.commandManager.executeCommand('notebook.selectKernel');
+        }
         await this.initialControllerSelected.promise;
         await this.kernelLoadPromise;
 
         // ensure editor is opened/focused
-        await this.commandManager.executeCommand('interactive.open', undefined, notebookDocument.uri);
+        await this.commandManager.executeCommand('interactive.open', undefined, notebookDocument.uri, this.notebookController!.id);
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
         const settings = this.configuration.getSettings();
