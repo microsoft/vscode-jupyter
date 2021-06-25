@@ -141,7 +141,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateNativeNotebookContext();
         this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
-        this.updateDebugContext(e);
+        void this.updateDebugContext(e);
     }
     private updateNativeNotebookContext() {
         this.hasNativeNotebookOpen.set(this.vscNotebook.notebookDocuments.some(isJupyterNotebook)).ignoreErrors();
