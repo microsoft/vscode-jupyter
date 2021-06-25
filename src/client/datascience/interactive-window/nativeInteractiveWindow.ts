@@ -598,7 +598,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.kernelLoadPromise;
 
         // ensure editor is opened/focused
-        await this.commandManager.executeCommand('interactive.open', undefined, notebookDocument.uri, this.notebookController!.id);
+        await this.commandManager.executeCommand(
+            'interactive.open',
+            undefined,
+            notebookDocument.uri,
+            this.notebookController!.id
+        );
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
         const settings = this.configuration.getSettings();
