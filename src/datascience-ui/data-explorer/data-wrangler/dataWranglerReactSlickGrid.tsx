@@ -396,7 +396,10 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         }
     }
 
-    protected renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
+    protected renderFilterCell = (
+        _e: Slick.EventData,
+        args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>
+    ) => {
         const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
         ReactDOM.render(
             <ReactSlickGridFilterBox
