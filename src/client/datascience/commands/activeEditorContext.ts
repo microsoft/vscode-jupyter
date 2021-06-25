@@ -13,6 +13,7 @@ import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { EditorContexts } from '../constants';
 import { isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers';
 import {
@@ -140,6 +141,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateNativeNotebookContext();
         this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
+        this.updateDebugContext(e);
     }
     private updateNativeNotebookContext() {
         this.hasNativeNotebookOpen.set(this.vscNotebook.notebookDocuments.some(isJupyterNotebook)).ignoreErrors();
@@ -154,14 +156,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
                         this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
                         const canInterrupt = nb && nb.status === ServerStatus.Busy;
                         this.canInterruptNotebookKernelContext.set(!!canInterrupt).ignoreErrors();
-
-                        this.canDebug.set(false).ignoreErrors();
-                        const interpreter = nb?.getMatchingInterpreter();
-                        if (interpreter) {
-                            this.canDebug
-                                .set(await this.dependencyService.areDebuggingDependenciesInstalled(interpreter))
-                                .ignoreErrors();
-                        }
                     }
                 })
                 .catch(
@@ -185,6 +179,31 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             return;
         }
         this.updateContextOfActiveNotebookKernel(activeEditor);
+    }
+    private async updateDebugContext(activeEditor?: INotebookEditor, interpreter?: PythonEnvironment) {
+        this.canDebug.set(false).ignoreErrors();
+
+        if (activeEditor) {
+            this.notebookProvider
+                .getOrCreateNotebook({ identity: activeEditor.file, resource: activeEditor.file, getOnly: true })
+                .then(async (nb) => {
+                    if (activeEditor === this.notebookEditorProvider.activeEditor) {
+                        const interpreter = nb?.getMatchingInterpreter();
+                        if (interpreter) {
+                            this.canDebug
+                                .set(await this.dependencyService.areDebuggingDependenciesInstalled(interpreter))
+                                .ignoreErrors();
+                        }
+                    }
+                })
+                .catch(
+                    traceError.bind(undefined, 'Failed to determine if a notebook is active for the current editor')
+                );
+        } else if (interpreter) {
+            this.canDebug
+                .set(await this.dependencyService.areDebuggingDependenciesInstalled(interpreter))
+                .ignoreErrors();
+        }
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {
         this.isPythonFileActive = e?.document.languageId === PYTHON_LANGUAGE && !isNotebookCell(e.document.uri);

@@ -13,6 +13,9 @@ import { IDebuggingCellMap, INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { INotebookControllerManager } from '../../datascience/notebook/types';
+import { ContextKey } from '../../common/contextKey';
+import { EditorContexts } from '../../datascience/constants';
+import { ICommandManager } from '../../common/application/types';
 
 class Debugger {
     private resolveFunc?: (value: vscode.DebugSession) => void;
@@ -59,6 +62,7 @@ class Debugger {
  */
 @injectable()
 export class DebuggingManager implements IExtensionSingleActivationService {
+    private debuggingInProgress: ContextKey;
     private notebookToDebugger = new Map<vscode.NotebookDocument, Debugger>();
     private readonly disposables: IDisposable[] = [];
 
@@ -66,8 +70,12 @@ export class DebuggingManager implements IExtensionSingleActivationService {
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IDebuggingCellMap) private debuggingCellMap: IDebuggingCellMap,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
-    ) {}
+        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
+    ) {
+        this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
+        this.updateToolbar(false);
+    }
 
     public async activate() {
         vscode.debug.breakpoints; // start to fetch breakpoints
@@ -75,6 +83,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
         this.disposables.push(
             // track termination of debug sessions
             vscode.debug.onDidTerminateDebugSession(async (session) => {
+                this.updateToolbar(false);
                 for (const [doc, dbg] of this.notebookToDebugger.entries()) {
                     if (dbg && session === (await dbg.session)) {
                         this.debuggingCellMap.getCellsAnClearQueue(doc);
@@ -89,6 +98,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                 this.debuggingCellMap.getCellsAnClearQueue(document);
                 const dbg = this.notebookToDebugger.get(document);
                 if (dbg) {
+                    this.updateToolbar(false);
                     await dbg.stop();
                 }
                 this.fixBreakpoints(document);
@@ -125,6 +135,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             vscode.commands.registerCommand('jupyter.debugNotebook', () => {
                 const editor = vscode.window.activeNotebookEditor;
                 if (editor) {
+                    this.updateToolbar(true);
                     void this.startDebugging(editor.document);
                 } else {
                     void vscode.window.showErrorMessage('No active notebook document to debug');
@@ -168,6 +179,10 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                 vscode.debug.addBreakpoints(addBpts);
             }
         }
+    }
+
+    private updateToolbar(debugging: boolean) {
+        this.debuggingInProgress.set(debugging).ignoreErrors();
     }
 
     private async startDebugging(doc: vscode.NotebookDocument) {
