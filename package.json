@@ -1453,6 +1453,12 @@
                     "description": "Enables/disables A/B tests.",
                     "scope": "machine"
                 },
+                "jupyter.enableNativeInteractiveWindow": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables the preview native interactive window experience. Set to false to opt back into the webview interactive window experience.",
+                    "scope": "machine"
+                },
                 "jupyter.logging.level": {
                     "type": "string",
                     "default": "debug",
