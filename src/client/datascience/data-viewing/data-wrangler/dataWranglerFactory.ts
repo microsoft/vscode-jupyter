@@ -14,6 +14,7 @@ import { ContextKey } from '../../../common/contextKey';
 import { debounce } from 'lodash';
 import { IDataViewerDataProvider } from '../types';
 
+// Creates Data Wranglers, keeps track of created data wranglers and disposes them when necessary
 @injectable()
 export class DataWranglerFactory implements IDataWranglerFactory, IAsyncDisposable {
     private knownDataWranglers = new Set<IDataWrangler>();
@@ -45,7 +46,6 @@ export class DataWranglerFactory implements IDataWranglerFactory, IAsyncDisposab
         }
     }
 
-    // @captureTelemetry(Telemetry.StartShowDataWrangler)
     public async create(
         dataProvider: IDataViewerDataProvider,
         title: string,
@@ -53,7 +53,7 @@ export class DataWranglerFactory implements IDataWranglerFactory, IAsyncDisposab
     ): Promise<IDataWrangler> {
         let result: IDataWrangler | undefined;
 
-        // Create the data explorer
+        // Create the data wrangler
         const dataWrangler = this.serviceContainer.get<IDataWrangler>(IDataWrangler);
         try {
             // Then load the data.

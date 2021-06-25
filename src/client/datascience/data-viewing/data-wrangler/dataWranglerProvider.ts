@@ -21,6 +21,9 @@ import { IDataWranglerFactory } from './types';
 import { DataScience } from '../../../common/utils/localize';
 import { IDataViewerDataProvider } from '../types';
 
+// Activates the Jupyter extension.
+// Does the work before the Data Wrangler loads like activating the custom editor,
+// selecting a file from the file explorer, and then calls the DataWranglerFactory to create/get the Data Wrangler
 @injectable()
 export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSingleActivationService {
     public get onDidChangeCustomDocument(): Event<CustomDocumentEditEvent> {

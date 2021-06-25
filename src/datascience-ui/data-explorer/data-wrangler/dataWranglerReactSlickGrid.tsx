@@ -208,7 +208,6 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 if (!slickgridJQ(e?.currentTarget).is('ul') || !this.state.grid?.getEditorLock().commitCurrentEdit()) {
                     return;
                 }
-                // Submit a drop column request
                 const contextMenuItem = e?.target?.id;
                 if (this.props.submitCommand) {
                     switch (contextMenuItem) {
