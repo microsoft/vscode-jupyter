@@ -18,6 +18,7 @@ import * as path from 'path';
 import { IDebuggingCellMap, IJupyterSession } from '../../datascience/types';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { ICommandManager } from '../../common/application/types';
+import { traceError } from '../../common/logger';
 
 const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugRequestMsg => {
     return {
@@ -173,7 +174,7 @@ export class KernelDebugAdapter implements DebugAdapter {
             });
         } else {
             // cannot send via iopub, no way to handle events even if they existed
-            console.assert(false, `Unknown message type to send ${message.type}`);
+            traceError(`Unknown message type to send ${message.type}`);
         }
     }
 
@@ -198,7 +199,7 @@ export class KernelDebugAdapter implements DebugAdapter {
                 this.fileToCell.set(norm, cell);
                 this.cellToFile.set(cell.document.uri.toString(), norm);
             } catch (err) {
-                console.log(err);
+                traceError(err);
             }
         }
     }
