@@ -25,7 +25,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
     render() {
         return (
             <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '100px' /* paddingTop: '6px' */ }}>
+                <div style={{ display: 'flex', flexDirection: 'column', width: '100px'}}>
                     <span>{'New start range:'}</span>
                     <input
                         value={this.state.normalizeRangeStart}
