@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { TextEditor } from 'vscode';
+import { NotebookDocument, TextEditor } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
@@ -16,6 +16,8 @@ import { isNotebookCell } from '../../common/utils/misc';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { EditorContexts } from '../constants';
 import { isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers';
+import { INotebookControllerManager } from '../notebook/types';
+import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
@@ -44,6 +46,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private isVSCodeNotebookActive: ContextKey;
     private usingWebViewNotebook: ContextKey;
     private hasNativeNotebookOpen: ContextKey;
+    private debugReadyInterpreters = new Map<PythonEnvironment, boolean>();
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -53,7 +56,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(UseVSCodeNotebookEditorApi) private readonly inNativeNotebookExperiment: boolean,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IKernelDependencyService) private dependencyService: IKernelDependencyService
+        @inject(IKernelDependencyService) private dependencyService: IKernelDependencyService,
+        @inject(INotebookControllerManager) private controllerManager: INotebookControllerManager
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -102,6 +106,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this,
             this.disposables
         );
+        this.controllerManager.onNotebookControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
 
         // Do we already have python file opened.
         if (this.docManager.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
@@ -141,7 +146,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateNativeNotebookContext();
         this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
-        void this.updateDebugContext(e);
+        void this.updateDebugContext(e?.notebook?.getMatchingInterpreter());
     }
     private updateNativeNotebookContext() {
         this.hasNativeNotebookOpen.set(this.vscNotebook.notebookDocuments.some(isJupyterNotebook)).ignoreErrors();
@@ -179,25 +184,27 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
         this.updateContextOfActiveNotebookKernel(activeEditor);
     }
-    private async updateDebugContext(activeEditor?: INotebookEditor, interpreter?: PythonEnvironment) {
-        this.canDebug.set(false).ignoreErrors();
-
-        if (activeEditor && activeEditor === this.notebookEditorProvider.activeEditor) {
-            const nb = await this.notebookProvider.getOrCreateNotebook({
-                identity: activeEditor.file,
-                resource: activeEditor.file,
-                getOnly: true
-            });
-            const interpreter = nb?.getMatchingInterpreter();
-            if (interpreter) {
-                this.canDebug
-                    .set(await this.dependencyService.areDebuggingDependenciesInstalled(interpreter))
-                    .ignoreErrors();
+    private onNotebookControllerSelected({
+        controller
+    }: {
+        notebook: NotebookDocument;
+        controller: VSCodeNotebookController;
+    }) {
+        this.updateDebugContext(controller.connection.interpreter);
+    }
+    private async updateDebugContext(interpreter?: PythonEnvironment) {
+        if (!interpreter) {
+            this.canDebug.set(false).ignoreErrors();
+        } else {
+            let flag = this.debugReadyInterpreters.get(interpreter);
+            if (flag !== undefined) {
+                this.canDebug.set(flag).ignoreErrors();
+                return;
             }
-        } else if (interpreter) {
-            this.canDebug
-                .set(await this.dependencyService.areDebuggingDependenciesInstalled(interpreter))
-                .ignoreErrors();
+
+            flag = await this.dependencyService.areDebuggingDependenciesInstalled(interpreter);
+            this.debugReadyInterpreters.set(interpreter, flag);
+            this.canDebug.set(flag).ignoreErrors();
         }
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {
