@@ -194,7 +194,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async show(): Promise<void> {
-        noop(); // TODO VS Code needs to provide an API for this
+        await this.commandManager.executeCommand('interactive.open', undefined, this.notebookUri, undefined);
     }
 
     public dispose() {
@@ -230,7 +230,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.addNotebookCell(code);
         try {
             await this.commandManager.executeCommand('notebook.cell.execute', {
-                ranges: [{ start: this.notebookDocument.cellCount - 2, end: this.notebookDocument.cellCount }],
+                ranges: [{ start: this.notebookDocument.cellCount - 1, end: this.notebookDocument.cellCount }],
                 document: this.notebookDocument.uri,
                 autoReveal: true
             });
@@ -607,7 +607,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             'interactive.open',
             undefined,
             this.notebookDocument.uri,
-            this.notebookController!.id
+            this.notebookController?.id
         );
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files

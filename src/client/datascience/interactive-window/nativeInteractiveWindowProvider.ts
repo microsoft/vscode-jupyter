@@ -29,7 +29,6 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
-import { getInterpreterKernelSpecName } from '../jupyter/kernels/helpers';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
 import { INotebookControllerManager } from '../notebook/types';
@@ -245,37 +244,19 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         // Fetch the active interpreter and use the matching controller
         const api = await this.pythonApi.getApi();
         const activeInterpreter = await api.getActiveInterpreter();
-        const interpreterControllers = this.notebookControllerManager.registeredNotebookControllers().filter(
-            (controller) =>
-                // We register each of our kernels as two controllers
-                // because controllers are currently per-viewtype. Find
-                // the one for the interactive viewtype for now
-                controller.controller.notebookType === InteractiveWindowView
-        );
-
-        // First try to match on the kernelSpec name. This is supposed to uniquely
-        // identify the active interpreter.
-        const kernelSpecName = getInterpreterKernelSpecName(activeInterpreter);
-        let preferredController = interpreterControllers.find((controller) => {
-            return (
-                controller.connection.kind === 'startUsingPythonInterpreter' &&
-                controller.connection.kernelSpec.name === kernelSpecName
-            );
-        });
-
-        // We do some deduplication of old kernelspecs which may result in matches
-        // being hidden, so just in case the first search on the kernelSpecName fails to
-        // return a match, fall back to matching on the interpreter path. Note that we
-        // don't want to start with just the naive path match below, because it's possible to
-        // have multiple kernelspecs associated with the same Python interpreter path.
-        if (preferredController === undefined) {
-            preferredController = interpreterControllers.find((controller) => {
+        const preferredController = this.notebookControllerManager
+            .registeredNotebookControllers()
+            .find((controller) => {
                 return (
+                    // We register each of our kernels as two controllers
+                    // because controllers are currently per-viewtype. Find
+                    // the one for the interactive viewtype for now
+                    controller.controller.notebookType === InteractiveWindowView &&
                     controller.connection.kind === 'startUsingPythonInterpreter' &&
-                    controller.connection.interpreter?.path === activeInterpreter?.path
+                    controller.connection.interpreter?.path === activeInterpreter?.path &&
+                    controller.connection.interpreter.displayName === activeInterpreter.displayName
                 );
             });
-        }
 
         return preferredController !== undefined ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
     }
