@@ -1048,10 +1048,6 @@ export namespace DataScience {
         'DataScience.dataWranglerFillNaTransformation',
         "Replaced Na values with: '{0}'"
     );
-    export const dataWranglerPyplotHistogramCode = localize(
-        'DataScience.dataWranglerPyPlotHistogram',
-        "import matplotlib.pyplot as plt\nplt.hist({0}['{1}'])\n"
-    );
     export const dataWranglerImportCode = localize(
         'DataScience.dataWranglerImportCode',
         "import pandas as pd\r\ndf = pd.read_csv(r'{0}')\n"

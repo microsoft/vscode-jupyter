@@ -38,7 +38,7 @@ import 'slickgrid/slick.grid.css';
 import './dataWranglerReactSlickGrid.css';
 import './contextMenu.css';
 import { ISlickGridProps, ISlickRow, ReactSlickGrid } from '../reactSlickGrid';
-import { DataWranglerCommands, IDropDuplicatesRequest, IDropNaRequest, IDropRequest, INormalizeColumnRequest } from '../../../client/datascience/data-viewing/data-wrangler/types';
+import { DataWranglerCommands, IDescribeColReq, IDropDuplicatesRequest, IDropNaRequest, IDropRequest, INormalizeColumnRequest } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { ControlPanel } from './controlPanel';
 import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
 
@@ -209,6 +209,11 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 const contextMenuItem = e?.target?.id;
                 if (this.props.submitCommand) {
                     switch (contextMenuItem) {
+                        case ColumnContextMenuItem.GetColumnStats:
+                            return this.props.submitCommand({
+                                command: DataWranglerCommands.Describe,
+                                args: { targetColumn: this.contextMenuColumnName } as IDescribeColReq
+                            });
                         case ColumnContextMenuItem.DropColumns:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.Drop,

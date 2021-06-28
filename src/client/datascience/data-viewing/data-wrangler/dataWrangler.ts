@@ -43,7 +43,6 @@ import {
     IDropDuplicatesRequest,
     IDropNaRequest,
     ICoerceColumnRequest,
-    IPlotHistogramReq,
     IGetColumnStatsReq,
     IGetHistoryItem,
     IReplaceAllColumnsRequest
@@ -125,7 +124,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         this.commands.set(DataWranglerCommands.FillNa, this.fillNa.bind(this));
         this.commands.set(DataWranglerCommands.GetHistoryItem, this.getHistoryItem.bind(this));
         this.commands.set(DataWranglerCommands.CoerceColumn, this.coerceColumn.bind(this));
-        this.commands.set(DataWranglerCommands.PyplotHistogram, this.plotHistogram.bind(this));
         this.commands.set(DataWranglerCommands.ReplaceAllColumn, this.replaceAllColumn.bind(this));
     }
 
@@ -254,11 +252,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         await updateCellCode(blankCell, dataCleanCode);
     }
 
-    private async plotHistogram(req: IPlotHistogramReq, currentVariableName: string): Promise<IHistoryItem> {
-        const code = DataScience.dataWranglerPyplotHistogramCode().format(currentVariableName, req.targetColumn);
-        return { code: code } as IHistoryItem;
-    }
-
     private async getColumnStats(req: IGetColumnStatsReq) {
         if (this.dataProvider && this.dataProvider.getCols && req.targetColumn !== undefined) {
             const columnData = await this.dataProvider.getCols(req.targetColumn);
@@ -293,7 +286,9 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
                 if (this.existingDisposable) {
                     this.existingDisposable.dispose();
                 }
-                await this.updateWithNewVariable(newVariableName);
+                if (newVariableName) {
+                    await this.updateWithNewVariable(newVariableName);
+                }
             });
         }
     }

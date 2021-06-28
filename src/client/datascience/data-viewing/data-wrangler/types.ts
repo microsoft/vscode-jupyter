@@ -71,7 +71,7 @@ export interface IGetHistoryItem {
     index: number;
 }
 
-export interface IPlotHistogramReq {
+export interface IDescribeColReq {
     targetColumn: string;
 }
 
