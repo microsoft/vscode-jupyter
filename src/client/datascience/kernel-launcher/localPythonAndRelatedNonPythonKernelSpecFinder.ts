@@ -84,8 +84,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         );
     }
     /**
-     * If user has python extension installed, then we'll not list any of the globally registered Python kernels.
-     * They are too ambiguous (because we have no idea what Python environment they are related to).
+     * Don't list any global python kernelspecs that are just default kernelspecs. Others should be listed as they might have been manually added
+     * by users to the global kernelspec location.
      *
      * Some python environments like conda can have non-python kernel specs as well, this will return those as well.
      * Those kernels can only be started within the context of the Python environment.
@@ -107,8 +107,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             this.listGlobalPythonKernelSpecs(true, cancelToken)
         ]);
 
-        const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
-            isKernelRegisteredByUs(item.kernelSpec)
+        // Only return global location kernelspecs if they are the old ones registered by us, or if they
+        // do not match the default kernel spec name.
+        const nonDefaultGlobalPythonKernelSpecs = globalKernelSpecs.filter(
+            (item) =>
+                isKernelRegisteredByUs(item.kernelSpec) ||
+                !item.kernelSpec.name.toLowerCase().match(isDefaultPythonKernelSpecName)
         );
         // Copy the interpreter list. We need to filter out those items
         // which have matched one or more kernelspecs
@@ -123,7 +127,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // Then go through all of the kernels and generate their metadata
         const distinctKernelMetadata = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
         await Promise.all(
-            [...kernelSpecs, ...globalPythonKernelSpecsRegisteredByUs.map((item) => item.kernelSpec)]
+            [...kernelSpecs, ...nonDefaultGlobalPythonKernelSpecs.map((item) => item.kernelSpec)]
                 .filter((kernelspec) => {
                     if (
                         kernelspec.language === PYTHON_LANGUAGE &&
