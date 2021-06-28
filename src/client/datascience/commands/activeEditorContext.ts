@@ -202,6 +202,9 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
                 return;
             }
 
+            // set to false while we wait
+            this.canDebug.set(false).ignoreErrors();
+
             flag = await this.dependencyService.areDebuggingDependenciesInstalled(interpreter);
             this.debugReadyInterpreters.set(interpreter, flag);
             this.canDebug.set(flag).ignoreErrors();
