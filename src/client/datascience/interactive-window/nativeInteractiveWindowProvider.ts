@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Event, EventEmitter, Memento, workspace, window, ViewColumn } from 'vscode';
-import { IPythonExtensionChecker } from '../../api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 
 import {
     IApplicationShell,
@@ -11,6 +11,7 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../common/application/types';
+import { JVSC_EXTENSION_ID } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -28,7 +29,9 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
+import { getInterpreterKernelSpecName } from '../jupyter/kernels/helpers';
 import { IKernelProvider } from '../jupyter/kernels/types';
+import { InteractiveWindowView } from '../notebook/constants';
 import { INotebookControllerManager } from '../notebook/types';
 import {
     IInteractiveWindow,
@@ -52,7 +55,9 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         return this._onDidCreateInteractiveWindow.event;
     }
     public get activeWindow(): IInteractiveWindow | undefined {
-        return this._activeWindow;
+        return this._windows.find(
+            (win) => win.notebookUri.toString() === window.activeNotebookEditor?.document.uri.toString()
+        );
     }
     public get windows(): ReadonlyArray<IInteractiveWindow> {
         return this._windows;
@@ -61,7 +66,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private _windows: NativeInteractiveWindow[] = [];
-    private _activeWindow: NativeInteractiveWindow | undefined = undefined;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -74,23 +78,10 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider
     ) {
         asyncRegistry.push(this);
-
-        this.disposables.push(
-            workspace.onDidCloseNotebookDocument((_) => {
-                this.update();
-            })
-        );
-
-        this.disposables.push(
-            window.onDidChangeActiveNotebookEditor((_) => {
-                this.update();
-            })
-        );
-
-        this.update();
     }
 
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
@@ -125,10 +116,17 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         // Ensure all our controllers are registered with VS Code
         await this.notebookControllerManager.loadNotebookControllers();
 
+        // When this is not undefined, VS Code will always pick this controller for the interactive window
+        // When this is undefined, VS Code will fallback to its own cached notebook-controller association
+        // If VS Code does not have a cached association, the user will be asked to select a kernel from the
+        // kernel picker quickpick UI
+        const preferredControllerId = await this.getControllerForInteractiveWindow();
+
         const { notebookUri } = (await this.commandManager.executeCommand(
             'interactive.open',
             ViewColumn.Beside,
-            undefined
+            undefined,
+            preferredControllerId
         )) as INativeInteractiveWindow;
         const notebookDocument = workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === notebookUri.toString()
@@ -188,31 +186,30 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             result === 'multiple' &&
             resource &&
             !this.globalMemento.get(AskedForPerFileSettingKey) &&
-            this._windows.length === 1
+            this._windows.length === 1 &&
+            // Only prompt if the submitting file is different
+            this._windows[0].owner?.fsPath !== resource.fsPath
         ) {
             // See if the first window was tied to a file or not.
-            const firstWindow = this._windows.find((w) => w.owner);
-            if (firstWindow) {
-                this.globalMemento.update(AskedForPerFileSettingKey, true).then(noop, noop);
-                const questions = [
-                    localize.DataScience.interactiveWindowModeBannerSwitchYes(),
-                    localize.DataScience.interactiveWindowModeBannerSwitchNo()
-                ];
-                // Ask user if they'd like to switch to per file or not.
-                const response = await this.appShell.showInformationMessage(
-                    localize.DataScience.interactiveWindowModeBannerTitle(),
-                    ...questions
+            this.globalMemento.update(AskedForPerFileSettingKey, true).then(noop, noop);
+            const questions = [
+                localize.DataScience.interactiveWindowModeBannerSwitchYes(),
+                localize.DataScience.interactiveWindowModeBannerSwitchNo()
+            ];
+            // Ask user if they'd like to switch to per file or not.
+            const response = await this.appShell.showInformationMessage(
+                localize.DataScience.interactiveWindowModeBannerTitle(),
+                ...questions
+            );
+            if (response === questions[0]) {
+                result = 'perFile';
+                this._windows[0].changeMode(result);
+                await this.configService.updateSetting(
+                    'interactiveWindowMode',
+                    result,
+                    resource,
+                    ConfigurationTarget.Global
                 );
-                if (response === questions[0]) {
-                    result = 'perFile';
-                    firstWindow.changeMode(result);
-                    await this.configService.updateSetting(
-                        'interactiveWindowMode',
-                        result,
-                        resource,
-                        ConfigurationTarget.Global
-                    );
-                }
             }
         }
         return result;
@@ -244,25 +241,43 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         });
     }
 
-    private update() {
-        const windows: NativeInteractiveWindow[] = [];
+    private async getControllerForInteractiveWindow(): Promise<string | undefined> {
+        // Fetch the active interpreter and use the matching controller
+        const api = await this.pythonApi.getApi();
+        const activeInterpreter = await api.getActiveInterpreter();
+        const interpreterControllers = this.notebookControllerManager.registeredNotebookControllers().filter(
+            (controller) =>
+                // We register each of our kernels as two controllers
+                // because controllers are currently per-viewtype. Find
+                // the one for the interactive viewtype for now
+                controller.controller.notebookType === InteractiveWindowView
+        );
 
-        this._windows.forEach((win) => {
-            const notebookDocument = workspace.notebookDocuments.find(
-                (document) => win.notebookUri.toString() === document.uri.toString()
+        // First try to match on the kernelSpec name. This is supposed to uniquely
+        // identify the active interpreter.
+        const kernelSpecName = getInterpreterKernelSpecName(activeInterpreter);
+        let preferredController = interpreterControllers.find((controller) => {
+            return (
+                controller.connection.kind === 'startUsingPythonInterpreter' &&
+                controller.connection.kernelSpec.name === kernelSpecName
             );
-            if (notebookDocument === undefined) {
-                win.dispose();
-            } else {
-                windows.push(win);
-            }
         });
 
-        this._windows = windows;
-        const activeNotebookEditor = window.activeNotebookEditor;
-        this._activeWindow = this._windows.find(
-            (win) => win.notebookUri.toString() === activeNotebookEditor?.document.uri.toString()
-        );
+        // We do some deduplication of old kernelspecs which may result in matches
+        // being hidden, so just in case the first search on the kernelSpecName fails to
+        // return a match, fall back to matching on the interpreter path. Note that we
+        // don't want to start with just the naive path match below, because it's possible to
+        // have multiple kernelspecs associated with the same Python interpreter path.
+        if (preferredController === undefined) {
+            preferredController = interpreterControllers.find((controller) => {
+                return (
+                    controller.connection.kind === 'startUsingPythonInterpreter' &&
+                    controller.connection.interpreter?.path === activeInterpreter?.path
+                );
+            });
+        }
+
+        return preferredController !== undefined ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
     }
 
     // TODO: we don't currently have a way to know when the VS Code InteractiveEditor

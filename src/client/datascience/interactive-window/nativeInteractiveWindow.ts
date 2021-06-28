@@ -64,6 +64,7 @@ import {
 } from '../types';
 import { createInteractiveIdentity } from './identity';
 import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
+import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -174,6 +175,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             this,
             this.disposables
         );
+
+        workspace.onDidCloseNotebookDocument((notebookDocument) => {
+            if (notebookDocument === this.notebookDocument) {
+                this.closedEvent.fire(this);
+            }
+        });
     }
 
     private registerKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
@@ -589,20 +596,28 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     private async addNotebookCell(code: string): Promise<NotebookCell> {
         // Ensure we have a controller to execute code against
-        // and a NotebookDocument to add the NotebookCell to
-        const notebookDocument = this.notebookDocument;
+        if (!this.notebookController) {
+            await this.commandManager.executeCommand('notebook.selectKernel');
+        }
         await this.initialControllerSelected.promise;
         await this.kernelLoadPromise;
 
         // ensure editor is opened/focused
-        await this.commandManager.executeCommand('interactive.open', undefined, notebookDocument.uri);
+        await this.commandManager.executeCommand(
+            'interactive.open',
+            undefined,
+            this.notebookDocument.uri,
+            this.notebookController!.id
+        );
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
         const settings = this.configuration.getSettings();
         const cellMatcher = new CellMatcher(settings);
-        const strippedCode = cellMatcher.stripFirstMarker(code).trimStart();
-        const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
         const isMarkdown = cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
+        const strippedCode = isMarkdown
+            ? generateMarkdownFromCodeLines(code.splitLines()).join('\n')
+            : cellMatcher.stripFirstMarker(code).trimStart();
+        const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
         // Insert code cell into NotebookDocument
         const edit = new WorkspaceEdit();
@@ -616,14 +631,14 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         );
         notebookCellData.metadata = { interactiveWindowCellMarker };
         edit.replaceNotebookCells(
-            notebookDocument.uri,
-            new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
+            this.notebookDocument.uri,
+            new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),
             [
                 notebookCellData // TODO generalize to arbitrary languages and cell types
             ]
         );
         await workspace.applyEdit(edit);
-        return notebookDocument.cellAt(notebookDocument.cellCount - 1);
+        return this.notebookDocument.cellAt(this.notebookDocument.cellCount - 1);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
@@ -633,7 +648,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
-        const cells = generateCellsFromNotebookDocument(this.notebookDocument);
+        const { magicCommandsAsComments } = this.configuration.getSettings();
+        const cells = generateCellsFromNotebookDocument(this.notebookDocument, magicCommandsAsComments);
 
         // Should be an array of cells
         if (cells && this.exportDialog) {
@@ -651,7 +667,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
-        const cells = generateCellsFromNotebookDocument(this.notebookDocument);
+        const { magicCommandsAsComments } = this.configuration.getSettings();
+        const cells = generateCellsFromNotebookDocument(this.notebookDocument, magicCommandsAsComments);
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };

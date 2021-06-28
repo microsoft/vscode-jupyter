@@ -296,8 +296,8 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, MigrateJupyterInterpreterStateService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, VariableViewActivationService);
     serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
-    const interactiveConfiguration = workspace.getConfiguration('interactive.experiments');
-    if (interactiveConfiguration.get<boolean | undefined>('enable') === true) {
+    const jupyterConfiguration = workspace.getConfiguration('jupyter');
+    if (jupyterConfiguration.get<boolean>('experiments.enabled') === true && jupyterConfiguration.get<boolean>('enableNativeInteractiveWindow') === true) {
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, NativeInteractiveWindowProvider);
         serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
     } else {

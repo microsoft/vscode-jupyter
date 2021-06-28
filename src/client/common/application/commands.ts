@@ -58,6 +58,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri } }];
     [DSCommands.InteractiveRemoveCell]: [NotebookCell];
     [DSCommands.InteractiveGoToCode]: [NotebookCell];
+    [DSCommands.InteractiveCopyCode]: [NotebookCell];
     [DSCommands.InteractiveExportAsNotebook]: [{ notebookEditor: { notebookUri: Uri } }];
     [DSCommands.InteractiveExportAs]: [{ notebookEditor: { notebookUri: Uri } }];
     ['notebook.cell.quitEdit']: [];
@@ -99,7 +100,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.save']: [Uri];
     ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
     ['undo']: [];
-    ['interactive.open']: [ViewColumn | undefined, Uri | undefined];
+    ['interactive.open']: [ViewColumn | undefined, Uri | undefined, string | undefined];
     ['interactive.execute']: [string];
     [DSCommands.NotebookEditorInterruptKernel]: [Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
