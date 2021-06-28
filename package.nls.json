@@ -144,6 +144,7 @@
     "DataScience.collapseVariableExplorerLabel": "Variables",
     "DataScience.expandVariableExplorerTooltip": "Show variables active in jupyter kernel",
     "DataScience.close": "Close",
+    "DataScience.interactiveCopyCode": "Copy Code",
     "DataScience.variableLoadingValue": "Loading...",
     "DataScience.importDialogTitle": "Import Jupyter Notebook",
     "DataScience.importDialogFilter": "Jupyter Notebooks",
@@ -499,5 +500,5 @@
     "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targetting the language '{1}'",
     "DataScience.interactiveClearAllCells": "Clear All",
     "DataScience.interactiveRemoveCell": "Remove Cell",
-    "DataScience.interactiveGoToCode": "Go to code"
+    "DataScience.interactiveGoToCode": "Go to Code"
 }

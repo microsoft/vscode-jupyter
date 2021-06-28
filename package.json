@@ -802,6 +802,12 @@
                     "dark": "resources/dark/export_to_python.svg"
                 },
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.interactive.copyCode",
+                "title": "%DataScience.interactiveCopyCode%",
+                "icon": "$(copy)",
+                "category": "Jupyter"
             }
         ],
         "menus": {
@@ -955,13 +961,18 @@
             ],
             "interactive/cell/title": [
                 {
-                    "command": "jupyter.interactive.goToCode",
+                    "command": "jupyter.interactive.copyCode",
                     "group": "inline@0",
                     "when": "isWorkspaceTrusted"
                 },
                 {
+                    "command": "jupyter.interactive.goToCode",
+                    "group": "inline@1",
+                    "when": "isWorkspaceTrusted"
+                },
+                {
                     "command": "jupyter.interactive.removeCell",
-                    "group": "inline@0",
+                    "group": "inline@2",
                     "when": "isWorkspaceTrusted"
                 }
             ],
@@ -996,6 +1007,10 @@
                 {
                     "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow",
                     "title": "%DataScience.renderMarkdownAndSelectBelow%",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.interactive.copyCode",
                     "when": "false"
                 },
                 {

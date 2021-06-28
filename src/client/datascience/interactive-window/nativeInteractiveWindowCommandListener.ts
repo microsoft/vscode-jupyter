@@ -19,7 +19,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
+import { IApplicationShell, IClipboard, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
@@ -61,7 +61,8 @@ export class NativeInteractiveWindowCommandListener {
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
         @inject(IExportManager) private exportManager: IExportManager,
-        @inject(IExportDialog) private exportDialog: IExportDialog
+        @inject(IExportDialog) private exportDialog: IExportDialog,
+        @inject(IClipboard) private clipboard: IClipboard
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -184,6 +185,9 @@ export class NativeInteractiveWindowCommandListener {
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow, this)
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.InteractiveCopyCode, this.copyCodeInInteractiveWindow, this)
         );
     }
 
@@ -577,6 +581,12 @@ export class NativeInteractiveWindowCommandListener {
                 editor.revealRange(new Range(line, 0, line, 0));
                 editor.selection = new Selection(new Position(line, 0), new Position(line, 0));
             }
+        }
+    }
+
+    private async copyCodeInInteractiveWindow(context?: NotebookCell) {
+        if (context) {
+            await this.clipboard.writeText(context.document.getText());
         }
     }
 }
