@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { DataWranglerCommands, IReplaceAllColumnsRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
+import { buttonStyle, inputStyle } from '../styles';
 
 interface IProps {
     selectedColumns: string[];
@@ -31,7 +32,7 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
                         value={this.state.oldValue}
                         onChange={this.handleChangeOldValue}
                         className={'slice-data'}
-                        style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
+                        style={inputStyle}
                         autoComplete="on"
                     />
                     <span>{'To:'}</span>
@@ -39,7 +40,7 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
                         value={this.state.newValue}
                         onChange={this.handleChangeNewValue}
                         className={'slice-data'}
-                        style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
+                        style={inputStyle}
                         autoComplete="on"
                     />
                     <button
@@ -56,16 +57,7 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
                                 this.props.setColumns([]);
                             }
                         }}
-                        style={{
-                            backgroundColor: 'var(--vscode-button-background)',
-                            color: 'var(--vscode-button-foreground)',
-                            margin: '4px',
-                            marginLeft: '0px',
-                            padding: '8px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            height: '26px'
-                        }}
+                        style={buttonStyle}
                     >
                         Submit
                     </button>

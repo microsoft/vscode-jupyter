@@ -38,7 +38,14 @@ import 'slickgrid/slick.grid.css';
 import './dataWranglerReactSlickGrid.css';
 import './contextMenu.css';
 import { ISlickGridProps, ISlickRow, ReactSlickGrid } from '../reactSlickGrid';
-import { DataWranglerCommands, IDescribeColReq, IDropDuplicatesRequest, IDropNaRequest, IDropRequest, INormalizeColumnRequest } from '../../../client/datascience/data-viewing/data-wrangler/types';
+import {
+    DataWranglerCommands,
+    IDescribeColReq,
+    IDropDuplicatesRequest,
+    IDropNaRequest,
+    IDropRequest,
+    INormalizeColumnRequest
+} from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { ControlPanel } from './controlPanel';
 import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
 
@@ -222,7 +229,11 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                         case ColumnContextMenuItem.NormalizeColumn:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.NormalizeColumn,
-                                args: { start: 0, end: 1, targetColumn: this.contextMenuColumnName } as INormalizeColumnRequest
+                                args: {
+                                    start: 0,
+                                    end: 1,
+                                    targetColumn: this.contextMenuColumnName
+                                } as INormalizeColumnRequest
                             });
                         case ColumnContextMenuItem.DropNA:
                             return this.props.submitCommand({
@@ -263,19 +274,12 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
               }
             : {};
 
-
         return (
             <div className="outer-container">
                 <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden' }}>
-                    {/* <Resizable 
-                        style={{display: "flex", alignItems: "top", justifyContent: "left", flexDirection: "column", zIndex: 99998 }}
-                        handleClasses={{ right: "resizable-span" }}
-                        defaultSize={{ width: '60%', height }}
-                        enable={{ left:false, top:false, right:true, bottom:false, topRight:false, bottomRight:false, bottomLeft:false, topLeft:false }}
-                        > */}
                     <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                     <div className="react-grid-measure" ref={this.measureRef} />
-                        <Resizable
+                    <Resizable
                         style={{
                             display: 'flex',
                             alignItems: 'top',
@@ -303,8 +307,8 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                         interface and made them optional so we have to use ?? here */}
                         <ControlPanel
                             historyList={this.props.historyList ?? []}
-                            monacoTheme={this.props.monacoTheme ?? ""}
-                            histogramData={this.props.histogramData ?? {} as IGetColsResponse}
+                            monacoTheme={this.props.monacoTheme ?? ''}
+                            histogramData={this.props.histogramData ?? ({} as IGetColsResponse)}
                             data={this.dataView.getItems()}
                             resizeEvent={this.props.resizeGridEvent}
                             headers={
@@ -313,15 +317,15 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                                     .map((c) => c.name)
                                     .filter((c) => c !== undefined) as string[]
                             }
-                            currentVariableName={this.props.currentVariableName ?? ""}
+                            currentVariableName={this.props.currentVariableName ?? ''}
                             /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-function */
-                            submitCommand={this.props.submitCommand ?? ((_data: {command: string, args: any}) => {})}
+                            submitCommand={this.props.submitCommand ?? ((_data: { command: string; args: any }) => {})}
                             /* eslint-enable no-return-assign, no-param-reassign */
                         />
                     </Resizable>
                 </div>
                 <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
-                    <li id={ColumnContextMenuItem.GetColumnStats}>{ColumnContextMenuItem.GetColumnStats}</li>
+                    {/* <li id={ColumnContextMenuItem.GetColumnStats}>{ColumnContextMenuItem.GetColumnStats}</li> */}
                     <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>
                     <li id={ColumnContextMenuItem.NormalizeColumn}>{ColumnContextMenuItem.NormalizeColumn}</li>
                     <li id={ColumnContextMenuItem.DropNA}>{ColumnContextMenuItem.DropNA}</li>
@@ -412,6 +416,5 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             />,
             args.node
         );
-        // }
     };
 }

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { DataWranglerCommands, IRenameColumnsRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
+import { buttonStyle, inputStyle } from '../styles';
 
 interface IProps {
     selectedColumn: string;
@@ -29,7 +30,7 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
                         value={this.state.newColumnName}
                         onChange={this.handleChange}
                         className={'slice-data'}
-                        style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
+                        style={inputStyle}
                         autoComplete="on"
                     />
                     <button
@@ -45,16 +46,7 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
                                 this.props.setColumns([]);
                             }
                         }}
-                        style={{
-                            backgroundColor: 'var(--vscode-button-background)',
-                            color: 'var(--vscode-button-foreground)',
-                            margin: '4px',
-                            marginLeft: '0px',
-                            padding: '8px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            height: '26px'
-                        }}
+                        style={buttonStyle}
                     >
                         Submit
                     </button>

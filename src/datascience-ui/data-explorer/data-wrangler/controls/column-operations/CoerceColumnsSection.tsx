@@ -1,7 +1,7 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
 import { DataWranglerCommands, ICoerceColumnRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
-import { dropdownStyles } from '../styles';
+import { buttonStyle, dropdownStyle, dropdownStyles } from '../styles';
 
 interface IProps {
     selectedColumns: string[];
@@ -39,7 +39,7 @@ export class CoerceColumnsSection extends React.Component<IProps, IState> {
                     <span>{'To:'}</span>
                     <Dropdown
                         responsiveMode={ResponsiveMode.xxxLarge}
-                        style={{ marginRight: '10px', width: '150px', marginBottom: '16px' }}
+                        style={dropdownStyle}
                         styles={dropdownStyles}
                         options={this.getCoercableTypes()}
                         className="dropdownTitleOverrides"
@@ -57,16 +57,7 @@ export class CoerceColumnsSection extends React.Component<IProps, IState> {
                                 });
                             }
                         }}
-                        style={{
-                            backgroundColor: 'var(--vscode-button-background)',
-                            color: 'var(--vscode-button-foreground)',
-                            margin: '4px',
-                            marginLeft: '0px',
-                            padding: '8px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            height: '26px'
-                        }}
+                        style={buttonStyle}
                     >
                         Submit
                     </button>

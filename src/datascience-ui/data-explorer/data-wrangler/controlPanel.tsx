@@ -74,49 +74,6 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                     currentVariableName={this.props.currentVariableName}
                     submitCommand={this.props.submitCommand}
                 />
-                {/* <details className="slicing-control" style={{ borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)', paddingTop: '4px', paddingBottom: '4px'}}>
-                    <summary className="slice-summary">
-                        <span className="slice-summary-detail">
-                            {'HANDLE OUTLIERS'}
-                        </span>
-                    </summary>
-                    <div className="slice-control-row slice-form-container" style={{ paddingBottom: '5px' }}>
-						<Dropdown
-							responsiveMode={ResponsiveMode.xxxLarge}
-							label={'In column:'}
-							style={{ marginRight: '10px', width: '100px' }}
-							styles={dropdownStyles}
-							selectedKey={3}
-							options={this.generateColumnRenameOptions()}
-							className="dropdownTitleOverrides"
-							onChange={this.updateRenameTarget}
-						/>
-						<div style={{ paddingLeft: '10px', display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px', paddingRight: '20px' }} >
-							<span>
-								{'Replace value:'}
-							</span>
-							<input
-								value={'inf'}
-								onChange={this.handleChange}
-								className={'slice-data'}
-                                style={{ width: '100px', marginTop: '4px', marginBottom: '4px', marginRight: '10px' }}
-								autoComplete="on"
-							/>
-						</div>
-						<div style={{ paddingLeft: '10px', display: 'flex', flexDirection: 'column', width: '100px', paddingTop: '6px' }} >
-							<span>
-								{'With new value:'}
-							</span>
-							<input
-								value={'nan'}
-								onChange={this.handleChange}
-								className={'slice-data'}
-                                style={{ width: '100px', marginTop: '4px', marginBottom: '4px' }}
-								autoComplete="on"
-							/>
-						</div>
-					</div>
-                </details> */}
             </div>
         );
     }

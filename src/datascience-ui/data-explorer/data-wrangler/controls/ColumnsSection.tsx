@@ -8,8 +8,7 @@ import { NormalizeDataSection } from './column-operations/NormalizeDataSection';
 import { RenameColumnsSection } from './column-operations/RenameColumnsSection';
 import { ReplaceAllColumnsSection } from './column-operations/ReplaceAllColumnsSection';
 import { SidePanelSection } from './SidePanelSection';
-import { dropdownStyles } from './styles';
-
+import { dropdownStyle, dropdownStyles } from './styles';
 interface IProps {
     collapsed: boolean;
     headers: string[];
@@ -84,17 +83,17 @@ export class ColumnsSection extends React.Component<IProps, IState> {
                     multiSelect={true}
                     responsiveMode={ResponsiveMode.xxxLarge}
                     label={'Select the column(s) you want to modify:'}
-                    style={{ marginRight: '10px', width: '150px', marginBottom: '16px' }}
+                    style={dropdownStyle}
                     styles={dropdownStyles}
                     options={this.generateOptions()}
-                    className="dropdownTitleOverrides"
+                    className="dropdownTitleOverrides "
                     onChange={this.updateSelectedColumnsTarget.bind(this)}
                     selectedKeys={this.state.selectedColumns}
                 />
                 <Dropdown
                     responsiveMode={ResponsiveMode.xxxLarge}
                     label={'Operation'}
-                    style={{ marginRight: '10px', width: '150px', marginBottom: '16px' }}
+                    style={dropdownStyle}
                     styles={dropdownStyles}
                     options={this.generatePossibleColumnOperations()}
                     className="dropdownTitleOverrides"

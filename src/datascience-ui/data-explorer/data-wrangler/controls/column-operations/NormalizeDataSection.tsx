@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { DataWranglerCommands, INormalizeColumnRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
+import { buttonStyle, inputStyle } from '../styles';
 
 interface IProps {
     selectedColumn: string;
@@ -31,7 +32,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                         value={this.state.normalizeRangeStart}
                         onChange={this.handleNormalizeStartChange}
                         className={'slice-data'}
-                        style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
+                        style={inputStyle}
                         autoComplete="on"
                     />
                     <span>{'New end range:'}</span>
@@ -39,7 +40,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                         value={this.state.normalizeRangeEnd}
                         onChange={this.handleNormalizeEndChange}
                         className={'slice-data'}
-                        style={{ width: '140px', marginTop: '4px', marginBottom: '16px' }}
+                        style={inputStyle}
                         autoComplete="on"
                     />
                     <button
@@ -54,16 +55,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                                 });
                             }
                         }
-                        style={{
-                            backgroundColor: 'var(--vscode-button-background)',
-                            color: 'var(--vscode-button-foreground)',
-                            margin: '4px',
-                            padding: '8px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            height: '26px',
-                            marginLeft: '0px'
-                        }}
+                        style={buttonStyle}
                     >
                         Normalize
                     </button>
