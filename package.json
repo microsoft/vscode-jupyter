@@ -2108,7 +2108,6 @@
         "node-stream-zip": "^1.6.0",
         "onigasm": "^2.2.2",
         "pdfkit": "^0.12.1",
-        "plotly.js": "^1.58.4",
         "plotly.js-dist": "^1.58.4",
         "portfinder": "^1.0.25",
         "re-resizable": "^6.5.5",
