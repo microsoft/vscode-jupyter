@@ -72,7 +72,7 @@
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {
             "supported": "limited",
-            "description": "Execution of cells in Interactive Window and Notebooks is not be supported in untrusted workspaces."
+            "description": "Execution of cells in Interactive Window and Notebooks is not supported in untrusted workspaces."
         }
     },
     "contributes": {
