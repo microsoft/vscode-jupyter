@@ -13,11 +13,13 @@ import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { EditorContexts } from '../constants';
 import { isJupyterNotebook, isPythonNotebook } from '../notebook/helpers/helpers';
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
+    IKernelDependencyService,
     INotebook,
     INotebookEditor,
     INotebookEditorProvider,
@@ -35,6 +37,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private pythonOrInteractiveOrNativeContext: ContextKey;
     private canRestartNotebookKernelContext: ContextKey;
     private canInterruptNotebookKernelContext: ContextKey;
+    private canDebug: ContextKey;
     private hasNativeNotebookCells: ContextKey;
     private isPythonFileActive: boolean = false;
     private isPythonNotebook: ContextKey;
@@ -49,7 +52,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(UseVSCodeNotebookEditorApi) private readonly inNativeNotebookExperiment: boolean,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(IKernelDependencyService) private dependencyService: IKernelDependencyService
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -61,6 +65,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             EditorContexts.CanInterruptNotebookKernel,
             this.commandManager
         );
+        this.canDebug = new ContextKey(EditorContexts.CanDebug, this.commandManager);
         this.interactiveContext = new ContextKey(EditorContexts.IsInteractiveActive, this.commandManager);
         this.interactiveOrNativeContext = new ContextKey(
             EditorContexts.IsInteractiveOrNativeActive,
@@ -136,6 +141,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateNativeNotebookContext();
         this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
+        void this.updateDebugContext(e);
     }
     private updateNativeNotebookContext() {
         this.hasNativeNotebookOpen.set(this.vscNotebook.notebookDocuments.some(isJupyterNotebook)).ignoreErrors();
@@ -144,7 +150,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         if (activeEditor) {
             this.notebookProvider
                 .getOrCreateNotebook({ identity: activeEditor.file, resource: activeEditor.file, getOnly: true })
-                .then((nb) => {
+                .then(async (nb) => {
                     if (activeEditor === this.notebookEditorProvider.activeEditor) {
                         const canStart = nb && nb.status !== ServerStatus.NotStarted;
                         this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
@@ -172,6 +178,27 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             return;
         }
         this.updateContextOfActiveNotebookKernel(activeEditor);
+    }
+    private async updateDebugContext(activeEditor?: INotebookEditor, interpreter?: PythonEnvironment) {
+        this.canDebug.set(false).ignoreErrors();
+
+        if (activeEditor && activeEditor === this.notebookEditorProvider.activeEditor) {
+            const nb = await this.notebookProvider.getOrCreateNotebook({
+                identity: activeEditor.file,
+                resource: activeEditor.file,
+                getOnly: true
+            });
+            const interpreter = nb?.getMatchingInterpreter();
+            if (interpreter) {
+                this.canDebug
+                    .set(await this.dependencyService.areDebuggingDependenciesInstalled(interpreter))
+                    .ignoreErrors();
+            }
+        } else if (interpreter) {
+            this.canDebug
+                .set(await this.dependencyService.areDebuggingDependenciesInstalled(interpreter))
+                .ignoreErrors();
+        }
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {
         this.isPythonFileActive = e?.document.languageId === PYTHON_LANGUAGE && !isNotebookCell(e.document.uri);

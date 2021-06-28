@@ -138,6 +138,7 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
+    IDebuggingCellMap,
     IDebugLocationTracker,
     IHoverProvider,
     IInteractiveWindow,
@@ -191,6 +192,8 @@ import { IApplicationEnvironment } from '../common/application/types';
 import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
 import { ExtensionRecommendationService } from './extensionRecommendation';
 import { PythonVariablesRequester } from './jupyter/pythonVariableRequester';
+import { DebuggingManager } from '../debugger/jupyter/debuggingManager';
+import { DebuggingCellMap } from '../debugger/jupyter/debuggingCellMap';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { NativeInteractiveWindowCommandListener } from './interactive-window/nativeInteractiveWindowCommandListener';
 import { workspace } from 'vscode';
@@ -363,6 +366,9 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ExtensionRecommendationService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebuggingManager);
+    serviceManager.addSingleton<IDebuggingCellMap>(IDebuggingCellMap, DebuggingCellMap);
+    serviceManager.addBinding(IDebuggingCellMap, INotebookExecutionLogger);
 
     registerNotebookTypes(serviceManager);
     registerContextTypes(serviceManager);

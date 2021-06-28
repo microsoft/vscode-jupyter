@@ -18,6 +18,7 @@ import {
     HoverProvider,
     LanguageConfiguration,
     NotebookCell,
+    NotebookDocument,
     QuickPickItem,
     Range,
     TextDocument,
@@ -272,6 +273,7 @@ export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean, language: string, resource: Uri): Promise<void>;
+    nativePostExecute?(cell: NotebookCell): Promise<void>;
     onKernelStarted(resource: Uri): void;
     onKernelRestarted(resource: Uri): void;
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
@@ -316,6 +318,7 @@ export interface IJupyterPasswordConnect {
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
+    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
@@ -327,6 +330,10 @@ export interface IJupyterSession extends IAsyncDisposable {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+    requestDebug(
+        content: KernelMessage.IDebugRequestMsg['content'],
+        disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined;
     requestComplete(
         content: KernelMessage.ICompleteRequestMsg['content']
     ): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
@@ -1342,6 +1349,7 @@ export interface IKernelDependencyService {
         disableUI?: boolean
     ): Promise<void>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+    areDebuggingDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }
 
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
@@ -1482,4 +1490,9 @@ export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchroni
  */
 export interface INotebookModelSynchronization {
     syncAllCells(model: INotebookModel): Promise<void>;
+}
+
+export const IDebuggingCellMap = Symbol('IDebuggingCellMap');
+export interface IDebuggingCellMap {
+    getCellsAnClearQueue(doc: NotebookDocument): NotebookCell[];
 }
