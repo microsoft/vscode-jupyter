@@ -64,6 +64,7 @@ import {
 } from '../types';
 import { createInteractiveIdentity } from './identity';
 import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
+import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -174,6 +175,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             this,
             this.disposables
         );
+
+        workspace.onDidCloseNotebookDocument((notebookDocument) => {
+            if (notebookDocument === this.notebookDocument) {
+                this.closedEvent.fire(this);
+            }
+        });
     }
 
     private registerKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
@@ -606,9 +613,11 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
         const settings = this.configuration.getSettings();
         const cellMatcher = new CellMatcher(settings);
-        const strippedCode = cellMatcher.stripFirstMarker(code).trimStart();
-        const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
         const isMarkdown = cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
+        const strippedCode = isMarkdown
+            ? generateMarkdownFromCodeLines(code.splitLines()).join('\n')
+            : cellMatcher.stripFirstMarker(code).trimStart();
+        const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
         // Insert code cell into NotebookDocument
         const edit = new WorkspaceEdit();
@@ -639,7 +648,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
-        const cells = generateCellsFromNotebookDocument(this.notebookDocument);
+        const { magicCommandsAsComments } = this.configuration.getSettings();
+        const cells = generateCellsFromNotebookDocument(this.notebookDocument, magicCommandsAsComments);
 
         // Should be an array of cells
         if (cells && this.exportDialog) {
@@ -657,7 +667,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
-        const cells = generateCellsFromNotebookDocument(this.notebookDocument);
+        const { magicCommandsAsComments } = this.configuration.getSettings();
+        const cells = generateCellsFromNotebookDocument(this.notebookDocument, magicCommandsAsComments);
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };

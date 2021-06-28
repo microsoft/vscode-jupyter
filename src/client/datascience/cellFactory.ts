@@ -6,13 +6,14 @@ import '../common/extensions';
 import * as uuid from 'uuid/v4';
 import { NotebookDocument, Range, TextDocument, Uri } from 'vscode';
 
-import { parseForComments } from '../../datascience-ui/common';
+import { appendLineFeed, parseForComments } from '../../datascience-ui/common';
 import { createCodeCell, createMarkdownCell } from '../../datascience-ui/common/cellFactory';
 import { IJupyterSettings, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { CellMatcher } from './cellMatcher';
 import { Identifiers } from './constants';
 import { CellState, ICell, ICellRange } from './types';
+import { MARKDOWN_LANGUAGE } from '../common/constants';
 
 function generateCodeCell(
     code: string[],
@@ -31,13 +32,13 @@ function generateCodeCell(
     };
 }
 
-function generateMarkdownCell(code: string[], file: string, line: number, id: string): ICell {
+function generateMarkdownCell(code: string[], file: string, line: number, id: string, useSourceAsIs = false): ICell {
     return {
         id: id,
         file: file,
         line: line,
         state: CellState.finished,
-        data: createMarkdownCell(code)
+        data: createMarkdownCell(code, useSourceAsIs)
     };
 }
 
@@ -194,19 +195,21 @@ export function generateCellsFromDocument(document: TextDocument, settings?: IJu
     );
 }
 
-export function generateCellsFromNotebookDocument(notebookDocument: NotebookDocument): ICell[] {
-    return notebookDocument.getCells().reduce((cells: ICell[], cell) => {
-        // Skip sysinfo cells when exporting
-        if (cell.metadata.isSysInfoCell) {
-            return cells;
-        }
-
-        // Reinstate cell structure + comments from cell metadata
-        let code = cell.document.getText();
-        if (cell.metadata.interactiveWindowCellMarker !== undefined) {
-            code = cell.metadata.interactiveWindowCellMarker + '\n' + code;
-        }
-        const generatedCells = generateCells(undefined, code, '', 0, false, uuid());
-        return cells.concat(generatedCells);
-    }, []);
+export function generateCellsFromNotebookDocument(
+    notebookDocument: NotebookDocument,
+    magicCommandsAsComments: boolean
+): ICell[] {
+    return notebookDocument
+        .getCells()
+        .filter((cell) => !cell.metadata.isSysInfoCell)
+        .map((cell) => {
+            // Reinstate cell structure + comments from cell metadata
+            let code = cell.document.getText().splitLines();
+            if (cell.metadata.interactiveWindowCellMarker !== undefined) {
+                code.unshift(cell.metadata.interactiveWindowCellMarker + '\n');
+            }
+            return cell.document.languageId === MARKDOWN_LANGUAGE
+                ? generateMarkdownCell(appendLineFeed(code), '', 0, uuid(), true)
+                : generateCodeCell(appendLineFeed(code), '', 0, uuid(), magicCommandsAsComments);
+        });
 }

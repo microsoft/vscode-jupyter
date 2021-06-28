@@ -55,7 +55,9 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         return this._onDidCreateInteractiveWindow.event;
     }
     public get activeWindow(): IInteractiveWindow | undefined {
-        return this._activeWindow;
+        return this._windows.find(
+            (win) => win.notebookUri.toString() === window.activeNotebookEditor?.document.uri.toString()
+        );
     }
     public get windows(): ReadonlyArray<IInteractiveWindow> {
         return this._windows;
@@ -64,7 +66,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private _windows: NativeInteractiveWindow[] = [];
-    private _activeWindow: NativeInteractiveWindow | undefined = undefined;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -81,20 +82,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider
     ) {
         asyncRegistry.push(this);
-
-        this.disposables.push(
-            workspace.onDidCloseNotebookDocument((_) => {
-                this.update();
-            })
-        );
-
-        this.disposables.push(
-            window.onDidChangeActiveNotebookEditor((_) => {
-                this.update();
-            })
-        );
-
-        this.update();
     }
 
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
@@ -291,27 +278,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         }
 
         return preferredController !== undefined ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
-    }
-
-    private update() {
-        const windows: NativeInteractiveWindow[] = [];
-
-        this._windows.forEach((win) => {
-            const notebookDocument = workspace.notebookDocuments.find(
-                (document) => win.notebookUri.toString() === document.uri.toString()
-            );
-            if (notebookDocument === undefined) {
-                win.dispose();
-            } else {
-                windows.push(win);
-            }
-        });
-
-        this._windows = windows;
-        const activeNotebookEditor = window.activeNotebookEditor;
-        this._activeWindow = this._windows.find(
-            (win) => win.notebookUri.toString() === activeNotebookEditor?.document.uri.toString()
-        );
     }
 
     // TODO: we don't currently have a way to know when the VS Code InteractiveEditor
