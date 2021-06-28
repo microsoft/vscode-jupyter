@@ -1,5 +1,6 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
+import { getLocString } from '../../../react-common/locReactSide';
 import { CoerceColumnsSection } from './column-operations/CoerceColumnsSection';
 import { DropColumnsSection } from './column-operations/DropColumnSection';
 import { DropMissingColumnsSection } from './column-operations/DropMissingColumnsSection';
@@ -31,14 +32,46 @@ export enum ColumnOperation {
     ReplaceAll = 'Replace All'
 }
 
-export class ColumnsSection extends React.Component<IProps, IState> {
-    private multiSelectColumnOperations = [
-        ColumnOperation.Drop,
-        ColumnOperation.DropNA,
-        ColumnOperation.ReplaceAll,
-        ColumnOperation.Coerce
-    ];
+interface IColumnOperationInfo {
+    title: ColumnOperation,
+    tooltip: string,
+    worksWithMultipleCols: boolean
+}
 
+const columnOperationInfo: Array<IColumnOperationInfo> = [
+    {
+        title: ColumnOperation.Drop,
+        tooltip: getLocString('DataScience.dataWranglerDropTooltip', 'Drop specified labels from selected columns'),
+        worksWithMultipleCols: true
+    },
+    {
+        title: ColumnOperation.Rename,
+        tooltip: getLocString('DataScience.dataWranglerRenameTooltip', 'Rename column label'),
+        worksWithMultipleCols: false
+    },
+    {
+        title: ColumnOperation.Normalize,
+        tooltip: getLocString('DataScience.dataWranglerNormalizeTooltip', 'Transform column by scaling each feature to a given range'),
+        worksWithMultipleCols: false
+    },
+    {
+        title: ColumnOperation.DropNA,
+        tooltip: getLocString('DataScience.dataWranglerDropNATooltip', 'Remove missing values from selected columns'),
+        worksWithMultipleCols: true
+    },
+    {
+        title: ColumnOperation.Coerce,
+        tooltip: getLocString('DataScience.dataWranglerCoerceTooltip', 'Cast a column to a specified type'),
+        worksWithMultipleCols: true
+    },
+    {
+        title: ColumnOperation.ReplaceAll,
+        tooltip: getLocString('DataScience.dataWranglerReplaceAllTooltip', 'Replace specified values with a new given value'),
+        worksWithMultipleCols: true
+    }
+];
+
+export class ColumnsSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
         this.state = { operationType: null, selectedColumns: [] };
@@ -86,21 +119,30 @@ export class ColumnsSection extends React.Component<IProps, IState> {
 
         if (this.state.selectedColumns.length === 0) {
             // No selected columns. All operations should be disabled.
-            for (const operation of Object.values(ColumnOperation)) {
-                const option = { key: operation, text: operation, disabled: true };
+            for (const operation of Object.values(columnOperationInfo)) {
+                const option = {
+                    key: operation.title,
+                    text: operation.title,
+                    disabled: true,
+                    title: operation.tooltip
+                };
                 possibleColumnOperations.push(option);
             }
         } else if (this.state.selectedColumns.length > 1) {
             // Multiple selected columns. Single operations should be disabled.
-            for (const operation of Object.values(ColumnOperation)) {
-                const disabled = !this.multiSelectColumnOperations.includes(operation);
-                const option = { key: operation, text: operation, disabled: disabled };
+            for (const operation of Object.values(columnOperationInfo)) {
+                const option = {
+                    key: operation.title,
+                    text: operation.title,
+                    disabled: !operation.worksWithMultipleCols,
+                    title: operation.tooltip
+                };
                 possibleColumnOperations.push(option);
             }
         } else {
             // One selected column. No operations should be disabled.
-            for (const operation of Object.values(ColumnOperation)) {
-                const option = { key: operation, text: operation };
+            for (const operation of Object.values(columnOperationInfo)) {
+                const option = { key: operation.title, text: operation.title, title: operation.tooltip };
                 possibleColumnOperations.push(option);
             }
         }
@@ -202,10 +244,9 @@ export class ColumnsSection extends React.Component<IProps, IState> {
             // Removes the operation dropdown for now until another column is selected
             this.setState({ selectedColumns: cols, operationType: null });
         } else if (
-            cols.length > 1 &&
-            !this.multiSelectColumnOperations.find((operation) => operation === this.state.operationType)
+            cols.length > 1 && this.state.operationType && !columnOperationInfo.filter(op => this.state.operationType === op.title)[0].worksWithMultipleCols
         ) {
-            // Removes the operation section because the current operation was a
+            // Deselects the operation because the current operation was a
             // single column operation only and we have more than one column selected
             this.setState({ selectedColumns: cols, operationType: null });
         } else {

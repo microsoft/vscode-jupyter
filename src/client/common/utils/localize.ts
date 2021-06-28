@@ -1066,6 +1066,27 @@ export namespace DataScience {
         'Failed to create the Data Wrangler. Check the Jupyter tab of the Output window for more info.'
     );
     export const dataWranglerTitle = localize('DataScience.dataWranglerTitle', 'Data Wrangler');
+    export const dataWranglerDropTooltip = localize(
+        'DataScience.dataWranglerDropTooltip',
+        'Drop specified labels from selected columns'
+    );
+    export const dataWranglerRenameTooltip = localize('DataScience.dataWranglerRenameTooltip', 'Rename column label');
+    export const dataWranglerNormalizeTooltip = localize(
+        'DataScience.dataWranglerNormalizeTooltip',
+        'Transform column by scaling each feature to a given range'
+    );
+    export const dataWranglerDropNATooltip = localize(
+        'DataScience.dataWranglerDropNATooltip',
+        'Remove missing values from selected columns'
+    );
+    export const dataWranglerCoerceTooltip = localize(
+        'DataScience.dataWranglerCoerceTooltip',
+        'Cast a column to a specified type'
+    );
+    export const dataWranglerReplaceAllTooltip = localize(
+        'DataScience.dataWranglerReplaceAllTooltip',
+        'Replace specified values with a new given value'
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
