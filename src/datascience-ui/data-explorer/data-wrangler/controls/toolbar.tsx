@@ -49,7 +49,8 @@ export class Toolbar extends React.PureComponent<IProps> {
                     flexDirection: 'row',
                     fontFamily: 'var(--vscode-font-family)',
                     fontSize: 'var(--vscode-font-size)',
-                    // fontWeight: 'var(--vscode-font-weight)',
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    fontWeight: 'var(--vscode-font-weight)' as any,
                     justifyContent: 'start'
                 }}
             >
@@ -65,11 +66,6 @@ export class Toolbar extends React.PureComponent<IProps> {
                     command={DataWranglerCommands.ExportToPythonScript}
                     args={null}
                 />
-                {/* <div
-                    className="codicon codicon-filter codicon-button"
-                    onClick={() => this.props.onToggleFilter()}
-                    title="Toggle filters"
-                /> */}
             </div>
         );
     }

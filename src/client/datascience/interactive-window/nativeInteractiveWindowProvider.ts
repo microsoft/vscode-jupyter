@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Event, EventEmitter, Memento, Uri } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Memento, workspace, window, ViewColumn } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 
 import {
@@ -30,8 +30,15 @@ import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebookExporter, IStatusProvider } from '../types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    IJupyterDebugger,
+    INotebookExporter,
+    IStatusProvider
+} from '../types';
 import { NativeInteractiveWindow } from './nativeInteractiveWindow';
+import { INativeInteractiveWindow } from './types';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -45,7 +52,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         return this._onDidCreateInteractiveWindow.event;
     }
     public get activeWindow(): IInteractiveWindow | undefined {
-        return this._windows.find((w) => w.active && w.visible);
+        return this._activeWindow;
     }
     public get windows(): ReadonlyArray<IInteractiveWindow> {
         return this._windows;
@@ -54,6 +61,8 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private _windows: NativeInteractiveWindow[] = [];
+    private _activeWindow: NativeInteractiveWindow | undefined = undefined;
+
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -62,15 +71,30 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
+        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {
         asyncRegistry.push(this);
+
+        this.disposables.push(
+            workspace.onDidCloseNotebookDocument((_) => {
+                this.update();
+            })
+        );
+
+        this.disposables.push(
+            window.onDidChangeActiveNotebookEditor((_) => {
+                this.update();
+            })
+        );
+
+        this.update();
     }
 
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
-        if (!this.workspace.isTrusted) {
+        if (!this.workspaceService.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
             // The commands the like should be disabled.
             throw new Error('Worksapce not trusted');
@@ -82,7 +106,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         let result = this.get(resource, mode) as IInteractiveWindow;
         if (!result) {
             // No match. Create a new item.
-            result = await this.create(resource, mode, undefined);
+            result = await this.create(resource, mode);
         }
 
         return result;
@@ -97,13 +121,23 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         noop();
     }
 
-    protected async create(
-        resource: Resource,
-        mode: InteractiveWindowMode,
-        notebookUri: Uri | undefined
-    ): Promise<NativeInteractiveWindow> {
+    protected async create(resource: Resource, mode: InteractiveWindowMode): Promise<NativeInteractiveWindow> {
         // Ensure all our controllers are registered with VS Code
         await this.notebookControllerManager.loadNotebookControllers();
+
+        const { notebookUri } = (await this.commandManager.executeCommand(
+            'interactive.open',
+            ViewColumn.Beside,
+            undefined
+        )) as INativeInteractiveWindow;
+        const notebookDocument = workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === notebookUri.toString()
+        );
+        if (!notebookDocument) {
+            // This means VS Code failed to create an interactive window.
+            // This should never happen.
+            throw new Error('Failed to request creation of interactive window from VS Code.');
+        }
 
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
@@ -120,10 +154,11 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             mode,
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
             this.serviceContainer.get<IExportDialog>(IExportDialog),
-            notebookUri,
+            notebookDocument,
             this.notebookControllerManager,
             this.kernelProvider,
-            this.disposables
+            this.disposables,
+            this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger)
         );
         this._windows.push(result);
 
@@ -207,6 +242,27 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             }
             return false;
         });
+    }
+
+    private update() {
+        const windows: NativeInteractiveWindow[] = [];
+
+        this._windows.forEach((win) => {
+            const notebookDocument = workspace.notebookDocuments.find(
+                (document) => win.notebookUri.toString() === document.uri.toString()
+            );
+            if (notebookDocument === undefined) {
+                win.dispose();
+            } else {
+                windows.push(win);
+            }
+        });
+
+        this._windows = windows;
+        const activeNotebookEditor = window.activeNotebookEditor;
+        this._activeWindow = this._windows.find(
+            (win) => win.notebookUri.toString() === activeNotebookEditor?.document.uri.toString()
+        );
     }
 
     // TODO: we don't currently have a way to know when the VS Code InteractiveEditor

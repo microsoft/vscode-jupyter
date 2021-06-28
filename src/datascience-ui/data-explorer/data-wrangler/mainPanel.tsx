@@ -437,7 +437,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private setSidePanels(response: string[]) {
-        this.setState({sidePanels: response});
+        this.setState({ sidePanels: response });
     }
 
     private handleGetHistogram(response: IGetColsResponse) {

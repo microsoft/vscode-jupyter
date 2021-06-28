@@ -983,7 +983,10 @@ export namespace DataScience {
         'DataScience.dataWranglerRenameColumnTransformation',
         "Renamed column '{0}' to '{1}'"
     );
-    export const dataWranglerDropRowCode = localize('DataScience.dataWranglerDropRowCode', '{0} = {1}.drop({2})\n');
+    export const dataWranglerDropRowCode = localize(
+        'DataScience.dataWranglerDropRowCode',
+        '{0} = {1}.drop(index={2})\n'
+    );
     export const dataWranglerDropRowTransformation = localize(
         'DataScience.dataWranglerDropRowTransformation',
         'Dropped rows(s): {0}'
@@ -1030,7 +1033,7 @@ export namespace DataScience {
     );
     export const dataWranglerDropNaRowsOnColumnTransformation = localize(
         'DataScience.dataWranglerDropNaRowsOnColumnTransformation',
-        "Dropped rows with missing data in column: '{0}'"
+        'Dropped rows with missing data in column: {0}'
     );
     export const dataWranglerNormalizeColumnCode = localize(
         'DataScience.dataWranglerNormalizeColumnCode',

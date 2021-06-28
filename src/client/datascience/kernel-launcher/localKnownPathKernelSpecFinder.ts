@@ -12,6 +12,7 @@ import { IJupyterKernelSpec } from '../types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { JupyterPaths } from './jupyterPaths';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { IPythonExtensionChecker } from '../../api/types';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -23,9 +24,10 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
     constructor(
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
+        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker
     ) {
-        super(fs, workspaceService);
+        super(fs, workspaceService, extensionChecker);
     }
     /**
      * @param {boolean} includePythonKernels Include/exclude Python kernels in the result.
@@ -34,7 +36,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
         includePythonKernels: boolean,
         cancelToken?: CancellationToken
     ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        return this.listKernelsWithCache(includePythonKernels ? 'IncludePython' : 'ExcludePython', async () => {
+        return this.listKernelsWithCache(includePythonKernels ? 'IncludePython' : 'ExcludePython', false, async () => {
             // First find the on disk kernel specs and interpreters
             const kernelSpecs = await this.findKernelSpecs(cancelToken);
 
