@@ -182,22 +182,18 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private async updateDebugContext(activeEditor?: INotebookEditor, interpreter?: PythonEnvironment) {
         this.canDebug.set(false).ignoreErrors();
 
-        if (activeEditor) {
-            this.notebookProvider
-                .getOrCreateNotebook({ identity: activeEditor.file, resource: activeEditor.file, getOnly: true })
-                .then(async (nb) => {
-                    if (activeEditor === this.notebookEditorProvider.activeEditor) {
-                        const interpreter = nb?.getMatchingInterpreter();
-                        if (interpreter) {
-                            this.canDebug
-                                .set(await this.dependencyService.areDebuggingDependenciesInstalled(interpreter))
-                                .ignoreErrors();
-                        }
-                    }
-                })
-                .catch(
-                    traceError.bind(undefined, 'Failed to determine if a notebook is active for the current editor')
-                );
+        if (activeEditor && activeEditor === this.notebookEditorProvider.activeEditor) {
+            const nb = await this.notebookProvider.getOrCreateNotebook({
+                identity: activeEditor.file,
+                resource: activeEditor.file,
+                getOnly: true
+            });
+            const interpreter = nb?.getMatchingInterpreter();
+            if (interpreter) {
+                this.canDebug
+                    .set(await this.dependencyService.areDebuggingDependenciesInstalled(interpreter))
+                    .ignoreErrors();
+            }
         } else if (interpreter) {
             this.canDebug
                 .set(await this.dependencyService.areDebuggingDependenciesInstalled(interpreter))

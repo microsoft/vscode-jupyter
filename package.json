@@ -1990,8 +1990,8 @@
         },
         "debuggers": [
             {
-                "type": "Python Kernel",
-                "label": "Python Kernel Debug"
+                "type": "Python Kernel Debug Adapter",
+                "label": "Python Kernel Debug Adapter"
             }
         ]
     },

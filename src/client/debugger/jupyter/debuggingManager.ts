@@ -42,7 +42,7 @@ class Debugger {
 
             debug
                 .startDebugging(undefined, {
-                    type: 'Python Kernel',
+                    type: DataScience.pythonKernelDebugAdapter(),
                     name: `${path.basename(document.uri.toString())}`,
                     request: 'attach',
                     internalConsoleOptions: 'neverOpen',
@@ -119,7 +119,7 @@ export class DebuggingManager implements IExtensionSingleActivationService {
             }),
 
             // factory for kernel debug adapters
-            debug.registerDebugAdapterDescriptorFactory('Python Kernel', {
+            debug.registerDebugAdapterDescriptorFactory(DataScience.pythonKernelDebugAdapter(), {
                 createDebugAdapterDescriptor: async (session) => {
                     if (this.vscNotebook.activeNotebookEditor) {
                         const activeDoc = this.vscNotebook.activeNotebookEditor.document;
