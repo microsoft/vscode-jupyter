@@ -40,7 +40,7 @@ export enum DataWranglerCommands {
 
 export namespace DataWranglerMessages {
     export const SubmitCommand = 'submit_command';
-    export const RefreshDataWrangler = 'refresh_data_wrangler'; // TODOV
+    export const RefreshDataWrangler = 'refresh_data_wrangler';
     export const UpdateHistoryList = 'update_history_list';
     export const GetHistogramResponse = 'get_histogram_response';
     export const SetSidePanels = 'set_side_panels';

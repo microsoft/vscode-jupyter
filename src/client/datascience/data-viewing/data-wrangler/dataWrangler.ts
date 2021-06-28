@@ -45,7 +45,8 @@ import {
     ICoerceColumnRequest,
     IGetColumnStatsReq,
     IGetHistoryItem,
-    IReplaceAllColumnsRequest
+    IReplaceAllColumnsRequest,
+    SidePanelSections
 } from './types';
 import { DataScience } from '../../../common/utils/localize';
 import { DataViewer } from '../dataViewer';
@@ -140,7 +141,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             await super.loadWebview(process.cwd(), webviewPanel).catch(traceError);
 
             const wantedPanels = this.configService.getSettings().dataWrangler.sidePanelSections;
-            this.postMessage(DataWranglerMessages.UpdateHistoryList, wantedPanels).ignoreErrors();
+            this.postMessage(DataWranglerMessages.SetSidePanels, wantedPanels as SidePanelSections[]).ignoreErrors();
 
             // Use Data Viewer logic to show initial data
             const dataFrameInfo = await this.showInitialData(title);

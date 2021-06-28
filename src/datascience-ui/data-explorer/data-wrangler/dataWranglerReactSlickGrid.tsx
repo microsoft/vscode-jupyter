@@ -37,7 +37,7 @@ import 'slickgrid/slick.grid.css';
 // eslint-disable-next-line import/order
 import './dataWranglerReactSlickGrid.css';
 import './contextMenu.css';
-import { ISlickGridProps, ISlickRow, ReactSlickGrid } from '../reactSlickGrid';
+import { ISlickGridProps, ISlickRow, ReactSlickGrid, readonlyCellEditor } from '../reactSlickGrid';
 import {
     DataWranglerCommands,
     IDescribeColReq,
@@ -64,8 +64,11 @@ enum ColumnContextMenuItem {
     DropColumns = 'Drop Column',
     NormalizeColumn = 'Normalize Column',
     DropNA = 'Remove Missing Values',
-    DropDuplicates = 'Drop Duplicates On Column'
+    DropDuplicates = 'Drop Duplicates On Column',
+    SortAscending = 'Sort Ascending',
+    SortDescending = 'Sort Descending'
 }
+
 export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     private contextMenuRowId: number | undefined;
     private contextMenuCellId: number | undefined;
@@ -166,9 +169,6 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 slickgridJQ('.grid-canvas').on('keydown', this.slickgridHandleKeyDown);
             }
 
-            // Setup the sorting
-            grid.onSort.subscribe(this.sort);
-
             grid.onHeaderContextMenu.subscribe(this.maybeDropColumns);
             grid.onContextMenu.subscribe(this.maybeDropRows);
 
@@ -216,6 +216,10 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 const contextMenuItem = e?.target?.id;
                 if (this.props.submitCommand) {
                     switch (contextMenuItem) {
+                        case ColumnContextMenuItem.SortAscending:
+                            return this.sortColumn(this.contextMenuColumnName, true);
+                        case ColumnContextMenuItem.SortDescending:
+                            return this.sortColumn(this.contextMenuColumnName, false);
                         case ColumnContextMenuItem.GetColumnStats:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.Describe,
@@ -326,6 +330,8 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 </div>
                 <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
                     {/* <li id={ColumnContextMenuItem.GetColumnStats}>{ColumnContextMenuItem.GetColumnStats}</li> */}
+                    <li id={ColumnContextMenuItem.SortAscending}>{ColumnContextMenuItem.SortAscending}</li>
+                    <li id={ColumnContextMenuItem.SortDescending}>{ColumnContextMenuItem.SortDescending}</li>
                     <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>
                     <li id={ColumnContextMenuItem.NormalizeColumn}>{ColumnContextMenuItem.NormalizeColumn}</li>
                     <li id={ColumnContextMenuItem.DropNA}>{ColumnContextMenuItem.DropNA}</li>
@@ -337,6 +343,17 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 </ul>
             </div>
         );
+    }
+
+    private sortColumn(sortCol: string | undefined, sortAscending: boolean) {
+        if (sortCol) {
+            const cols = this.state.grid?.getColumns();
+            const idx = cols?.findIndex(c => c.name === sortCol);
+            if (cols && idx) {
+                this.dataView.sort((l: any, r: any) => this.compareElements(l, r, cols[idx]), sortAscending);
+                this.state.grid?.setSortColumn(idx?.toString(), sortAscending);
+            }
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -417,4 +434,17 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             args.node
         );
     };
+
+    protected styleColumns(columns: Slick.Column<ISlickRow>[]) {
+        // Transform columns so they are sortable and stylable
+        return columns.map((c) => {
+            console.log('column id', c.id);
+            // Disable sorting by clicking on header
+            c.sortable = false;
+            c.editor = readonlyCellEditor;
+            c.headerCssClass = 'react-grid-header-cell';
+            c.cssClass = 'react-grid-cell';
+            return c;
+        });
+    }
 }

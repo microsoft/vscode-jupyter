@@ -34,6 +34,10 @@
     box-sizing: border-box;
 }
 
+.react-grid-header-cell-selected, .react-grid-cell-selected {
+    background-color: var(--override-selection-background, var(--vscode-list-hoverBackground));
+}
+
 .react-grid-cell.active {
     background-color: var(--vscode-list-activeSelectionBackground);
     color: var(--vscode-list-activeSelectionForeground);
@@ -82,6 +86,7 @@
 
 .react-grid-header-cell:hover {
     background-color: var(--override-selection-background, var(--vscode-list-hoverBackground));
+    cursor: pointer;
 }
 
 .react-grid-header-cell > .slick-sort-indicator-asc::before {

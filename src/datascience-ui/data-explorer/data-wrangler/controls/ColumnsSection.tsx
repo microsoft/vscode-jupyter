@@ -86,7 +86,7 @@ export class ColumnsSection extends React.Component<IProps, IState> {
                     style={dropdownStyle}
                     styles={dropdownStyles}
                     options={this.generateOptions()}
-                    className="dropdownTitleOverrides "
+                    className="dropdownTitleOverrides"
                     onChange={this.updateSelectedColumnsTarget.bind(this)}
                     selectedKeys={this.state.selectedColumns}
                 />
@@ -109,7 +109,8 @@ export class ColumnsSection extends React.Component<IProps, IState> {
 
     private generateOptions() {
         const selectAll = { key: -1, text: 'Select All' };
-        return [selectAll, ...this.props.options.filter((option) => option.text !== 'index')]; // Don't let user drop the index column
+        // Don't let users operate on index column
+        return [selectAll, ...this.props.options.filter((option) => option.text !== 'index')];
     }
 
     private generatePossibleColumnOperations(): IDropdownOption[] {

@@ -42,9 +42,11 @@ import { Tokenizer } from '../../interactive-common/tokenizer';
 import { createDeferred } from '../../../client/common/utils/async';
 import {
     DataWranglerCommands,
-    DataWranglerMessages
+    DataWranglerMessages,
+    SidePanelSections
 } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow } from '../reactSlickGrid';
+
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);
@@ -79,7 +81,7 @@ interface IMainPanelState {
     historyList: [];
     histogramData?: IGetColsResponse;
     monacoTheme: string;
-    sidePanels: string[];
+    sidePanels: SidePanelSections[];
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -224,27 +226,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     };
 
-    // private renderBreadcrumb() {
-    //     let breadcrumbText = this.state.variableName;
-    //     if (this.state.originalVariableShape) {
-    //         breadcrumbText += ' (' + this.state.originalVariableShape?.join(', ') + ')';
-    //     }
-    //     if (breadcrumbText) {
-    //         return (
-    //             <div className="breadcrumb-container control-container">
-    //                 <div className="breadcrumb">
-    //                     <div className="icon-python breadcrumb-file-icon" />
-    //                     <span>{this.state.fileName}</span>
-    //                     {this.state.fileName ? (
-    //                         <div className="codicon codicon-chevron-right breadcrumb-codicon" />
-    //                     ) : undefined}
-    //                     <span>{breadcrumbText}</span>
-    //                 </div>
-    //             </div>
-    //         );
-    //     }
-    // }
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
@@ -367,6 +348,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 submitCommand={this.submitCommand}
                 handleRefreshRequest={this.handleRefreshRequest}
                 currentVariableName={this.state.variableName!}
+                sidePanels={this.state.sidePanels}
             />
         );
     }
@@ -435,7 +417,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd, sliceExpression });
     }
 
-    private setSidePanels(response: string[]) {
+    private setSidePanels(response: SidePanelSections[]) {
         this.setState({ sidePanels: response });
     }
 
