@@ -138,6 +138,7 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
+    IDebuggingCellMap,
     IDebugLocationTracker,
     IHoverProvider,
     IInteractiveWindow,
@@ -191,6 +192,8 @@ import { IApplicationEnvironment, IDataWranglerProvider } from '../common/applic
 import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
 import { ExtensionRecommendationService } from './extensionRecommendation';
 import { PythonVariablesRequester } from './jupyter/pythonVariableRequester';
+import { DebuggingManager } from '../debugger/jupyter/debuggingManager';
+import { DebuggingCellMap } from '../debugger/jupyter/debuggingCellMap';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { NativeInteractiveWindowCommandListener } from './interactive-window/nativeInteractiveWindowCommandListener';
 import { workspace } from 'vscode';
@@ -303,8 +306,8 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, MigrateJupyterInterpreterStateService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, VariableViewActivationService);
     serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
-    const interactiveConfiguration = workspace.getConfiguration('interactive.experiments');
-    if (interactiveConfiguration.get<boolean | undefined>('enable') === true) {
+    const jupyterConfiguration = workspace.getConfiguration('jupyter');
+    if (jupyterConfiguration.get<boolean>('experiments.enabled') === true && jupyterConfiguration.get<boolean>('enableNativeInteractiveWindow') === true) {
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, NativeInteractiveWindowProvider);
         serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
     } else {
@@ -373,6 +376,9 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ExtensionRecommendationService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebuggingManager);
+    serviceManager.addSingleton<IDebuggingCellMap>(IDebuggingCellMap, DebuggingCellMap);
+    serviceManager.addBinding(IDebuggingCellMap, INotebookExecutionLogger);
 
     registerNotebookTypes(serviceManager);
     registerContextTypes(serviceManager);

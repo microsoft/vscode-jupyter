@@ -30,7 +30,6 @@ import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
-import { testOnlyMethod } from '../../common/utils/decorators';
 import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { noop } from '../../common/utils/misc';
 import { IPythonExtensionChecker } from '../../api/types';
@@ -97,7 +96,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // Function to expose currently registered controllers to test code only
-    @testOnlyMethod()
     public registeredNotebookControllers(): VSCodeNotebookController[] {
         return Array.from(this.registeredControllers.values());
     }
@@ -136,10 +134,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     /**
      * Turn all our kernelConnections that we know about into registered NotebookControllers
      */
-    private async loadNotebookControllersImpl(listLocalNonPytonKernels: boolean): Promise<void> {
+    private async loadNotebookControllersImpl(listLocalNonPythonKernels: boolean): Promise<void> {
         const cancelToken = new CancellationTokenSource();
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
-        const connections = await this.getKernelConnectionMetadata(listLocalNonPytonKernels, cancelToken.token);
+        const connections = await this.getKernelConnectionMetadata(listLocalNonPythonKernels, cancelToken.token);
 
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
@@ -322,15 +320,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     private async getKernelConnectionMetadata(
-        listLocalNonPytonKernels: boolean,
+        listLocalNonPythonKernels: boolean,
         token: CancellationToken
     ): Promise<KernelConnectionMetadata[]> {
         if (this.isLocalLaunch) {
-            return listLocalNonPytonKernels
+            return listLocalNonPythonKernels
                 ? this.localKernelFinder.listNonPythonKernels(token)
                 : this.localKernelFinder.listKernels(undefined, token);
         } else {
-            if (listLocalNonPytonKernels) {
+            if (listLocalNonPythonKernels) {
                 return [];
             }
             const connection = await this.notebookProvider.connect({

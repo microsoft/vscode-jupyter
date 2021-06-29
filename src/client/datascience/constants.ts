@@ -168,8 +168,10 @@ export namespace Commands {
     export const InteractiveClearAll = 'jupyter.interactive.clearAllCells';
     export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
     export const InteractiveGoToCode = 'jupyter.interactive.goToCode';
+    export const InteractiveCopyCode = 'jupyter.interactive.copyCode';
     export const InteractiveExportAsNotebook = 'jupyter.interactive.exportasnotebook';
     export const InteractiveExportAs = 'jupyter.interactive.exportas';
+    export const DebugNotebook = 'jupyter.debugNotebook';
 
     // Data Wrangler
     export const OpenDataWrangler = 'jupyter.openDataWrangler';
@@ -205,6 +207,8 @@ export namespace EditorContexts {
     export const HaveCellSelected = 'jupyter.havecellselected';
     export const CanRestartNotebookKernel = 'jupyter.notebookeditor.canrestartNotebookkernel';
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
+    export const CanDebug = 'jupyter.notebookeditor.canDebug';
+    export const DebuggingInProgress = 'jupyter.notebookeditor.debuggingInProgress';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
