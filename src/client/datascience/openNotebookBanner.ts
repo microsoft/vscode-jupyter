@@ -10,7 +10,7 @@ export class OpenNotebookBanner implements IExtensionSingleActivationService {
     constructor(
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IPythonExtensionChecker) private pythonExtensionChecker: IPythonExtensionChecker
-    ) { }
+    ) {}
 
     public async activate() {
         this.notebookEditorProvider.onDidOpenNotebookEditor(this.openedNotebook.bind(this));
