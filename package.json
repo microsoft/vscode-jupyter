@@ -65,6 +65,7 @@
         "onCommand:jupyter.openVariableView",
         "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
         "onNotebook:jupyter-notebook",
+        "onNotebook:interactive",
         "onCustomEditor:jupyter.notebook.ipynb"
     ],
     "main": "./out/client/extension",
