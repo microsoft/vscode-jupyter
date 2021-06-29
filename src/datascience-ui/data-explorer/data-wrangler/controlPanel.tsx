@@ -5,7 +5,6 @@ import './sliceControl.css';
 import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
 import { HistorySection } from './controls/HistorySection';
 import { SummarySection } from './controls/SummarySection';
-import { ColumnsSection } from './controls/ColumnsSection';
 import { RowsSection } from './controls/RowsSection';
 import { CodeSection } from './controls/CodeSection';
 import { IHistoryItem } from '../../../client/datascience/data-viewing/data-wrangler/types';
@@ -46,12 +45,6 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                     histogramData={this.props.histogramData}
                     submitCommand={this.props.submitCommand}
                     resizeEvent={this.props.resizeEvent}
-                    headers={this.props.headers}
-                />
-                <ColumnsSection
-                    collapsed={true}
-                    submitCommand={this.props.submitCommand}
-                    options={columnDropdownOptions}
                     headers={this.props.headers}
                 />
                 <RowsSection

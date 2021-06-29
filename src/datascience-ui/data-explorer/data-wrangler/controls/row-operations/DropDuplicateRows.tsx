@@ -1,6 +1,7 @@
 import { IDropdownOption } from '@fluentui/react';
 import * as React from 'react';
-import { DataWranglerCommands } from '../../../../client/datascience/data-viewing/data-wrangler/types';
+import { DataWranglerCommands } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
+import { buttonStyle } from '../styles';
 
 interface IProps {
     headers: string[];
@@ -21,16 +22,7 @@ export class DropDuplicateRowsSection extends React.Component<IProps, IState> {
                         args: {}
                     })
                 }
-                style={{
-                    width: '50px',
-                    backgroundColor: 'var(--vscode-button-background)',
-                    color: 'var(--vscode-button-foreground)',
-                    margin: '0px',
-                    padding: '4px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    height: '26px'
-                }}
+                style={buttonStyle}
             >
                 Drop
             </button>

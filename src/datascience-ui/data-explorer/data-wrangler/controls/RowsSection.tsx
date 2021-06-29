@@ -1,9 +1,9 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
-import { DropDuplicateRowsSection } from './DropDuplicateRows';
-import { DropMissingRowsSection } from './DropMissingRowsSection';
+import { DropDuplicateRowsSection } from './row-operations/DropDuplicateRows';
+import { DropMissingRowsSection } from './row-operations/DropMissingRowsSection';
 import { SidePanelSection } from './SidePanelSection';
-import { dropdownStyles } from './styles';
+import { dropdownStyle, dropdownStyles } from './styles';
 
 interface IProps {
     collapsed: boolean;
@@ -35,7 +35,7 @@ export class RowsSection extends React.Component<IProps, IState> {
                 <Dropdown
                     responsiveMode={ResponsiveMode.xxxLarge}
                     label={'Operation'}
-                    style={{ marginRight: '10px', width: '150px', marginBottom: '16px' }}
+                    style={dropdownStyle}
                     styles={dropdownStyles}
                     options={this.generateTransformOperations()}
                     className="dropdownTitleOverrides"
