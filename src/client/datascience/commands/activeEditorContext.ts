@@ -46,7 +46,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private isVSCodeNotebookActive: ContextKey;
     private usingWebViewNotebook: ContextKey;
     private hasNativeNotebookOpen: ContextKey;
-    private debugReadyInterpreters = new Map<PythonEnvironment, boolean>();
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -92,7 +91,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
-        this.debugReadyInterpreters.clear();
     }
     public async activate(): Promise<void> {
         this.docManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);
@@ -147,7 +145,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateNativeNotebookContext();
         this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
-        void this.updateDebugContext(e?.notebook?.getMatchingInterpreter());
+        this.updateDebugContext(e?.notebook?.getMatchingInterpreter()).ignoreErrors();
     }
     private updateNativeNotebookContext() {
         this.hasNativeNotebookOpen.set(this.vscNotebook.notebookDocuments.some(isJupyterNotebook)).ignoreErrors();
@@ -186,28 +184,21 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateContextOfActiveNotebookKernel(activeEditor);
     }
     private onNotebookControllerSelected({
+        notebook,
         controller
     }: {
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
-        this.updateDebugContext(controller.connection.interpreter);
+        const activeDoc = this.vscNotebook.activeNotebookEditor?.document;
+        if (activeDoc === notebook) {
+            this.updateDebugContext(controller.connection.interpreter);
+        }
     }
     private async updateDebugContext(interpreter?: PythonEnvironment) {
-        if (!interpreter) {
-            this.canDebug.set(false).ignoreErrors();
-        } else {
-            let flag = this.debugReadyInterpreters.get(interpreter);
-            if (flag !== undefined) {
-                this.canDebug.set(flag).ignoreErrors();
-                return;
-            }
-
-            // set to false while we wait
-            this.canDebug.set(false).ignoreErrors();
-
-            flag = await this.dependencyService.areDebuggingDependenciesInstalled(interpreter);
-            this.debugReadyInterpreters.set(interpreter, flag);
+        this.canDebug.set(false).ignoreErrors();
+        if (interpreter) {
+            const flag = await this.dependencyService.areDebuggingDependenciesInstalled(interpreter);
             this.canDebug.set(flag).ignoreErrors();
         }
     }
