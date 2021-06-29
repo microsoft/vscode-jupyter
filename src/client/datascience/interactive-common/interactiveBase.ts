@@ -339,14 +339,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 this.handleMessage(message, payload, this.requestVariables);
                 break;
 
-            case InteractiveWindowMessages.LoadTmLanguageRequest:
-                this.handleMessage(message, payload, this.requestTmLanguage);
-                break;
-
-            case InteractiveWindowMessages.LoadOnigasmAssemblyRequest:
-                this.handleMessage(message, payload, this.requestOnigasm);
-                break;
-
             case InteractiveWindowMessages.SelectKernel:
                 this.handleMessage(message, payload, this.selectNewKernel);
                 break;

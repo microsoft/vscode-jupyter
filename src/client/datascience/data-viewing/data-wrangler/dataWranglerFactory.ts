@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import '../../../common/extensions';
-import { WebviewPanel, window } from 'vscode';
+import { WebviewPanel } from 'vscode';
 import { inject, injectable } from 'inversify';
 
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../../common/types';
@@ -30,13 +30,6 @@ export class DataWranglerFactory implements IDataWranglerFactory, IAsyncDisposab
         this.viewContext = new ContextKey(EditorContexts.IsDataWranglerActive, this.commandManager);
         this.disposables.push(
             this.commandManager.registerCommand(Commands.RefreshDataWrangler, this.refreshDataWrangler, this)
-        );
-        this.disposables.push(
-            this.commandManager.registerCommand(
-                Commands.UpdateOrCreateDataWrangler,
-                this.updateOrCreateDataWrangler,
-                this
-            )
         );
     }
 
@@ -103,30 +96,4 @@ export class DataWranglerFactory implements IDataWranglerFactory, IAsyncDisposab
             }
         }
     }, 1000);
-
-    private updateOrCreateDataWrangler() {
-        // Get the active text editor selection
-        const editor = window.activeTextEditor;
-        if (!editor) return;
-        const document = editor.document;
-        if (!document) return;
-        const position = editor.selection;
-        if (!position) return;
-        // See if a variable exists
-        // Look for an active data wrangler
-        if (this.knownDataWranglers.size === 0) {
-            // Create a new data wrangler
-        } else {
-            // Reuse an existing data wrangler
-            const range = document.getWordRangeAtPosition(position.anchor);
-            if (range) {
-                const word = document.getText(range);
-                for (const wrangler of this.knownDataWranglers) {
-                    void wrangler.updateWithNewVariable(word);
-                }
-            }
-        }
-        // Set its dependencies
-        // Overwrite
-    }
 }

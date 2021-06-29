@@ -51,11 +51,9 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
             }
             const col = {
                 key: column.key,
-                type: normalizedType
-            } as { key: string; type: ColumnType; describe?: string };
-            if (column.describe) {
-                col['describe'] = column.describe;
-            }
+                type: normalizedType,
+                describe: column.describe ?? ''
+            };
             return col;
         });
     }

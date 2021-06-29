@@ -3,8 +3,6 @@
 'use strict';
 import '../../common/extensions';
 
-import * as fsextra from 'fs-extra';
-import * as path from 'path';
 import { injectable, unmanaged } from 'inversify';
 import { ViewColumn, WebviewPanel as vscodeWebviewPanel } from 'vscode';
 
@@ -19,11 +17,6 @@ import { IConfigurationService, IDisposable, Resource } from '../../common/types
 import { noop } from '../../common/utils/misc';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewHost } from './webviewHost';
-import { serializeLanguageConfiguration } from '../interactive-common/serialization';
-import { traceInfo, traceWarning } from '../../common/logger';
-import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> implements IDisposable {
     protected get isDisposed(): boolean {
@@ -141,46 +134,4 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         this.viewState.active = active;
         this.onViewStateChanged({ current, previous });
     };
-
-    protected async requestTmLanguage(languageId: string = PYTHON_LANGUAGE) {
-        // Get the contents of the appropriate tmLanguage file.
-        traceInfo('Request for tmlanguage file.');
-        const languageJson = await this.themeFinder.findTmLanguage(languageId);
-        const languageConfiguration = serializeLanguageConfiguration(
-            await this.themeFinder.findLanguageConfiguration(languageId)
-        );
-        const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
-        const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
-        this.postMessageInternal(InteractiveWindowMessages.LoadTmLanguageResponse, {
-            languageJSON: languageJson ?? '',
-            languageConfiguration,
-            extensions,
-            scopeName,
-            languageId
-        }).ignoreErrors();
-    }
-
-    protected async requestOnigasm(): Promise<void> {
-        // Look for the file next or our current file (this is where it's installed in the vsix)
-        let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
-        traceInfo(`Request for onigasm file at ${filePath}`);
-        if (await fsextra.pathExists(filePath)) {
-            const contents = await fsextra.readFile(filePath);
-            this.postMessageInternal(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
-        } else {
-            // During development it's actually in the node_modules folder
-            filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
-            traceInfo(`Backup request for onigasm file at ${filePath}`);
-            if (await fsextra.pathExists(filePath)) {
-                const contents = await fsextra.readFile(filePath);
-                this.postMessageInternal(
-                    InteractiveWindowMessages.LoadOnigasmAssemblyResponse,
-                    contents
-                ).ignoreErrors();
-            } else {
-                traceWarning('Onigasm file not found. Colorization will not be available.');
-                this.postMessageInternal(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
-            }
-        }
-    }
 }

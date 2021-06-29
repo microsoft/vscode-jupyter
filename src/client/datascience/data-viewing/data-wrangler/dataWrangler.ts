@@ -28,7 +28,6 @@ import {
     IThemeFinder
 } from '../../types';
 import { updateCellCode } from '../../notebook/helpers/executionHelpers';
-import { InteractiveWindowMessages } from '../../interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../messages';
 import { DataViewerMessages, IDataViewerDataProvider } from '../types';
 import {
@@ -51,6 +50,9 @@ import { DataViewer } from '../dataViewer';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataWranglerPreferredViewColumn';
 const dataWranglerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
+
+// Keeps track of all the transformations called on the data wrangler
+// Runs the transformations, communicates with the data wrangler UI through onMessage and postMessage
 @injectable()
 export class DataWrangler extends DataViewer implements IDataWrangler, IDisposable {
     private variableCounter = 0;
@@ -205,14 +207,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
             case DataWranglerMessages.RefreshDataWrangler:
                 this.refreshData().ignoreErrors();
-                break;
-
-            case InteractiveWindowMessages.LoadTmLanguageRequest:
-                void this.requestTmLanguage(payload);
-                break;
-
-            case InteractiveWindowMessages.LoadOnigasmAssemblyRequest:
-                void this.requestOnigasm();
                 break;
 
             case CssMessages.GetMonacoThemeRequest:
