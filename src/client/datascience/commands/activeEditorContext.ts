@@ -192,7 +192,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }) {
         const activeDoc = this.vscNotebook.activeNotebookEditor?.document;
         if (activeDoc === notebook) {
-            this.updateDebugContext(controller.connection.interpreter);
+            this.updateDebugContext(controller.connection.interpreter).ignoreErrors();
         }
     }
     private async updateDebugContext(interpreter?: PythonEnvironment) {
