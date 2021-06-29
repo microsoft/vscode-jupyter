@@ -63,6 +63,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
         return this.onStatusChangedEvent.event;
     }
+    public get onIOPubMessage(): Event<KernelMessage.IIOPubMessage> {
+        if (!this.ioPubEventEmitter) {
+            this.ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
+        }
+        return this.ioPubEventEmitter.event;
+    }
 
     public get status(): ServerStatus {
         return this.getServerStatus();
@@ -264,6 +270,15 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             promise.done.finally(() => this.startRestartSession(this.sessionTimeout)).catch(noop);
         }
         return promise;
+    }
+
+    public requestDebug(
+        content: KernelMessage.IDebugRequestMsg['content'],
+        disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined {
+        return this.session && this.session.kernel
+            ? this.session.kernel.requestDebug(content, disposeOnDone)
+            : undefined;
     }
 
     public requestInspect(

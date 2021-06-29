@@ -243,31 +243,30 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             result === 'multiple' &&
             resource &&
             !this.globalMemento.get(AskedForPerFileSettingKey) &&
-            this._windows.length === 1
+            this._windows.length === 1 &&
+            // Only prompt if the submitting file is different
+            this._windows[0].owner?.fsPath !== resource.fsPath
         ) {
             // See if the first window was tied to a file or not.
-            const firstWindow = this._windows.find((w) => w.owner);
-            if (firstWindow) {
-                this.globalMemento.update(AskedForPerFileSettingKey, true).then(noop, noop);
-                const questions = [
-                    localize.DataScience.interactiveWindowModeBannerSwitchYes(),
-                    localize.DataScience.interactiveWindowModeBannerSwitchNo()
-                ];
-                // Ask user if they'd like to switch to per file or not.
-                const response = await this.appShell.showInformationMessage(
-                    localize.DataScience.interactiveWindowModeBannerTitle(),
-                    ...questions
+            this.globalMemento.update(AskedForPerFileSettingKey, true).then(noop, noop);
+            const questions = [
+                localize.DataScience.interactiveWindowModeBannerSwitchYes(),
+                localize.DataScience.interactiveWindowModeBannerSwitchNo()
+            ];
+            // Ask user if they'd like to switch to per file or not.
+            const response = await this.appShell.showInformationMessage(
+                localize.DataScience.interactiveWindowModeBannerTitle(),
+                ...questions
+            );
+            if (response === questions[0]) {
+                result = 'perFile';
+                this._windows[0].changeMode(result);
+                await this.configService.updateSetting(
+                    'interactiveWindowMode',
+                    result,
+                    resource,
+                    ConfigurationTarget.Global
                 );
-                if (response === questions[0]) {
-                    result = 'perFile';
-                    firstWindow.changeMode(result);
-                    await this.configService.updateSetting(
-                        'interactiveWindowMode',
-                        result,
-                        resource,
-                        ConfigurationTarget.Global
-                    );
-                }
             }
         }
         return result;
