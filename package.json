@@ -2120,8 +2120,6 @@
         "@nteract/transforms": "^4.4.7",
         "@octokit/rest": "^18.0.6",
         "@phosphor/widgets": "^1.9.3",
-        "@types/d3": "^7.0.0",
-        "@types/plotly.js": "^1.54.10",
         "ansi-regex": "^4.1.0",
         "ansi-to-html": "^0.6.7",
         "ansi-to-react": "^6.0.8",

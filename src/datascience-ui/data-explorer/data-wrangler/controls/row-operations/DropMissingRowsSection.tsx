@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DataWranglerCommands } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
+import { DataWranglerCommands, IDropNaRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
 import { buttonStyle } from '../styles';
 
 interface IProps {
@@ -16,7 +16,7 @@ export class DropMissingRowsSection extends React.Component<IProps, IState> {
                 onClick={() =>
                     this.props.submitCommand({
                         command: DataWranglerCommands.DropNa,
-                        args: { target: 'Drop Missing Values' }
+                        args: { target: 'row' } as IDropNaRequest
                     })
                 }
                 style={buttonStyle}

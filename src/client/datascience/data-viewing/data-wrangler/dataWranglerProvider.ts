@@ -154,7 +154,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
     }
 
     private getImportCodeForFileType(filepath: string) {
-        const code = DataScience.dataWranglerImportCode().format(filepath);
+        const code = `import pandas as pd\r\ndf = pd.read_csv(r'${filepath}')\n`;
         return code;
     }
 }

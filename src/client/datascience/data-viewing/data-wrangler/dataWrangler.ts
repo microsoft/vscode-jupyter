@@ -149,7 +149,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
             this.historyList.push({
                 transformation: DataScience.dataWranglerImportTransformation(),
-                code: DataScience.dataWranglerImportCode().format(this.sourceFile ?? 'broken'),
+                code: `import pandas as pd\r\ndf = pd.read_csv(r'${this.sourceFile ?? 'broken'}')\n`,
                 variableName: 'df'
             });
             this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
@@ -299,10 +299,9 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         const newVariableName = `df${this.variableCounter}`;
         const columns = req.targetColumns.map((col) => `'${col}'`).join(', ');
         const astypeDict = req.targetColumns.map((col) => `'${col}': '${req.newType}'`).join(', ');
-        // TODOV: What to do if it fails?
         const code = `${newVariableName} = ${currentVariableName}.astype({${astypeDict}})\n`;
         const historyItem = {
-            transformation: `Coerced type of column(s) ${columns} to ${req.newType}`,
+            transformation: DataScience.dataWranglerCoerceColumnTransformation().format(columns, req.newType),
             variableName: newVariableName,
             code: code
         };
@@ -314,8 +313,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
         const columns = req.targetColumns.map((col) => `'${col}'`).join(', ');
-
-        // TODOV: What to do if it fails
 
         // Find type of each column
         // It is necessary so we replace the values in the columns with the correct column type
@@ -345,7 +342,11 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         }
 
         const historyItem = {
-            transformation: `Replaced all values of '${req.oldValue}' with '${req.newValue}' in column(s): ${columns}`,
+            transformation: DataScience.dataWranglerReplaceAllTransformation().format(
+                req.oldValue as string,
+                req.newValue as string,
+                columns
+            ),
             variableName: newVariableName,
             code: code
         };
@@ -356,12 +357,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     private async renameColumn(req: IRenameColumnsRequest, currentVariableName: string): Promise<IHistoryItem> {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
-        const code = DataScience.dataWranglerRenameColumnCode().format(
-            newVariableName,
-            currentVariableName,
-            req.targetColumn,
-            req.newColumnName
-        );
+        const code = `${newVariableName} = ${currentVariableName}.rename(columns={ '${req.targetColumn}': '${req.newColumnName}' })\n`;
         const historyItem = {
             transformation: DataScience.dataWranglerRenameColumnTransformation().format(
                 req.targetColumn,
@@ -379,11 +375,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         const newVariableName = `df${this.variableCounter}`;
         if (req.rowIndex) {
             // Drop rows by index
-            const code = DataScience.dataWranglerDropRowCode().format(
-                newVariableName,
-                currentVariableName,
-                req.rowIndex.toString()
-            );
+            const code = `${newVariableName} = ${currentVariableName}.drop(index=${req.rowIndex})\n`;
             const historyItem = {
                 transformation: DataScience.dataWranglerDropRowTransformation().format(req.rowIndex.toString()),
                 variableName: newVariableName,
@@ -395,11 +387,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             // Drop columns by column name
             const labels = req.targetColumns;
             const columnNames = labels.map((label) => `'${label}'`).join(', ');
-            const code = DataScience.dataWranglerDropColumnCode().format(
-                newVariableName,
-                currentVariableName,
-                `[${columnNames}]`
-            );
+            const code = `${newVariableName} = ${currentVariableName}.drop(columns=[${columnNames}])\n`;
             const historyItem = {
                 transformation: DataScience.dataWranglerDropColumnTransformation().format(columnNames),
                 variableName: newVariableName,
@@ -418,11 +406,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         if (req.targetColumns !== undefined) {
             // Drop duplicates in a column
             const targetColumns = req.targetColumns.map((col: string) => `'${col}'`).join(', ');
-            const code = DataScience.dataWranglerDropDuplicatesRowsOnColumnCode().format(
-                newVariableName,
-                currentVariableName,
-                targetColumns
-            );
+            const code = `${newVariableName} = ${currentVariableName}.drop_duplicates(subset=[${targetColumns}])\n`;
             const historyItem = {
                 transformation: DataScience.dataWranglerDropDuplicatesRowsOnColumnTransformation().format(
                     targetColumns
@@ -434,7 +418,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             return historyItem;
         } else {
             // Drop duplicate rows
-            const code = DataScience.dataWranglerDropDuplicatesRowsCode().format(newVariableName, currentVariableName);
+            const code = `${newVariableName} = ${currentVariableName}.drop_duplicates()\n`;
             const historyItem = {
                 transformation: DataScience.dataWranglerDropDuplicatesRowsTransformation(),
                 variableName: newVariableName,
@@ -452,11 +436,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         if (req.targetColumns !== undefined) {
             // Only drop rows where there are Na values in the target columns
             const targetColumns = req.targetColumns.map((col: string) => `'${col}'`).join(', ');
-            const code = DataScience.dataWranglerDropNaRowsOnColumnCode().format(
-                newVariableName,
-                currentVariableName,
-                targetColumns
-            );
+            const code = `${newVariableName} = ${currentVariableName}.dropna(subset=[${targetColumns}])\n`;
             const historyItem = {
                 transformation: DataScience.dataWranglerDropNaRowsOnColumnTransformation().format(targetColumns),
                 variableName: newVariableName,
@@ -466,11 +446,8 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             return historyItem;
         } else {
             // Drop all rows that contain any Na value or drop all columns that contain any Na value
-            const code = DataScience.dataWranglerDropNaCode().format(
-                newVariableName,
-                currentVariableName,
-                req.target === 'row' ? '0' : '1'
-            );
+            const axis = req.target === 'row' ? '0' : '1';
+            const code = `${newVariableName} = ${currentVariableName}.dropna(axis=${axis})\n`;
             const historyItem = {
                 transformation:
                     req.target === 'row'
@@ -487,16 +464,9 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     private async normalizeColumn(req: INormalizeColumnRequest, currentVariableName: string): Promise<IHistoryItem> {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
-        const code = DataScience.dataWranglerNormalizeColumnCode().format(
-            req.start.toString(),
-            req.end.toString(),
-            newVariableName,
-            currentVariableName,
-            newVariableName,
-            req.targetColumn,
-            newVariableName,
+        const code = `from sklearn.preprocessing import MinMaxScaler\r\nscaler = MinMaxScaler(feature_range=(${req.start.toString()}, ${req.end.toString()}))\r\n${newVariableName} = ${currentVariableName}.copy()\r\n${newVariableName}['${
             req.targetColumn
-        );
+        }'] = scaler.fit_transform(${newVariableName}['${req.targetColumn}'].values.reshape(-1, 1))\n`;
         const historyItem = {
             transformation: DataScience.dataWranglerNormalizeColumnTransformation().format(req.targetColumn),
             variableName: newVariableName,
@@ -509,11 +479,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     private async fillNa(req: IFillNaRequest, currentVariableName: string): Promise<IHistoryItem> {
         this.variableCounter += 1;
         const newVariableName = `df${this.variableCounter}`;
-        const code = DataScience.dataWranglerFillNaCode().format(
-            newVariableName,
-            currentVariableName,
-            req.newValue.toString()
-        );
+        const code = `${currentVariableName} = ${currentVariableName}.fillna(${req.newValue.toString()})\n`;
         const historyItem = {
             transformation: DataScience.dataWranglerFillNaTransformation().format(req.newValue.toString()),
             variableName: newVariableName,

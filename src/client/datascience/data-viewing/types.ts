@@ -101,7 +101,7 @@ export interface IDataFrameInfo {
      * The name of the file that this variable was declared in.
      */
     fileName?: string;
-    sourceFile?: string; // TODOV: Check if they're the same?
+    sourceFile?: string;
 }
 
 // Used by DataViewer and DataWrangler
