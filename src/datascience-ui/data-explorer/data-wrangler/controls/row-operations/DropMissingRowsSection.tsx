@@ -1,10 +1,8 @@
-import { IDropdownOption } from '@fluentui/react';
 import * as React from 'react';
+import { DataWranglerCommands } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
 import { buttonStyle } from '../styles';
 
 interface IProps {
-    headers: string[];
-    options: IDropdownOption[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
@@ -17,8 +15,8 @@ export class DropMissingRowsSection extends React.Component<IProps, IState> {
             <button
                 onClick={() =>
                     this.props.submitCommand({
-                        command: 'dropna',
-                        args: { target: 'row' }
+                        command: DataWranglerCommands.DropNa,
+                        args: { target: 'Drop Missing Values' }
                     })
                 }
                 style={buttonStyle}

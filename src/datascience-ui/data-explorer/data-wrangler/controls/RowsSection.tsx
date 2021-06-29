@@ -19,7 +19,7 @@ interface IState {
 }
 
 export enum RowTransformation {
-    DropNA = 'Drop NA',
+    DropNA = 'Drop Missing Values',
     DropDuplicates = 'Drop Duplicates'
 }
 
@@ -54,16 +54,12 @@ export class RowsSection extends React.Component<IProps, IState> {
             case RowTransformation.DropNA:
                 return (
                     <DropMissingRowsSection
-                        headers={this.props.headers}
-                        options={this.props.options}
                         submitCommand={this.props.submitCommand}
                     />
                 );
             case RowTransformation.DropDuplicates:
                 return (
                     <DropDuplicateRowsSection
-                        headers={this.props.headers}
-                        options={this.props.options}
                         submitCommand={this.props.submitCommand}
                     />
                 );
