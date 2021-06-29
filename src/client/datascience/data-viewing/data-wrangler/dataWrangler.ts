@@ -43,7 +43,8 @@ import {
     IDropDuplicatesRequest,
     IDropNaRequest,
     IPlotHistogramReq,
-    IGetColumnStatsReq
+    IGetColumnStatsReq,
+    SidePanelSections
 } from './types';
 import { DataScience } from '../../../common/utils/localize';
 import { DataViewer } from '../dataViewer';
@@ -135,9 +136,14 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
             // Load the web panel using our current directory as we don't expect to load any other files
             await super.loadWebview(process.cwd(), webviewPanel).catch(traceError);
-
-            const wantedPanels = this.configService.getSettings().dataWrangler.sidePanelSections;
-            this.postMessage(DataWranglerMessages.UpdateHistoryList, wantedPanels).ignoreErrors();
+            const settings = this.configService.getSettings();
+            if (settings && settings.dataWrangler && settings.dataWrangler.sidePanelSections) {
+                const wantedPanels = settings.dataWrangler.sidePanelSections;
+                this.postMessage(
+                    DataWranglerMessages.SetSidePanels,
+                    wantedPanels as SidePanelSections[]
+                ).ignoreErrors();
+            }
 
             // Use Data Viewer logic to show initial data
             const dataFrameInfo = await this.showInitialData(title);
