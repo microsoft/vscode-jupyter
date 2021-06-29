@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, NotebookCell, Position, TextDocument, Uri, ViewColumn } from 'vscode';
+import { CancellationToken, NotebookCell, NotebookDocument, Position, TextDocument, Uri, ViewColumn } from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
@@ -58,6 +58,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri } }];
     [DSCommands.InteractiveRemoveCell]: [NotebookCell];
     [DSCommands.InteractiveGoToCode]: [NotebookCell];
+    [DSCommands.InteractiveCopyCode]: [NotebookCell];
     [DSCommands.InteractiveExportAsNotebook]: [{ notebookEditor: { notebookUri: Uri } }];
     [DSCommands.InteractiveExportAs]: [{ notebookEditor: { notebookUri: Uri } }];
     ['notebook.cell.quitEdit']: [];
@@ -93,12 +94,13 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['notebook.cell.insertCodeCellBelow']: [];
     ['notebook.undo']: [];
     ['notebook.redo']: [];
+    ['notebook.toggleBreakpointMargin']: [NotebookDocument];
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
     ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
     ['undo']: [];
-    ['interactive.open']: [ViewColumn | undefined, Uri | undefined];
+    ['interactive.open']: [ViewColumn | undefined, Uri | undefined, string | undefined];
     ['interactive.execute']: [string];
     [DSCommands.NotebookEditorInterruptKernel]: [Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
@@ -164,6 +166,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
     [DSCommands.NotebookEditorKeybindSave]: [];
     [DSCommands.NotebookEditorKeybindUndo]: [];
+    [DSCommands.DebugNotebook]: [];
 
     // Data Wrangler
     [DSCommands.OpenDataWrangler]: [];

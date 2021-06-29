@@ -144,6 +144,7 @@
     "DataScience.collapseVariableExplorerLabel": "Variables",
     "DataScience.expandVariableExplorerTooltip": "Show variables active in jupyter kernel",
     "DataScience.close": "Close",
+    "DataScience.interactiveCopyCode": "Copy Code",
     "DataScience.variableLoadingValue": "Loading...",
     "DataScience.importDialogTitle": "Import Jupyter Notebook",
     "DataScience.importDialogFilter": "Jupyter Notebooks",
@@ -530,5 +531,8 @@
     "DataScience.dataWranglerNormalizeTooltip": "Transform column by scaling each feature to a given range",
     "DataScience.dataWranglerDropNATooltip": "Remove missing values from selected columns",
     "DataScience.dataWranglerCoerceTooltip": "Cast a column to a specified type",
-    "DataScience.dataWranglerReplaceAllTooltip": "Replace specified values with a new given value"
+    "DataScience.dataWranglerReplaceAllTooltip": "Replace specified values with a new given value",
+    "DataScience.kernelWasNotStarted": "Kernel was not started. A kernel session is needed to start debugging.",
+    "DataScience.noNotebookToDebug": "No active notebook document to debug.",
+    "DataScience.cantStartDebugging": "Can't start debugging."
 }

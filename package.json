@@ -74,7 +74,7 @@
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {
             "supported": "limited",
-            "description": "Execution of cells in Interactive Window and Notebooks is not be supported in untrusted workspaces."
+            "description": "Execution of cells in Interactive Window and Notebooks is not supported in untrusted workspaces."
         }
     },
     "contributes": {
@@ -287,6 +287,13 @@
                 "command": "jupyter.openDataWrangler",
                 "title": "Open Data Wrangler",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.debugNotebook",
+                "title": "Debug",
+                "icon": "$(bug)",
+                "category": "Jupyter",
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -656,7 +663,7 @@
                     "light": "resources/light/interrupt.svg",
                     "dark": "resources/dark/interrupt.svg"
                 },
-                "enablement": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
+                "enablement": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel && !jupyter.notebookeditor.debuggingInProgress"
             },
             {
                 "command": "jupyter.notebookeditor.restartkernel",
@@ -667,7 +674,7 @@
                     "light": "resources/light/restart-kernel.svg",
                     "dark": "resources/dark/restart-kernel.svg"
                 },
-                "enablement": "jupyter.notebookeditor.canrestartNotebookkernel && isWorkspaceTrusted"
+                "enablement": "jupyter.notebookeditor.canrestartNotebookkernel && isWorkspaceTrusted && !jupyter.notebookeditor.debuggingInProgress"
             },
             {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
@@ -817,6 +824,12 @@
                 "category": "Jupyter"
             },
             {
+                "command": "jupyter.interactive.copyCode",
+                "title": "%DataScience.interactiveCopyCode%",
+                "icon": "$(copy)",
+                "category": "Jupyter"
+            },
+            {
                 "command": "jupyter.refreshDataWrangler",
                 "title": "Refresh Data Wrangler",
                 "category": "Jupyter",
@@ -933,6 +946,11 @@
                     "command": "jupyter.notebookeditor.export",
                     "group": "navigation@2",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.debugNotebook",
+                    "group": "navigation@3",
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && config.jupyter.experimental.debugging"
                 }
             ],
             "interactive/toolbar": [
@@ -979,13 +997,18 @@
             ],
             "interactive/cell/title": [
                 {
-                    "command": "jupyter.interactive.goToCode",
+                    "command": "jupyter.interactive.copyCode",
                     "group": "inline@0",
                     "when": "isWorkspaceTrusted"
                 },
                 {
+                    "command": "jupyter.interactive.goToCode",
+                    "group": "inline@1",
+                    "when": "isWorkspaceTrusted"
+                },
+                {
                     "command": "jupyter.interactive.removeCell",
-                    "group": "inline@0",
+                    "group": "inline@2",
                     "when": "isWorkspaceTrusted"
                 }
             ],
@@ -1020,6 +1043,10 @@
                 {
                     "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow",
                     "title": "%DataScience.renderMarkdownAndSelectBelow%",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.interactive.copyCode",
                     "when": "false"
                 },
                 {
@@ -1499,6 +1526,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables/disables A/B tests.",
+                    "scope": "machine"
+                },
+                "jupyter.enableNativeInteractiveWindow": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables the preview native interactive window experience. Set to false to opt back into the webview interactive window experience.",
                     "scope": "machine"
                 },
                 "jupyter.logging.level": {
@@ -2018,7 +2051,13 @@
                     "when": "jupyter.hasNativeNotebookOpen"
                 }
             ]
-        }
+        },
+        "debuggers": [
+            {
+                "type": "Python Kernel Debug Adapter",
+                "label": "Python Kernel Debug Adapter"
+            }
+        ]
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
@@ -2148,7 +2187,7 @@
         "unicode": "^10.0.0",
         "untildify": "^3.0.2",
         "uuid": "^3.3.2",
-        "vscode-debugprotocol": "^1.28.0",
+        "vscode-debugprotocol": "^1.41.0",
         "vscode-extension-telemetry": "0.1.4",
         "vscode-jsonrpc": "6.0.0",
         "vscode-languageclient": "7.0.0",
