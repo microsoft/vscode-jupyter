@@ -3,7 +3,7 @@ import {
     DataWranglerCommands,
     IDropNaRequest
 } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
-import { buttonStyle } from '../styles';
+import { dropButtonStyle } from '../styles';
 
 interface IProps {
     selectedColumns: string[];
@@ -25,7 +25,7 @@ export class DropMissingColumnsSection extends React.Component<IProps, IState> {
                     });
                     this.props.setColumns([]);
                 }}
-                style={buttonStyle}
+                style={dropButtonStyle}
             >
                 Drop
             </button>

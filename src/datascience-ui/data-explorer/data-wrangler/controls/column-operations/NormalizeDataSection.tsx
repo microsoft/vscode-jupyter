@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DataWranglerCommands, INormalizeColumnRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
-import { buttonStyle, inputStyle } from '../styles';
+import { normalizeButtonStyle, inputStyle } from '../styles';
 
 interface IProps {
     selectedColumn: string;
@@ -55,7 +55,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                                 });
                             }
                         }
-                        style={buttonStyle}
+                        style={normalizeButtonStyle}
                     >
                         Normalize
                     </button>

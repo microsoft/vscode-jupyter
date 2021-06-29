@@ -1,7 +1,7 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
 import { DataWranglerCommands, ICoerceColumnRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
-import { buttonStyle, dropdownStyle, dropdownStyles } from '../styles';
+import { submitButtonStyle, dropdownStyle, dropdownStyles } from '../styles';
 
 interface IProps {
     selectedColumns: string[];
@@ -57,7 +57,7 @@ export class CoerceColumnsSection extends React.Component<IProps, IState> {
                                 });
                             }
                         }}
-                        style={buttonStyle}
+                        style={submitButtonStyle}
                     >
                         Submit
                     </button>

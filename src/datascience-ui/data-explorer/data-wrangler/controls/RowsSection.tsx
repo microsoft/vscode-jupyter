@@ -1,5 +1,6 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
+import { getLocString } from '../../../react-common/locReactSide';
 import { DropDuplicateRowsSection } from './row-operations/DropDuplicateRows';
 import { DropMissingRowsSection } from './row-operations/DropMissingRowsSection';
 import { SidePanelSection } from './SidePanelSection';
@@ -15,18 +16,33 @@ interface IProps {
 
 interface IState {
     columnsToDrop: number[]; // Indices
-    operationType: RowTransformation;
+    operationType: RowOperation;
 }
 
-export enum RowTransformation {
+export enum RowOperation {
     DropNA = 'Drop Missing Values',
     DropDuplicates = 'Drop Duplicates'
 }
+interface IRowOperationInfo {
+    title: RowOperation;
+    tooltip: string;
+}
+
+const rowOperationInfo: Array<IRowOperationInfo> = [
+    {
+        title: RowOperation.DropNA,
+        tooltip: getLocString('DataScience.dataWranglerDropNARowsTooltip', 'Remove rows with missing values')
+    },
+    {
+        title: RowOperation.DropDuplicates,
+        tooltip: getLocString('DataScience.dataWranglerDropDuplicateRowsTooltip', 'Remove duplicate rows')
+    }
+];
 
 export class RowsSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
-        this.state = { columnsToDrop: [], operationType: RowTransformation.DropNA };
+        this.state = { columnsToDrop: [], operationType: RowOperation.DropNA };
     }
 
     render() {
@@ -46,43 +62,28 @@ export class RowsSection extends React.Component<IProps, IState> {
             </div>
         );
 
-        return <SidePanelSection title="ROWS" panel={rowsComponent} collapsed={this.props.collapsed}/>
+        return <SidePanelSection title="ROWS" panel={rowsComponent} collapsed={this.props.collapsed} />;
     }
 
     private renderOperationControls = () => {
         switch (this.state.operationType) {
-            case RowTransformation.DropNA:
-                return (
-                    <DropMissingRowsSection
-                        submitCommand={this.props.submitCommand}
-                    />
-                );
-            case RowTransformation.DropDuplicates:
-                return (
-                    <DropDuplicateRowsSection
-                        submitCommand={this.props.submitCommand}
-                    />
-                );
+            case RowOperation.DropNA:
+                return <DropMissingRowsSection submitCommand={this.props.submitCommand} />;
+            case RowOperation.DropDuplicates:
+                return <DropDuplicateRowsSection submitCommand={this.props.submitCommand} />;
         }
     };
 
     private generateTransformOperations = () => {
-        return [
-            {
-                text: RowTransformation.DropDuplicates,
-                key: RowTransformation.DropDuplicates
-            },
-            {
-                text: RowTransformation.DropNA,
-                key: RowTransformation.DropNA
-            }
-        ];
+        return rowOperationInfo.map((operation) => {
+            return { text: operation.title, key: operation.title, title: operation.tooltip };
+        });
     };
 
     private updateTransformType = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
         if (item) {
             this.setState({
-                operationType: item.text as RowTransformation
+                operationType: item.text as RowOperation
             });
         }
     };

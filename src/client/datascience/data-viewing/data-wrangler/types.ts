@@ -35,7 +35,8 @@ export enum DataWranglerCommands {
     Describe = 'describe',
     GetHistoryItem = 'get_history_item',
     CoerceColumn = 'coerce_column',
-    ReplaceAllColumn = 'replace_all_column'
+    ReplaceAllColumn = 'replace_all_column',
+    RemoveHistoryItem = 'remove_history_item'
 }
 
 export namespace DataWranglerMessages {
@@ -59,6 +60,10 @@ export interface IDataWrangler extends IDisposable {
     showData(dataProvider: IDataViewerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<void>;
     refreshData(): Promise<void>;
     updateWithNewVariable(newVariableName: string): Promise<void>;
+}
+
+export interface IRemoveHistoryItemRequest {
+    index: number;
 }
 
 export interface IHistoryItem {

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DataWranglerCommands, IReplaceAllColumnsRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
-import { buttonStyle, inputStyle } from '../styles';
+import { submitButtonStyle, inputStyle } from '../styles';
 
 interface IProps {
     selectedColumns: string[];
@@ -57,7 +57,7 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
                                 this.props.setColumns([]);
                             }
                         }}
-                        style={buttonStyle}
+                        style={submitButtonStyle}
                     >
                         Submit
                     </button>

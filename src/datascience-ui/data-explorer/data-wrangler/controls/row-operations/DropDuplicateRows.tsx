@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DataWranglerCommands } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
-import { buttonStyle } from '../styles';
+import { dropButtonStyle } from '../styles';
 
 interface IProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,7 +19,7 @@ export class DropDuplicateRowsSection extends React.Component<IProps, IState> {
                         args: {}
                     })
                 }
-                style={buttonStyle}
+                style={dropButtonStyle}
             >
                 Drop
             </button>

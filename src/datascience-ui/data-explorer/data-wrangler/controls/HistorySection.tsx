@@ -47,7 +47,7 @@ export const styles = mergeStyleSets({
             fontFamily: 'var(--vscode-font-family)',
             fontSize: 'var(--vscode-font-size)',
             fontWeight: 'var(--vscode-font-weight)',
-            display: 'inline-block',
+            display: 'flex',
             paddingLeft: 10,
             paddingRight: 15
         }
@@ -76,7 +76,20 @@ export class HistorySection extends React.Component<IProps, IState> {
         }
     }
 
-    // handleDeleteHistoryItem() {}
+    handleDeleteHistoryItem(index: number | undefined) {
+        if (index !== undefined) {
+            this.props.submitCommand({
+                command: DataWranglerCommands.RemoveHistoryItem,
+                args: {
+                    index
+                }
+            });
+            this.setState({ currentVariableIndex: index - 1});
+            setTimeout(() => {
+                this.listRef.current?.forceUpdate();
+            });
+        }
+    }
 
     viewHistoryItem(index: number | undefined) {
         if (index !== undefined) {
@@ -102,17 +115,18 @@ export class HistorySection extends React.Component<IProps, IState> {
                 <div
                     className={className}
                     style={{ paddingBottom: '4px', paddingTop: '2px' }}
-                    onClick={() => this.viewHistoryItem(index)}
                 >
-                    {/* <div
-                    className="codicon codicon-close codicon-button"
-                    onClick={this.handleDeleteHistoryItem}
-                    style={{ verticalAlign: 'middle' }}
-                    title={"Remove step"}
-                /> */}
-                    <span style={{ verticalAlign: 'middle' }} title={`Click to view intermediate state`}>
+                    <span onClick={() => this.viewHistoryItem(index)} style={{ verticalAlign: 'middle', width: '100%', flexGrow: 1 }} title={`Click to view intermediate state`}>
                         {item.transformation}
                     </span>
+                    {index !== 0 && this.props.historyList.length - 1 === index && (
+                        <div
+                            className="codicon codicon-close codicon-button"
+                            onClick={() => this.handleDeleteHistoryItem(index)}
+                            style={{ verticalAlign: 'middle'}}
+                            title={'Remove step'}
+                        />
+                    )}
                 </div>
             </div>
         );
@@ -136,6 +150,6 @@ export class HistorySection extends React.Component<IProps, IState> {
                 </span>
             );
 
-        return <SidePanelSection title="HISTORY" panel={historyComponent} collapsed={this.props.collapsed}/>;
+        return <SidePanelSection title="HISTORY" panel={historyComponent} collapsed={this.props.collapsed} />;
     }
 }

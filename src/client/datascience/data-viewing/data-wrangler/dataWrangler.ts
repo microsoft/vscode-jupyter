@@ -46,7 +46,8 @@ import {
     IGetColumnStatsReq,
     IGetHistoryItem,
     IReplaceAllColumnsRequest,
-    SidePanelSections
+    SidePanelSections,
+    IRemoveHistoryItemRequest
 } from './types';
 import { DataScience } from '../../../common/utils/localize';
 import { DataViewer } from '../dataViewer';
@@ -126,6 +127,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         this.commands.set(DataWranglerCommands.GetHistoryItem, this.getHistoryItem.bind(this));
         this.commands.set(DataWranglerCommands.CoerceColumn, this.coerceColumn.bind(this));
         this.commands.set(DataWranglerCommands.ReplaceAllColumn, this.replaceAllColumn.bind(this));
+        this.commands.set(DataWranglerCommands.RemoveHistoryItem, this.removeHistoryItem.bind(this));
     }
 
     public async showData(
@@ -160,6 +162,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         this._onDidDisposeDataWrangler.fire(this as IDataWrangler);
     }
 
+    // Shows the dataframe in data viewer associated with newVariableName
     public async updateWithNewVariable(newVariableName: string) {
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
 
@@ -292,6 +295,12 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
                 }
             });
         }
+    }
+
+    private async removeHistoryItem(req: IRemoveHistoryItemRequest, currentVariableName: string): Promise<void> {
+        this.historyList.splice(req.index, 1);
+        this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
+        await this.updateWithNewVariable(currentVariableName);
     }
 
     private async coerceColumn(req: ICoerceColumnRequest, currentVariableName: string): Promise<IHistoryItem> {

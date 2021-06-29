@@ -51,4 +51,18 @@ export const buttonStyle = {
     alignItems: 'center'
 };
 
+export const dropButtonStyle = {
+    ...buttonStyle,
+}
+
+export const normalizeButtonStyle = {
+    ...buttonStyle,
+    marginRight: '40px'
+}
+
+export const submitButtonStyle = {
+    ...buttonStyle,
+    marginRight: '22px'
+}
+
 export const inputStyle = { width: '140px', marginTop: '4px', marginBottom: '16px' };

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DataWranglerCommands, IDropRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
-import { buttonStyle } from '../styles';
+import { dropButtonStyle } from '../styles';
 
 interface IProps {
     selectedColumns: string[];
@@ -25,7 +25,7 @@ export class DropColumnsSection extends React.Component<IProps, IState> {
                         });
                         this.props.setColumns([]);
                     }}
-                    style={buttonStyle}
+                    style={dropButtonStyle}
                 >
                     Drop
                 </button>

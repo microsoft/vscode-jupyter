@@ -1067,6 +1067,14 @@ export namespace DataScience {
         'DataScience.dataWranglerReplaceAllTooltip',
         'Replace specified values with a new given value'
     );
+    export const dataWranglerDropNARowsTooltip = localize(
+        'DataScience.dataWranglerDropNARowsTooltip',
+        'Remove rows with missing values'
+    );
+    export const dataWranglerDropDuplicateRowTooltip = localize(
+        'DataScience.dataWranglerDropDuplicateRowTooltip',
+        'Remove duplicate rows'
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
