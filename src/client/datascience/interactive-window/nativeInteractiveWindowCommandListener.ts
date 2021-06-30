@@ -63,7 +63,7 @@ export class NativeInteractiveWindowCommandListener {
         @inject(IExportManager) private exportManager: IExportManager,
         @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard
-    ) {}
+    ) { }
 
     public register(commandManager: ICommandManager): void {
         let disposable = commandManager.registerCommand(Commands.CreateNewInteractive, () =>

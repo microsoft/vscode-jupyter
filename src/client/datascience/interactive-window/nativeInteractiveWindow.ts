@@ -225,9 +225,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    public async addCode(code: string, file: Uri): Promise<boolean> {
+    public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
         await this.updateOwners(file);
-        await this.addNotebookCell(code);
+        await this.addNotebookCell(code, file, line);
         try {
             await this.commandManager.executeCommand('notebook.cell.execute', {
                 ranges: [{ start: this.notebookDocument.cellCount - 1, end: this.notebookDocument.cellCount }],
@@ -270,7 +270,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // Call the internal method if we were able to save
         if (saved) {
             await this.updateOwners(fileUri);
-            const notebookCell = await this.addNotebookCell(code);
+            const notebookCell = await this.addNotebookCell(code, fileUri, line);
             const notebook = this.kernel?.notebook;
             if (!notebook) {
                 return false;
@@ -594,7 +594,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.show();
     }
 
-    private async addNotebookCell(code: string): Promise<NotebookCell> {
+    private async addNotebookCell(code: string, file: Uri, line: number): Promise<NotebookCell> {
         // Ensure we have a controller to execute code against
         if (!this.notebookController) {
             await this.commandManager.executeCommand('notebook.selectKernel');
@@ -629,7 +629,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             strippedCode,
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
-        notebookCellData.metadata = { interactiveWindowCellMarker };
+        notebookCellData.metadata = {
+            interactiveWindowCellMarker, interactive: {
+                file: file.fsPath,
+                line: line
+            }
+        };
         edit.replaceNotebookCells(
             this.notebookDocument.uri,
             new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),
