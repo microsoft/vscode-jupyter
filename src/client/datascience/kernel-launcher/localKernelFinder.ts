@@ -63,7 +63,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
             // Always include the interpreter in the search if we can
             const preferredInterpreter =
-                resource && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                     ? await this.interpreterService.getActiveInterpreter(resource)
                     : undefined;
 
