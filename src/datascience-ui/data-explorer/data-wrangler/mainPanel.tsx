@@ -353,6 +353,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 handleRefreshRequest={this.handleRefreshRequest}
                 currentVariableName={this.state.variableName!}
                 sidePanels={this.state.sidePanels}
+                dataframeSummary={this.state.dataframeSummary}
             />
         );
     }

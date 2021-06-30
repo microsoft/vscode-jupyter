@@ -29,7 +29,7 @@ import {
 } from '../../types';
 import { updateCellCode } from '../../notebook/helpers/executionHelpers';
 import { CssMessages } from '../../messages';
-import { ColumnType, DataViewerMessages, IDataViewerDataProvider } from '../types';
+import { ColumnType, DataViewerMessages, IDataFrameInfo, IDataViewerDataProvider } from '../types';
 import {
     IDataWrangler,
     DataWranglerMessages,
@@ -163,6 +163,21 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             });
             this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
         }
+    }
+
+    protected async showInitialData(title: string): Promise<IDataFrameInfo> {
+        super.setTitle(title);
+
+        // Then show our web panel. Eventually we need to consume the data
+        await super.show(true);
+
+        let dataFrameInfo = await this.prepDataFrameInfo();
+
+        // Send a message with our data
+        this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+
+        // Return for data wrangler to use
+        return dataFrameInfo;
     }
 
     private dataWranglerDisposed() {

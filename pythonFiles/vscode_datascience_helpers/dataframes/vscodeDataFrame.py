@@ -177,6 +177,15 @@ def _VSCODE_getDataFrameColumn(df, columnName):
 
 # Function to get info on the passed in data frame
 def _VSCODE_getDataFrameInfo(df):
+    def get_col(df, column_name):
+        try:
+            col = df[column_name]
+            return col
+        # Columns don't have names, so get colum with index
+        except KeyError:
+            col = df[int(column_name)]
+            return col
+
     def describe_repeated(col):
         isduplicate_series = col.duplicated()
         describe = ""
@@ -243,43 +252,39 @@ def _VSCODE_getDataFrameInfo(df):
         colobj["type"] = str(column_type)
 
         # Needed for Data Wrangler
-        try:
-            length = len(df)
-            null_count = 0
-            duplicate_count = 0
-            col = df.iloc[:, n]
-            if column_name != "index":
-                describe_obj = col.describe()
-                describe_text = describe_obj.to_string(header=False)
-                describe_null_text, null_count = describe_null(col)
-                describe_text += describe_null_text
-                describe_repeated_text, duplicate_count = describe_repeated(df)
-                describe_text += describe_repeated_text
+        length = len(df)
+        null_count = 0
+        duplicate_count = 0
+        if column_name != "index":
+            col = get_col(df, column_name)
+            describe_obj = col.describe()
+            describe_text = describe_obj.to_string(header=False)
+            describe_null_text, null_count = describe_null(col)
+            describe_text += describe_null_text
+            describe_repeated_text, duplicate_count = describe_repeated(df)
+            describe_text += describe_repeated_text
 
-                colobj["totalCount"] = describe_obj.get("count")
-                colob["missingCount"] = int(null_count)
-                # Unique count is number of rows minus number of repeated values
-                colobj["uniqueCount"] = int(col.shape[0] - duplicate_count)
-
-                if str(column_type) == "object":
-                    colobj["mostFrequentValue"] = describe_obj.get("top")
-                    colobj["mostFrequentValueAppearances"] = describe_obj.get("freq")
-                else:
-                    statistics = {}
-                    statistics["average"] = describe_obj.get("mean")
-                    statistics["median"] = describe_obj.get("50%")
-                    statistics["min"] = describe_obj.get("min")
-                    statistics["max"] = describe_obj.get("max")
-                    statistics["sd"] = describe_obj.get("std")
-                    colobj["statistics"] = statistics
+            colobj["totalCount"] = int(col.count())
+            colobj["missingCount"] = int(null_count)
+            # Unique count is number of rows minus number of repeated values
+            colobj["uniqueCount"] = int(col.shape[0] - duplicate_count)
+            if str(column_type) == "object":
+                colobj["mostFrequentValue"] = describe_obj.top
+                colobj["mostFrequentValueAppearances"] = int(describe_obj.freq)
             else:
-                describe_text = df.describe().to_string()
-                describe_text += describe_repeated(df)
+                statistics = {}
+                statistics["average"] = col.mean()
+                statistics["median"] = col.median()
+                statistics["min"] = col.min()
+                statistics["max"] = col.max()
+                statistics["sd"] = col.std()
+                colobj["statistics"] = statistics
+        else:
+            describe_text = df.describe().to_string()
+            describe_repeated_text, duplicate_count = describe_repeated(df)
+            describe_text += describe_repeated_text
 
-            colobj["describe"] = describe_text
-        except:
-            pass
-
+        colobj["describe"] = describe_text
         columns.append(colobj)
 
     # Save this in our target
