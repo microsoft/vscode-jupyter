@@ -28,7 +28,6 @@ import {
     IThemeFinder
 } from '../../types';
 import { updateCellCode } from '../../notebook/helpers/executionHelpers';
-import { InteractiveWindowMessages } from '../../interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../messages';
 import { ColumnType, DataViewerMessages, IDataViewerDataProvider } from '../types';
 import {
@@ -43,17 +42,20 @@ import {
     IDropDuplicatesRequest,
     IDropNaRequest,
     ICoerceColumnRequest,
-    IGetColumnStatsReq,
     IGetHistoryItem,
     IReplaceAllColumnsRequest,
+    IRemoveHistoryItemRequest,
     SidePanelSections,
-    IRemoveHistoryItemRequest
+    IGetColumnStatsReq
 } from './types';
 import { DataScience } from '../../../common/utils/localize';
 import { DataViewer } from '../dataViewer';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataWranglerPreferredViewColumn';
 const dataWranglerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
+
+// Keeps track of all the transformations called on the data wrangler
+// Runs the transformations, communicates with the data wrangler UI through onMessage and postMessage
 @injectable()
 export class DataWrangler extends DataViewer implements IDataWrangler, IDisposable {
     private variableCounter = 0;
@@ -141,9 +143,14 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
             // Load the web panel using our current directory as we don't expect to load any other files
             await super.loadWebview(process.cwd(), webviewPanel).catch(traceError);
-
-            const wantedPanels = this.configService.getSettings().dataWrangler.sidePanelSections;
-            this.postMessage(DataWranglerMessages.SetSidePanels, wantedPanels as SidePanelSections[]).ignoreErrors();
+            const settings = this.configService.getSettings();
+            if (settings && settings.dataWrangler && settings.dataWrangler.sidePanelSections) {
+                const wantedPanels = settings.dataWrangler.sidePanelSections;
+                this.postMessage(
+                    DataWranglerMessages.SetSidePanels,
+                    wantedPanels as SidePanelSections[]
+                ).ignoreErrors();
+            }
 
             // Use Data Viewer logic to show initial data
             const dataFrameInfo = await this.showInitialData(title);
@@ -206,14 +213,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
             case DataWranglerMessages.RefreshDataWrangler:
                 this.refreshData().ignoreErrors();
-                break;
-
-            case InteractiveWindowMessages.LoadTmLanguageRequest:
-                void this.requestTmLanguage(payload);
-                break;
-
-            case InteractiveWindowMessages.LoadOnigasmAssemblyRequest:
-                void this.requestOnigasm();
                 break;
 
             case CssMessages.GetMonacoThemeRequest:

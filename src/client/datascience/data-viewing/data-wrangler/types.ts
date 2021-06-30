@@ -1,5 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
+// Types specifically made for the Data Wrangler and Data Wrangler messages
+
 'use strict';
 
 import { Event, WebviewPanel } from 'vscode';

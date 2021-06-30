@@ -5,6 +5,9 @@
 
 import '../../common/extensions';
 
+import * as fsextra from 'fs-extra';
+import * as path from 'path';
+
 import { injectable, unmanaged } from 'inversify';
 import {
     ConfigurationChangeEvent,
@@ -18,7 +21,7 @@ import {
 
 import { IWebview, IWorkspaceService } from '../../common/application/types';
 import { isTestExecution } from '../../common/constants';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -29,6 +32,8 @@ import { InteractiveWindowMessages } from '../interactive-common/interactiveWind
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 import { testOnlyMethod } from '../../common/utils/decorators';
+import { serializeLanguageConfiguration } from '../interactive-common/serialization';
+import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
@@ -178,6 +183,14 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                     this.activeHTMLRequest.resolve(payload);
                     this.activeHTMLRequest = undefined;
                 }
+                break;
+
+            case InteractiveWindowMessages.LoadTmLanguageRequest:
+                void this.requestTmLanguage(payload);
+                break;
+
+            case InteractiveWindowMessages.LoadOnigasmAssemblyRequest:
+                void this.requestOnigasm();
                 break;
 
             default:
@@ -351,6 +364,48 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             return workspaceConfig.get(section, defaultValue);
         }
         return defaultValue;
+    }
+
+    protected async requestTmLanguage(languageId: string = PYTHON_LANGUAGE) {
+        // Get the contents of the appropriate tmLanguage file.
+        traceInfo('Request for tmlanguage file.');
+        const languageJson = await this.themeFinder.findTmLanguage(languageId);
+        const languageConfiguration = serializeLanguageConfiguration(
+            await this.themeFinder.findLanguageConfiguration(languageId)
+        );
+        const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
+        const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
+        this.postMessageInternal(InteractiveWindowMessages.LoadTmLanguageResponse, {
+            languageJSON: languageJson ?? '',
+            languageConfiguration,
+            extensions,
+            scopeName,
+            languageId
+        }).ignoreErrors();
+    }
+
+    protected async requestOnigasm(): Promise<void> {
+        // Look for the file next or our current file (this is where it's installed in the vsix)
+        let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
+        traceInfo(`Request for onigasm file at ${filePath}`);
+        if (await fsextra.pathExists(filePath)) {
+            const contents = await fsextra.readFile(filePath);
+            this.postMessageInternal(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
+        } else {
+            // During development it's actually in the node_modules folder
+            filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
+            traceInfo(`Backup request for onigasm file at ${filePath}`);
+            if (await fsextra.pathExists(filePath)) {
+                const contents = await fsextra.readFile(filePath);
+                this.postMessageInternal(
+                    InteractiveWindowMessages.LoadOnigasmAssemblyResponse,
+                    contents
+                ).ignoreErrors();
+            } else {
+                traceWarning('Onigasm file not found. Colorization will not be available.');
+                this.postMessageInternal(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
+            }
+        }
     }
 
     // Post a message to our webpanel and update our new datascience settings
