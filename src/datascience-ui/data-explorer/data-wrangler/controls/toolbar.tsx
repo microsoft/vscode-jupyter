@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { DataWranglerCommands } from '../../../../client/datascience/data-viewing/data-wrangler/types';
+import { getLocString } from '../../../react-common/locReactSide';
 
 interface IProps {
     currentVariableName: string | undefined;
@@ -56,13 +57,13 @@ export class Toolbar extends React.PureComponent<IProps> {
             >
                 <ToolbarButton
                     submitCommand={this.props.submitCommand}
-                    title="Export to CSV"
+                    title={getLocString('DataScience.dataWranglerExportCsv', 'Export to CSV')}
                     command={DataWranglerCommands.ExportToCsv}
                     args={{variableName: this.props.currentVariableName}}
                 />
                 <ToolbarButton
                     submitCommand={this.props.submitCommand}
-                    title="Open as Python script"
+                    title={getLocString('DataScience.dataWranglerExportPython', 'Open as Python script')}
                     command={DataWranglerCommands.ExportToPythonScript}
                     args={null}
                 />

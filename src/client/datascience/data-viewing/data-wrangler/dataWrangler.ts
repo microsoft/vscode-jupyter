@@ -234,7 +234,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     private async exportToCsv(_req: undefined, currentVariableName: string) {
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
         const fileInfo = await this.applicationShell.showSaveDialog({
-            saveLabel: 'Save CSV',
+            saveLabel: DataScience.dataWranglerSaveCsv(),
             filters: { CSV: ['csv'] }
         });
         if (fileInfo) {
