@@ -47,7 +47,7 @@ import {
     INormalizeColumnRequest
 } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { ControlPanel } from './controlPanel';
-import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
+import { IDataFrameInfo, IGetColsResponse } from '../../../client/datascience/data-viewing/types';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -313,6 +313,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             historyList={this.props.historyList ?? []}
                             monacoTheme={this.props.monacoTheme ?? ''}
                             histogramData={this.props.histogramData ?? ({} as IGetColsResponse)}
+                            dataframeSummary={this.props.dataframeSummary ?? ({} as IDataFrameInfo)}
                             data={this.dataView.getItems()}
                             resizeEvent={this.props.resizeGridEvent}
                             headers={
@@ -329,7 +330,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                     </Resizable>
                 </div>
                 <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
-                    {/* <li id={ColumnContextMenuItem.GetColumnStats}>{ColumnContextMenuItem.GetColumnStats}</li> */}
+                    <li id={ColumnContextMenuItem.GetColumnStats}>{"Get column stats (will remove later)"}</li>
                     <li id={ColumnContextMenuItem.SortAscending}>{ColumnContextMenuItem.SortAscending}</li>
                     <li id={ColumnContextMenuItem.SortDescending}>{ColumnContextMenuItem.SortDescending}</li>
                     <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>

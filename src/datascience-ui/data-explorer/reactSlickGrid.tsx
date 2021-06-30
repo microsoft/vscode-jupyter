@@ -6,6 +6,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {
     ColumnType,
+    IDataFrameInfo,
     IGetColsResponse,
     IGetSliceRequest,
     MaxStringCompare
@@ -87,6 +88,7 @@ export interface ISlickGridProps {
     toggleFilterEvent?: Slick.Event<void>;
     submitCommand?(args: { command: string; args: any }): void;
     sidePanels?: SidePanelSections[];
+    dataframeSummary?: IDataFrameInfo;
 }
 
 interface ISlickGridState {

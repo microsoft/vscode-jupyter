@@ -3,13 +3,13 @@ import * as React from 'react';
 // but we will use plotly.js-dist
 import createPlotlyComponent from 'react-plotly.js/factory';
 const Plotly = require('plotly.js-dist');
-import { IGetColsResponse } from '../../../../client/datascience/data-viewing/types';
+import { IDataFrameInfo, IGetColsResponse } from '../../../../client/datascience/data-viewing/types';
 import { SidePanelSection } from './SidePanelSection';
 interface IProps {
     collapsed: boolean;
-    headers: string[];
     resizeEvent: Slick.Event<void>;
-    histogramData: IGetColsResponse | undefined;
+    histogramData?: IGetColsResponse;
+    dataframeSummary: IDataFrameInfo;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
@@ -19,12 +19,12 @@ interface IState {}
 const Plot = createPlotlyComponent(Plotly);
 
 export class SummarySection extends React.Component<IProps, IState> {
-
     constructor(props: IProps) {
         super(props);
         this.props.resizeEvent.subscribe(() => {
             this.forceUpdate();
         });
+        console.log('summary', this.props.dataframeSummary);
     }
 
     render() {
@@ -44,7 +44,12 @@ export class SummarySection extends React.Component<IProps, IState> {
                             type: 'histogram'
                         }
                     ]}
-                    layout={{ autosize: true, title: 'Column: ' + this.props.histogramData.columnName }}
+                    layout={{
+                        autosize: true,
+                        title: 'Column: ' + this.props.histogramData.columnName,
+                        plot_bgcolor: 'gray',
+                        paper_bgcolor: 'gray' // TODOV: var(--vscode-editor-background) ?
+                    }}
                     useResizeHandler={true}
                 />
             ) : (

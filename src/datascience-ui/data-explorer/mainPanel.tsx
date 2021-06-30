@@ -12,6 +12,7 @@ import {
     CellFetchSizeSubsequent,
     ColumnType,
     DataViewerMessages,
+    IDataFrameColumnInfo,
     IDataFrameInfo,
     IDataViewerMapping,
     IGetRowsResponse,
@@ -393,10 +394,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const rowNumberColumn = {
                 key: RowNumberColumnName,
                 type: ColumnType.Number
-            };
+            } as IDataFrameColumnInfo;
             const columns = [rowNumberColumn].concat(variable.columns);
             return columns.reduce(
-                (accum: Slick.Column<Slick.SlickData>[], c: { key: string; type: ColumnType }, i: number) => {
+                (accum: Slick.Column<Slick.SlickData>[], c: IDataFrameColumnInfo, i: number) => {
                     // Only show index column for pandas DataFrame and Series
                     if (
                         variable?.type === 'DataFrame' ||

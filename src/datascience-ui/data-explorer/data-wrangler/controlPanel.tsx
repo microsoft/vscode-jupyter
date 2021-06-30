@@ -2,7 +2,7 @@ import * as React from 'react';
 import { ISlickRow } from '../reactSlickGrid';
 
 import './sliceControl.css';
-import { IGetColsResponse } from '../../../client/datascience/data-viewing/types';
+import { IDataFrameInfo, IGetColsResponse } from '../../../client/datascience/data-viewing/types';
 import { HistorySection } from './controls/HistorySection';
 import { SummarySection } from './controls/SummarySection';
 import { ColumnsSection } from './controls/ColumnsSection';
@@ -20,6 +20,7 @@ interface IControlPanelProps {
     monacoTheme: string;
     histogramData: IGetColsResponse;
     currentVariableName: string;
+    dataframeSummary: IDataFrameInfo;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
@@ -46,7 +47,7 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                     histogramData={this.props.histogramData}
                     submitCommand={this.props.submitCommand}
                     resizeEvent={this.props.resizeEvent}
-                    headers={this.props.headers}
+                    dataframeSummary={this.props.dataframeSummary}
                 />
                 <ColumnsSection
                     collapsed={true}

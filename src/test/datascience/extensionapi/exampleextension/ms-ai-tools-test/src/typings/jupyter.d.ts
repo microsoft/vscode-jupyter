@@ -25,8 +25,26 @@ export interface IJupyterExtensionApi {
     createBlankNotebook(options: { defaultCellLanguage: string }): Promise<void>;
 }
 
+export interface IDataFrameColumnInfo {
+    key: string;
+    type: ColumnType | string;
+    describe?: string;
+    uniqueEntries?: number;
+    totalEntries?: number;
+    missingEntries?: number;
+    statistics?: {
+        average: number;
+        median: number;
+        min: number;
+        max: number;
+        sd: number;
+    };
+    mostFrequentValue?: string;
+    mostFrequentValueAppearances?: string;
+}
+
 export interface IDataFrameInfo {
-    columns?: { key: string; type: ColumnType; describe?: string }[];
+    columns?: IDataFrameColumnInfo[];
     indexColumn?: string;
     rowCount?: number;
 }

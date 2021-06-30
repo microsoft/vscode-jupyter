@@ -85,10 +85,32 @@ export type IDataViewerMapping = {
     [CssMessages.GetMonacoThemeRequest]: { isDark: boolean };
 };
 
+export interface IDataFrameColumnInfo {
+    key: string;
+    type: ColumnType | string;
+    describe?: string;
+    uniqueCount?: number;
+    missingCount?: number;
+    totalCount?: number;
+    // Just for numeric columns
+    statistics?: {
+        average: number;
+        median: number;
+        min: number;
+        max: number;
+        sd: number;
+    };
+    // Just for string columns
+    mostFrequentValue?: string;
+    mostFrequentValueAppearances?: number;
+}
+
 export interface IDataFrameInfo {
-    columns?: { key: string; type: ColumnType; describe?: string }[];
+    columns?: IDataFrameColumnInfo[];
     indexColumn?: string;
     rowCount?: number;
+    duplicateRowsCount?: number;
+    missingValuesRowsCount?: number;
     shape?: number[];
     originalVariableShape?: number[];
     dataDimensionality?: number;

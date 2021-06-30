@@ -180,6 +180,7 @@ def _VSCODE_getDataFrameInfo(df):
     def describe_repeated(col):
         isduplicate_series = col.duplicated()
         describe = ""
+        isduplicate = 0
         if len(isduplicate_series):
             isduplicate = isduplicate_series.sum()
             describe += "\n# repeated\t" + str(isduplicate)
@@ -187,11 +188,12 @@ def _VSCODE_getDataFrameInfo(df):
         else:
             describe += "\n# repeated\t0"
             describe += "\n% repeated\t0%"
-        return describe
+        return describe, isduplicate
 
     def describe_null(col):
         isna_series = col.isna()
         describe = ""
+        isna = 0
         if len(isna_series) != 0:
             isna = isna_series.sum()
             describe += "\n# null\t" + str(isna)
@@ -199,7 +201,7 @@ def _VSCODE_getDataFrameInfo(df):
         else:
             describe += "\n# null\t0"
             describe += "\n% null\t0%"
-        return describe
+        return describe, isna
 
     df = _VSCODE_convertToDataFrame(df)
     rowCount = _VSCODE_getRowCount(df)
@@ -231,7 +233,6 @@ def _VSCODE_getDataFrameInfo(df):
         columnTypes.insert(0, "int64")
 
     # Then loop and generate our output json
-    # TODO check to see if column is numeric type?
     columns = []
     for n in _VSCODE_builtins.range(0, _VSCODE_builtins.len(columnNames)):
         column_type = columnTypes[n]
@@ -244,15 +245,38 @@ def _VSCODE_getDataFrameInfo(df):
         # Needed for Data Wrangler
         try:
             length = len(df)
+            null_count = 0
+            duplicate_count = 0
+            col = df.iloc[:, n]
             if column_name != "index":
-                col = df.iloc[:, n]
-                describe = col.describe().to_string(header=False)
-                describe += describe_null(col)
-                describe += describe_repeated(col)
+                describe_obj = col.describe()
+                describe_text = describe_obj.to_string(header=False)
+                describe_null_text, null_count = describe_null(col)
+                describe_text += describe_null_text
+                describe_repeated_text, duplicate_count = describe_repeated(df)
+                describe_text += describe_repeated_text
+
+                colobj["totalCount"] = describe_obj.get("count")
+                colob["missingCount"] = int(null_count)
+                # Unique count is number of rows minus number of repeated values
+                colobj["uniqueCount"] = int(col.shape[0] - duplicate_count)
+
+                if str(column_type) == "object":
+                    colobj["mostFrequentValue"] = describe_obj.get("top")
+                    colobj["mostFrequentValueAppearances"] = describe_obj.get("freq")
+                else:
+                    statistics = {}
+                    statistics["average"] = describe_obj.get("mean")
+                    statistics["median"] = describe_obj.get("50%")
+                    statistics["min"] = describe_obj.get("min")
+                    statistics["max"] = describe_obj.get("max")
+                    statistics["sd"] = describe_obj.get("std")
+                    colobj["statistics"] = statistics
             else:
-                describe = df.describe().to_string()
-                describe += describe_repeated(df)
-            colobj["describe"] = describe
+                describe_text = df.describe().to_string()
+                describe_text += describe_repeated(df)
+
+            colobj["describe"] = describe_text
         except:
             pass
 
@@ -263,6 +287,12 @@ def _VSCODE_getDataFrameInfo(df):
     target["columns"] = columns
     target["indexColumn"] = indexColumn
     target["rowCount"] = rowCount
+
+    # Count duplicate rows
+    target["duplicateRowsCount"] = int(df.duplicated(keep="first").sum())
+
+    # Count rows with missing values
+    target["missingValuesRowsCount"] = int(df.isnull().any(axis=1).sum())
 
     # return our json object as a string
     return _VSCODE_json.dumps(target)

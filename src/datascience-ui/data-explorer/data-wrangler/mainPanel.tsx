@@ -12,6 +12,7 @@ import {
     CellFetchSizeSubsequent,
     ColumnType,
     DataViewerMessages,
+    IDataFrameColumnInfo,
     IDataFrameInfo,
     IDataViewerMapping,
     IGetColsResponse,
@@ -82,6 +83,7 @@ interface IMainPanelState {
     histogramData?: IGetColsResponse;
     monacoTheme: string;
     sidePanels: SidePanelSections[];
+    dataframeSummary: IDataFrameInfo;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -127,7 +129,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 historyList: [],
                 histogramData: undefined,
                 monacoTheme: 'vs-dark',
-                sidePanels: []
+                sidePanels: [],
+                dataframeSummary: {}
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -148,7 +151,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 historyList: [],
                 histogramData: undefined,
                 monacoTheme: 'vs-dark',
-                sidePanels: []
+                sidePanels: [],
+                dataframeSummary: {}
             };
         }
     }
@@ -388,7 +392,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     fileName,
                     sliceExpression,
                     // Maximum number of rows is 100 if evaluating in debugger, undefined otherwise
-                    maximumRowChunkSize: variable.maximumRowChunkSize ?? this.state.maximumRowChunkSize
+                    maximumRowChunkSize: variable.maximumRowChunkSize ?? this.state.maximumRowChunkSize,
+                    dataframeSummary: variable
                 });
 
                 // Compute our row fetch sizes based on the number of columns
@@ -486,12 +491,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const rowNumberColumn = {
                 key: RowNumberColumnName,
                 type: ColumnType.Number
-            };
+            } as IDataFrameColumnInfo;
             const columns = [rowNumberColumn].concat(variable.columns);
             return columns.reduce(
                 (
                     accum: Slick.Column<Slick.SlickData>[],
-                    c: { key: string; type: ColumnType; describe?: string },
+                    c: IDataFrameColumnInfo,
                     i: number
                 ) => {
                     // Only show index column for pandas DataFrame and Series
