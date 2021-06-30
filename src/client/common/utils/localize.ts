@@ -1079,6 +1079,9 @@ export namespace DataScience {
         'Failed to create the Data Wrangler. Check the Jupyter tab of the Output window for more info.'
     );
     export const dataWranglerTitle = localize('DataScience.dataWranglerTitle', 'Data Wrangler');
+    export const dataWranglerSaveCsv = localize('DataScience.dataWranglerSaveCsv', 'Save CSV');
+    export const dataWranglerExportCsv = localize('DataScience.dataWranglerExportCsv', 'Export to CSV');
+    export const dataWranglerExportPython = localize('DataScience.dataWranglerExportPython', 'Open as Python script');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

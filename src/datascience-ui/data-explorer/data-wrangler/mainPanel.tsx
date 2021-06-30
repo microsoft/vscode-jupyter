@@ -198,6 +198,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     handleRefreshRequest={this.handleRefreshRequest}
                     submitCommand={this.submitCommand}
                     onToggleFilter={() => this.toggleFilterEvent.notify()}
+                    currentVariableName={this.state.variableName}
                 />
                 {this.renderSliceControls()}
                 {this.state.styleReady && this.renderGrid()}

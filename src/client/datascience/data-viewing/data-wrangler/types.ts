@@ -67,6 +67,7 @@ export interface IHistoryItem {
     variableName: string;
     code: string;
 }
+
 export interface IRenameColumnsRequest {
     oldColumnName: string;
     newColumnName: string;
