@@ -1,5 +1,67 @@
 # Changelog
 
+## 2021.7.0 (7 July 2021)
+
+### Enhancements
+
+1. In preview native notebooks UI, contribute `L` keybinding to toggle line numbers for the current cell, and `shift+L` keybinding to toggle line numbers for all cells.
+   ([#4438](https://github.com/Microsoft/vscode-jupyter/issues/4438))
+1. Add xarray arrays to Data Viewer.
+   ([#5590](https://github.com/Microsoft/vscode-jupyter/issues/5590))
+1. When editing a markdown cell in preview native notebooks UI, contribute `ctrl+enter` keybinding to render current markdown cell, and `shift+enter` to render current markdown cell and skip to the next cell.
+   ([#5976](https://github.com/Microsoft/vscode-jupyter/issues/5976))
+1. Contribute extension-level `shift+enter` keybinding to execute current code cell and select below in preview native notebooks UI.
+   ([#6037](https://github.com/Microsoft/vscode-jupyter/issues/6037))
+1. Added ability to save plots in the preview native notebooks UI.
+   ([#6183](https://github.com/Microsoft/vscode-jupyter/issues/6183))
+
+### Fixes
+
+1. Fix problems loading other language kernels in the Interactive Window and in non insiders webviews.
+   ([#893](https://github.com/Microsoft/vscode-jupyter/issues/893))
+1. Only ask user to switch to `"perFile"` mode if `"jupyter.interactiveWindowMode": "multiple"` and they have submitted code from two different source files.
+   ([#5471](https://github.com/Microsoft/vscode-jupyter/issues/5471))
+1. On remote connections check for new or removed LiveKernelConnections on document open.
+   ([#5984](https://github.com/Microsoft/vscode-jupyter/issues/5984))
+1. In preview native notebooks interface, show editor title buttons only when "notebook.globalToolbar" setting is set to `false`.
+   ([#6019](https://github.com/Microsoft/vscode-jupyter/issues/6019))
+1. Ship require.js with our notebook preloads and renderers.
+   ([#6034](https://github.com/Microsoft/vscode-jupyter/issues/6034))
+1. Save output in *.ipynb even when output is created without any Jupyter output metadata.
+   ([#6192](https://github.com/Microsoft/vscode-jupyter/issues/6192))
+1. In preview native notebooks interface, contribute `ctrl+enter` keybinding which puts the current cell into control mode instead of leaving it in edit mode after running.
+   ([#6198](https://github.com/Microsoft/vscode-jupyter/issues/6198))
+1. Fix interrupt button in Native Notebook toolbar.
+   ([#6254](https://github.com/Microsoft/vscode-jupyter/issues/6254))
+
+### Code Health
+
+1. Add doc switching variable view tests for native notebooks.
+   ([#4355](https://github.com/Microsoft/vscode-jupyter/issues/4355))
+1. Fix 'Restarting kernel will cancel cell execution & we can re-run a cell' test.
+   ([#6139](https://github.com/Microsoft/vscode-jupyter/issues/6139))
+1. Restore GitHub token access for CodeQL, issue locking and issue assignment workflows.
+   ([#6170](https://github.com/Microsoft/vscode-jupyter/issues/6170))
+1. Fix flake notebookAndWebview test.
+   ([#6234](https://github.com/Microsoft/vscode-jupyter/issues/6234))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2021.6.999 (16 June 2021)
 
 ### Fixes
