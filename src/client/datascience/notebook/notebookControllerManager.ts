@@ -16,8 +16,8 @@ import {
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Telemetry } from '../constants';
-import { getDisplayNameOrNameOfKernelConnection, isLocalLaunch } from '../jupyter/kernels/helpers';
-import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { createInterpreterKernelSpec, getDisplayNameOrNameOfKernelConnection, getKernelId, isLocalLaunch } from '../jupyter/kernels/helpers';
+import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { INotebookProvider } from '../types';
@@ -33,6 +33,7 @@ import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { noop } from '../../common/utils/misc';
 import { IPythonExtensionChecker } from '../../api/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -129,6 +130,36 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 });
         }
         return this.controllersPromise;
+    }
+
+    public getOrCreateController(pythonInterpreter: PythonEnvironment): VSCodeNotebookController | undefined {
+        // If already registered just return it
+        let matchingController: VSCodeNotebookController | undefined;
+        if (this.registeredControllers.size > 0) {
+            matchingController = this.registeredNotebookControllers()
+                .find((controller) => {
+                    return (
+                        // We register each of our kernels as two controllers
+                        // because controllers are currently per-viewtype. Find
+                        // the one for the interactive viewtype for now
+                        controller.controller.notebookType === InteractiveWindowView &&
+                        controller.connection.kind === 'startUsingPythonInterpreter' &&
+                        controller.connection.interpreter?.path === pythonInterpreter?.path &&
+                        controller.connection.interpreter.displayName === pythonInterpreter.displayName
+                    );
+                });
+        }
+        // Otherwise create the VSCodeNotebookController
+        const spec = createInterpreterKernelSpec(pythonInterpreter);
+        const result: PythonKernelConnectionMetadata = {
+            kind: 'startUsingPythonInterpreter',
+            kernelSpec: spec,
+            interpreter: pythonInterpreter,
+            id: getKernelId(spec, pythonInterpreter)
+        };
+        const matchingControllers = this.createNotebookControllers([result]);
+        matchingController = matchingControllers.find((controller) => controller.controller.notebookType === InteractiveWindowView);
+        return matchingController!;
     }
 
     /**
@@ -255,19 +286,20 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
         });
 
-        connectionsWithLabel.forEach((value) => {
-            this.createNotebookController(value.connection, value.label);
-        });
+        return connectionsWithLabel.reduce((prev: VSCodeNotebookController[], value) => {
+            const current = this.createNotebookController(value.connection, value.label);
+            return current ? prev.concat(current) : prev;
+        }, []);
     }
     private createNotebookController(kernelConnection: KernelConnectionMetadata, label: string) {
         try {
             // Create notebook selector
-            [
+            return [
                 [kernelConnection.id, JupyterNotebookView],
                 [`${kernelConnection.id} (Interactive)`, InteractiveWindowView]
             ]
                 .filter(([id]) => !this.registeredControllers.has(id))
-                .forEach(([id, viewType]) => {
+                .map(([id, viewType]) => {
                     const controller = new VSCodeNotebookController(
                         kernelConnection,
                         id,
@@ -297,6 +329,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     // We are disposing as documents are closed, but do this as well
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);
+
+                    return controller;
                 });
         } catch (ex) {
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).

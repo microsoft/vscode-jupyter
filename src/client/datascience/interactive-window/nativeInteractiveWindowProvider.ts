@@ -30,7 +30,6 @@ import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
-import { InteractiveWindowView } from '../notebook/constants';
 import { INotebookControllerManager } from '../notebook/types';
 import {
     IInteractiveWindow,
@@ -112,9 +111,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     }
 
     protected async create(resource: Resource, mode: InteractiveWindowMode): Promise<NativeInteractiveWindow> {
-        // Ensure all our controllers are registered with VS Code
-        await this.notebookControllerManager.loadNotebookControllers();
-
         // When this is not undefined, VS Code will always pick this controller for the interactive window
         // When this is undefined, VS Code will fallback to its own cached notebook-controller association
         // If VS Code does not have a cached association, the user will be asked to select a kernel from the
@@ -244,19 +240,11 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         // Fetch the active interpreter and use the matching controller
         const api = await this.pythonApi.getApi();
         const activeInterpreter = await api.getActiveInterpreter();
-        const preferredController = this.notebookControllerManager
-            .registeredNotebookControllers()
-            .find((controller) => {
-                return (
-                    // We register each of our kernels as two controllers
-                    // because controllers are currently per-viewtype. Find
-                    // the one for the interactive viewtype for now
-                    controller.controller.notebookType === InteractiveWindowView &&
-                    controller.connection.kind === 'startUsingPythonInterpreter' &&
-                    controller.connection.interpreter?.path === activeInterpreter?.path &&
-                    controller.connection.interpreter.displayName === activeInterpreter.displayName
-                );
-            });
+
+        if (!activeInterpreter) {
+            return;
+        }
+        const preferredController = this.notebookControllerManager.getOrCreateController(activeInterpreter);
 
         return preferredController !== undefined ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
     }
