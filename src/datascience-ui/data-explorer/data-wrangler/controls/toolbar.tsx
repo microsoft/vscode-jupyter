@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { DataWranglerCommands } from '../../../../client/datascience/data-viewing/data-wrangler/types';
+import { getLocString } from '../../../react-common/locReactSide';
 
 interface IProps {
     handleRefreshRequest(): void;
@@ -8,7 +9,7 @@ interface IProps {
     onToggleFilter(): void;
 }
 
-interface IToolbarIconProps {
+interface IToolbarButtonProps {
     title: string;
     command: DataWranglerCommands;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,7 +17,7 @@ interface IToolbarIconProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
-export class ToolbarIcon extends React.PureComponent<IToolbarIconProps> {
+export class ToolbarButton extends React.PureComponent<IToolbarButtonProps> {
     render() {
         return (
             <div
@@ -53,17 +54,17 @@ export class Toolbar extends React.PureComponent<IProps> {
                     justifyContent: 'start'
                 }}
             >
-                <ToolbarIcon
-                    title="Export to CSV"
+                <ToolbarButton
+                    submitCommand={this.props.submitCommand}
+                    title={getLocString('DataScience.dataWranglerExportCsv', 'Export to CSV')}
                     command={DataWranglerCommands.ExportToCsv}
                     args={null}
-                    submitCommand={this.props.submitCommand}
                 />
-                <ToolbarIcon
-                    title="Open as Python script"
+                <ToolbarButton
+                    submitCommand={this.props.submitCommand}
+                    title={getLocString('DataScience.dataWranglerExportPython', 'Open as Python script')}
                     command={DataWranglerCommands.ExportToPythonScript}
                     args={null}
-                    submitCommand={this.props.submitCommand}
                 />
             </div>
         );
