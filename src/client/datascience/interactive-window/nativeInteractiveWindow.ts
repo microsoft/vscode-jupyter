@@ -226,14 +226,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
-        await this.updateOwners(file);
-        const notebookCell = await this.addNotebookCell(code, file, line);
-        try {
-            return this.submitCodeImpl(code, file.fsPath, 0, false, notebookCell);
-        } catch (e) {
-            traceError(e);
-            return false;
-        }
+        return this.submitCodeImpl(code, file, line, false);
     }
 
     public async debugCode(code: string, fileUri: Uri, line: number): Promise<boolean> {
@@ -264,9 +257,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
         // Call the internal method if we were able to save
         if (saved) {
-            await this.updateOwners(fileUri);
-            const notebookCell = await this.addNotebookCell(code, fileUri, line);
-            return this.submitCodeImpl(code, file, line, true, notebookCell);
+            return this.submitCodeImpl(code, fileUri, line, true);
         }
 
         return result;
@@ -274,15 +265,17 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     private async submitCodeImpl(
         code: string,
-        file: string,
+        fileUri: Uri,
         line: number,
-        isDebug: boolean,
-        notebookCell: NotebookCell
+        isDebug: boolean
     ) {
+        await this.updateOwners(fileUri);
+        const notebookCell = await this.addNotebookCell(code, fileUri, line);
         const notebook = this.kernel?.notebook;
         if (!notebook) {
             return false;
         }
+        const file = fileUri.fsPath;
         let result = true;
         try {
             const finishedAddingCode = createDeferred<void>();
