@@ -16,6 +16,7 @@
    ([#6183](https://github.com/Microsoft/vscode-jupyter/issues/6183))
 1. Added a preview to run by line and debugging in native notebooks. Set the `jupyter.experimental.debugging` setting to true, install ipykernel 6 on your selected kernel and a `debug` button will appear. Pressing it will start a debugging session and let you set and hit breakpoints.
    ([#5607](https://github.com/microsoft/vscode-jupyter/issues/5607))
+1. Add `jupyter.enableNativeInteractiveWindow` setting to opt into the preview native interactive window experience, with support for VS Code customizations like keybindings, themes, snippets and more.([#1388](https://github.com/microsoft/vscode-jupyter/issues/1388))
 
 ### Fixes
 
