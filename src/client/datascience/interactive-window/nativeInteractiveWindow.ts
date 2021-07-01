@@ -308,6 +308,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                     // Then send the combined output to the UI
                     const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
                     await temporaryExecution.replaceOutput(converted);
+                    const executionCount = (cells[0].data as nbformat.ICodeCell).execution_count;
+                    if (executionCount) {
+                        temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10)
+                    }
 
                     // Any errors will move our result to false (if allowed)
                     if (this.configuration.getSettings(owningResource).stopOnError) {
