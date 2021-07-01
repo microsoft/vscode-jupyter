@@ -189,8 +189,8 @@ export class KernelDebugAdapter implements DebugAdapter {
         this.cellToFile.forEach((tempPath) => {
             const norm = path.normalize(tempPath);
             const dir = path.dirname(norm);
-            this.fs.deleteLocalFile(norm);
-            this.fs.deleteLocalDirectory(dir);
+            void this.fs.deleteLocalFile(norm);
+            void this.fs.deleteLocalDirectory(dir);
         });
     }
 
