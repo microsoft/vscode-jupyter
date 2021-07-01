@@ -302,8 +302,8 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
         !configuration.get<string[]>('jupyter.experiments.optOutFrom')?.includes('All') &&
         // If in Daily Insiders channel and in VS Code Insiders, opt in by default
         ((configuration.get<string>('python.insidersChannel') === 'daily' && isVSCInsiders) ||
-        // If user explicitly asked to be in the experiment, also opt in
-        configuration.get<boolean>('jupyter.enableNativeInteractiveWindow') === true)
+            // If user explicitly asked to be in the experiment, also opt in
+            configuration.get<boolean>('jupyter.enableNativeInteractiveWindow') === true)
     ) {
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, NativeInteractiveWindowProvider);
         serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
