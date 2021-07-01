@@ -352,14 +352,11 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
-
-    public get onDidChangeInterpreter(): Event<void> {
+    ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
-            if (this.extensionChecker.isPythonExtensionActive && !this.eventHandlerAdded) {
-                this.hookupOnDidChangeInterpreterEvent();
-            }
             if (!this.extensionChecker.isPythonExtensionActive) {
+                // This event may not fire. It only fires if we're the reason for python extension
+                // activation. VS code does not fire such an event itself if something else activates
                 this.apiProvider.onDidActivatePythonExtension(
                     this.hookupOnDidChangeInterpreterEvent,
                     this,
@@ -367,14 +364,20 @@ export class InterpreterService implements IInterpreterService {
                 );
             }
         }
+    }
+
+    public get onDidChangeInterpreter(): Event<void> {
+        this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreter.event;
     }
 
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
+        this.hookupOnDidChangeInterpreterEvent();
         return this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
+        this.hookupOnDidChangeInterpreterEvent();
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
         let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
         if (!promise) {
@@ -394,6 +397,7 @@ export class InterpreterService implements IInterpreterService {
     }
 
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
+        this.hookupOnDidChangeInterpreterEvent();
         try {
             return await this.apiProvider.getApi().then((api) => api.getInterpreterDetails(pythonPath, resource));
         } catch {
@@ -402,7 +406,15 @@ export class InterpreterService implements IInterpreterService {
         }
     }
     private hookupOnDidChangeInterpreterEvent() {
+        // Only do this once.
         if (this.eventHandlerAdded) {
+            return;
+        }
+        // Python may not be installed or active
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
+        if (!this.extensionChecker.isPythonExtensionActive) {
             return;
         }
         this.apiProvider

@@ -135,6 +135,7 @@ export class ServerCache implements IAsyncDisposable {
                     ? options.workingDir
                     : await calculateWorkingDirectory(this.configService, this.workspace, this.fs),
             metadata: options?.metadata,
+            kernelConnection: options?.kernelConnection,
             allowUI: options?.allowUI ? options.allowUI : () => false
         };
     }
