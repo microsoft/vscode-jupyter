@@ -263,12 +263,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         return result;
     }
 
-    private async submitCodeImpl(
-        code: string,
-        fileUri: Uri,
-        line: number,
-        isDebug: boolean
-    ) {
+    private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         await this.updateOwners(fileUri);
         const notebookCell = await this.addNotebookCell(code, fileUri, line);
         const notebook = this.kernel?.notebook;
