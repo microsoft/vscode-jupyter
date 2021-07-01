@@ -439,7 +439,6 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     protected styleColumns(columns: Slick.Column<ISlickRow>[]) {
         // Transform columns so they are sortable and stylable
         return columns.map((c) => {
-            console.log('column id', c.id);
             // Disable sorting by clicking on header
             c.sortable = false;
             c.editor = readonlyCellEditor;

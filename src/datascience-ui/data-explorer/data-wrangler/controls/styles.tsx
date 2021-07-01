@@ -52,17 +52,25 @@ export const buttonStyle = {
 };
 
 export const dropButtonStyle = {
-    ...buttonStyle,
-}
+    ...buttonStyle
+};
 
 export const normalizeButtonStyle = {
     ...buttonStyle,
-    marginRight: '40px'
-}
+    marginRight: '22px'
+};
 
 export const submitButtonStyle = {
     ...buttonStyle,
-    marginRight: '22px'
-}
+    marginRight: '40px'
+};
 
 export const inputStyle = { width: '140px', marginTop: '4px', marginBottom: '16px' };
+
+// Summary section
+export const summaryRowStyle = { display: 'flex', justifyContent: 'space-between', margin: '1px 8px 1px 12px' };
+export const summaryChildRowStyle = { ...summaryRowStyle, margin: '1px 8px 1px 6px' };
+export const summaryInnerRowStyle = {
+    marginLeft: '16px',
+    borderLeft: '2px solid var(--vscode-editor-selectionHighlightBackground)'
+};

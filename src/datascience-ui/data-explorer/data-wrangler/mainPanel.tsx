@@ -623,7 +623,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private submitCommand = (arg: { command: string; args: any }) => {
         if (arg.command === DataWranglerCommands.Describe) {
-            console.log('Describe', arg);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.lastDescribeRequestColumnName = (arg.args as any).columnName;
         }

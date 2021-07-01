@@ -32,7 +32,6 @@ export enum DataWranglerCommands {
     Drop = 'drop',
     DropDuplicates = 'drop_duplicates',
     DropNa = 'drop_na',
-    PyplotHistogram = 'pyplot.hist',
     NormalizeColumn = 'normalize_column',
     FillNa = 'fill_na',
     Describe = 'describe',

@@ -273,11 +273,11 @@ def _VSCODE_getDataFrameInfo(df):
                 colobj["mostFrequentValueAppearances"] = int(describe_obj.freq)
             else:
                 statistics = {}
-                statistics["average"] = col.mean()
+                statistics["average"] = round(col.mean(), 2)
                 statistics["median"] = col.median()
                 statistics["min"] = col.min()
                 statistics["max"] = col.max()
-                statistics["sd"] = col.std()
+                statistics["sd"] = round(col.std(), 2)
                 colobj["statistics"] = statistics
         else:
             describe_text = df.describe().to_string()
