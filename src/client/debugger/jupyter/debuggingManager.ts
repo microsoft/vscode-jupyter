@@ -64,7 +64,7 @@ class Debugger {
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
 @injectable()
-export class DebuggingManager implements IExtensionSingleActivationService {
+export class DebuggingManager implements IExtensionSingleActivationService, IDisposable {
     private debuggingInProgress: ContextKey;
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
     private readonly disposables: IDisposable[] = [];
@@ -152,6 +152,10 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                 }
             })
         );
+    }
+
+    public dispose() {
+        this.disposables.forEach((d) => d.dispose());
     }
 
     private updateToolbar(debugging: boolean) {
