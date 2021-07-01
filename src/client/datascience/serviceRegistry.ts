@@ -201,6 +201,7 @@ import { NativeInteractiveWindowProvider } from './interactive-window/nativeInte
 import { JupyterPaths } from './kernel-launcher/jupyterPaths';
 import { LocalKnownPathKernelSpecFinder } from './kernel-launcher/localKnownPathKernelSpecFinder';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
+import { noop } from '../common/utils/misc';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -296,10 +297,15 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, MigrateJupyterInterpreterStateService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, VariableViewActivationService);
     serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
-    const jupyterConfiguration = workspace.getConfiguration('jupyter');
-    if (jupyterConfiguration.get<boolean>('experiments.enabled') === true && jupyterConfiguration.get<boolean>('enableNativeInteractiveWindow') === true) {
+    const configuration = workspace.getConfiguration();
+    if (
+        configuration.get<boolean>('jupyter.experiments.enabled') === true &&
+        isVSCInsiders &&
+        (configuration.get<boolean>('jupyter.enableNativeInteractiveWindow') === true || configuration.get<string>('python.insidersChannel') === 'daily')
+    ) {
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, NativeInteractiveWindowProvider);
         serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
+        configuration.update('jupyter.enableNativeInteractiveWindow', true).then(noop, noop);
     } else {
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
         serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
