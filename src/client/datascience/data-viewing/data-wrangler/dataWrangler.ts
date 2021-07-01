@@ -130,6 +130,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         this.commands.set(DataWranglerCommands.CoerceColumn, this.coerceColumn.bind(this));
         this.commands.set(DataWranglerCommands.ReplaceAllColumn, this.replaceAllColumn.bind(this));
         this.commands.set(DataWranglerCommands.RemoveHistoryItem, this.removeHistoryItem.bind(this));
+        this.commands.set(DataWranglerCommands.ExportToCsv, this.exportToCsv.bind(this));
     }
 
     public async showData(
@@ -249,6 +250,18 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
     private getCode() {
         return this.historyList.map((item) => item.code).join('\n');
+    }
+
+    private async exportToCsv(_req: undefined, currentVariableName: string) {
+        const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
+        const fileInfo = await this.applicationShell.showSaveDialog({
+            saveLabel: DataScience.dataWranglerSaveCsv(),
+            filters: { CSV: ['csv'] }
+        });
+        if (fileInfo) {
+            const code = `${currentVariableName}.to_csv(path_or_buf=r'${fileInfo.fsPath}', index=False)`;
+            await notebook?.execute(code, '', 0, uuid(), undefined, false);
+        }
     }
 
     private async generatePythonCode() {

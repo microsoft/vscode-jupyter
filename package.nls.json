@@ -526,6 +526,9 @@
     "DataScience.dataWranglerReplaceAllTooltip": "Replace specified values with a new given value",
     "DataScience.dataWranglerDropNARowsTooltip": "Remove rows with missing values",
     "DataScience.dataWranglerDropDuplicateRowTooltip": "Remove duplicate rows",
+    "DataScience.DataWranglerSaveCsv": "Save CSV",
+    "DataScience.DataWranglerExportCsv": "Export to CSV",
+    "DataScience.DataWranglerExportPython": "Open as Python script",
     "DataScience.kernelWasNotStarted": "Kernel was not started. A kernel session is needed to start debugging.",
     "DataScience.noNotebookToDebug": "No active notebook document to debug.",
     "DataScience.cantStartDebugging": "Can't start debugging."

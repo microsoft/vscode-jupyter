@@ -78,6 +78,10 @@ export interface IHistoryItem {
 export interface IGetHistoryItem {
     index: number;
 }
+export interface IRenameColumnsRequest {
+    oldColumnName: string;
+    newColumnName: string;
+}
 
 export interface IDescribeColReq {
     targetColumn: string;
