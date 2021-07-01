@@ -201,7 +201,6 @@ import { NativeInteractiveWindowProvider } from './interactive-window/nativeInte
 import { JupyterPaths } from './kernel-launcher/jupyterPaths';
 import { LocalKnownPathKernelSpecFinder } from './kernel-launcher/localKnownPathKernelSpecFinder';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
-import { noop } from '../common/utils/misc';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
