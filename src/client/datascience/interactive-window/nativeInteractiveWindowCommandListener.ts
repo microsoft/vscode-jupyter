@@ -151,10 +151,18 @@ export class NativeInteractiveWindowCommandListener {
             )
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.ExpandAllCells, () => this.expandAllCells())
+            commandManager.registerCommand(
+                Commands.ExpandAllCells,
+                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                    this.expandAllCells(context?.notebookEditor.notebookUri)
+            )
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.CollapseAllCells, () => this.collapseAllCells())
+            commandManager.registerCommand(
+                Commands.CollapseAllCells,
+                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                    this.collapseAllCells(context?.notebookEditor.notebookUri)
+            )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.ExportOutputAsNotebook, () => this.exportCells())
@@ -422,15 +430,19 @@ export class NativeInteractiveWindowCommandListener {
         }
     }
 
-    private expandAllCells() {
-        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+    private expandAllCells(uri?: Uri) {
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.expandAllCells();
         }
     }
 
-    private collapseAllCells() {
-        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+    private collapseAllCells(uri?: Uri) {
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.collapseAllCells();
         }
@@ -445,7 +457,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private exportAs(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.exportAs();
@@ -454,7 +466,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private export(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.export();
