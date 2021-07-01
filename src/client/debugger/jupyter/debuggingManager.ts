@@ -19,6 +19,7 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../commo
 import { traceError } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { Commands as DSCommands } from '../../datascience/constants';
+import { IFileSystem } from '../../common/platform/types';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -76,7 +77,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(IFileSystem) private fs: IFileSystem
     ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.updateToolbar(false);
@@ -129,7 +131,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
                                         debug.document,
                                         notebook.session,
                                         this.debuggingCellMap,
-                                        this.commandManager
+                                        this.commandManager,
+                                        this.fs
                                     )
                                 );
                             } else {

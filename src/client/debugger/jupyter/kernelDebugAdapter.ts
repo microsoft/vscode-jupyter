@@ -19,6 +19,7 @@ import { IDebuggingCellMap, IJupyterSession } from '../../datascience/types';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 
 const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugRequestMsg => {
     const sessionId = message.arguments?.__sessionId ? message.arguments.__sessionId : randomBytes(8).toString('hex');
@@ -106,7 +107,8 @@ export class KernelDebugAdapter implements DebugAdapter {
         private notebookDocument: NotebookDocument,
         private readonly jupyterSession: IJupyterSession,
         private cellMap: IDebuggingCellMap,
-        private commandManager: ICommandManager
+        private commandManager: ICommandManager,
+        private fs: IFileSystem
     ) {
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -182,6 +184,14 @@ export class KernelDebugAdapter implements DebugAdapter {
     dispose() {
         this.messageListener.forEach((ml) => ml.dispose());
         this.messageListener.clear();
+
+        // clean temp files
+        this.cellToFile.forEach((tempPath) => {
+            const norm = path.normalize(tempPath);
+            const dir = path.dirname(norm);
+            this.fs.deleteLocalFile(norm);
+            this.fs.deleteLocalDirectory(dir);
+        });
     }
 
     private async dumpCellsThatRanBeforeDebuggingBegan() {
