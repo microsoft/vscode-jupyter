@@ -137,7 +137,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.controllersPromise;
     }
 
-    public getOrCreateController(pythonInterpreter: PythonEnvironment, notebookType: 'interactive' | 'jupyter-notebook'): VSCodeNotebookController | undefined {
+    public getOrCreateController(
+        pythonInterpreter: PythonEnvironment,
+        notebookType: 'interactive' | 'jupyter-notebook'
+    ): VSCodeNotebookController | undefined {
         // If already registered just return it
         let matchingController: VSCodeNotebookController | undefined;
         if (this.registeredControllers.size > 0) {

@@ -13,7 +13,10 @@ export interface INotebookControllerManager {
     getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
     // Marked test only, just for tests to access registered controllers
     registeredNotebookControllers(): VSCodeNotebookController[];
-    getOrCreateController(pythonInterpreter: PythonEnvironment, notebookType: 'interactive' | 'jupyter-notebook'): VSCodeNotebookController | undefined;
+    getOrCreateController(
+        pythonInterpreter: PythonEnvironment,
+        notebookType: 'interactive' | 'jupyter-notebook'
+    ): VSCodeNotebookController | undefined;
 }
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',

@@ -245,7 +245,10 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         if (!activeInterpreter) {
             return;
         }
-        const preferredController = this.notebookControllerManager.getOrCreateController(activeInterpreter, InteractiveWindowView);
+        const preferredController = this.notebookControllerManager.getOrCreateController(
+            activeInterpreter,
+            InteractiveWindowView
+        );
 
         return preferredController !== undefined ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
     }
