@@ -137,7 +137,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.controllersPromise;
     }
 
-    public getOrCreateController(pythonInterpreter: PythonEnvironment): VSCodeNotebookController | undefined {
+    public getOrCreateController(pythonInterpreter: PythonEnvironment, notebookType: 'interactive' | 'jupyter-notebook'): VSCodeNotebookController | undefined {
         // If already registered just return it
         let matchingController: VSCodeNotebookController | undefined;
         if (this.registeredControllers.size > 0) {
@@ -146,26 +146,28 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     // We register each of our kernels as two controllers
                     // because controllers are currently per-viewtype. Find
                     // the one for the interactive viewtype for now
-                    controller.controller.notebookType === InteractiveWindowView &&
+                    controller.controller.notebookType === notebookType &&
                     controller.connection.kind === 'startUsingPythonInterpreter' &&
                     controller.connection.interpreter?.path === pythonInterpreter?.path &&
                     controller.connection.interpreter.displayName === pythonInterpreter.displayName
                 );
             });
         }
-        // Otherwise create the VSCodeNotebookController
-        const spec = createInterpreterKernelSpec(pythonInterpreter);
-        const result: PythonKernelConnectionMetadata = {
-            kind: 'startUsingPythonInterpreter',
-            kernelSpec: spec,
-            interpreter: pythonInterpreter,
-            id: getKernelId(spec, pythonInterpreter)
-        };
-        const matchingControllers = this.createNotebookControllers([result]);
-        matchingController = matchingControllers.find(
-            (controller) => controller.controller.notebookType === InteractiveWindowView
-        );
-        return matchingController!;
+        if (!matchingController) {
+            // Otherwise try to create the VSCodeNotebookController
+            const spec = createInterpreterKernelSpec(pythonInterpreter);
+            const result: PythonKernelConnectionMetadata = {
+                kind: 'startUsingPythonInterpreter',
+                kernelSpec: spec,
+                interpreter: pythonInterpreter,
+                id: getKernelId(spec, pythonInterpreter)
+            };
+            const matchingControllers = this.createNotebookControllers([result]);
+            matchingController = matchingControllers.find(
+                (controller) => controller.controller.notebookType === notebookType
+            );
+        }
+        return matchingController;
     }
 
     /**

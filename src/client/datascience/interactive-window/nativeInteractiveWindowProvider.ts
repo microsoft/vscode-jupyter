@@ -30,6 +30,7 @@ import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
+import { InteractiveWindowView } from '../notebook/constants';
 import { INotebookControllerManager } from '../notebook/types';
 import {
     IInteractiveWindow,
@@ -244,7 +245,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         if (!activeInterpreter) {
             return;
         }
-        const preferredController = this.notebookControllerManager.getOrCreateController(activeInterpreter);
+        const preferredController = this.notebookControllerManager.getOrCreateController(activeInterpreter, InteractiveWindowView);
 
         return preferredController !== undefined ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
     }
