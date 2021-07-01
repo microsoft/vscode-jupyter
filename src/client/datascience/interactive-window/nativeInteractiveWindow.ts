@@ -227,14 +227,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
         await this.updateOwners(file);
-        await this.addNotebookCell(code, file, line);
+        const notebookCell = await this.addNotebookCell(code, file, line);
         try {
-            await this.commandManager.executeCommand('notebook.cell.execute', {
-                ranges: [{ start: this.notebookDocument.cellCount - 1, end: this.notebookDocument.cellCount }],
-                document: this.notebookDocument.uri,
-                autoReveal: true
-            });
-            return true;
+            return this.submitCodeImpl(code, file.fsPath, 0, false, notebookCell);
         } catch (e) {
             traceError(e);
             return false;
@@ -271,64 +266,72 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         if (saved) {
             await this.updateOwners(fileUri);
             const notebookCell = await this.addNotebookCell(code, fileUri, line);
-            const notebook = this.kernel?.notebook;
-            if (!notebook) {
-                return false;
-            }
-            try {
-                const finishedAddingCode = createDeferred<void>();
-
-                // Before we try to execute code make sure that we have an initial directory set
-                // Normally set via the workspace, but we might not have one here if loading a single loose file
-                if (file !== Identifiers.EmptyFileName) {
-                    await notebook.setLaunchingFile(file);
-                }
-
-                await this.jupyterDebugger.startDebugging(notebook);
-
-                // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-                await this.setFileInKernel(file, this.notebookDocument);
-
-                const owningResource = this.owningResource;
-                const id = uuid();
-                const observable = this.kernel!.notebook!.executeObservable(code, file, line, id, false);
-                const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(
-                    notebookCell
-                );
-                temporaryExecution?.start();
-
-                // Sign up for cell changes
-                observable.subscribe(
-                    async (cells: ICell[]) => {
-                        // Then send the combined output to the UI
-                        const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
-                        await temporaryExecution.replaceOutput(converted);
-
-                        // Any errors will move our result to false (if allowed)
-                        if (this.configuration.getSettings(owningResource).stopOnError) {
-                            result = result && cells.find((c) => c.state === CellState.error) === undefined;
-                        }
-                    },
-                    (error) => {
-                        traceError(`Error executing a cell: `, error);
-                        if (!(error instanceof CancellationError)) {
-                            this.applicationShell.showErrorMessage(error.toString()).then(noop, noop);
-                        }
-                    },
-                    () => {
-                        temporaryExecution.end(result);
-                        finishedAddingCode.resolve();
-                    }
-                );
-
-                // Wait for the cell to finish
-                await finishedAddingCode.promise;
-                traceInfo(`Finished execution for ${id}`);
-            } finally {
-                await this.jupyterDebugger.stopDebugging(notebook);
-            }
+            return this.submitCodeImpl(code, file, line, true, notebookCell);
         }
 
+        return result;
+    }
+
+    private async submitCodeImpl(code: string, file: string, line: number, isDebug: boolean, notebookCell: NotebookCell) {
+        const notebook = this.kernel?.notebook;
+        if (!notebook) {
+            return false;
+        }
+        let result = true;
+        try {
+            const finishedAddingCode = createDeferred<void>();
+
+            // Before we try to execute code make sure that we have an initial directory set
+            // Normally set via the workspace, but we might not have one here if loading a single loose file
+            if (file !== Identifiers.EmptyFileName) {
+                await notebook.setLaunchingFile(file);
+            }
+
+            if (isDebug) {
+                await this.jupyterDebugger.startDebugging(notebook);
+            }
+
+            // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
+            await this.setFileInKernel(file, this.notebookDocument);
+
+            const owningResource = this.owningResource;
+            const id = uuid();
+            const observable = this.kernel!.notebook!.executeObservable(code, file, line, id, false);
+            const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(
+                notebookCell
+            );
+            temporaryExecution?.start();
+
+            // Sign up for cell changes
+            observable.subscribe(
+                async (cells: ICell[]) => {
+                    // Then send the combined output to the UI
+                    const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
+                    await temporaryExecution.replaceOutput(converted);
+
+                    // Any errors will move our result to false (if allowed)
+                    if (this.configuration.getSettings(owningResource).stopOnError) {
+                        result = result && cells.find((c) => c.state === CellState.error) === undefined;
+                    }
+                },
+                (error) => {
+                    traceError(`Error executing a cell: `, error);
+                    if (!(error instanceof CancellationError)) {
+                        this.applicationShell.showErrorMessage(error.toString()).then(noop, noop);
+                    }
+                },
+                () => {
+                    temporaryExecution.end(result);
+                    finishedAddingCode.resolve();
+                }
+            );
+
+            // Wait for the cell to finish
+            await finishedAddingCode.promise;
+            traceInfo(`Finished execution for ${id}`);
+        } finally {
+            await this.jupyterDebugger.stopDebugging(notebook);
+        }
         return result;
     }
 
