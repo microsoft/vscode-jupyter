@@ -37,8 +37,17 @@ import 'slickgrid/slick.grid.css';
 // eslint-disable-next-line import/order
 import './dataWranglerReactSlickGrid.css';
 import './contextMenu.css';
-import { ISlickGridProps, ISlickRow, ReactSlickGrid } from '../reactSlickGrid';
-import { DataWranglerCommands } from '../../../client/datascience/data-viewing/data-wrangler/types';
+import { ISlickGridProps, ISlickRow, ReactSlickGrid, readonlyCellEditor } from '../reactSlickGrid';
+import {
+    DataWranglerCommands,
+    IDescribeColReq,
+    IDropDuplicatesRequest,
+    IDropNaRequest,
+    IDropRequest,
+    INormalizeColumnRequest
+} from '../../../client/datascience/data-viewing/data-wrangler/types';
+import { ControlPanel } from './controlPanel';
+import { IDataFrameInfo, IGetColsResponse } from '../../../client/datascience/data-viewing/types';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -47,8 +56,6 @@ Slick grid MUST be imported after we load jQuery and other stuff from `./globalJ
 
 enum RowContextMenuItem {
     DropRow = 'Drop Row',
-    NormalizeRow = 'Normalize Row',
-    DropNA = 'Drop NA',
     CopyData = 'Copy Cell Data'
 }
 
@@ -57,8 +64,11 @@ enum ColumnContextMenuItem {
     DropColumns = 'Drop Column',
     NormalizeColumn = 'Normalize Column',
     DropNA = 'Remove Missing Values',
-    DropDuplicates = 'Drop Duplicates On Column'
+    DropDuplicates = 'Drop Duplicates On Column',
+    SortAscending = 'Sort Ascending',
+    SortDescending = 'Sort Descending'
 }
+
 export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     private contextMenuRowId: number | undefined;
     private contextMenuCellId: number | undefined;
@@ -159,9 +169,6 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 slickgridJQ('.grid-canvas').on('keydown', this.slickgridHandleKeyDown);
             }
 
-            // Setup the sorting
-            grid.onSort.subscribe(this.sort);
-
             grid.onHeaderContextMenu.subscribe(this.maybeDropColumns);
             grid.onContextMenu.subscribe(this.maybeDropRows);
 
@@ -185,7 +192,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                         if (this.props.submitCommand) {
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.Drop,
-                                args: { targets: [this.contextMenuRowId], mode: 'row' }
+                                args: { rowIndex: this.contextMenuRowId, mode: 'row' } as IDropRequest
                             });
                         }
                         return;
@@ -197,8 +204,6 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             void navigator.clipboard.writeText(cellData);
                         }
                         return;
-                    case RowContextMenuItem.NormalizeRow:
-                    case RowContextMenuItem.DropNA:
                 }
             });
 
@@ -211,30 +216,38 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 const contextMenuItem = e?.target?.id;
                 if (this.props.submitCommand) {
                     switch (contextMenuItem) {
+                        case ColumnContextMenuItem.SortAscending:
+                            return this.sortColumn(this.contextMenuColumnName, true);
+                        case ColumnContextMenuItem.SortDescending:
+                            return this.sortColumn(this.contextMenuColumnName, false);
                         case ColumnContextMenuItem.GetColumnStats:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.Describe,
-                                args: { columnName: this.contextMenuColumnName }
+                                args: { targetColumn: this.contextMenuColumnName } as IDescribeColReq
                             });
                         case ColumnContextMenuItem.DropColumns:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.Drop,
-                                args: { targets: [this.contextMenuColumnName] }
+                                args: { targetColumns: [this.contextMenuColumnName] } as IDropRequest
                             });
                         case ColumnContextMenuItem.NormalizeColumn:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.NormalizeColumn,
-                                args: { start: 0, end: 1, target: this.contextMenuColumnName }
+                                args: {
+                                    start: 0,
+                                    end: 1,
+                                    targetColumn: this.contextMenuColumnName
+                                } as INormalizeColumnRequest
                             });
                         case ColumnContextMenuItem.DropNA:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.DropNa,
-                                args: { subset: this.contextMenuColumnName, target: 0 }
+                                args: { targetColumns: [this.contextMenuColumnName] } as IDropNaRequest
                             });
                         case ColumnContextMenuItem.DropDuplicates:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.DropDuplicates,
-                                args: { subset: [this.contextMenuColumnName], mode: 'column' }
+                                args: { targetColumns: [this.contextMenuColumnName] } as IDropDuplicatesRequest
                             });
                     }
                 }
@@ -268,16 +281,9 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         return (
             <div className="outer-container">
                 <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden' }}>
-                    {/* <Resizable 
-                        style={{display: "flex", alignItems: "top", justifyContent: "left", flexDirection: "column", zIndex: 99998 }}
-                        handleClasses={{ right: "resizable-span" }}
-                        defaultSize={{ width: '60%', height }}
-                        enable={{ left:false, top:false, right:true, bottom:false, topRight:false, bottomRight:false, bottomLeft:false, topLeft:false }}
-                        > */}
                     <div className="react-grid-container" style={style} ref={this.containerRef}></div>
                     <div className="react-grid-measure" ref={this.measureRef} />
-                    <Resizable>
-                        {/* <Resizable
+                    <Resizable
                         style={{
                             display: 'flex',
                             alignItems: 'top',
@@ -301,10 +307,13 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             topLeft: false
                         }}
                     >
+                        {/* Because we extend data viewer, we added data wrangler attributes into the data viewer
+                        interface and made them optional so we have to use ?? here */}
                         <ControlPanel
-                            historyList={this.props.historyList}
-                            monacoTheme={this.props.monacoTheme}
-                            histogramData={this.props.histogramData}
+                            historyList={this.props.historyList ?? []}
+                            monacoTheme={this.props.monacoTheme ?? ''}
+                            histogramData={this.props.histogramData ?? ({} as IGetColsResponse)}
+                            dataframeSummary={this.props.dataframeSummary ?? ({} as IDataFrameInfo)}
                             data={this.dataView.getItems()}
                             resizeEvent={this.props.resizeGridEvent}
                             headers={
@@ -313,13 +322,17 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                                     .map((c) => c.name)
                                     .filter((c) => c !== undefined) as string[]
                             }
-                            currentVariableName={this.props.currentVariableName}
-                            submitCommand={this.props.submitCommand}
-                        /> */}
+                            currentVariableName={this.props.currentVariableName ?? ''}
+                            /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-function */
+                            submitCommand={this.props.submitCommand ?? ((_data: { command: string; args: any }) => {})}
+                            /* eslint-enable no-return-assign, no-param-reassign */
+                        />
                     </Resizable>
                 </div>
                 <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
-                    <li id={ColumnContextMenuItem.GetColumnStats}>{ColumnContextMenuItem.GetColumnStats}</li>
+                    <li id={ColumnContextMenuItem.GetColumnStats}>{"Get column stats (will remove later)"}</li>
+                    <li id={ColumnContextMenuItem.SortAscending}>{ColumnContextMenuItem.SortAscending}</li>
+                    <li id={ColumnContextMenuItem.SortDescending}>{ColumnContextMenuItem.SortDescending}</li>
                     <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>
                     <li id={ColumnContextMenuItem.NormalizeColumn}>{ColumnContextMenuItem.NormalizeColumn}</li>
                     <li id={ColumnContextMenuItem.DropNA}>{ColumnContextMenuItem.DropNA}</li>
@@ -331,6 +344,17 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 </ul>
             </div>
         );
+    }
+
+    private sortColumn(sortCol: string | undefined, sortAscending: boolean) {
+        if (sortCol) {
+            const cols = this.state.grid?.getColumns();
+            const idx = cols?.findIndex(c => c.name === sortCol);
+            if (cols && idx) {
+                this.dataView.sort((l: any, r: any) => this.compareElements(l, r, cols[idx]), sortAscending);
+                this.state.grid?.setSortColumn(idx?.toString(), sortAscending);
+            }
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -410,6 +434,17 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             />,
             args.node
         );
-        // }
     };
+
+    protected styleColumns(columns: Slick.Column<ISlickRow>[]) {
+        // Transform columns so they are sortable and stylable
+        return columns.map((c) => {
+            // Disable sorting by clicking on header
+            c.sortable = false;
+            c.editor = readonlyCellEditor;
+            c.headerCssClass = 'react-grid-header-cell';
+            c.cssClass = 'react-grid-cell';
+            return c;
+        });
+    }
 }

@@ -12,6 +12,7 @@ import {
     CellFetchSizeSubsequent,
     ColumnType,
     DataViewerMessages,
+    IDataFrameColumnInfo,
     IDataFrameInfo,
     IDataViewerMapping,
     IGetColsResponse,
@@ -42,9 +43,11 @@ import { Tokenizer } from '../../interactive-common/tokenizer';
 import { createDeferred } from '../../../client/common/utils/async';
 import {
     DataWranglerCommands,
-    DataWranglerMessages
+    DataWranglerMessages,
+    SidePanelSections
 } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow } from '../reactSlickGrid';
+
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);
@@ -79,7 +82,8 @@ interface IMainPanelState {
     historyList: [];
     histogramData?: IGetColsResponse;
     monacoTheme: string;
-    sidePanels: string[];
+    sidePanels: SidePanelSections[];
+    dataframeSummary: IDataFrameInfo;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -125,7 +129,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 historyList: [],
                 histogramData: undefined,
                 monacoTheme: 'vs-dark',
-                sidePanels: []
+                sidePanels: [],
+                dataframeSummary: {}
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -146,7 +151,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 historyList: [],
                 histogramData: undefined,
                 monacoTheme: 'vs-dark',
-                sidePanels: []
+                sidePanels: [],
+                dataframeSummary: {}
             };
         }
     }
@@ -198,7 +204,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     handleRefreshRequest={this.handleRefreshRequest}
                     submitCommand={this.submitCommand}
                     onToggleFilter={() => this.toggleFilterEvent.notify()}
-                    currentVariableName={this.state.variableName}
                 />
                 {this.renderSliceControls()}
                 {this.state.styleReady && this.renderGrid()}
@@ -224,27 +229,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             );
         }
     };
-
-    // private renderBreadcrumb() {
-    //     let breadcrumbText = this.state.variableName;
-    //     if (this.state.originalVariableShape) {
-    //         breadcrumbText += ' (' + this.state.originalVariableShape?.join(', ') + ')';
-    //     }
-    //     if (breadcrumbText) {
-    //         return (
-    //             <div className="breadcrumb-container control-container">
-    //                 <div className="breadcrumb">
-    //                     <div className="icon-python breadcrumb-file-icon" />
-    //                     <span>{this.state.fileName}</span>
-    //                     {this.state.fileName ? (
-    //                         <div className="codicon codicon-chevron-right breadcrumb-codicon" />
-    //                     ) : undefined}
-    //                     <span>{breadcrumbText}</span>
-    //                 </div>
-    //             </div>
-    //         );
-    //     }
-    // }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public handleMessage = (msg: string, payload?: any) => {
@@ -368,6 +352,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 submitCommand={this.submitCommand}
                 handleRefreshRequest={this.handleRefreshRequest}
                 currentVariableName={this.state.variableName!}
+                sidePanels={this.state.sidePanels}
+                dataframeSummary={this.state.dataframeSummary}
             />
         );
     }
@@ -407,7 +393,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     fileName,
                     sliceExpression,
                     // Maximum number of rows is 100 if evaluating in debugger, undefined otherwise
-                    maximumRowChunkSize: variable.maximumRowChunkSize ?? this.state.maximumRowChunkSize
+                    maximumRowChunkSize: variable.maximumRowChunkSize ?? this.state.maximumRowChunkSize,
+                    dataframeSummary: variable
                 });
 
                 // Compute our row fetch sizes based on the number of columns
@@ -436,7 +423,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd, sliceExpression });
     }
 
-    private setSidePanels(response: string[]) {
+    private setSidePanels(response: SidePanelSections[]) {
         this.setState({ sidePanels: response });
     }
 
@@ -505,12 +492,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const rowNumberColumn = {
                 key: RowNumberColumnName,
                 type: ColumnType.Number
-            };
+            } as IDataFrameColumnInfo;
             const columns = [rowNumberColumn].concat(variable.columns);
             return columns.reduce(
                 (
                     accum: Slick.Column<Slick.SlickData>[],
-                    c: { key: string; type: ColumnType; describe?: string },
+                    c: IDataFrameColumnInfo,
                     i: number
                 ) => {
                     // Only show index column for pandas DataFrame and Series
@@ -636,7 +623,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private submitCommand = (arg: { command: string; args: any }) => {
         if (arg.command === DataWranglerCommands.Describe) {
-            console.log('Describe', arg);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             this.lastDescribeRequestColumnName = (arg.args as any).columnName;
         }

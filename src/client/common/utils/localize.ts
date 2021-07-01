@@ -984,49 +984,33 @@ export namespace DataScience {
         'Python Kernel Debug Adapter'
     );
     // Data Wrangler
-    export const dataWranglerRenameColumnCode = localize(
-        'DataScience.dataWranglerRenameColumnCode',
-        "{0} = {1}.rename(columns={ '{2}': '{3}' })\n"
+    export const dataWranglerCoerceColumnTransformation = localize(
+        'DataScience.DataWranglerCoerceColumnTransformation',
+        'Casted column(s): {0} to {1}'
+    );
+    export const dataWranglerReplaceAllTransformation = localize(
+        'DataScience.dataWranglerReplaceAllTransformation',
+        "Replaced all instances of '{0}' with '{1}' in column(s): {2}"
     );
     export const dataWranglerRenameColumnTransformation = localize(
         'DataScience.dataWranglerRenameColumnTransformation',
         "Renamed column '{0}' to '{1}'"
     );
-    export const dataWranglerDropRowCode = localize(
-        'DataScience.dataWranglerDropRowCode',
-        '{0} = {1}.drop(index={2})\n'
-    );
     export const dataWranglerDropRowTransformation = localize(
         'DataScience.dataWranglerDropRowTransformation',
         'Dropped rows(s): {0}'
-    );
-    export const dataWranglerDropColumnCode = localize(
-        'DataScience.dataWranglerDropColumnCode',
-        '{0} = {1}.drop(columns={2})\n'
     );
     export const dataWranglerDropColumnTransformation = localize(
         'DataScience.dataWranglerDropColumnTransformation',
         'Dropped column(s): {0}'
     );
-    export const dataWranglerDropDuplicatesRowsCode = localize(
-        'DataScience.dataWranglerDropDuplicatesRowsCode',
-        '{0} = {1}.drop_duplicates()\n'
-    );
     export const dataWranglerDropDuplicatesRowsTransformation = localize(
         'DataScience.dataWranglerDropDuplicatesRowsTransformation',
         'Removed duplicate rows'
     );
-    export const dataWranglerDropDuplicatesRowsOnColumnCode = localize(
-        'DataScience.dataWranglerDropDuplicatesRowsOnColumnCode',
-        '{0} = {1}.drop_duplicates(subset=[{2}])\n'
-    );
     export const dataWranglerDropDuplicatesRowsOnColumnTransformation = localize(
         'DataScience.dataWranglerDropDuplicatesRowsOnColumnTransformation',
         'Removed duplicate rows on column(s): {0}'
-    );
-    export const dataWranglerDropNaCode = localize(
-        'DataScience.dataWranglerDropNaRowsCode',
-        '{0} = {1}.dropna(axis={2})\n'
     );
     export const dataWranglerDropNaRowsTransformation = localize(
         'DataScience.dataWranglerDropNaRowsTransformation',
@@ -1036,34 +1020,17 @@ export namespace DataScience {
         'DataScience.dataWranglerDropNaColumnsTransformation',
         'Dropped columns with missing data'
     );
-    export const dataWranglerDropNaRowsOnColumnCode = localize(
-        'DataScience.dataWranglerDropNaRowsOnColumnCode',
-        '{0} = {1}.dropna(subset=[{2}])\n'
-    );
     export const dataWranglerDropNaRowsOnColumnTransformation = localize(
         'DataScience.dataWranglerDropNaRowsOnColumnTransformation',
         'Dropped rows with missing data in column: {0}'
-    );
-    export const dataWranglerNormalizeColumnCode = localize(
-        'DataScience.dataWranglerNormalizeColumnCode',
-        "from sklearn.preprocessing import MinMaxScaler\r\nscaler = MinMaxScaler(feature_range=({0}, {1}))\r\n{2} = {3}.copy()\r\n{4}['{5}'] = scaler.fit_transform({6}['{7}'].values.reshape(-1, 1))\n"
     );
     export const dataWranglerNormalizeColumnTransformation = localize(
         'DataScience.dataWranglerNormalizeColumnTransformation',
         "Normalized column: '{0}'"
     );
-    export const dataWranglerFillNaCode = localize('DataScience.dataWranglerFillNaCode', '{0} = {1}.fillna({2})\n');
     export const dataWranglerFillNaTransformation = localize(
         'DataScience.dataWranglerFillNaTransformation',
         "Replaced Na values with: '{0}'"
-    );
-    export const dataWranglerPyplotHistogramCode = localize(
-        'DataScience.dataWranglerPyPlotHistogram',
-        "import matplotlib.pyplot as plt\nplt.hist({0}['{1}'])\n"
-    );
-    export const dataWranglerImportCode = localize(
-        'DataScience.dataWranglerImportCode',
-        "import pandas as pd\r\ndf = pd.read_csv(r'{0}')\n"
     );
     export const dataWranglerImportTransformation = localize(
         'DataScience.DataWranglerImportTransformation',
@@ -1079,6 +1046,35 @@ export namespace DataScience {
         'Failed to create the Data Wrangler. Check the Jupyter tab of the Output window for more info.'
     );
     export const dataWranglerTitle = localize('DataScience.dataWranglerTitle', 'Data Wrangler');
+    export const dataWranglerDropTooltip = localize(
+        'DataScience.dataWranglerDropTooltip',
+        'Drop specified labels from selected columns'
+    );
+    export const dataWranglerRenameTooltip = localize('DataScience.dataWranglerRenameTooltip', 'Rename column label');
+    export const dataWranglerNormalizeTooltip = localize(
+        'DataScience.dataWranglerNormalizeTooltip',
+        'Transform column by scaling each feature to a given range'
+    );
+    export const dataWranglerDropNATooltip = localize(
+        'DataScience.dataWranglerDropNATooltip',
+        'Remove missing values from selected columns'
+    );
+    export const dataWranglerCoerceTooltip = localize(
+        'DataScience.dataWranglerCoerceTooltip',
+        'Cast a column to a specified type'
+    );
+    export const dataWranglerReplaceAllTooltip = localize(
+        'DataScience.dataWranglerReplaceAllTooltip',
+        'Replace specified values with a new given value'
+    );
+    export const dataWranglerDropNARowsTooltip = localize(
+        'DataScience.dataWranglerDropNARowsTooltip',
+        'Remove rows with missing values'
+    );
+    export const dataWranglerDropDuplicateRowTooltip = localize(
+        'DataScience.dataWranglerDropDuplicateRowTooltip',
+        'Remove duplicate rows'
+    );
     export const dataWranglerSaveCsv = localize('DataScience.dataWranglerSaveCsv', 'Save CSV');
     export const dataWranglerExportCsv = localize('DataScience.dataWranglerExportCsv', 'Export to CSV');
     export const dataWranglerExportPython = localize('DataScience.dataWranglerExportPython', 'Open as Python script');

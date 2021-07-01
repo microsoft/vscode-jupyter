@@ -3,7 +3,6 @@ import { DataWranglerCommands } from '../../../../client/datascience/data-viewin
 import { getLocString } from '../../../react-common/locReactSide';
 
 interface IProps {
-    currentVariableName: string | undefined;
     handleRefreshRequest(): void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
@@ -12,7 +11,7 @@ interface IProps {
 
 interface IToolbarButtonProps {
     title: string;
-    command: string;
+    command: DataWranglerCommands;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     args: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,7 +58,7 @@ export class Toolbar extends React.PureComponent<IProps> {
                     submitCommand={this.props.submitCommand}
                     title={getLocString('DataScience.dataWranglerExportCsv', 'Export to CSV')}
                     command={DataWranglerCommands.ExportToCsv}
-                    args={{variableName: this.props.currentVariableName}}
+                    args={null}
                 />
                 <ToolbarButton
                     submitCommand={this.props.submitCommand}

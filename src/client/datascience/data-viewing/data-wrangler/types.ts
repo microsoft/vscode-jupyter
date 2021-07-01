@@ -32,16 +32,18 @@ export enum DataWranglerCommands {
     Drop = 'drop',
     DropDuplicates = 'drop_duplicates',
     DropNa = 'drop_na',
-    PyplotHistogram = 'pyplot.hist',
     NormalizeColumn = 'normalize_column',
     FillNa = 'fill_na',
     Describe = 'describe',
-    GetHistoryItem = 'get_history_item'
+    GetHistoryItem = 'get_history_item',
+    CoerceColumn = 'coerce_column',
+    ReplaceAllColumn = 'replace_all_column',
+    RemoveHistoryItem = 'remove_history_item'
 }
 
 export namespace DataWranglerMessages {
     export const SubmitCommand = 'submit_command';
-    export const RefreshDataWrangler = 'refresh_data_wrangler'; // TODOV
+    export const RefreshDataWrangler = 'refresh_data_wrangler';
     export const UpdateHistoryList = 'update_history_list';
     export const GetHistogramResponse = 'get_histogram_response';
     export const SetSidePanels = 'set_side_panels';
@@ -62,45 +64,67 @@ export interface IDataWrangler extends IDisposable {
     updateWithNewVariable(newVariableName: string): Promise<void>;
 }
 
+export interface IRemoveHistoryItemRequest {
+    index: number;
+}
+
 export interface IHistoryItem {
     transformation: string;
     variableName: string;
     code: string;
 }
 
+export interface IGetHistoryItem {
+    index: number;
+}
 export interface IRenameColumnsRequest {
     oldColumnName: string;
     newColumnName: string;
 }
 
-export interface IPlotHistogramReq {
-    target: string;
+export interface IDescribeColReq {
+    targetColumn: string;
 }
 
 export interface IGetColumnStatsReq {
-    columnName: string;
+    targetColumn: string;
 }
 
+export interface IRenameColumnsRequest {
+    targetColumn: string;
+    newColumnName: string;
+}
+
+export interface IReplaceAllColumnsRequest {
+    targetColumns: string[];
+    oldValue: string | number | undefined;
+    newValue: string | number | undefined;
+}
 export interface IDropRequest {
-    mode: 'row' | 'column';
-    targets: string[];
+    targetColumns?: string[];
+    rowIndex?: number;
 }
 
 export interface IDropDuplicatesRequest {
-    subset?: string[];
+    targetColumns?: string[];
 }
 
 export interface IDropNaRequest {
-    subset?: string[];
-    target?: Number;
+    targetColumns?: string[];
+    target?: 'row' | 'column';
 }
 
 export interface INormalizeColumnRequest {
     start: Number;
     end: Number;
-    target: string;
+    targetColumn: string;
 }
 
 export interface IFillNaRequest {
     newValue: string | Number;
+}
+
+export interface ICoerceColumnRequest {
+    targetColumns: string[];
+    newType: string;
 }

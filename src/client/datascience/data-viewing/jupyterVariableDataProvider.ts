@@ -8,7 +8,7 @@ import { inject, injectable, named } from 'inversify';
 import { Identifiers } from '../constants';
 import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables, INotebook } from '../types';
 import { DataViewerDependencyService } from './dataViewerDependencyService';
-import { ColumnType, IDataFrameInfo, IRowsResponse, IColsResponse } from './types';
+import { ColumnType, IDataFrameInfo, IRowsResponse, IColsResponse, IDataFrameColumnInfo } from './types';
 import { traceError } from '../../common/logger';
 
 @injectable()
@@ -28,10 +28,8 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
      * @param columns
      * @returns Array of columns with normalized type
      */
-    private static getNormalizedColumns(
-        columns: { key: string; type: string; describe?: string }[]
-    ): { key: string; type: ColumnType; describe?: string }[] {
-        return columns.map((column: { key: string; type: string; describe?: string }) => {
+    private static getNormalizedColumns(columns: IDataFrameColumnInfo[]): IDataFrameColumnInfo[] {
+        return columns.map((column: IDataFrameColumnInfo) => {
             let normalizedType: ColumnType;
             switch (column.type) {
                 case 'bool':
@@ -46,14 +44,15 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 case 'number':
                     normalizedType = ColumnType.Number;
                     break;
+                case ColumnType.Bool:
+                case ColumnType.Number:
+                case ColumnType.String:
+                    normalizedType = column.type;
+                    break;
                 default:
                     normalizedType = ColumnType.String;
             }
-            const col = {
-                key: column.key,
-                type: normalizedType,
-                describe: column.describe ?? ''
-            };
+            const col = { ...column, type: normalizedType };
             return col;
         });
     }
@@ -101,6 +100,8 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                     : variable.columns,
                 indexColumn: variable.indexColumn,
                 rowCount: variable.rowCount,
+                duplicateRowsCount: variable.duplicateRowsCount,
+                missingValuesRowsCount: variable.missingValuesRowsCount,
                 dataDimensionality: variable.dataDimensionality,
                 shape: JupyterVariableDataProvider.parseShape(variable.shape),
                 sliceExpression,

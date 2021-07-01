@@ -219,7 +219,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         return this.dataFrameInfoPromise;
     }
 
-    private async prepDataFrameInfo(): Promise<IDataFrameInfo> {
+    protected async prepDataFrameInfo(): Promise<IDataFrameInfo> {
         this.rowsTimer = new StopWatch();
         const output = await this.getDataFrameInfo();
 

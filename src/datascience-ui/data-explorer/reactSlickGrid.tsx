@@ -6,6 +6,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {
     ColumnType,
+    IDataFrameInfo,
     IGetColsResponse,
     IGetSliceRequest,
     MaxStringCompare
@@ -14,6 +15,9 @@ import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import './globalJQueryImports';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
+import { generateDisplayValue } from './cellFormatter';
+import { getLocString } from '../react-common/locReactSide';
+import { IHistoryItem, SidePanelSections } from '../../client/datascience/data-viewing/data-wrangler/types';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -42,9 +46,7 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
-import { generateDisplayValue } from './cellFormatter';
-import { getLocString } from '../react-common/locReactSide';
-import { IHistoryItem } from '../../client/datascience/data-viewing/data-wrangler/types';
+
 /*
 WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
@@ -85,12 +87,15 @@ export interface ISlickGridProps {
     currentVariableName?: string;
     toggleFilterEvent?: Slick.Event<void>;
     submitCommand?(args: { command: string; args: any }): void;
+    sidePanels?: SidePanelSections[];
+    dataframeSummary?: IDataFrameInfo;
 }
 
 interface ISlickGridState {
     grid?: Slick.Grid<ISlickRow>;
     showingFilters?: boolean;
     fontSize: number;
+    selectedColumn?: string;
 }
 
 export class ColumnFilter {
@@ -644,7 +649,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private compareElements(a: any, b: any, col?: Slick.Column<Slick.SlickData>): number {
+    protected compareElements(a: any, b: any, col?: Slick.Column<Slick.SlickData>): number {
         if (col) {
             const sortColumn = col.field;
             if (sortColumn && col.hasOwnProperty('type')) {
@@ -678,7 +683,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
 // Modified version of https://github.com/6pac/SlickGrid/blob/master/slick.editors.js#L24
 // with some fixes to get things working in our context
-function readonlyCellEditor(this: any, args: any) {
+export function readonlyCellEditor(this: any, args: any) {
     var $input: any;
     var defaultValue: any;
 

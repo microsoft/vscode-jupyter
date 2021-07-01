@@ -35,7 +35,7 @@ import { IAsyncDisposable, IDisposable, IJupyterSettings, InteractiveWindowMode,
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
-import { IDataViewerDataProvider } from './data-viewing/types';
+import { IDataFrameColumnInfo, IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
@@ -897,8 +897,10 @@ export interface IJupyterVariable {
     dataDimensionality?: number;
     count: number;
     truncated: boolean;
-    columns?: { key: string; type: string; describe?: string }[];
+    columns?: IDataFrameColumnInfo[];
     rowCount?: number;
+    duplicateRowsCount?: number;
+    missingValuesRowsCount?: number;
     indexColumn?: string;
     maximumRowChunkSize?: number;
     fileName?: string;
