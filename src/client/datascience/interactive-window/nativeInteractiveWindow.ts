@@ -272,7 +272,13 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         return result;
     }
 
-    private async submitCodeImpl(code: string, file: string, line: number, isDebug: boolean, notebookCell: NotebookCell) {
+    private async submitCodeImpl(
+        code: string,
+        file: string,
+        line: number,
+        isDebug: boolean,
+        notebookCell: NotebookCell
+    ) {
         const notebook = this.kernel?.notebook;
         if (!notebook) {
             return false;
@@ -297,9 +303,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             const owningResource = this.owningResource;
             const id = uuid();
             const observable = this.kernel!.notebook!.executeObservable(code, file, line, id, false);
-            const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(
-                notebookCell
-            );
+            const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(notebookCell);
             temporaryExecution?.start();
 
             // Sign up for cell changes
@@ -484,7 +488,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         throw new Error('Method not implemented.');
     }
 
-    public expandAllCells() {
+    public async expandAllCells() {
         const edit = new WorkspaceEdit();
         this.notebookDocument.getCells().forEach((cell, index) => {
             const metadata = {
@@ -494,16 +498,16 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             };
             edit.replaceNotebookCellMetadata(this.notebookDocument.uri, index, metadata);
         });
-        return workspace.applyEdit(edit);
+        await workspace.applyEdit(edit);
     }
 
-    public collapseAllCells() {
+    public async collapseAllCells() {
         const edit = new WorkspaceEdit();
         this.notebookDocument.getCells().forEach((cell, index) => {
             const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: false };
             edit.replaceNotebookCellMetadata(this.notebookDocument.uri, index, metadata);
         });
-        return workspace.applyEdit(edit);
+        await workspace.applyEdit(edit);
     }
 
     public scrollToCell(_id: string): void {
@@ -637,7 +641,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
         notebookCellData.metadata = {
-            interactiveWindowCellMarker, interactive: {
+            interactiveWindowCellMarker,
+            interactive: {
                 file: file.fsPath,
                 line: line
             }
