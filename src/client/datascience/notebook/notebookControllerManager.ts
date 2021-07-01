@@ -16,7 +16,12 @@ import {
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Telemetry } from '../constants';
-import { createInterpreterKernelSpec, getDisplayNameOrNameOfKernelConnection, getKernelId, isLocalLaunch } from '../jupyter/kernels/helpers';
+import {
+    createInterpreterKernelSpec,
+    getDisplayNameOrNameOfKernelConnection,
+    getKernelId,
+    isLocalLaunch
+} from '../jupyter/kernels/helpers';
 import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
@@ -136,18 +141,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // If already registered just return it
         let matchingController: VSCodeNotebookController | undefined;
         if (this.registeredControllers.size > 0) {
-            matchingController = this.registeredNotebookControllers()
-                .find((controller) => {
-                    return (
-                        // We register each of our kernels as two controllers
-                        // because controllers are currently per-viewtype. Find
-                        // the one for the interactive viewtype for now
-                        controller.controller.notebookType === InteractiveWindowView &&
-                        controller.connection.kind === 'startUsingPythonInterpreter' &&
-                        controller.connection.interpreter?.path === pythonInterpreter?.path &&
-                        controller.connection.interpreter.displayName === pythonInterpreter.displayName
-                    );
-                });
+            matchingController = this.registeredNotebookControllers().find((controller) => {
+                return (
+                    // We register each of our kernels as two controllers
+                    // because controllers are currently per-viewtype. Find
+                    // the one for the interactive viewtype for now
+                    controller.controller.notebookType === InteractiveWindowView &&
+                    controller.connection.kind === 'startUsingPythonInterpreter' &&
+                    controller.connection.interpreter?.path === pythonInterpreter?.path &&
+                    controller.connection.interpreter.displayName === pythonInterpreter.displayName
+                );
+            });
         }
         // Otherwise create the VSCodeNotebookController
         const spec = createInterpreterKernelSpec(pythonInterpreter);
@@ -158,7 +162,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             id: getKernelId(spec, pythonInterpreter)
         };
         const matchingControllers = this.createNotebookControllers([result]);
-        matchingController = matchingControllers.find((controller) => controller.controller.notebookType === InteractiveWindowView);
+        matchingController = matchingControllers.find(
+            (controller) => controller.controller.notebookType === InteractiveWindowView
+        );
         return matchingController!;
     }
 
