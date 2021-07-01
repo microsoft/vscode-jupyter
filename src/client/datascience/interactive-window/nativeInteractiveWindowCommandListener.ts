@@ -586,7 +586,8 @@ export class NativeInteractiveWindowCommandListener {
 
     private async copyCodeInInteractiveWindow(context?: NotebookCell) {
         if (context) {
-            await this.clipboard.writeText(context.document.getText());
+            const source = [context.metadata.interactiveWindowCellMarker, context.document.getText()].join('\n');
+            await this.clipboard.writeText(source);
         }
     }
 }
