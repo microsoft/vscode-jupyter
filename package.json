@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.7.0",
+    "version": "2021.8.0",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
@@ -67,7 +67,8 @@
         "onCommand:jupyter.openDataWrangler",
         "onNotebook:jupyter-notebook",
         "onCustomEditor:jupyter.notebook.ipynb",
-        "onCustomEditor:jupyter-data-wrangler"
+        "onCustomEditor:jupyter-data-wrangler",
+        "onNotebook:interactive"
     ],
     "main": "./out/client/extension",
     "capabilities": {
