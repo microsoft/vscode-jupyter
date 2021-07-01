@@ -432,7 +432,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private expandAllCells(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.expandAllCells();
@@ -441,7 +441,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private collapseAllCells(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.collapseAllCells();
@@ -457,7 +457,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private exportAs(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.exportAs();
@@ -466,7 +466,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private export(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.export();

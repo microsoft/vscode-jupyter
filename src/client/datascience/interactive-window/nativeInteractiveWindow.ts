@@ -314,7 +314,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                     await temporaryExecution.replaceOutput(converted);
                     const executionCount = (cells[0].data as nbformat.ICodeCell).execution_count;
                     if (executionCount) {
-                        temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10)
+                        temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10);
                     }
 
                     // Any errors will move our result to false (if allowed)
