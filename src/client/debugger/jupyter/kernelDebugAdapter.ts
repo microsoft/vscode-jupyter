@@ -21,6 +21,7 @@ import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 
 const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugRequestMsg => {
+    const sessionId = message.arguments?.__sessionId ? message.arguments.__sessionId : randomBytes(8).toString('hex');
     return {
         channel: 'control',
         header: {
@@ -29,7 +30,7 @@ const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugReque
             version: '5.2',
             msg_type: 'debug_request',
             username: 'vscode',
-            session: randomBytes(8).toString('hex')
+            session: sessionId
         },
         metadata: {},
         parent_header: {},
