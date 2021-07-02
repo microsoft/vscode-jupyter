@@ -27,9 +27,7 @@ export class NotebookSerializer implements VSCNotebookSerializer {
         @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService
     ) {}
     public deserializeNotebook(content: Uint8Array, _token: CancellationToken): NotebookData {
-        let contents = new TextDecoder().decode(content.buffer);
-		// Decoded string appears to contain $dataToNotebook + unicode junk? Skip past the junk
-		contents = contents.slice(contents.indexOf('{'));
+		const contents = new TextDecoder().decode(content.buffer.slice(content.byteOffset));
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : {};
         traceInfoIf(IS_CI_SERVER, `NotebookJSON ${JSON.stringify(json)}`);
 
