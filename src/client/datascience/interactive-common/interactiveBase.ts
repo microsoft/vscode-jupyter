@@ -441,7 +441,13 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     const dontAskAgain = localize.DataScience.restartKernelMessageDontAskAgain();
                     const no = localize.DataScience.restartKernelMessageNo();
 
-                    const v = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
+                    const v = await this.applicationShell.showInformationMessage(
+                        message,
+                        { modal: true },
+                        yes,
+                        dontAskAgain,
+                        no
+                    );
                     if (v === dontAskAgain) {
                         await this.disableAskForRestart();
                         await this.restartKernelInternal();
@@ -482,7 +488,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     const message = localize.DataScience.restartKernelAfterInterruptMessage();
                     const yes = localize.DataScience.restartKernelMessageYes();
                     const no = localize.DataScience.restartKernelMessageNo();
-                    const v = await this.applicationShell.showInformationMessage(message, yes, no);
+                    const v = await this.applicationShell.showInformationMessage(message, { modal: true }, yes, no);
                     if (v === yes) {
                         await this.restartKernelInternal();
                     }

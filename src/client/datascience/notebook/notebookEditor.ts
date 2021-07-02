@@ -232,7 +232,7 @@ export class NotebookEditor implements INotebookEditor {
                 const message = DataScience.restartKernelAfterInterruptMessage();
                 const yes = DataScience.restartKernelMessageYes();
                 const no = DataScience.restartKernelMessageNo();
-                const v = await this.applicationShell.showInformationMessage(message, yes, no);
+                const v = await this.applicationShell.showInformationMessage(message, { modal: true }, yes, no);
                 if (v === yes) {
                     this.restartingKernel = false;
                     this.kernelInterruptedDontAskToRestart = true;
@@ -265,7 +265,13 @@ export class NotebookEditor implements INotebookEditor {
                 const dontAskAgain = DataScience.restartKernelMessageDontAskAgain();
                 const no = DataScience.restartKernelMessageNo();
 
-                const response = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
+                const response = await this.applicationShell.showInformationMessage(
+                    message,
+                    { modal: true },
+                    yes,
+                    dontAskAgain,
+                    no
+                );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart();
                     void this.applicationShell.withProgress(
