@@ -39,23 +39,17 @@ export class KernelEnvironmentVariablesService {
             traceInfo(`No custom variables for Kernel as interpreter is not conda, but is ${interpreter?.envType}`);
             return kernelEnv;
         }
-        const customEditVarsPromise = this.customEndVars.getCustomEnvironmentVariables(resource).catch(noop);
-        traceInfo('Fetching interpreter variables of Conda environment to be used as env vars of Kernel');
-        const interpreterEnv = await this.envActivation
-            .getActivatedEnvironmentVariables(resource, interpreter, false)
-            .catch<undefined>((ex) => {
+        let [customEditVars, interpreterEnv] = await Promise.all([
+            this.customEndVars.getCustomEnvironmentVariables(resource).catch(noop),
+            this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, false).catch<undefined>((ex) => {
                 traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
                 return undefined;
-            });
+            })
+        ]);
         if (!interpreterEnv) {
             traceInfo('No custom variables for Kernel even thought interpreter is conda');
             return kernelEnv;
         }
-
-        let customEditVars = await customEditVarsPromise.catch((ex) =>
-            traceError('Failed to get custom env vars for kernel', ex)
-        );
-        traceInfo('Got custom variables for Kernel owned by a conda interpreter');
         // Merge the env variables with that of the kernel env.
         const mergedVars = { ...process.env };
         kernelEnv = kernelEnv || {};
@@ -67,20 +61,22 @@ export class KernelEnvironmentVariablesService {
         // The values in `PATH` found in the interpreter trumps everything else.
         // If we have more PATHS, they need to be appended to this PATH.
         // Similarly for `PTYHONPATH`
-        let pathKey = Object.keys(interpreterEnv).find((k) => k.toLowerCase() == 'path');
-        if (pathKey) {
-            mergedVars[pathKey] = interpreterEnv[pathKey];
+        // Additionally the 'PATH' variable may have different case in each, so account for that.
+        let otherEnvPathKey = Object.keys(interpreterEnv).find((k) => k.toLowerCase() == 'path');
+        const processPathKey = Object.keys(mergedVars).find((k) => k.toLowerCase() == 'path') || otherEnvPathKey;
+        if (otherEnvPathKey && processPathKey) {
+            mergedVars[processPathKey] = interpreterEnv[otherEnvPathKey];
         }
         if (interpreterEnv['PYTHONPATH']) {
             mergedVars['PYTHONPATH'] = interpreterEnv['PYTHONPATH'];
         }
-        pathKey = Object.keys(customEditVars).find((k) => k.toLowerCase() == 'path');
-        if (pathKey && customEditVars[pathKey]) {
-            this.envVarsService.appendPath(mergedVars, customEditVars[pathKey]!);
+        otherEnvPathKey = Object.keys(customEditVars).find((k) => k.toLowerCase() == 'path');
+        if (otherEnvPathKey && customEditVars[otherEnvPathKey]) {
+            this.envVarsService.appendPath(mergedVars, customEditVars[otherEnvPathKey]!);
         }
-        pathKey = Object.keys(kernelEnv).find((k) => k.toLowerCase() == 'path');
-        if (pathKey && kernelEnv[pathKey]) {
-            this.envVarsService.appendPath(mergedVars, kernelEnv[pathKey]!);
+        otherEnvPathKey = Object.keys(kernelEnv).find((k) => k.toLowerCase() == 'path');
+        if (otherEnvPathKey && kernelEnv[otherEnvPathKey]) {
+            this.envVarsService.appendPath(mergedVars, kernelEnv[otherEnvPathKey]!);
         }
         if (customEditVars.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, customEditVars.PYTHONPATH);
