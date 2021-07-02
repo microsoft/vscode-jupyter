@@ -6,17 +6,11 @@ import * as path from 'path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IFileSystem } from '../platform/types';
-import { IPathUtils } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
-    private _pathVariable?: 'Path' | 'PATH';
-    constructor(
-        // We only use a small portion of either of these interfaces.
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(IFileSystem) private readonly fs: IFileSystem
-    ) {}
+    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
 
     public async parseFile(
         filePath?: string,
@@ -32,7 +26,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!target) {
             return;
         }
-        const settingsNotToMerge = ['PYTHONPATH', this.pathVariable];
+        const settingsNotToMerge = ['PYTHONPATH', 'path', 'Path', 'PATH'];
         Object.keys(source).forEach((setting) => {
             if (settingsNotToMerge.indexOf(setting) >= 0) {
                 return;
@@ -46,21 +40,10 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
     }
 
     public appendPath(vars: EnvironmentVariables, ...paths: string[]) {
-        return this.appendPaths(vars, this.pathVariable, ...paths);
+        return this.appendPaths(vars, 'PATH', ...paths);
     }
 
-    private get pathVariable(): 'Path' | 'PATH' {
-        if (!this._pathVariable) {
-            this._pathVariable = this.pathUtils.getPathVariableName();
-        }
-        return this._pathVariable!;
-    }
-
-    private appendPaths(
-        vars: EnvironmentVariables,
-        variableName: 'PATH' | 'Path' | 'PYTHONPATH',
-        ...pathsToAppend: string[]
-    ) {
+    private appendPaths(vars: EnvironmentVariables, variableName: 'PATH' | 'PYTHONPATH', ...pathsToAppend: string[]) {
         const valueToAppend = pathsToAppend
             .filter((item) => typeof item === 'string' && item.trim().length > 0)
             .map((item) => item.trim())
@@ -69,7 +52,10 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             return vars;
         }
 
-        const variable = vars ? vars[variableName] : undefined;
+        // It's been shown that the 'path' variable can have multiple casing even on the same platform
+        // depending upon where the environment variable comes from (kernelspec might have 'PATH' whereas windows might use 'Path')
+        const matchingKey = vars ? Object.keys(vars).find((k) => k.toLowerCase() == variableName) : undefined;
+        const variable = vars && matchingKey ? vars[matchingKey] : undefined;
         if (variable && typeof variable === 'string' && variable.length > 0) {
             vars[variableName] = variable + path.delimiter + valueToAppend;
         } else {

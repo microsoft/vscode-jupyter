@@ -104,7 +104,6 @@ export interface IPathUtils {
      * @memberof IPathUtils
      */
     readonly separator: string;
-    getPathVariableName(): 'Path' | 'PATH';
     basename(pathValue: string, ext?: string): string;
     getDisplayName(pathValue: string, cwd?: string): string;
 }
