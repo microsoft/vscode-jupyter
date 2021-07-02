@@ -26,9 +26,11 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!target) {
             return;
         }
-        const settingsNotToMerge = ['PYTHONPATH', 'path', 'Path', 'PATH'];
         Object.keys(source).forEach((setting) => {
-            if (settingsNotToMerge.indexOf(setting) >= 0) {
+            const lowerCase = setting.toLowerCase();
+            if (lowerCase == 'pythonpath' || lowerCase == 'path') {
+                // PATH can be path, Path, or PATH on the same OS depending
+                // upon the source so check all cases.
                 return;
             }
             target[setting] = source[setting];
@@ -54,12 +56,14 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
 
         // It's been shown that the 'path' variable can have multiple casing even on the same platform
         // depending upon where the environment variable comes from (kernelspec might have 'PATH' whereas windows might use 'Path')
-        const matchingKey = vars ? Object.keys(vars).find((k) => k.toLowerCase() == variableName) : undefined;
+        const variableNameLower = variableName.toLowerCase();
+        const matchingKey = vars ? Object.keys(vars).find((k) => k.toLowerCase() == variableNameLower) : undefined;
         const variable = vars && matchingKey ? vars[matchingKey] : undefined;
+        const setKey = matchingKey || variableName;
         if (variable && typeof variable === 'string' && variable.length > 0) {
-            vars[variableName] = variable + path.delimiter + valueToAppend;
+            vars[setKey] = variable + path.delimiter + valueToAppend;
         } else {
-            vars[variableName] = valueToAppend;
+            vars[setKey] = valueToAppend;
         }
         return vars;
     }

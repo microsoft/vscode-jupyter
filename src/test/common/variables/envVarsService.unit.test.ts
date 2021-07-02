@@ -169,7 +169,7 @@ PYTHON=${BINDIR}/python3\n\
             variablesService.mergeVariables(vars1, vars2);
 
             expect(Object.keys(vars1)).lengthOf(4, 'Source variables modified');
-            expect(Object.keys(vars2)).lengthOf(3, 'Variables not merged');
+            expect(Object.keys(vars2)).lengthOf(3, `Variables not merged in ${JSON.stringify(vars2)}`);
             expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
             expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
             expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
@@ -187,7 +187,7 @@ PYTHON=${BINDIR}/python3\n\
             variablesService.mergeVariables(vars1, vars2);
 
             expect(Object.keys(vars1)).lengthOf(2, 'Source variables modified');
-            expect(Object.keys(vars2)).lengthOf(5, 'Variables not merged');
+            expect(Object.keys(vars2)).lengthOf(7, 'Variables not merged');
             expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
             expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
             expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
@@ -250,7 +250,7 @@ PYTHON=${BINDIR}/python3\n\
 
             variablesService.appendPath(vars, pathToAppend);
 
-            expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
+            expect(Object.keys(vars)).lengthOf(2, `Incorrect number of variables ${Object.keys(vars).join(' ')}`);
             expect(vars).to.have.property('ONE', '1', 'Incorrect value');
             expect(vars).to.have.property(`paTh`, `PATH${path.delimiter}${pathToAppend}`, 'Incorrect value');
             verifyAll();
