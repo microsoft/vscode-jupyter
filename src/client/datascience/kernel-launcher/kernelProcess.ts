@@ -341,6 +341,7 @@ export class KernelProcess implements IKernelProcess {
             traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
             const [executionService, env] = await Promise.all([
                 this.processExecutionFactory.create(this.resource),
+                // Interpreter not passed in this situation since this isn't python.
                 this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec)
             ]);
 
