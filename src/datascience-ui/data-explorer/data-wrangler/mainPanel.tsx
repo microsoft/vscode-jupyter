@@ -81,7 +81,8 @@ interface IMainPanelState {
     sliceExpression?: string;
     historyList: [];
     histogramData?: IGetColsResponse;
-    monacoTheme: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    monacoThemeObj: any;
     sidePanels: SidePanelSections[];
     dataframeSummary: IDataFrameInfo;
 }
@@ -128,7 +129,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableType: undefined,
                 historyList: [],
                 histogramData: undefined,
-                monacoTheme: 'vs-dark',
+                monacoThemeObj: {base: 'vs-dark'},
                 sidePanels: [],
                 dataframeSummary: {}
             };
@@ -150,7 +151,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableType: undefined,
                 historyList: [],
                 histogramData: undefined,
-                monacoTheme: 'vs-dark',
+                monacoThemeObj: {base: 'vs-dark'},
                 sidePanels: [],
                 dataframeSummary: {}
             };
@@ -301,7 +302,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             case CssMessages.GetMonacoThemeResponse:
                 console.log('Theme response payload', payload);
-                this.setState({ monacoTheme: payload.theme.base });
+                this.setState({ monacoThemeObj: payload.theme });
                 break;
 
             default:
@@ -343,7 +344,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 filterRowsTooltip={filterRowsTooltip}
                 forceHeight={this.props.testMode ? 200 : undefined}
                 dataDimensionality={this.state.dataDimensionality}
-                monacoTheme={this.state.monacoTheme}
+                monacoThemeObj={this.state.monacoThemeObj}
                 originalVariableShape={this.state.originalVariableShape}
                 isSliceDataEnabled={this.state.isSliceDataEnabled}
                 historyList={this.state.historyList}

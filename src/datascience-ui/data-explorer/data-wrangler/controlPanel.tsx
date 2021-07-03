@@ -17,7 +17,8 @@ interface IControlPanelProps {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     historyList: IHistoryItem[];
-    monacoTheme: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    monacoThemeObj: any;
     histogramData: IGetColsResponse;
     currentVariableName: string;
     dataframeSummary: IDataFrameInfo;
@@ -45,6 +46,7 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                 <SummarySection
                     collapsed={false}
                     histogramData={this.props.histogramData}
+                    monacoThemeObj={this.props.monacoThemeObj}
                     submitCommand={this.props.submitCommand}
                     resizeEvent={this.props.resizeEvent}
                     dataframeSummary={this.props.dataframeSummary}
@@ -71,7 +73,7 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                 <CodeSection
                     collapsed={false}
                     code={this.props.historyList.map((item) => item.code).join('')}
-                    monacoTheme={this.props.monacoTheme}
+                    monacoTheme={this.props.monacoThemeObj.base}
                     currentVariableName={this.props.currentVariableName}
                     submitCommand={this.props.submitCommand}
                 />

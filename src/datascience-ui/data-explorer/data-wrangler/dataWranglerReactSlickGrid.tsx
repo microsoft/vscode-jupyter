@@ -311,7 +311,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                         interface and made them optional so we have to use ?? here */}
                         <ControlPanel
                             historyList={this.props.historyList ?? []}
-                            monacoTheme={this.props.monacoTheme ?? ''}
+                            monacoThemeObj={this.props.monacoThemeObj}
                             histogramData={this.props.histogramData ?? ({} as IGetColsResponse)}
                             dataframeSummary={this.props.dataframeSummary ?? ({} as IDataFrameInfo)}
                             data={this.dataView.getItems()}

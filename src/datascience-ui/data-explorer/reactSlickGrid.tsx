@@ -81,7 +81,7 @@ export interface ISlickGridProps {
     handleRefreshRequest(): void;
 
     // For Data Wrangler
-    monacoTheme?: string;
+    monacoThemeObj?: any;
     historyList?: IHistoryItem[];
     histogramData?: IGetColsResponse;
     currentVariableName?: string;

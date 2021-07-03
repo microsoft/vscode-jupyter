@@ -17,6 +17,8 @@ interface ISummarySectionProps {
     histogramData?: IGetColsResponse;
     dataframeSummary: IDataFrameInfo;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    monacoThemeObj: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
 
@@ -36,6 +38,18 @@ interface IInnerRowsProps {
     children: ISummaryRowProps[];
 }
 
+interface ISummaryTitleProps {
+    name: string;
+    canClose: boolean;
+}
+
+interface IHistogramProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    themeObj: any;
+}
+
 interface IState {}
 
 const Plot = createPlotlyComponent(Plotly);
@@ -46,6 +60,24 @@ class SummaryRow extends React.Component<ISummaryRowProps> {
             <div style={this.props.child ? summaryChildRowStyle : summaryRowStyle}>
                 <span>{this.props.name}</span>
                 <span>{this.props.value}</span>
+            </div>
+        );
+    }
+}
+
+class SummaryTitle extends React.Component<ISummaryTitleProps> {
+    render() {
+        return (
+            <div style={{...summaryRowStyle, fontWeight: 'bold'}}>
+                <span>Column: {this.props.name}</span>
+                {this.props.canClose && (
+                    <div
+                        className="codicon codicon-close codicon-button"
+                        onClick={() => {console.log('button clicked');}}
+                        style={{ verticalAlign: 'middle' }}
+                        title={'Close column summary'}
+                    />
+                )}
             </div>
         );
     }
@@ -70,6 +102,7 @@ class ColumnSummary extends React.Component<IDataframeColumnSummaryProps> {
         }
         return (
             <div>
+                <SummaryTitle name={this.props.columnSummary.key} canClose={true} />
                 <SummaryRow name={'Data frame shape'} value={this.props.shape} />
                 <SummaryRow name={'Unique values'} value={this.props.columnSummary.uniqueCount} />
                 <SummaryRow name={'Rows'} value={this.props.rowCount} />
@@ -144,8 +177,25 @@ class DataframeSummary extends React.Component<IDataFrameInfo> {
     }
 }
 
-export class Histogram extends React.Component<IGetColsResponse> {
+export class Histogram extends React.Component<IHistogramProps> {
     render() {
+        const layout = {
+            autosize: true,
+            margin: {
+                t: 50,
+                b: 50,
+                l: 50,
+                r: 50,
+                pad: 10
+            },
+            // colorway: [this.props.themeObj.colors['sideBarTitle.foreground']],
+            plot_bgcolor: this.props.themeObj.colors['editor.background'],
+            paper_bgcolor: this.props.themeObj.colors['editor.background'],
+            font: {
+                color: this.props.themeObj.colors['editor.foreground']
+            }
+        } as Plotly.Layout;
+
         return (
             <div>
                 <Plot
@@ -158,22 +208,12 @@ export class Histogram extends React.Component<IGetColsResponse> {
                     }}
                     data={[
                         {
-                            x: this.props.cols,
+                            x: this.props.data,
                             type: 'histogram'
                         }
                     ]}
-                    layout={{
-                        autosize: true,
-                        margin: {
-                            t: 50,
-                            b: 50,
-                            l: 50,
-                            r: 50,
-                            pad: 10
-                        },
-                        plot_bgcolor: 'gray',
-                        paper_bgcolor: 'gray' // TODOV: var(--vscode-editor-background) ?
-                    }}
+
+                    layout={layout}
                     useResizeHandler={true}
                 />
             </div>
@@ -206,7 +246,7 @@ export class SummarySection extends React.Component<ISummarySectionProps, IState
                     rowCount={this.props.dataframeSummary.rowCount ?? 0}
                 />
                 {this.props.histogramData && this.props.histogramData.cols.length > 0 && (
-                    <Histogram {...this.props.histogramData} />
+                    <Histogram data={this.props.histogramData.cols} themeObj={this.props.monacoThemeObj} />
                 )}
             </>
         ) : (
