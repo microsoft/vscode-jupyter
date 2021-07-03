@@ -326,6 +326,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-function */
                             submitCommand={this.props.submitCommand ?? ((_data: { command: string; args: any }) => {})}
                             /* eslint-enable no-return-assign, no-param-reassign */
+                            sidePanels={this.props.sidePanels}
                         />
                     </Resizable>
                 </div>
