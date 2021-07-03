@@ -566,9 +566,11 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
             // Images in Jupyter are stored in base64 encoded format.
             // VS Code expects bytes when rendering images.
             // https://developer.mozilla.org/en-US/docs/Glossary/Base64#solution_1_%E2%80%93_escaping_the_string_before_encoding_it
-            return btoa(encodeURIComponent(stringValue).replace(/%([0-9A-F]{2})/g, function(_match, p1) {
-                return String.fromCharCode(Number.parseInt('0x' + p1));
-            }));
+            return btoa(
+                encodeURIComponent(stringValue).replace(/%([0-9A-F]{2})/g, function (_match, p1) {
+                    return String.fromCharCode(Number.parseInt('0x' + p1));
+                })
+            );
         } else if (mime.toLowerCase().includes('json')) {
             return stringValue.length > 0 ? JSON.parse(stringValue) : stringValue;
         } else {
@@ -592,7 +594,7 @@ function convertJupyterOutputToBuffer(mime: string, value: unknown): NotebookCel
         } else if (mime.startsWith('image/') && typeof value === 'string' && mime !== 'image/svg+xml') {
             // Images in Jupyter are stored in base64 encoded format.
             // VS Code expects bytes when rendering images.
-            const data = Uint8Array.from(atob(value), c => c.charCodeAt(0));
+            const data = Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
             return new NotebookCellOutputItem(data, mime);
         } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
             return NotebookCellOutputItem.text(JSON.stringify(value), mime);
