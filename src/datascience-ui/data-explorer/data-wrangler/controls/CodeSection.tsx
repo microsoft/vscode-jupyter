@@ -17,7 +17,7 @@ interface IState {
     currentVariableIndex: number | undefined;
 }
 
-export class CodeSection extends React.Component<IProps, IState> {
+export class  CodeSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
         this.state = { currentVariableIndex: 0 };
@@ -27,7 +27,7 @@ export class CodeSection extends React.Component<IProps, IState> {
         const codeComponent = (
             <div
                 style={{
-                    marginLeft: '20px',
+                    marginLeft: '-10px',
                     marginTop: '10px',
                     marginRight: '20px',
                     width: '100%',
@@ -53,16 +53,22 @@ export class CodeSection extends React.Component<IProps, IState> {
                     onChange={() => {}}
                     disableUndoStack={true}
                     focusPending={0}
-                    editorOptions={{ renderFinalNewline: false }}
+                    editorOptions={{
+                        renderFinalNewline: false,
+                        lineNumbers: 'on',
+                        lineDecorationsWidth: 8,
+                        // wordWrap: 'bounded', TODOV
+                        // wordWrapColumn: 10
+                    }}
                     outermostParentClass=""
                     // eslint-disable-next-line @typescript-eslint/no-empty-function
                     openLink={() => {}}
                     font={{ size: 12, family: 'var(--vscode-editor-font-family' }}
-                    showLineNumbers={false}
+                    showLineNumbers={true}
                 />
             </div>
         );
 
-        return <SidePanelSection title="CODE" panel={codeComponent} collapsed={this.props.collapsed}/>;
+        return <SidePanelSection title="CODE" panel={codeComponent} collapsed={this.props.collapsed} />;
     }
 }
