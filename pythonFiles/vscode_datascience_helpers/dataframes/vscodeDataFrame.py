@@ -181,7 +181,7 @@ def _VSCODE_getDataFrameInfo(df):
         try:
             col = df[column_name]
             return col
-        # Columns don't have names, so get colum with index
+        # Columns don't have names, so get column with index
         except KeyError:
             col = df[int(column_name)]
             return col

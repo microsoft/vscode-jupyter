@@ -403,6 +403,10 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             const columns = this.state.grid.getColumns();
             const placeholder = '99999999999';
             const maxFieldWidth = measureText(placeholder, fontString);
+
+            // Removes first column that was similar to index column but had no name
+            columns.shift();
+
             columns.forEach((c) => {
                 if (c.field !== this.props.idProperty) {
                     c.width = maxFieldWidth;
