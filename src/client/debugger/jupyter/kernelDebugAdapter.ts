@@ -19,8 +19,9 @@ import { IDebuggingCellMap, IJupyterSession } from '../../datascience/types';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 
-const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugRequestMsg => {
+const debugRequest = (message: DebugProtocol.Request, jupyterSessionId: string): KernelMessage.IDebugRequestMsg => {
     return {
         channel: 'control',
         header: {
@@ -29,7 +30,7 @@ const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugReque
             version: '5.2',
             msg_type: 'debug_request',
             username: 'vscode',
-            session: randomBytes(8).toString('hex')
+            session: jupyterSessionId
         },
         metadata: {},
         parent_header: {},
@@ -42,7 +43,7 @@ const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugReque
     };
 };
 
-const debugResponse = (message: DebugProtocol.Response): KernelMessage.IDebugReplyMsg => {
+const debugResponse = (message: DebugProtocol.Response, jupyterSessionId: string): KernelMessage.IDebugReplyMsg => {
     return {
         channel: 'control',
         header: {
@@ -51,7 +52,7 @@ const debugResponse = (message: DebugProtocol.Response): KernelMessage.IDebugRep
             version: '5.2',
             msg_type: 'debug_reply',
             username: 'vscode',
-            session: randomBytes(8).toString('hex')
+            session: jupyterSessionId
         },
         metadata: {},
         parent_header: {},
@@ -105,7 +106,8 @@ export class KernelDebugAdapter implements DebugAdapter {
         private notebookDocument: NotebookDocument,
         private readonly jupyterSession: IJupyterSession,
         private cellMap: IDebuggingCellMap,
-        private commandManager: ICommandManager
+        private commandManager: ICommandManager,
+        private fs: IFileSystem
     ) {
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -151,7 +153,7 @@ export class KernelDebugAdapter implements DebugAdapter {
         });
 
         if (message.type === 'request') {
-            const request = debugRequest(message as DebugProtocol.Request);
+            const request = debugRequest(message as DebugProtocol.Request, this.jupyterSession.sessionId);
             const control = this.jupyterSession.requestDebug({
                 seq: request.content.seq,
                 type: 'request',
@@ -166,7 +168,7 @@ export class KernelDebugAdapter implements DebugAdapter {
             }
         } else if (message.type === 'response') {
             // responses of reverse requests
-            const response = debugResponse(message as DebugProtocol.Response);
+            const response = debugResponse(message as DebugProtocol.Response, this.jupyterSession.sessionId);
             this.jupyterSession.requestDebug({
                 seq: response.content.seq,
                 type: 'request',
@@ -181,6 +183,18 @@ export class KernelDebugAdapter implements DebugAdapter {
     dispose() {
         this.messageListener.forEach((ml) => ml.dispose());
         this.messageListener.clear();
+
+        // clean temp files
+        this.cellToFile.forEach((tempPath) => {
+            const norm = path.normalize(tempPath);
+            const dir = path.dirname(norm);
+            try {
+                void this.fs.deleteLocalFile(norm);
+                void this.fs.deleteLocalDirectory(dir);
+            } catch {
+                traceError('Error deleting temporary debug files');
+            }
+        });
     }
 
     private async dumpCellsThatRanBeforeDebuggingBegan() {
