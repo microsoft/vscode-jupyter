@@ -21,13 +21,7 @@ import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
-const debugRequest = (
-    message: DebugProtocol.Request,
-    sessionId: string | undefined
-): KernelMessage.IDebugRequestMsg => {
-    if (!sessionId) {
-        sessionId = randomBytes(8).toString('hex');
-    }
+const debugRequest = (message: DebugProtocol.Request, jupyterSessionId: string): KernelMessage.IDebugRequestMsg => {
     return {
         channel: 'control',
         header: {
@@ -36,7 +30,7 @@ const debugRequest = (
             version: '5.2',
             msg_type: 'debug_request',
             username: 'vscode',
-            session: sessionId
+            session: jupyterSessionId
         },
         metadata: {},
         parent_header: {},
@@ -49,7 +43,7 @@ const debugRequest = (
     };
 };
 
-const debugResponse = (message: DebugProtocol.Response): KernelMessage.IDebugReplyMsg => {
+const debugResponse = (message: DebugProtocol.Response, jupyterSessionId: string): KernelMessage.IDebugReplyMsg => {
     return {
         channel: 'control',
         header: {
@@ -58,7 +52,7 @@ const debugResponse = (message: DebugProtocol.Response): KernelMessage.IDebugRep
             version: '5.2',
             msg_type: 'debug_reply',
             username: 'vscode',
-            session: randomBytes(8).toString('hex')
+            session: jupyterSessionId
         },
         metadata: {},
         parent_header: {},
@@ -104,7 +98,6 @@ export class KernelDebugAdapter implements DebugAdapter {
         number,
         Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg>
     >();
-    private sessionId: string | undefined;
 
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
 
@@ -160,12 +153,7 @@ export class KernelDebugAdapter implements DebugAdapter {
         });
 
         if (message.type === 'request') {
-            const DAPrequest = message as DebugProtocol.Request;
-            if (!this.sessionId && DAPrequest.arguments?.__sessionId) {
-                this.sessionId = DAPrequest.arguments.__sessionId;
-            }
-
-            const request = debugRequest(DAPrequest, this.sessionId);
+            const request = debugRequest(message as DebugProtocol.Request, this.jupyterSession.sessionId);
             const control = this.jupyterSession.requestDebug({
                 seq: request.content.seq,
                 type: 'request',
@@ -180,7 +168,7 @@ export class KernelDebugAdapter implements DebugAdapter {
             }
         } else if (message.type === 'response') {
             // responses of reverse requests
-            const response = debugResponse(message as DebugProtocol.Response);
+            const response = debugResponse(message as DebugProtocol.Response, this.jupyterSession.sessionId);
             this.jupyterSession.requestDebug({
                 seq: response.content.seq,
                 type: 'request',
