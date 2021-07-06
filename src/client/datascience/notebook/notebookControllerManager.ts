@@ -289,20 +289,19 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
         });
 
-        return connectionsWithLabel.reduce((prev: VSCodeNotebookController[], value) => {
-            const current = this.createNotebookController(value.connection, value.label);
-            return current ? prev.concat(current) : prev;
-        }, []);
+        connectionsWithLabel.forEach((value) => {
+            this.createNotebookController(value.connection, value.label);
+        });
     }
     private createNotebookController(kernelConnection: KernelConnectionMetadata, label: string) {
         try {
             // Create notebook selector
-            return [
+            [
                 [kernelConnection.id, JupyterNotebookView],
                 [`${kernelConnection.id} (Interactive)`, InteractiveWindowView]
             ]
                 .filter(([id]) => !this.registeredControllers.has(id))
-                .map(([id, viewType]) => {
+                .forEach(([id, viewType]) => {
                     const controller = new VSCodeNotebookController(
                         kernelConnection,
                         id,
@@ -332,8 +331,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     // We are disposing as documents are closed, but do this as well
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);
-
-                    return controller;
                 });
         } catch (ex) {
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
