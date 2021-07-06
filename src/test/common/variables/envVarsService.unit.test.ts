@@ -10,30 +10,17 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IPathUtils } from '../../../client/common/types';
 import { EnvironmentVariablesService, parseEnvFile } from '../../../client/common/variables/environment';
 
 use(chaiAsPromised);
 
-type PathVar = 'Path' | 'PATH';
-const PATHS = [
-    'Path', // Windows
-    'PATH' // non-Windows
-];
-
 suite('Environment Variables Service', () => {
     const filename = 'x/y/z/.env';
-    let pathUtils: TypeMoq.IMock<IPathUtils>;
     let fs: TypeMoq.IMock<IFileSystem>;
     let variablesService: EnvironmentVariablesService;
     setup(() => {
-        pathUtils = TypeMoq.Mock.ofType<IPathUtils>(undefined, TypeMoq.MockBehavior.Strict);
         fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
-        variablesService = new EnvironmentVariablesService(
-            // This is the only place that the mocks are used.
-            pathUtils.object,
-            fs.object
-        );
+        variablesService = new EnvironmentVariablesService(fs.object);
     });
     function verifyAll() {
         fs.verifyAll();
@@ -158,126 +145,115 @@ PYTHON=${BINDIR}/python3\n\
         });
     });
 
-    PATHS.map((pathVariable) => {
-        suite(`mergeVariables() (path var: ${pathVariable})`, () => {
-            setup(() => {
-                pathUtils
-                    .setup((pu) => pu.getPathVariableName()) // This always gets called.
-                    .returns(() => pathVariable as PathVar); // Pretend we're on a specific platform.
-            });
+    suite(`mergeVariables()`, () => {
+        test('Ensure variables are merged', async () => {
+            const vars1 = { ONE: '1', TWO: 'TWO' };
+            const vars2 = { ONE: 'ONE', THREE: '3' };
 
-            test('Ensure variables are merged', async () => {
-                const vars1 = { ONE: '1', TWO: 'TWO' };
-                const vars2 = { ONE: 'ONE', THREE: '3' };
+            variablesService.mergeVariables(vars1, vars2);
 
-                variablesService.mergeVariables(vars1, vars2);
+            expect(Object.keys(vars1)).lengthOf(2, 'Source variables modified');
+            expect(Object.keys(vars2)).lengthOf(3, 'Variables not merged');
+            expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
+            expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
+            expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
+            verifyAll();
+        });
 
-                expect(Object.keys(vars1)).lengthOf(2, 'Source variables modified');
-                expect(Object.keys(vars2)).lengthOf(3, 'Variables not merged');
-                expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
-                expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
-                expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
-                verifyAll();
-            });
+        test('Ensure path variables variables are not merged into target', async () => {
+            const vars1 = { ONE: '1', TWO: 'TWO', PYTHONPATH: 'PYTHONPATH' };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (vars1 as any)['paTh'] = 'PATH';
+            const vars2 = { ONE: 'ONE', THREE: '3' };
 
-            test('Ensure path variables variables are not merged into target', async () => {
-                const vars1 = { ONE: '1', TWO: 'TWO', PYTHONPATH: 'PYTHONPATH' };
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (vars1 as any)[pathVariable] = 'PATH';
-                const vars2 = { ONE: 'ONE', THREE: '3' };
+            variablesService.mergeVariables(vars1, vars2);
 
-                variablesService.mergeVariables(vars1, vars2);
+            expect(Object.keys(vars1)).lengthOf(4, 'Source variables modified');
+            expect(Object.keys(vars2)).lengthOf(3, `Variables not merged in ${JSON.stringify(vars2)}`);
+            expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
+            expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
+            expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
+            verifyAll();
+        });
 
-                expect(Object.keys(vars1)).lengthOf(4, 'Source variables modified');
-                expect(Object.keys(vars2)).lengthOf(3, 'Variables not merged');
-                expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
-                expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
-                expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
-                verifyAll();
-            });
+        test('Ensure path variables variables in target are left untouched', async () => {
+            const vars1 = { ONE: '1', TWO: 'TWO' };
+            const vars2 = { ONE: 'ONE', THREE: '3', PYTHONPATH: 'PYTHONPATH' };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (vars2 as any)['Path'] = 'PATH';
+            (vars2 as any)['PaTH'] = 'PATH2';
+            (vars2 as any)['PATH'] = 'PATH3';
 
-            test('Ensure path variables variables in target are left untouched', async () => {
-                const vars1 = { ONE: '1', TWO: 'TWO' };
-                const vars2 = { ONE: 'ONE', THREE: '3', PYTHONPATH: 'PYTHONPATH' };
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (vars2 as any)[pathVariable] = 'PATH';
+            variablesService.mergeVariables(vars1, vars2);
 
-                variablesService.mergeVariables(vars1, vars2);
-
-                expect(Object.keys(vars1)).lengthOf(2, 'Source variables modified');
-                expect(Object.keys(vars2)).lengthOf(5, 'Variables not merged');
-                expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
-                expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
-                expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
-                expect(vars2).to.have.property('PYTHONPATH', 'PYTHONPATH', 'Incorrect value');
-                expect(vars2).to.have.property(pathVariable, 'PATH', 'Incorrect value');
-                verifyAll();
-            });
+            expect(Object.keys(vars1)).lengthOf(2, 'Source variables modified');
+            expect(Object.keys(vars2)).lengthOf(7, 'Variables not merged');
+            expect(vars2).to.have.property('ONE', '1', 'Variable overwritten');
+            expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
+            expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
+            expect(vars2).to.have.property('PYTHONPATH', 'PYTHONPATH', 'Incorrect value');
+            expect(vars2).to.have.property('Path', 'PATH', 'Incorrect value');
+            expect(vars2).to.have.property('PaTH', 'PATH2', 'Incorrect value');
+            expect(vars2).to.have.property('PATH', 'PATH3', 'Incorrect value');
+            verifyAll();
         });
     });
 
-    PATHS.map((pathVariable) => {
-        suite(`appendPath() (path var: ${pathVariable})`, () => {
-            setup(() => {
-                pathUtils
-                    .setup((pu) => pu.getPathVariableName()) // This always gets called.
-                    .returns(() => pathVariable as PathVar); // Pretend we're on a specific platform.
-            });
+    suite(`appendPath() `, () => {
+        test('Ensure appending PATH has no effect if an undefined value or empty string is provided and PATH does not exist in vars object', async () => {
+            const vars = { ONE: '1' };
 
-            test('Ensure appending PATH has no effect if an undefined value or empty string is provided and PATH does not exist in vars object', async () => {
-                const vars = { ONE: '1' };
+            variablesService.appendPath(vars);
+            expect(Object.keys(vars)).lengthOf(1, 'Incorrect number of variables');
+            expect(vars).to.have.property('ONE', '1', 'Incorrect value');
 
-                variablesService.appendPath(vars);
-                expect(Object.keys(vars)).lengthOf(1, 'Incorrect number of variables');
-                expect(vars).to.have.property('ONE', '1', 'Incorrect value');
+            variablesService.appendPath(vars, '');
+            expect(Object.keys(vars)).lengthOf(1, 'Incorrect number of variables');
+            expect(vars).to.have.property('ONE', '1', 'Incorrect value');
 
-                variablesService.appendPath(vars, '');
-                expect(Object.keys(vars)).lengthOf(1, 'Incorrect number of variables');
-                expect(vars).to.have.property('ONE', '1', 'Incorrect value');
+            variablesService.appendPath(vars, ' ', '');
+            expect(Object.keys(vars)).lengthOf(1, 'Incorrect number of variables');
+            expect(vars).to.have.property('ONE', '1', 'Incorrect value');
 
-                variablesService.appendPath(vars, ' ', '');
-                expect(Object.keys(vars)).lengthOf(1, 'Incorrect number of variables');
-                expect(vars).to.have.property('ONE', '1', 'Incorrect value');
+            verifyAll();
+        });
 
-                verifyAll();
-            });
+        test(`Ensure appending PATH has no effect if an empty string is provided and path does not exist in vars object`, async () => {
+            const vars = { ONE: '1' };
+            const pathVariable = 'paTh';
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (vars as any)[pathVariable] = 'PATH';
 
-            test(`Ensure appending PATH has no effect if an empty string is provided and path does not exist in vars object (${pathVariable})`, async () => {
-                const vars = { ONE: '1' };
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (vars as any)[pathVariable] = 'PATH';
+            variablesService.appendPath(vars);
+            expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
+            expect(vars).to.have.property('ONE', '1', 'Incorrect value');
+            expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
 
-                variablesService.appendPath(vars);
-                expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
-                expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+            variablesService.appendPath(vars, '');
+            expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
+            expect(vars).to.have.property('ONE', '1', 'Incorrect value');
+            expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
 
-                variablesService.appendPath(vars, '');
-                expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
-                expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+            variablesService.appendPath(vars, ' ', '');
+            expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
+            expect(vars).to.have.property('ONE', '1', 'Incorrect value');
+            expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
 
-                variablesService.appendPath(vars, ' ', '');
-                expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
-                expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+            verifyAll();
+        });
 
-                verifyAll();
-            });
+        test(`Ensure PATH is appeneded irregardless of case`, async () => {
+            const vars = { ONE: '1' };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (vars as any)['paTh'] = 'PATH';
+            const pathToAppend = `/usr/one${path.delimiter}/usr/three`;
 
-            test(`Ensure PATH is appeneded (${pathVariable})`, async () => {
-                const vars = { ONE: '1' };
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (vars as any)[pathVariable] = 'PATH';
-                const pathToAppend = `/usr/one${path.delimiter}/usr/three`;
+            variablesService.appendPath(vars, pathToAppend);
 
-                variablesService.appendPath(vars, pathToAppend);
-
-                expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
-                expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, `PATH${path.delimiter}${pathToAppend}`, 'Incorrect value');
-                verifyAll();
-            });
+            expect(Object.keys(vars)).lengthOf(2, `Incorrect number of variables ${Object.keys(vars).join(' ')}`);
+            expect(vars).to.have.property('ONE', '1', 'Incorrect value');
+            expect(vars).to.have.property(`paTh`, `PATH${path.delimiter}${pathToAppend}`, 'Incorrect value');
+            verifyAll();
         });
     });
 

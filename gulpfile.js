@@ -9,9 +9,7 @@
 'use strict';
 
 const gulp = require('gulp');
-const ts = require('gulp-typescript');
 const spawn = require('cross-spawn');
-const colors = require('colors/safe');
 const path = require('path');
 const del = require('del');
 const fs = require('fs-extra');
@@ -20,9 +18,9 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
-const { ExtensionRootDir } = require('./build/util');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 const { downloadRendererExtension } = require('./build/ci/downloadRenderer');
+const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
@@ -104,7 +102,6 @@ gulp.task('checkNpmDependencies', (done) => {
 
 gulp.task('compile-ipywidgets', () => buildIPyWidgets());
 
-const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
 async function buildIPyWidgets() {
     // if the output ipywidgest file exists, then no need to re-build.
@@ -130,7 +127,9 @@ gulp.task('compile-viewers', async () => {
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
-    gulp.task('compile-webviews', async () => {});
+    gulp.task('compile-webviews', async () => { 
+        // Do nothing, just eliminate js errors
+    });
 } else {
     gulp.task(
         'compile-webviews',

@@ -40,13 +40,6 @@ export class PathUtils implements IPathUtils {
         return this.utils.paths.sep;
     }
 
-    // eslint-disable-next-line
-    // TODO: Deprecate in favor of IPlatformService?
-    public getPathVariableName(): 'Path' | 'PATH' {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return this.utils.executables.envVar as any;
-    }
-
     public getDisplayName(pathValue: string, cwd?: string): string {
         // Paths on windows can either contain \ or / Both work.
         // Thus, C:\Python.exe is the same as C:/Python.exe
