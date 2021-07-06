@@ -16,8 +16,13 @@ import {
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Telemetry } from '../constants';
-import { getDisplayNameOrNameOfKernelConnection, isLocalLaunch } from '../jupyter/kernels/helpers';
-import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import {
+    createInterpreterKernelSpec,
+    getDisplayNameOrNameOfKernelConnection,
+    getKernelId,
+    isLocalLaunch
+} from '../jupyter/kernels/helpers';
+import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { INotebookProvider } from '../types';
@@ -33,6 +38,7 @@ import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { noop } from '../../common/utils/misc';
 import { IPythonExtensionChecker } from '../../api/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -129,6 +135,34 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 });
         }
         return this.controllersPromise;
+    }
+
+    public getOrCreateController(
+        pythonInterpreter: PythonEnvironment,
+        notebookType: 'interactive' | 'jupyter-notebook'
+    ): VSCodeNotebookController | undefined {
+        // Ensure that the controller corresponding to the active interpreter
+        // has been successfully created
+        const spec = createInterpreterKernelSpec(pythonInterpreter);
+        const result: PythonKernelConnectionMetadata = {
+            kind: 'startUsingPythonInterpreter',
+            kernelSpec: spec,
+            interpreter: pythonInterpreter,
+            id: getKernelId(spec, pythonInterpreter)
+        };
+        this.createNotebookControllers([result]);
+
+        // Return the created controller
+        return this.registeredNotebookControllers().find(
+            (controller) =>
+                // We register each of our kernels as two controllers
+                // because controllers are currently per-viewtype. Find
+                // the one for the interactive viewtype for now
+                controller.controller.notebookType === notebookType &&
+                controller.connection.kind === 'startUsingPythonInterpreter' &&
+                controller.connection.interpreter?.path === pythonInterpreter?.path &&
+                controller.connection.interpreter.displayName === pythonInterpreter.displayName
+        );
     }
 
     /**
