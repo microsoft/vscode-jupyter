@@ -21,8 +21,13 @@ import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
-const debugRequest = (message: DebugProtocol.Request): KernelMessage.IDebugRequestMsg => {
-    const sessionId = message.arguments?.__sessionId ? message.arguments.__sessionId : randomBytes(8).toString('hex');
+const debugRequest = (
+    message: DebugProtocol.Request,
+    sessionId: string | undefined
+): KernelMessage.IDebugRequestMsg => {
+    if (!sessionId) {
+        sessionId = randomBytes(8).toString('hex');
+    }
     return {
         channel: 'control',
         header: {
@@ -99,6 +104,7 @@ export class KernelDebugAdapter implements DebugAdapter {
         number,
         Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg>
     >();
+    private sessionId: string | undefined;
 
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
 
@@ -154,7 +160,12 @@ export class KernelDebugAdapter implements DebugAdapter {
         });
 
         if (message.type === 'request') {
-            const request = debugRequest(message as DebugProtocol.Request);
+            const DAPrequest = message as DebugProtocol.Request;
+            if (!this.sessionId && DAPrequest.arguments?.__sessionId) {
+                this.sessionId = DAPrequest.arguments.__sessionId;
+            }
+
+            const request = debugRequest(DAPrequest, this.sessionId);
             const control = this.jupyterSession.requestDebug({
                 seq: request.content.seq,
                 type: 'request',
