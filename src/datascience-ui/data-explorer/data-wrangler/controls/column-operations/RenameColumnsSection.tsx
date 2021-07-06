@@ -23,9 +23,9 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
 
     render() {
         return (
-            <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '100px' }}>
-                    <span>{'To:'}</span>
+            <div className="slice-control-row" style={{ paddingBottom: '5px', paddingTop: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', width: '140px' }}>
+                    <span>{'New column name'}</span>
                     <input
                         value={this.state.newColumnName}
                         onChange={this.handleChange}

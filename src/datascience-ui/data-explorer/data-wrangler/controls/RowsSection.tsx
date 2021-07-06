@@ -23,21 +23,15 @@ export enum RowOperation {
     DropNA = 'Drop Missing Values',
     DropDuplicates = 'Drop Duplicates'
 }
-interface IRowOperationInfo {
-    title: RowOperation;
-    tooltip: string;
-}
 
-const rowOperationInfo: Array<IRowOperationInfo> = [
-    {
-        title: RowOperation.DropNA,
+const rowOperationInfo = {
+    [RowOperation.DropNA]:{
         tooltip: getLocString('DataScience.dataWranglerDropNARowsTooltip', 'Remove rows with missing values')
     },
-    {
-        title: RowOperation.DropDuplicates,
+    [RowOperation.DropDuplicates]: {
         tooltip: getLocString('DataScience.dataWranglerDropDuplicateRowsTooltip', 'Remove duplicate rows')
     }
-];
+};
 
 export class RowsSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
@@ -58,6 +52,11 @@ export class RowsSection extends React.Component<IProps, IState> {
                     onChange={this.updateTransformType}
                     selectedKey={this.state.operationType}
                 />
+                {this.state.operationType && (
+                    <div style={{ color: 'var(--vscode-descriptionForeground)', marginBottom: '4px' }}>
+                        <span>{rowOperationInfo[this.state.operationType].tooltip}</span>
+                    </div>
+                )}
                 {this.renderOperationControls()}
             </div>
         );
@@ -75,8 +74,8 @@ export class RowsSection extends React.Component<IProps, IState> {
     };
 
     private generateTransformOperations = () => {
-        return rowOperationInfo.map((operation) => {
-            return { text: operation.title, key: operation.title, title: operation.tooltip };
+        return Object.keys(rowOperationInfo).map((operation) => {
+            return { text: operation, key: operation, title: rowOperationInfo[operation as RowOperation].tooltip };
         });
     };
 

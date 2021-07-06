@@ -167,7 +167,7 @@ details[open] > summary::before {
        it's necessary to ensure that when the dropdown
        has focus, the default dropdown :focus color (black)
        is not applied */
-    color: var(--vscode-dropdown-foreground) !important; 
+    color: var(--vscode-dropdown-foreground) !important;
     font-family: var(--vscode-font-family);
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
@@ -208,6 +208,10 @@ details[open] > summary::before {
     font-family: var(--vscode-font-family) !important;
     font-weight: var(--vscode-font-weight) !important;
     font-size: var(--vscode-font-size) !important;
+}
+
+[class*='ms-Button']:disabled {
+    opacity: 0.4;
 }
 
 .slice-data.input-invalid {

@@ -57,12 +57,12 @@ export const dropButtonStyle = {
 
 export const normalizeButtonStyle = {
     ...buttonStyle,
-    marginRight: '22px'
+    marginRight: '62px'
 };
 
 export const submitButtonStyle = {
     ...buttonStyle,
-    marginRight: '40px'
+    marginRight: '78px'
 };
 
 export const inputStyle = { width: '140px', marginTop: '4px', marginBottom: '16px' };

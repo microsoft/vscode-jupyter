@@ -34,10 +34,10 @@ export class CoerceColumnsSection extends React.Component<IProps, IState> {
 
     render() {
         return (
-            <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '100px' }}>
-                    <span>{'To:'}</span>
+            <div className="slice-control-row" style={{ paddingBottom: '5px', paddingTop: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', width: '140px' }}>
                     <Dropdown
+                        label={'New column type'}
                         responsiveMode={ResponsiveMode.xxxLarge}
                         style={dropdownStyle}
                         styles={dropdownStyles}

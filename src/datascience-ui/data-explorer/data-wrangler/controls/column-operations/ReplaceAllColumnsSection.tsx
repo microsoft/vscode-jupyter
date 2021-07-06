@@ -25,8 +25,8 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
 
     render() {
         return (
-            <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '100px' }}>
+            <div className="slice-control-row" style={{ paddingBottom: '5px', paddingTop: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', width: '140px' }}>
                     <span>{'Replace all values of:'}</span>
                     <input
                         value={this.state.oldValue}
@@ -35,7 +35,7 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
                         style={inputStyle}
                         autoComplete="on"
                     />
-                    <span>{'To:'}</span>
+                    <span>{'New value'}</span>
                     <input
                         value={this.state.newValue}
                         onChange={this.handleChangeNewValue}

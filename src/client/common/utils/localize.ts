@@ -1044,32 +1044,32 @@ export namespace DataScience {
     export const dataWranglerTitle = localize('DataScience.dataWranglerTitle', 'Data Wrangler');
     export const dataWranglerDropTooltip = localize(
         'DataScience.dataWranglerDropTooltip',
-        'Drop specified labels from selected columns'
+        'Drop specified labels from selected columns.'
     );
     export const dataWranglerRenameTooltip = localize('DataScience.dataWranglerRenameTooltip', 'Rename column label');
     export const dataWranglerNormalizeTooltip = localize(
         'DataScience.dataWranglerNormalizeTooltip',
-        'Transform column by scaling each feature to a given range'
+        'Transform column by scaling each feature to a given range.'
     );
     export const dataWranglerDropNATooltip = localize(
         'DataScience.dataWranglerDropNATooltip',
-        'Remove missing values from selected columns'
+        'Remove missing values from selected columns.'
     );
     export const dataWranglerCoerceTooltip = localize(
         'DataScience.dataWranglerCoerceTooltip',
-        'Cast a column to a specified type'
+        'Cast a column to a specified type.'
     );
     export const dataWranglerReplaceAllTooltip = localize(
         'DataScience.dataWranglerReplaceAllTooltip',
-        'Replace specified values with a new given value'
+        'Replace specified values with a new given value.'
     );
     export const dataWranglerDropNARowsTooltip = localize(
         'DataScience.dataWranglerDropNARowsTooltip',
-        'Remove rows with missing values'
+        'Remove rows with missing values.'
     );
     export const dataWranglerDropDuplicateRowTooltip = localize(
         'DataScience.dataWranglerDropDuplicateRowTooltip',
-        'Remove duplicate rows'
+        'Remove duplicate rows.'
     );
     export const dataWranglerSaveCsv = localize('DataScience.dataWranglerSaveCsv', 'Save CSV');
     export const dataWranglerExportCsv = localize('DataScience.dataWranglerExportCsv', 'Export to CSV');

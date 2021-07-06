@@ -25,9 +25,9 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
 
     render() {
         return (
-            <div className="slice-control-row" style={{ paddingBottom: '5px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '100px'}}>
-                    <span>{'New start range:'}</span>
+            <div className="slice-control-row" style={{ paddingBottom: '5px', paddingTop: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', width: '140px' }}>
+                    <span>{'New start range'}</span>
                     <input
                         value={this.state.normalizeRangeStart}
                         onChange={this.handleNormalizeStartChange}
@@ -35,7 +35,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                         style={inputStyle}
                         autoComplete="on"
                     />
-                    <span>{'New end range:'}</span>
+                    <span>{'New end range'}</span>
                     <input
                         value={this.state.normalizeRangeEnd}
                         onChange={this.handleNormalizeEndChange}
