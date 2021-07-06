@@ -555,9 +555,7 @@ export class NativeInteractiveWindowCommandListener {
         }
 
         // Look for the matching notebook document to add cells to
-        const document = workspace.notebookDocuments.find(
-            (document) => document.uri.toString() === uri.toString()
-        );
+        const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri.toString());
         if (!document) {
             return;
         }
