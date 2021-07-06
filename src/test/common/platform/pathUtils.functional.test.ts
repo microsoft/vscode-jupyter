@@ -42,16 +42,6 @@ suite('FileSystem - PathUtils', () => {
         });
     });
 
-    suite('getPathVariableName', () => {
-        test('matches wrapped object', () => {
-            const expected = wrapped.executables.envVar;
-
-            const envVar = utils.getPathVariableName();
-
-            expect(envVar).to.equal(expected);
-        });
-    });
-
     suite('getDisplayName', () => {
         test('matches wrapped object', () => {
             const filename = 'spam.py';

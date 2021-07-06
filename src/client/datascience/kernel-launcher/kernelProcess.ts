@@ -347,7 +347,7 @@ export class KernelProcess implements IKernelProcess {
             const [executionService, env] = await Promise.all([
                 this.processExecutionFactory.create(this.resource),
                 !useProcessEnv
-                    ? this.kernelEnvVarsService.getEnvironmentVariables(this.resource, this.launchKernelSpec)
+                    ? this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec)
                     : process.env
             ]);
 
