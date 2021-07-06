@@ -22,10 +22,15 @@ import {
     getKernelId,
     isLocalLaunch
 } from '../jupyter/kernels/helpers';
-import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import {
+    IKernelProvider,
+    KernelConnectionMetadata,
+    KernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { INotebookProvider } from '../types';
+import { IJupyterKernelSpec, INotebookProvider } from '../types';
 import { getNotebookMetadata } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
@@ -109,6 +114,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Find all the notebook controllers that we have registered
     public async loadNotebookControllers(): Promise<void> {
         if (!this.controllersPromise) {
+            this.loadFastKernel();
+
             const stopWatch = new StopWatch();
 
             this.controllersPromise = Promise.all([
@@ -163,6 +170,29 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 controller.connection.interpreter?.path === pythonInterpreter?.path &&
                 controller.connection.interpreter.displayName === pythonInterpreter.displayName
         );
+    }
+
+    private loadFastKernel() {
+        const config = this.configuration.getSettings();
+        if (config.fastPythonKernel) {
+            traceInfo('Loading fast python controller');
+
+            const fastKernelSpec: IJupyterKernelSpec = {
+                name: 'vscodefastpythonkernel',
+                path: '/vscodefastpythonkernel',
+                display_name: 'VS Code Fast Python Kernel',
+                argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}']
+            };
+
+            const connectionMetadata: KernelSpecConnectionMetadata = {
+                kernelSpec: fastKernelSpec,
+                kind: 'startUsingKernelSpec',
+                id: getKernelId(fastKernelSpec, undefined),
+                useProcessEnv: true
+            };
+
+            this.createNotebookController(connectionMetadata, 'Fast Python');
+        }
     }
 
     /**

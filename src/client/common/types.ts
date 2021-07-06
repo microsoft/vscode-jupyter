@@ -170,6 +170,7 @@ export interface IJupyterSettings {
     readonly interactiveWindowMode: InteractiveWindowMode;
     readonly disableZMQSupport: boolean;
     readonly variableTooltipFields: IVariableTooltipFields;
+    readonly fastPythonKernel: boolean;
 }
 
 export interface IVariableTooltipFields {

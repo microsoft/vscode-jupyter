@@ -339,9 +339,16 @@ export class KernelProcess implements IKernelProcess {
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
             traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
+
+            const useProcessEnv =
+                this._kernelConnectionMetadata.kind === 'startUsingKernelSpec' &&
+                this._kernelConnectionMetadata.useProcessEnv;
+
             const [executionService, env] = await Promise.all([
                 this.processExecutionFactory.create(this.resource),
-                this.kernelEnvVarsService.getEnvironmentVariables(this.resource, this.launchKernelSpec)
+                !useProcessEnv
+                    ? this.kernelEnvVarsService.getEnvironmentVariables(this.resource, this.launchKernelSpec)
+                    : process.env
             ]);
 
             // Add quotations to arguments if they have a blank space in them.
