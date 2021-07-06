@@ -547,17 +547,22 @@ export class NativeInteractiveWindowCommandListener {
     }
 
     private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
-        if (!context) {
+        // Use the context if invoked from interactive/toolbar
+        // Then fallback to the active interactive window
+        const uri = context?.notebookEditor.notebookUri ?? this.interactiveWindowProvider.activeWindow?.notebookUri;
+        if (!uri) {
             return;
         }
 
+        // Look for the matching notebook document to add cells to
         const document = workspace.notebookDocuments.find(
-            (document) => document.uri.toString() === context.notebookEditor.notebookUri.toString()
+            (document) => document.uri.toString() === uri.toString()
         );
         if (!document) {
             return;
         }
 
+        // Remove the cells from the matching notebook document
         const edit = new WorkspaceEdit();
         edit.replaceNotebookCells(document.uri, new NotebookRange(0, document.cellCount), []);
         await workspace.applyEdit(edit);
