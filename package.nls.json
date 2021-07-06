@@ -144,7 +144,7 @@
     "DataScience.collapseVariableExplorerLabel": "Variables",
     "DataScience.expandVariableExplorerTooltip": "Show variables active in jupyter kernel",
     "DataScience.close": "Close",
-    "DataScience.interactiveCopyCode": "Copy Code",
+    "DataScience.interactiveCopyCell": "Copy Cell",
     "DataScience.variableLoadingValue": "Loading...",
     "DataScience.importDialogTitle": "Import Jupyter Notebook",
     "DataScience.importDialogFilter": "Jupyter Notebooks",

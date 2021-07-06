@@ -812,8 +812,8 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.interactive.copyCode",
-                "title": "%DataScience.interactiveCopyCode%",
+                "command": "jupyter.interactive.copyCell",
+                "title": "%DataScience.interactiveCopyCell%",
                 "icon": "$(copy)",
                 "category": "Jupyter"
             }
@@ -974,7 +974,7 @@
             ],
             "interactive/cell/title": [
                 {
-                    "command": "jupyter.interactive.copyCode",
+                    "command": "jupyter.interactive.copyCell",
                     "group": "inline@0",
                     "when": "isWorkspaceTrusted"
                 },
@@ -1023,7 +1023,7 @@
                     "when": "false"
                 },
                 {
-                    "command": "jupyter.interactive.copyCode",
+                    "command": "jupyter.interactive.copyCell",
                     "when": "false"
                 },
                 {

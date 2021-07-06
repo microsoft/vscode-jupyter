@@ -492,6 +492,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public async collapseAllCells() {
         const edit = new WorkspaceEdit();
         this.notebookDocument.getCells().forEach((cell, index) => {
+            if (cell.kind !== NotebookCellKind.Code) {
+                return;
+            }
             const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: false };
             edit.replaceNotebookCellMetadata(this.notebookDocument.uri, index, metadata);
         });
