@@ -7,15 +7,17 @@ import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../common/variables/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 
 @injectable()
 export class KernelEnvironmentVariablesService {
     constructor(
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
-        @inject(IEnvironmentVariablesProvider) private readonly customEndVars: IEnvironmentVariablesProvider
+        @inject(IEnvironmentVariablesProvider) private readonly customEnvVars: IEnvironmentVariablesProvider
     ) {}
     /**
      * If the kernel belongs to a conda environment, then use the env variables of the conda environment and merge that with the env variables of the kernel spec.
@@ -29,18 +31,29 @@ export class KernelEnvironmentVariablesService {
         kernelSpec: IJupyterKernelSpec
     ) {
         let kernelEnv = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
-        if (!kernelSpec.interpreterPath) {
-            traceInfo(
-                `No custom variables for Kernel as interpreter path is not defined for kernel ${kernelSpec.display_name}`
-            );
-            return kernelEnv;
+
+        // If an interpreter was not explicitly passed in, check for an interpreter path in the kernelspec to use
+        if (!interpreter) {
+            if (!kernelSpec.interpreterPath) {
+                traceInfo(
+                    `No custom variables for Kernel as interpreter path is not defined for kernel ${kernelSpec.display_name}`
+                );
+                return kernelEnv;
+            }
+            interpreter = await this.interpreterService
+                .getInterpreterDetails(kernelSpec.interpreterPath)
+                .catch((ex) => {
+                    traceError('Failed to fetch interpreter information for interpreter that owns a kernel', ex);
+                    return undefined;
+                });
         }
+
         if (interpreter?.envType !== EnvironmentType.Conda) {
             traceInfo(`No custom variables for Kernel as interpreter is not conda, but is ${interpreter?.envType}`);
             return kernelEnv;
         }
         let [customEditVars, interpreterEnv] = await Promise.all([
-            this.customEndVars.getCustomEnvironmentVariables(resource).catch(noop),
+            this.customEnvVars.getCustomEnvironmentVariables(resource).catch(noop),
             this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, false).catch<undefined>((ex) => {
                 traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
                 return undefined;

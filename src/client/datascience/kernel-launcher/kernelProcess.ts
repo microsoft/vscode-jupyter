@@ -341,7 +341,9 @@ export class KernelProcess implements IKernelProcess {
             traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
             const [executionService, env] = await Promise.all([
                 this.processExecutionFactory.create(this.resource),
-                // Interpreter not passed in this situation since this isn't python.
+                // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
+                // Note that there might still be python env vars to merge from the kernel spec in the case of something like
+                // a Java kernel registered in a conda environment
                 this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec)
             ]);
 
