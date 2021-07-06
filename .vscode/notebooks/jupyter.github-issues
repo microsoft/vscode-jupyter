@@ -1,0 +1,37 @@
+[
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO=repo:microsoft/vscode-jupyter repo:microsoft/vscode"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "## Interactive Window"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Blockers for rolling out to more users"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:interactive-window label:important -label:feature-request -label:enhancement -label:unreleased"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### All bugs"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:interactive-window label:bug -label:unreleased"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:interactive-window"
+  }
+]
