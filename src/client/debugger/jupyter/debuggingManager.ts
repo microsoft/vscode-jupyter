@@ -4,16 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import {
-    debug,
-    Location,
-    NotebookDocument,
-    workspace,
-    Uri,
-    DebugAdapterInlineImplementation,
-    DebugSession,
-    SourceBreakpoint
-} from 'vscode';
+import { debug, NotebookDocument, workspace, DebugAdapterInlineImplementation, DebugSession } from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable } from '../../common/types';
@@ -28,6 +19,7 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../commo
 import { traceError } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { Commands as DSCommands } from '../../datascience/constants';
+import { IFileSystem } from '../../common/platform/types';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -73,7 +65,7 @@ class Debugger {
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
 @injectable()
-export class DebuggingManager implements IExtensionSingleActivationService {
+export class DebuggingManager implements IExtensionSingleActivationService, IDisposable {
     private debuggingInProgress: ContextKey;
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
     private readonly disposables: IDisposable[] = [];
@@ -85,15 +77,14 @@ export class DebuggingManager implements IExtensionSingleActivationService {
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(IFileSystem) private fs: IFileSystem
     ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.updateToolbar(false);
     }
 
     public async activate() {
-        debug.breakpoints; // start to fetch breakpoints
-
         this.disposables.push(
             // track termination of debug sessions
             debug.onDidTerminateDebugSession(async (session) => {
@@ -115,7 +106,6 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                     this.updateToolbar(false);
                     await dbg.stop();
                 }
-                this.fixBreakpoints(document);
             }),
 
             // factory for kernel debug adapters
@@ -141,7 +131,8 @@ export class DebuggingManager implements IExtensionSingleActivationService {
                                         debug.document,
                                         notebook.session,
                                         this.debuggingCellMap,
-                                        this.commandManager
+                                        this.commandManager,
+                                        this.fs
                                     )
                                 );
                             } else {
@@ -166,43 +157,8 @@ export class DebuggingManager implements IExtensionSingleActivationService {
         );
     }
 
-    // update the fragment part of the cell uri for moved cells, and create new breakpoints with the updated cell positions
-    private fixBreakpoints(doc: NotebookDocument) {
-        const movedCells = new Map<string, Uri>();
-
-        // find moved cells and store a fixed index
-        doc.getCells().forEach((cell, index) => {
-            const pos = parseInt(cell.document.uri.fragment);
-            if (pos !== index) {
-                movedCells.set(
-                    cell.document.uri.toString(), // old uri
-                    cell.document.uri.with({ fragment: index.toString().padStart(8, '0') }) // updated uri
-                );
-            }
-        });
-
-        // if cells were moved, find their corresponding breakpoints
-        // delete them and replace them with a new breakpoint with the updated cell location
-        if (movedCells.size > 0) {
-            const addBpts: SourceBreakpoint[] = [];
-            const removeBpt: SourceBreakpoint[] = [];
-            for (const breakpoint of debug.breakpoints) {
-                if (breakpoint instanceof SourceBreakpoint) {
-                    const updatedUri = movedCells.get(breakpoint.location.uri.toString());
-                    if (updatedUri) {
-                        removeBpt.push(breakpoint);
-                        const loc = new Location(updatedUri, breakpoint.location.range);
-                        addBpts.push(new SourceBreakpoint(loc));
-                    }
-                }
-            }
-            if (removeBpt.length > 0) {
-                debug.removeBreakpoints(removeBpt);
-            }
-            if (addBpts.length > 0) {
-                debug.addBreakpoints(addBpts);
-            }
-        }
+    public dispose() {
+        this.disposables.forEach((d) => d.dispose());
     }
 
     private updateToolbar(debugging: boolean) {
