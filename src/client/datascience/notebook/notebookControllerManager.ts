@@ -141,36 +141,28 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         pythonInterpreter: PythonEnvironment,
         notebookType: 'interactive' | 'jupyter-notebook'
     ): VSCodeNotebookController | undefined {
-        // If already registered just return it
-        let matchingController: VSCodeNotebookController | undefined;
-        if (this.registeredControllers.size > 0) {
-            matchingController = this.registeredNotebookControllers().find((controller) => {
-                return (
-                    // We register each of our kernels as two controllers
-                    // because controllers are currently per-viewtype. Find
-                    // the one for the interactive viewtype for now
-                    controller.controller.notebookType === notebookType &&
-                    controller.connection.kind === 'startUsingPythonInterpreter' &&
-                    controller.connection.interpreter?.path === pythonInterpreter?.path &&
-                    controller.connection.interpreter.displayName === pythonInterpreter.displayName
-                );
-            });
-        }
-        if (!matchingController) {
-            // Otherwise try to create the VSCodeNotebookController
-            const spec = createInterpreterKernelSpec(pythonInterpreter);
-            const result: PythonKernelConnectionMetadata = {
-                kind: 'startUsingPythonInterpreter',
-                kernelSpec: spec,
-                interpreter: pythonInterpreter,
-                id: getKernelId(spec, pythonInterpreter)
-            };
-            const matchingControllers = this.createNotebookControllers([result]);
-            matchingController = matchingControllers.find(
-                (controller) => controller.controller.notebookType === notebookType
-            );
-        }
-        return matchingController;
+        // Ensure that the controller corresponding to the active interpreter
+        // has been successfully created
+        const spec = createInterpreterKernelSpec(pythonInterpreter);
+        const result: PythonKernelConnectionMetadata = {
+            kind: 'startUsingPythonInterpreter',
+            kernelSpec: spec,
+            interpreter: pythonInterpreter,
+            id: getKernelId(spec, pythonInterpreter)
+        };
+        this.createNotebookControllers([result]);
+
+        // Return the created controller
+        return this.registeredNotebookControllers().find(
+            (controller) =>
+                // We register each of our kernels as two controllers
+                // because controllers are currently per-viewtype. Find
+                // the one for the interactive viewtype for now
+                controller.controller.notebookType === notebookType &&
+                controller.connection.kind === 'startUsingPythonInterpreter' &&
+                controller.connection.interpreter?.path === pythonInterpreter?.path &&
+                controller.connection.interpreter.displayName === pythonInterpreter.displayName
+        );
     }
 
     /**
