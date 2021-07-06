@@ -187,7 +187,7 @@ export class NativeInteractiveWindowCommandListener {
             commandManager.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow, this)
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.InteractiveCopyCode, this.copyCodeInInteractiveWindow, this)
+            commandManager.registerCommand(Commands.InteractiveCopyCell, this.copyCellInInteractiveWindow, this)
         );
     }
 
@@ -584,9 +584,14 @@ export class NativeInteractiveWindowCommandListener {
         }
     }
 
-    private async copyCodeInInteractiveWindow(context?: NotebookCell) {
+    private async copyCellInInteractiveWindow(context?: NotebookCell) {
         if (context) {
-            const source = [context.metadata.interactiveWindowCellMarker, context.document.getText()].join('\n');
+            const settings = this.configuration.getSettings(context.notebook.uri);
+            const source = [
+                // Prepend cell marker to code
+                context.metadata.interactiveWindowCellMarker ?? settings.defaultCellMarker,
+                context.document.getText()
+            ].join('\n');
             await this.clipboard.writeText(source);
         }
     }
