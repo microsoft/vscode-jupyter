@@ -11,15 +11,16 @@ import {
     ProgressLocation
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../activation/types';
-import { IApplicationShell, IDataWranglerProvider } from '../../../common/application/types';
+import { IApplicationShell, ICommandManager, IDataWranglerProvider } from '../../../common/application/types';
 import * as uuid from 'uuid/v4';
 import { Identifiers } from '../../constants';
 import { INotebookProvider, IJupyterVariables, IJupyterVariableDataProviderFactory } from '../../types';
 import { DataViewerChecker } from '../../interactive-common/dataViewerChecker';
-import { IConfigurationService } from '../../../common/types';
+import { IConfigurationService, IExperimentService } from '../../../common/types';
 import { IDataWranglerFactory } from './types';
 import { DataScience } from '../../../common/utils/localize';
 import { IDataViewerDataProvider } from '../types';
+import { Experiments } from '../../../common/experiments/groups';
 
 // Activates the Jupyter extension.
 // Does the work before the Data Wrangler loads like activating the custom editor,
@@ -43,7 +44,9 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         @named(Identifiers.KERNEL_VARIABLES)
         private kernelVariableProvider: IJupyterVariables,
         @inject(IConfigurationService) configService: IConfigurationService,
-        @inject(IApplicationShell) private appShell: IApplicationShell
+        @inject(IApplicationShell) private appShell: IApplicationShell,
+        @inject(ICommandManager) private commandManager: ICommandManager,
+        @inject(IExperimentService) private experimentService: IExperimentService
     ) {
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
     }
@@ -105,6 +108,15 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
             title: DataScience.dataWranglerStandaloneLoading()
         };
 
+        const isDataWranglerEnabled = await this.experimentService.inExperiment(Experiments.DataWrangler);
+        if (!isDataWranglerEnabled) {
+            await this.appShell.showErrorMessage(
+                'Data Wrangler is not enabled. Enable it in the experiments section to use it.'
+            );
+            await this.commandManager.executeCommand('workbench.action.closeActiveEditor');
+            return;
+        }
+
         await this.appShell.withProgress(options, async (_, __) => this.importAndLaunchDataWrangler(file, source));
     }
 
@@ -114,8 +126,11 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
             identity: file,
             disableUI: true
         });
+
+        // Import original version of csv as dataframe
         const code = this.getImportCodeForFileType(file!.fsPath);
         await notebook?.execute(code, '', 0, uuid(), undefined, true);
+
         const jupyterVariable = await this.kernelVariableProvider.getFullVariable(
             {
                 name: 'df',

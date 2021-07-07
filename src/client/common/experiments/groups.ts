@@ -5,5 +5,7 @@ export enum Experiments {
     // Experiment to turn on custom editor or VS Code Native Notebook API support.
     NativeNotebook = 'NativeNotebookEditor',
     // Experiment to enable tensor tooltips.
-    EnhancedTooltips = 'jupyterEnhancedTensorTooltips'
+    EnhancedTooltips = 'jupyterEnhancedTensorTooltips',
+    // Experiment to enable data wrangler.
+    DataWrangler = 'jupyterDataWrangler'
 }

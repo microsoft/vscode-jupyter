@@ -834,12 +834,13 @@
                 "command": "jupyter.refreshDataWrangler",
                 "title": "Refresh Data Wrangler",
                 "category": "Jupyter",
-                "enablement": "jupyter.dataWranglerActive && isWorkspaceTrusted"
+                "enablement": "config.jupyter.experimental.dataWrangler && jupyter.dataWranglerActive && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.openDataWrangler",
                 "title": "Open Data Wrangler",
-                "category": "Jupyter"
+                "category": "Jupyter",
+                "enablement": "config.jupyter.experimental.dataWrangler"
             }
         ],
         "menus": {
@@ -1559,7 +1560,8 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "CustomEditor"
+                            "CustomEditor",
+                            "jupyterDataWrangler"
                         ]
                     },
                     "markdownDescription": "List of experiment to opt into. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
@@ -1571,7 +1573,8 @@
                     "items": {
                         "enum": [
                             "NativeNotebookEditor",
-                            "CustomEditor"
+                            "CustomEditor",
+                            "jupyterDataWrangler"
                         ]
                     },
                     "markdownDescription": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
