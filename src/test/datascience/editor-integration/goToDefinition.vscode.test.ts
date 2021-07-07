@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { NotebookEditor as VSCNotebookEditor, commands, workspace } from 'vscode';
+import { NotebookEditor as VSCNotebookEditor, commands, workspace, window, Selection, Position } from 'vscode';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
@@ -21,7 +21,6 @@ import {
     runAllCellsInActiveNotebook,
     selectCell,
     startJupyterServer,
-    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from '../notebook/helper';
@@ -77,7 +76,6 @@ suite('DataScience - Go To Definition', function () {
         // Wait for code lenses to get detected.
         await sleep(1_000);
 
-        await trustAllNotebooks();
         await createEmptyPythonNotebook(disposables);
         vscEditor = vscodeNotebook.activeNotebookEditor!;
 
@@ -92,35 +90,34 @@ suite('DataScience - Go To Definition', function () {
 
         // put cursor on 'add'
         await selectCell(vscEditor.document, 1, 2);
-        await sleep(40000);
-        // const textEditors = window.visibleTextEditors;
-        // textEditors[1].selection = new Selection(new Position(0, 0), new Position(0, 1));
+        const textEditors = window.visibleTextEditors;
+        textEditors[1].selection = new Selection(new Position(0, 0), new Position(0, 3));
+        await sleep(1000);
 
         // Run the F12 command
         await commands.executeCommand('editor.action.revealDefinition');
-        await sleep(60000);
+        // await sleep(1000);
 
         // Check that the first cell gets selected
         assert.equal(vscEditor.selections[0].start, 0);
         assert.equal(vscEditor.selections[0].end, 1);
     });
 
-    // test('Go To Definition of a python import', async () => {
-    //     await trustAllNotebooks();
-    //     await createEmptyPythonNotebook(disposables);
-    //     vscEditor = vscodeNotebook.activeNotebookEditor!;
+    test('Go To Definition of a python import', async () => {
+        await createEmptyPythonNotebook(disposables);
+        vscEditor = vscodeNotebook.activeNotebookEditor!;
 
-    //     await insertCodeCell(`import os,sys\nsys.path.append(os.path.abspath('..'))`, { index: 0 });
+        await insertCodeCell(`import os,sys\nsys.path.append(os.path.abspath('..'))`, { index: 0 });
 
-    //     // put cursor on 'sys'
-    //     await selectCell(vscEditor.document, 0, 1);
-    //     const textEditors = window.visibleTextEditors;
-    //     textEditors[0].selection = new Selection(new Position(1, 0), new Position(1, 1));
+        // put cursor on 'sys'
+        await selectCell(vscEditor.document, 0, 1);
+        const textEditors = window.visibleTextEditors;
+        textEditors[0].selection = new Selection(new Position(1, 0), new Position(1, 1));
 
-    //     // Run the F12 command
-    //     await commands.executeCommand('editor.action.revealDefinition');
+        // Run the F12 command
+        await commands.executeCommand('editor.action.revealDefinition');
 
-    //     // Check that a python file opened
-    //     assert.equal(window.activeTextEditor?.document.languageId, 'python');
-    // });
+        // Check that a python file opened
+        assert.equal(window.activeTextEditor?.document.languageId, 'python');
+    });
 });
