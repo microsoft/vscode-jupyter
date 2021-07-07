@@ -19,6 +19,7 @@
     "DataScience.insecureSessionDenied": "Denied connection to insecure server.",
     "DataScience.installPython": "Python is not installed. \nPlease [download](https://www.python.org/downloads) and install Python in order to execute cells in this notebook.",
     "DataScience.installKernel": "The Jupyter Kernel '{0}' could not be found and needs to be installed in order to execute cells in this notebook.",
+    "DataScience.newNotebookUI": "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use! To learn more, click [here](https://aka.ms/NewNotebookUI)",
     "jupyter.command.jupyter.viewLanguageServerOutput.title": "Show Language Server Output",
     "jupyter.command.jupyter.selectAndRunTestMethod.title": "Run Test Method ...",
     "jupyter.command.jupyter.selectAndDebugTestMethod.title": "Debug Test Method ...",

@@ -7,6 +7,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
+import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { isJupyterNotebook } from './helpers/helpers';
 
@@ -52,10 +53,6 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
         }
         this.messageDisplayed = true;
         this.memento.update(IntroduceNativeNotebookDisplayed, true).then(noop, noop);
-        this.appShell
-            .showInformationMessage(
-                "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use! To learn more, click [here](https://aka.ms/NewNotebookUI)"
-            )
-            .then(noop, noop);
+        this.appShell.showInformationMessage(DataScience.newNotebookUI()).then(noop, noop);
     }
 }
