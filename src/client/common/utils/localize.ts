@@ -982,7 +982,7 @@ export namespace DataScience {
     // Data Wrangler
     export const dataWranglerCoerceColumnTransformation = localize(
         'DataScience.DataWranglerCoerceColumnTransformation',
-        'Casted column(s): {0} to {1}'
+        'Cast column(s): {0} to {1}'
     );
     export const dataWranglerReplaceAllTransformation = localize(
         'DataScience.dataWranglerReplaceAllTransformation',

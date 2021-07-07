@@ -172,7 +172,7 @@ def _VSCODE_getDataFrameColumn(df, columnName):
         )
     except:
         pass
-    return df[columnName].values.tolist()
+    return df[columnName].tolist()
 
 
 # Function to get info on the passed in data frame
@@ -261,14 +261,14 @@ def _VSCODE_getDataFrameInfo(df):
             describe_text = describe_obj.to_string(header=False)
             describe_null_text, null_count = describe_null(col)
             describe_text += describe_null_text
-            describe_repeated_text, duplicate_count = describe_repeated(df)
+            describe_repeated_text, duplicate_count = describe_repeated(col)
             describe_text += describe_repeated_text
 
             colobj["totalCount"] = int(col.count())
             colobj["missingCount"] = int(null_count)
             # Unique count is number of rows minus number of repeated values
             colobj["uniqueCount"] = int(col.shape[0] - duplicate_count)
-            if str(column_type) == "object":
+            if str(column_type) == "object" or str(column_type) == "string":
                 colobj["mostFrequentValue"] = describe_obj.top
                 colobj["mostFrequentValueAppearances"] = int(describe_obj.freq)
             else:
