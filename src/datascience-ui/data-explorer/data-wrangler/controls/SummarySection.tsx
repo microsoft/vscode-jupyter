@@ -197,7 +197,7 @@ export class Histogram extends React.Component<IHistogramProps> {
         } as Plotly.Layout;
 
         return (
-            <div>
+            <div style={{marginRight: '15px', paddingRight: '15px'}}>
                 <Plot
                     style={{
                         marginLeft: '20px',
