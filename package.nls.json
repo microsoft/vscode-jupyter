@@ -500,7 +500,7 @@
     "DataScience.interactiveClearAllCells": "Clear All",
     "DataScience.interactiveRemoveCell": "Remove Cell",
     "DataScience.interactiveGoToCode": "Go to code",
-    "DataScience.dataWranglerCoerceColumnTransformation": "Casted column(s): {0} to {1}",
+    "DataScience.dataWranglerCoerceColumnTransformation": "Cast column(s): {0} to {1}",
     "DataScience.dataWranglerRenameColumnTransformation": "Renamed column '{0}' to '{1}'",
     "DataScience.dataWranglerReplaceAllTransformation": "Replaced all instances of '{0}' with '{1}' in column(s): {2}",
     "DataScience.dataWranglerDropRowTransformation": "Dropped rows(s): {0}",
