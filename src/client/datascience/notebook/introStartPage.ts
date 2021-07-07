@@ -1,17 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
 import { inject, injectable, named } from 'inversify';
-import { Memento, Uri } from 'vscode';
+import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IApplicationEnvironment, ICommandManager } from '../../common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
-import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../common/types';
+import { GLOBAL_MEMENTO, IMemento } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { CommandSource } from '../../testing/common/constants';
-import { Commands } from '../constants';
-import { swallowExceptions } from '../../common/utils/decorators';
 import { InsidersNotebookSurveyStateKeys } from '../dataScienceSurveyBanner';
 
 export const IntroduceNativeNotebookDisplayed = 'JVSC_INTRO_NATIVE_NB_DISPLAYED';
@@ -21,16 +17,12 @@ export const IntroduceNativeNotebookDisplayed = 'JVSC_INTRO_NATIVE_NB_DISPLAYED'
  */
 @injectable()
 export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivationService {
-    private readonly introNotebook: Uri;
     constructor(
         @inject(UseVSCodeNotebookEditorApi) private readonly useVSCNotebook: boolean,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
-    ) {
-        this.introNotebook = Uri.file(path.join(this.context.extensionPath, 'resources/startNativeNotebooks.ipynb'));
-    }
+    ) {}
     public async activate(): Promise<void> {
         if (
             this.appEnv.channel !== 'stable' ||
@@ -40,25 +32,18 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
             return;
         }
 
+        this.doNotShowStartPageAgain().then(noop, noop);
         // Only display to users who have run a notebook at least once before.
         if (this.memento.get<number>(InsidersNotebookSurveyStateKeys.ExecutionCount, 0) === 0) {
-            this.doNotShowStartPageAgain().then(noop, noop);
             return;
         }
-        this.openIntroNotebook().catch(noop);
+        this.appShell
+            .showInformationMessage(
+                'The notebook interface has been revamped. To learn more about this new experience, click [here](https://github.com/microsoft/vscode-jupyter/wiki/Introducing-Native-Notebooks)'
+            )
+            .then(noop, noop);
     }
     private async doNotShowStartPageAgain() {
         await this.memento.update(IntroduceNativeNotebookDisplayed, true);
-    }
-    @swallowExceptions('Open Intro Native Notebook')
-    private async openIntroNotebook() {
-        // Ensure we display once.
-        await this.doNotShowStartPageAgain();
-        await this.commandManager.executeCommand(
-            Commands.OpenNotebook,
-            this.introNotebook,
-            undefined,
-            CommandSource.auto
-        );
     }
 }
