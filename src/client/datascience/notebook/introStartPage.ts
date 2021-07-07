@@ -54,7 +54,7 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
         this.memento.update(IntroduceNativeNotebookDisplayed, true).then(noop, noop);
         this.appShell
             .showInformationMessage(
-                "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use! To learn more, click [here](https://github.com/microsoft/vscode-jupyter/wiki/Native-Notebook-Support-in-VS-Code)"
+                "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use! To learn more, click [here](https://aka.ms/NewNotebookUI)"
             )
             .then(noop, noop);
     }
