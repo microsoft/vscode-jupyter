@@ -39,7 +39,7 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
         }
         this.appShell
             .showInformationMessage(
-                'The notebook interface has been revamped. To learn more about this improved experience, click [here](https://github.com/microsoft/vscode-jupyter/wiki/Native-Notebook-Support-in-VS-Code)'
+                'The notebook interface has been improved. To learn more about this improved experience, click [here](https://github.com/microsoft/vscode-jupyter/wiki/Native-Notebook-Support-in-VS-Code)'
             )
             .then(noop, noop);
     }
