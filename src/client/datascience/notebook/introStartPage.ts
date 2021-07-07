@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Memento } from 'vscode';
+import { Memento, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IApplicationEnvironment, IApplicationShell } from '../../common/application/types';
+import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
-import { GLOBAL_MEMENTO, IMemento } from '../../common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { InsidersNotebookSurveyStateKeys } from '../dataScienceSurveyBanner';
+import { isJupyterNotebook } from './helpers/helpers';
 
 export const IntroduceNativeNotebookDisplayed = 'JVSC_INTRO_NATIVE_NB_DISPLAYED';
 
@@ -21,8 +21,12 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
         @inject(UseVSCodeNotebookEditorApi) private readonly useVSCNotebook: boolean,
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
+        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
+
+    private messageDisplayed?: boolean;
     public async activate(): Promise<void> {
         if (
             this.appEnv.channel !== 'stable' ||
@@ -32,14 +36,25 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
             return;
         }
 
-        this.memento.update(IntroduceNativeNotebookDisplayed, true).then(noop, noop);
-        // Only display to users who have run a notebook at least once before.
-        if (this.memento.get<number>(InsidersNotebookSurveyStateKeys.ExecutionCount, 0) === 0) {
+        this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
+        if (this.vscodeNotebook.notebookDocuments.length) {
+            this.notify();
+        }
+    }
+    private onDidOpenNotebookDocument(doc: NotebookDocument) {
+        if (isJupyterNotebook(doc)) {
+            this.notify();
+        }
+    }
+    private notify() {
+        if (this.messageDisplayed) {
             return;
         }
+        this.messageDisplayed = true;
+        this.memento.update(IntroduceNativeNotebookDisplayed, true).then(noop, noop);
         this.appShell
             .showInformationMessage(
-                'The notebook interface has been improved. To learn more about this improved experience, click [here](https://github.com/microsoft/vscode-jupyter/wiki/Native-Notebook-Support-in-VS-Code)'
+                "Welcome to VS Code's new notebook experience!  We think you'll find it faster, prettier and easier to use! To learn more, click [here](https://github.com/microsoft/vscode-jupyter/wiki/Native-Notebook-Support-in-VS-Code)"
             )
             .then(noop, noop);
     }
