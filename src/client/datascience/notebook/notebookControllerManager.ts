@@ -35,10 +35,10 @@ import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
-import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { noop } from '../../common/utils/misc';
 import { IPythonExtensionChecker } from '../../api/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { isCI } from '../../common/constants';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -207,7 +207,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         );
 
         // Prep so that we can track the selected controller for this document
-        traceInfoIf(IS_CI_SERVER, `Clear controller mapping for ${document.uri.toString()}`);
+        traceInfoIf(isCI, `Clear controller mapping for ${document.uri.toString()}`);
         const loadControllersPromise = this.loadNotebookControllers();
 
         try {
@@ -241,10 +241,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 return;
             }
             if (!preferredConnection) {
-                traceInfoIf(
-                    IS_CI_SERVER,
-                    `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`
-                );
+                traceInfoIf(isCI, `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`);
                 return;
             }
 
@@ -263,7 +260,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
             } else {
                 traceInfoIf(
-                    IS_CI_SERVER,
+                    isCI,
                     `TargetController nof found ID: ${preferredConnection.id} for document ${document.uri.toString()}`
                 );
             }
@@ -417,7 +414,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // If we have any out of date connections, dispose of them
         disposedControllers.forEach((controller) => {
             this.registeredControllers.delete(controller.id);
-            traceInfoIf(IS_CI_SERVER, `Disposing controller ${controller.id}`);
+            traceInfoIf(isCI, `Disposing controller ${controller.id}`);
             controller.dispose();
         });
     }

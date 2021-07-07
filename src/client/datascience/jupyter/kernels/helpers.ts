@@ -12,7 +12,7 @@ const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp
 import { nbformat } from '@jupyterlab/coreutils';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { PYTHON_LANGUAGE } from '../../../common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../../common/constants';
 import { IConfigurationService, IPathUtils, Resource } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
@@ -31,7 +31,6 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError, traceInfo, traceInfoIf } from '../../../common/logger';
 import { getInterpreterHash } from '../../../pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../../../telemetry/helpers';
-import { IS_CI_SERVER } from '../../../../test/ciConstants';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { Uri } from 'vscode';
 import { getResourceType } from '../../common';
@@ -598,7 +597,7 @@ export async function sendTelemetryForPythonKernelExecutable(
         return;
     }
     try {
-        traceInfoIf(IS_CI_SERVER, 'Begin sendTelemetryForPythonKernelExecutable');
+        traceInfoIf(isCI, 'Begin sendTelemetryForPythonKernelExecutable');
         const cells = await notebook.execute('import sys\nprint(sys.executable)', file, 0, uuid(), undefined, true);
         if (cells.length === 0 || !Array.isArray(cells[0].data.outputs) || cells[0].data.outputs.length === 0) {
             return;
@@ -638,5 +637,5 @@ export async function sendTelemetryForPythonKernelExecutable(
     } catch (ex) {
         // Noop.
     }
-    traceInfoIf(IS_CI_SERVER, 'End sendTelemetryForPythonKernelExecutable');
+    traceInfoIf(isCI, 'End sendTelemetryForPythonKernelExecutable');
 }
