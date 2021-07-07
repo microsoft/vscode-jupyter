@@ -225,20 +225,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    public async addCode(code: string, file: Uri): Promise<boolean> {
-        await this.updateOwners(file);
-        await this.addNotebookCell(code);
-        try {
-            await this.commandManager.executeCommand('notebook.cell.execute', {
-                ranges: [{ start: this.notebookDocument.cellCount - 1, end: this.notebookDocument.cellCount }],
-                document: this.notebookDocument.uri,
-                autoReveal: true
-            });
-            return true;
-        } catch (e) {
-            traceError(e);
-            return false;
-        }
+    public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
+        return this.submitCodeImpl(code, file, line, false);
     }
 
     public async debugCode(code: string, fileUri: Uri, line: number): Promise<boolean> {
@@ -269,66 +257,77 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
         // Call the internal method if we were able to save
         if (saved) {
-            await this.updateOwners(fileUri);
-            const notebookCell = await this.addNotebookCell(code);
-            const notebook = this.kernel?.notebook;
-            if (!notebook) {
-                return false;
-            }
-            try {
-                const finishedAddingCode = createDeferred<void>();
-
-                // Before we try to execute code make sure that we have an initial directory set
-                // Normally set via the workspace, but we might not have one here if loading a single loose file
-                if (file !== Identifiers.EmptyFileName) {
-                    await notebook.setLaunchingFile(file);
-                }
-
-                await this.jupyterDebugger.startDebugging(notebook);
-
-                // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-                await this.setFileInKernel(file, this.notebookDocument);
-
-                const owningResource = this.owningResource;
-                const id = uuid();
-                const observable = this.kernel!.notebook!.executeObservable(code, file, line, id, false);
-                const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(
-                    notebookCell
-                );
-                temporaryExecution?.start();
-
-                // Sign up for cell changes
-                observable.subscribe(
-                    async (cells: ICell[]) => {
-                        // Then send the combined output to the UI
-                        const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
-                        await temporaryExecution.replaceOutput(converted);
-
-                        // Any errors will move our result to false (if allowed)
-                        if (this.configuration.getSettings(owningResource).stopOnError) {
-                            result = result && cells.find((c) => c.state === CellState.error) === undefined;
-                        }
-                    },
-                    (error) => {
-                        traceError(`Error executing a cell: `, error);
-                        if (!(error instanceof CancellationError)) {
-                            this.applicationShell.showErrorMessage(error.toString()).then(noop, noop);
-                        }
-                    },
-                    () => {
-                        temporaryExecution.end(result);
-                        finishedAddingCode.resolve();
-                    }
-                );
-
-                // Wait for the cell to finish
-                await finishedAddingCode.promise;
-                traceInfo(`Finished execution for ${id}`);
-            } finally {
-                await this.jupyterDebugger.stopDebugging(notebook);
-            }
+            return this.submitCodeImpl(code, fileUri, line, true);
         }
 
+        return result;
+    }
+
+    private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
+        await this.updateOwners(fileUri);
+        const notebookCell = await this.addNotebookCell(code, fileUri, line);
+        const notebook = this.kernel?.notebook;
+        if (!notebook) {
+            return false;
+        }
+        const file = fileUri.fsPath;
+        let result = true;
+        try {
+            const finishedAddingCode = createDeferred<void>();
+
+            // Before we try to execute code make sure that we have an initial directory set
+            // Normally set via the workspace, but we might not have one here if loading a single loose file
+            if (file !== Identifiers.EmptyFileName) {
+                await notebook.setLaunchingFile(file);
+            }
+
+            if (isDebug) {
+                await this.jupyterDebugger.startDebugging(notebook);
+            }
+
+            // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
+            await this.setFileInKernel(file, this.notebookDocument);
+
+            const owningResource = this.owningResource;
+            const id = uuid();
+            const observable = this.kernel!.notebook!.executeObservable(code, file, line, id, false);
+            const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(notebookCell);
+            temporaryExecution?.start();
+
+            // Sign up for cell changes
+            observable.subscribe(
+                async (cells: ICell[]) => {
+                    // Then send the combined output to the UI
+                    const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
+                    await temporaryExecution.replaceOutput(converted);
+                    const executionCount = (cells[0].data as nbformat.ICodeCell).execution_count;
+                    if (executionCount) {
+                        temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10);
+                    }
+
+                    // Any errors will move our result to false (if allowed)
+                    if (this.configuration.getSettings(owningResource).stopOnError) {
+                        result = result && cells.find((c) => c.state === CellState.error) === undefined;
+                    }
+                },
+                (error) => {
+                    traceError(`Error executing a cell: `, error);
+                    if (!(error instanceof CancellationError)) {
+                        this.applicationShell.showErrorMessage(error.toString()).then(noop, noop);
+                    }
+                },
+                () => {
+                    temporaryExecution.end(result);
+                    finishedAddingCode.resolve();
+                }
+            );
+
+            // Wait for the cell to finish
+            await finishedAddingCode.promise;
+            traceInfo(`Finished execution for ${id}`);
+        } finally {
+            await this.jupyterDebugger.stopDebugging(notebook);
+        }
         return result;
     }
 
@@ -477,7 +476,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         throw new Error('Method not implemented.');
     }
 
-    public expandAllCells() {
+    public async expandAllCells() {
         const edit = new WorkspaceEdit();
         this.notebookDocument.getCells().forEach((cell, index) => {
             const metadata = {
@@ -487,16 +486,19 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             };
             edit.replaceNotebookCellMetadata(this.notebookDocument.uri, index, metadata);
         });
-        return workspace.applyEdit(edit);
+        await workspace.applyEdit(edit);
     }
 
-    public collapseAllCells() {
+    public async collapseAllCells() {
         const edit = new WorkspaceEdit();
         this.notebookDocument.getCells().forEach((cell, index) => {
+            if (cell.kind !== NotebookCellKind.Code) {
+                return;
+            }
             const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: false };
             edit.replaceNotebookCellMetadata(this.notebookDocument.uri, index, metadata);
         });
-        return workspace.applyEdit(edit);
+        await workspace.applyEdit(edit);
     }
 
     public scrollToCell(_id: string): void {
@@ -594,7 +596,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.show();
     }
 
-    private async addNotebookCell(code: string): Promise<NotebookCell> {
+    private async addNotebookCell(code: string, file: Uri, line: number): Promise<NotebookCell> {
         // Ensure we have a controller to execute code against
         if (!this.notebookController) {
             await this.commandManager.executeCommand('notebook.selectKernel');
@@ -629,7 +631,13 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             strippedCode,
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
-        notebookCellData.metadata = { interactiveWindowCellMarker };
+        notebookCellData.metadata = {
+            interactiveWindowCellMarker,
+            interactive: {
+                file: file.fsPath,
+                line: line
+            }
+        };
         edit.replaceNotebookCells(
             this.notebookDocument.uri,
             new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),

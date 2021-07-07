@@ -825,8 +825,8 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.interactive.copyCode",
-                "title": "%DataScience.interactiveCopyCode%",
+                "command": "jupyter.interactive.copyCell",
+                "title": "%DataScience.interactiveCopyCell%",
                 "icon": "$(copy)",
                 "category": "Jupyter"
             },
@@ -998,7 +998,7 @@
             ],
             "interactive/cell/title": [
                 {
-                    "command": "jupyter.interactive.copyCode",
+                    "command": "jupyter.interactive.copyCell",
                     "group": "inline@0",
                     "when": "isWorkspaceTrusted"
                 },
@@ -1047,7 +1047,7 @@
                     "when": "false"
                 },
                 {
-                    "command": "jupyter.interactive.copyCode",
+                    "command": "jupyter.interactive.copyCell",
                     "when": "false"
                 },
                 {
@@ -1527,6 +1527,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables/disables A/B tests.",
+                    "scope": "machine"
+                },
+                "jupyter.experimental.debugging": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables the preview debugging experience. Set to true to enable the debugging mode button on native notebooks. Your selected kernel should also have ipykernel 6 installed in order to support debugging. Clicking the button will start a debugging session and will allow you to set and hit breakpoints.",
                     "scope": "machine"
                 },
                 "jupyter.enableNativeInteractiveWindow": {

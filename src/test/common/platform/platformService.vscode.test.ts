@@ -15,13 +15,6 @@ use(chaiAsPromised);
 // eslint-disable-next-line
 suite('PlatformService', () => {
     const osType = getOSType();
-    test('pathVariableName', async () => {
-        const expected = osType === OSType.Windows ? 'Path' : 'PATH';
-        const svc = new PlatformService();
-        const result = svc.pathVariableName;
-
-        expect(result).to.be.equal(expected, 'invalid value');
-    });
 
     test('virtualEnvBinName - Windows', async () => {
         const expected = osType === OSType.Windows ? 'Scripts' : 'bin';

@@ -151,10 +151,18 @@ export class NativeInteractiveWindowCommandListener {
             )
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.ExpandAllCells, () => this.expandAllCells())
+            commandManager.registerCommand(
+                Commands.ExpandAllCells,
+                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                    this.expandAllCells(context?.notebookEditor.notebookUri)
+            )
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.CollapseAllCells, () => this.collapseAllCells())
+            commandManager.registerCommand(
+                Commands.CollapseAllCells,
+                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                    this.collapseAllCells(context?.notebookEditor.notebookUri)
+            )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.ExportOutputAsNotebook, () => this.exportCells())
@@ -187,7 +195,7 @@ export class NativeInteractiveWindowCommandListener {
             commandManager.registerCommand(Commands.InteractiveGoToCode, this.goToCodeInInteractiveWindow, this)
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.InteractiveCopyCode, this.copyCodeInInteractiveWindow, this)
+            commandManager.registerCommand(Commands.InteractiveCopyCell, this.copyCellInInteractiveWindow, this)
         );
     }
 
@@ -422,15 +430,19 @@ export class NativeInteractiveWindowCommandListener {
         }
     }
 
-    private expandAllCells() {
-        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+    private expandAllCells(uri?: Uri) {
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.expandAllCells();
         }
     }
 
-    private collapseAllCells() {
-        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
+    private collapseAllCells(uri?: Uri) {
+        const interactiveWindow = uri
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.collapseAllCells();
         }
@@ -445,7 +457,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private exportAs(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.exportAs();
@@ -454,7 +466,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private export(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.export();
@@ -535,17 +547,20 @@ export class NativeInteractiveWindowCommandListener {
     }
 
     private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
-        if (!context) {
+        // Use the context if invoked from interactive/toolbar
+        // Then fallback to the active interactive window
+        const uri = context?.notebookEditor.notebookUri ?? this.interactiveWindowProvider.activeWindow?.notebookUri;
+        if (!uri) {
             return;
         }
 
-        const document = workspace.notebookDocuments.find(
-            (document) => document.uri.toString() === context.notebookEditor.notebookUri.toString()
-        );
+        // Look for the matching notebook document to add cells to
+        const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri.toString());
         if (!document) {
             return;
         }
 
+        // Remove the cells from the matching notebook document
         const edit = new WorkspaceEdit();
         edit.replaceNotebookCells(document.uri, new NotebookRange(0, document.cellCount), []);
         await workspace.applyEdit(edit);
@@ -584,9 +599,15 @@ export class NativeInteractiveWindowCommandListener {
         }
     }
 
-    private async copyCodeInInteractiveWindow(context?: NotebookCell) {
+    private async copyCellInInteractiveWindow(context?: NotebookCell) {
         if (context) {
-            await this.clipboard.writeText(context.document.getText());
+            const settings = this.configuration.getSettings(context.notebook.uri);
+            const source = [
+                // Prepend cell marker to code
+                context.metadata.interactiveWindowCellMarker ?? settings.defaultCellMarker,
+                context.document.getText()
+            ].join('\n');
+            await this.clipboard.writeText(source);
         }
     }
 }
