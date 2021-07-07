@@ -64,7 +64,8 @@ export class PythonApiProvider implements IPythonApiProvider {
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
+        @inject(IWorkspaceService) private workspace: IWorkspaceService
     ) {
         const previouslyInstalled = this.extensionChecker.isPythonExtensionInstalled;
         if (!previouslyInstalled) {
@@ -87,7 +88,9 @@ export class PythonApiProvider implements IPythonApiProvider {
     }
 
     public setApi(api: PythonApi): void {
-        if (this.api.resolved) {
+        // Never allow accessing python API (we dont want to ever use the API and run code in untrusted API).
+        // Don't assume Python API will always be disabled in untrusted worksapces.
+        if (this.api.resolved || !this.workspace.isTrusted) {
             return;
         }
         this.api.resolve(api);
@@ -125,13 +128,13 @@ export class PythonApiProvider implements IPythonApiProvider {
 @injectable()
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
-    private pythonExtensionId = PythonExtension;
     private waitingOnInstallPrompt?: Promise<void>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         // If the python extension is not installed listen to see if anything does install it
         if (!this.isPythonExtensionInstalled) {
@@ -140,26 +143,38 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     public get isPythonExtensionInstalled() {
-        return this.extensions.getExtension(this.pythonExtensionId) !== undefined;
+        return this.extensions.getExtension(PythonExtension) !== undefined;
     }
     public get isPythonExtensionActive() {
-        return this.extensions.getExtension(this.pythonExtensionId)?.isActive === true;
+        return this.extensions.getExtension(PythonExtension)?.isActive === true;
     }
 
     public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
+        // If workspace is not trusted, then don't show prompt
+        if (!this.workspace.isTrusted) {
+            return;
+        }
         if (this.waitingOnInstallPrompt) {
             return this.waitingOnInstallPrompt;
         }
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
         const no = localize.Common.bannerLabelNo();
+        sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
         const answer = await this.appShell.showErrorMessage(localize.DataScience.pythonExtensionRequired(), yes, no);
         if (answer === yes) {
+            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
             await this.installPythonExtension();
+        } else {
+            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
         }
     }
 
     public async showPythonExtensionInstallRecommendedPrompt() {
+        // If workspace is not trusted, then don't show prompt
+        if (!this.workspace.isTrusted) {
+            return;
+        }
         const key = 'ShouldShowPythonExtensionInstallRecommendedPrompt';
         const surveyPrompt = this.persistentStateFactory.createGlobalPersistentState(key, true);
         if (surveyPrompt.value) {
@@ -337,14 +352,11 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
-
-    public get onDidChangeInterpreter(): Event<void> {
+    ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
-            if (this.extensionChecker.isPythonExtensionActive && !this.eventHandlerAdded) {
-                this.hookupOnDidChangeInterpreterEvent();
-            }
             if (!this.extensionChecker.isPythonExtensionActive) {
+                // This event may not fire. It only fires if we're the reason for python extension
+                // activation. VS code does not fire such an event itself if something else activates
                 this.apiProvider.onDidActivatePythonExtension(
                     this.hookupOnDidChangeInterpreterEvent,
                     this,
@@ -352,14 +364,20 @@ export class InterpreterService implements IInterpreterService {
                 );
             }
         }
+    }
+
+    public get onDidChangeInterpreter(): Event<void> {
+        this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreter.event;
     }
 
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
+        this.hookupOnDidChangeInterpreterEvent();
         return this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
+        this.hookupOnDidChangeInterpreterEvent();
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
         let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
         if (!promise) {
@@ -379,6 +397,7 @@ export class InterpreterService implements IInterpreterService {
     }
 
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
+        this.hookupOnDidChangeInterpreterEvent();
         try {
             return await this.apiProvider.getApi().then((api) => api.getInterpreterDetails(pythonPath, resource));
         } catch {
@@ -387,7 +406,15 @@ export class InterpreterService implements IInterpreterService {
         }
     }
     private hookupOnDidChangeInterpreterEvent() {
+        // Only do this once.
         if (this.eventHandlerAdded) {
+            return;
+        }
+        // Python may not be installed or active
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
+        if (!this.extensionChecker.isPythonExtensionActive) {
             return;
         }
         this.apiProvider

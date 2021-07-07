@@ -1,0 +1,52 @@
+[
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_REPOS=repo:microsoft/vscode-jupyter repo:microsoft/vscode-jupyter-internal \r\n$VSCODE_REPOS=repo:microsoft/vscode\r\n$REPO=$JUPYTER_REPOS $VSCODE_REPOS \r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "## Epics"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Current Iteration"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:Epic $PROJECT_BOARDS"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "## Interactive Window"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Blockers for rolling out to more users"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:interactive-window label:important -label:feature-request -label:enhancement -label:unreleased"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### All bugs"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:interactive-window label:bug -label:unreleased"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:interactive-window"
+  }
+]

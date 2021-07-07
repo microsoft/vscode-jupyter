@@ -86,6 +86,7 @@ export interface IInstaller {
         cancel?: CancellationToken,
         reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse>;
+    getVersion(product: Product, resource?: InterpreterUri): Promise<string | undefined>;
     isInstalled(product: Product, resource: InterpreterUri): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
@@ -103,7 +104,6 @@ export interface IPathUtils {
      * @memberof IPathUtils
      */
     readonly separator: string;
-    getPathVariableName(): 'Path' | 'PATH';
     basename(pathValue: string, ext?: string): string;
     getDisplayName(pathValue: string, cwd?: string): string;
 }
@@ -118,7 +118,6 @@ export interface IJupyterSettings {
     readonly logging: ILoggingSettings;
     readonly allowUnauthorizedRemoteConnection: boolean;
     readonly allowImportFromNotebook: boolean;
-    readonly alwaysTrustNotebooks: boolean;
     readonly jupyterInterruptTimeout: number;
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;

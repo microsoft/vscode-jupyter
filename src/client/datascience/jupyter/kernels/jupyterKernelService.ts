@@ -8,11 +8,12 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
+import { isCI } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceDecorators, traceInfo } from '../../../common/logger';
+import { traceDecorators, traceInfo, traceInfoIf } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 
-import { ReadWrite } from '../../../common/types';
+import { ReadWrite, Resource } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -49,6 +50,7 @@ export class JupyterKernelService {
      */
     @traceDecorators.verbose('Check if a kernel is usable')
     public async ensureKernelIsUsable(
+        resource: Resource,
         kernel: KernelConnectionMetadata,
         cancelToken?: CancellationToken,
         disableUI?: boolean
@@ -59,7 +61,12 @@ export class JupyterKernelService {
 
         // If we have an interpreter, make sure it has the correct dependencies installed
         if (kernel.kind !== 'connectToLiveKernel' && kernel.interpreter) {
-            await this.kernelDependencyService.installMissingDependencies(kernel.interpreter, token, disableUI);
+            await this.kernelDependencyService.installMissingDependencies(
+                resource,
+                kernel.interpreter,
+                token,
+                disableUI
+            );
         }
 
         // If the spec file doesn't exist or is not defined, we need to register this kernel
@@ -84,6 +91,10 @@ export class JupyterKernelService {
 
         // Update the kernel environment to use the interpreter's latest
         if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter) {
+            traceInfoIf(
+                isCI,
+                `updateKernelEnvironment ${kernel.interpreter.displayName}, ${kernel.interpreter.path} for ${kernel.id}`
+            );
             await this.updateKernelEnvironment(kernel.interpreter, kernel.kernelSpec, token);
         }
     }

@@ -4,10 +4,13 @@
 /* eslint-disable , , @typescript-eslint/no-explicit-any, no-multi-str, no-trailing-spaces */
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
+import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { EventEmitter, TextDocument } from 'vscode';
+import { EventEmitter, NotebookDocument, TextDocument } from 'vscode';
 
-import { IDocumentManager } from '../../client/common/application/types';
+import { IDocumentManager, IVSCodeNotebook } from '../../client/common/application/types';
+import { disposeAllDisposables } from '../../client/common/helpers';
+import { IDisposable } from '../../client/common/types';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../client/datascience/types';
 import { EventName } from '../../client/telemetry/constants';
@@ -34,7 +37,7 @@ suite('Import Tracker', () => {
     const scipyHash: string = getTelemetrySafeHashedString('scipy');
     const sklearnHash: string = getTelemetrySafeHashedString('sklearn');
     const randomHash: string = getTelemetrySafeHashedString('random');
-
+    const disposables: IDisposable[] = [];
     class Reporter {
         public static eventNames: string[] = [];
         public static properties: Record<string, string>[] = [];
@@ -78,7 +81,13 @@ suite('Import Tracker', () => {
         rewiremock.enable();
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
-        importTracker = new ImportTracker(documentManager.object, nativeProvider.object);
+        const vscNb = mock<IVSCodeNotebook>();
+        const onDidOpenCloseNbEvent = new EventEmitter<NotebookDocument>();
+        disposables.push(onDidOpenCloseNbEvent);
+        when(vscNb.onDidOpenNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
+        when(vscNb.onDidCloseNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
+
+        importTracker = new ImportTracker(documentManager.object, instance(vscNb), nativeProvider.object, disposables);
     });
     teardown(() => {
         process.env.VSC_JUPYTER_UNIT_TEST = oldValueOfVSC_JUPYTER_UNIT_TEST;
@@ -87,6 +96,7 @@ suite('Import Tracker', () => {
         Reporter.eventNames = [];
         Reporter.measures = [];
         rewiremock.disable();
+        disposeAllDisposables(disposables);
     });
 
     function emitDocEvent(code: string, ev: EventEmitter<TextDocument>) {

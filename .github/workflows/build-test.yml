@@ -4,6 +4,9 @@
 
 name: Build and Test
 
+permissions:
+  deployments: write
+
 on:
   pull_request:
     branches:
@@ -191,6 +194,67 @@ jobs:
 
       - name: Check dependencies
         run: npm run checkDependencies
+
+  vsc_api_check:
+    needs: pick_environment
+    name: VSC Stable & Proposed API
+    runs-on: ${{ matrix.os }}
+    if: github.repository == 'microsoft/vscode-jupyter'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v2.1.5
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
+      - name: Cache npm on linux/mac
+        uses: actions/cache@v2.1.4
+        if: matrix.os != 'windows-latest'
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Get npm cache directory
+        if: matrix.os == 'windows-latest'
+        id: npm-cache
+        run: |
+          echo "::set-output name=dir::$(npm config get cache)"
+      - name: Cache npm on windows
+        uses: actions/cache@v2.1.4
+        if: matrix.os == 'windows-latest'
+        with:
+          path: ${{ steps.npm-cache.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache compiled TS files
+        # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
+        id: out-cache
+        uses: actions/cache@v2.1.4
+        with:
+          path: ./out
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      - name: Install Stable + Proposed API
+        run: npm run download-api
+
+      - name: Compile if not cached
+        run: npx gulp prePublishNonBundle
+        env:
+          CI_JUPYTER_FAST_COMPILATION: 'true'
 
   ts_tests:
     needs: pick_environment
@@ -939,29 +1003,6 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
-
-  upload:
-    name: Upload VSIX to Azure Blob Storage
-    runs-on: ubuntu-latest
-    # This should happen in the release and insiders branch
-    if: github.repository == 'microsoft/vscode-jupyter' && (github.event_name == 'push' || github.event_name == 'schedule') && (github.ref == 'refs/heads/main' || contains(github.ref, 'refs/heads/release'))
-    needs: [build-vsix, pick_environment, lint, ts_tests, vscodeTests, smoke-tests]
-    env:
-      BLOB_CONTAINER_NAME: extension-builds-jupyter
-
-    steps:
-      - name: Download VSIX
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.pick_environment.outputs.vsix_name }}
-
-      - name: Azure Login
-        uses: azure/login@v1.3.0
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Upload to Blob Storage
-        run: az storage blob upload --file ${{ needs.pick_environment.outputs.vsix_name }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ needs.pick_environment.outputs.vsix_name }}
 
   coverage:
     name: Coverage reports upload

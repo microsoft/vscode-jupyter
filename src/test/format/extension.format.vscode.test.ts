@@ -16,8 +16,7 @@
 // import {
 //     canRunTests,
 //     closeNotebooksAndCleanUpAfterTests,
-//     createTemporaryNotebook,
-//     trustAllNotebooks
+//     createTemporaryNotebook
 // } from '../datascience/notebook/helper';
 // import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize, initializeTest } from '../initialize';
 
@@ -51,7 +50,6 @@
 //             setup(async () => {
 //                 sinon.restore();
 //                 await initializeTest();
-//                 await trustAllNotebooks();
 //                 // Don't use same file (due to dirty handling, we might save in dirty.)
 //                 // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
 //                 const templateIPynb = path.join(

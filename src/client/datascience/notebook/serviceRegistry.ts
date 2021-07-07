@@ -3,16 +3,15 @@
 
 'use strict';
 
-import { NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
-import { NotebookContentProvider } from './contentProvider';
+import { NotebookSerializer } from './notebookSerializer';
 import { CreationOptionService } from './creation/creationOptionsService';
 import { NotebookCreator } from './creation/notebookCreator';
-import { NotebookCellLanguageService } from './defaultCellLanguageService';
+import { NotebookCellLanguageService } from './cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { NotebookIntegration } from './integration';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
@@ -20,10 +19,12 @@ import { IntroduceNativeNotebookStartPage } from './introStartPage';
 import { NotebookControllerManager } from './notebookControllerManager';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
-import { INotebookContentProvider, INotebookControllerManager } from './types';
+import { INotebookControllerManager } from './types';
+import { RendererCommunication } from './outputs/rendererCommunication';
+import { PlotSaveHandler } from './outputs/plotSaveHandler';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<VSCNotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);
+    serviceManager.addSingleton<NotebookSerializer>(NotebookSerializer, NotebookSerializer);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookIntegration
@@ -56,5 +57,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
     serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
+    serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        RendererCommunication
+    );
     serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);
 }

@@ -16,6 +16,7 @@ import { ServerStatus } from '../../datascience-ui/interactive-common/mainState'
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
 import { Resource } from '../../client/common/types';
+import { randomBytes } from 'crypto';
 
 const LineFeedRegEx = /(\r\n|\n)/g;
 
@@ -60,8 +61,15 @@ export class MockJupyterSession implements IJupyterSession {
         }
         return this.onStatusChangedEvent.event;
     }
+    public get onIOPubMessage(): Event<KernelMessage.IIOPubMessage> {
+        return new EventEmitter<KernelMessage.IIOPubMessage>().event;
+    }
     public get status(): ServerStatus {
         return this._status;
+    }
+
+    public get sessionId(): string {
+        return randomBytes(8).toString('hex');
     }
 
     public async restart(_timeout: number): Promise<void> {
@@ -137,6 +145,13 @@ export class MockJupyterSession implements IJupyterSession {
         request.done.then(removeHandler).catch(removeHandler);
         this.lastRequest = request;
         return request;
+    }
+
+    public requestDebug(
+        _content: KernelMessage.IDebugRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined {
+        return undefined;
     }
 
     public requestInspect(

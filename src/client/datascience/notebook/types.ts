@@ -1,22 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { VSCodeNotebookController } from './vscodeNotebookController';
-
-export const INotebookContentProvider = Symbol('INotebookContentProvider');
 
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 
 export const INotebookControllerManager = Symbol('INotebookControllerManager');
 export interface INotebookControllerManager {
     readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: VSCodeNotebookController }>;
+    loadNotebookControllers(): Promise<void>;
     getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
-    getNotebookControllers(): Promise<VSCodeNotebookController[] | undefined>;
+    // Marked test only, just for tests to access registered controllers
+    registeredNotebookControllers(): VSCodeNotebookController[];
+    getOrCreateController(
+        pythonInterpreter: PythonEnvironment,
+        notebookType: 'interactive' | 'jupyter-notebook'
+    ): VSCodeNotebookController | undefined;
 }
 export enum CellOutputMimeTypes {
-    error = 'application/x.notebook.error-traceback',
-    stderr = 'application/x.notebook.stderr',
-    stdout = 'application/x.notebook.stdout'
+    error = 'application/vnd.code.notebook.error',
+    stderr = 'application/vnd.code.notebook.stderr',
+    stdout = 'application/vnd.code.notebook.stdout'
 }
 
 /**

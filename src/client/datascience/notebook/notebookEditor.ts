@@ -7,20 +7,20 @@ import {
     ConfigurationTarget,
     Event,
     EventEmitter,
-    NotebookCell,
     NotebookCellKind,
     NotebookRange,
     NotebookDocument,
     ProgressLocation,
     Uri,
     WebviewPanel,
-    NotebookCellData
+    NotebookCellData,
+    NotebookCell
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
+import { isUntitledFile, noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -35,8 +35,11 @@ import {
     InterruptResult,
     IStatusProvider
 } from '../types';
-import { NotebookCellLanguageService } from './defaultCellLanguageService';
+import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
+import { getNotebookMetadata } from './helpers/helpers';
+import { NotebookSerializer } from './notebookSerializer';
+import type { nbformat } from '@jupyterlab/coreutils';
 
 export class NotebookEditor implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
@@ -52,19 +55,19 @@ export class NotebookEditor implements INotebookEditor {
         return this._saved.event;
     }
     public get isUntitled(): boolean {
-        return this.model.isUntitled;
+        return isUntitledFile(this.document.uri);
     }
     public get isDirty(): boolean {
         return this.document.isDirty;
     }
     public get file(): Uri {
-        return this.model.file;
+        return this.document.uri;
     }
     public get visible(): boolean {
-        return !this.model.isDisposed;
+        return !this.document.isClosed;
     }
     public get active(): boolean {
-        return this.vscodeNotebook.activeNotebookEditor?.document.uri.toString() === this.model.file.toString();
+        return this.vscodeNotebook.activeNotebookEditor?.document.uri.toString() === this.document.uri.toString();
     }
     public readonly type = 'native';
     public notebook?: INotebook | undefined;
@@ -76,7 +79,6 @@ export class NotebookEditor implements INotebookEditor {
     private restartingKernel?: boolean;
     private kernelInterruptedDontAskToRestart: boolean = false;
     constructor(
-        public readonly model: INotebookModel,
         public readonly document: NotebookDocument,
         private readonly vscodeNotebook: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
@@ -86,18 +88,18 @@ export class NotebookEditor implements INotebookEditor {
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
-        private readonly cellLanguageService: NotebookCellLanguageService
+        private readonly cellLanguageService: NotebookCellLanguageService,
+        private readonly serializer: NotebookSerializer
     ) {
-        disposables.push(model.onDidEdit(() => this._modified.fire(this)));
-        disposables.push(
-            model.changed((e) => {
-                if (e.kind === 'save') {
-                    this._saved.fire(this);
-                }
-            })
-        );
-        disposables.push(model.onDidDispose(this.dispose.bind(this)));
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
+    }
+    executed?: Event<INotebookEditor> | undefined;
+    public get notebookMetadata(): nbformat.INotebookMetadata | undefined {
+        return getNotebookMetadata(this.document);
+    }
+    onExecutedCode?: Event<string> | undefined;
+    public getContent() {
+        return this.serializer.serializeNotebookDocument(this.document);
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
@@ -139,20 +141,6 @@ export class NotebookEditor implements INotebookEditor {
     public redoCells(): void {
         this.commandManager.executeCommand('notebook.redo').then(noop, noop);
     }
-    public removeAllCells(): void {
-        if (!this.vscodeNotebook.activeNotebookEditor) {
-            return;
-        }
-        const defaultLanguage = this.cellLanguageService.getPreferredLanguage(this.model.metadata);
-        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
-        if (editor) {
-            chainWithPendingUpdates(editor.document, (edit) =>
-                edit.replaceNotebookCells(editor.document.uri, new NotebookRange(0, this.document.cellCount), [
-                    new NotebookCellData(NotebookCellKind.Code, '', defaultLanguage)
-                ])
-            ).then(noop, noop);
-        }
-    }
     public toggleOutput(): void {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
@@ -171,10 +159,24 @@ export class NotebookEditor implements INotebookEditor {
             chainWithPendingUpdates(editor.document, (edit) => {
                 cells.forEach((cell) => {
                     const collapsed = cell.metadata.outputCollapsed || false;
-                    const metadata = cell.metadata.with({ outputCollapsed: !collapsed });
+                    const metadata = { ...cell.metadata, outputCollapsed: !collapsed };
                     edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
                 });
             }).then(noop, noop);
+        }
+    }
+    public removeAllCells(): void {
+        if (!this.vscodeNotebook.activeNotebookEditor) {
+            return;
+        }
+        const defaultLanguage = this.cellLanguageService.getPreferredLanguage(getNotebookMetadata(this.document));
+        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
+        if (editor) {
+            chainWithPendingUpdates(editor.document, (edit) =>
+                edit.replaceNotebookCells(editor.document.uri, new NotebookRange(0, this.document.cellCount), [
+                    new NotebookCellData(NotebookCellKind.Code, '', defaultLanguage)
+                ])
+            ).then(noop, noop);
         }
     }
     public expandAllCells(): void {
@@ -186,7 +188,7 @@ export class NotebookEditor implements INotebookEditor {
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.getCells().forEach((cell, index) => {
-                    const metadata = cell.metadata.with({ inputCollapsed: false, outputCollapsed: false });
+                    const metadata = { ...(cell.metadata || {}), inputCollapsed: false, outputCollapsed: false };
                     edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);
@@ -201,7 +203,7 @@ export class NotebookEditor implements INotebookEditor {
         if (editor) {
             chainWithPendingUpdates(editor.document, (edit) => {
                 notebook.getCells().forEach((cell, index) => {
-                    const metadata = cell.metadata.with({ inputCollapsed: true, outputCollapsed: true });
+                    const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: true };
                     edit.replaceNotebookCellMetadata(editor.document.uri, index, metadata);
                 });
             }).then(noop, noop);
@@ -288,24 +290,6 @@ export class NotebookEditor implements INotebookEditor {
         this._closed.fire(this);
     }
 
-    public runAbove(cell: NotebookCell | undefined): void {
-        if (cell && cell.index > 0) {
-            void this.commandManager.executeCommand(
-                'notebook.cell.execute',
-                { start: 0, end: cell.index },
-                cell.notebook.uri
-            );
-        }
-    }
-    public runCellAndBelow(cell: NotebookCell | undefined): void {
-        if (cell && cell.index >= 0) {
-            void this.commandManager.executeCommand(
-                'notebook.cell.execute',
-                { start: cell.index, end: cell.notebook.cellCount },
-                cell.notebook.uri
-            );
-        }
-    }
     private onClosedDocument(e?: NotebookDocument) {
         if (this.document === e) {
             this._closed.fire(this);
@@ -320,7 +304,7 @@ export class NotebookEditor implements INotebookEditor {
 
         const stopWatch = new StopWatch();
         try {
-            await kernel.restart();
+            await kernel.restart(this.document);
             sendKernelTelemetryEvent(this.document.uri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
@@ -346,7 +330,7 @@ export class NotebookEditor implements INotebookEditor {
                     getOnly: false,
                     disableUI: false,
                     resource: this.file,
-                    metadata: this.model.metadata
+                    metadata: getNotebookMetadata(this.document)
                 });
             } else {
                 // Show the error message

@@ -32,8 +32,11 @@ async function unzip(zipFile, targetFolder) {
 
 async function downloadRendererExtension() {
     console.log('Downloading Renderer extension...');
+
+    // Renderer constants
     const extensionName = 'ms-notebook-renderers.vsix';
     const uri = `https://pvsc.blob.core.windows.net/extension-builds-jupyter-public/ms-notebook-renderers.vsix`;
+
     let cleanup;
     try {
         const downloadDir = await new Promise((resolve, reject) => {
@@ -46,6 +49,7 @@ async function downloadRendererExtension() {
             });
         });
 
+        // Download and extract the output renderer
         const downloadedFile = path.join(downloadDir, extensionName);
         if (fs.existsSync(downloadedFile)) {
             await fs.unlink(downloadedFile);

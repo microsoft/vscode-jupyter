@@ -6,6 +6,7 @@ import type { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
+import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -40,7 +41,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -53,7 +54,6 @@ import {
 } from './kernels/helpers';
 import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
-import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { IPythonExecutionFactory } from '../../common/process/types';
 
 class CellSubscriber {
@@ -298,7 +298,7 @@ export class JupyterNotebookBase implements INotebook {
         try {
             // When we start our notebook initial, change to our workspace or user specified root directory
             await this.updateWorkingDirectoryAndPath();
-            traceInfoIf(IS_CI_SERVER, `Initial setup after for updateWorkingDirectoryAndPath ...`);
+            traceInfoIf(isCI, `Initial setup after for updateWorkingDirectoryAndPath ...`);
             let isDefinitelyNotAPythonKernel = false;
             if (
                 this._executionInfo.kernelConnectionMetadata?.kind === 'startUsingKernelSpec' &&
@@ -320,7 +320,7 @@ export class JupyterNotebookBase implements INotebook {
             const settings = this.configService.getSettings(this.resource);
             if (settings && settings.themeMatplotlibPlots) {
                 // We're theming matplotlibs, so we have to setup our default state.
-                traceInfoIf(IS_CI_SERVER, `Initialize config for plots for ${this.identity.toString()}`);
+                traceInfoIf(isCI, `Initialize config for plots for ${this.identity.toString()}`);
                 if (!isDefinitelyNotAPythonKernel) {
                     await this.initializeMatplotlib(cancelToken);
                 }
@@ -331,12 +331,12 @@ export class JupyterNotebookBase implements INotebook {
                     !isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
                         ? CodeSnippets.ConfigSvg
                         : CodeSnippets.ConfigPng;
-                traceInfoIf(IS_CI_SERVER, `Initialize config for plots for ${this.identity.toString()}`);
+                traceInfoIf(isCI, `Initialize config for plots for ${this.identity.toString()}`);
                 if (!isDefinitelyNotAPythonKernel) {
                     await this.executeSilently(configInit, cancelToken);
                 }
             }
-            traceInfoIf(IS_CI_SERVER, `Initial setup for ${this.identity.toString()} half way ...`);
+            traceInfoIf(isCI, `Initial setup for ${this.identity.toString()} half way ...`);
             if (
                 !isDefinitelyNotAPythonKernel &&
                 this._executionInfo.connectionInfo.localLaunch &&
@@ -359,10 +359,10 @@ export class JupyterNotebookBase implements INotebook {
 
             if (setting) {
                 // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
-                traceInfoIf(IS_CI_SERVER, 'Begin Run startup code for notebook');
+                traceInfoIf(isCI, 'Begin Run startup code for notebook');
                 const cleanedUp = setting.replace(/\\n/g, '\n');
                 const cells = await this.executeSilently(cleanedUp, cancelToken);
-                traceInfoIf(IS_CI_SERVER, `Run startup code for notebook: ${cleanedUp} - results: ${cells.length}`);
+                traceInfoIf(isCI, `Run startup code for notebook: ${cleanedUp} - results: ${cells.length}`);
             }
 
             traceInfo(`Initial setup complete for ${this.identity.toString()}`);
@@ -964,7 +964,7 @@ export class JupyterNotebookBase implements INotebook {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggested;
                 return this.changeDirectoryIfPossible(this._workingDirectory);
-            } else if (launchingFile && (await this.fs.localFileExists(launchingFile))) {
+            } else if (launchingFile && (await this.fs.localDirectoryExists(path.dirname(launchingFile)))) {
                 // Combine the working directory with this file if possible.
                 this._workingDirectory = expandWorkingDir(
                     this._executionInfo.workingDir,

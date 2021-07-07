@@ -35,6 +35,10 @@ import { InterpreterUri, IProductPathService } from './types';
 
 export { Product } from '../types';
 
+/**
+ * Keep track of the fact that we attempted to install a package into an interpreter.
+ * (don't care whether it was successful or not).
+ */
 export async function trackPackageInstalledIntoInterpreter(
     memento: Memento,
     product: Product,
@@ -120,6 +124,54 @@ export abstract class BaseInstaller {
         return this.serviceContainer
             .get<IPythonInstaller>(IPythonInstaller)
             .install(product, resource, cancel, reInstallAndUpdate);
+    }
+
+    public async getVersion(product: Product, resource?: InterpreterUri): Promise<string | undefined> {
+        // User may have customized the module name or provided the fully qualified path.
+        const interpreter = isResource(resource) ? undefined : resource;
+        const uri = isResource(resource) ? resource : undefined;
+        const executableName = this.getExecutableNameFromSettings(product, uri);
+
+        const pythonProcess = await this.serviceContainer
+            .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+            .createActivatedEnvironment({ resource: uri, interpreter, allowEnvironmentFetchExceptions: true });
+
+        const output = pythonProcess.execObservable(['-m', 'pip', 'show', executableName], {});
+        const outputsReceived: string[] = [];
+
+        await new Promise<void>((resolve, reject) => {
+            output.out.subscribe((out) => outputsReceived.push(out.out), reject, resolve);
+        });
+
+        // output will be on this form:
+        //
+        // Name: ipykernel
+        // Version: x.x.x
+        // Summary: IPython Kernel for Jupyter
+        // Home-page: https://ipython.org
+        // Author: IPython Development Team
+        // Author-email: ipython-dev@scipy.org
+        // License: BSD
+        // Location: c:<path>
+        // Requires: tornado, traitlets, jupyter-client, ipython
+        // Required-by: notebook, ipywidgets
+
+        // the rest of the function gets the version
+        const versionText = 'Version: ';
+        const rightOutput = outputsReceived.find((output) => output.includes(versionText));
+
+        if (!rightOutput) {
+            return;
+        }
+
+        const lines = rightOutput.split('\n');
+        const versionLine = lines.find((line) => line.includes(versionText));
+
+        if (!versionLine) {
+            return;
+        }
+
+        return versionLine.substr(versionText.length);
     }
 
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
@@ -208,6 +260,7 @@ export class DataScienceInstaller extends BaseInstaller {
             ? localize.Common.bannerLabelYes()
             : await this.appShell.showErrorMessage(
                   message,
+                  { modal: true },
                   localize.Common.bannerLabelYes(),
                   localize.Common.bannerLabelNo()
               );
@@ -283,6 +336,10 @@ export class ProductInstaller implements IInstaller {
     }
     public translateProductToModuleName(product: Product, _purpose: ModuleNamePurpose): string {
         return translateProductToModule(product);
+    }
+
+    public async getVersion(product: Product, resource?: InterpreterUri): Promise<string | undefined> {
+        return this.createInstaller().getVersion(product, resource);
     }
     private createInstaller(): BaseInstaller {
         return new DataScienceInstaller(this.serviceContainer, this.outputChannel);

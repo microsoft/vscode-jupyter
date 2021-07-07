@@ -1213,7 +1213,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     kernelConnection: this.kernelConnection,
                     disableUI
                 });
-                if (notebook) {
+                if (notebook && !notebook.disposed) {
                     const executionActivation = { ...this.notebookIdentity, owningResource: this.owningResource };
                     this.postMessageToListeners(
                         InteractiveWindowMessages.NotebookExecutionActivated,

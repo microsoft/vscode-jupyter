@@ -61,15 +61,17 @@ import {
     NotebookCellMetadataChangeEvent as VSCNotebookCellMetadataChangeEvent,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
-    NotebookContentProvider,
     NotebookDocument,
     NotebookDocumentMetadataChangeEvent as VSCNotebookDocumentMetadataChangeEvent,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookDocumentContentOptions,
-    NotebookExecuteHandler,
-    NotebookKernelPreload,
-    NotebookController
+    NotebookRendererScript,
+    NotebookController,
+    NotebookCell,
+    NotebookSerializer,
+    NotebookData,
+    NotebookDocumentShowOptions
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -815,6 +817,15 @@ export interface IWorkspaceService {
      * @return The full configuration or a subset.
      */
     getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration;
+    /**
+     * When true, the user has explicitly trusted the contents of the workspace.
+     */
+    readonly isTrusted: boolean;
+
+    /**
+     * Event that fires when the current workspace has been trusted.
+     */
+    readonly onDidGrantWorkspaceTrust: Event<void>;
 }
 
 export const ITerminalManager = Symbol('ITerminalManager');
@@ -1566,9 +1577,9 @@ export interface IVSCodeNotebook {
     readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
-    registerNotebookContentProvider(
+    registerNotebookSerializer(
         notebookType: string,
-        provider: NotebookContentProvider,
+        serializer: NotebookSerializer,
         options?: NotebookDocumentContentOptions
     ): Disposable;
 
@@ -1576,9 +1587,17 @@ export interface IVSCodeNotebook {
         id: string,
         viewType: string,
         label: string,
-        handler?: NotebookExecuteHandler,
-        preloads?: NotebookKernelPreload[]
+        handler?: (
+            cells: NotebookCell[],
+            notebook: NotebookDocument,
+            controller: NotebookController
+        ) => void | Thenable<void>,
+        rendererScripts?: NotebookRendererScript[]
     ): NotebookController;
+    openNotebookDocument(uri: Uri): Thenable<NotebookDocument>;
+    openNotebookDocument(viewType: string, content?: NotebookData): Promise<NotebookDocument>;
+    showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
+    showNotebookDocument(document: NotebookDocument, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
 }
 
 export const IEncryptedStorage = Symbol('IAuthenticationService');

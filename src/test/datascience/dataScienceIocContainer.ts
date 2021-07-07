@@ -142,11 +142,9 @@ import { IntellisenseProvider } from '../../client/datascience/interactive-commo
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
-import { DigestStorage } from '../../client/datascience/interactive-ipynb/digestStorage';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorRunByLineListener } from '../../client/datascience/interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
-import { TrustService } from '../../client/datascience/interactive-ipynb/trustService';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { JupyterCommandLineSelector } from '../../client/datascience/jupyter/commandLineSelector';
@@ -190,7 +188,7 @@ import {
     IKernelLauncher,
     IRemoteKernelFinder
 } from '../../client/datascience/kernel-launcher/types';
-import { NotebookCellLanguageService } from '../../client/datascience/notebook/defaultCellLanguageService';
+import { NotebookCellLanguageService } from '../../client/datascience/notebook/cellLanguageService';
 import { NotebookCreationTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 import { NotebookExtensibility } from '../../client/datascience/notebookExtensibility';
 import { NotebookModelFactory } from '../../client/datascience/notebookStorage/factory';
@@ -218,7 +216,6 @@ import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IDebugLocationTracker,
-    IDigestStorage,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -238,6 +235,7 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IKernelDependencyService,
+    IKernelVariableRequester,
     INbConvertExportToPythonService,
     INbConvertInterpreterDependencyChecker,
     INotebookCreationTracker,
@@ -255,9 +253,7 @@ import {
     IRawNotebookProvider,
     IRawNotebookSupportedService,
     IStatusProvider,
-    ISystemPseudoRandomNumberGenerator,
     IThemeFinder,
-    ITrustService,
     IWebviewExtensibility
 } from '../../client/datascience/types';
 import { INotebookWatcher, IVariableViewProvider } from '../../client/datascience/variablesView/types';
@@ -270,7 +266,6 @@ import { IEnvironmentActivationService } from '../../client/interpreter/activati
 import { IInterpreterSelector } from '../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../client/interpreter/locators/types';
-import { trustDirectoryMigrated } from '../../client/migration/migrateDigestStorage';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
@@ -309,7 +304,6 @@ import { JupyterServerUriStorage } from '../../client/datascience/jupyter/server
 import { MockEncryptedStorage } from './mockEncryptedStorage';
 import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets/webviewIPyWidgetCoordinator';
 import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
-import { SystemPseudoRandomNumberGenerator } from '../../client/datascience/interactive-ipynb/randomBytes';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { PreferredRemoteKernelIdProvider } from '../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { NotebookWatcher } from '../../client/datascience/variablesView/notebookWatcher';
@@ -318,6 +312,10 @@ import { RemoteKernelFinder } from '../../client/datascience/kernel-launcher/rem
 import { Extensions } from '../../client/common/application/extensions';
 import { NotebookCreator } from '../../client/datascience/notebook/creation/notebookCreator';
 import { CreationOptionService } from '../../client/datascience/notebook/creation/creationOptionsService';
+import { PythonVariablesRequester } from '../../client/datascience/jupyter/pythonVariableRequester';
+import { LocalKnownPathKernelSpecFinder } from '../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
+import { JupyterPaths } from '../../client/datascience/kernel-launcher/jupyterPaths';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -619,6 +617,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             DebuggerVariables,
             Identifiers.DEBUGGER_VARIABLES
         );
+        this.serviceManager.addSingleton<IKernelVariableRequester>(
+            IKernelVariableRequester,
+            PythonVariablesRequester,
+            Identifiers.PYTHON_VARIABLES_REQUESTER
+        );
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [
             ICellHashListener
         ]);
@@ -653,7 +656,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
         mockExtensionContext.setup((m) => m.globalStorageUri).returns(() => Uri.file(os.tmpdir()));
         const globalState = new MockMemento();
-        globalState.update(trustDirectoryMigrated, true);
         mockExtensionContext.setup((m) => m.globalState).returns(() => globalState);
         mockExtensionContext.setup((m) => m.extensionPath).returns(() => this.extensionRootPath || os.tmpdir());
         mockExtensionContext.setup((m) => m.subscriptions).returns(() => []);
@@ -892,6 +894,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             );
             this.serviceManager.addSingleton<JupyterKernelService>(JupyterKernelService, JupyterKernelService);
             this.serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
+            this.serviceManager.addSingleton<JupyterPaths>(JupyterPaths, JupyterPaths);
+            this.serviceManager.addSingleton<LocalKnownPathKernelSpecFinder>(
+                LocalKnownPathKernelSpecFinder,
+                LocalKnownPathKernelSpecFinder
+            );
+            this.serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinder>(
+                LocalPythonAndRelatedNonPythonKernelSpecFinder,
+                LocalPythonAndRelatedNonPythonKernelSpecFinder
+            );
             this.serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
@@ -904,12 +915,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         }
         this.serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
-        this.serviceManager.addSingleton<ISystemPseudoRandomNumberGenerator>(
-            ISystemPseudoRandomNumberGenerator,
-            SystemPseudoRandomNumberGenerator
-        );
-        this.serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
-        this.serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
         // Disable syncrhonizing edits
         this.serviceContainer.get<NativeEditorSynchronizer>(NativeEditorSynchronizer).disable();
         const dummyDisposable = {
@@ -1218,7 +1223,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Then setup the default values.
         settings.assign({
             allowImportFromNotebook: true,
-            alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 120000,
             jupyterLaunchRetries: 3,
             jupyterServerType: 'local',
@@ -1285,6 +1289,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         const workspaceService = mock(WorkspaceService);
+        when(workspaceService.isTrusted).thenReturn(true);
+        when(workspaceService.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
         this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
         when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
         when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);

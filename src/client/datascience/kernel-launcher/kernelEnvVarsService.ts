@@ -3,13 +3,12 @@
 
 import { inject, injectable } from 'inversify';
 import { traceError, traceInfo } from '../../common/logger';
-import { IPlatformService } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../common/variables/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { EnvironmentType } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 
 @injectable()
@@ -18,8 +17,7 @@ export class KernelEnvironmentVariablesService {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
-        @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IEnvironmentVariablesProvider) private readonly customEndVars: IEnvironmentVariablesProvider
+        @inject(IEnvironmentVariablesProvider) private readonly customEnvVars: IEnvironmentVariablesProvider
     ) {}
     /**
      * If the kernel belongs to a conda environment, then use the env variables of the conda environment and merge that with the env variables of the kernel spec.
@@ -27,43 +25,44 @@ export class KernelEnvironmentVariablesService {
      * The first argument is an executable, and it is not in the current path.
      * However, when activating the conda env, the path variables are updated to set path to the location where the java executable is located.
      */
-    public async getEnvironmentVariables(resource: Resource, kernelSpec: IJupyterKernelSpec) {
-        const customEditVarsPromise = this.customEndVars.getCustomEnvironmentVariables(resource);
-        customEditVarsPromise.catch(noop); // If we return early, we don't want failing promise go unhandled.
+    public async getEnvironmentVariables(
+        resource: Resource,
+        interpreter: PythonEnvironment | undefined,
+        kernelSpec: IJupyterKernelSpec
+    ) {
         let kernelEnv = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
-        if (!kernelSpec.interpreterPath) {
-            traceInfo(
-                `No custom variables for Kernel as interpreter path is not defined for kernel ${kernelSpec.display_name}`
-            );
-            return kernelEnv;
+
+        // If an interpreter was not explicitly passed in, check for an interpreter path in the kernelspec to use
+        if (!interpreter) {
+            if (!kernelSpec.interpreterPath) {
+                traceInfo(
+                    `No custom variables for Kernel as interpreter path is not defined for kernel ${kernelSpec.display_name}`
+                );
+                return kernelEnv;
+            }
+            interpreter = await this.interpreterService
+                .getInterpreterDetails(kernelSpec.interpreterPath)
+                .catch((ex) => {
+                    traceError('Failed to fetch interpreter information for interpreter that owns a kernel', ex);
+                    return undefined;
+                });
         }
-        const interpreter = await this.interpreterService
-            .getInterpreterDetails(kernelSpec.interpreterPath)
-            .catch((ex) => {
-                traceError('Failed to fetch interpreter information for interpreter that owns a kernel', ex);
-                return undefined;
-            });
 
         if (interpreter?.envType !== EnvironmentType.Conda) {
             traceInfo(`No custom variables for Kernel as interpreter is not conda, but is ${interpreter?.envType}`);
             return kernelEnv;
         }
-        traceInfo('Fetching interpreter variables of Conda environment to be used as env vars of Kernel');
-        const interpreterEnv = await this.envActivation
-            .getActivatedEnvironmentVariables(resource, interpreter, false)
-            .catch<undefined>((ex) => {
+        let [customEditVars, interpreterEnv] = await Promise.all([
+            this.customEnvVars.getCustomEnvironmentVariables(resource).catch(noop),
+            this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, false).catch<undefined>((ex) => {
                 traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
                 return undefined;
-            });
+            })
+        ]);
         if (!interpreterEnv) {
             traceInfo('No custom variables for Kernel even thought interpreter is conda');
             return kernelEnv;
         }
-
-        let customEditVars = await customEditVarsPromise.catch((ex) =>
-            traceError('Failed to get custom env vars for kernel', ex)
-        );
-        traceInfo('Got custom variables for Kernel owned by a conda interpreter');
         // Merge the env variables with that of the kernel env.
         const mergedVars = { ...process.env };
         kernelEnv = kernelEnv || {};
@@ -71,12 +70,26 @@ export class KernelEnvironmentVariablesService {
         this.envVarsService.mergeVariables(interpreterEnv, mergedVars); // interpreter vars win over proc.
         this.envVarsService.mergeVariables(kernelEnv, mergedVars); // kernels vars win over interpreter.
         this.envVarsService.mergeVariables(customEditVars, mergedVars); // custom vars win over all.
-        const pathVariable = this.platformService.pathVariableName;
-        if (customEditVars[pathVariable]) {
-            this.envVarsService.appendPath(mergedVars, customEditVars[pathVariable]!);
+        // Reinitialize the PATH variables.
+        // The values in `PATH` found in the interpreter trumps everything else.
+        // If we have more PATHS, they need to be appended to this PATH.
+        // Similarly for `PTYHONPATH`
+        // Additionally the 'PATH' variable may have different case in each, so account for that.
+        let otherEnvPathKey = Object.keys(interpreterEnv).find((k) => k.toLowerCase() == 'path');
+        const processPathKey = Object.keys(mergedVars).find((k) => k.toLowerCase() == 'path') || otherEnvPathKey;
+        if (otherEnvPathKey && processPathKey) {
+            mergedVars[processPathKey] = interpreterEnv[otherEnvPathKey];
         }
-        if (kernelEnv[pathVariable]) {
-            this.envVarsService.appendPath(mergedVars, kernelEnv[pathVariable]!);
+        if (interpreterEnv['PYTHONPATH']) {
+            mergedVars['PYTHONPATH'] = interpreterEnv['PYTHONPATH'];
+        }
+        otherEnvPathKey = Object.keys(customEditVars).find((k) => k.toLowerCase() == 'path');
+        if (otherEnvPathKey && customEditVars[otherEnvPathKey]) {
+            this.envVarsService.appendPath(mergedVars, customEditVars[otherEnvPathKey]!);
+        }
+        otherEnvPathKey = Object.keys(kernelEnv).find((k) => k.toLowerCase() == 'path');
+        if (otherEnvPathKey && kernelEnv[otherEnvPathKey]) {
+            this.envVarsService.appendPath(mergedVars, kernelEnv[otherEnvPathKey]!);
         }
         if (customEditVars.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars, customEditVars.PYTHONPATH);

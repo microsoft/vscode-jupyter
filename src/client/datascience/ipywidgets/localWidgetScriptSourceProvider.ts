@@ -7,6 +7,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
@@ -32,7 +33,8 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         private readonly notebook: INotebook,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
         private readonly fs: IFileSystem,
-        private readonly interpreterService: IInterpreterService
+        private readonly interpreterService: IInterpreterService,
+        private readonly factory: IPythonExecutionFactory
     ) {}
     public async getWidgetScriptSource(moduleName: string): Promise<Readonly<WidgetScriptSource>> {
         const sources = await this.getWidgetScriptSources();
@@ -106,6 +108,11 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
                 traceError.bind(`Failed to get interpreter details for Kernel/Interpreter ${interpreterOrKernelPath}`)
             );
 
+        if (interpreterInfo && !interpreterInfo.sysPrefix) {
+            const pythonService = await this.factory.createActivatedEnvironment({ interpreter: interpreterInfo });
+            const info = await pythonService.getInterpreterInformation();
+            return info?.sysPrefix;
+        }
         if (interpreterInfo) {
             return interpreterInfo?.sysPrefix;
         }

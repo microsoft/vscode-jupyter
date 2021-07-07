@@ -18,6 +18,7 @@ import { getDisplayNameOrNameOfKernelConnection, isLocalLaunch } from './helpers
 import { KernelSelectionProvider } from './kernelSelections';
 import { IKernelSpecQuickPickItem, KernelConnectionMetadata } from './types';
 import { InterpreterPackages } from '../../telemetry/interpreterPackages';
+import { Uri } from 'vscode';
 
 /**
  * All KernelConnections returned (as return values of methods) by the KernelSelector can be used in a number of ways.
@@ -27,6 +28,7 @@ import { InterpreterPackages } from '../../telemetry/interpreterPackages';
  */
 @injectable()
 export class KernelSelector {
+    private readonly kernelSelectionsByResource = new Map<Uri, Promise<KernelConnectionMetadata | undefined>>();
     constructor(
         @inject(KernelSelectionProvider) private readonly selectionProvider: KernelSelectionProvider,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
@@ -74,7 +76,6 @@ export class KernelSelector {
         );
         return cloneDeep(selection);
     }
-
     private async selectKernel<T extends KernelConnectionMetadata>(
         resource: Resource,
         stopWatch: StopWatch,
@@ -83,19 +84,42 @@ export class KernelSelector {
         cancelToken?: CancellationToken,
         currentKernelDisplayName?: string
     ) {
-        const placeHolder =
-            localize.DataScience.selectKernel() +
-            (currentKernelDisplayName ? ` (current: ${currentKernelDisplayName})` : '');
-        sendTelemetryEvent(telemetryEvent, stopWatch.elapsedTime);
-        sendKernelListTelemetry(resource, suggestions, stopWatch);
-        const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder }, cancelToken);
-        if (!selection?.selection) {
-            return;
+        if (resource && this.kernelSelectionsByResource.get(resource)) {
+            return this.kernelSelectionsByResource.get(resource);
         }
-        if (selection.selection.interpreter) {
-            this.interpreterPackages.trackPackages(selection.selection.interpreter);
+        const promise = (async () => {
+            const placeHolder =
+                localize.DataScience.selectKernel() +
+                (currentKernelDisplayName ? ` (current: ${currentKernelDisplayName})` : '');
+            sendTelemetryEvent(telemetryEvent, stopWatch.elapsedTime);
+            sendKernelListTelemetry(
+                resource,
+                suggestions.map((item) => item.selection),
+                stopWatch
+            );
+            const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder }, cancelToken);
+            if (!selection?.selection) {
+                return;
+            }
+            if (selection.selection.interpreter) {
+                this.interpreterPackages.trackPackages(selection.selection.interpreter);
+            }
+            sendKernelTelemetryEvent(resource, Telemetry.SwitchKernel);
+            return selection.selection;
+        })();
+
+        // Work around to prevent duplicate kernel pickers being displayed for the same resource.
+        // We seem to start kernels in different places, and we end up with multiple code paths that will throw errors
+        // about missing dependencies, hence we could have multiple prompts to install missing dependencies.
+        // This ensures we only display the kernel picker once.
+        if (resource) {
+            this.kernelSelectionsByResource.set(resource, promise);
+            promise.finally(() => {
+                if (this.kernelSelectionsByResource.get(resource) === promise) {
+                    this.kernelSelectionsByResource.delete(resource);
+                }
+            });
         }
-        sendKernelTelemetryEvent(resource, Telemetry.SwitchKernel);
-        return selection.selection;
+        return promise;
     }
 }

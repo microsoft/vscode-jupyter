@@ -5,14 +5,15 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { TextDocument } from 'vscode';
+import { NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
 import { splitMultilineString } from '../../datascience-ui/common';
-import { IS_CI_SERVER } from '../../test/ciConstants';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IDocumentManager } from '../common/application/types';
-import { isTestExecution } from '../common/constants';
+import { IDocumentManager, IVSCodeNotebook } from '../common/application/types';
+import { isCI, isTestExecution } from '../common/constants';
 import '../common/extensions';
+import { disposeAllDisposables } from '../common/helpers';
+import { IDisposable, IDisposableRegistry } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../datascience/types';
 import { EventName } from './constants';
@@ -47,20 +48,27 @@ const MAX_DOCUMENT_LINES = 1000;
 const testExecution = isTestExecution();
 
 @injectable()
-export class ImportTracker implements IExtensionSingleActivationService, INotebookExecutionLogger {
+export class ImportTracker implements IExtensionSingleActivationService, INotebookExecutionLogger, IDisposable {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
+    private disposables: IDisposable[] = [];
     private sentMatches: Set<string> = new Set<string>();
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
+        @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
+        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t));
-        this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t));
-        this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
-        this.notebookEditorProvider.onDidCloseNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
+        disposables.push(this);
+        this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t), this.disposables);
+        this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t), this.disposables);
+        this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t), this.disposables);
+        this.notebookEditorProvider.onDidCloseNotebookEditor((t) => this.onOpenedOrClosedNotebook(t), this.disposables);
+        this.vscNotebook.onDidOpenNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t), this.disposables);
+        this.vscNotebook.onDidCloseNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t), this.disposables);
     }
 
     public dispose() {
+        disposeAllDisposables(this.disposables);
         this.pendingChecks.clear();
     }
 
@@ -115,9 +123,28 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
                     });
             } catch (ex) {
                 // Can fail on CI, if the notebook has been closed or the like
-                if (!IS_CI_SERVER) {
+                if (!isCI) {
                     throw ex;
                 }
+            }
+        }
+        return result;
+    }
+    private getNotebookDocumentLines(e: NotebookDocument): (string | undefined)[] {
+        const result: (string | undefined)[] = [];
+        try {
+            e.getCells()
+                .filter((cell) => cell.kind === NotebookCellKind.Code)
+                .forEach((c) => {
+                    const cellArray = this.getCellLinesFromSource(c.document.getText());
+                    if (result.length < MAX_DOCUMENT_LINES) {
+                        result.push(...cellArray);
+                    }
+                });
+        } catch (ex) {
+            // Can fail on CI, if the notebook has been closed or the like
+            if (!isCI) {
+                throw ex;
             }
         }
         return result;
@@ -125,7 +152,12 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
 
     private getCellLines(cell: nbformat.ICodeCell): (string | undefined)[] {
         // Split into multiple lines removing line feeds on the end.
-        return splitMultilineString(cell.source).map((s) => s.replace(/\n/g, ''));
+        return this.getCellLinesFromSource(cell.source);
+    }
+
+    private getCellLinesFromSource(source: nbformat.MultilineString): (string | undefined)[] {
+        // Split into multiple lines removing line feeds on the end.
+        return splitMultilineString(source).map((s) => s.replace(/\n/g, ''));
     }
 
     private onOpenedOrSavedDocument(document: TextDocument) {
@@ -139,6 +171,9 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         if (e.file) {
             this.scheduleCheck(e.file.fsPath, this.checkNotebook.bind(this, e));
         }
+    }
+    private onOpenedOrClosedNotebookDocument(e: NotebookDocument) {
+        this.scheduleCheck(e.uri.fsPath, this.checkNotebookDocument.bind(this, e));
     }
 
     private scheduleDocument(document: TextDocument) {
@@ -182,6 +217,12 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
     private checkNotebook(e: INotebookEditor) {
         this.pendingChecks.delete(e.file.fsPath);
         const lines = this.getNotebookLines(e);
+        this.lookForImports(lines);
+    }
+    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
+    private checkNotebookDocument(e: NotebookDocument) {
+        this.pendingChecks.delete(e.uri.fsPath);
+        const lines = this.getNotebookDocumentLines(e);
         this.lookForImports(lines);
     }
 

@@ -408,6 +408,14 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asCallHierarchyOutgoingCalls(_items: any): code.CallHierarchyOutgoingCall[] | undefined {
         throw new Error('Method not implemented.');
     }
+    public asLinkedEditingRanges(value: null | undefined): undefined;
+    public asLinkedEditingRanges(value: proto.LinkedEditingRanges): code.LinkedEditingRanges;
+    public asLinkedEditingRanges(
+        value: proto.LinkedEditingRanges | null | undefined
+    ): code.LinkedEditingRanges | undefined;
+    public asLinkedEditingRanges(_value: any): code.LinkedEditingRanges | undefined {
+        throw new Error('Method not implemented.');
+    }
 
     private asCompletionItemKind(
         value: proto.CompletionItemKind

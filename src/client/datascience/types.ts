@@ -18,6 +18,7 @@ import {
     HoverProvider,
     LanguageConfiguration,
     NotebookCell,
+    NotebookDocument,
     QuickPickItem,
     Range,
     TextDocument,
@@ -272,6 +273,7 @@ export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean, language: string, resource: Uri): Promise<void>;
+    nativePostExecute?(cell: NotebookCell): Promise<void>;
     onKernelStarted(resource: Uri): void;
     onKernelRestarted(resource: Uri): void;
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
@@ -316,9 +318,11 @@ export interface IJupyterPasswordConnect {
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
+    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    readonly sessionId: string;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
@@ -327,6 +331,10 @@ export interface IJupyterSession extends IAsyncDisposable {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+    requestDebug(
+        content: KernelMessage.IDebugRequestMsg['content'],
+        disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined;
     requestComplete(
         content: KernelMessage.ICompleteRequestMsg['content']
     ): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
@@ -526,6 +534,7 @@ export interface IInteractiveBase extends Disposable {
     stopProgress(): void;
     undoCells(): void;
     redoCells(): void;
+    toggleOutput?(): void;
     removeAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
@@ -548,6 +557,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly submitters: Uri[];
     readonly identity: Uri;
     readonly title: string;
+    readonly notebookUri?: Uri;
     closed: Event<IInteractiveWindow>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
@@ -562,6 +572,8 @@ export interface IInteractiveWindow extends IInteractiveBase {
     collapseAllCells(): void;
     exportCells(): void;
     scrollToCell(id: string): void;
+    exportAs(cells?: ICell[]): void;
+    export(cells?: ICell[]): void;
 }
 
 export interface IInteractiveWindowLoadable extends IInteractiveWindow {
@@ -605,7 +617,8 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     readonly file: Uri;
     readonly visible: boolean;
     readonly active: boolean;
-    readonly model: INotebookModel;
+    readonly model?: INotebookModel;
+    readonly notebookMetadata: nbformat.INotebookMetadata | undefined;
     notebook?: INotebook;
     show(): Promise<void>;
     runAllCells(): void;
@@ -619,9 +632,7 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
     syncAllCells(): Promise<void>;
-    runAbove(cell: NotebookCell | undefined): void;
-    runCellAndBelow(cell: NotebookCell | undefined): void;
-    toggleOutput(): void;
+    getContent(): string;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');
@@ -688,7 +699,7 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
-export interface ICodeWatcher {
+export interface ICodeWatcher extends IDisposable {
     readonly uri: Uri | undefined;
     codeLensUpdated: Event<void>;
     setDocument(document: TextDocument): void;
@@ -1143,10 +1154,6 @@ export interface INotebookModel {
      * all editors associated with the document have been closed.)
      */
     dispose(): void;
-    /**
-     * Trusts a notebook document.
-     */
-    trust(): void;
 }
 
 export interface IModelLoadOptions {
@@ -1323,20 +1330,52 @@ export type KernelSocketInformation = {
     readonly options: KernelSocketOptions;
 };
 
+/**
+ * Response for installation of kernel dependencies such as ipykernel.
+ * (these values are used in telemetry)
+ */
 export enum KernelInterpreterDependencyResponse {
-    ok,
-    cancel,
-    failed
+    ok = 0, // Used in telemetry.
+    cancel = 1, // Used in telemetry.
+    failed = 2, // Used in telemetry.
+    selectDifferentKernel = 3 // Used in telemetry.
 }
 
 export const IKernelDependencyService = Symbol('IKernelDependencyService');
 export interface IKernelDependencyService {
     installMissingDependencies(
+        resource: Resource,
         interpreter: PythonEnvironment,
         token?: CancellationToken,
         disableUI?: boolean
     ): Promise<void>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+    areDebuggingDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
+}
+
+export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
+
+export interface IKernelVariableRequester {
+    getVariableNamesAndTypesFromKernel(notebook: INotebook, token?: CancellationToken): Promise<IJupyterVariable[]>;
+    getFullVariable(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        token?: CancellationToken
+    ): Promise<IJupyterVariable>;
+    getDataFrameRows(start: number, end: number, notebook: INotebook, expression: string): Promise<{}>;
+    getVariableProperties(
+        word: string,
+        notebook: INotebook,
+        cancelToken: CancellationToken | undefined,
+        matchingVariable: IJupyterVariable | undefined,
+        languageSettings: { [typeNameKey: string]: string[] },
+        inEnhancedTooltipsExperiment: boolean
+    ): Promise<{ [attributeName: string]: string }>;
+    getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        expression: string
+    ): Promise<IJupyterVariable>;
 }
 
 export const INotebookCreationTracker = Symbol('INotebookCreationTracker');
@@ -1405,19 +1444,6 @@ export interface IJupyterUriProviderRegistration {
     registerProvider(picker: IJupyterUriProvider): void;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
-export const IDigestStorage = Symbol('IDigestStorage');
-export interface IDigestStorage {
-    readonly key: Promise<string | undefined>;
-    saveDigest(uri: Uri, digest: string): Promise<void>;
-    containsDigest(uri: Uri, digest: string): Promise<boolean>;
-}
-
-export const ITrustService = Symbol('ITrustService');
-export interface ITrustService {
-    readonly onDidSetNotebookTrust: Event<void>;
-    isNotebookTrusted(uri: Uri, notebookContents: string): Promise<boolean>;
-    trustNotebook(uri: Uri, notebookContents: string): Promise<void>;
-}
 
 export interface ISwitchKernelOptions {
     identity: Resource;
@@ -1457,14 +1483,6 @@ export interface IExternalCommandFromWebview {
     cell: ICell;
 }
 
-// Smoke tests compile the tests but exercise the VSIX, so Symbols are not shared
-// Ensure we reuse Symbols created for existing keys so that we can retrieve the
-// Symbol matching this key from the extension API serviceManager
-export const ISystemPseudoRandomNumberGenerator = Symbol.for('ISystemPseudoRandomNumberGenerator');
-export interface ISystemPseudoRandomNumberGenerator {
-    generateRandomKey(numBytes: number): Promise<string>;
-}
-
 export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchronization');
 /**
  * Service used to make sure a notebook model matches the code displayed in the UI (whichever UI is hosting the model)
@@ -1473,4 +1491,9 @@ export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchroni
  */
 export interface INotebookModelSynchronization {
     syncAllCells(model: INotebookModel): Promise<void>;
+}
+
+export const IDebuggingCellMap = Symbol('IDebuggingCellMap');
+export interface IDebuggingCellMap {
+    getCellsAnClearQueue(doc: NotebookDocument): NotebookCell[];
 }

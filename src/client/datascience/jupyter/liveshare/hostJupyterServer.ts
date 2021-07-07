@@ -15,7 +15,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../../common/application/types';
-import { traceInfo } from '../../../common/logger';
+import { traceInfo, traceInfoIf } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
@@ -49,6 +49,7 @@ import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
+import { isCI } from '../../../common/constants';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
@@ -347,10 +348,13 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         ) {
             let kernelInfo: KernelConnectionMetadata | undefined;
             if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'connectToLiveKernel') {
+                traceInfoIf(isCI, `kernelConnection?.kind === 'connectToLiveKernel'`);
                 kernelInfo = kernelConnection;
             } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'startUsingKernelSpec') {
+                traceInfoIf(isCI, `kernelConnection?.kind === 'startUsingKernelSpec'`);
                 kernelInfo = kernelConnection;
             } else if (launchInfo.connectionInfo.localLaunch && kernelConnection) {
+                traceInfoIf(isCI, `launchInfo.connectionInfo.localLaunch && kernelConnection'`);
                 kernelInfo = kernelConnection;
             } else {
                 kernelInfo = await (launchInfo.connectionInfo.localLaunch
@@ -361,8 +365,9 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                           notebookMetadata,
                           cancelToken
                       ));
+                traceInfoIf(isCI, `kernelInfo found ${kernelInfo?.id}`);
             }
-            if (kernelInfo && kernelInfo !== launchInfo.kernelConnectionMetadata) {
+            if (kernelInfo && kernelInfo.id !== launchInfo.kernelConnectionMetadata?.id) {
                 // Update kernel info if we found a new one.
                 launchInfo.kernelConnectionMetadata = kernelInfo;
                 changedKernel = true;
@@ -371,7 +376,16 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 `Compute Launch Info uri = ${resource?.fsPath}, changed ${changedKernel}, ${launchInfo.kernelConnectionMetadata?.id}`
             );
         }
+        if (!changedKernel && kernelConnection && kernelConnection.id !== launchInfo.kernelConnectionMetadata?.id) {
+            // Update kernel info if its different from what was originally provided.
+            traceInfoIf(isCI, `kernelConnection provided is different from launch info ${kernelConnection.id}`);
+            launchInfo.kernelConnectionMetadata = kernelConnection;
+            changedKernel = true;
+        }
 
+        traceInfo(
+            `Computed Launch Info uri = ${resource?.fsPath}, changed ${changedKernel}, ${launchInfo.kernelConnectionMetadata?.id}`
+        );
         return { info: launchInfo, changedKernel };
     }
 

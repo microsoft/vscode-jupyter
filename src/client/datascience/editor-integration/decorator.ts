@@ -104,6 +104,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
             editor.document &&
             editor.document.languageId === PYTHON_LANGUAGE &&
             !this.vsCodeNotebook.activeNotebookEditor &&
+            editor.document.notebook === undefined &&
             this.activeCellTop &&
             this.cellSeparatorType &&
             this.activeCellBottom &&

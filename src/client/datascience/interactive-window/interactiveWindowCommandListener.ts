@@ -21,7 +21,6 @@ import { Commands, Telemetry } from '../constants';
 import { ExportFormat, IExportDialog, IExportManager } from '../export/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
-    IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IInteractiveBase,
     IInteractiveWindowProvider,
@@ -35,7 +34,7 @@ import {
 import { createExportInteractiveIdentity } from './identity';
 
 @injectable()
-export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
+export class InteractiveWindowCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
