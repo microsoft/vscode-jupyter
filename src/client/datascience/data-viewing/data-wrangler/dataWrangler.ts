@@ -499,9 +499,16 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
     private async normalizeColumn(req: INormalizeColumnRequest, currentVariableName: string): Promise<IHistoryItem> {
         const newVariableName = this.getNewVariableName();
-        const code = `from sklearn.preprocessing import MinMaxScaler\r\nscaler = MinMaxScaler(feature_range=(${req.start.toString()}, ${req.end.toString()}))\r\n${newVariableName} = ${currentVariableName}.copy()\r\n${newVariableName}['${
+        // MinMaxScaler code in pandas taken from https://stackoverflow.com/a/50028155
+        const code = `new_min, new_max = ${req.start.toString()}, ${req.end.toString()}\r\nold_min, old_max = df[['${
             req.targetColumn
-        }'] = scaler.fit_transform(${newVariableName}['${req.targetColumn}'].values.reshape(-1, 1))\n`;
+        }']].min(), df[['${
+            req.targetColumn
+        }']].max()\r\n${newVariableName} = ${currentVariableName}.copy()\r\n${newVariableName}['${
+            req.targetColumn
+        }'] = (${currentVariableName}[['${
+            req.targetColumn
+        }']] - old_min) / (old_max - old_min) * (new_max - new_min) + new_min\n`;
         const historyItem = {
             transformation: DataScience.dataWranglerNormalizeColumnTransformation().format(req.targetColumn),
             variableName: newVariableName,
