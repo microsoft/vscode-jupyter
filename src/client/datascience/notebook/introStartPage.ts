@@ -32,7 +32,7 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
             return;
         }
 
-        this.doNotShowStartPageAgain().then(noop, noop);
+        this.memento.update(IntroduceNativeNotebookDisplayed, true).then(noop, noop);
         // Only display to users who have run a notebook at least once before.
         if (this.memento.get<number>(InsidersNotebookSurveyStateKeys.ExecutionCount, 0) === 0) {
             return;
@@ -42,8 +42,5 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
                 'The notebook interface has been revamped. To learn more about this new experience, click [here](https://github.com/microsoft/vscode-jupyter/wiki/Introducing-Native-Notebooks)'
             )
             .then(noop, noop);
-    }
-    private async doNotShowStartPageAgain() {
-        await this.memento.update(IntroduceNativeNotebookDisplayed, true);
     }
 }
