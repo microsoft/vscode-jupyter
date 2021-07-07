@@ -115,7 +115,8 @@ export class ExperimentService implements IExperimentService {
         // https://github.com/microsoft/vscode-jupyter/issues/4771
         if (
             experiment === ExperimentGroups.NativeNotebook &&
-            this.extensions.getExtension('ms-dotnettools.dotnet-interactive-vscode')
+            (this.extensions.getExtension('ms-dotnettools.dotnet-interactive-vscode') ||
+                this.extensions.getExtension('julialang.language-julia'))
         ) {
             return true;
         }

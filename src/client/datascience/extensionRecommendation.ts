@@ -29,14 +29,23 @@ const knownExtensionsToRecommend = new Map<string, { displayName: string; extens
             extensionLink:
                 'https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode'
         }
+    ],
+    [
+        'julialang.language-julia',
+        {
+            displayName: 'Julia',
+            extensionLink:
+                'https://marketplace.visualstudio.com/items?itemName=julialang.language-julia'
+        }
     ]
 ]);
-const extensionsThatSupportJupyterKernelLanguages = new Map<string, string>([
+export const extensionsThatSupportJupyterKernelLanguages = new Map<string, string>([
     ['c#', 'ms-dotnettools.dotnet-interactive-vscode'],
     ['csharp', 'ms-dotnettools.dotnet-interactive-vscode'],
     ['f#', 'ms-dotnettools.dotnet-interactive-vscode'],
     ['fsharp', 'ms-dotnettools.dotnet-interactive-vscode'],
-    ['powershell', 'ms-dotnettools.dotnet-interactive-vscode']
+    ['powershell', 'ms-dotnettools.dotnet-interactive-vscode'],
+    ['julia', 'julialang.language-julia']
 ]);
 
 export function canOtherExtensionsRunCellsInNotebook(document: NotebookDocument) {

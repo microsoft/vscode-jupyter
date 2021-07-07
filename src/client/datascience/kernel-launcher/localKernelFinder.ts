@@ -30,6 +30,7 @@ import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
 import { JupyterPaths } from './jupyterPaths';
+import { extensionsThatSupportJupyterKernelLanguages } from '../extensionRecommendation';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -133,6 +134,10 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     }
     private filterKernels(kernels: (KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]) {
         return kernels.filter(({ kernelSpec }) => {
+            const kernelLanguage = kernelSpec.language?.toLowerCase();
+            const extensionThatSupportsThisLanguage = extensionsThatSupportJupyterKernelLanguages.get(
+                kernelLanguage || ''
+            );
             // Disable xeus python for now.
             if (kernelSpec.argv[0].toLowerCase().endsWith('xpython')) {
                 traceInfo(`Hiding xeus kernelspec`);
@@ -141,6 +146,14 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             const extensionId = kernelSpec.metadata?.vscode?.extension_id;
             if (extensionId && this.extensions.getExtension(extensionId)) {
                 traceInfo(`Hiding kernelspec ${kernelSpec.display_name}, better support by ${extensionId}`);
+                return false;
+            } else if (
+                extensionThatSupportsThisLanguage &&
+                this.extensions.getExtension(extensionThatSupportsThisLanguage)
+            ) {
+                traceInfo(
+                    `Hiding kernelspec ${kernelSpec.display_name}, better support by ${extensionThatSupportsThisLanguage}`
+                );
                 return false;
             }
             return true;
