@@ -152,7 +152,7 @@ export namespace DataScience {
     );
     export const newNotebookUI = localize(
         'DataScience.newNotebookUI',
-        "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use! To learn more, click [here](https://aka.ms/NewNotebookUI)"
+        "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use. [Learn more...](https://aka.ms/NewNotebookUI)"
     );
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
