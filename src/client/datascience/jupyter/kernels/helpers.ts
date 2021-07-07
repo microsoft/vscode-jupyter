@@ -12,7 +12,7 @@ const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp
 import { nbformat } from '@jupyterlab/coreutils';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { PYTHON_LANGUAGE } from '../../../common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../../common/constants';
 import { IConfigurationService, IPathUtils, Resource } from '../../../common/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import {
