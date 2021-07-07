@@ -34,8 +34,7 @@ const knownExtensionsToRecommend = new Map<string, { displayName: string; extens
         'julialang.language-julia',
         {
             displayName: 'Julia',
-            extensionLink:
-                'https://marketplace.visualstudio.com/items?itemName=julialang.language-julia'
+            extensionLink: 'https://marketplace.visualstudio.com/items?itemName=julialang.language-julia'
         }
     ]
 ]);
