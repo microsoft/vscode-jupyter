@@ -8,10 +8,9 @@ import * as path from 'path';
 import { NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
 import { splitMultilineString } from '../../datascience-ui/common';
-import { IS_CI_SERVER } from '../../test/ciConstants';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../common/application/types';
-import { isTestExecution } from '../common/constants';
+import { isCI, isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { disposeAllDisposables } from '../common/helpers';
 import { IDisposable, IDisposableRegistry } from '../common/types';
@@ -124,7 +123,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
                     });
             } catch (ex) {
                 // Can fail on CI, if the notebook has been closed or the like
-                if (!IS_CI_SERVER) {
+                if (!isCI) {
                     throw ex;
                 }
             }
@@ -144,7 +143,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
                 });
         } catch (ex) {
             // Can fail on CI, if the notebook has been closed or the like
-            if (!IS_CI_SERVER) {
+            if (!isCI) {
                 throw ex;
             }
         }

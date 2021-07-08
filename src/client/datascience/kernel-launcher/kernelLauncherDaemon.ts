@@ -54,7 +54,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         const [daemon, wdExists, env] = await Promise.all([
             this.daemonPool.get(resource, kernelSpec, interpreter),
             fs.pathExists(workingDirectory),
-            this.kernelEnvVarsService.getEnvironmentVariables(resource, kernelSpec)
+            this.kernelEnvVarsService.getEnvironmentVariables(resource, interpreter, kernelSpec)
         ]);
 
         // Check to see if we have the type of kernelspec that we expect

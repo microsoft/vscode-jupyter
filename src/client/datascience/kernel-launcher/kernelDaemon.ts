@@ -73,6 +73,8 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         this.monitorOutput();
 
         if (this.preWarmed) {
+            // Making an assumption that the prewarmed kernel has the same environment.
+            traceInfo(`Using prewarmed kernel ...`);
             const request = new RequestType<{ args: string[] }, ExecResponse, void>('start_prewarmed_kernel');
             await this.sendRequest(request, { args: [moduleName].concat(args) });
         } else {
@@ -87,6 +89,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
             // This is why when we run `execModule` in the Kernel daemon, it finishes (comes back) quickly.
             // However in reality it is running in the background.
             // See `m_exec_module_observable` in `kernel_launcher_daemon.py`.
+            traceInfo(`Starting kernel from scratch with options ${JSON.stringify(options)}`);
             await this.execModule(moduleName, args, options);
         }
 

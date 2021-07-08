@@ -25,7 +25,7 @@ export class MockMemento implements Memento {
         // noop.
         this._keys = keys;
     }
-    public get keys(): readonly string[] {
+    public keys(): readonly string[] {
         return this._keys;
     }
 }
