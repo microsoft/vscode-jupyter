@@ -46,6 +46,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private isVSCodeNotebookActive: ContextKey;
     private usingWebViewNotebook: ContextKey;
     private hasNativeNotebookOpen: ContextKey;
+    private kernelCanDebugCache = new Map<PythonEnvironment, boolean>();
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
@@ -196,10 +197,21 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
     }
     private async updateDebugContext(interpreter?: PythonEnvironment) {
-        this.canDebug.set(false).ignoreErrors();
         if (interpreter) {
+            const cache = this.kernelCanDebugCache.get(interpreter);
+            if (cache) {
+                this.canDebug.set(cache).ignoreErrors();
+            } else {
+                this.canDebug.set(false).ignoreErrors();
+            }
+
             const flag = await this.dependencyService.areDebuggingDependenciesInstalled(interpreter);
-            this.canDebug.set(flag).ignoreErrors();
+            this.kernelCanDebugCache.set(interpreter, flag);
+            if (cache === undefined || cache !== flag) {
+                this.canDebug.set(flag).ignoreErrors();
+            }
+        } else {
+            this.canDebug.set(false).ignoreErrors();
         }
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {
