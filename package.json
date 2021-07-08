@@ -281,14 +281,15 @@
                 "key": "ctrl+r",
                 "mac": "cmd+r",
                 "when": "jupyter.dataWranglerActive"
+            },
+            {
+                "command": "jupyter.undoDataWrangler",
+                "key": "ctrl+z",
+                "mac": "cmd+z",
+                "when": "jupyter.dataWranglerActive"
             }
         ],
         "commands": [
-            {
-                "command": "jupyter.openDataWrangler",
-                "title": "Open Data Wrangler",
-                "category": "Jupyter"
-            },
             {
                 "command": "jupyter.debugNotebook",
                 "title": "Debug",
@@ -834,13 +835,19 @@
                 "command": "jupyter.refreshDataWrangler",
                 "title": "Refresh Data Wrangler",
                 "category": "Jupyter",
-                "enablement": "config.jupyter.experimental.dataWrangler && jupyter.dataWranglerActive && isWorkspaceTrusted"
+                "enablement": "jupyter.dataWranglerActive && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.openDataWrangler",
                 "title": "Open Data Wrangler",
                 "category": "Jupyter",
-                "enablement": "config.jupyter.experimental.dataWrangler"
+                "enablement": "isWorkspaceTrusted"
+            },
+            {
+                "command": "jupyter.undoDataWrangler",
+                "title": "Undo Data Wrangler",
+                "category": "Jupyter",
+                "enablement": "jupyter.dataWranglerActive && isWorkspaceTrusted"
             }
         ],
         "menus": {
@@ -1064,6 +1071,11 @@
                 },
                 {
                     "command": "jupyter.refreshDataWrangler",
+                    "category": "Jupyter",
+                    "when": "isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.undoDataWrangler",
                     "category": "Jupyter",
                     "when": "isWorkspaceTrusted"
                 },

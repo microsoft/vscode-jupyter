@@ -177,6 +177,7 @@ export namespace Commands {
     export const OpenDataWrangler = 'jupyter.openDataWrangler';
     export const UpdateOrCreateDataWrangler = 'jupyter.openDataFrameInDataWrangler';
     export const RefreshDataWrangler = 'jupyter.refreshDataWrangler';
+    export const UndoDataWrangler = 'jupyter.undoDataWrangler';
 }
 
 export namespace CodeLensCommands {

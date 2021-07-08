@@ -29,7 +29,8 @@ export class DataWranglerFactory implements IDataWranglerFactory, IAsyncDisposab
         asyncRegistry.push(this);
         this.viewContext = new ContextKey(EditorContexts.IsDataWranglerActive, this.commandManager);
         this.disposables.push(
-            this.commandManager.registerCommand(Commands.RefreshDataWrangler, this.refreshDataWrangler, this)
+            this.commandManager.registerCommand(Commands.RefreshDataWrangler, this.refreshDataWrangler, this),
+            this.commandManager.registerCommand(Commands.UndoDataWrangler, this.undoLastStepDataWrangler, this)
         );
     }
 
@@ -96,4 +97,12 @@ export class DataWranglerFactory implements IDataWranglerFactory, IAsyncDisposab
             }
         }
     }, 1000);
+
+    private undoLastStepDataWrangler = async () => {
+        for (const wrangler of this.knownDataWranglers) {
+            if (wrangler.visible) {
+                await wrangler.removeLatestHistoryItem();
+            }
+        }
+    };
 }

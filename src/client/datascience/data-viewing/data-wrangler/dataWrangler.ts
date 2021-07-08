@@ -25,7 +25,8 @@ import {
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
-    IThemeFinder
+    IThemeFinder,
+    WebViewViewChangeEventArgs
 } from '../../types';
 import { updateCellCode } from '../../notebook/helpers/executionHelpers';
 import { CssMessages } from '../../messages';
@@ -114,8 +115,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             PREFERRED_VIEWGROUP,
             ViewColumn.One
         );
-        this.onDidDispose(this.dataWranglerDisposed, this);
-
         this.commands.set(DataWranglerCommands.Describe, this.getColumnStats.bind(this));
         this.commands.set(DataWranglerCommands.ExportToPythonScript, this.generatePythonCode.bind(this));
         this.commands.set(DataWranglerCommands.ExportToNotebook, this.generateNotebook.bind(this));
@@ -130,6 +129,8 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         this.commands.set(DataWranglerCommands.ReplaceAllColumn, this.replaceAllColumn.bind(this));
         this.commands.set(DataWranglerCommands.RemoveHistoryItem, this.removeHistoryItem.bind(this));
         this.commands.set(DataWranglerCommands.ExportToCsv, this.exportToCsv.bind(this));
+
+        this.onDidDispose(this.dataWranglerDisposed, this);
     }
 
     public async showData(
@@ -219,27 +220,40 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         await this.updateWithNewVariable(variableName);
     }
 
+    protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
+        if (args.current.active && args.current.visible && args.previous.active && args.current.visible) {
+            await this.globalMemento.update(PREFERRED_VIEWGROUP, this.webPanel?.viewColumn);
+        }
+        this._onDidChangeDataWranglerViewState.fire();
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected onMessage(message: string, payload: any) {
+        let handled = false;
         switch (message) {
             case DataWranglerMessages.SubmitCommand:
                 this.handleCommand(payload).ignoreErrors();
+                handled = true;
                 break;
 
             case DataWranglerMessages.RefreshDataWrangler:
                 this.refreshData().ignoreErrors();
+                handled = true;
                 break;
 
             case CssMessages.GetMonacoThemeRequest:
                 void this.handleMonacoThemeRequest(payload);
+                handled = true;
                 break;
 
             default:
                 break;
         }
 
-        // Some messages will be handled by DataViewer
-        super.onMessage(message, payload);
+        if (!handled) {
+            // Some messages will be handled by DataViewer
+            super.onMessage(message, payload);
+        }
     }
 
     private addToHistory(newHistoryItem: IHistoryItem) {
@@ -323,10 +337,16 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         }
     }
 
-    private async removeHistoryItem(
-        req: IRemoveHistoryItemRequest,
-        currentVariableName: string
-    ): Promise<IHistoryItem> {
+    public async removeLatestHistoryItem() {
+        if (this.historyList.length > 1) {
+            await this.handleCommand({
+                command: DataWranglerCommands.RemoveHistoryItem,
+                args: { index: this.historyList.length - 1 }
+            });
+        }
+    }
+
+    public async removeHistoryItem(req: IRemoveHistoryItemRequest, currentVariableName: string): Promise<IHistoryItem> {
         this.historyList.splice(req.index, 1);
         this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
         return {
@@ -337,7 +357,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     private async coerceColumn(req: ICoerceColumnRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.getNewVariableName();
+        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
         const columns = req.targetColumns.map((col) => `'${col}'`).join(', ');
         const astypeDict = req.targetColumns.map((col) => `'${col}': '${req.newType}'`).join(', ');
         const code = `${newVariableName} = ${currentVariableName}.astype({${astypeDict}})\n`;
@@ -351,7 +371,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     private async replaceAllColumn(req: IReplaceAllColumnsRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.getNewVariableName();
+        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
         const columns = req.targetColumns.map((col) => `'${col}'`).join(', ');
 
         // Find type of each column
@@ -395,7 +415,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     private async renameColumn(req: IRenameColumnsRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.getNewVariableName();
+        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
         const code = `${newVariableName} = ${currentVariableName}.rename(columns={ '${req.targetColumn}': '${req.newColumnName}' })\n`;
         const historyItem = {
             transformation: DataScience.dataWranglerRenameColumnTransformation().format(
@@ -410,7 +430,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     private async drop(req: IDropRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.getNewVariableName();
+        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
         if (req.rowIndex) {
             // Drop rows by index
             const code = `${newVariableName} = ${currentVariableName}.drop(index=${req.rowIndex})\n`;
@@ -438,7 +458,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     private async dropDuplicates(req: IDropDuplicatesRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.getNewVariableName();
+        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
 
         if (req.targetColumns !== undefined) {
             // Drop duplicates in a column
@@ -467,7 +487,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     private async dropNa(req: IDropNaRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.getNewVariableName();
+        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
 
         if (req.targetColumns !== undefined) {
             // Only drop rows where there are Na values in the target columns
@@ -498,7 +518,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     private async normalizeColumn(req: INormalizeColumnRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.getNewVariableName();
+        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
         // MinMaxScaler code in pandas taken from https://stackoverflow.com/a/50028155
         const code = `new_min, new_max = ${req.start.toString()}, ${req.end.toString()}\r\nold_min, old_max = df[['${
             req.targetColumn
@@ -519,7 +539,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     private async fillNa(req: IFillNaRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.getNewVariableName();
+        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
         const code = `${currentVariableName} = ${currentVariableName}.fillna(${req.newValue.toString()})\n`;
         const historyItem = {
             transformation: DataScience.dataWranglerFillNaTransformation().format(req.newValue.toString()),
@@ -530,13 +550,16 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         return historyItem;
     }
 
-    private getNewVariableName() {
-        const oldCurrVar = this.historyList[this.historyList.length - 1].variableName;
-        const currVar = oldCurrVar.substr(2);
-        if (currVar === '') {
+    private cleanHistoryAndGetNewVariableName(currentVariableName: string) {
+        // Removes subsequent history items if current variable is an intermediate step
+        // Then sets most recent variable to the action performed after that intermediate step
+        if (currentVariableName === 'df') {
+            this.historyList = this.historyList.slice(0, 1);
             return 'df1';
         } else {
-            return 'df' + (Number(currVar) + 1).toString();
+            const currVarIndex = Number(currentVariableName.substr(2));
+            this.historyList = this.historyList.slice(0, currVarIndex + 1);
+            return 'df' + (Number(currVarIndex) + 1).toString();
         }
     }
 }

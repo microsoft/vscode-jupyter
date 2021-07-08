@@ -62,6 +62,7 @@ export interface IDataWrangler extends IDisposable {
     showData(dataProvider: IDataViewerDataProvider, title: string, webviewPanel?: WebviewPanel): Promise<void>;
     refreshData(): Promise<void>;
     updateWithNewVariable(newVariableName: string): Promise<void>;
+    removeLatestHistoryItem(): Promise<void>;
 }
 
 export interface IRemoveHistoryItemRequest {

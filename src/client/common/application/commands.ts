@@ -172,4 +172,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.OpenDataWrangler]: [];
     [DSCommands.UpdateOrCreateDataWrangler]: [];
     [DSCommands.RefreshDataWrangler]: [];
+    [DSCommands.UndoDataWrangler]: [];
 }
