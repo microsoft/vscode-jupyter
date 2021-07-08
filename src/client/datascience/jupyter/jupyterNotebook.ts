@@ -964,7 +964,11 @@ export class JupyterNotebookBase implements INotebook {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggested;
                 return this.changeDirectoryIfPossible(this._workingDirectory);
-            } else if (launchingFile && (await this.fs.localDirectoryExists(path.dirname(launchingFile)))) {
+            } else if (
+                launchingFile &&
+                (await this.fs.localFileExists(launchingFile)) &&
+                (await this.fs.localDirectoryExists(path.dirname(launchingFile)))
+            ) {
                 // Combine the working directory with this file if possible.
                 this._workingDirectory = expandWorkingDir(
                     this._executionInfo.workingDir,
