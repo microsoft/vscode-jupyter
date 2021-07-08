@@ -49,7 +49,10 @@ suite('DataScience - Kernels Finder', () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
         const kernelSpec = await kernelFinder.findKernel(resourceToUse, {
             kernelspec: { display_name: 'foobar', name: 'foobar' },
-            orig_nbformat: 4
+            orig_nbformat: 4,
+            language_info: {
+                name: PYTHON_LANGUAGE
+            }
         });
         assert.ok(kernelSpec);
         assert.equal(kernelSpec?.interpreter?.path, interpreter?.path, 'No interpreter found');

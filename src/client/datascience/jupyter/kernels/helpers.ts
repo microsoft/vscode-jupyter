@@ -428,11 +428,28 @@ export function findPreferredKernel(
                       )?.toLowerCase();
         }
         let bestScore = -1;
+
+        // Find index of the kernelspec that matches the preferred interpreter.
+        const preferredInterpreterKernelSpecIndex = preferredInterpreter
+            ? kernels.findIndex((spec) => {
+                  if (
+                      spec.kind === 'startUsingPythonInterpreter' &&
+                      spec.kernelSpec &&
+                      spec.kernelSpec.language === PYTHON_LANGUAGE &&
+                      spec.interpreter.path === preferredInterpreter.path
+                  ) {
+                      return true;
+                  }
+                  return false;
+              })
+            : -1;
+
         for (let i = 0; kernels && i < kernels?.length; i = i + 1) {
             const metadata = kernels[i];
             const spec = metadata.kind !== 'connectToLiveKernel' ? metadata.kernelSpec : undefined;
             const speclanguage = getKernelConnectionLanguage(metadata);
             let score = -1;
+            let subScore = 0;
 
             if (spec) {
                 // Check if the kernel spec name matches the hash of the generated kernel spec name.
@@ -497,7 +514,8 @@ export function findPreferredKernel(
                     preferredInterpreter.version &&
                     spec &&
                     spec.name &&
-                    nbMetadataLanguage === PYTHON_LANGUAGE
+                    nbMetadataLanguage === PYTHON_LANGUAGE &&
+                    !isKernelRegisteredByUs(spec)
                 ) {
                     // Search for a digit on the end of the name. It should match our major version
                     const match = /\D+(\d+)/.exec(spec.name);
@@ -544,6 +562,7 @@ export function findPreferredKernel(
                             metadata
                         )} is ${score}`
                     );
+                    subScore = 1;
                     score = 1;
                 }
                 // Give python 3 environments a higher priority over others.
@@ -559,6 +578,7 @@ export function findPreferredKernel(
                         spec.argv[0].toLocaleLowerCase().includes('python3'))
                 ) {
                     score += 1;
+                    subScore += 1;
                     traceInfo(
                         `findPreferredKernel score for Python3, ${getDisplayNameOrNameOfKernelConnection(
                             metadata
@@ -581,7 +601,19 @@ export function findPreferredKernel(
             // Trace score for kernel
             traceInfo(`findPreferredKernel score for ${getDisplayNameOrNameOfKernelConnection(metadata)} is ${score}`);
 
-            if (score > bestScore) {
+            // If we have a score of 2, this can only happen if we match against language and find a Python 3 kernel.
+            // In such cases, use our preferred interpreter kernel if we have one.
+            // I.e. give preference to the preferred interpreter kernelspec if we dont have any matches.
+            if (
+                subScore === 2 &&
+                score === 2 &&
+                (metadata.kind === 'startUsingPythonInterpreter' ||
+                    (metadata.kind === 'startUsingKernelSpec' && metadata.kernelSpec.language === PYTHON_LANGUAGE)) &&
+                preferredInterpreterKernelSpecIndex >= 0 &&
+                bestScore <= 2
+            ) {
+                index = preferredInterpreterKernelSpecIndex;
+            } else if (score > bestScore) {
                 index = i;
                 bestScore = score;
             }
