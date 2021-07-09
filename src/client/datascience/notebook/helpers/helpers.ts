@@ -19,7 +19,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
-import { IVSCodeNotebook } from '../../../common/application/types';
+import { IDocumentManager, IVSCodeNotebook } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
@@ -69,6 +69,7 @@ export function getNotebookMetadata(document: NotebookDocument | NotebookData): 
 
 export async function updateNotebookDocumentMetadata(
     document: NotebookDocument,
+    editManager: IDocumentManager,
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
@@ -87,7 +88,8 @@ export async function updateNotebookDocumentMetadata(
 
         docMetadata.custom = docMetadata.custom || {};
         docMetadata.custom.metadata = metadata;
-        await edit.replaceNotebookMetadata(document.uri, { ...(document.metadata || {}), custom: docMetadata.custom });
+        edit.replaceNotebookMetadata(document.uri, { ...(document.metadata || {}), custom: docMetadata.custom });
+        await editManager.applyEdit(edit);
     }
 }
 

@@ -12,8 +12,8 @@ import type {
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { Cancellation } from '../../common/cancellation';
+import { isCI } from '../../common/constants';
 import { BaseError } from '../../common/errors/types';
 import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
@@ -104,7 +104,7 @@ export class JupyterSession extends BaseJupyterSession {
                 newSession.isRemoteSession = true;
                 newSession.resource = resource;
             } else {
-                traceInfoIf(IS_CI_SERVER, `createNewKernelSession ${kernelConnection?.id}`);
+                traceInfoIf(isCI, `createNewKernelSession ${kernelConnection?.id}`);
                 newSession = await this.createSession(
                     resource,
                     this.serverSettings,
@@ -149,10 +149,7 @@ export class JupyterSession extends BaseJupyterSession {
         let exception: any;
         while (tryCount < 3) {
             try {
-                traceInfoIf(
-                    IS_CI_SERVER,
-                    `JupyterSession.createNewKernelSession ${tryCount}, id is ${kernelConnection?.id}`
-                );
+                traceInfoIf(isCI, `JupyterSession.createNewKernelSession ${tryCount}, id is ${kernelConnection?.id}`);
                 result = await this.createSession(
                     resource,
                     session.serverSettings,
@@ -246,7 +243,7 @@ export class JupyterSession extends BaseJupyterSession {
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (kernelConnection?.interpreter && this.connInfo.localLaunch) {
             // Make sure the kernel actually exists and is up to date.
-            traceInfoIf(IS_CI_SERVER, `JupyterSession.createSession ${kernelConnection.id}`);
+            traceInfoIf(isCI, `JupyterSession.createSession ${kernelConnection.id}`);
             await this.kernelService.ensureKernelIsUsable(resource, kernelConnection, cancelToken, disableUI);
         }
 
