@@ -2058,7 +2058,7 @@
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
-        "@nteract/transform-plotly": "^6.0.0",
+        "@nteract/transform-plotly": "^7.0.0",
         "@nteract/transform-vega": "^7.0.0",
         "@nteract/transforms": "^4.4.7",
         "@octokit/rest": "^18.0.6",
