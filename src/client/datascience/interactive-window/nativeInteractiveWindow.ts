@@ -525,10 +525,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         ) {
             const notebookRange = new NotebookRange(matchingCell.index, matchingCell.index);
             window.activeNotebookEditor.selections = [notebookRange];
-            window.activeNotebookEditor.revealRange(
-                notebookRange,
-                NotebookEditorRevealType.InCenterIfOutsideViewport
-            );
+            window.activeNotebookEditor.revealRange(notebookRange, NotebookEditorRevealType.InCenterIfOutsideViewport);
         }
     }
 
