@@ -510,6 +510,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     public async scrollToCell(id: string): Promise<void> {
         const matchingCell = this.notebookDocument.getCells().find((cell) => cell.metadata.executionId === id);
+        // Activate the interactive window's editor group
+        // This should make activeNotebookEditor.document the interactive window NotebookDocument
         await this.commandManager.executeCommand(
             'interactive.open',
             { preserveFocus: false },
@@ -521,8 +523,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             window.activeNotebookEditor &&
             window.activeNotebookEditor.document === this.notebookDocument
         ) {
+            const notebookRange = new NotebookRange(matchingCell.index, matchingCell.index);
+            window.activeNotebookEditor.selections = [notebookRange];
             window.activeNotebookEditor.revealRange(
-                new NotebookRange(matchingCell.index, matchingCell.index),
+                notebookRange,
                 NotebookEditorRevealType.InCenterIfOutsideViewport
             );
         }
