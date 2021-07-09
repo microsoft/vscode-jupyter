@@ -25,6 +25,7 @@ import {
     InstallerResponse,
     IPersistentStateFactory,
     Product,
+    ProductInstallStatus,
     Resource
 } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -314,6 +315,19 @@ export class PythonInstaller implements IPythonInstaller {
                 action,
                 moduleName: ProductNames.get(product)!
             });
+        }
+    }
+
+    public async isProductVersionCompatible(
+        product: Product,
+        semVerRequirement: string,
+        resource?: InterpreterUri
+    ): Promise<ProductInstallStatus> {
+        try {
+            const api = await this.apiProvider.getApi();
+            return await api.isProductVersionCompatible(product, semVerRequirement, resource);
+        } catch (ex) {
+            throw ex;
         }
     }
 }

@@ -6,6 +6,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Memento, Uri } from 'vscode';
+import { IPythonInstaller } from '../../../../client/api/types';
 import { IApplicationShell, ICommandManager } from '../../../../client/common/application/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
@@ -22,17 +23,20 @@ suite('DataScience - Kernel Dependency Service', () => {
     let appShell: IApplicationShell;
     let cmdManager: ICommandManager;
     let installer: IInstaller;
+    let pythonInstaller: IPythonInstaller;
     let memento: Memento;
     const interpreter = createPythonInterpreter({ displayName: 'name', envType: EnvironmentType.Conda, path: 'abc' });
     setup(() => {
         appShell = mock<IApplicationShell>();
         installer = mock<IInstaller>();
+        pythonInstaller = mock<IPythonInstaller>();
         cmdManager = mock<ICommandManager>();
         memento = mock<Memento>();
         when(memento.get(anything(), anything())).thenReturn(false);
         dependencyService = new KernelDependencyService(
             instance(appShell),
             instance(installer),
+            instance(pythonInstaller),
             instance(memento),
             false,
             instance(cmdManager),
