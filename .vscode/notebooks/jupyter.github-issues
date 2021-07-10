@@ -7,7 +7,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "## Triage"
+    "value": "---\r\n## Triage\r\n\r\n\r\nBugs that need or should be looked at *by the team* should be tagged with the \"*needs-triage*\" label.  "
   },
   {
     "kind": 1,
@@ -32,7 +32,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "## Epics"
+    "value": "---\r\n## Epics\r\n"
   },
   {
     "kind": 1,
@@ -47,7 +47,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "## Interactive Window"
+    "value": "---\r\n## Interactive Window"
   },
   {
     "kind": 1,
