@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Label for Triage
-        uses: christianvuerings/add-labels@v1
+        uses: andymckay/labeler@1.0.2
         with:
-          labels: needs-triage
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          add-labels: needs-triage
+          ignore-if-assigned: false
           
   assignIssue:
     name: Assign Issue to Someone
