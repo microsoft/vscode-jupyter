@@ -8,6 +8,14 @@ permissions:
   issues: write
 
 jobs:
+  add-needs-triage-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label for Triage
+        uses: andymckay/labeler@1.0.2
+        with:
+          add-labels: "needs-triage"
+          
   assignIssue:
     name: Assign Issue to Someone
     runs-on: ubuntu-latest
