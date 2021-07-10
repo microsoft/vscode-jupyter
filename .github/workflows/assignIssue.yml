@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Label for Triage
-        uses: christianvuerings/add-labels@v1.1
+        uses: christianvuerings/add-labels@v1
         with:
           labels: needs-triage
         env:
