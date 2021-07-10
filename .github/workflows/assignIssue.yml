@@ -15,8 +15,8 @@ jobs:
       - name: Label for Triage
         uses: andymckay/labeler@1.0.2
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
           add-labels: "needs-triage"
+          github-token: ${{secrets.GITHUB_TOKEN}}
           
   assignIssue:
     name: Assign Issue to Someone
