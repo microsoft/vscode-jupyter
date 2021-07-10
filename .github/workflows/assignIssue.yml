@@ -8,7 +8,7 @@ permissions:
   issues: write
 
 jobs:
-  addTriageLabels:
+  addTriageLabel:
     name: Add needs-triage label
     runs-on: ubuntu-latest
     steps:
@@ -16,7 +16,6 @@ jobs:
         uses: andymckay/labeler@1.0.2
         with:
           add-labels: "needs-triage"
-          github-token: ${{secrets.GITHUB_TOKEN}}
           
   assignIssue:
     name: Assign Issue to Someone
