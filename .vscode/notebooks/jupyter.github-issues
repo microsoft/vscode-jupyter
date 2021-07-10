@@ -22,7 +22,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO is:open is:issue label:needs-triage -author:DavidKutu -author:joyceerhl -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff"
+    "value": "$JUPYTER_REPO is:open is:issue label:needs-triage -author:DavidKutu -author:joyceerhl -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff sort:created-asc"
   },
   {
     "kind": 1,
@@ -32,7 +32,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_INTERNAL_REPO is:open is:issue label:needs-triage author:DavidKutu author:joyceerhl author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff"
+    "value": "$JUPYTER_INTERNAL_REPO is:open is:issue label:needs-triage author:DavidKutu author:joyceerhl author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff sort:created-asc"
   },
   {
     "kind": 1,
