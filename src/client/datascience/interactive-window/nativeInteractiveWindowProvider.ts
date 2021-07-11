@@ -118,9 +118,11 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         // kernel picker quickpick UI
         const preferredControllerId = await this.getControllerForInteractiveWindow();
 
+        const hasOwningFile = resource !== undefined;
         const { notebookUri } = (await this.commandManager.executeCommand(
             'interactive.open',
-            ViewColumn.Beside,
+            // Keep focus on the owning file if there is one
+            { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
             undefined,
             preferredControllerId
         )) as INativeInteractiveWindow;
