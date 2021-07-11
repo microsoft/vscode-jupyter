@@ -618,7 +618,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const isMarkdown = cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
         const strippedCode = isMarkdown
             ? generateMarkdownFromCodeLines(code.splitLines()).join('\n')
-            : cellMatcher.stripFirstMarker(code).trimStart();
+            : cellMatcher.stripFirstMarker(code).trim();
         const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
         // Insert code cell into NotebookDocument
