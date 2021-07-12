@@ -528,7 +528,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                             name: c.key === RowNumberColumnName ? '' : c.key.toString(),
                             sortable: true,
                             toolTip: c.describe,
-                            formatter: cellFormatterFunc
+                            formatter: cellFormatterFunc,
+                            isPreview: c.key.includes("(preview)")
                         } as Slick.Column<Slick.SlickData>);
                     }
                     return accum;

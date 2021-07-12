@@ -9,6 +9,7 @@ declare namespace Slick {
 
     export interface Column<T extends SlickData> {
         header?: Header;
+        isPreview?: boolean;
     }
 
     export interface Header {

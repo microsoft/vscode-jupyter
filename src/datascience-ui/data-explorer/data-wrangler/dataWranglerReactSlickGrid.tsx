@@ -294,7 +294,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const stylings = {} as any;
         const columns = grid.getColumns();
-        const previewColumns = columns.filter((col) => col.name?.includes("(preview)"));
+        const previewColumns = columns.filter((col) => col.isPreview);
         this.removeAllCellStyles(grid);
         switch (this.props.operationPreview) {
             case DataWranglerCommands.NormalizeColumn:
@@ -303,6 +303,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                     const columnCss = {} as any;
                     // There should only be one preview column
                     columnCss[Number(previewColumns[0].id)] = 'react-grid-cell-preview'
+                    columnCss[Number(previewColumns[0].id) - 1] = 'react-grid-cell-before'
                     for (let j = 0; j < rows; j++) {
                         stylings[j] = columnCss;
                     }
@@ -321,8 +322,10 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             const oldValue = item[previewColumns[i].name?.replace(" (preview)", "") as string];
                             if (Object.is(previewValue, oldValue)) {
                                 columnCss[Number(previewColumns[i].id)] = 'react-grid-cell-preview'
+                                columnCss[Number(previewColumns[0].id) - 1] = 'react-grid-cell-before'
                             } else {
                                 columnCss[Number(previewColumns[i].id)] = 'react-grid-header-cell-preview'
+                                columnCss[Number(previewColumns[0].id) - 1] = 'react-grid-header-cell-before'
                             }
                         }
                         stylings[j] = columnCss;
@@ -451,7 +454,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         e.preventDefault();
         e.stopPropagation();
         // Show our context menu
-        if (data.column.field?.includes("(preview)") || data.column.field === 'index') {
+        if (data.column.isPreview || data.column.field === 'index') {
             slickgridJQ('#headerContextMenuPreview').css('top', e.pageY).css('left', e.pageX).show();
             slickgridJQ('#headerContextMenu').hide();
         } else {
@@ -557,8 +560,8 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     protected styleColumns(columns: Slick.Column<ISlickRow>[]) {
         // Transform columns so they are sortable and stylable
         const previewTitle = " (preview)";
-        const previewColumns = columns.filter((c) => c.name?.includes(previewTitle)).map((c) => c.name);
-        const oldColumns = previewColumns.map((name) => name?.substring(0, name.length - previewTitle.length - 1));
+        const previewColumns = columns.filter((c) => c.isPreview).map((c) => c.name);
+        const oldColumns = previewColumns.map((name) => name?.substring(0, name.length - previewTitle.length));
         return columns.map((c) => {
             // Disable sorting by clicking on header
             c.sortable = false;
