@@ -167,6 +167,9 @@ export class JupyterNotebookBase implements INotebook {
     public get onDisposed(): Event<void> {
         return this.disposedEvent.event;
     }
+    public get onDidFinishExecuting(): Event<ICell> {
+        return this.finishedExecuting.event;
+    }
     public get onKernelChanged(): Event<KernelConnectionMetadata> {
         return this.kernelChanged.event;
     }
@@ -183,6 +186,7 @@ export class JupyterNotebookBase implements INotebook {
     private readonly kernelRestarted = new EventEmitter<void>();
     private readonly kernelInterrupted = new EventEmitter<void>();
     private disposedEvent = new EventEmitter<void>();
+    private finishedExecuting = new EventEmitter<ICell>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
     private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => void>();
@@ -466,6 +470,11 @@ export class JupyterNotebookBase implements INotebook {
             result.subscribe(
                 (cells) => {
                     subscriber.next(cells);
+                    cells.forEach((cell) => {
+                        if (cell.state === CellState.finished || cell.state === CellState.error) {
+                            this.finishedExecuting.fire(cell);
+                        }
+                    });
                 },
                 (error) => {
                     subscriber.error(error);
@@ -964,7 +973,11 @@ export class JupyterNotebookBase implements INotebook {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggested;
                 return this.changeDirectoryIfPossible(this._workingDirectory);
-            } else if (launchingFile && (await this.fs.localDirectoryExists(path.dirname(launchingFile)))) {
+            } else if (
+                launchingFile &&
+                (await this.fs.localFileExists(launchingFile)) &&
+                (await this.fs.localDirectoryExists(path.dirname(launchingFile)))
+            ) {
                 // Combine the working directory with this file if possible.
                 this._workingDirectory = expandWorkingDir(
                     this._executionInfo.workingDir,

@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.58.0-insider"
+        "vscode": "1.59.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -2058,7 +2058,7 @@
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
-        "@nteract/transform-plotly": "^6.0.0",
+        "@nteract/transform-plotly": "^7.0.0",
         "@nteract/transform-vega": "^7.0.0",
         "@nteract/transforms": "^4.4.7",
         "@octokit/rest": "^18.0.6",
@@ -2090,7 +2090,7 @@
         "node-stream-zip": "^1.6.0",
         "onigasm": "^2.2.2",
         "pdfkit": "^0.12.1",
-        "plotly.js-dist": "^1.58.4",
+        "plotly.js-dist": "^2.2.1",
         "portfinder": "^1.0.25",
         "re-resizable": "~6.5.5",
         "react": "^16.5.2",

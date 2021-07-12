@@ -344,7 +344,8 @@ export class Kernel implements IKernel {
         }
 
         const message = getSysInfoReasonHeader(reason, this.kernelConnectionMetadata);
-        const sysInfoMessages = [(info.content as KernelMessage.IInfoReply)?.banner.split('\n').join('\n\n')];
+        const bannerMessage = (info.content as KernelMessage.IInfoReply)?.banner || '';
+        const sysInfoMessages = bannerMessage ? bannerMessage.split('\n') : [];
         if (sysInfoMessages) {
             // Connection string only for our initial start, not restart or interrupt
             let connectionString: string = '';
@@ -362,7 +363,7 @@ export class Kernel implements IKernel {
             return chainWithPendingUpdates(notebookDocument, (edit) => {
                 const markdownCell = new NotebookCellData(
                     NotebookCellKind.Markup,
-                    sysInfoMessages.join('\n\n'),
+                    sysInfoMessages.join('  \n'),
                     MARKDOWN_LANGUAGE
                 );
                 markdownCell.metadata = { isSysInfoCell: true };

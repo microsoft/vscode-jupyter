@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import { ICommandManager, IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import {
     IConfigurationService,
@@ -76,7 +76,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
         @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IDocumentManager) private readonly docManager: IDocumentManager
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -316,7 +317,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.isLocalLaunch ? 'local' : 'remote',
                         this.interpreterPackages,
                         this.configuration,
-                        this.widgetCoordinator
+                        this.widgetCoordinator,
+                        this.docManager
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     controller.onNotebookControllerSelected(

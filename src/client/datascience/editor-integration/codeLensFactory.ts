@@ -272,6 +272,11 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         args.notebook.onDisposed(() => {
             this.notebookData.delete(key);
         });
+        if (args.notebook.onDidFinishExecuting !== undefined) {
+            args.notebook.onDidFinishExecuting((cell: ICell) => {
+                this.updateExecutionCounts(args.identity, cell);
+            });
+        }
     }
 
     private getHashProviders(): ICellHashProvider[] {

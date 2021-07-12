@@ -1,6 +1,6 @@
 # Changelog
 
-## 2021.7.0 (7 July 2021)
+## 2021.8.0 (8 July 2021)
 
 ### Enhancements
 
@@ -36,6 +36,8 @@
    ([#6198](https://github.com/Microsoft/vscode-jupyter/issues/6198))
 1. Fix interrupt button in Native Notebook toolbar.
    ([#6254](https://github.com/Microsoft/vscode-jupyter/issues/6254))
+1. Fix problem where the active interpreter is not being used for the interactive window when not running with raw kernel.
+   ([#6409](https://github.com/Microsoft/vscode-jupyter/issues/6409))
 
 ### Code Health
 

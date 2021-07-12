@@ -59,8 +59,8 @@ export class NotebookCommands implements IDisposable {
 
     private executeCell() {
         void this.commandManager
-            .executeCommand('notebook.cell.execute')
-            .then(() => this.commandManager.executeCommand('notebook.cell.quitEdit'));
+            .executeCommand('notebook.cell.quitEdit')
+            .then(() => this.commandManager.executeCommand('notebook.cell.execute'));
     }
 
     private renderMarkdownAndSelectBelow() {
