@@ -48,6 +48,7 @@ import {
 } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { ControlPanel } from './controlPanel';
 import { IDataFrameInfo, IGetColsResponse } from '../../../client/datascience/data-viewing/types';
+import { getLocString } from '../../react-common/locReactSide';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -126,10 +127,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
 
             this.dataView.onRowCountChanged.subscribe((_e, _args) => {
                 grid.updateRowCount();
-                if (grid.getDataLength() === 0) {
-                    const canvasElement = grid.getCanvasNode();
-                    canvasElement.innerHTML = '<div class="no-data"><span>No data</span></div>';
-                }
+                this.changeCellColor(grid, grid.getDataLength());
                 grid.render();
             });
 
@@ -236,7 +234,8 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                                 args: {
                                     start: 0,
                                     end: 1,
-                                    targetColumn: this.contextMenuColumnName
+                                    targetColumn: this.contextMenuColumnName,
+                                    isPreview: true
                                 } as INormalizeColumnRequest
                             });
                         case ColumnContextMenuItem.DropNA:
@@ -248,6 +247,27 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.DropDuplicates,
                                 args: { targetColumns: [this.contextMenuColumnName] } as IDropDuplicatesRequest
+                            });
+                    }
+                }
+            });
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            slickgridJQ('#headerContextMenuPreview').click((e: any) => {
+                if (!slickgridJQ(e?.currentTarget).is('ul') || !this.state.grid?.getEditorLock().commitCurrentEdit()) {
+                    return;
+                }
+                const contextMenuItem = e?.target?.id;
+                if (this.props.submitCommand) {
+                    switch (contextMenuItem) {
+                        case ColumnContextMenuItem.SortAscending:
+                            return this.sortColumn(this.contextMenuColumnName, true);
+                        case ColumnContextMenuItem.SortDescending:
+                            return this.sortColumn(this.contextMenuColumnName, false);
+                        case ColumnContextMenuItem.GetColumnStats:
+                            return this.props.submitCommand({
+                                command: DataWranglerCommands.Describe,
+                                args: { targetColumn: this.contextMenuColumnName } as IDescribeColReq
                             });
                     }
                 }
@@ -269,6 +289,62 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         // Act like a resize happened to refresh the layout.
         this.windowResized();
     };
+
+    private changeCellColor(grid: Slick.Grid<ISlickRow>, rows: number) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const stylings = {} as any;
+        const columns = grid.getColumns();
+        const previewColumns = columns.filter((col) => col.name?.includes("(preview)"));
+        this.removeAllCellStyles(grid);
+        switch (this.props.operationPreview) {
+            case DataWranglerCommands.NormalizeColumn:
+                if (previewColumns.length > 0) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const columnCss = {} as any;
+                    // There should only be one preview column
+                    columnCss[Number(previewColumns[0].id)] = 'react-grid-cell-preview'
+                    for (let j = 0; j < rows; j++) {
+                        stylings[j] = columnCss;
+                    }
+                    grid.setCellCssStyles(DataWranglerCommands.NormalizeColumn, stylings);
+                }
+                break;
+            case DataWranglerCommands.ReplaceAllColumn:
+                if (previewColumns.length > 0) {
+                    for (let j = 0; j < rows; j++) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const columnCss = {} as any;
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const item = grid.getDataItem(j) as any;
+                        for (let i = 0; i < previewColumns.length; i++) {
+                            const previewValue = item[previewColumns[i].name as string];
+                            const oldValue = item[previewColumns[i].name?.replace(" (preview)", "") as string];
+                            if (Object.is(previewValue, oldValue)) {
+                                columnCss[Number(previewColumns[i].id)] = 'react-grid-cell-preview'
+                            } else {
+                                columnCss[Number(previewColumns[i].id)] = 'react-grid-header-cell-preview'
+                            }
+                        }
+                        stylings[j] = columnCss;
+                    }
+                    grid.setCellCssStyles(DataWranglerCommands.ReplaceAllColumn, stylings);
+                }
+                break;
+            case DataWranglerCommands.DropNa:
+                // TODO
+                // Use const item = grid.getDataItem(j) as any;
+                grid.setCellCssStyles(DataWranglerCommands.DropNa, stylings);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private removeAllCellStyles(grid: Slick.Grid<ISlickRow>) {
+        grid.removeCellCssStyles(DataWranglerCommands.NormalizeColumn);
+        grid.removeCellCssStyles(DataWranglerCommands.DropNa);
+        grid.removeCellCssStyles(DataWranglerCommands.ReplaceAllColumn);
+    }
 
     public render() {
         const style: React.CSSProperties = this.props.forceHeight
@@ -331,13 +407,20 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                     </Resizable>
                 </div>
                 <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
-                    <li id={ColumnContextMenuItem.GetColumnStats}>{"Get column stats (will remove later)"}</li>
+                    <li id={ColumnContextMenuItem.GetColumnStats}>{'Get column stats (will remove later)'}</li>
                     <li id={ColumnContextMenuItem.SortAscending}>{ColumnContextMenuItem.SortAscending}</li>
                     <li id={ColumnContextMenuItem.SortDescending}>{ColumnContextMenuItem.SortDescending}</li>
                     <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>
                     <li id={ColumnContextMenuItem.NormalizeColumn}>{ColumnContextMenuItem.NormalizeColumn}</li>
                     <li id={ColumnContextMenuItem.DropNA}>{ColumnContextMenuItem.DropNA}</li>
-                    <li id={ColumnContextMenuItem.DropDuplicates}>{ColumnContextMenuItem.DropDuplicates}</li>
+                    <li id={ColumnContextMenuItem.DropDuplicates}>
+                        {ColumnContextMenuItem.DropDuplicates}
+                    </li>
+                </ul>
+                <ul id="headerContextMenuPreview" style={{ display: 'none', position: 'absolute' }}>
+                    <li id={ColumnContextMenuItem.GetColumnStats}>{'Get column stats (will remove later)'}</li>
+                    <li id={ColumnContextMenuItem.SortAscending}>{ColumnContextMenuItem.SortAscending}</li>
+                    <li id={ColumnContextMenuItem.SortDescending}>{ColumnContextMenuItem.SortDescending}</li>
                 </ul>
                 <ul id="contextMenu" style={{ display: 'none', position: 'absolute' }}>
                     <li id={RowContextMenuItem.DropRow}>{RowContextMenuItem.DropRow}</li>
@@ -350,7 +433,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     private sortColumn(sortCol: string | undefined, sortAscending: boolean) {
         if (sortCol) {
             const cols = this.state.grid?.getColumns();
-            const idx = cols?.findIndex(c => c.name === sortCol);
+            const idx = cols?.findIndex((c) => c.name === sortCol);
             if (cols && idx) {
                 this.dataView.sort((l: any, r: any) => this.compareElements(l, r, cols[idx]), sortAscending);
                 this.state.grid?.setSortColumn(idx?.toString(), sortAscending);
@@ -362,17 +445,24 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     private maybeDropColumns = (e: any, data: Slick.OnHeaderContextMenuEventArgs<ISlickRow>) => {
         this.contextMenuColumnName = data.column.name;
         // Don't show context menu for the row numbering column or index column
-        if (data.column.field === 'No.' || data.column.field === 'index') {
+        if (data.column.field === 'No.') {
             return;
         }
         e.preventDefault();
         e.stopPropagation();
         // Show our context menu
-        slickgridJQ('#headerContextMenu').css('top', e.pageY).css('left', e.pageX).show();
+        if (data.column.field?.includes("(preview)") || data.column.field === 'index') {
+            slickgridJQ('#headerContextMenuPreview').css('top', e.pageY).css('left', e.pageX).show();
+            slickgridJQ('#headerContextMenu').hide();
+        } else {
+            slickgridJQ('#headerContextMenu').css('top', e.pageY).css('left', e.pageX).show();
+            slickgridJQ('#headerContextMenuPreview').hide();
+        }
 
         // If user clicks away from the context menu, hide it
         slickgridJQ('body').one('click', () => {
             slickgridJQ('#headerContextMenu').hide();
+            slickgridJQ('#headerContextMenuPreview').hide();
             this.contextMenuColumnName = undefined;
         });
     };
@@ -405,7 +495,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             const maxFieldWidth = measureText(placeholder, fontString);
 
             // Removes first column that was similar to index column but had no name
-            columns.shift();
+            // columns.shift();
 
             columns.forEach((c) => {
                 if (c.field !== this.props.idProperty) {
@@ -413,6 +503,17 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 } else {
                     c.width = maxFieldWidth / 2;
                     c.name = '';
+                    c.header = {
+                        buttons: [
+                            {
+                                cssClass: 'codicon codicon-filter codicon-button header-cell-button',
+                                handler: this.clickFilterButton,
+                                tooltip: this.state.showingFilters
+                                    ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
+                                    : getLocString('DataScience.dataViewerShowFilters', 'Show filters')
+                            },
+                        ]
+                    };
                 }
             });
             this.state.grid.setColumns(columns);
@@ -429,25 +530,45 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         _e: Slick.EventData,
         args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>
     ) => {
-        const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
-        ReactDOM.render(
-            <ReactSlickGridFilterBox
-                filter={filter ?? ''}
-                column={args.column}
-                onChange={this.filterChanged}
-                fontSize={this.state.fontSize}
-            />,
-            args.node
-        );
+        if (args.column.field === this.props.idProperty) {
+            const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
+            ReactDOM.render(
+                <div
+                    className="codicon codicon-clear-all codicon-button"
+                    onClick={this.clearAllFilters}
+                    title={tooltipText}
+                />,
+                args.node
+            );
+        } else {
+            const filter = args.column.field ? this.columnFilters.get(args.column.field)?.text : '';
+            ReactDOM.render(
+                <ReactSlickGridFilterBox
+                    filter={filter ?? ''}
+                    column={args.column}
+                    onChange={this.filterChanged}
+                    fontSize={this.state.fontSize}
+                />,
+                args.node
+            );
+        }
     };
 
     protected styleColumns(columns: Slick.Column<ISlickRow>[]) {
         // Transform columns so they are sortable and stylable
+        const previewTitle = " (preview)";
+        const previewColumns = columns.filter((c) => c.name?.includes(previewTitle)).map((c) => c.name);
+        const oldColumns = previewColumns.map((name) => name?.substring(0, name.length - previewTitle.length - 1));
         return columns.map((c) => {
             // Disable sorting by clicking on header
             c.sortable = false;
             c.editor = readonlyCellEditor;
             c.headerCssClass = 'react-grid-header-cell';
+            if (previewColumns.includes(c.name)) {
+                c.headerCssClass += ' react-grid-header-cell-preview'
+            } else if (oldColumns.includes(c.name)) {
+                c.headerCssClass += ' react-grid-header-cell-before'
+            }
             c.cssClass = 'react-grid-cell';
             return c;
         });

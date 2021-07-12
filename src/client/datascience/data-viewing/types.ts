@@ -7,7 +7,7 @@ import { CssMessages, SharedMessages } from '../messages';
 import { Event, WebviewPanel } from 'vscode';
 import { SliceOperationSource } from '../../telemetry/constants';
 import { ILoadTmLanguageResponse, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { DataWranglerMessages, SidePanelSections } from './data-wrangler/types';
+import { DataWranglerCommands, DataWranglerMessages, IHistoryItem, SidePanelSections } from './data-wrangler/types';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -75,9 +75,10 @@ export type IDataViewerMapping = {
     [DataWranglerMessages.SubmitCommand]: { command: string; args: any };
     [DataWranglerMessages.RefreshDataWrangler]: never | undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [DataWranglerMessages.UpdateHistoryList]: any[] | undefined;
+    [DataWranglerMessages.UpdateHistoryList]: IHistoryItem[] | undefined;
     [DataWranglerMessages.GetHistogramResponse]: IGetColsResponse;
     [DataWranglerMessages.SetSidePanels]: SidePanelSections[];
+    [DataWranglerMessages.OperationPreview]: DataWranglerCommands;
     [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
     [InteractiveWindowMessages.LoadTmLanguageRequest]: string;

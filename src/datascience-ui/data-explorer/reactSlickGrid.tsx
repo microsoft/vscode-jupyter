@@ -17,7 +17,7 @@ import './globalJQueryImports';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
 import { generateDisplayValue } from './cellFormatter';
 import { getLocString } from '../react-common/locReactSide';
-import { IHistoryItem, SidePanelSections } from '../../client/datascience/data-viewing/data-wrangler/types';
+import { DataWranglerCommands, IHistoryItem, SidePanelSections } from '../../client/datascience/data-viewing/data-wrangler/types';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -89,6 +89,7 @@ export interface ISlickGridProps {
     submitCommand?(args: { command: string; args: any }): void;
     sidePanels?: SidePanelSections[];
     dataframeSummary?: IDataFrameInfo;
+    operationPreview?: DataWranglerCommands;
 }
 
 interface ISlickGridState {
@@ -256,10 +257,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
             this.dataView.onRowCountChanged.subscribe((_e, _args) => {
                 grid.updateRowCount();
-                if (grid.getDataLength() === 0) {
-                    const canvasElement = grid.getCanvasNode();
-                    canvasElement.innerHTML = '<div class="no-data"><span>No data</span></div>';
-                }
                 grid.render();
             });
 
@@ -374,7 +371,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    private clearAllFilters = () => {
+    protected clearAllFilters = () => {
         // Avoid rerendering if there are no filters
         if (this.columnFilters.size > 0) {
             this.columnFilters = new Map();

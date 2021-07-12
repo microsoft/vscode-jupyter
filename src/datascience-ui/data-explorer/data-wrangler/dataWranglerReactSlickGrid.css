@@ -36,3 +36,45 @@
     margin: 4px;
     padding: 4px;
 }
+
+.react-grid-cell.active {
+    background-color: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
+}
+
+.react-grid-header-cell-active {
+    background-color: #264F78;
+}
+
+.react-grid-cell-active {
+    background-color: #094771;
+    padding: 4px;
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    border-right: 1px solid transparent;
+    box-sizing: border-box;
+}
+
+.react-grid-header-cell-focus {
+    background-color: #094771;
+}
+
+.react-grid-cell-focus {
+    background-color: #062F4A;
+}
+
+.react-grid-header-cell-before {
+    background-color: #6F1313;
+}
+
+.react-grid-cell-before {
+    background-color: #4B1818;
+}
+
+.react-grid-header-cell-preview {
+    background-color: #4B5632;
+}
+
+.react-grid-cell-preview {
+    background-color: #373D29;
+}

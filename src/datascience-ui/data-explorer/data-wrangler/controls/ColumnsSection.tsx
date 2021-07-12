@@ -109,7 +109,7 @@ export class ColumnsSection extends React.Component<IProps, IState> {
     private generateOptions() {
         const selectAll = { key: -1, text: 'Select All' };
         // Don't let users operate on index column
-        return [selectAll, ...this.props.options.filter((option) => option.text !== 'index')];
+        return [selectAll, ...this.props.options.filter((option) => option.text !== 'index' && !option.text.includes('(preview)'))];
     }
 
     private generatePossibleColumnOperations(): IDropdownOption[] {

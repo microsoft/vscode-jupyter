@@ -129,6 +129,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         this.commands.set(DataWranglerCommands.ReplaceAllColumn, this.replaceAllColumn.bind(this));
         this.commands.set(DataWranglerCommands.RemoveHistoryItem, this.removeHistoryItem.bind(this));
         this.commands.set(DataWranglerCommands.ExportToCsv, this.exportToCsv.bind(this));
+        this.commands.set(DataWranglerCommands.RespondToPreview, this.respondToPreview.bind(this));
 
         this.onDidDispose(this.dataWranglerDisposed, this);
     }
@@ -158,7 +159,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             this.sourceFile = dataFrameInfo.sourceFile;
 
             this.historyList.push({
-                transformation: DataScience.dataWranglerImportTransformation(),
+                description: DataScience.dataWranglerImportDescription(),
                 code: `import pandas as pd\r\ndf = pd.read_csv(r'${this.sourceFile ?? 'broken'}')\n`,
                 variableName: 'df'
             });
@@ -310,25 +311,29 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     private async handleCommand(payload: { command: string; args: any }) {
         console.log('handle command', payload);
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
-        let code = '';
+        let codeToRun;
         const currentVariableName = (await this.dataFrameInfoPromise)!.name ?? '';
         let newVariableName = currentVariableName ?? '';
+        let historyItem: IHistoryItem | void;
 
         // Get and run data wrangler command
         const cmd = this.commands.get(payload.command as DataWranglerCommands);
         if (cmd) {
-            const historyItem = await cmd(payload.args, currentVariableName);
-            if (historyItem) {
-                code = historyItem.code;
+            historyItem = await cmd(payload.args, currentVariableName);
+            if (historyItem !== undefined) {
+                codeToRun = historyItem.isPreview ? historyItem.previewCode : historyItem.code;
                 newVariableName = historyItem.variableName;
             }
         }
 
         // Execute python command
-        if (code && notebook !== undefined) {
-            void notebook?.execute(code, '', 0, uuid()).then(async () => {
+        if (codeToRun && notebook !== undefined) {
+            void notebook?.execute(codeToRun, '', 0, uuid()).then(async () => {
                 if (this.existingDisposable) {
                     this.existingDisposable.dispose();
+                }
+                if (historyItem && historyItem.shouldAdd) {
+                    this.addToHistory(historyItem);
                 }
                 if (newVariableName) {
                     await this.updateWithNewVariable(newVariableName);
@@ -350,28 +355,37 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         this.historyList.splice(req.index, 1);
         this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
         return {
-            transformation: '',
+            type: DataWranglerCommands.RemoveHistoryItem,
+            description: '',
             code: `del ${currentVariableName}`,
-            variableName: this.historyList[this.historyList.length - 1].variableName
+            variableName: this.historyList[this.historyList.length - 1].variableName,
+            shouldAdd: false
         };
     }
 
     private async coerceColumn(req: ICoerceColumnRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const vars = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const currVar = vars.currentVariableName;
+        const newVar = vars.newVariableName;
+
         const columns = req.targetColumns.map((col) => `'${col}'`).join(', ');
         const astypeDict = req.targetColumns.map((col) => `'${col}': '${req.newType}'`).join(', ');
-        const code = `${newVariableName} = ${currentVariableName}.astype({${astypeDict}})\n`;
+        const code = `${newVar} = ${currVar}.astype({${astypeDict}})\n`;
         const historyItem = {
-            transformation: DataScience.dataWranglerCoerceColumnTransformation().format(columns, req.newType),
-            variableName: newVariableName,
-            code: code
+            type: DataWranglerCommands.CoerceColumn,
+            description: DataScience.dataWranglerCoerceColumnDescription().format(columns, req.newType),
+            variableName: newVar,
+            code: code,
+            shouldAdd: true
         };
-        this.addToHistory(historyItem);
         return historyItem;
     }
 
     private async replaceAllColumn(req: IReplaceAllColumnsRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const vars = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const currVar = vars.currentVariableName;
+        const newVar = vars.newVariableName;
+
         const columns = req.targetColumns.map((col) => `'${col}'`).join(', ');
 
         // Find type of each column
@@ -389,177 +403,284 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         }
 
         // Make a copy of dataframe
-        let code = `${newVariableName} = ${currentVariableName}.copy()\n`;
+        let code = `${newVar} = ${currVar}.copy()\r\n`;
+        let previewCode = code.slice();
 
         // Replace columns that have type string
         if (stringColumns.length > 0) {
-            code += `${newVariableName}[[${columns}]] = ${newVariableName}[[${columns}]].replace(to_replace='${req.oldValue}', value='${req.newValue}')\n`;
+            const strCols = stringColumns.map((col) => `'${col}'`).join(', ');
+            code += `${newVar}[[${strCols}]] = ${newVar}[[${strCols}]].replace(to_replace='${req.oldValue}', value='${req.newValue}')\r\n`;
+
+            if (req.isPreview) {
+                for (const col of stringColumns) {
+                    previewCode += `idx = ${newVar}.columns.get_loc("${col}")\r\n`;
+                    previewCode += `data = ${newVar}[['${col}']].replace(to_replace='${req.oldValue}', value='${req.newValue}')\r\n`;
+                    previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
+                }
+            }
         }
 
         // Replace columns that have type boolean or number
         if (boolNumColumns.length > 0) {
-            code += `${newVariableName}[[${columns}]] = ${newVariableName}[[${columns}]].replace(to_replace=${req.oldValue}, value=${req.newValue})\n`;
+            const boolNumCols = boolNumColumns.map((col) => `'${col}'`).join(', ');
+            code += `${newVar}[[${boolNumCols}]] = ${newVar}[[${boolNumCols}]].replace(to_replace=${req.oldValue}, value=${req.newValue})\n`;
+
+            if (req.isPreview) {
+                for (const col of boolNumColumns) {
+                    previewCode += `idx = ${newVar}.columns.get_loc("${col}")\r\n`;
+                    previewCode += `data = ${newVar}[['${col}']].replace(to_replace=${req.oldValue}, value=${req.newValue})\r\n`;
+                    previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
+                }
+            }
+        }
+
+        if (req.isPreview) {
+            this.postMessage(
+                DataWranglerMessages.OperationPreview,
+                DataWranglerCommands.ReplaceAllColumn
+            ).ignoreErrors();
         }
 
         const historyItem = {
-            transformation: DataScience.dataWranglerReplaceAllTransformation().format(
+            type: DataWranglerCommands.ReplaceAllColumn,
+            description: DataScience.dataWranglerReplaceAllDescription().format(
                 req.oldValue as string,
                 req.newValue as string,
                 columns
             ),
-            variableName: newVariableName,
-            code: code
+            variableName: newVar,
+            code: code,
+            previewCode: previewCode,
+            isPreview: req.isPreview,
+            shouldAdd: true
         };
-        this.addToHistory(historyItem);
         return historyItem;
     }
 
     private async renameColumn(req: IRenameColumnsRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
-        const code = `${newVariableName} = ${currentVariableName}.rename(columns={ '${req.targetColumn}': '${req.newColumnName}' })\n`;
+        const vars = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const currVar = vars.currentVariableName;
+        const newVar = vars.newVariableName;
+
+        const code = `${newVar} = ${currVar}.rename(columns={ '${req.targetColumn}': '${req.newColumnName}' })\n`;
         const historyItem = {
-            transformation: DataScience.dataWranglerRenameColumnTransformation().format(
-                req.targetColumn,
-                req.newColumnName
-            ),
-            variableName: newVariableName,
-            code: code
+            type: DataWranglerCommands.RenameColumn,
+            description: DataScience.dataWranglerRenameColumnDescription().format(req.targetColumn, req.newColumnName),
+            variableName: newVar,
+            code: code,
+            shouldAdd: true
         };
-        this.addToHistory(historyItem);
         return historyItem;
     }
 
     private async drop(req: IDropRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
-        if (req.rowIndex) {
+        const vars = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const currVar = vars.currentVariableName;
+        const newVar = vars.newVariableName;
+
+        if (req.rowIndex !== undefined) {
             // Drop rows by index
-            const code = `${newVariableName} = ${currentVariableName}.drop(index=${req.rowIndex})\n`;
+            const code = `${newVar} = ${currVar}.drop(index=${req.rowIndex})\n`;
             const historyItem = {
-                transformation: DataScience.dataWranglerDropRowTransformation().format(req.rowIndex.toString()),
-                variableName: newVariableName,
-                code: code
+                type: DataWranglerCommands.Drop,
+                description: DataScience.dataWranglerDropRowDescription().format(req.rowIndex.toString()),
+                variableName: newVar,
+                code: code,
+                shouldAdd: true
             };
-            this.addToHistory(historyItem);
             return historyItem;
         } else if (req.targetColumns) {
             // Drop columns by column name
             const labels = req.targetColumns;
             const columnNames = labels.map((label) => `'${label}'`).join(', ');
-            const code = `${newVariableName} = ${currentVariableName}.drop(columns=[${columnNames}])\n`;
+            const code = `${newVar} = ${currVar}.drop(columns=[${columnNames}])\n`;
             const historyItem = {
-                transformation: DataScience.dataWranglerDropColumnTransformation().format(columnNames),
-                variableName: newVariableName,
-                code: code
+                type: DataWranglerCommands.Drop,
+                description: DataScience.dataWranglerDropColumnDescription().format(columnNames),
+                variableName: newVar,
+                code: code,
+                shouldAdd: true
             };
-            this.addToHistory(historyItem);
             return historyItem;
         }
         return {} as IHistoryItem;
     }
 
     private async dropDuplicates(req: IDropDuplicatesRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const vars = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const currVar = vars.currentVariableName;
+        const newVar = vars.newVariableName;
 
         if (req.targetColumns !== undefined) {
             // Drop duplicates in a column
             const targetColumns = req.targetColumns.map((col: string) => `'${col}'`).join(', ');
-            const code = `${newVariableName} = ${currentVariableName}.drop_duplicates(subset=[${targetColumns}])\n`;
+            const code = `${newVar} = ${currVar}.drop_duplicates(subset=[${targetColumns}])\n`;
             const historyItem = {
-                transformation: DataScience.dataWranglerDropDuplicatesRowsOnColumnTransformation().format(
-                    targetColumns
-                ),
-                variableName: newVariableName,
-                code: code
+                type: DataWranglerCommands.DropDuplicates,
+                description: DataScience.dataWranglerDropDuplicatesRowsOnColumnDescription().format(targetColumns),
+                variableName: newVar,
+                code: code,
+                shouldAdd: true
             };
-            this.addToHistory(historyItem);
             return historyItem;
         } else {
             // Drop duplicate rows
-            const code = `${newVariableName} = ${currentVariableName}.drop_duplicates()\n`;
+            const code = `${newVar} = ${currVar}.drop_duplicates()\n`;
             const historyItem = {
-                transformation: DataScience.dataWranglerDropDuplicatesRowsTransformation(),
-                variableName: newVariableName,
-                code: code
+                type: DataWranglerCommands.DropDuplicates,
+                description: DataScience.dataWranglerDropDuplicatesRowsDescription(),
+                variableName: newVar,
+                code: code,
+                shouldAdd: true
             };
-            this.addToHistory(historyItem);
             return historyItem;
         }
     }
 
     private async dropNa(req: IDropNaRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const vars = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const currVar = vars.currentVariableName;
+        const newVar = vars.newVariableName;
 
         if (req.targetColumns !== undefined) {
             // Only drop rows where there are Na values in the target columns
             const targetColumns = req.targetColumns.map((col: string) => `'${col}'`).join(', ');
-            const code = `${newVariableName} = ${currentVariableName}.dropna(subset=[${targetColumns}])\n`;
+            const code = `${newVar} = ${currVar}.dropna(subset=[${targetColumns}])\n`;
             const historyItem = {
-                transformation: DataScience.dataWranglerDropNaRowsOnColumnTransformation().format(targetColumns),
-                variableName: newVariableName,
-                code: code
+                type: DataWranglerCommands.DropNa,
+                description: DataScience.dataWranglerDropNaRowsOnColumnDescription().format(targetColumns),
+                variableName: newVar,
+                code: code,
+                shouldAdd: true
             };
-            this.addToHistory(historyItem);
             return historyItem;
         } else {
             // Drop all rows that contain any Na value or drop all columns that contain any Na value
             const axis = req.target === 'row' ? '0' : '1';
-            const code = `${newVariableName} = ${currentVariableName}.dropna(axis=${axis})\n`;
+            const code = `${newVar} = ${currVar}.dropna(axis=${axis})\n`;
             const historyItem = {
-                transformation:
+                type: DataWranglerCommands.DropNa,
+                description:
                     req.target === 'row'
-                        ? DataScience.dataWranglerDropNaRowsTransformation()
-                        : DataScience.dataWranglerDropNaColumnsTransformation(),
-                variableName: newVariableName,
-                code: code
+                        ? DataScience.dataWranglerDropNaRowsDescription()
+                        : DataScience.dataWranglerDropNaColumnsDescription(),
+                variableName: newVar,
+                code: code,
+                shouldAdd: true
             };
-            this.addToHistory(historyItem);
             return historyItem;
         }
     }
 
     private async normalizeColumn(req: INormalizeColumnRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const vars = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const currVar = vars.currentVariableName;
+        const newVar = vars.newVariableName;
+
         // MinMaxScaler code in pandas taken from https://stackoverflow.com/a/50028155
-        const code = `new_min, new_max = ${req.start.toString()}, ${req.end.toString()}\r\nold_min, old_max = df[['${
-            req.targetColumn
-        }']].min(), df[['${
-            req.targetColumn
-        }']].max()\r\n${newVariableName} = ${currentVariableName}.copy()\r\n${newVariableName}['${
-            req.targetColumn
-        }'] = (${currentVariableName}[['${
-            req.targetColumn
-        }']] - old_min) / (old_max - old_min) * (new_max - new_min) + new_min\n`;
+        let previewCode = '';
+        let code = `new_min, new_max = ${req.start.toString()}, ${req.end.toString()}\r\n`;
+        code += `old_min, old_max = ${currVar}[['${req.targetColumn}']].min(), ${currVar}[['${req.targetColumn}']].max()\r\n`;
+        code += `${newVar} = ${currVar}.copy()\r\n`;
+
+        if (req.isPreview) {
+            previewCode = code.slice();
+            previewCode += `idx = ${currVar}.columns.get_loc("${req.targetColumn}")\r\n`;
+            previewCode += `data = (${currVar}[['${req.targetColumn}']] - old_min) / (old_max - old_min) * (new_max - new_min) + new_min\r\n`;
+            previewCode += `${newVar}.insert(idx + 1, '${req.targetColumn} (preview)', data)\n`;
+        }
+
+        code += `${newVar}['${req.targetColumn}'] = (${currVar}[['${req.targetColumn}']] - old_min) / (old_max - old_min) * (new_max - new_min) + new_min\n`;
+
         const historyItem = {
-            transformation: DataScience.dataWranglerNormalizeColumnTransformation().format(req.targetColumn),
-            variableName: newVariableName,
-            code: code
+            type: DataWranglerCommands.NormalizeColumn,
+            description: DataScience.dataWranglerNormalizeColumnDescription().format(req.targetColumn),
+            variableName: newVar,
+            code: code,
+            previewCode: previewCode,
+            isPreview: req.isPreview,
+            shouldAdd: true
         };
-        this.addToHistory(historyItem);
+
+        if (req.isPreview) {
+            this.postMessage(
+                DataWranglerMessages.OperationPreview,
+                DataWranglerCommands.NormalizeColumn
+            ).ignoreErrors();
+        }
+
         return historyItem;
     }
 
     private async fillNa(req: IFillNaRequest, currentVariableName: string): Promise<IHistoryItem> {
-        const newVariableName = this.cleanHistoryAndGetNewVariableName(currentVariableName);
-        const code = `${currentVariableName} = ${currentVariableName}.fillna(${req.newValue.toString()})\n`;
+        const vars = this.cleanHistoryAndGetNewVariableName(currentVariableName);
+        const currVar = vars.currentVariableName;
+        const newVar = vars.newVariableName;
+
+        const code = `${currVar} = ${currVar}.fillna(${req.newValue.toString()})\n`;
         const historyItem = {
-            transformation: DataScience.dataWranglerFillNaTransformation().format(req.newValue.toString()),
-            variableName: newVariableName,
-            code: code
+            type: DataWranglerCommands.FillNa,
+            description: DataScience.dataWranglerFillNaDescription().format(req.newValue.toString()),
+            variableName: newVar,
+            code: code,
+            shouldAdd: true
         };
-        this.addToHistory(historyItem);
+
         return historyItem;
     }
 
-    private cleanHistoryAndGetNewVariableName(currentVariableName: string) {
-        // Removes subsequent history items if current variable is an intermediate step
-        // Then sets most recent variable to the action performed after that intermediate step
-        if (currentVariableName === 'df') {
-            this.historyList = this.historyList.slice(0, 1);
-            return 'df1';
+    private async respondToPreview(req: { doesAccept: boolean }): Promise<IHistoryItem> {
+        this.postMessage(DataWranglerMessages.OperationPreview, undefined).ignoreErrors();
+        if (!this.historyList[this.historyList.length - 1].isPreview) {
+            // Most recent operation is not a preview operation
+            return {} as IHistoryItem;
+        }
+        if (req.doesAccept) {
+            this.historyList[this.historyList.length - 1].isPreview = false;
+            this.historyList[this.historyList.length - 1].shouldAdd = false;
+            this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
+            return this.historyList[this.historyList.length - 1];
         } else {
-            const currVarIndex = Number(currentVariableName.substr(2));
+            // Reject preview
+            // Remove history item
+            this.historyList.pop();
+            this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
+
+            // Go back to oldest variable and display its data
+            const newVariableName = this.historyList[this.historyList.length - 1].variableName;
+            await this.updateWithNewVariable(newVariableName);
+            return {} as IHistoryItem;
+        }
+    }
+
+    // Removes subsequent history items if current variable is an intermediate step
+    // Then sets most recent variable to the action performed after that intermediate step
+    private cleanHistoryAndGetNewVariableName(
+        currentVariableName: string
+    ): { currentVariableName: string; newVariableName: string } {
+        const currVarIndex = Number(currentVariableName.substr(2));
+
+        if (this.historyList[this.historyList.length - 1].isPreview) {
+            // Latest operation was a preview operation
+            this.postMessage(DataWranglerMessages.OperationPreview, undefined).ignoreErrors();
+            const latestHistoryItem = this.historyList.pop();
+            if (latestHistoryItem && latestHistoryItem.variableName === currentVariableName) {
+                // Newest operation was branched off of the preview operation so we need to instead branch it off of
+                // the stable operation before the preview operation
+                const newCurrVar = Number(currVarIndex) - 1 === 0 ? 'df' : 'df' + (Number(currVarIndex) - 1).toString();
+                return {
+                    currentVariableName: newCurrVar,
+                    newVariableName: currentVariableName
+                };
+            }
+            // Newest operation was based off an intermediate stable operation
+            return { currentVariableName, newVariableName: 'df' + (Number(currVarIndex) + 1).toString() };
+        } else if (currentVariableName === 'df') {
+            this.historyList = this.historyList.slice(0, 1);
+            return { currentVariableName: 'df', newVariableName: 'df1' };
+        } else {
             this.historyList = this.historyList.slice(0, currVarIndex + 1);
-            return 'df' + (Number(currVarIndex) + 1).toString();
+            return { currentVariableName, newVariableName: 'df' + (Number(currVarIndex) + 1).toString() };
         }
     }
 }

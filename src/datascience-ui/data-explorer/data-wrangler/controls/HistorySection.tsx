@@ -3,14 +3,14 @@ import * as React from 'react';
 import { mergeStyleSets, getTheme, normalize } from 'office-ui-fabric-react/lib/Styling';
 import './HistorySection.css';
 import { SidePanelSection } from './SidePanelSection';
-import { DataWranglerCommands } from '../../../../client/datascience/data-viewing/data-wrangler/types';
+import { DataWranglerCommands, IHistoryItem } from '../../../../client/datascience/data-viewing/data-wrangler/types';
 
 interface IProps {
     collapsed: boolean;
     headers: string[];
     currentVariableName: string | undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    historyList: any[];
+    historyList: IHistoryItem[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 }
@@ -84,11 +84,20 @@ export class HistorySection extends React.Component<IProps, IState> {
                     index
                 }
             });
-            this.setState({ currentVariableIndex: index - 1});
+            this.setState({ currentVariableIndex: index - 1 });
             setTimeout(() => {
                 this.listRef.current?.forceUpdate();
             });
         }
+    }
+
+    respondToPreview(doesAccept: boolean) {
+        this.props.submitCommand({
+            command: DataWranglerCommands.RespondToPreview,
+            args: {
+                doesAccept
+            }
+        });
     }
 
     viewHistoryItem(index: number | undefined) {
@@ -106,24 +115,48 @@ export class HistorySection extends React.Component<IProps, IState> {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onRenderCell = (item?: any, index?: number): JSX.Element => {
+    onRenderCell = (item?: IHistoryItem, index?: number): JSX.Element => {
         const isCurrentStep = (this.state.currentVariableIndex ?? 0) === index!; // df1 corresponds to history item 0
         const className = styles.itemContent + ' history-item' + (isCurrentStep ? ' selected-history-item' : '');
         return (
             <div data-is-focusable>
-                <div
-                    className={className}
-                    style={{ paddingBottom: '4px', paddingTop: '2px' }}
-                >
-                    <span onClick={() => this.viewHistoryItem(index)} style={{ verticalAlign: 'middle', width: '100%', flexGrow: 1 }} title={`Click to view intermediate state`}>
-                        {item.transformation}
-                    </span>
-                    {index !== 0 && this.props.historyList.length - 1 === index && (
+                <div className={className} style={{ paddingBottom: '4px', paddingTop: '2px' }}>
+                    <div style={{flexGrow: 1}} onClick={() => this.viewHistoryItem(index)} title={`Click to view intermediate state`}>
+                        <span
+                            style={{ verticalAlign: 'middle', width: '100%' }}
+                        >
+                            {item?.description}
+                        </span>
+                        {item?.isPreview &&
+                        <span
+                            style={{ verticalAlign: 'bottom', width: '100%', color: 'var(--vscode-descriptionForeground)', fontSize: '10px' }}
+                        >
+                            &nbsp;&nbsp;&nbsp;Preview
+                        </span>}
+                    </div>
+
+                    {index !== 0 && item?.isPreview && (
+                        <>
+                            <div
+                                className="codicon codicon-check codicon-button"
+                                onClick={() => this.respondToPreview(true)}
+                                style={{ verticalAlign: 'middle' }}
+                                title={'Accept step'}
+                            />
+                            <div
+                                className="codicon codicon-close codicon-button"
+                                onClick={() => this.respondToPreview(false)}
+                                style={{ verticalAlign: 'middle' }}
+                                title={'Reject step'}
+                            />
+                        </>
+                    )}
+                    {/* Need to check that it is the latest operation that is not preview */}
+                    {index !== 0 && this.props.historyList.length - 1 === index && !item?.isPreview && (
                         <div
-                            className="codicon codicon-close codicon-button"
+                            className="codicon codicon-discard codicon-button"
                             onClick={() => this.handleDeleteHistoryItem(index)}
-                            style={{ verticalAlign: 'middle'}}
+                            style={{ verticalAlign: 'middle' }}
                             title={'Remove step'}
                         />
                     )}

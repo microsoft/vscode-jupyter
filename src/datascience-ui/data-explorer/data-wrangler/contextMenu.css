@@ -1,4 +1,4 @@
-#contextMenu, #headerContextMenu {
+#contextMenu, #headerContextMenu, #headerContextMenuPreview {
 	background-color: var(--vscode-menu-background);
 	color: var(--vscode-menu-foreground);
 	outline-color: var(--vscode-list-focusOutline);
@@ -13,14 +13,14 @@
 	border: 0;
 }
 
-#contextMenu li, #headerContextMenu li {
+#contextMenu li, #headerContextMenu li, #headerContextMenuPreview li {
 	padding: 4px 26px;
 	margin: 0px;
 	list-style: none;
 	cursor: pointer;
 }
 
-#contextMenu li:hover, #headerContextMenu li:hover {
+#contextMenu li:hover, #headerContextMenu li:hover, #headerContextMenuPreview li:hover {
 	background-color: var(--vscode-list-activeSelectionBackground);
 	color: var(--vscode-list-activeSelectionForeground);
 }

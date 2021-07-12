@@ -50,7 +50,8 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                                     args: {
                                         start: this.state.normalizeRangeStart,
                                         end: this.state.normalizeRangeEnd,
-                                        targetColumn: this.props.selectedColumn
+                                        targetColumn: this.props.selectedColumn,
+                                        isPreview: true
                                     } as INormalizeColumnRequest
                                 });
                             }

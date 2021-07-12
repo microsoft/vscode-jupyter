@@ -38,7 +38,8 @@ export enum DataWranglerCommands {
     GetHistoryItem = 'get_history_item',
     CoerceColumn = 'coerce_column',
     ReplaceAllColumn = 'replace_all_column',
-    RemoveHistoryItem = 'remove_history_item'
+    RemoveHistoryItem = 'remove_history_item',
+    RespondToPreview = 'respond_to_preview'
 }
 
 export namespace DataWranglerMessages {
@@ -47,6 +48,7 @@ export namespace DataWranglerMessages {
     export const UpdateHistoryList = 'update_history_list';
     export const GetHistogramResponse = 'get_histogram_response';
     export const SetSidePanels = 'set_side_panels';
+    export const OperationPreview = 'operation_preview';
 }
 
 export const IDataWranglerFactory = Symbol('IDataWranglerFactory');
@@ -70,9 +72,13 @@ export interface IRemoveHistoryItemRequest {
 }
 
 export interface IHistoryItem {
-    transformation: string;
+    type?: DataWranglerCommands;
+    description: string;
     variableName: string;
     code: string;
+    isPreview?: boolean;
+    previewCode?: string;
+    shouldAdd?: boolean;
 }
 
 export interface IGetHistoryItem {
@@ -100,6 +106,7 @@ export interface IReplaceAllColumnsRequest {
     targetColumns: string[];
     oldValue: string | number | undefined;
     newValue: string | number | undefined;
+    isPreview: boolean;
 }
 export interface IDropRequest {
     targetColumns?: string[];
@@ -119,6 +126,7 @@ export interface INormalizeColumnRequest {
     start: Number;
     end: Number;
     targetColumn: string;
+    isPreview: boolean;
 }
 
 export interface IFillNaRequest {

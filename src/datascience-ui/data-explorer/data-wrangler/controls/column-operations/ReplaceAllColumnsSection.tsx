@@ -51,7 +51,8 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
                                     args: {
                                         targetColumns: this.props.selectedColumns,
                                         oldValue: this.state.oldValue,
-                                        newValue: this.state.newValue
+                                        newValue: this.state.newValue,
+                                        isPreview: true
                                     } as IReplaceAllColumnsRequest
                                 });
                                 this.props.setColumns([]);

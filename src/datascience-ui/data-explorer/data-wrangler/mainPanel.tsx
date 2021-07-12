@@ -44,6 +44,7 @@ import { createDeferred } from '../../../client/common/utils/async';
 import {
     DataWranglerCommands,
     DataWranglerMessages,
+    IHistoryItem,
     SidePanelSections
 } from '../../../client/datascience/data-viewing/data-wrangler/types';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow } from '../reactSlickGrid';
@@ -79,12 +80,13 @@ interface IMainPanelState {
     variableName?: string;
     fileName?: string;
     sliceExpression?: string;
-    historyList: [];
+    historyList: IHistoryItem[];
     histogramData?: IGetColsResponse;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     monacoThemeObj: any;
     sidePanels: SidePanelSections[];
     dataframeSummary: IDataFrameInfo;
+    operationPreview?: DataWranglerCommands;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -131,7 +133,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 histogramData: undefined,
                 monacoThemeObj: {base: 'vs-dark'},
                 sidePanels: [],
-                dataframeSummary: {}
+                dataframeSummary: {},
+                operationPreview: undefined
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -153,7 +156,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 histogramData: undefined,
                 monacoThemeObj: {base: 'vs-dark'},
                 sidePanels: [],
-                dataframeSummary: {}
+                dataframeSummary: {},
+                operationPreview: undefined
             };
         }
     }
@@ -258,6 +262,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.handleUpdateHistoryList(payload);
                 break;
 
+            case DataWranglerMessages.OperationPreview:
+                this.handleOperationPreview(payload);
+                break;
+
             case SharedMessages.UpdateSettings:
                 this.updateSettings(payload);
                 break;
@@ -355,6 +363,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 currentVariableName={this.state.variableName!}
                 sidePanels={this.state.sidePanels}
                 dataframeSummary={this.state.dataframeSummary}
+                operationPreview={this.state.operationPreview}
             />
         );
     }
@@ -432,8 +441,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.setState({ histogramData: response });
     }
 
-    private handleUpdateHistoryList(response: []) {
+    private handleUpdateHistoryList(response: IHistoryItem[]) {
         this.setState({ historyList: response });
+    }
+
+    private handleOperationPreview(response: DataWranglerCommands | undefined) {
+        // This is so we know how to color the columns/rows for different types of operation previews
+        this.setState({ operationPreview: response });
     }
 
     private handleGetAllRowsResponse(response: IRowsResponse) {

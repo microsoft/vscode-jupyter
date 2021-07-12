@@ -984,58 +984,55 @@ export namespace DataScience {
         'Python Kernel Debug Adapter'
     );
     // Data Wrangler
-    export const dataWranglerCoerceColumnTransformation = localize(
-        'DataScience.DataWranglerCoerceColumnTransformation',
+    export const dataWranglerCoerceColumnDescription = localize(
+        'DataScience.DataWranglerCoerceColumnDescription',
         'Cast column(s): {0} to {1}'
     );
-    export const dataWranglerReplaceAllTransformation = localize(
-        'DataScience.dataWranglerReplaceAllTransformation',
+    export const dataWranglerReplaceAllDescription = localize(
+        'DataScience.dataWranglerReplaceAllDescription',
         "Replaced all instances of '{0}' with '{1}' in column(s): {2}"
     );
-    export const dataWranglerRenameColumnTransformation = localize(
-        'DataScience.dataWranglerRenameColumnTransformation',
+    export const dataWranglerRenameColumnDescription = localize(
+        'DataScience.dataWranglerRenameColumnDescription',
         "Renamed column '{0}' to '{1}'"
     );
-    export const dataWranglerDropRowTransformation = localize(
-        'DataScience.dataWranglerDropRowTransformation',
+    export const dataWranglerDropRowDescription = localize(
+        'DataScience.dataWranglerDropRowDescription',
         'Dropped rows(s): {0}'
     );
-    export const dataWranglerDropColumnTransformation = localize(
-        'DataScience.dataWranglerDropColumnTransformation',
+    export const dataWranglerDropColumnDescription = localize(
+        'DataScience.dataWranglerDropColumnDescription',
         'Dropped column(s): {0}'
     );
-    export const dataWranglerDropDuplicatesRowsTransformation = localize(
-        'DataScience.dataWranglerDropDuplicatesRowsTransformation',
+    export const dataWranglerDropDuplicatesRowsDescription = localize(
+        'DataScience.dataWranglerDropDuplicatesRowsDescription',
         'Removed duplicate rows'
     );
-    export const dataWranglerDropDuplicatesRowsOnColumnTransformation = localize(
-        'DataScience.dataWranglerDropDuplicatesRowsOnColumnTransformation',
+    export const dataWranglerDropDuplicatesRowsOnColumnDescription = localize(
+        'DataScience.dataWranglerDropDuplicatesRowsOnColumnDescription',
         'Removed duplicate rows on column(s): {0}'
     );
-    export const dataWranglerDropNaRowsTransformation = localize(
-        'DataScience.dataWranglerDropNaRowsTransformation',
+    export const dataWranglerDropNaRowsDescription = localize(
+        'DataScience.dataWranglerDropNaRowsDescription',
         'Dropped rows with missing data'
     );
-    export const dataWranglerDropNaColumnsTransformation = localize(
-        'DataScience.dataWranglerDropNaColumnsTransformation',
+    export const dataWranglerDropNaColumnsDescription = localize(
+        'DataScience.dataWranglerDropNaColumnsDescription',
         'Dropped columns with missing data'
     );
-    export const dataWranglerDropNaRowsOnColumnTransformation = localize(
-        'DataScience.dataWranglerDropNaRowsOnColumnTransformation',
+    export const dataWranglerDropNaRowsOnColumnDescription = localize(
+        'DataScience.dataWranglerDropNaRowsOnColumnDescription',
         'Dropped rows with missing data in column: {0}'
     );
-    export const dataWranglerNormalizeColumnTransformation = localize(
-        'DataScience.dataWranglerNormalizeColumnTransformation',
+    export const dataWranglerNormalizeColumnDescription = localize(
+        'DataScience.dataWranglerNormalizeColumnDescription',
         "Normalized column: '{0}'"
     );
-    export const dataWranglerFillNaTransformation = localize(
-        'DataScience.dataWranglerFillNaTransformation',
+    export const dataWranglerFillNaDescription = localize(
+        'DataScience.dataWranglerFillNaDescription',
         "Replaced Na values with: '{0}'"
     );
-    export const dataWranglerImportTransformation = localize(
-        'DataScience.DataWranglerImportTransformation',
-        'Imported data'
-    );
+    export const dataWranglerImportDescription = localize('DataScience.DataWranglerImportDescription', 'Imported data');
     export const dataWranglerStandalone = localize('DataScience.dataWranglerStandalone', 'Open just the Data Wrangler');
     export const dataWranglerStandaloneLoading = localize(
         'DataScience.dataWranglerStandaloneLoading',
