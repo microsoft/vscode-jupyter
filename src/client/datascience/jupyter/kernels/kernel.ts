@@ -407,8 +407,6 @@ export class Kernel implements IKernel {
         if (!this.notebook) {
             return;
         }
-        // Force matplotlib to inline and save the default style. We'll use this later if we
-        // get a request to update style
         const deferred = createDeferred<void>();
         const observable = this.notebook.executeObservable(code, this.uri.fsPath, 0, uuid(), true);
         const subscription = observable.subscribe(
