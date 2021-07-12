@@ -9,6 +9,7 @@ import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
 import {
     CancellationTokenSource,
+    ColorThemeKind,
     Event,
     EventEmitter,
     NotebookCell,
@@ -21,14 +22,14 @@ import {
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../../common/application/types';
-import { traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { CodeSnippets, Telemetry } from '../../constants';
+import { CodeSnippets, Identifiers, Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
@@ -45,7 +46,7 @@ import { getSysInfoReasonHeader, isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
-import { MARKDOWN_LANGUAGE } from '../../../common/constants';
+import { isCI, MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 
@@ -96,11 +97,12 @@ export class Kernel implements IKernel {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         kernelProvider: IKernelProvider,
-        appShell: IApplicationShell,
+        private readonly appShell: IApplicationShell,
         private readonly fs: IFileSystem,
         context: IExtensionContext,
         private readonly serverStorage: IJupyterServerUriStorage,
-        controller: NotebookController
+        controller: NotebookController,
+        private readonly configService: IConfigurationService
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -285,7 +287,6 @@ export class Kernel implements IKernel {
             editor.notebook = this.notebook;
         }
 
-        this.disableJedi();
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
@@ -308,7 +309,9 @@ export class Kernel implements IKernel {
             );
         }
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
+            await this.disableJedi();
             await this.notebook.setLaunchingFile(this.uri.fsPath);
+            await this.initializeMatplotlib();
         }
         await this.notebook
             .requestKernelInfo()
@@ -320,10 +323,8 @@ export class Kernel implements IKernel {
         await this.notebook.waitForIdle(this.launchTimeout);
     }
 
-    private disableJedi() {
-        if (isPythonKernelConnection(this.kernelConnectionMetadata) && this.notebook) {
-            this.notebook.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
-        }
+    private async disableJedi() {
+        await this.executeSilently(CodeSnippets.disableJedi);
     }
 
     /**
@@ -344,7 +345,8 @@ export class Kernel implements IKernel {
         }
 
         const message = getSysInfoReasonHeader(reason, this.kernelConnectionMetadata);
-        const sysInfoMessages = [(info.content as KernelMessage.IInfoReply)?.banner.split('\n').join('\n\n')];
+        const bannerMessage = (info.content as KernelMessage.IInfoReply)?.banner || '';
+        const sysInfoMessages = bannerMessage ? bannerMessage.split('\n') : [];
         if (sysInfoMessages) {
             // Connection string only for our initial start, not restart or interrupt
             let connectionString: string = '';
@@ -362,7 +364,7 @@ export class Kernel implements IKernel {
             return chainWithPendingUpdates(notebookDocument, (edit) => {
                 const markdownCell = new NotebookCellData(
                     NotebookCellKind.Markup,
-                    sysInfoMessages.join('\n\n'),
+                    sysInfoMessages.join('  \n'),
                     MARKDOWN_LANGUAGE
                 );
                 markdownCell.metadata = { isSysInfoCell: true };
@@ -373,5 +375,50 @@ export class Kernel implements IKernel {
                 );
             });
         }
+    }
+    private async initializeMatplotlib(): Promise<void> {
+        if (!this.notebook) {
+            return;
+        }
+        const settings = this.configService.getSettings(this.uri);
+        if (settings && settings.themeMatplotlibPlots) {
+            const matplobInit = settings.enablePlotViewer
+                ? CodeSnippets.MatplotLibInitSvg
+                : CodeSnippets.MatplotLibInitPng;
+
+            traceInfo(`Initialize matplotlib for ${this.uri.toString()}`);
+            await this.executeSilently(matplobInit);
+            const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
+            if (!settings.ignoreVscodeTheme) {
+                // Reset the matplotlib style based on if dark or not.
+                await this.executeSilently(
+                    useDark
+                        ? "matplotlib.style.use('dark_background')"
+                        : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`
+                );
+            }
+        } else {
+            const configInit = !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
+            traceInfoIf(isCI, `Initialize config for plots for ${this.uri.toString()}`);
+            await this.executeSilently(configInit);
+        }
+    }
+    private async executeSilently(code: string) {
+        if (!this.notebook) {
+            return;
+        }
+        // Force matplotlib to inline and save the default style. We'll use this later if we
+        // get a request to update style
+        const deferred = createDeferred<void>();
+        const observable = this.notebook.executeObservable(code, this.uri.fsPath, 0, uuid(), true);
+        const subscription = observable.subscribe(
+            noop,
+            (ex) => deferred.reject(ex),
+            () => deferred.resolve()
+        );
+        this.disposables.push({
+            dispose: () => subscription.unsubscribe()
+        });
+        await deferred.promise;
     }
 }

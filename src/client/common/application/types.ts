@@ -71,7 +71,8 @@ import {
     NotebookCell,
     NotebookSerializer,
     NotebookData,
-    NotebookDocumentShowOptions
+    NotebookDocumentShowOptions,
+    ColorTheme
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -82,6 +83,7 @@ import { ICommandNameArgumentTypeMapping } from './commands';
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
+    readonly activeColorTheme: ColorTheme;
     /**
      * An [event](#Event) which fires when the focus state of the current window
      * changes. The value of the event represents whether the window is focused.

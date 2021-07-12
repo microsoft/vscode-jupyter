@@ -76,7 +76,8 @@ export class KernelProvider implements IKernelProvider {
             this.fs,
             this.context,
             this.serverStorage,
-            options.controller
+            options.controller,
+            this.configService
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByUri.set(uri.toString(), { options, kernel });
