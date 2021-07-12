@@ -321,7 +321,7 @@ export class PythonInstaller implements IPythonInstaller {
     public async isProductVersionCompatible(
         product: Product,
         semVerRequirement: string,
-        resource?: InterpreterUri
+        resource?: PythonEnvironment
     ): Promise<ProductInstallStatus> {
         const api = await this.apiProvider.getApi();
         return api.isProductVersionCompatible(product, semVerRequirement, resource);

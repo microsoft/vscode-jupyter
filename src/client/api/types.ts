@@ -98,7 +98,7 @@ export type PythonApi = {
     isProductVersionCompatible(
         product: Product,
         semVerRequirement: string,
-        resource?: InterpreterUri
+        resource?: PythonEnvironment
     ): Promise<ProductInstallStatus>;
     /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
