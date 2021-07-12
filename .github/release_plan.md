@@ -34,16 +34,16 @@
     -   new features
     -   settings changes
     -   etc. (ask the team)
--   [ ] Schedule a bug bash. Aim for close after freeze so there is still time to fix release bugs before release. Ask teams before bash for specific areas that need testing.
--   [ ] Is the validation pipeline clear? If not, drive to make sure that it is clear for release. Bug bash can be used to help with this.
+-   [ ] Schedule a sanity test. Aim for close after freeze so there is still time to fix release bugs before release. Ask teams before bash for specific areas that need testing.
+-   [ ] Is the validation pipeline clear? If not, drive to make sure that it is clear for release. Sanity test can be used to help with this.
 -   [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post. Contact the PM team for this.
 -   [ ] Ask CTI to test the release candidate
 
 # Testing (Monday of VS Code release week, XXX XX)
 
 -  [ ] Obtain VS Code prebuild for sanity testing
--  [ ] Bug bash release candidate VSIX against VS Code prebuild
--  [ ] Candidate bug fixes found from bug bash should be checked into `main` and `release` branches
+-  [ ] Sanity test release candidate VSIX against VS Code prebuild
+-  [ ] Candidate bug fixes found from sanity test should be checked into `main` and `release` branches
 -  [ ] Manually publish Monday's VS Code Insiders release from `main` branch to minimize gap in Insiders program
 
 # Release (Tuesday or day before VS Code publishes, whichever is later)
