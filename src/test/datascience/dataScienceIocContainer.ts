@@ -25,13 +25,8 @@ import * as vsls from 'vsls/vscode';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
 import { IExtensionSingleActivationService } from '../../client/activation/types';
-import { PythonExtensionChecker, PythonInstaller } from '../../client/api/pythonApi';
-import {
-    ILanguageServerProvider,
-    IPythonDebuggerPathProvider,
-    IPythonExtensionChecker,
-    IPythonInstaller
-} from '../../client/api/types';
+import { PythonExtensionChecker } from '../../client/api/pythonApi';
+import { ILanguageServerProvider, IPythonDebuggerPathProvider, IPythonExtensionChecker } from '../../client/api/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
@@ -887,7 +882,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.forceDataScienceSettingsChanged({ disableZMQSupport: true }, false);
         } else {
             this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
-            this.serviceManager.addSingleton<IPythonInstaller>(IPythonInstaller, PythonInstaller);
             this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
             this.serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
             this.serviceManager.addSingleton<IWindowsStoreInterpreter>(

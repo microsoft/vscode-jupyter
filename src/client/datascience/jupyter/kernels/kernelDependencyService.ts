@@ -24,6 +24,7 @@ import {
 } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
+import { IServiceContainer } from '../../../ioc/types';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -42,7 +43,7 @@ export class KernelDependencyService implements IKernelDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
-        @inject(IPythonInstaller) private readonly pythonInstaller: IPythonInstaller,
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
@@ -90,11 +91,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         _token?: CancellationToken
     ): Promise<boolean> {
         try {
-            const result = await this.pythonInstaller.isProductVersionCompatible(
-                Product.ipykernel,
-                '>=6.0.0',
-                interpreter
-            );
+            const installer = await this.serviceContainer.get<IPythonInstaller>(IPythonInstaller);
+            const result = await installer.isProductVersionCompatible(Product.ipykernel, '>=6.0.0', interpreter);
             switch (result) {
                 case ProductInstallStatus.Installed:
                     return true;
