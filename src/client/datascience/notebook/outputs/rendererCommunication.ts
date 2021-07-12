@@ -10,6 +10,7 @@ import { IDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { JupyterNotebookRenderer } from '../constants';
 import { PlotSaveHandler } from './plotSaveHandler';
+import { PlotViewHandler } from './plotViewHandler';
 
 type RendererMessageTypes = { type: 'saveAs'; outputId: string; mimeType: string };
 
@@ -18,7 +19,8 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(UseVSCodeNotebookEditorApi) private readonly useVSCNotebook: boolean,
-        @inject(PlotSaveHandler) private readonly plotSaveHandler: PlotSaveHandler
+        @inject(PlotSaveHandler) private readonly plotSaveHandler: PlotSaveHandler,
+        @inject(PlotViewHandler) private readonly plotViewHandler: PlotViewHandler
     ) {}
 
     public dispose() {
@@ -34,6 +36,8 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
             ({ editor, message }) => {
                 if (message.type === 'saveAs') {
                     this.plotSaveHandler.savePlot(editor, message.outputId, message.mimeType).catch(noop);
+                } else if (message.type === 'openPlot') {
+                    this.plotViewHandler.openPlot(editor, message.outputId).catch(noop);
                 }
             },
             this,
