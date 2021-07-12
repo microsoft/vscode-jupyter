@@ -131,7 +131,7 @@ export interface IPythonInstaller {
     isProductVersionCompatible(
         product: Product,
         semVerRequirement: string,
-        resource?: InterpreterUri
+        resource?: PythonEnvironment
     ): Promise<ProductInstallStatus>;
 }
 

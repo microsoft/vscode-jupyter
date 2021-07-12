@@ -323,12 +323,8 @@ export class PythonInstaller implements IPythonInstaller {
         semVerRequirement: string,
         resource?: InterpreterUri
     ): Promise<ProductInstallStatus> {
-        try {
-            const api = await this.apiProvider.getApi();
-            return await api.isProductVersionCompatible(product, semVerRequirement, resource);
-        } catch (ex) {
-            throw ex;
-        }
+        const api = await this.apiProvider.getApi();
+        return api.isProductVersionCompatible(product, semVerRequirement, resource);
     }
 }
 
