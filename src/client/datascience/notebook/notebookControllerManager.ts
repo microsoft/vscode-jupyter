@@ -95,7 +95,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (!activeInterpreter) {
             return;
         }
-        this.getOrCreateController(activeInterpreter, InteractiveWindowView)?.id;
+        return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
     }
 
     get onNotebookControllerSelected() {
