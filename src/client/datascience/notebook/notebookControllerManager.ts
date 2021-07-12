@@ -36,7 +36,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { noop } from '../../common/utils/misc';
-import { IPythonExtensionChecker } from '../../api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { isCI } from '../../common/constants';
 /**
@@ -77,7 +77,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IDocumentManager) private readonly docManager: IDocumentManager
+        @inject(IDocumentManager) private readonly docManager: IDocumentManager,
+        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -85,6 +86,16 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }>();
         this.disposables.push(this._onNotebookControllerSelected);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
+    }
+    public async getInteractiveController(): Promise<VSCodeNotebookController | undefined> {
+        // Fetch the active interpreter and use the matching controller
+        const api = await this.pythonApi.getApi();
+        const activeInterpreter = await api.getActiveInterpreter();
+
+        if (!activeInterpreter) {
+            return;
+        }
+        return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
     }
 
     get onNotebookControllerSelected() {
