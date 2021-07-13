@@ -31,15 +31,15 @@ The Jupyter Extension supports other languages in addition to Python such as Jul
 
 -   To create a new notebook open the command palette (Windows: Ctrl + Shift + P, iOS: Command + Shift + P) and select the command `"Jupyter: Create New Blank Notebook"`
 
-         <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
+    <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
 
 -   Select your kernel by clicking on the kernel picker in the bottom right of the status bar or by invoking the `"Notebook: Select Notebook Kernel"` command.
 
-         <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/KernelPicker.gif?>
+    <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/KernelPicker.gif?>
 
 -   Change the cell language by clicking the language picker or by invoking the `"Notebook: Change Cell Language"` command.
 
-         <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/LanguagePicker.gif?>
+    <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/LanguagePicker.gif?>
 
 ## Useful commands
 
@@ -81,13 +81,7 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 
 ## Data and telemetry
 
-The Microsoft Jupyter Extension for Visual Studio Code collects usage
-data and sends it to Microsoft to help improve our products and
-services. Read our
-[privacy statement](https://privacy.microsoft.com/privacystatement) to
-learn more. This extension respects the `telemetry.enableTelemetry`
-setting which you can learn more about at
-https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting.
+The Microsoft Jupyter Extension for Visual Studio Code collects usage data and sends it to Microsoft to help improve our products and services. Read our [privacy statement](https://privacy.microsoft.com/privacystatement) to learn more. This extension respects the `telemetry.enableTelemetry` setting which you can learn more about at https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting.
 
 ## Trademarks
 
