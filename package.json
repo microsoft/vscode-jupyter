@@ -284,6 +284,13 @@
                 "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging"
             },
             {
+                "command": "jupyter.runByLine",
+                "title": "Run by Line",
+                "icon": "$(debug-line-by-line)",
+                "category": "Jupyter",
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging"
+            },
+            {
                 "command": "jupyter.viewOutput",
                 "title": "%jupyter.command.jupyter.viewOutput.title%",
                 "category": "Jupyter"
@@ -928,6 +935,13 @@
                     "command": "jupyter.debugNotebook",
                     "group": "navigation@3",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && config.jupyter.experimental.debugging"
+                }
+            ],
+            "notebook/cell/title": [
+                {
+                  "command": "jupyter.runByLine",
+                  "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && config.jupyter.experimental.debugging",
+                  "group": "inline/cell@0"
                 }
             ],
             "interactive/toolbar": [

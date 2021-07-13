@@ -4,7 +4,15 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { debug, NotebookDocument, workspace, DebugAdapterInlineImplementation, DebugSession } from 'vscode';
+import {
+    debug,
+    NotebookDocument,
+    workspace,
+    DebugAdapterInlineImplementation,
+    DebugSession,
+    NotebookCell,
+    window
+} from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable } from '../../common/types';
@@ -153,6 +161,10 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
                 } else {
                     void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
                 }
+            }),
+
+            this.commandManager.registerCommand(DSCommands.RunByLine, (_cell: NotebookCell) => {
+                // TODO
             })
         );
     }

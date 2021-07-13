@@ -172,6 +172,7 @@ export namespace Commands {
     export const InteractiveExportAsNotebook = 'jupyter.interactive.exportasnotebook';
     export const InteractiveExportAs = 'jupyter.interactive.exportas';
     export const DebugNotebook = 'jupyter.debugNotebook';
+    export const RunByLine = 'jupyter.runByLine';
 }
 
 export namespace CodeLensCommands {
