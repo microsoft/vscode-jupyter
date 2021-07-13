@@ -44,6 +44,7 @@ import { createDeferred } from '../../../client/common/utils/async';
 import {
     DataWranglerCommands,
     DataWranglerMessages,
+    ICellCssStylesHash,
     IHistoryItem,
     SidePanelSections
 } from '../../../client/datascience/data-viewing/data-wrangler/types';
@@ -87,6 +88,7 @@ interface IMainPanelState {
     sidePanels: SidePanelSections[];
     dataframeSummary: IDataFrameInfo;
     operationPreview?: DataWranglerCommands;
+    cssStylings?: ICellCssStylesHash;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -134,7 +136,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 monacoThemeObj: {base: 'vs-dark'},
                 sidePanels: [],
                 dataframeSummary: {},
-                operationPreview: undefined
+                operationPreview: undefined,
+                cssStylings: {}
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -157,7 +160,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 monacoThemeObj: {base: 'vs-dark'},
                 sidePanels: [],
                 dataframeSummary: {},
-                operationPreview: undefined
+                operationPreview: undefined,
+                cssStylings: {}
             };
         }
     }
@@ -364,6 +368,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 sidePanels={this.state.sidePanels}
                 dataframeSummary={this.state.dataframeSummary}
                 operationPreview={this.state.operationPreview}
+                cssStylings={this.state.cssStylings}
             />
         );
     }
@@ -445,9 +450,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.setState({ historyList: response });
     }
 
-    private handleOperationPreview(response: DataWranglerCommands | undefined) {
+    private handleOperationPreview(response: {
+        type: DataWranglerCommands | undefined;
+        cssStylings?: ICellCssStylesHash;
+    } | undefined) {
         // This is so we know how to color the columns/rows for different types of operation previews
-        this.setState({ operationPreview: response });
+        this.setState({ operationPreview: response?.type, cssStylings: response?.cssStylings });
     }
 
     private handleGetAllRowsResponse(response: IRowsResponse) {
@@ -529,7 +537,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                             sortable: true,
                             toolTip: c.describe,
                             formatter: cellFormatterFunc,
-                            isPreview: c.key.includes("(preview)")
+                            isPreview: c.key.includes(" (preview)")
                         } as Slick.Column<Slick.SlickData>);
                     }
                     return accum;

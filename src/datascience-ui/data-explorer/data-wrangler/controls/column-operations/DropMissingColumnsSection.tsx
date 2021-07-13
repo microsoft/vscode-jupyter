@@ -21,7 +21,7 @@ export class DropMissingColumnsSection extends React.Component<IProps, IState> {
                 onClick={() => {
                     this.props.submitCommand({
                         command: DataWranglerCommands.DropNa,
-                        args: { targetColumns: this.props.selectedColumns } as IDropNaRequest
+                        args: { targetColumns: this.props.selectedColumns, isPreview: false } as IDropNaRequest
                     });
                     this.props.setColumns([]);
                 }}

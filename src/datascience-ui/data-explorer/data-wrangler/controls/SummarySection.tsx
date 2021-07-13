@@ -158,10 +158,10 @@ class DataframeSummary extends React.Component<IDataFrameInfo> {
                 <SummaryRow name={'Rows'} value={this.props.rowCount} />
                 <InnerRows
                     children={[
-                        { name: '# Missing value', value: this.props.missingValuesRowsCount },
+                        { name: '# Missing value', value: this.props.nanRows?.length },
                         {
                             name: '% Missing values',
-                            value: calculatePercent(this.props.missingValuesRowsCount ?? 0, this.props.rowCount ?? 0)
+                            value: calculatePercent(this.props.nanRows?.length ?? 0, this.props.rowCount ?? 0)
                         },
                         { name: '# Duplicate rows', value: this.props.duplicateRowsCount },
                         {
@@ -170,7 +170,7 @@ class DataframeSummary extends React.Component<IDataFrameInfo> {
                         }
                     ]}
                 />
-                <SummaryRow name={'Missing values'} value={this.props.missingValuesRowsCount} />
+                <SummaryRow name={'Missing values'} value={this.props.nanRows?.length} />
                 <InnerRows children={getColumnsWithMissingValues(this.props.columns ?? [])} />
             </div>
         );

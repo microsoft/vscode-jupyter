@@ -101,7 +101,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 indexColumn: variable.indexColumn,
                 rowCount: variable.rowCount,
                 duplicateRowsCount: variable.duplicateRowsCount,
-                missingValuesRowsCount: variable.missingValuesRowsCount,
+                nanRows: variable.nanRows,
                 dataDimensionality: variable.dataDimensionality,
                 shape: JupyterVariableDataProvider.parseShape(variable.shape),
                 sliceExpression,
@@ -109,7 +109,8 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 maximumRowChunkSize: variable.maximumRowChunkSize,
                 name: variable.name,
                 fileName: variable.fileName,
-                sourceFile: variable.sourceFile
+                sourceFile: variable.sourceFile,
+                previewDiffs: variable.previewDiffs
             };
         }
         if (isRefresh) {

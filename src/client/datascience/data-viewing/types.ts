@@ -7,7 +7,13 @@ import { CssMessages, SharedMessages } from '../messages';
 import { Event, WebviewPanel } from 'vscode';
 import { SliceOperationSource } from '../../telemetry/constants';
 import { ILoadTmLanguageResponse, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { DataWranglerCommands, DataWranglerMessages, IHistoryItem, SidePanelSections } from './data-wrangler/types';
+import {
+    DataWranglerCommands,
+    DataWranglerMessages,
+    ICellCssStylesHash,
+    IHistoryItem,
+    SidePanelSections
+} from './data-wrangler/types';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -78,7 +84,10 @@ export type IDataViewerMapping = {
     [DataWranglerMessages.UpdateHistoryList]: IHistoryItem[] | undefined;
     [DataWranglerMessages.GetHistogramResponse]: IGetColsResponse;
     [DataWranglerMessages.SetSidePanels]: SidePanelSections[];
-    [DataWranglerMessages.OperationPreview]: DataWranglerCommands;
+    [DataWranglerMessages.OperationPreview]: {
+        type: DataWranglerCommands | undefined;
+        cssStylings?: ICellCssStylesHash;
+    };
     [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
     [InteractiveWindowMessages.LoadTmLanguageRequest]: string;
@@ -111,7 +120,7 @@ export interface IDataFrameInfo {
     indexColumn?: string;
     rowCount?: number;
     duplicateRowsCount?: number;
-    missingValuesRowsCount?: number;
+    nanRows?: number[];
     shape?: number[];
     originalVariableShape?: number[];
     dataDimensionality?: number;
@@ -125,6 +134,7 @@ export interface IDataFrameInfo {
      */
     fileName?: string;
     sourceFile?: string;
+    previewDiffs?: ICellCssStylesHash;
 }
 
 // Used by DataViewer and DataWrangler

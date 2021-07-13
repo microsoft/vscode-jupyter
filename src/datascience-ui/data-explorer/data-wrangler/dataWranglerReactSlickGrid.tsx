@@ -127,7 +127,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
 
             this.dataView.onRowCountChanged.subscribe((_e, _args) => {
                 grid.updateRowCount();
-                this.changeCellColor(grid, grid.getDataLength());
+                this.changeCellStylings(grid);
                 grid.render();
             });
 
@@ -241,7 +241,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                         case ColumnContextMenuItem.DropNA:
                             return this.props.submitCommand({
                                 command: DataWranglerCommands.DropNa,
-                                args: { targetColumns: [this.contextMenuColumnName] } as IDropNaRequest
+                                args: { targetColumns: [this.contextMenuColumnName], isPreview: false } as IDropNaRequest
                             });
                         case ColumnContextMenuItem.DropDuplicates:
                             return this.props.submitCommand({
@@ -290,56 +290,10 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         this.windowResized();
     };
 
-    private changeCellColor(grid: Slick.Grid<ISlickRow>, rows: number) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const stylings = {} as any;
-        const columns = grid.getColumns();
-        const previewColumns = columns.filter((col) => col.isPreview);
+    private changeCellStylings(grid: Slick.Grid<ISlickRow>) {
         this.removeAllCellStyles(grid);
-        switch (this.props.operationPreview) {
-            case DataWranglerCommands.NormalizeColumn:
-                if (previewColumns.length > 0) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const columnCss = {} as any;
-                    // There should only be one preview column
-                    columnCss[Number(previewColumns[0].id)] = 'react-grid-cell-preview'
-                    columnCss[Number(previewColumns[0].id) - 1] = 'react-grid-cell-before'
-                    for (let j = 0; j < rows; j++) {
-                        stylings[j] = columnCss;
-                    }
-                    grid.setCellCssStyles(DataWranglerCommands.NormalizeColumn, stylings);
-                }
-                break;
-            case DataWranglerCommands.ReplaceAllColumn:
-                if (previewColumns.length > 0) {
-                    for (let j = 0; j < rows; j++) {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const columnCss = {} as any;
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const item = grid.getDataItem(j) as any;
-                        for (let i = 0; i < previewColumns.length; i++) {
-                            const previewValue = item[previewColumns[i].name as string];
-                            const oldValue = item[previewColumns[i].name?.replace(" (preview)", "") as string];
-                            if (Object.is(previewValue, oldValue)) {
-                                columnCss[Number(previewColumns[i].id)] = 'react-grid-cell-preview'
-                                columnCss[Number(previewColumns[0].id) - 1] = 'react-grid-cell-before'
-                            } else {
-                                columnCss[Number(previewColumns[i].id)] = 'react-grid-header-cell-preview'
-                                columnCss[Number(previewColumns[0].id) - 1] = 'react-grid-header-cell-before'
-                            }
-                        }
-                        stylings[j] = columnCss;
-                    }
-                    grid.setCellCssStyles(DataWranglerCommands.ReplaceAllColumn, stylings);
-                }
-                break;
-            case DataWranglerCommands.DropNa:
-                // TODO
-                // Use const item = grid.getDataItem(j) as any;
-                grid.setCellCssStyles(DataWranglerCommands.DropNa, stylings);
-                break;
-            default:
-                break;
+        if (this.props.operationPreview && this.props.cssStylings) {
+            grid.setCellCssStyles(this.props.operationPreview, this.props.cssStylings);
         }
     }
 
@@ -533,6 +487,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         _e: Slick.EventData,
         args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>
     ) => {
+        const oldColumns = this.getBeforePreviewColumns(this.state.grid?.getColumns() ?? []);
         if (args.column.field === this.props.idProperty) {
             const tooltipText = getLocString('DataScience.clearFilters', 'Clear all filters');
             ReactDOM.render(
@@ -554,26 +509,38 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 />,
                 args.node
             );
+            if (args.column.isPreview) {
+                args.node.classList.add("react-grid-header-cell-preview");
+            } else if (oldColumns.has(args.column.name)) {
+                args.node.classList.add("react-grid-header-cell-before");
+            }
         }
     };
 
     protected styleColumns(columns: Slick.Column<ISlickRow>[]) {
         // Transform columns so they are sortable and stylable
-        const previewTitle = " (preview)";
-        const previewColumns = columns.filter((c) => c.isPreview).map((c) => c.name);
-        const oldColumns = previewColumns.map((name) => name?.substring(0, name.length - previewTitle.length));
+        const oldColumns = this.getBeforePreviewColumns(columns);
         return columns.map((c) => {
             // Disable sorting by clicking on header
             c.sortable = false;
             c.editor = readonlyCellEditor;
             c.headerCssClass = 'react-grid-header-cell';
-            if (previewColumns.includes(c.name)) {
-                c.headerCssClass += ' react-grid-header-cell-preview'
-            } else if (oldColumns.includes(c.name)) {
-                c.headerCssClass += ' react-grid-header-cell-before'
-            }
             c.cssClass = 'react-grid-cell';
+            if (c.isPreview) {
+                c.headerCssClass += ' react-grid-header-cell-preview'
+                c.cssClass += ' react-grid-cell-preview'
+            } else if (oldColumns.has(c.name)) {
+                c.headerCssClass += ' react-grid-header-cell-before'
+                c.cssClass += ' react-grid-cell-before'
+            }
             return c;
         });
+    }
+
+    private getBeforePreviewColumns(columns: Slick.Column<ISlickRow>[]) {
+        const previewTitle = " (preview)";
+        const previewColumns = columns.filter((c) => c.isPreview).map((c) => c.name);
+        const oldColumns = previewColumns?.map((name) => name?.substring(0, name.length - previewTitle.length));
+        return new Set(oldColumns);
     }
 }

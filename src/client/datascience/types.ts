@@ -35,6 +35,7 @@ import { IAsyncDisposable, IDisposable, IJupyterSettings, InteractiveWindowMode,
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
+import { ICellCssStylesHash } from './data-viewing/data-wrangler/types';
 import { IDataFrameColumnInfo, IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
@@ -901,11 +902,12 @@ export interface IJupyterVariable {
     columns?: IDataFrameColumnInfo[];
     rowCount?: number;
     duplicateRowsCount?: number;
-    missingValuesRowsCount?: number;
+    nanRows?: number[];
     indexColumn?: string;
     maximumRowChunkSize?: number;
     fileName?: string;
     sourceFile?: string;
+    previewDiffs?: ICellCssStylesHash;
 }
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');

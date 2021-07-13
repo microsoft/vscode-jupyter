@@ -32,6 +32,26 @@
     border-bottom-color: none;
 }
 
+.slick-header-column.ui-state-default,
+.slick-group-header-column.ui-state-default {
+    border-left: 1px solid var(--vscode-editor-lineHighlightBorder) !important;
+    border-right: 1px solid var(--vscode-editor-lineHighlightBorder);
+    padding-right: 0px;
+    padding-left: 6px;
+    padding-bottom: 2px;
+    display: flex;
+}
+
+.slick-headerrow-column.ui-state-default {
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-bottom: 2px;
+    padding-top: 1px;
+    border-left: 1px solid var(--vscode-editor-lineHighlightBorder);
+    border-right: 1px solid var(--vscode-editor-lineHighlightBorder);
+    border-bottom: 1px solid var(--vscode-editor-lineHighlightBorder);
+}
+
 .no-data {
     margin: 4px;
     padding: 4px;
@@ -71,10 +91,18 @@
     background-color: #4B1818;
 }
 
+.react-grid-cell-before-diff {
+    background-color: #6F1313 !important;
+}
+
 .react-grid-header-cell-preview {
     background-color: #4B5632;
 }
 
 .react-grid-cell-preview {
     background-color: #373D29;
+}
+
+.react-grid-cell-preview-diff {
+    background-color: #4B5632 !important;
 }

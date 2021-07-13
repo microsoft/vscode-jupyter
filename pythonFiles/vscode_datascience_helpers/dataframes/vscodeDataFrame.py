@@ -241,6 +241,12 @@ def _VSCODE_getDataFrameInfo(df):
         columnNames.insert(0, indexColumn)
         columnTypes.insert(0, "int64")
 
+    target = {}
+    # PreviewDiff is a dict with keys as row indices
+    # and values as dicts with keys as column names and values as class names for css styling
+    # Eg. {3: {'age': 'red'}} means that the cell in row 3, column 'age' has class name 'red'
+    target["previewDiffs"] = {}
+
     # Then loop and generate our output json
     columns = []
     for n in _VSCODE_builtins.range(0, _VSCODE_builtins.len(columnNames)):
@@ -270,7 +276,9 @@ def _VSCODE_getDataFrameInfo(df):
             colobj["uniqueCount"] = int(col.shape[0] - duplicate_count)
             if str(column_type) == "object" or str(column_type) == "string":
                 colobj["mostFrequentValue"] = describe_obj.top
-                colobj["mostFrequentValueAppearances"] = int(describe_obj.freq)
+                colobj["mostFrequentValueAppearances"] = (
+                    0 if _VSCODE_np.isnan(describe_obj.freq) else int(describe_obj.freq)
+                )
             else:
                 statistics = {}
                 statistics["average"] = round(col.mean(), 2)
@@ -287,8 +295,29 @@ def _VSCODE_getDataFrameInfo(df):
         colobj["describe"] = describe_text
         columns.append(colobj)
 
+        # Check if column is a preview column and if so, check to see if old column and preview column have different values
+        if "(preview)" in column_name:
+            # Preview column is always the column after the old column
+            old_column_name = columnNames[n - 1]
+
+            # Find row indices where two values in the columns differ
+            # Also makes sure that Nan and Nan mean the same value
+            rows = df.index[
+                _VSCODE_np.where(
+                    ~(
+                        df[column_name].eq(df[old_column_name])
+                        | (df[column_name].isna() & df[old_column_name].isna())
+                    )
+                )
+            ].tolist()
+            for row in rows:
+                if row not in target["previewDiffs"]:
+                    target["previewDiffs"][row] = {}
+                # Need to increment by 1 because we add a new column in the slick grid
+                target["previewDiffs"][row][n] = "react-grid-cell-before-diff"
+                target["previewDiffs"][row][n + 1] = "react-grid-cell-preview-diff"
+
     # Save this in our target
-    target = {}
     target["columns"] = columns
     target["indexColumn"] = indexColumn
     target["rowCount"] = rowCount
@@ -297,7 +326,8 @@ def _VSCODE_getDataFrameInfo(df):
     target["duplicateRowsCount"] = int(df.duplicated(keep="first").sum())
 
     # Count rows with missing values
-    target["missingValuesRowsCount"] = int(df.isnull().any(axis=1).sum())
+    # Will be highlighted on drop missing rows preview operation
+    target["nanRows"] = df[df.isnull().any(axis=1)].index.values.tolist()
 
     # return our json object as a string
     return _VSCODE_json.dumps(target)

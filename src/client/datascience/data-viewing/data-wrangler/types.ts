@@ -67,6 +67,12 @@ export interface IDataWrangler extends IDisposable {
     removeLatestHistoryItem(): Promise<void>;
 }
 
+export interface ICellCssStylesHash {
+    [index: number]: {
+        [id: number]: string;
+    };
+}
+
 export interface IRemoveHistoryItemRequest {
     index: number;
 }
@@ -120,6 +126,7 @@ export interface IDropDuplicatesRequest {
 export interface IDropNaRequest {
     targetColumns?: string[];
     target?: 'row' | 'column';
+    isPreview: boolean;
 }
 
 export interface INormalizeColumnRequest {

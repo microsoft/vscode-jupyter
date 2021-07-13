@@ -17,7 +17,7 @@ import './globalJQueryImports';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
 import { generateDisplayValue } from './cellFormatter';
 import { getLocString } from '../react-common/locReactSide';
-import { DataWranglerCommands, IHistoryItem, SidePanelSections } from '../../client/datascience/data-viewing/data-wrangler/types';
+import { DataWranglerCommands, ICellCssStylesHash, IHistoryItem, SidePanelSections } from '../../client/datascience/data-viewing/data-wrangler/types';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -90,6 +90,7 @@ export interface ISlickGridProps {
     sidePanels?: SidePanelSections[];
     dataframeSummary?: IDataFrameInfo;
     operationPreview?: DataWranglerCommands;
+    cssStylings?: ICellCssStylesHash;
 }
 
 interface ISlickGridState {

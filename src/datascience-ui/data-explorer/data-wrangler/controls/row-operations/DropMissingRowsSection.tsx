@@ -16,7 +16,7 @@ export class DropMissingRowsSection extends React.Component<IProps, IState> {
                 onClick={() =>
                     this.props.submitCommand({
                         command: DataWranglerCommands.DropNa,
-                        args: { target: 'row' } as IDropNaRequest
+                        args: { target: 'row', isPreview: true } as IDropNaRequest
                     })
                 }
                 style={dropButtonStyle}

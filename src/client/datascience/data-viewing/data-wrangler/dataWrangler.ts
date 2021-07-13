@@ -47,7 +47,8 @@ import {
     IReplaceAllColumnsRequest,
     IRemoveHistoryItemRequest,
     SidePanelSections,
-    IGetColumnStatsReq
+    IGetColumnStatsReq,
+    ICellCssStylesHash
 } from './types';
 import { DataScience } from '../../../common/utils/localize';
 import { DataViewer } from '../dataViewer';
@@ -327,18 +328,32 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         }
 
         // Execute python command
-        if (codeToRun && notebook !== undefined) {
-            void notebook?.execute(codeToRun, '', 0, uuid()).then(async () => {
-                if (this.existingDisposable) {
-                    this.existingDisposable.dispose();
+        if (codeToRun !== undefined && notebook !== undefined) {
+            await notebook?.execute(codeToRun, '', 0, uuid());
+            if (this.existingDisposable) {
+                this.existingDisposable.dispose();
+            }
+            if (newVariableName) {
+                await this.updateWithNewVariable(newVariableName);
+            }
+        }
+
+        if (historyItem) {
+            // Add the history item to the history list to be displayed
+            if (historyItem?.shouldAdd) {
+                this.addToHistory(historyItem);
+            }
+
+            // Change data wrangler cell stylings if preview operation
+            if (historyItem?.isPreview && historyItem.type) {
+                const stylings = await this.computeCssStylings(historyItem.type);
+                if (stylings) {
+                    void this.postMessage(DataWranglerMessages.OperationPreview, {
+                        type: historyItem.type,
+                        cssStylings: stylings
+                    });
                 }
-                if (historyItem && historyItem.shouldAdd) {
-                    this.addToHistory(historyItem);
-                }
-                if (newVariableName) {
-                    await this.updateWithNewVariable(newVariableName);
-                }
-            });
+            }
         }
     }
 
@@ -432,13 +447,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
                     previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
                 }
             }
-        }
-
-        if (req.isPreview) {
-            this.postMessage(
-                DataWranglerMessages.OperationPreview,
-                DataWranglerCommands.ReplaceAllColumn
-            ).ignoreErrors();
         }
 
         const historyItem = {
@@ -558,7 +566,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             // Drop all rows that contain any Na value or drop all columns that contain any Na value
             const axis = req.target === 'row' ? '0' : '1';
             const code = `${newVar} = ${currVar}.dropna(axis=${axis})\n`;
-            const historyItem = {
+            const historyItem: IHistoryItem = {
                 type: DataWranglerCommands.DropNa,
                 description:
                     req.target === 'row'
@@ -568,6 +576,10 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
                 code: code,
                 shouldAdd: true
             };
+            if (req.isPreview) {
+                historyItem.isPreview = req.isPreview;
+                historyItem.previewCode = `${newVar} = ${currVar}`;
+            }
             return historyItem;
         }
     }
@@ -602,13 +614,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             shouldAdd: true
         };
 
-        if (req.isPreview) {
-            this.postMessage(
-                DataWranglerMessages.OperationPreview,
-                DataWranglerCommands.NormalizeColumn
-            ).ignoreErrors();
-        }
-
         return historyItem;
     }
 
@@ -630,7 +635,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     private async respondToPreview(req: { doesAccept: boolean }): Promise<IHistoryItem> {
-        this.postMessage(DataWranglerMessages.OperationPreview, undefined).ignoreErrors();
+        this.postMessage(DataWranglerMessages.OperationPreview, { type: undefined }).ignoreErrors();
         if (!this.historyList[this.historyList.length - 1].isPreview) {
             // Most recent operation is not a preview operation
             return {} as IHistoryItem;
@@ -658,11 +663,12 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     private cleanHistoryAndGetNewVariableName(
         currentVariableName: string
     ): { currentVariableName: string; newVariableName: string } {
+        // Get index from variable name
         const currVarIndex = Number(currentVariableName.substr(2));
 
         if (this.historyList[this.historyList.length - 1].isPreview) {
             // Latest operation was a preview operation
-            this.postMessage(DataWranglerMessages.OperationPreview, undefined).ignoreErrors();
+            this.postMessage(DataWranglerMessages.OperationPreview, { type: undefined }).ignoreErrors();
             const latestHistoryItem = this.historyList.pop();
             if (latestHistoryItem && latestHistoryItem.variableName === currentVariableName) {
                 // Newest operation was branched off of the preview operation so we need to instead branch it off of
@@ -682,5 +688,40 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             this.historyList = this.historyList.slice(0, currVarIndex + 1);
             return { currentVariableName, newVariableName: 'df' + (Number(currVarIndex) + 1).toString() };
         }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private async computeCssStylings(operation: DataWranglerCommands): Promise<ICellCssStylesHash> {
+        if (operation === DataWranglerCommands.DropNa) {
+            const dataFrameInfo = await this.dataFrameInfoPromise;
+            const columns = dataFrameInfo?.columns?.length;
+            const nanRows = dataFrameInfo?.nanRows;
+
+            if (!columns) {
+                return {};
+            }
+
+            // Create individual row styling that will be given to each row
+            // It is an object with the keys as all the column names
+            const rowStyling: { [id: number]: string } = {};
+            // Need to + 1 because slick grid adds an additional column
+            for (let i = 0; i < columns + 1; i++) {
+                rowStyling[i] = 'react-grid-cell-before';
+            }
+            // Create whole styling
+            // It is an object with the keys as the rows and the values as the stylings defined above
+            if (rowStyling !== undefined) {
+                return (
+                    nanRows?.reduce((result, row) => {
+                        result[row] = rowStyling;
+                        return result;
+                    }, {} as ICellCssStylesHash) ?? {}
+                );
+            }
+        } else if (operation === DataWranglerCommands.ReplaceAllColumn) {
+            const dataFrameInfo = await this.dataFrameInfoPromise;
+            return dataFrameInfo?.previewDiffs ?? {};
+        }
+        return {};
     }
 }
