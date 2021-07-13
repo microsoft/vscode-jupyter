@@ -10,8 +10,7 @@ import {
     workspace,
     DebugAdapterInlineImplementation,
     DebugSession,
-    NotebookCell,
-    window
+    NotebookCell
 } from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
