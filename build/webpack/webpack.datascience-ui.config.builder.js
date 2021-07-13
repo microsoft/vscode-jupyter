@@ -43,6 +43,10 @@ function getEntry(bundle) {
             return {
                 ipywidgetsRenderer: [`./src/datascience-ui/ipywidgets/renderer/index.ts`]
             };
+        case 'errorRenderer':
+            return {
+                errorRenderer: [`./src/datascience-ui/error-renderer/index.ts`]
+            };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
     }
@@ -141,6 +145,16 @@ function getPlugins(bundle) {
             plugins.push(...(isProdBuild ? [definePlugin] : []));
             break;
         }
+        case 'errorRenderer': {
+            const definePlugin = new webpack.DefinePlugin({
+                'process.env': {
+                    NODE_ENV: JSON.stringify('production')
+                }
+            });
+
+            plugins.push(...(isProdBuild ? [definePlugin] : []));
+            break;
+        }
         default:
             throw new Error(`Bundle not supported ${bundle}`);
     }
@@ -183,9 +197,9 @@ function buildConfiguration(bundle) {
         bundle !== 'ipywidgetsRenderer'
             ? {}
             : {
-                  library: 'LIB',
-                  libraryTarget: 'var'
-              };
+                library: 'LIB',
+                libraryTarget: 'var'
+            };
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'src/datascience-ui/ipywidgets/kernel/require.js'),
@@ -392,3 +406,4 @@ exports.notebooks = buildConfiguration('notebook');
 exports.viewers = buildConfiguration('viewers');
 exports.ipywidgetsKernel = buildConfiguration('ipywidgetsKernel');
 exports.ipywidgetsRenderer = buildConfiguration('ipywidgetsRenderer');
+exports.errorRenderer = buildConfiguration('errorRenderer');

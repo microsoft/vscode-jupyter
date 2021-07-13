@@ -1938,6 +1938,15 @@
                 ]
             },
             {
+                "id": "jupyter-error-renderer",
+                "entrypoint": "./out/datascience-ui/error-renderer/index.js",
+                "displayName": "Jupyter Error Renderer",
+                "requiresMessaging": "always",
+                "mimeTypes": [
+                    "application/vnd.code.notebook.error"
+                ]
+            },
+            {
                 "id": "jupyter-notebook-renderer",
                 "entrypoint": "./out/client_renderer/renderers.js",
                 "displayName": "Jupyter Notebook Renderer",
