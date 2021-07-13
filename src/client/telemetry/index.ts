@@ -339,7 +339,7 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
                     // eslint-disable-next-line @typescript-eslint/promise-function-async
                     .catch((ex) => {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const failedProps: P[E] = {...(props() || ({} as any))};
+                        const failedProps: P[E] = { ...(props() || ({} as any)) };
                         (failedProps as any).failed = true;
                         sendTelemetryEvent(
                             failureEventName ? failureEventName : eventName,
