@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, Uri } from 'vscode';
+import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, Uri, workspace } from 'vscode';
 
-import { IDocumentManager } from '../../common/application/types';
+import { IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -59,9 +59,11 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IDocumentManager) private documentManager: IDocumentManager
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument.bind(this));
+        this.workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear());
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings.bind(this));
         this.notebookProvider.onNotebookCreated(this.onNotebookCreated.bind(this));
     }
@@ -270,6 +272,11 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         args.notebook.onDisposed(() => {
             this.notebookData.delete(key);
         });
+        if (args.notebook.onDidFinishExecuting !== undefined) {
+            args.notebook.onDidFinishExecuting((cell: ICell) => {
+                this.updateExecutionCounts(args.identity, cell);
+            });
+        }
     }
 
     private getHashProviders(): ICellHashProvider[] {
@@ -317,6 +324,30 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             fullCommandList = fullCommandList.concat(CodeLensCommands.DefaultDebuggingLenses);
         }
 
+        // If workspace is not trusted, then exclude execution related commands.
+        if (!this.workspace.isTrusted) {
+            const commandsToBeDisabledIfNotTrusted = [
+                ...CodeLensCommands.DebuggerCommands,
+                ...CodeLensCommands.DebuggerCommands,
+                Commands.RunAllCells,
+                Commands.RunAllCellsAbove,
+                Commands.RunAllCellsAbovePalette,
+                Commands.RunCellAndAllBelowPalette,
+                Commands.RunCurrentCell,
+                Commands.RunCurrentCellAdvance,
+                Commands.RunCurrentCellAndAddBelow,
+                Commands.RunFileInInteractiveWindows,
+                Commands.InterruptKernel,
+                Commands.RunToLine,
+                Commands.RunCell,
+                Commands.DebugCell,
+                Commands.DebugContinue,
+                Commands.DebugStepOver,
+                Commands.DebugStop,
+                Commands.RunCellAndAllBelowPalette
+            ];
+            fullCommandList = fullCommandList.filter((item) => !commandsToBeDisabledIfNotTrusted.includes(item));
+        }
         return fullCommandList;
     }
 
@@ -327,6 +358,11 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         commandName: string,
         isFirst: boolean
     ): CodeLens | undefined {
+        // Do not generate interactive window codelenses for TextDocuments which are part of NotebookDocuments
+        if (workspace.notebookDocuments.find((notebook) => notebook.uri.toString() === document.uri.toString())) {
+            return;
+        }
+
         // We only support specific commands
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.

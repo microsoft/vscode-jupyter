@@ -65,6 +65,8 @@ export async function closeActiveWindows(disposables: IDisposable[] = []): Promi
     disposeAllDisposables(disposables);
     await closeActiveNotebooks();
     await closeWindowsInternal();
+    // Work around for https://github.com/microsoft/vscode/issues/125211#issuecomment-863592741
+    await sleep(2_000);
 }
 export async function closeActiveNotebooks(): Promise<void> {
     if (!vscode.env.appName.toLowerCase().includes('insiders') || !isANotebookOpen()) {
@@ -72,7 +74,7 @@ export async function closeActiveNotebooks(): Promise<void> {
     }
     // We could have untitled notebooks, close them by reverting changes.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    while ((vscode as any).notebook.activeNotebookEditor || vscode.window.activeTextEditor) {
+    while ((vscode as any).window.activeNotebookEditor || vscode.window.activeTextEditor) {
         await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
     }
     // Work around VS Code issues (sometimes notebooks do not get closed).
@@ -81,6 +83,8 @@ export async function closeActiveNotebooks(): Promise<void> {
         await sleep(counter * 100);
         await closeWindowsInternal();
     }
+    // Work around for https://github.com/microsoft/vscode/issues/125211#issuecomment-863592741
+    await sleep(2_000);
 }
 
 async function closeWindowsInternal() {
@@ -134,10 +138,10 @@ async function closeWindowsInternal() {
 function isANotebookOpen() {
     /* eslint-disable */
     if (
-        Array.isArray((vscode as any).notebook.visibleNotebookEditors) &&
-        (vscode as any).notebook.visibleNotebookEditors.length
+        Array.isArray((vscode as any).window.visibleNotebookEditors) &&
+        (vscode as any).window.visibleNotebookEditors.length
     ) {
         return true;
     }
-    return !!(vscode as any).notebook.activeNotebookEditor;
+    return !!(vscode as any).window.activeNotebookEditor;
 }

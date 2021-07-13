@@ -4,15 +4,16 @@
 import '../common/extensions';
 
 import * as uuid from 'uuid/v4';
-import { Range, TextDocument, Uri } from 'vscode';
+import { NotebookDocument, Range, TextDocument, Uri } from 'vscode';
 
-import { parseForComments } from '../../datascience-ui/common';
+import { appendLineFeed, parseForComments } from '../../datascience-ui/common';
 import { createCodeCell, createMarkdownCell } from '../../datascience-ui/common/cellFactory';
 import { IJupyterSettings, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { CellMatcher } from './cellMatcher';
 import { Identifiers } from './constants';
 import { CellState, ICell, ICellRange } from './types';
+import { MARKDOWN_LANGUAGE } from '../common/constants';
 
 function generateCodeCell(
     code: string[],
@@ -31,13 +32,13 @@ function generateCodeCell(
     };
 }
 
-function generateMarkdownCell(code: string[], file: string, line: number, id: string): ICell {
+function generateMarkdownCell(code: string[], file: string, line: number, id: string, useSourceAsIs = false): ICell {
     return {
         id: id,
         file: file,
         line: line,
         state: CellState.finished,
-        data: createMarkdownCell(code)
+        data: createMarkdownCell(code, useSourceAsIs)
     };
 }
 
@@ -192,4 +193,23 @@ export function generateCellsFromDocument(document: TextDocument, settings?: IJu
             return generateCells(settings, code, '', cr.range.start.line, false, uuid());
         })
     );
+}
+
+export function generateCellsFromNotebookDocument(
+    notebookDocument: NotebookDocument,
+    magicCommandsAsComments: boolean
+): ICell[] {
+    return notebookDocument
+        .getCells()
+        .filter((cell) => !cell.metadata.isSysInfoCell)
+        .map((cell) => {
+            // Reinstate cell structure + comments from cell metadata
+            let code = cell.document.getText().splitLines();
+            if (cell.metadata.interactiveWindowCellMarker !== undefined) {
+                code.unshift(cell.metadata.interactiveWindowCellMarker + '\n');
+            }
+            return cell.document.languageId === MARKDOWN_LANGUAGE
+                ? generateMarkdownCell(appendLineFeed(code), '', 0, uuid(), true)
+                : generateCodeCell(appendLineFeed(code), '', 0, uuid(), magicCommandsAsComments);
+        });
 }

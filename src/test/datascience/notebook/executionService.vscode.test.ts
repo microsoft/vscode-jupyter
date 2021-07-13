@@ -12,7 +12,7 @@ import * as sinon from 'sinon';
 import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, Uri } from 'vscode';
 import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
+import { traceInfo, traceInfoIf } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
@@ -23,7 +23,6 @@ import {
     runAllCellsInActiveNotebook,
     runCell,
     insertCodeCell,
-    trustAllNotebooks,
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
@@ -39,7 +38,8 @@ import {
     assertVSCCellIsNotRunning,
     createEmptyPythonNotebook,
     assertNotHasTextOutputInVSCode,
-    waitForQueuedForExecutionOrExecuting
+    waitForQueuedForExecutionOrExecuting,
+    workAroundVSCodeNotebookStartPages
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
@@ -51,6 +51,7 @@ import {
     NotebookCellStateTracker,
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
+import { IS_CI_SERVER } from '../../ciConstants';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -71,11 +72,13 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
     this.timeout(120_000);
     suiteSetup(async function () {
+        traceInfo('Suite Setup');
         this.timeout(120_000);
         api = await initialize();
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
+        await workAroundVSCodeNotebookStartPages();
         await hijackPrompt(
             'showErrorMessage',
             { endsWith: expectedPromptMessageSuffix },
@@ -83,18 +86,17 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             disposables
         );
 
-        await trustAllNotebooks();
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        traceInfo('Suite Setup (completed)');
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await startJupyterServer();
-        await trustAllNotebooks();
         await createEmptyPythonNotebook(disposables);
         assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
@@ -404,7 +406,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
 
         assertHasTextOutputInVSCode(cells[1], 'foo', 0, true);
-        const cellOutputMetadata = cells[1].outputs[0].outputs[0]?.metadata as CellOutputMetadata | undefined;
+        const cellOutputMetadata = cells[1].outputs[0]?.metadata as CellOutputMetadata | undefined;
         assert.ok(cellOutputMetadata?.transient?.display_id, 'Display id not present in metadata');
 
         await insertCodeCell(
@@ -515,9 +517,16 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             async () => {
                 const output = cells[1].outputs[0];
                 const text = getTextOutputValue(output);
-                return text.trim().endsWith('iteration 9');
+                if (text.trim().endsWith('iteration 9')) {
+                    return true;
+                }
+                const cell1Output = getTextOutputValue(cells[0].outputs[0]);
+                const cell2Output = getTextOutputValue(cells[1].outputs[0]);
+                // https://github.com/microsoft/vscode-jupyter/issues/6175
+                traceInfoIf(IS_CI_SERVER, `Cell 1 Output: ${cell1Output}\nCell 2 Output: ${cell2Output}`);
+                return false;
             },
-            10_000,
+            20_000,
             'Expected background messages to end up in cell 2'
         );
         const cell1Output = getTextOutputValue(cells[0].outputs[0]);

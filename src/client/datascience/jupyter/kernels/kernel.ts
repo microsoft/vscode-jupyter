@@ -9,23 +9,27 @@ import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
 import {
     CancellationTokenSource,
+    ColorThemeKind,
     Event,
     EventEmitter,
     NotebookCell,
+    NotebookCellData,
+    NotebookCellKind,
     NotebookController,
     NotebookDocument,
+    NotebookRange,
     Uri
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../../common/application/types';
-import { traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { CodeSnippets, Telemetry } from '../../constants';
+import { CodeSnippets, Identifiers, Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
@@ -38,9 +42,13 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../types';
-import { isPythonKernelConnection } from './helpers';
+import { getSysInfoReasonHeader, isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
+import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
+import { isCI, MARKDOWN_LANGUAGE } from '../../../common/constants';
+import { InteractiveWindowView } from '../../notebook/constants';
+import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -68,7 +76,7 @@ export class Kernel implements IKernel {
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
-    private notebook?: INotebook;
+    public notebook?: INotebook;
     private _disposed?: boolean;
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
@@ -89,11 +97,12 @@ export class Kernel implements IKernel {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         kernelProvider: IKernelProvider,
-        appShell: IApplicationShell,
+        private readonly appShell: IApplicationShell,
         private readonly fs: IFileSystem,
         context: IExtensionContext,
         private readonly serverStorage: IJupyterServerUriStorage,
-        controller: NotebookController
+        controller: NotebookController,
+        private readonly configService: IConfigurationService
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -121,6 +130,13 @@ export class Kernel implements IKernel {
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         await promise;
     }
+    public async executeHidden(code: string, file: string, document: NotebookDocument) {
+        const stopWatch = new StopWatch();
+        const notebookPromise = this.startNotebook({ disableUI: false, document });
+        const promise = this.notebook!.execute(code, file, 0, uuid(), undefined, true);
+        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
+        await promise;
+    }
     public async start(options: { disableUI?: boolean; document: NotebookDocument }): Promise<void> {
         await this.startNotebook(options);
     }
@@ -132,7 +148,9 @@ export class Kernel implements IKernel {
         }
         traceInfo(`Interrupt requested ${document.uri}`);
         this.startCancellation.cancel();
-        return this.kernelExecution.interrupt(document, this._notebookPromise);
+        const interruptResultPromise = this.kernelExecution.interrupt(document, this._notebookPromise);
+        await interruptResultPromise;
+        return interruptResultPromise;
     }
     public async dispose(): Promise<void> {
         traceInfo(`Dispose kernel ${this.uri.toString()}`);
@@ -147,7 +165,7 @@ export class Kernel implements IKernel {
         }
         this.kernelExecution.dispose();
     }
-    public async restart(): Promise<void> {
+    public async restart(notebookDocument: NotebookDocument): Promise<void> {
         if (this.restarting) {
             return this.restarting.promise;
         }
@@ -155,7 +173,7 @@ export class Kernel implements IKernel {
             this.restarting = createDeferred<void>();
             try {
                 await this.notebook.restartKernel(this.launchTimeout);
-                await this.initializeAfterStart();
+                await this.initializeAfterStart(SysInfoReason.Restart, notebookDocument);
                 this.restarting.resolve();
             } catch (ex) {
                 this.restarting.reject(ex);
@@ -214,7 +232,7 @@ export class Kernel implements IKernel {
                         traceError(`failed to create INotebook in kernel, UI Disabled = ${options.disableUI}`, ex);
                         throw ex;
                     }
-                    await this.initializeAfterStart();
+                    await this.initializeAfterStart(SysInfoReason.Start, options.document);
                     sendKernelTelemetryEvent(
                         this.uri,
                         Telemetry.PerceivedJupyterStartupNotebook,
@@ -258,7 +276,7 @@ export class Kernel implements IKernel {
         );
     }
 
-    private async initializeAfterStart() {
+    private async initializeAfterStart(reason: SysInfoReason, notebookDocument: NotebookDocument) {
         if (!this.notebook) {
             return;
         }
@@ -269,7 +287,6 @@ export class Kernel implements IKernel {
             editor.notebook = this.notebook;
         }
 
-        this.disableJedi();
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
@@ -292,18 +309,114 @@ export class Kernel implements IKernel {
             );
         }
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
+            await this.disableJedi();
             await this.notebook.setLaunchingFile(this.uri.fsPath);
+            await this.initializeMatplotlib();
         }
         await this.notebook
             .requestKernelInfo()
-            .then((item) => (this._info = item.content))
+            .then(async (item) => {
+                this._info = item.content;
+                await this.addSysInfoForInteractive(reason, notebookDocument, item);
+            })
             .catch(traceWarning.bind('Failed to request KernelInfo'));
         await this.notebook.waitForIdle(this.launchTimeout);
     }
 
-    private disableJedi() {
-        if (isPythonKernelConnection(this.kernelConnectionMetadata) && this.notebook) {
-            this.notebook.executeObservable(CodeSnippets.disableJedi, this.uri.fsPath, 0, uuid(), true);
+    private async disableJedi() {
+        await this.executeSilently(CodeSnippets.disableJedi);
+    }
+
+    /**
+     *
+     * After a kernel state change, update the interactive window with a sys info cell
+     * indicating the new connection info
+     * @param reason The reason for kernel state change
+     * @param notebookDocument The document to add a sys info Markdown cell to
+     * @param info The kernel info to include in the sys info message
+     */
+    private async addSysInfoForInteractive(
+        reason: SysInfoReason,
+        notebookDocument: NotebookDocument,
+        info: KernelMessage.IInfoReplyMsg
+    ) {
+        if (notebookDocument.notebookType !== InteractiveWindowView || this.notebook === undefined) {
+            return;
         }
+
+        const message = getSysInfoReasonHeader(reason, this.kernelConnectionMetadata);
+        const bannerMessage = (info.content as KernelMessage.IInfoReply)?.banner || '';
+        const sysInfoMessages = bannerMessage ? bannerMessage.split('\n') : [];
+        if (sysInfoMessages) {
+            // Connection string only for our initial start, not restart or interrupt
+            let connectionString: string = '';
+            if (reason === SysInfoReason.Start) {
+                connectionString = this.connection?.displayName || '';
+            }
+
+            // Update our sys info with our locally applied data.
+            sysInfoMessages.unshift(message);
+            if (connectionString && connectionString.length) {
+                sysInfoMessages.unshift(connectionString);
+            }
+
+            // Append a markdown cell containing the sys info to the end of the NotebookDocument
+            return chainWithPendingUpdates(notebookDocument, (edit) => {
+                const markdownCell = new NotebookCellData(
+                    NotebookCellKind.Markup,
+                    sysInfoMessages.join('  \n'),
+                    MARKDOWN_LANGUAGE
+                );
+                markdownCell.metadata = { isSysInfoCell: true };
+                edit.replaceNotebookCells(
+                    notebookDocument.uri,
+                    new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
+                    [markdownCell]
+                );
+            });
+        }
+    }
+    private async initializeMatplotlib(): Promise<void> {
+        if (!this.notebook) {
+            return;
+        }
+        const settings = this.configService.getSettings(this.uri);
+        if (settings && settings.themeMatplotlibPlots) {
+            const matplobInit = settings.enablePlotViewer
+                ? CodeSnippets.MatplotLibInitSvg
+                : CodeSnippets.MatplotLibInitPng;
+
+            traceInfo(`Initialize matplotlib for ${this.uri.toString()}`);
+            await this.executeSilently(matplobInit);
+            const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
+            if (!settings.ignoreVscodeTheme) {
+                // Reset the matplotlib style based on if dark or not.
+                await this.executeSilently(
+                    useDark
+                        ? "matplotlib.style.use('dark_background')"
+                        : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`
+                );
+            }
+        } else {
+            const configInit = !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
+            traceInfoIf(isCI, `Initialize config for plots for ${this.uri.toString()}`);
+            await this.executeSilently(configInit);
+        }
+    }
+    private async executeSilently(code: string) {
+        if (!this.notebook) {
+            return;
+        }
+        const deferred = createDeferred<void>();
+        const observable = this.notebook.executeObservable(code, this.uri.fsPath, 0, uuid(), true);
+        const subscription = observable.subscribe(
+            noop,
+            (ex) => deferred.reject(ex),
+            () => deferred.resolve()
+        );
+        this.disposables.push({
+            dispose: () => subscription.unsubscribe()
+        });
+        await deferred.promise;
     }
 }

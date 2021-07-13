@@ -6,10 +6,11 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { ICommandManager } from '../../common/application/types';
-import { IDisposable } from '../../common/types';
+import { IConfigurationService, IDisposable } from '../../common/types';
 import { Commands } from '../constants';
 import {
     getDisplayNameOrNameOfKernelConnection,
+    isLocalLaunch,
     kernelConnectionMetadataHasKernelModel
 } from '../jupyter/kernels/helpers';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
@@ -26,7 +27,8 @@ export class NotebookCommands implements IDisposable {
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(KernelSelector) private readonly kernelSelector: KernelSelector,
-        @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher
+        @inject(KernelSwitcher) private readonly kernelSwitcher: KernelSwitcher,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
     public register() {
         this.disposables.push(
@@ -36,7 +38,13 @@ export class NotebookCommands implements IDisposable {
             this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this),
             this.commandManager.registerCommand(Commands.NotebookEditorKeybindSave, this.keybindSave, this),
             this.commandManager.registerCommand(Commands.NotebookEditorKeybindUndo, this.keybindUndo, this),
-            this.commandManager.registerCommand(Commands.NotebookEditorToggleOutput, this.toggleOutput, this)
+            this.commandManager.registerCommand(Commands.NotebookEditorToggleOutput, this.toggleOutput, this),
+            this.commandManager.registerCommand(Commands.NotebookEditorKeybindExecuteCell, this.executeCell, this),
+            this.commandManager.registerCommand(
+                Commands.NotebookEditorKeybindRenderMarkdownAndSelectBelow,
+                this.renderMarkdownAndSelectBelow,
+                this
+            )
         );
     }
     public dispose() {
@@ -44,9 +52,21 @@ export class NotebookCommands implements IDisposable {
     }
 
     private toggleOutput() {
-        if (this.notebookEditorProvider.activeEditor) {
+        if (this.notebookEditorProvider.activeEditor?.toggleOutput) {
             this.notebookEditorProvider.activeEditor.toggleOutput();
         }
+    }
+
+    private executeCell() {
+        void this.commandManager
+            .executeCommand('notebook.cell.quitEdit')
+            .then(() => this.commandManager.executeCommand('notebook.cell.execute'));
+    }
+
+    private renderMarkdownAndSelectBelow() {
+        void this.commandManager
+            .executeCommand('notebook.cell.quitEdit')
+            .then(() => this.commandManager.executeCommand('notebook.cell.executeAndSelectBelow'));
     }
 
     private collapseAll() {
@@ -83,8 +103,8 @@ export class NotebookCommands implements IDisposable {
                       identity: this.notebookEditorProvider.activeEditor.file,
                       resource: this.notebookEditorProvider.activeEditor.file,
                       currentKernelDisplayName:
-                          this.notebookEditorProvider.activeEditor.model.metadata?.kernelspec?.display_name ||
-                          this.notebookEditorProvider.activeEditor.model.metadata?.kernelspec?.name
+                          this.notebookEditorProvider.activeEditor.notebookMetadata?.kernelspec?.display_name ||
+                          this.notebookEditorProvider.activeEditor.notebookMetadata?.kernelspec?.name
                   }
                 : {
                       identity: this.interactiveWindowProvider.activeWindow?.identity,
@@ -95,12 +115,15 @@ export class NotebookCommands implements IDisposable {
                   };
         }
         if (options.identity) {
+            const isLocal = isLocalLaunch(this.configService);
             // Make sure we have a connection or we can't get remote kernels.
-            const connection = await this.notebookProvider.connect({
-                getOnly: false,
-                disableUI: false,
-                resource: options.resource
-            });
+            const connection = isLocal
+                ? undefined
+                : await this.notebookProvider.connect({
+                      getOnly: false,
+                      disableUI: false,
+                      resource: options.resource
+                  });
 
             // Select a new kernel using the connection information
             const kernel = await this.kernelSelector.selectJupyterKernel(

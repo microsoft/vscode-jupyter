@@ -54,17 +54,12 @@ import { NotebookProvider } from './interactive-common/notebookProvider';
 import { NotebookServerProvider } from './interactive-common/notebookServerProvider';
 import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker';
 import { ShowPlotListener } from './interactive-common/showPlotListener';
-import { DigestStorage } from './interactive-ipynb/digestStorage';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorRunByLineListener } from './interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
 import { NativeEditorViewTracker } from './interactive-ipynb/nativeEditorViewTracker';
-import { SystemPseudoRandomNumberGenerator } from './interactive-ipynb/randomBytes';
-import { TrustCommandHandler } from './interactive-ipynb/trustCommandHandler';
-import { TrustService } from './interactive-ipynb/trustService';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
-import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
 import { IPyWidgetMessageDispatcherFactory } from './ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { WebviewIPyWidgetCoordinator } from './ipywidgets/webviewIPyWidgetCoordinator';
@@ -143,8 +138,8 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
+    IDebuggingCellMap,
     IDebugLocationTracker,
-    IDigestStorage,
     IHoverProvider,
     IInteractiveWindow,
     IInteractiveWindowListener,
@@ -165,6 +160,7 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IKernelDependencyService,
+    IKernelVariableRequester,
     INbConvertExportToPythonService,
     INbConvertInterpreterDependencyChecker,
     INotebookCreationTracker,
@@ -183,9 +179,7 @@ import {
     IRawNotebookProvider,
     IRawNotebookSupportedService,
     IStatusProvider,
-    ISystemPseudoRandomNumberGenerator,
     IThemeFinder,
-    ITrustService,
     IWebviewExtensibility
 } from './types';
 import { NotebookWatcher } from './variablesView/notebookWatcher';
@@ -197,6 +191,16 @@ import { RemoteKernelFinder } from './kernel-launcher/remoteKernelFinder';
 import { IApplicationEnvironment } from '../common/application/types';
 import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
 import { ExtensionRecommendationService } from './extensionRecommendation';
+import { PythonVariablesRequester } from './jupyter/pythonVariableRequester';
+import { DebuggingManager } from '../debugger/jupyter/debuggingManager';
+import { DebuggingCellMap } from '../debugger/jupyter/debuggingCellMap';
+import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
+import { NativeInteractiveWindowCommandListener } from './interactive-window/nativeInteractiveWindowCommandListener';
+import { workspace } from 'vscode';
+import { NativeInteractiveWindowProvider } from './interactive-window/nativeInteractiveWindowProvider';
+import { JupyterPaths } from './kernel-launcher/jupyterPaths';
+import { LocalKnownPathKernelSpecFinder } from './kernel-launcher/localKnownPathKernelSpecFinder';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -266,6 +270,9 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
     serviceManager.addSingleton<KernelEnvironmentVariablesService>(KernelEnvironmentVariablesService, KernelEnvironmentVariablesService);
     serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
+    serviceManager.addSingleton<JupyterPaths>(JupyterPaths, JupyterPaths);
+    serviceManager.addSingleton<LocalKnownPathKernelSpecFinder>(LocalKnownPathKernelSpecFinder, LocalKnownPathKernelSpecFinder);
+    serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinder>(LocalPythonAndRelatedNonPythonKernelSpecFinder, LocalPythonAndRelatedNonPythonKernelSpecFinder);
     serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
     serviceManager.addSingleton<CellOutputMimeTypeTracker>(CellOutputMimeTypeTracker, CellOutputMimeTypeTracker, undefined, [IExtensionSingleActivationService, INotebookExecutionLogger]);
     serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
@@ -275,7 +282,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
-    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
@@ -287,11 +293,24 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NativeEditorViewTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookUsageTracker);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, TrustCommandHandler);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, MigrateJupyterInterpreterStateService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, VariableViewActivationService);
     serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
-    serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+    const configuration = workspace.getConfiguration();
+    if (
+        configuration.get<boolean>('jupyter.experiments.enabled') === true &&
+        !configuration.get<string[]>('jupyter.experiments.optOutFrom')?.includes('All') &&
+        // If in Daily Insiders channel and in VS Code Insiders, opt in by default
+        ((configuration.get<string>('python.insidersChannel') === 'daily' && isVSCInsiders) ||
+            // If user explicitly asked to be in the experiment, also opt in
+            configuration.get<boolean>('jupyter.enableNativeInteractiveWindow') === true)
+    ) {
+        serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, NativeInteractiveWindowProvider);
+        serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
+    } else {
+        serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+        serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
+    }
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
@@ -300,6 +319,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, DebuggerVariables, Identifiers.DEBUGGER_VARIABLES);
+    serviceManager.addSingleton<IKernelVariableRequester>(IKernelVariableRequester, PythonVariablesRequester, Identifiers.PYTHON_VARIABLES_REQUESTER);
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
@@ -346,9 +366,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
     serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
     serviceManager.addSingleton<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration, JupyterUriProviderRegistration);
-    serviceManager.addSingleton<ISystemPseudoRandomNumberGenerator>(ISystemPseudoRandomNumberGenerator, SystemPseudoRandomNumberGenerator);
-    serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
-    serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
     serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
@@ -356,6 +373,9 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ExtensionRecommendationService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebuggingManager);
+    serviceManager.addSingleton<IDebuggingCellMap>(IDebuggingCellMap, DebuggingCellMap);
+    serviceManager.addBinding(IDebuggingCellMap, INotebookExecutionLogger);
 
     registerNotebookTypes(serviceManager);
     registerContextTypes(serviceManager);

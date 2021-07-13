@@ -9,7 +9,7 @@ import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
 import {
     ExtensionMode,
     NotebookCell,
-    NotebookCellExecutionTask,
+    NotebookCellExecution,
     NotebookCellKind,
     NotebookCellExecutionSummary,
     NotebookDocument,
@@ -98,10 +98,7 @@ export class CellExecution {
      * At any given point in time, we can only have one cell actively running.
      * This will keep track of that task.
      */
-    private static activeNotebookCellExecutionTask = new WeakMap<
-        NotebookDocument,
-        NotebookCellExecutionTask | undefined
-    >();
+    private static activeNotebookCellExecution = new WeakMap<NotebookDocument, NotebookCellExecution | undefined>();
 
     private static sentExecuteCellTelemetry?: boolean;
 
@@ -115,8 +112,8 @@ export class CellExecution {
     private startTime?: number;
     private endTime?: number;
     private readonly initPromise?: Promise<void>;
-    private task?: NotebookCellExecutionTask;
-    private temporaryTask?: NotebookCellExecutionTask;
+    private execution?: NotebookCellExecution;
+    private temporaryExecution?: NotebookCellExecution;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
     private cancelHandled = false;
     private requestHandlerChain = Promise.resolve();
@@ -161,7 +158,7 @@ export class CellExecution {
             disposables
         );
         if (this.canExecuteCell()) {
-            this.task = controller.createNotebookCellExecutionTask(this.cell);
+            this.execution = controller.createNotebookCellExecution(this.cell);
             this.initPromise = this.enqueue();
         }
     }
@@ -188,8 +185,9 @@ export class CellExecution {
             `Cell Exec contents ${this.cell.document.getText().substring(0, 50)}...`
         );
         if (!this.canExecuteCell()) {
-            this.task?.end({});
-            this.task = undefined;
+            // End state is bool | undefined not optional. Undefined == not success or failure
+            this.execution?.end(undefined);
+            this.execution = undefined;
             return;
         }
         if (this.started) {
@@ -201,9 +199,9 @@ export class CellExecution {
         this.started = true;
 
         this.startTime = new Date().getTime();
-        CellExecution.activeNotebookCellExecutionTask.set(this.cell.notebook, this.task);
-        this.task?.start({ startTime: this.startTime });
-        await Promise.all([this.initPromise, this.task?.clearOutput()]);
+        CellExecution.activeNotebookCellExecution.set(this.cell.notebook, this.execution);
+        this.execution?.start(this.startTime);
+        await Promise.all([this.initPromise, this.execution?.clearOutput()]);
         this.stopWatch.reset();
 
         // Begin the request that will modify our cell.
@@ -259,7 +257,7 @@ export class CellExecution {
 
         await chainWithPendingUpdates(this.cell.notebook, async () => {
             traceCellMessage(this.cell, 'Update with error state & output');
-            await this.task?.appendOutput([translateErrorOutput(createErrorOutput(error))]);
+            await this.execution?.appendOutput([translateErrorOutput(createErrorOutput(error))]);
         });
 
         this.endCellTask('failed');
@@ -292,18 +290,20 @@ export class CellExecution {
     }
     private endCellTask(success: 'success' | 'failed' | 'cancelled') {
         if (this.isEmptyCodeCell) {
-            this.task?.end({});
+            // Undefined for not success or failures
+            this.execution?.end(undefined);
         } else if (success === 'success' || success === 'failed') {
             this.endTime = new Date().getTime();
-            this.task?.end({ endTime: this.endTime, success: success === 'success' });
+            this.execution?.end(success === 'success', this.endTime);
         } else {
             // Cell was cancelled.
-            this.task?.end({});
+            // Undefined for not success or failures
+            this.execution?.end(undefined);
         }
-        if (CellExecution.activeNotebookCellExecutionTask.get(this.cell.notebook) === this.task) {
-            CellExecution.activeNotebookCellExecutionTask.set(this.cell.notebook, undefined);
+        if (CellExecution.activeNotebookCellExecution.get(this.cell.notebook) === this.execution) {
+            CellExecution.activeNotebookCellExecution.set(this.cell.notebook, undefined);
         }
-        this.task = undefined;
+        this.execution = undefined;
     }
     /**
      * Assume we run cell A
@@ -318,37 +318,38 @@ export class CellExecution {
             return;
         }
         // If we have an active task, use that instead of creating a new task.
-        const existingTask = CellExecution.activeNotebookCellExecutionTask.get(this.cell.notebook);
+        const existingTask = CellExecution.activeNotebookCellExecution.get(this.cell.notebook);
         if (existingTask) {
             return existingTask;
         }
 
         // Create a temporary task.
         this.previousResultsToRestore = { ...(this.cell.executionSummary || {}) };
-        this.temporaryTask = this.controller.createNotebookCellExecutionTask(this.cell);
-        this.temporaryTask?.start({});
-        if (this.previousResultsToRestore?.executionOrder && this.task) {
-            this.task.executionOrder = this.previousResultsToRestore.executionOrder;
+        this.temporaryExecution = this.controller.createNotebookCellExecution(this.cell);
+        this.temporaryExecution?.start();
+        if (this.previousResultsToRestore?.executionOrder && this.execution) {
+            this.execution.executionOrder = this.previousResultsToRestore.executionOrder;
         }
-        return this.temporaryTask;
+        return this.temporaryExecution;
     }
     private endTemporaryTask() {
-        if (this.previousResultsToRestore?.executionOrder && this.task) {
-            this.task.executionOrder = this.previousResultsToRestore.executionOrder;
+        if (this.previousResultsToRestore?.executionOrder && this.execution) {
+            this.execution.executionOrder = this.previousResultsToRestore.executionOrder;
         }
-        if (this.previousResultsToRestore && this.temporaryTask) {
+        if (this.previousResultsToRestore && this.temporaryExecution) {
             if (this.previousResultsToRestore.executionOrder) {
-                this.temporaryTask.executionOrder = this.previousResultsToRestore.executionOrder;
+                this.temporaryExecution.executionOrder = this.previousResultsToRestore.executionOrder;
             }
-            this.temporaryTask.end({
-                endTime: this.previousResultsToRestore.endTime,
-                success: this.previousResultsToRestore.success
-            });
+            this.temporaryExecution.end(
+                this.previousResultsToRestore.success,
+                this.previousResultsToRestore.timing?.endTime
+            );
         } else {
-            this.temporaryTask?.end({});
+            // Undefined for not success or failure
+            this.temporaryExecution?.end(undefined);
         }
         this.previousResultsToRestore = undefined;
-        this.temporaryTask = undefined;
+        this.temporaryExecution = undefined;
     }
 
     private async completedDueToCancellation() {
@@ -391,6 +392,11 @@ export class CellExecution {
         const code = this.cell.document.getText();
         traceCellMessage(this.cell, 'Send code for execution');
         await this.executeCodeCell(code, session, loggers);
+        loggers.forEach((l) => {
+            if (l.nativePostExecute) {
+                void l.nativePostExecute(this.cell);
+            }
+        });
     }
 
     private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
@@ -506,7 +512,7 @@ export class CellExecution {
                 traceInfoIf(
                     !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
                     'KernelMessage = StreamMessage',
-                    `Stream '${msg.content.name}`,
+                    `Cell Index ${this.cell.index}, Stream '${msg.content.name}`,
                     msg.content.text
                 );
                 await this.handleStreamMessage(msg as KernelMessage.IStreamMsg, clearState);
@@ -533,9 +539,9 @@ export class CellExecution {
             }
 
             // Set execution count, all messages should have it
-            if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number' && this.task) {
+            if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number' && this.execution) {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, `Exec Count = ${msg.content.execution_count}`);
-                this.task.executionOrder = msg.content.execution_count;
+                this.execution.executionOrder = msg.content.execution_count;
             }
         } catch (err) {
             traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, err);
@@ -557,7 +563,7 @@ export class CellExecution {
             traceCellMessage(this.cell, 'Update output');
             // Clear if necessary
             if (clearState.value) {
-                await this.task?.clearOutput();
+                await this.execution?.clearOutput();
                 clearState.update(false);
             }
 
@@ -565,7 +571,7 @@ export class CellExecution {
             // Possible execution of cell has completed (the task would have been disposed).
             // This message could have come from a background thread.
             // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-            const task = this.task || this.createTemporaryTask();
+            const task = this.execution || this.createTemporaryTask();
             const promise = task?.appendOutput([converted]);
             this.endTemporaryTask();
             // await on the promise at the end, we want to minimize UI flickers.
@@ -662,8 +668,8 @@ export class CellExecution {
     }
 
     private async handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
-        if (msg.content.execution_count && this.task) {
-            this.task.executionOrder = msg.content.execution_count;
+        if (msg.content.execution_count && this.execution) {
+            this.execution.executionOrder = msg.content.execution_count;
         }
     }
 
@@ -678,7 +684,7 @@ export class CellExecution {
             // Possible execution of cell has completed (the task would have been disposed).
             // This message could have come from a background thread.
             // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-            const task = this.task || this.createTemporaryTask();
+            const task = this.execution || this.createTemporaryTask();
 
             // Clear output if waiting for a clear
             const clearOutput = clearState.value;
@@ -722,7 +728,7 @@ export class CellExecution {
                     name: msg.content.name,
                     text: formatStreamText(concatMultilineString(`${existingOutputText}${newContent}`))
                 });
-                promise = task?.replaceOutputItems(output.outputs, existingOutputToAppendTo.id);
+                promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo);
             } else if (clearOutput) {
                 // Replace the current outputs with a single new output.
                 const output = cellOutputToVSCCellOutput({
@@ -775,7 +781,7 @@ export class CellExecution {
             // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
 
             // Clear all outputs and start over again.
-            const task = this.task || this.createTemporaryTask();
+            const task = this.execution || this.createTemporaryTask();
             await task?.clearOutput();
             this.endTemporaryTask();
         }
@@ -800,8 +806,8 @@ export class CellExecution {
             await this.handleExecuteReply(msg, clearState);
 
             // Set execution count, all messages should have it
-            if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number' && this.task) {
-                this.task.executionOrder = msg.content.execution_count;
+            if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number' && this.execution) {
+                this.execution.executionOrder = msg.content.execution_count;
             }
         }
     }
@@ -838,15 +844,15 @@ export class CellExecution {
                     metadata: msg.content.metadata
                 });
                 // If there was no output and still no output, then nothing to do.
-                if (outputToBeUpdated.outputs.length === 0 && newOutput.outputs.length === 0) {
+                if (outputToBeUpdated.items.length === 0 && newOutput.items.length === 0) {
                     return;
                 }
                 // Compare each output item (at the end of the day everything is serializable).
                 // Hence this is a safe comparison.
-                if (outputToBeUpdated.outputs.length === newOutput.outputs.length) {
+                if (outputToBeUpdated.items.length === newOutput.items.length) {
                     let allAllOutputItemsSame = true;
                     for (let index = 0; index < cell.outputs.length; index++) {
-                        if (!fastDeepEqual(outputToBeUpdated.outputs[index], newOutput.outputs[index])) {
+                        if (!fastDeepEqual(outputToBeUpdated.items[index], newOutput.items[index])) {
                             allAllOutputItemsSame = false;
                             break;
                         }
@@ -859,8 +865,8 @@ export class CellExecution {
                 // Possible execution of cell has completed (the task would have been disposed).
                 // This message could have come from a background thread.
                 // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-                const task = this.task || this.createTemporaryTask();
-                const promise = task?.replaceOutputItems(newOutput.outputs, outputToBeUpdated.id);
+                const task = this.execution || this.createTemporaryTask();
+                const promise = task?.replaceOutputItems(newOutput.items, outputToBeUpdated);
                 this.endTemporaryTask();
                 // await on the promise at the end, we want to minimize UI flickers.
                 // The way we update output of other cells is to use an existing task or a temporary task.

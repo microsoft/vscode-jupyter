@@ -14,14 +14,13 @@ import { JupyterNotebookView } from '../../../client/datascience/notebook/consta
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    insertMarkdownCell,
-    trustAllNotebooks
+    insertMarkdownCell
 } from './helper';
 
 suite('DataScience - VSCode Notebook (Editor Provider)', function () {
@@ -45,6 +44,10 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         api = await initialize();
+        if (IS_REMOTE_NATIVE_TEST) {
+            // https://github.com/microsoft/vscode-jupyter/issues/6331
+            return this.skip();
+        }
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
@@ -56,7 +59,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await closeActiveWindows();
-        await trustAllNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
@@ -210,27 +212,31 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
 
         await notebookOpened.assertFiredExactly(2);
         await activeNotebookChanged.assertFiredAtLeast(2);
-        assert.equal(activeNotebookChanged.last, editor2);
+        assert.equal(activeNotebookChanged.second, editor2);
         assert.isFalse(notebookClosed.fired, 'No notebook should be closed');
 
         // Re-opening, first file should change the editor back to that.
         await commands.executeCommand('workbench.action.nextEditor');
         await notebookOpened.assertFiredExactly(2); // Only 2, no new notebooks opened.
         await activeNotebookChanged.assertFiredAtLeast(3);
-        assert.equal(activeNotebookChanged.last, editor1);
+        await waitForCondition(async () => activeNotebookChanged.last === editor1, 500, 'Active editor is not set');
 
         // Close the first notebook.
         await commands.executeCommand('workbench.action.files.saveAll'); // Save untitled changes (to prevent prompts).
         await commandManager.executeCommand('workbench.action.closeActiveEditor');
         await notebookClosed.assertFired();
         await activeNotebookChanged.assertFiredAtLeast(4);
-        assert.equal(activeNotebookChanged.last, editor2);
+        await waitForCondition(async () => activeNotebookChanged.last === editor2, 500, 'Active editor is not set');
 
         // Close the second notebook.
         await commandManager.executeCommand('workbench.action.closeActiveEditor');
         await notebookClosed.assertFiredExactly(2);
         await activeNotebookChanged.assertFiredAtLeast(5); // Fired when there are no more documents open.
-        assert.isUndefined(activeNotebookChanged.last);
+        await waitForCondition(
+            async () => activeNotebookChanged.last === undefined,
+            500,
+            'Active editor is not undefined'
+        );
     });
     test('Closing a notebook will fire necessary events and clear state', async () => {
         const notebookClosed = createEventHandler(editorProvider, 'onDidCloseNotebookEditor', disposables);
@@ -247,13 +253,11 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         await waitForCondition(async () => !!editorProvider.activeEditor, 2_000, 'Editor not created');
 
         const editorClosed = createEventHandler(editorProvider.activeEditor!, 'closed', disposables);
-        const modelDisposed = createEventHandler(editorProvider.activeEditor!.model!, 'onDidDispose', disposables);
 
         await closeActiveWindows();
 
         await waitForCondition(async () => !editorProvider.activeEditor, 1_000, 'Editor not closed');
         await editorClosed.assertFired();
-        await modelDisposed.assertFired();
     });
     test('Opening an nb multiple times will result in a single (our) INotebookEditor being created', async () => {
         await commandManager.executeCommand('vscode.openWith', Uri.file(templateIPynb), JupyterNotebookView);
@@ -272,7 +276,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
         await waitForCondition(async () => !!editorProvider.activeEditor, 2_000, 'Editor not created');
 
         const editorDisposed = createEventHandler(editorProvider.activeEditor!, 'closed', disposables);
-        const modelDisposed = createEventHandler(editorProvider.activeEditor!.model!, 'onDidDispose', disposables);
 
         // Open a duplicate editor.
         await commands.executeCommand('workbench.action.splitEditor', Uri.file(templateIPynb));
@@ -292,7 +295,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
 
         // Verify our notebook was not disposed.
         assert.equal(editorDisposed.count, 0, 'Editor disposed');
-        assert.equal(modelDisposed.count, 0, 'Model disposed');
 
         // Close the last VSC editor & confirm our editor also got disposed.
         await commands.executeCommand('workbench.action.closeActiveEditor');
@@ -304,19 +306,6 @@ suite('DataScience - VSCode Notebook (Editor Provider)', function () {
 
         // Verify our notebook was not disposed.
         await editorDisposed.assertFired();
-        await modelDisposed.assertFired();
-    });
-    test('Closing nb & re-opening it should create a new model & not re-use old model', async () => {
-        await editorProvider.open(Uri.file(templateIPynb));
-        const firstEditor = editorProvider.activeEditor!;
-        const firstModel = firstEditor.model!;
-
-        await closeActiveWindows();
-
-        await editorProvider.open(Uri.file(templateIPynb));
-
-        assert.notEqual(firstEditor, editorProvider.activeEditor!, 'Editor references must be different');
-        assert.notEqual(firstModel, editorProvider.activeEditor!.model, 'Model references must be different');
     });
     test('Open a notebook using our API', async () => {
         const editor = await editorProvider.open(testIPynb);

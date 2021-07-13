@@ -29,9 +29,9 @@ import {
     insertCodeCell,
     insertMarkdownCell,
     saveActiveNotebook,
-    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
-    waitForKernelToGetAutoSelected
+    waitForKernelToGetAutoSelected,
+    workAroundVSCodeNotebookStartPages
 } from './helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -90,8 +90,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         ) {
             return this.skip();
         }
-        await trustAllNotebooks();
         sinon.restore();
+        await workAroundVSCodeNotebookStartPages();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
         languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);

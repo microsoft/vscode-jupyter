@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { Disposable, NotebookCell, NotebookController, NotebookControllerAffinity, NotebookDocument } from 'vscode';
-import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
+import { isCI, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { getKernelNotInstalledErrorMessage } from '../errorHandler/errorHandler';
+import { KernelSpecNotFoundError } from '../errorHandler/kernelSpecNotFoundError';
 import { getLanguageInNotebookMetadata } from '../jupyter/kernels/helpers';
 import { IDataScienceErrorHandler } from '../types';
 import { JupyterNotebookView } from './constants';
@@ -42,7 +42,7 @@ export class NoKernelsNotebookController implements Disposable {
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         this.controller.updateNotebookAffinity(notebook, affinity);
         // Only on CI Server.
-        if (IS_CI_SERVER) {
+        if (isCI) {
             await this.commandManager.executeCommand('notebook.selectKernel', {
                 id: this.controller.id,
                 extension: JVSC_EXTENSION_ID
@@ -67,9 +67,9 @@ export class NoKernelsNotebookController implements Disposable {
         }
         const cell = cells[0];
         const notebook = cell.notebook;
-        const task = this.controller.createNotebookCellExecutionTask(cell);
+        const task = this.controller.createNotebookCellExecution(cell);
         task.start();
-        task.clearOutput(cell.index).then(noop, noop);
+        task.clearOutput(cell).then(noop, noop);
         const errorMessage = getKernelNotInstalledErrorMessage(getNotebookMetadata(notebook));
         const errorOutput = translateErrorOutput({
             ename: '',
@@ -78,7 +78,7 @@ export class NoKernelsNotebookController implements Disposable {
             traceback: errorMessage.split('\n')
         });
         task.appendOutput(errorOutput).then(noop, noop);
-        task.end();
-        this.errorHandler.handleError(new Error()).catch(noop);
+        task.end(undefined);
+        this.errorHandler.handleError(new KernelSpecNotFoundError(getNotebookMetadata(notebook))).catch(noop);
     }
 }

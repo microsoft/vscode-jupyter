@@ -99,7 +99,6 @@ export enum InteractiveWindowMessages {
     SavePng = 'save_png',
     StartDebugging = 'start_debugging',
     StopDebugging = 'stop_debugging',
-    LaunchNotebookTrustPrompt = 'launch_notebook_trust_prompt',
     TrustNotebookComplete = 'trust_notebook_complete',
     LoadAllCells = 'load_all_cells',
     LoadAllCellsComplete = 'load_all_cells_complete',
@@ -663,7 +662,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SavePng]: string | undefined;
     public [InteractiveWindowMessages.StartDebugging]: never | undefined;
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
-    public [InteractiveWindowMessages.LaunchNotebookTrustPrompt]: never | undefined;
     public [InteractiveWindowMessages.TrustNotebookComplete]: never | undefined;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
     public [InteractiveWindowMessages.LoadAllCellsComplete]: ILoadAllCells;

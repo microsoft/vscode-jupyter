@@ -28,6 +28,7 @@ import {
 } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
@@ -79,10 +80,16 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
 
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
+        if (!this.workspace.isTrusted) {
+            // This should not happen, but if it does, then just throw an error.
+            // The commands the like should be disabled.
+            throw new Error('Worksapce not trusted');
+        }
         // Ask for a configuration change if appropriate
         const mode = await this.getInteractiveMode(resource);
 
@@ -172,31 +179,30 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider {
             result === 'multiple' &&
             resource &&
             !this.globalMemento.get(AskedForPerFileSettingKey) &&
-            this._windows.length === 1
+            this._windows.length === 1 &&
+            // Only prompt if the submitting file is different
+            this._windows[0].owner?.fsPath !== resource.fsPath
         ) {
             // See if the first window was tied to a file or not.
-            const firstWindow = this._windows.find((w) => w.owner);
-            if (firstWindow) {
-                void this.globalMemento.update(AskedForPerFileSettingKey, true);
-                const questions = [
-                    localize.DataScience.interactiveWindowModeBannerSwitchYes(),
-                    localize.DataScience.interactiveWindowModeBannerSwitchNo()
-                ];
-                // Ask user if they'd like to switch to per file or not.
-                const response = await this.appShell.showInformationMessage(
-                    localize.DataScience.interactiveWindowModeBannerTitle(),
-                    ...questions
+            this.globalMemento.update(AskedForPerFileSettingKey, true).then(noop, noop);
+            const questions = [
+                localize.DataScience.interactiveWindowModeBannerSwitchYes(),
+                localize.DataScience.interactiveWindowModeBannerSwitchNo()
+            ];
+            // Ask user if they'd like to switch to per file or not.
+            const response = await this.appShell.showInformationMessage(
+                localize.DataScience.interactiveWindowModeBannerTitle(),
+                ...questions
+            );
+            if (response === questions[0]) {
+                result = 'perFile';
+                this._windows[0].changeMode(result);
+                await this.configService.updateSetting(
+                    'interactiveWindowMode',
+                    result,
+                    resource,
+                    ConfigurationTarget.Global
                 );
-                if (response === questions[0]) {
-                    result = 'perFile';
-                    firstWindow.changeMode(result);
-                    await this.configService.updateSetting(
-                        'interactiveWindowMode',
-                        result,
-                        resource,
-                        ConfigurationTarget.Global
-                    );
-                }
             }
         }
         return result;

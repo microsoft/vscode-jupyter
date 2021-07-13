@@ -36,7 +36,6 @@ import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { NativeEditorProvider } from '../notebookStorage/nativeEditorProvider';
 import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
-import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
@@ -52,8 +51,7 @@ import {
     INotebookModel,
     INotebookProvider,
     IStatusProvider,
-    IThemeFinder,
-    ITrustService
+    IThemeFinder
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorOldWebView } from './nativeEditorOldWebView';
@@ -222,7 +220,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
             this.serviceContainer.get<boolean>(UseCustomEditorApi),
             this.serviceContainer.get<INotebookStorageProvider>(INotebookStorageProvider),
-            this.serviceContainer.get<ITrustService>(ITrustService),
             model,
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
@@ -309,10 +306,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     ) => {
         // See if this is an ipynb file
         if (this.isNotebook(document)) {
-            if (await this.isDocumentOpenedInVSCodeNotebook(document)) {
-                return;
-            }
-
             const closeActiveEditorCommand = 'workbench.action.closeActiveEditor';
             try {
                 const uri = document.uri;
@@ -341,15 +334,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             }
         }
     };
-    /**
-     * If the INotebookModel associated with a Notebook is of type VSCodeNotebookModel, then its used with a VSC Notebook.
-     * I.e. document is already opened in a VSC Notebook.
-     */
-    private async isDocumentOpenedInVSCodeNotebook(document: TextDocument): Promise<boolean> {
-        const model = await this.loadModel({ file: document.uri });
-        // This is temporary code.
-        return model instanceof VSCodeNotebookModel;
-    }
     /**
      * Check if user is attempting to compare two ipynb files.
      * If yes, then return `true`, else `false`.

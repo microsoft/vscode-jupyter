@@ -4,7 +4,21 @@ on:
   issues:
     types: [opened]
 
+permissions:
+  issues: write
+
 jobs:
+  addTriageLabel:
+    name: Add needs-triage label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label for Triage
+        uses: andymckay/labeler@1.0.2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          add-labels: needs-triage
+          ignore-if-assigned: false
+          
   assignIssue:
     name: Assign Issue to Someone
     runs-on: ubuntu-latest

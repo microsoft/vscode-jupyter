@@ -17,7 +17,13 @@ import type {
 import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
-import type { IJupyterKernel, IJupyterKernelSpec, InterruptResult, KernelSocketInformation } from '../../types';
+import type {
+    IJupyterKernel,
+    IJupyterKernelSpec,
+    INotebook,
+    InterruptResult,
+    KernelSocketInformation
+} from '../../types';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
@@ -128,11 +134,13 @@ export interface IKernel extends IAsyncDisposable {
      */
     readonly info?: KernelMessage.IInfoReplyMsg['content'];
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    readonly notebook?: INotebook;
     start(options?: { disableUI?: boolean; document: NotebookDocument }): Promise<void>;
     interrupt(document: NotebookDocument): Promise<InterruptResult>;
-    restart(): Promise<void>;
+    restart(document: NotebookDocument): Promise<void>;
     executeCell(cell: NotebookCell): Promise<void>;
     executeAllCells(document: NotebookDocument): Promise<void>;
+    executeHidden(code: string, file: string, document: NotebookDocument): Promise<void>;
 }
 
 export type KernelOptions = { metadata: KernelConnectionMetadata; controller: NotebookController };

@@ -3,6 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import {
@@ -21,7 +22,8 @@ export class ServerPreload implements IExtensionSingleActivationService {
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebook.bind(this));
         this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.onDidOpenOrCloseInteractive.bind(this));
@@ -55,6 +57,9 @@ export class ServerPreload implements IExtensionSingleActivationService {
     }
 
     private async createServerIfNecessary() {
+        if (!this.workspace.isTrusted) {
+            return;
+        }
         try {
             traceInfo(`Attempting to start a server because of preload conditions ...`);
 

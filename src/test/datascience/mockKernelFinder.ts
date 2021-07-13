@@ -11,6 +11,9 @@ export class MockKernelFinder implements ILocalKernelFinder {
     private dummySpecs = new Map<string, LocalKernelConnectionMetadata>();
 
     constructor(private readonly realFinder: ILocalKernelFinder) {}
+    public listNonPythonKernels(_cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]> {
+        throw new Error('Method not implemented.');
+    }
 
     public async findKernel(
         resource: Resource,

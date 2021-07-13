@@ -27,7 +27,6 @@ import {
     runAllCellsInActiveNotebook,
     insertCodeCell,
     startJupyterServer,
-    trustAllNotebooks,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToChange,
     waitForKernelToGetAutoSelected
@@ -112,7 +111,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             proc.exec(venvNoRegPythonPath, ['-m', 'pip', 'install', 'ipykernel'])
         ]);
 
-        await trustAllNotebooks();
         await startJupyterServer();
         sinon.restore();
     });
@@ -121,7 +119,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         console.log(`Start test ${this.currentTest?.title}`);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        await trustAllNotebooks();
         nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables, venvNoKernelDisplayName);
         // Update hash in notebook metadata.
         fs.writeFileSync(

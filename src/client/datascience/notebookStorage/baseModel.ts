@@ -11,6 +11,7 @@ import { ICryptoUtils } from '../../common/types';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { pruneCell } from '../common';
+import { defaultNotebookFormat } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
     getInterpreterFromKernelConnectionMetadata,
@@ -45,6 +46,31 @@ export function updateNotebookMetadata(
     let kernelId: string | undefined;
     if (!metadata) {
         return { changed, kernelId };
+    }
+
+    // If language isn't specified in the metadata, ensure we have that.
+    if (!metadata?.language_info?.name) {
+        metadata = metadata || <nbformat.INotebookMetadata>{ orig_nbformat: 3, language_info: { name: '' } };
+        metadata.language_info = metadata.language_info || { name: '' };
+    }
+
+    let language: string | undefined;
+    switch (kernelConnection?.kind) {
+        case 'connectToLiveKernel':
+            language = kernelConnection.kernelModel.language;
+            break;
+        case 'startUsingKernelSpec':
+            language = kernelConnection.kernelSpec.language;
+            break;
+        case 'startUsingPythonInterpreter':
+            language = PYTHON_LANGUAGE;
+            break;
+        default:
+            break;
+    }
+    if (metadata.language_info.name !== language && language) {
+        metadata.language_info.name = language;
+        changed = true;
     }
 
     if (kernelInfo && 'language_info' in kernelInfo && kernelInfo.language_info) {
@@ -155,14 +181,14 @@ export function getDefaultNotebookContent(pythonNumber: number = 3): Partial<nbf
             pygments_lexer: `ipython${pythonNumber}`,
             version: pythonNumber
         },
-        orig_nbformat: 2
+        orig_nbformat: defaultNotebookFormat.major
     };
 
     // Default notebook data.
     return {
         metadata: metadata,
-        nbformat: 4,
-        nbformat_minor: 2
+        nbformat: defaultNotebookFormat.major,
+        nbformat_minor: defaultNotebookFormat.minor
     };
 }
 /**
@@ -181,7 +207,7 @@ export function getDefaultNotebookContentForNativeNotebooks(language: string = '
                     name: language,
                     nbconvert_exporter: 'python'
                 },
-                orig_nbformat: 2
+                orig_nbformat: defaultNotebookFormat.major
             };
             break;
         default:
@@ -189,14 +215,14 @@ export function getDefaultNotebookContentForNativeNotebooks(language: string = '
                 language_info: {
                     name: language
                 },
-                orig_nbformat: 2
+                orig_nbformat: defaultNotebookFormat.major
             };
     }
 
     return {
         metadata,
-        nbformat: 4,
-        nbformat_minor: 2
+        nbformat: defaultNotebookFormat.major,
+        nbformat_minor: defaultNotebookFormat.minor
     };
 }
 export abstract class BaseNotebookModel implements INotebookModel {
@@ -227,9 +253,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return this.notebookJson.metadata as any;
     }
-    public get isTrusted() {
-        return this._isTrusted;
-    }
     public get cellCount(): number {
         return this.getCellCount();
     }
@@ -239,8 +262,11 @@ export abstract class BaseNotebookModel implements INotebookModel {
     protected _editEventEmitter = new EventEmitter<NotebookModelChange>();
     protected _kernelConnection?: KernelConnectionMetadata;
     private readonly preferredRemoteKernelIdStorage: PreferredRemoteKernelIdProvider;
+    public get isTrusted() {
+        return this._isTrusted();
+    }
     constructor(
-        protected _isTrusted: boolean,
+        private _isTrusted: () => boolean,
         protected _file: Uri,
         protected globalMemento: Memento,
         crypto: ICryptoUtils,
@@ -265,9 +291,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public abstract getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
     public getContent(): string {
         return this.generateNotebookContent();
-    }
-    public trust() {
-        this._isTrusted = true;
     }
     protected abstract getCellCount(): number;
     protected handleUndo(_change: NotebookModelChange): boolean {

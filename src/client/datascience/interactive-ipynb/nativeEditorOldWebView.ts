@@ -41,8 +41,7 @@ import {
     INotebookImporter,
     INotebookProvider,
     IStatusProvider,
-    IThemeFinder,
-    ITrustService
+    IThemeFinder
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
@@ -93,7 +92,6 @@ export class NativeEditorOldWebView extends NativeEditor {
         notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private readonly storage: INotebookStorageProvider,
-        trustService: ITrustService,
         model: NativeEditorNotebookModel,
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
@@ -127,7 +125,6 @@ export class NativeEditorOldWebView extends NativeEditor {
             asyncRegistry,
             notebookProvider,
             useCustomEditorApi,
-            trustService,
             model,
             webviewPanel,
             selector,

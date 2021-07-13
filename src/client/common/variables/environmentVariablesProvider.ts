@@ -6,7 +6,6 @@ import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWa
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { traceVerbose } from '../logger';
-import { IPlatformService } from '../platform/types';
 import { IDisposableRegistry } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
@@ -24,7 +23,6 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     constructor(
         @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
-        @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @optional() private cacheDuration: number = CACHE_DURATION
     ) {
@@ -95,15 +93,16 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         const mergedVars: EnvironmentVariables = {};
         this.envVarsService.mergeVariables(process.env, mergedVars); // Copy current proc vars into new obj.
         this.envVarsService.mergeVariables(customEnvVars!, mergedVars); // Copy custom vars over into obj.
-        const pathVariable = this.platformService.pathVariableName;
-        if (process.env[pathVariable]) {
-            mergedVars[pathVariable] = process.env[pathVariable];
+        let pathKey = Object.keys(process.env).find((k) => k.toLowerCase() == 'path');
+        if (pathKey) {
+            mergedVars[pathKey] = process.env[pathKey];
         }
         if (process.env.PYTHONPATH) {
             mergedVars.PYTHONPATH = process.env.PYTHONPATH;
         }
-        if (customEnvVars![pathVariable]) {
-            this.envVarsService.appendPath(mergedVars!, customEnvVars![pathVariable]!);
+        pathKey = customEnvVars ? Object.keys(customEnvVars).find((k) => k.toLowerCase() == 'path') : undefined;
+        if (pathKey && customEnvVars![pathKey]) {
+            this.envVarsService.appendPath(mergedVars!, customEnvVars![pathKey]!);
         }
         if (customEnvVars!.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars!, customEnvVars!.PYTHONPATH);

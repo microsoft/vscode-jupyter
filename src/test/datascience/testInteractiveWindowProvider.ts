@@ -4,7 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Memento, Uri } from 'vscode';
-import { IApplicationShell } from '../../client/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import {
     GLOBAL_MEMENTO,
@@ -45,9 +45,10 @@ export class TestInteractiveWindowProvider extends InteractiveWindowProvider imp
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
-        @inject(IApplicationShell) appShell: IApplicationShell
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IWorkspaceService) worksapce: IWorkspaceService
     ) {
-        super(container, disposables, fileSystem, configService, globalMemento, appShell);
+        super(container, disposables, fileSystem, configService, globalMemento, appShell, worksapce);
 
         // Reset our identity IDs when we create a new TestInteractiveWindowProvider
         resetIdentity();

@@ -8,6 +8,7 @@ import { injectable } from 'inversify';
 import {
     CancellationToken,
     CancellationTokenSource,
+    ColorTheme,
     Disposable,
     env,
     Event,
@@ -37,6 +38,9 @@ import { IApplicationShell } from './types';
 
 @injectable()
 export class ApplicationShell implements IApplicationShell {
+    public get activeColorTheme(): ColorTheme {
+        return window.activeColorTheme;
+    }
     public get onDidChangeWindowState(): Event<WindowState> {
         return window.onDidChangeWindowState;
     }

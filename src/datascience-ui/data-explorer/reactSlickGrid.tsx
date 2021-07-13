@@ -96,7 +96,7 @@ class ColumnFilter {
             switch (columnType) {
                 case ColumnType.String:
                 default:
-                    this.matchFunc = (v: any) => !v || v.toString().includes(text);
+                    this.matchFunc = (v: any) => !v || this.matchStringWithWildcards(v, text);
                     break;
 
                 case ColumnType.Number:
@@ -110,6 +110,25 @@ class ColumnFilter {
 
     public matches(value: any): boolean {
         return this.matchFunc(value);
+    }
+
+    // Tries to match entire words instead of possibly trying to match substrings.
+    private matchStringWithWildcards(v: any, text: string): boolean {
+        // boundaryRegEx allows us to check that v matches full string and not substring.
+        // It is similar to \b but works with special characters as well
+        // Modified from https://stackoverflow.com/a/40298937
+        const boundaryRegEx = '(?:(?=[\\S])(?<![\\S])|(?<=[\\S])(?![\\S]))';
+
+        const regEx = text
+            .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Replace special characters in regex with backslashed versions
+            .replace(/\*/g, '.*');
+
+        try {
+            const matchExpr = new RegExp(`${boundaryRegEx}${regEx}${boundaryRegEx}`, 'i');
+            return matchExpr.test(v);
+        } catch (e) {
+            return false;
+        }
     }
 
     private extractDigits(text: string, regex: RegExp): number {
@@ -152,7 +171,7 @@ class ColumnFilter {
             return (v: any) => v !== undefined && (v === n5 || (Number.isNaN(v) && Number.isNaN(n5)));
         } else {
             const n6 = parseFloat(text);
-            return (v: any) => v !== undefined && v === n6;
+            return (v: any) => v !== undefined && parseFloat(v) === n6;
         }
     }
 }
