@@ -71,6 +71,12 @@ export enum Product {
     pandas = 23
 }
 
+export enum ProductInstallStatus {
+    Installed,
+    NotInstalled,
+    NeedsUpgrade
+}
+
 export enum ModuleNamePurpose {
     install = 1,
     run = 2
@@ -86,7 +92,6 @@ export interface IInstaller {
         cancel?: CancellationToken,
         reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse>;
-    getVersion(product: Product, resource?: InterpreterUri): Promise<string | undefined>;
     isInstalled(product: Product, resource: InterpreterUri): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
