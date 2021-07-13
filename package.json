@@ -1939,7 +1939,7 @@
             },
             {
                 "id": "jupyter-error-renderer",
-                "entrypoint": "./out/datascience-ui/error-renderer/index.js",
+                "entrypoint": "./out/datascience-ui/errorRenderer/errorRenderer.js",
                 "displayName": "Jupyter Error Renderer",
                 "requiresMessaging": "always",
                 "mimeTypes": [
