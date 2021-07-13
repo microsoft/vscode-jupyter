@@ -146,7 +146,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ExportToHTML]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.ExportToPDF]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.Export]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
-    [DSCommands.NativeNotebookExport]: [Uri];
+    [DSCommands.NativeNotebookExport]: [Uri | undefined];
     [DSCommands.SetJupyterKernel]: [KernelConnectionMetadata, Uri, undefined | Uri];
     [DSCommands.SwitchJupyterKernel]: [ISwitchKernelOptions | undefined] | [];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
