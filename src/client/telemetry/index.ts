@@ -257,18 +257,13 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
 
-    // if (process.env && process.env.VSC_JUPYTER_LOG_TELEMETRY) {
-    traceInfo(
-        `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
-            customProperties
-        )} `
-    );
-    console.error(
-        `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
-            customProperties
-        )} `
-    );
-    // }
+    if (process.env && process.env.VSC_JUPYTER_LOG_TELEMETRY) {
+        traceInfo(
+            `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
+                customProperties
+            )} `
+        );
+    }
 }
 
 // Type-parameterized form of MethodDecorator in lib.es5.d.ts.
