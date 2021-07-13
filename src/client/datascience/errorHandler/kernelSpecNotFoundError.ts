@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type { nbformat } from '@jupyterlab/coreutils';
-import { BaseError } from '../../../common/errors/types';
+import { BaseError } from '../../common/errors/types';
 
 export class KernelSpecNotFoundError extends BaseError {
     constructor(public readonly notebookMetadata?: Readonly<nbformat.INotebookMetadata>) {

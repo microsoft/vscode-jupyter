@@ -4,12 +4,10 @@
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
-import { IFileSystem } from '../../common/platform/types';
 
 import {
-    IAsyncDisposable,
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
@@ -19,47 +17,23 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
+import { JupyterExecutionBase } from './jupyterExecution';
 import { KernelSelector } from './kernels/kernelSelector';
-import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
-import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
-import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { NotebookStarter } from './notebookStarter';
 
-interface IJupyterExecutionInterface extends IRoleBasedObject, IJupyterExecution {}
-
-/* eslint-disable @typescript-eslint/prefer-function-type */
-type JupyterExecutionClassType = {
-    new (
-        liveShare: ILiveShareApi,
-        interpreterService: IInterpreterService,
-        disposableRegistry: IDisposableRegistry,
-        asyncRegistry: IAsyncDisposableRegistry,
-        fileSystem: IFileSystem,
-        workspace: IWorkspaceService,
-        configuration: IConfigurationService,
-        kernelSelector: KernelSelector,
-        notebookStarter: NotebookStarter,
-        appShell: IApplicationShell,
-        jupyterOutputChannel: IOutputChannel,
-        serviceContainer: IServiceContainer
-    ): IJupyterExecutionInterface;
-};
-/* eslint-enable @typescript-eslint/prefer-function-type */
+interface IJupyterExecutionInterface extends IJupyterExecution {}
 
 @injectable()
-export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposable {
-    private executionFactory: RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>;
-    private sessionChangedEventEmitter: EventEmitter<void> = new EventEmitter<void>();
+export class JupyterExecutionFactory implements IJupyterExecution {
+    private executionFactory: IJupyterExecutionInterface;
     private serverStartedEventEmitter: EventEmitter<INotebookServerOptions | undefined> = new EventEmitter<
         INotebookServerOptions | undefined
     >();
 
     constructor(
-        @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(KernelSelector) kernelSelector: KernelSelector,
@@ -69,15 +43,9 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         asyncRegistry.push(this);
-        this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
-            liveShare,
-            HostJupyterExecution,
-            GuestJupyterExecution,
-            liveShare,
+        this.executionFactory = new JupyterExecutionBase(
             interpreterService,
             disposableRegistry,
-            asyncRegistry,
-            fs,
             workspace,
             configuration,
             kernelSelector,
@@ -86,11 +54,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             jupyterOutputChannel,
             serviceContainer
         );
-        this.executionFactory.sessionChanged(() => this.onSessionChanged());
-    }
-
-    public get sessionChanged(): Event<void> {
-        return this.sessionChangedEventEmitter.event;
     }
 
     public get serverStarted(): Event<INotebookServerOptions | undefined> {
@@ -99,54 +62,41 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
 
     public async dispose(): Promise<void> {
         // Dispose of our execution object
-        const execution = await this.executionFactory.get();
-        return execution.dispose();
+        return this.executionFactory.dispose();
     }
 
     public async refreshCommands(): Promise<void> {
-        const execution = await this.executionFactory.get();
-        return execution.refreshCommands();
+        return this.executionFactory.refreshCommands();
     }
 
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        const execution = await this.executionFactory.get();
-        return execution.isNotebookSupported(cancelToken);
+        return this.executionFactory.isNotebookSupported(cancelToken);
     }
 
     public async getNotebookError(): Promise<string> {
-        const execution = await this.executionFactory.get();
-        return execution.getNotebookError();
+        return this.executionFactory.getNotebookError();
     }
 
     public async isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        const execution = await this.executionFactory.get();
-        return execution.isSpawnSupported(cancelToken);
+        return this.executionFactory.isSpawnSupported(cancelToken);
     }
     public async connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
-        const execution = await this.executionFactory.get();
-        const server = await execution.connectToNotebookServer(options, cancelToken);
+        const server = await this.executionFactory.connectToNotebookServer(options, cancelToken);
         if (server) {
             this.serverStartedEventEmitter.fire(options);
         }
         return server;
     }
     public async spawnNotebook(file: string): Promise<void> {
-        const execution = await this.executionFactory.get();
-        return execution.spawnNotebook(file);
+        return this.executionFactory.spawnNotebook(file);
     }
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
-        const execution = await this.executionFactory.get();
-        return execution.getUsableJupyterPython(cancelToken);
+        return this.executionFactory.getUsableJupyterPython(cancelToken);
     }
     public async getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
-        const execution = await this.executionFactory.get();
-        return execution.getServer(options);
-    }
-
-    private onSessionChanged() {
-        this.sessionChangedEventEmitter.fire();
+        return this.executionFactory.getServer(options);
     }
 }

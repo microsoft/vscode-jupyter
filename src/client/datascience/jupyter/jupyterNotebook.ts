@@ -10,7 +10,7 @@ import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import '../../common/extensions';
 import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../common/logger';
@@ -198,7 +198,6 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     constructor(
-        _liveShare: ILiveShareApi, // This is so the liveshare mixin works
         private readonly _session: IJupyterSession,
         private configService: IConfigurationService,
         private disposableRegistry: IDisposableRegistry,

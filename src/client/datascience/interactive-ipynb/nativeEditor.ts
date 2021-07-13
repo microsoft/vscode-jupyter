@@ -20,7 +20,6 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    ILiveShareApi,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -151,7 +150,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     constructor(
         listeners: IInteractiveWindowListener[],
-        liveShare: ILiveShareApi,
         applicationShell: IApplicationShell,
         documentManager: IDocumentManager,
         provider: IWebviewPanelProvider,
@@ -185,7 +183,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     ) {
         super(
             listeners,
-            liveShare,
             applicationShell,
             documentManager,
             provider,

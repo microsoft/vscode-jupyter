@@ -5,7 +5,6 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { ILiveShareApi } from '../../common/application/types';
 import '../../common/extensions';
 import { traceError, traceInfo } from '../../common/logger';
 import {
@@ -48,7 +47,6 @@ export class JupyterServerBase implements INotebookServer {
     private savedSession: IJupyterSession | undefined;
 
     constructor(
-        _liveShare: ILiveShareApi,
         private asyncRegistry: IAsyncDisposableRegistry,
         private disposableRegistry: IDisposableRegistry,
         protected readonly configService: IConfigurationService,

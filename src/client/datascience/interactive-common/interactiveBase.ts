@@ -30,7 +30,6 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    ILiveShareApi,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -149,7 +148,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     constructor(
         private readonly listeners: IInteractiveWindowListener[],
-        liveShare: ILiveShareApi,
         protected applicationShell: IApplicationShell,
         protected documentManager: IDocumentManager,
         provider: IWebviewPanelProvider,
@@ -184,7 +182,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             cssGenerator,
             themeFinder,
             workspaceService,
-            (c, v, d) => new InteractiveWindowMessageListener(liveShare, c, v, d),
+            (c, v, d) => new InteractiveWindowMessageListener(c, v, d),
             rootPath,
             scripts,
             title,
