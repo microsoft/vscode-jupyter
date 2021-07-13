@@ -442,6 +442,10 @@ function translateDisplayDataOutput(
     }
     */
     const metadata = getOutputMetadata(output);
+    // If we have both SVG & PNG, then add special metadata to indicate whether to display `open plot`
+    if ('image/svg+xml' in output.data && 'image/png' in output.data) {
+        metadata.__displayOpenPlotIcon = true;
+    }
     const items: NotebookCellOutputItem[] = [];
     // eslint-disable-next-line
     const data: Record<string, any> = output.data || {};
@@ -525,6 +529,10 @@ export type CellOutputMetadata = {
      * (this is something we have added)
      */
     __isJson?: boolean;
+    /**
+     * Whether to display the open plot icon.
+     */
+    __displayOpenPlotIcon?: boolean;
 };
 
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {

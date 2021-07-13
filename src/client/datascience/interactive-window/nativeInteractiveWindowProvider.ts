@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Event, EventEmitter, Memento, workspace, window, ViewColumn } from 'vscode';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
+import { IPythonExtensionChecker } from '../../api/types';
 
 import {
     IApplicationShell,
@@ -30,7 +30,6 @@ import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
-import { InteractiveWindowView } from '../notebook/constants';
 import { INotebookControllerManager } from '../notebook/types';
 import {
     IInteractiveWindow,
@@ -77,8 +76,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {
         asyncRegistry.push(this);
     }
@@ -118,9 +116,11 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         // kernel picker quickpick UI
         const preferredControllerId = await this.getControllerForInteractiveWindow();
 
+        const hasOwningFile = resource !== undefined;
         const { notebookUri } = (await this.commandManager.executeCommand(
             'interactive.open',
-            ViewColumn.Beside,
+            // Keep focus on the owning file if there is one
+            { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
             undefined,
             preferredControllerId
         )) as INativeInteractiveWindow;
@@ -238,19 +238,8 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     }
 
     private async getControllerForInteractiveWindow(): Promise<string | undefined> {
-        // Fetch the active interpreter and use the matching controller
-        const api = await this.pythonApi.getApi();
-        const activeInterpreter = await api.getActiveInterpreter();
-
-        if (!activeInterpreter) {
-            return;
-        }
-        const preferredController = this.notebookControllerManager.getOrCreateController(
-            activeInterpreter,
-            InteractiveWindowView
-        );
-
-        return preferredController !== undefined ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
+        const preferredController = await this.notebookControllerManager.getInteractiveController();
+        return preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
     }
 
     // TODO: we don't currently have a way to know when the VS Code InteractiveEditor

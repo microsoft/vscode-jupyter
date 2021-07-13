@@ -2028,6 +2028,7 @@
                     "image/gif",
                     "image/png",
                     "image/jpeg",
+                    "image/svg+xml",
                     "text/latex",
                     "text/vnd.plotly.v1+html"
                 ]

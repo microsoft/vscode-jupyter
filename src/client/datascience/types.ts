@@ -185,6 +185,7 @@ export interface INotebook extends IAsyncDisposable {
     onKernelChanged: Event<KernelConnectionMetadata>;
     onKernelRestarted: Event<void>;
     onKernelInterrupted: Event<void>;
+    onDidFinishExecuting?: Event<ICell>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(

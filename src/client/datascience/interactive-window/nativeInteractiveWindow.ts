@@ -11,8 +11,10 @@ import {
     NotebookCellData,
     NotebookCellKind,
     NotebookDocument,
+    NotebookEditorRevealType,
     NotebookRange,
     Uri,
+    window,
     workspace,
     WorkspaceEdit
 } from 'vscode';
@@ -194,7 +196,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async show(): Promise<void> {
-        await this.commandManager.executeCommand('interactive.open', undefined, this.notebookUri, undefined);
+        await this.commandManager.executeCommand(
+            'interactive.open',
+            { preserveFocus: true },
+            this.notebookUri,
+            undefined
+        );
     }
 
     public dispose() {
@@ -265,7 +272,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         await this.updateOwners(fileUri);
-        const notebookCell = await this.addNotebookCell(code, fileUri, line);
+        const id = uuid();
+        const notebookCell = await this.addNotebookCell(code, fileUri, line, id);
         const notebook = this.kernel?.notebook;
         if (!notebook) {
             return false;
@@ -289,7 +297,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             await this.setFileInKernel(file, this.notebookDocument);
 
             const owningResource = this.owningResource;
-            const id = uuid();
             const observable = this.kernel!.notebook!.executeObservable(code, file, line, id, false);
             const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(notebookCell);
             temporaryExecution?.start();
@@ -501,12 +508,30 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await workspace.applyEdit(edit);
     }
 
-    public scrollToCell(_id: string): void {
-        throw new Error('Method not implemented.');
+    public async scrollToCell(id: string): Promise<void> {
+        const matchingCell = this.notebookDocument.getCells().find((cell) => cell.metadata.executionId === id);
+        // Activate the interactive window's editor group
+        // This should make activeNotebookEditor.document the interactive window NotebookDocument
+        await this.commandManager.executeCommand(
+            'interactive.open',
+            { preserveFocus: false },
+            this.notebookUri,
+            undefined
+        );
+        if (
+            matchingCell &&
+            window.activeNotebookEditor &&
+            window.activeNotebookEditor.document === this.notebookDocument
+        ) {
+            const notebookRange = new NotebookRange(matchingCell.index, matchingCell.index + 1);
+            window.activeNotebookEditor.selections = [notebookRange];
+            window.activeNotebookEditor.revealRange(notebookRange, NotebookEditorRevealType.InCenterIfOutsideViewport);
+        }
     }
 
-    public hasCell(_id: string): Promise<boolean> {
-        throw new Error('Method not implemented.');
+    // TODO this does not need to be async since we no longer need to roundtrip to the UI
+    public async hasCell(id: string): Promise<boolean> {
+        return this.notebookDocument.getCells().find((cell) => cell.metadata.executionId === id) !== undefined;
     }
 
     public get owningResource(): Resource {
@@ -596,7 +621,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.show();
     }
 
-    private async addNotebookCell(code: string, file: Uri, line: number): Promise<NotebookCell> {
+    private async addNotebookCell(code: string, file: Uri, line: number, id: string): Promise<NotebookCell> {
         // Ensure we have a controller to execute code against
         if (!this.notebookController) {
             await this.commandManager.executeCommand('notebook.selectKernel');
@@ -604,10 +629,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.initialControllerSelected.promise;
         await this.kernelLoadPromise;
 
-        // ensure editor is opened/focused
+        // ensure editor is opened but not focused
         await this.commandManager.executeCommand(
             'interactive.open',
-            undefined,
+            { preserveFocus: true },
             this.notebookDocument.uri,
             this.notebookController?.id
         );
@@ -618,7 +643,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const isMarkdown = cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
         const strippedCode = isMarkdown
             ? generateMarkdownFromCodeLines(code.splitLines()).join('\n')
-            : cellMatcher.stripFirstMarker(code).trimStart();
+            : cellMatcher.stripFirstMarker(code).trim();
         const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
         // Insert code cell into NotebookDocument
@@ -636,7 +661,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             interactive: {
                 file: file.fsPath,
                 line: line
-            }
+            },
+            executionId: id
         };
         edit.replaceNotebookCells(
             this.notebookDocument.uri,
