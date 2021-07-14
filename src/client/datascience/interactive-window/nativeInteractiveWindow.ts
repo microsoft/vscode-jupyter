@@ -52,7 +52,11 @@ import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
-import { INotebookIdentity, InteractiveWindowMessages, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
+import {
+    INotebookIdentity,
+    InteractiveWindowMessages,
+    ISubmitNewCell
+} from '../interactive-common/interactiveWindowTypes';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
@@ -154,27 +158,29 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             this.initialControllerSelected.resolve();
 
             const messageChannel = notebooks.createRendererMessaging('jupyter-error-renderer');
-            this.disposables.push(messageChannel.onDidReceiveMessage(async e => {
-                const message = e.message;
-                if (message.message === InteractiveWindowMessages.OpenLink) {
-                    const href = message.payload;
-                    if (href.startsWith('file')) {
-                        await this.openFile(href);
-                    } else if (href.startsWith('https://command:')) {
-                        const temp: string = href.split(':')[2];
-                        const params: string[] = temp.includes('/?') ? temp.split('/?')[1].split(',') : [];
-                        let command = temp.split('/?')[0];
-                        if (command.endsWith('/')) {
-                            command = command.substring(0, command.length - 1);
+            this.disposables.push(
+                messageChannel.onDidReceiveMessage(async (e) => {
+                    const message = e.message;
+                    if (message.message === InteractiveWindowMessages.OpenLink) {
+                        const href = message.payload;
+                        if (href.startsWith('file')) {
+                            await this.openFile(href);
+                        } else if (href.startsWith('https://command:')) {
+                            const temp: string = href.split(':')[2];
+                            const params: string[] = temp.includes('/?') ? temp.split('/?')[1].split(',') : [];
+                            let command = temp.split('/?')[0];
+                            if (command.endsWith('/')) {
+                                command = command.substring(0, command.length - 1);
+                            }
+                            if (linkCommandAllowList.includes(command)) {
+                                await commands.executeCommand(command, params);
+                            }
+                        } else {
+                            this.applicationShell.openUrl(href);
                         }
-                        if (linkCommandAllowList.includes(command)) {
-                            await commands.executeCommand(command, params);
-                        }
-                    } else {
-                        this.applicationShell.openUrl(href);
                     }
-                }
-            }));
+                })
+            );
         }
 
         // Ensure we hear about any controller changes so we can update our cache accordingly

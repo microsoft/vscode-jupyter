@@ -57,15 +57,18 @@ export const activate: ActivationFunction = (_context) => {
             const metadata: any = outputItem.metadata;
             const outputItemJson = outputItem.json();
             console.log(outputItem.json());
-            const traceback: string[] = metadata?.outputType === 'error' && metadata?.transient && Array.isArray(metadata?.transient)
-                ? metadata?.transient
-                : (Array.isArray(outputItemJson.stack) ? outputItemJson.stack.map((item: string) => escape(item)) : [escape(outputItemJson.stack)]);
+            const traceback: string[] =
+                metadata?.outputType === 'error' && metadata?.transient && Array.isArray(metadata?.transient)
+                    ? metadata?.transient
+                    : Array.isArray(outputItemJson.stack)
+                    ? outputItemJson.stack.map((item: string) => escape(item))
+                    : [escape(outputItemJson.stack)];
             const html = traceback ? converter.toHtml(traceback.join('\n')) : outputItemJson.message;
             const container = document.createElement('div');
             container.classList.add('cell-output-text');
             container.innerHTML = html;
             element.appendChild(container);
-            container.addEventListener('click', e => {
+            container.addEventListener('click', (e) => {
                 handleInnerClick(e, _context);
             });
         }

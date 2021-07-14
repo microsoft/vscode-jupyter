@@ -18,7 +18,10 @@ export const LineQueryRegex = /line=(\d+)/;
 
 // The following list of commands represent those that can be executed
 // in a markdown cell using the syntax: https://command:[my.vscode.command].
-export const linkCommandAllowList = ['jupyter.latestExtension', 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource'];
+export const linkCommandAllowList = [
+    'jupyter.latestExtension',
+    'jupyter.enableLoadingWidgetScriptsFromThirdPartySource'
+];
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-floating-promises */
