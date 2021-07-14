@@ -77,6 +77,7 @@ import {
 import { createInteractiveIdentity } from './identity';
 import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
+import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
 
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
@@ -343,7 +344,22 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         await this.updateOwners(fileUri);
         const id = uuid();
+        const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
+
+        // Compute isAtBottom based on last notebook cell before adding a notebook cell
+        const isLastCellVisible = editor?.visibleRanges.find((r) => {
+            return r.end === this.notebookDocument.cellCount - 1;
+        });
         const notebookCell = await this.addNotebookCell(code, fileUri, line, id);
+        const settings = this.configuration.getSettings();
+        // The default behavior is to scroll to the last cell if the user is already at the bottom
+        // of the history, but not to scroll if the user has scrolled somewhere in the middle
+        // of the history. The jupyter.alwaysScrollOnNewCell setting overrides this to always scroll
+        // to newly-inserted cells.
+        if (settings.alwaysScrollOnNewCell || isLastCellVisible) {
+            this.revealCell(notebookCell);
+        }
+
         const notebook = this.kernel?.notebook;
         if (!notebook) {
             return false;
@@ -580,22 +596,26 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     public async scrollToCell(id: string): Promise<void> {
         const matchingCell = this.notebookDocument.getCells().find((cell) => cell.metadata.executionId === id);
-        // Activate the interactive window's editor group
-        // This should make activeNotebookEditor.document the interactive window NotebookDocument
-        await this.commandManager.executeCommand(
-            'interactive.open',
-            { preserveFocus: false },
-            this.notebookUri,
-            undefined
-        );
-        if (
-            matchingCell &&
-            window.activeNotebookEditor &&
-            window.activeNotebookEditor.document === this.notebookDocument
-        ) {
-            const notebookRange = new NotebookRange(matchingCell.index, matchingCell.index + 1);
-            window.activeNotebookEditor.selections = [notebookRange];
-            window.activeNotebookEditor.revealRange(notebookRange, NotebookEditorRevealType.InCenterIfOutsideViewport);
+        if (matchingCell) {
+            this.revealCell(matchingCell);
+        }
+    }
+
+    // This function's implementation is temporary and will change.
+    // It looks at all visibleNotebookEditors to find a matching notebookDocument,
+    // since currently the only way to scroll to a particular cell is to use
+    // NotebookEditor.revealRange, and the interactive window at this point may be
+    // visible but not active, so we can't use activeNotebookEditor.
+    // Note that this implementation only reveals the cell editor, and in fact we want
+    // to reveal the output. This is therefore an incomplete solution that requires further
+    // upstream changes, which are nontrivial due to the fact that cell output is
+    // asynchronously rendered, so we cannot guarantee that the output exists at the
+    // time that we try to reveal the output.
+    private revealCell(notebookCell: NotebookCell) {
+        const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
+        if (editor) {
+            const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
+            editor.revealRange(notebookRange, NotebookEditorRevealType.InCenterIfOutsideViewport);
         }
     }
 
@@ -717,7 +737,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
         // Insert code cell into NotebookDocument
-        const edit = new WorkspaceEdit();
         const language =
             workspace.textDocuments.find((document) => document.uri.toString() === this.owner?.toString())
                 ?.languageId ?? PYTHON_LANGUAGE;
@@ -734,14 +753,13 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             },
             executionId: id
         };
-        edit.replaceNotebookCells(
-            this.notebookDocument.uri,
-            new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),
-            [
-                notebookCellData // TODO generalize to arbitrary languages and cell types
-            ]
-        );
-        await workspace.applyEdit(edit);
+        await chainWithPendingUpdates(this.notebookDocument, (edit) => {
+            edit.replaceNotebookCells(
+                this.notebookDocument.uri,
+                new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),
+                [notebookCellData]
+            );
+        });
         return this.notebookDocument.cellAt(this.notebookDocument.cellCount - 1);
     }
 
