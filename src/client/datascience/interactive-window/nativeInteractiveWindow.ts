@@ -154,12 +154,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             this.initialControllerSelected.resolve();
 
             const messageChannel = notebooks.createRendererMessaging('jupyter-error-renderer');
-            this.disposables.push(messageChannel.onDidReceiveMessage(e => {
+            this.disposables.push(messageChannel.onDidReceiveMessage(async e => {
                 const message = e.message;
                 if (message.message === InteractiveWindowMessages.OpenLink) {
                     const href = message.payload;
                     if (href.startsWith('file')) {
-                        this.openFile(href);
+                        await this.openFile(href);
                     } else if (href.startsWith('https://command:')) {
                         const temp: string = href.split(':')[2];
                         const params: string[] = temp.includes('/?') ? temp.split('/?')[1].split(',') : [];
@@ -168,7 +168,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                             command = command.substring(0, command.length - 1);
                         }
                         if (linkCommandAllowList.includes(command)) {
-                            commands.executeCommand(command, params);
+                            await commands.executeCommand(command, params);
                         }
                     } else {
                         this.applicationShell.openUrl(href);
@@ -230,14 +230,14 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // Show the matching editor if there is one
         let editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
         if (editor) {
-            this.documentManager
+            return this.documentManager
                 .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
                 .then((e) => {
                     e.revealRange(selection, TextEditorRevealType.InCenter);
                 });
         } else {
             // Not a visible editor, try opening otherwise
-            this.commandManager.executeCommand('vscode.open', uri).then(() => {
+            return this.commandManager.executeCommand('vscode.open', uri).then(() => {
                 // See if that opened a text document
                 editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
                 if (editor) {

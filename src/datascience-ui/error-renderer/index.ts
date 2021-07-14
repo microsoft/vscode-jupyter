@@ -5,6 +5,8 @@ import './styles.css';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
 import ansiToHtml from 'ansi-to-html';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
     if (!event || !event.view || !event.view.document) {
         return;
@@ -65,8 +67,6 @@ export const activate: ActivationFunction = (_context) => {
             container.addEventListener('click', e => {
                 handleInnerClick(e, _context);
             });
-        },
-        disposeOutputItem() {
         }
     };
 };
