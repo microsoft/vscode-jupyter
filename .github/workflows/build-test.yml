@@ -533,6 +533,12 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
         id: test_functional_group
 
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v2
+        if: steps.test_functional_group.outcome == 'failure' && failure()
+        with:
+          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
+
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
         with:
@@ -925,7 +931,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
+          name: Screenshots-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
           path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
           retention-days: 1
 

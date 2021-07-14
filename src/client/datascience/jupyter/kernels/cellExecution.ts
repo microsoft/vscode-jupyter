@@ -611,7 +611,6 @@ export class CellExecution {
     // See this for docs on the messages:
     // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
     private async handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool) {
-        console.error(`Execute Result ${msg}`);
         await this.addToCellData(
             {
                 output_type: 'execute_result',
@@ -680,7 +679,7 @@ export class CellExecution {
     private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
         // eslint-disable-next-line complexity
         await chainWithPendingUpdates(this.cell.notebook, async () => {
-            traceCellMessage(this.cell, `Update streamed output '${msg.content.text}'`);
+            traceCellMessage(this.cell, 'Update streamed output');
             let exitingCellOutputs = this.cell.outputs;
             // Possible execution of cell has completed (the task would have been disposed).
             // This message could have come from a background thread.
@@ -702,13 +701,11 @@ export class CellExecution {
             const existingOutputToAppendTo =
                 lastOutput && isStreamOutput(lastOutput, msg.content.name) ? lastOutput : undefined;
             if (existingOutputToAppendTo) {
-                console.error(`TESTING_Append '${msg.content.text}'`);
                 // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
                 const outputs = existingOutputToAppendTo ? [translateCellDisplayOutput(existingOutputToAppendTo)] : [];
                 let existingOutputText: string = outputs.length
                     ? concatMultilineString((outputs[0] as nbformat.IStream).text)
                     : '';
-                console.error(`TESTING_Append to existing '${existingOutputText}'`);
                 let newContent = msg.content.text;
                 // Look for the ansi code `<char27>[A`. (this means move up)
                 // Not going to support `[2A` (not for now).
@@ -725,12 +722,6 @@ export class CellExecution {
                     existingOutputText = existingOutputLines.join('\n');
                     newContent = newContent.substring(moveUpCode.length);
                 }
-                console.error(`TESTING_Append new output ${newContent} `);
-                console.error(
-                    `TESTING_Append replace ${formatStreamText(
-                        concatMultilineString(`${existingOutputText}${newContent}`)
-                    )} `
-                );
                 // Create a new output item with the concatenated string.
                 const output = cellOutputToVSCCellOutput({
                     output_type: 'stream',
@@ -739,7 +730,6 @@ export class CellExecution {
                 });
                 promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo);
             } else if (clearOutput) {
-                console.error(`TESTING_Clear ${formatStreamText(concatMultilineString(msg.content.text))}`);
                 // Replace the current outputs with a single new output.
                 const output = cellOutputToVSCCellOutput({
                     output_type: 'stream',
@@ -748,7 +738,6 @@ export class CellExecution {
                 });
                 promise = task?.replaceOutput([output]);
             } else {
-                console.error(`TESTING_New ${formatStreamText(concatMultilineString(msg.content.text))}`);
                 // Create a new output
                 const output = cellOutputToVSCCellOutput({
                     output_type: 'stream',

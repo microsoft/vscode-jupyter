@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
-import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, Uri } from 'vscode';
+import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, NotebookCellOutput, Uri } from 'vscode';
 import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo, traceInfoIf } from '../../../client/common/logger';
@@ -586,18 +586,13 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Line1
         // Line2
         // Line3
-        await captureScreenShot(`${this.currentTest?.fullTitle()}_AfterExecution`);
-        console.error(`OUTPUT_COUNT1 ${cells[0].outputs.length}`);
-        console.error(`OUTPUT_1 ${cells[0].outputs.map((item) => item.items.map((o) => o.mime).join(',')).join('#')}`);
-        console.error(`OUTPUT_1 ${cells[0].outputs.map((item) => getTextOutputValue(item)).join('#')}`);
-        console.error(`OUTPUT_COUNT2 ${cells[1].outputs.length}`);
-        console.error(`OUTPUT_1 ${cells[1].outputs.map((item) => item.items.map((o) => o.mime).join(',')).join('#')}`);
-        console.error(`OUTPUT_2 ${cells[1].outputs.map((item) => getTextOutputValue(item)).join('#')}`);
 
-        assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
-        // assert.equal(cells[0].outputs[0].outputKind, CellOutputKind.Rich, 'Incorrect output type');
-        assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
-        // assert.equal(cells[1].outputs[0].outputKind, CellOutputKind.Rich, 'Incorrect output type');
+        // Work around https://github.com/ipython/ipykernel/issues/729
+        const ignoreEmptyOutputs = (output:NotebookCellOutput) => {
+            return output.items.filter(item => item.mime !== 'text/plain').length > 0
+        }
+        assert.equal(cells[0].outputs.filter(ignoreEmptyOutputs).length, 1, 'Incorrect number of output');
+        assert.equal(cells[1].outputs.filter(ignoreEmptyOutputs).length, 1, 'Incorrect number of output');
 
         // Confirm the output
         const output1Lines: string[] = getTextOutputValue(cells[0].outputs[0]).splitLines({
