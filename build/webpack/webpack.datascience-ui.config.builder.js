@@ -153,6 +153,7 @@ function getPlugins(bundle) {
             });
 
             plugins.push(...(isProdBuild ? [definePlugin] : []));
+            plugins.push(new EsmWebpackPlugin());
             break;
         }
         default:
@@ -194,7 +195,7 @@ function buildConfiguration(bundle) {
         );
     }
     let outputProps =
-        bundle !== 'ipywidgetsRenderer'
+        bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer'
             ? {}
             : {
                 library: 'LIB',
@@ -223,7 +224,7 @@ function buildConfiguration(bundle) {
         },
         mode: isProdBuild ? 'production' : 'development', // Leave as is, we'll need to see stack traces when there are errors.
         devtool: isProdBuild ? undefined : 'inline-source-map',
-        optimization: {
+        optimization: bundle === 'errorRenderer' ? undefined : {
             minimize: isProdBuild,
             minimizer: isProdBuild ? [new TerserPlugin({ sourceMap: true })] : [],
             moduleIds: 'hashed', // (doesn't re-generate bundles unnecessarily) https://webpack.js.org/configuration/optimization/#optimizationmoduleids.

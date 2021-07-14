@@ -1,0 +1,15 @@
+.cell-output-text {
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-x: hidden;
+}
+
+.cell-output-text {
+    white-space: pre-wrap;
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
+}
+
+b {
+    font-weight: 500;
+}
