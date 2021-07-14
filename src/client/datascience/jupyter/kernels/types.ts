@@ -148,11 +148,13 @@ export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
     /**
      * Get hold of the active kernel for a given Uri (Notebook or other file).
+     * Do not cache the result of this method.
      */
     get(uri: Uri): IKernel | undefined;
     /**
      * Gets or creates a kernel for a given Uri.
      * WARNING: If called with different options for same Uri, old kernel associated with the Uri will be disposed.
+     * Do not cache the result of this method.
      */
     getOrCreate(uri: Uri, options: KernelOptions): IKernel | undefined;
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Event, EventEmitter, Memento, workspace, window, ViewColumn } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Memento, window, ViewColumn } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 
 import {
@@ -122,15 +122,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
                     preferredControllerId
                 ) as unknown) as INativeInteractiveWindow;
             })
-            .then(({ notebookUri }: INativeInteractiveWindow) => {
-                const notebookDocument = workspace.notebookDocuments.find(
-                    (doc) => doc.uri.toString() === notebookUri.toString()
-                );
-                if (!notebookDocument) {
-                    // This means VS Code failed to create an interactive window.
-                    // This should never happen.
-                    throw new Error('Failed to request creation of interactive window from VS Code.');
-                }
+            .then(({ notebookEditor }: INativeInteractiveWindow) => {
                 // Set it as soon as we create it. The .ctor for the interactive window
                 // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
                 const result = new NativeInteractiveWindow(
@@ -146,7 +138,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
                     mode,
                     this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
                     this.serviceContainer.get<IExportDialog>(IExportDialog),
-                    notebookDocument,
+                    notebookEditor,
                     this.notebookControllerManager,
                     this.kernelProvider,
                     this.disposables,
