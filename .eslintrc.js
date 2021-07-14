@@ -32,7 +32,6 @@ module.exports = {
         'build/webpack/webpack.extension.dependencies.config.js',
         'build/webpack/common.js',
         'build/webpack/webpack.datascience-ui-viewers.config.js',
-        'build/webpack/webpack.datascience-ui-renderers.config.js',
         'build/webpack/loaders/fixNodeFetch.js',
         'build/webpack/loaders/remarkLoader.js',
         'build/webpack/loaders/jsonloader.js',
