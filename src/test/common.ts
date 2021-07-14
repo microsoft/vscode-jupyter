@@ -735,13 +735,13 @@ export async function captureScreenShot(fileNamePrefix: string) {
     if (!IS_CI_SERVER) {
         return;
     }
+    const name = `${fileNamePrefix}.${uuid()}`.replace(/[\W]+/g, '_');
+    const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, `${name}.-screenshot.png`);
     try {
-        const name = `${fileNamePrefix}.${uuid()}`.replace(/[\W]+/g, '_');
         const screenshot = require('screenshot-desktop');
-        const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, `${name}.-screenshot.png`);
         await screenshot({ filename });
         console.info(`Screenshot captured ${filename}`);
     } catch (ex) {
-        console.error(`Failed to capture screenshot with prefix ${fileNamePrefix}`, ex);
+        console.error(`Failed to capture screenshot into ${filename}`, ex);
     }
 }
