@@ -54,6 +54,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     }
     @traceDecorators.verbose('Find remote kernel spec')
     @captureTelemetry(Telemetry.KernelFinderPerf)
+    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
     public async findKernel(
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined,
@@ -97,7 +98,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     }
 
     // Talk to the remote server to determine sessions
-    @captureTelemetry(Telemetry.KernelListingPerf)
     public async listKernels(
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined
