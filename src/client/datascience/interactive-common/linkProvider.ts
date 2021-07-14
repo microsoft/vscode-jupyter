@@ -21,6 +21,8 @@ export const LineQueryRegex = /line=(\d+)/;
 export const linkCommandAllowList = ['jupyter.latestExtension', 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource'];
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
 @injectable()
 export class LinkProvider implements IInteractiveWindowListener {
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
