@@ -724,6 +724,12 @@ export class CellExecution {
                     existingOutputText = existingOutputLines.join('\n');
                     newContent = newContent.substring(moveUpCode.length);
                 }
+                console.error(`TESTING_Append new output ${newContent} `);
+                console.error(
+                    `TESTING_Append replace ${formatStreamText(
+                        concatMultilineString(`${existingOutputText}${newContent}`)
+                    )} `
+                );
                 // Create a new output item with the concatenated string.
                 const output = cellOutputToVSCCellOutput({
                     output_type: 'stream',
@@ -732,7 +738,7 @@ export class CellExecution {
                 });
                 promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo);
             } else if (clearOutput) {
-                console.error('TESTING_Clear');
+                console.error(`TESTING_Clear ${formatStreamText(concatMultilineString(msg.content.text))}`);
                 // Replace the current outputs with a single new output.
                 const output = cellOutputToVSCCellOutput({
                     output_type: 'stream',
@@ -741,7 +747,7 @@ export class CellExecution {
                 });
                 promise = task?.replaceOutput([output]);
             } else {
-                console.error('TESTING_New');
+                console.error(`TESTING_New ${formatStreamText(concatMultilineString(msg.content.text))}`);
                 // Create a new output
                 const output = cellOutputToVSCCellOutput({
                     output_type: 'stream',
