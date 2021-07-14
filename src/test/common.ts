@@ -17,6 +17,7 @@ import { IDisposable, IJupyterSettings } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
+import { IS_CI_SERVER } from './ciConstants';
 
 const StreamZip = require('node-stream-zip');
 
@@ -727,14 +728,19 @@ export function arePathsSame(path1: string, path2: string) {
 }
 
 /**
- * Captures screenshots (png format) & dumpts into root directory.
+ * Captures screenshots (png format) & dumpts into root directory (only on CI).
  * If there's a failure, it will be logged (errors are swallowed).
  */
 export async function captureScreenShot(fileNamePrefix: string) {
+    if (!IS_CI_SERVER) {
+        return;
+    }
     try {
-        const fileName = `${fileNamePrefix}.${uuid()}.-screenshot.png`.replace(/[\W]+/g, '_');
+        const name = `${fileNamePrefix}.${uuid()}.-screenshot.png`.replace(/[\W]+/g, '_');
         const screenshot = require('screenshot-desktop');
-        await screenshot({ filename: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, fileName) });
+        const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, name);
+        await screenshot({ filename });
+        console.info(`Screenshot captured ${filename}`);
     } catch (ex) {
         console.error(`Failed to capture screenshot with prefix ${fileNamePrefix}`, ex);
     }
