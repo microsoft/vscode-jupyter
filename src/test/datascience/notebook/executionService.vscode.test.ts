@@ -586,6 +586,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Line1
         // Line2
         // Line3
+        console.error(`OUTPUT_COUNT1 ${cells[0].outputs.length}`);
+        console.error(`OUTPUT_1 ${cells[0].outputs.map((item) => getTextOutputValue(item)).join('#')}`);
+        console.error(`OUTPUT_COUNT2 ${cells[1].outputs.length}`);
+        console.error(`OUTPUT_2 ${cells[1].outputs.map((item) => getTextOutputValue(item)).join('#')}`);
+
         assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
         // assert.equal(cells[0].outputs[0].outputKind, CellOutputKind.Rich, 'Incorrect output type');
         assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
