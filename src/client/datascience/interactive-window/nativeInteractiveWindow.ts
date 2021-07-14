@@ -274,8 +274,22 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         await this.updateOwners(fileUri);
         const id = uuid();
+        const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
+
+        // Compute isAtBottom based on last notebook cell before adding a notebook cell
+        const isLastCellVisible = editor?.visibleRanges.find((r) => {
+            return r.end === this.notebookDocument.cellCount - 1;
+        });
         const notebookCell = await this.addNotebookCell(code, fileUri, line, id);
-        this.revealCell(notebookCell);
+        const settings = this.configuration.getSettings();
+        // The default behavior is to scroll to the last cell if the user is already at the bottom
+        // of the history, but not to scroll if the user has scrolled somewhere in the middle
+        // of the history. The jupyter.alwaysScrollOnNewCell setting overrides this to always scroll
+        // to newly-inserted cells.
+        if (settings.alwaysScrollOnNewCell || isLastCellVisible) {
+            this.revealCell(notebookCell);
+        }
+
         const notebook = this.kernel?.notebook;
         if (!notebook) {
             return false;
