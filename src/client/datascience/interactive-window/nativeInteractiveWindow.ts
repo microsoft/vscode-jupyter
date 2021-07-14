@@ -517,6 +517,16 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
+    // This function's implementation is temporary and will change.
+    // It looks at all visibleNotebookEditors to find a matching notebookDocument,
+    // since currently the only way to scroll to a particular cell is to use
+    // NotebookEditor.revealRange, and the interactive window at this point may be
+    // visible but not active, so we can't use activeNotebookEditor.
+    // Note that this implementation only reveals the cell editor, and in fact we want
+    // to reveal the output. This is therefore an incomplete solution that requires further
+    // upstream changes, which are nontrivial due to the fact that cell output is
+    // asynchronously rendered, so we cannot guarantee that the output exists at the
+    // time that we try to reveal the output.
     private revealCell(notebookCell: NotebookCell) {
         const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
         if (editor) {
