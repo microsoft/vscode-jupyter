@@ -523,7 +523,7 @@ jobs:
 
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
-        run: apt-get install imagemagick
+        run: sudo apt-get install imagemagick
 
       - name: Install screen capture
         run: npm i -D screenshot-desktop
