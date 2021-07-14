@@ -14,7 +14,7 @@ import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo, traceInfoIf } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
+import { IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     assertHasTextOutputInVSCode,
@@ -588,9 +588,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Line3
 
         // Work around https://github.com/ipython/ipykernel/issues/729
-        const ignoreEmptyOutputs = (output:NotebookCellOutput) => {
-            return output.items.filter(item => item.mime !== 'text/plain').length > 0
-        }
+        const ignoreEmptyOutputs = (output: NotebookCellOutput) => {
+            return output.items.filter((item) => item.mime !== 'text/plain').length > 0;
+        };
         assert.equal(cells[0].outputs.filter(ignoreEmptyOutputs).length, 1, 'Incorrect number of output');
         assert.equal(cells[1].outputs.filter(ignoreEmptyOutputs).length, 1, 'Incorrect number of output');
 
