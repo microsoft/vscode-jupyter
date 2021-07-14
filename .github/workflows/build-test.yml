@@ -521,13 +521,6 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
-      - name: Install screen capture dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install imagemagick
-
-      - name: Install screen capture
-        run: npm i -D screenshot-desktop
-
         # This step is slow.
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
@@ -539,12 +532,6 @@ jobs:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
         id: test_functional_group
-
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v2
-        if: steps.test_functional_group.outcome == 'failure' && failure()
-        with:
-          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
 
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
@@ -936,6 +923,7 @@ jobs:
 
       - name: Upload screenshots
         uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
           path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
