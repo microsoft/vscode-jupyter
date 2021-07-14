@@ -611,6 +611,7 @@ export class CellExecution {
     // See this for docs on the messages:
     // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
     private async handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool) {
+        console.error(`Execute Result ${msg}`);
         await this.addToCellData(
             {
                 output_type: 'execute_result',
