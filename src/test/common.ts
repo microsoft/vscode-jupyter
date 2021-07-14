@@ -726,12 +726,16 @@ export function arePathsSame(path1: string, path2: string) {
     }
 }
 
+/**
+ * Captures screenshots (png format) & dumpts into root directory.
+ * If there's a failure, it will be logged (errors are swallowed).
+ */
 export async function captureScreenShot(fileNamePrefix: string) {
     try {
         const fileName = `${fileNamePrefix}.${uuid()}.-screenshot.png`.replace(/[\W]+/g, '_');
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, fileName) });
-    } catch {
+    } catch (ex) {
         console.error(`Failed to capture screenshot with prefix ${fileNamePrefix}`, ex);
     }
 }
