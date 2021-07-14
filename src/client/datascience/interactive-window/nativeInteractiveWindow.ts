@@ -16,7 +16,13 @@ import {
     Uri,
     window,
     workspace,
-    WorkspaceEdit
+    WorkspaceEdit,
+    notebooks,
+    Position,
+    Range,
+    Selection,
+    commands,
+    TextEditorRevealType
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
@@ -46,7 +52,11 @@ import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
-import { INotebookIdentity, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
+import {
+    INotebookIdentity,
+    InteractiveWindowMessages,
+    ISubmitNewCell
+} from '../interactive-common/interactiveWindowTypes';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
@@ -67,6 +77,7 @@ import {
 import { createInteractiveIdentity } from './identity';
 import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
+import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
 
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -145,6 +156,31 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         if (controller !== undefined) {
             this.registerKernel(this.notebookDocument, controller);
             this.initialControllerSelected.resolve();
+
+            const messageChannel = notebooks.createRendererMessaging('jupyter-error-renderer');
+            this.disposables.push(
+                messageChannel.onDidReceiveMessage(async (e) => {
+                    const message = e.message;
+                    if (message.message === InteractiveWindowMessages.OpenLink) {
+                        const href = message.payload;
+                        if (href.startsWith('file')) {
+                            await this.openFile(href);
+                        } else if (href.startsWith('https://command:')) {
+                            const temp: string = href.split(':')[2];
+                            const params: string[] = temp.includes('/?') ? temp.split('/?')[1].split(',') : [];
+                            let command = temp.split('/?')[0];
+                            if (command.endsWith('/')) {
+                                command = command.substring(0, command.length - 1);
+                            }
+                            if (linkCommandAllowList.includes(command)) {
+                                await commands.executeCommand(command, params);
+                            }
+                        } else {
+                            this.applicationShell.openUrl(href);
+                        }
+                    }
+                })
+            );
         }
 
         // Ensure we hear about any controller changes so we can update our cache accordingly
@@ -183,6 +219,40 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 this.closedEvent.fire(this);
             }
         });
+    }
+
+    private openFile(fileUri: string) {
+        const uri = Uri.parse(fileUri);
+        let selection: Range = new Range(new Position(0, 0), new Position(0, 0));
+        if (uri.query) {
+            // Might have a line number query on the file name
+            const lineMatch = LineQueryRegex.exec(uri.query);
+            if (lineMatch) {
+                const lineNumber = parseInt(lineMatch[1], 10);
+                selection = new Range(new Position(lineNumber, 0), new Position(lineNumber, 0));
+            }
+        }
+
+        // Show the matching editor if there is one
+        let editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
+        if (editor) {
+            return this.documentManager
+                .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
+                .then((e) => {
+                    e.revealRange(selection, TextEditorRevealType.InCenter);
+                });
+        } else {
+            // Not a visible editor, try opening otherwise
+            return this.commandManager.executeCommand('vscode.open', uri).then(() => {
+                // See if that opened a text document
+                editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
+                if (editor) {
+                    // Force the selection to change
+                    editor.revealRange(selection);
+                    editor.selection = new Selection(selection.start, selection.start);
+                }
+            });
+        }
     }
 
     private registerKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
