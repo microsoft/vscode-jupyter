@@ -67,6 +67,7 @@ import {
 import { createInteractiveIdentity } from './identity';
 import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
+import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -647,7 +648,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
         // Insert code cell into NotebookDocument
-        const edit = new WorkspaceEdit();
         const language =
             workspace.textDocuments.find((document) => document.uri.toString() === this.owner?.toString())
                 ?.languageId ?? PYTHON_LANGUAGE;
@@ -664,14 +664,13 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             },
             executionId: id
         };
-        edit.replaceNotebookCells(
-            this.notebookDocument.uri,
-            new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),
-            [
-                notebookCellData // TODO generalize to arbitrary languages and cell types
-            ]
-        );
-        await workspace.applyEdit(edit);
+        await chainWithPendingUpdates(this.notebookDocument, (edit) => {
+            edit.replaceNotebookCells(
+                this.notebookDocument.uri,
+                new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),
+                [notebookCellData]
+            );
+        });
         return this.notebookDocument.cellAt(this.notebookDocument.cellCount - 1);
     }
 
