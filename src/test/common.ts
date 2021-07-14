@@ -735,8 +735,8 @@ export async function captureScreenShot(fileNamePrefix: string) {
     if (!IS_CI_SERVER) {
         return;
     }
-    const name = `${fileNamePrefix}.${uuid()}`.replace(/[\W]+/g, '_');
-    const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, `${name}.-screenshot.png`);
+    const name = `${fileNamePrefix}_${uuid()}`.replace(/[\W]+/g, '_');
+    const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, `${name}-screenshot.png`);
     try {
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename });
