@@ -154,7 +154,7 @@ export class HistorySection extends React.Component<IProps, IState> {
                     {/* Need to check that it is the latest operation that is not preview */}
                     {index !== 0 && this.props.historyList.length - 1 === index && !item?.isPreview && (
                         <div
-                            className="codicon codicon-discard codicon-button"
+                            className="codicon codicon-discard codicon-button show-on-hover"
                             onClick={() => this.handleDeleteHistoryItem(index)}
                             style={{ verticalAlign: 'middle' }}
                             title={'Remove step'}
@@ -168,7 +168,7 @@ export class HistorySection extends React.Component<IProps, IState> {
     render() {
         const historyComponent =
             this.props.historyList.length > 0 ? (
-                <div className={styles.container} style={{ paddingTop: '10px' }} data-is-scrollable>
+                <div className={styles.container} data-is-scrollable>
                     <List
                         componentRef={this.listRef}
                         items={this.props.historyList}

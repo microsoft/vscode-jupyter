@@ -1,0 +1,18 @@
+.dataWranglerButton {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    margin: 4px 8px 4px 0px;
+    padding: 8px;
+    border: none;
+    cursor: pointer;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+}
+
+.dataWranglerButton:disabled {
+    opacity: 0.4;
+    cursor: default;
+}

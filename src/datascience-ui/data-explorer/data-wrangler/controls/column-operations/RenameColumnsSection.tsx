@@ -1,12 +1,9 @@
 import * as React from 'react';
-import { DataWranglerCommands, IRenameColumnsRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
-import { submitButtonStyle, inputStyle } from '../styles';
+import { inputStyle } from '../styles';
 
 interface IProps {
-    selectedColumn: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    submitCommand(data: { command: string; args: any }): void;
-    setColumns(cols: number[]): void;
+    setArgs(args: any): void;
 }
 
 interface IState {
@@ -19,12 +16,15 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
         this.state = {
             newColumnName: ''
         };
+        this.props.setArgs({
+            newColumnName: ''
+        });
     }
 
     render() {
         return (
             <div className="slice-control-row" style={{ paddingBottom: '5px', paddingTop: '6px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '140px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', width: '98%' }}>
                     <span>{'New column name'}</span>
                     <input
                         value={this.state.newColumnName}
@@ -33,23 +33,6 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
                         style={inputStyle}
                         autoComplete="on"
                     />
-                    <button
-                        onClick={() => {
-                            if (this.state.newColumnName) {
-                                this.props.submitCommand({
-                                    command: DataWranglerCommands.RenameColumn,
-                                    args: {
-                                        targetColumn: this.props.selectedColumn,
-                                        newColumnName: this.state.newColumnName
-                                    } as IRenameColumnsRequest
-                                });
-                                this.props.setColumns([]);
-                            }
-                        }}
-                        style={submitButtonStyle}
-                    >
-                        Submit
-                    </button>
                 </div>
             </div>
         );
@@ -57,5 +40,8 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
 
     private handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         this.setState({ newColumnName: event.currentTarget.value });
+        this.props.setArgs({
+            newColumnName: event.currentTarget.value
+        });
     };
 }

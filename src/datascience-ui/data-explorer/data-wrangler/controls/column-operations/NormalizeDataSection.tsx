@@ -1,32 +1,34 @@
 import * as React from 'react';
-import { DataWranglerCommands, INormalizeColumnRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
-import { normalizeButtonStyle, inputStyle } from '../styles';
+import { inputStyle } from '../styles';
 
 interface IProps {
-    selectedColumn: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    submitCommand(data: { command: string; args: any }): void;
-    setColumns(cols: number[]): void;
+    setArgs(args: any): void;
 }
 
 interface IState {
-    normalizeRangeStart: number;
-    normalizeRangeEnd: number;
+    normalizeRangeStart: string;
+    normalizeRangeEnd: string;
 }
 
 export class NormalizeDataSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
         this.state = {
-            normalizeRangeStart: 0,
-            normalizeRangeEnd: 1
+            normalizeRangeStart: '0',
+            normalizeRangeEnd: '1'
         };
+        this.props.setArgs({
+            start: 0,
+            end: 1,
+            isPreview: true
+        });
     }
 
     render() {
         return (
             <div className="slice-control-row" style={{ paddingBottom: '5px', paddingTop: '6px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '140px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', width: '98%' }}>
                     <span>{'New start range'}</span>
                     <input
                         value={this.state.normalizeRangeStart}
@@ -43,33 +45,30 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                         style={inputStyle}
                         autoComplete="on"
                     />
-                    <button
-                        onClick={() => {
-                                this.props.submitCommand({
-                                    command: DataWranglerCommands.NormalizeColumn,
-                                    args: {
-                                        start: this.state.normalizeRangeStart,
-                                        end: this.state.normalizeRangeEnd,
-                                        targetColumn: this.props.selectedColumn,
-                                        isPreview: true
-                                    } as INormalizeColumnRequest
-                                });
-                            }
-                        }
-                        style={normalizeButtonStyle}
-                    >
-                        Normalize
-                    </button>
                 </div>
             </div>
         );
     }
 
     private handleNormalizeStartChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({ normalizeRangeStart: +event.currentTarget.value });
+        this.setState({ normalizeRangeStart: event.currentTarget.value });
+        this.props.setArgs({
+            start: this.getNumber(event.currentTarget.value),
+            end: this.getNumber(this.state.normalizeRangeEnd),
+            isPreview: true
+        });
     };
 
     private handleNormalizeEndChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        this.setState({ normalizeRangeEnd: +event.currentTarget.value });
+        this.setState({ normalizeRangeEnd: event.currentTarget.value });
+        this.props.setArgs({
+            start: this.getNumber(this.state.normalizeRangeStart),
+            end: this.getNumber(event.currentTarget.value),
+            isPreview: true
+        });
     };
+
+    private getNumber(num: string) {
+        return num === "" ? NaN : +num;
+    }
 }

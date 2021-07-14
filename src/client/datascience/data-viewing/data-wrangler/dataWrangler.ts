@@ -309,7 +309,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleCommand(payload: { command: string; args: any }) {
+    private async handleCommand(payload: { command: DataWranglerCommands; args: any }) {
         console.log('handle command', payload);
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
         let codeToRun;
@@ -318,7 +318,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         let historyItem: IHistoryItem | void;
 
         // Get and run data wrangler command
-        const cmd = this.commands.get(payload.command as DataWranglerCommands);
+        const cmd = this.commands.get(payload.command);
         if (cmd) {
             historyItem = await cmd(payload.args, currentVariableName);
             if (historyItem !== undefined) {

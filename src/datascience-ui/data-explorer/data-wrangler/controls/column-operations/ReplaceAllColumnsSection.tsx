@@ -1,12 +1,9 @@
 import * as React from 'react';
-import { DataWranglerCommands, IReplaceAllColumnsRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
-import { submitButtonStyle, inputStyle } from '../styles';
+import { inputStyle } from '../styles';
 
 interface IProps {
-    selectedColumns: string[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    submitCommand(data: { command: string; args: any }): void;
-    setColumns(cols: number[]): void;
+    setArgs(args: any): void;
 }
 
 interface IState {
@@ -21,12 +18,17 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
             oldValue: '',
             newValue: ''
         };
+        this.props.setArgs({
+            oldValue: '',
+            newValue: '',
+            isPreview: true
+        })
     }
 
     render() {
         return (
             <div className="slice-control-row" style={{ paddingBottom: '5px', paddingTop: '6px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '140px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', width: '98%' }}>
                     <span>{'Replace all values of:'}</span>
                     <input
                         value={this.state.oldValue}
@@ -43,25 +45,6 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
                         style={inputStyle}
                         autoComplete="on"
                     />
-                    <button
-                        onClick={() => {
-                            if (this.state.oldValue && this.state.newValue) {
-                                this.props.submitCommand({
-                                    command: DataWranglerCommands.ReplaceAllColumn,
-                                    args: {
-                                        targetColumns: this.props.selectedColumns,
-                                        oldValue: this.state.oldValue,
-                                        newValue: this.state.newValue,
-                                        isPreview: true
-                                    } as IReplaceAllColumnsRequest
-                                });
-                                this.props.setColumns([]);
-                            }
-                        }}
-                        style={submitButtonStyle}
-                    >
-                        Submit
-                    </button>
                 </div>
             </div>
         );
@@ -69,9 +52,19 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
 
     private handleChangeOldValue = (event: React.ChangeEvent<HTMLInputElement>) => {
         this.setState({ oldValue: event.currentTarget.value });
+        this.props.setArgs({
+            oldValue: event.currentTarget.value,
+            newValue: this.state.newValue,
+            isPreview: true
+        })
     };
 
     private handleChangeNewValue = (event: React.ChangeEvent<HTMLInputElement>) => {
         this.setState({ newValue: event.currentTarget.value });
+        this.props.setArgs({
+            oldValue: this.state.oldValue,
+            newValue: event.currentTarget.value,
+            isPreview: true
+        })
     };
 }

@@ -36,36 +36,38 @@ export const dropdownStyles = {
     }
 };
 
-export const dropdownStyle = { marginRight: '10px', width: '150px', marginBottom: '16px' };
+export const dropdownStyle = { marginRight: '10px', width: '98%', marginBottom: '16px' };
 
 export const buttonStyle = {
     backgroundColor: 'var(--vscode-button-background)',
     color: 'var(--vscode-button-foreground)',
-    margin: '4px',
+    margin: '4px 8px 4px 0px',
     padding: '8px',
     border: 'none',
     cursor: 'pointer',
     height: '26px',
     marginLeft: '0px',
     display: 'inline-flex',
-    alignItems: 'center'
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '54px',
+    ':disabled': {
+        opacity: 0.4,
+        color: 'red'
+    }
 };
 
-export const dropButtonStyle = {
+export const applyButtonStyle = {
     ...buttonStyle
 };
 
-export const normalizeButtonStyle = {
+export const clearButtonStyle = {
     ...buttonStyle,
-    marginRight: '62px'
+    backgroundColor: 'var(--vscode-button-secondaryBackground)',
+    color: 'var(--vscode-button-secondaryForeground)'
 };
 
-export const submitButtonStyle = {
-    ...buttonStyle,
-    marginRight: '78px'
-};
-
-export const inputStyle = { width: '140px', marginTop: '4px', marginBottom: '16px' };
+export const inputStyle = { width: '100%', marginTop: '4px', marginBottom: '16px' };
 
 // Summary section
 export const summaryRowStyle = { display: 'flex', justifyContent: 'space-between', margin: '1px 8px 1px 12px' };

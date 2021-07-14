@@ -1,10 +1,9 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
+import { DataWranglerCommands } from '../../../../client/datascience/data-viewing/data-wrangler/types';
 import { getLocString } from '../../../react-common/locReactSide';
-import { DropDuplicateRowsSection } from './row-operations/DropDuplicateRows';
-import { DropMissingRowsSection } from './row-operations/DropMissingRowsSection';
 import { SidePanelSection } from './SidePanelSection';
-import { dropdownStyle, dropdownStyles } from './styles';
+import { clearButtonStyle, dropdownStyle, dropdownStyles } from './styles';
 
 interface IProps {
     collapsed: boolean;
@@ -15,20 +14,21 @@ interface IProps {
 }
 
 interface IState {
-    columnsToDrop: number[]; // Indices
-    operationType: RowOperation;
+    operationType: string;
+    args: { [key: string]: string | number | boolean| string[] };
 }
 
-export enum RowOperation {
-    DropNA = 'Drop Missing Values',
-    DropDuplicates = 'Drop Duplicates'
-}
-
-const rowOperationInfo = {
-    [RowOperation.DropNA]:{
+const rowOperationInfo: { [key: string]: { text: string; tooltip: string } } = {
+    Choose: {
+        text: 'Choose',
+        tooltip: 'Choose an operation'
+    },
+    [DataWranglerCommands.DropNa]: {
+        text: 'Drop Missing Values',
         tooltip: getLocString('DataScience.dataWranglerDropNARowsTooltip', 'Remove rows with missing values')
     },
-    [RowOperation.DropDuplicates]: {
+    [DataWranglerCommands.DropDuplicates]: {
+        text: 'Drop Duplicates',
         tooltip: getLocString('DataScience.dataWranglerDropDuplicateRowsTooltip', 'Remove duplicate rows')
     }
 };
@@ -36,7 +36,7 @@ const rowOperationInfo = {
 export class RowsSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
-        this.state = { columnsToDrop: [], operationType: RowOperation.DropNA };
+        this.state = { operationType: 'Choose', args: {} };
     }
 
     render() {
@@ -49,7 +49,8 @@ export class RowsSection extends React.Component<IProps, IState> {
                     styles={dropdownStyles}
                     options={this.generateTransformOperations()}
                     className="dropdownTitleOverrides"
-                    onChange={this.updateTransformType}
+                    onChange={this.updateOperationType}
+                    defaultSelectedKeys={[-2]}
                     selectedKey={this.state.operationType}
                 />
                 {this.state.operationType && (
@@ -57,33 +58,64 @@ export class RowsSection extends React.Component<IProps, IState> {
                         <span>{rowOperationInfo[this.state.operationType].tooltip}</span>
                     </div>
                 )}
-                {this.renderOperationControls()}
+                <div style={{ display: 'flex', flexDirection: 'row' }}>
+                    <button
+                        onClick={() => {
+                            this.props.submitCommand({
+                                command: this.state.operationType,
+                                args: {
+                                    ...this.state.args
+                                }
+                            });
+                            this.setState({ operationType: 'Choose' });
+                        }}
+                        disabled={this.state.operationType === 'Choose'}
+                        className="dataWranglerButton"
+                    >
+                        Apply
+                    </button>
+                    <button
+                        onClick={() => {
+                            this.setState({ operationType: 'Choose' });
+                        }}
+                        style={clearButtonStyle}
+                        className="dataWranglerButton"
+                        disabled={this.state.operationType === 'Choose'}
+                    >
+                        Clear
+                    </button>
+                </div>
             </div>
         );
 
         return <SidePanelSection title="ROWS" panel={rowsComponent} collapsed={this.props.collapsed} />;
     }
 
-    private renderOperationControls = () => {
-        switch (this.state.operationType) {
-            case RowOperation.DropNA:
-                return <DropMissingRowsSection submitCommand={this.props.submitCommand} />;
-            case RowOperation.DropDuplicates:
-                return <DropDuplicateRowsSection submitCommand={this.props.submitCommand} />;
-        }
-    };
-
     private generateTransformOperations = () => {
         return Object.keys(rowOperationInfo).map((operation) => {
-            return { text: operation, key: operation, title: rowOperationInfo[operation as RowOperation].tooltip };
+            const option: IDropdownOption = {
+                text: rowOperationInfo[operation].text,
+                key: operation,
+                title: rowOperationInfo[operation].tooltip
+            };
+            if (operation === 'Choose') {
+                option['disabled'] = true;
+                option['hidden'] = true;
+                option['selected'] = true;
+            }
+            return option;
         });
     };
 
-    private updateTransformType = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
+    private updateOperationType = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
         if (item) {
-            this.setState({
-                operationType: item.text as RowOperation
-            });
+            const operation = item.key as DataWranglerCommands
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const newState = { operationType:  operation } as any;
+            if (operation === DataWranglerCommands.DropNa) {
+                newState['args'] = {target: 'row', isPreview: true}
+            }
+            this.setState(newState);
         }
     };
 }

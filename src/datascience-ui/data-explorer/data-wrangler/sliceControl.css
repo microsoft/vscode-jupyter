@@ -11,6 +11,7 @@
     height: 24px;
     margin: 0px;
     border: 1px solid var(--vscode-settings-textInputBorder);
+    box-sizing: border-box;
 }
 
 .slicing-control {
@@ -55,5 +56,4 @@
     border-radius: 0px;
     height: 26px;
     line-height: 26px;
-    width: 150px;
 }

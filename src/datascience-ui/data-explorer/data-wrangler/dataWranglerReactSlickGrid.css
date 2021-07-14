@@ -57,6 +57,14 @@
     padding: 4px;
 }
 
+.show-on-hover {
+    opacity: 0
+}
+
+.show-on-hover:hover {
+    opacity: 1
+}
+
 .react-grid-cell.active {
     background-color: var(--vscode-list-activeSelectionBackground);
     color: var(--vscode-list-activeSelectionForeground);

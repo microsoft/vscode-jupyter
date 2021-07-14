@@ -3,5 +3,5 @@
 }
 
 .selected-history-item {
-    border-left: 3px solid var(--vscode-focusBorder); 
+    border-left: 3px solid var(--vscode-focusBorder);
 }
