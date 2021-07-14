@@ -13,6 +13,8 @@ import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { JupyterPaths } from './jupyterPaths';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IPythonExtensionChecker } from '../../api/types';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -32,6 +34,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
     /**
      * @param {boolean} includePythonKernels Include/exclude Python kernels in the result.
      */
+    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'localKernelSpec' })
     public async listKernelSpecs(
         includePythonKernels: boolean,
         cancelToken?: CancellationToken

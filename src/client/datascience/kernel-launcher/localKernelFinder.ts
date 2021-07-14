@@ -110,7 +110,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     /**
      * Search all our local file system locations for installed kernel specs and return them
      */
-    @captureTelemetry(Telemetry.KernelListingPerf)
+    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
     @traceDecorators.error('List kernels failed')
     public async listKernels(
         resource: Resource,

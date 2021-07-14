@@ -5,7 +5,13 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { ICommandManager, IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../common/application/types';
 import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import {
     IConfigurationService,
@@ -20,7 +26,8 @@ import {
     createInterpreterKernelSpec,
     getDisplayNameOrNameOfKernelConnection,
     getKernelId,
-    isLocalLaunch
+    isLocalLaunch,
+    isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
 import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
@@ -39,6 +46,7 @@ import { noop } from '../../common/utils/misc';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { isCI } from '../../common/constants';
+import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -58,6 +66,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     private readonly isLocalLaunch: boolean;
     private wasPythonInstalledWhenFetchingControllers?: boolean;
+    private interactiveNoPythonController?: NoPythonKernelsNotebookController;
+    private notbeookNoPythonController?: NoPythonKernelsNotebookController;
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -78,7 +88,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
-        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider
+        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -184,11 +195,47 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const cancelToken = new CancellationTokenSource();
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
         const connections = await this.getKernelConnectionMetadata(listLocalNonPythonKernels, cancelToken.token);
-
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
+        // If we're listing Python kernels & there aren't any, then add a placeholder for `Python` which will prompt users to install python
+        if (!listLocalNonPythonKernels) {
+            if (connections.some((item) => isPythonKernelConnection(item))) {
+                this.removeNoPythonControllers();
+            } else {
+                this.regsiterNoPythonControllers();
+            }
+        }
     }
+    private removeNoPythonControllers() {
+        this.notbeookNoPythonController?.dispose();
+        this.interactiveNoPythonController?.dispose();
 
+        this.notbeookNoPythonController = undefined;
+        this.interactiveNoPythonController = undefined;
+    }
+    private regsiterNoPythonControllers() {
+        if (this.notbeookNoPythonController) {
+            return;
+        }
+        this.notbeookNoPythonController = new NoPythonKernelsNotebookController(
+            JupyterNotebookView,
+            this.notebook,
+            this.commandManager,
+            this.disposables,
+            this.extensionChecker,
+            this.appShell
+        );
+        this.interactiveNoPythonController = new NoPythonKernelsNotebookController(
+            InteractiveWindowView,
+            this.notebook,
+            this.commandManager,
+            this.disposables,
+            this.extensionChecker,
+            this.appShell
+        );
+        this.disposables.push(this.interactiveNoPythonController);
+        this.disposables.push(this.notbeookNoPythonController);
+    }
     private async onDidChangeExtensions() {
         if (!this.isLocalLaunch || !this.controllersPromise) {
             return;

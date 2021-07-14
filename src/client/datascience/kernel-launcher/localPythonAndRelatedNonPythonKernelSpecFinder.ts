@@ -19,6 +19,8 @@ import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths';
 import { IPythonExtensionChecker } from '../../api/types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 
 export const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
 
@@ -43,6 +45,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     ) {
         super(fs, workspaceService, extensionChecker);
     }
+    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
     public async listKernelSpecs(resource: Resource, cancelToken?: CancellationToken) {
         // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
         const workspaceFolderId =
