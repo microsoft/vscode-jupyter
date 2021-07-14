@@ -14,7 +14,7 @@ import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo, traceInfoIf } from '../../../client/common/logger';
 import { IDisposable, Product } from '../../../client/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     assertHasTextOutputInVSCode,
@@ -539,7 +539,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             'output from cell 2 should be printed before last background output from cell 1'
         );
     });
-    test('Outputs with support for ansic code `\u001b[A`', async () => {
+    test('Outputs with support for ansic code `\u001b[A`', async function () {
         // Ansi Code `<esc>[A` means move cursor up, i.e. replace previous line with the new output (or erase previous line & start there).
         await insertCodeCell(
             dedent`
@@ -586,6 +586,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Line1
         // Line2
         // Line3
+        await captureScreenShot(`${this.currentTest?.fullTitle()}_AfterExecution`);
         console.error(`OUTPUT_COUNT1 ${cells[0].outputs.length}`);
         console.error(`OUTPUT_1 ${cells[0].outputs.map((item) => item.items.map((o) => o.mime).join(',')).join('#')}`);
         console.error(`OUTPUT_1 ${cells[0].outputs.map((item) => getTextOutputValue(item)).join('#')}`);

@@ -8,6 +8,7 @@ import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
+import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
@@ -722,5 +723,15 @@ export function arePathsSame(path1: string, path2: string) {
         return path1.toLowerCase() === path2.toLowerCase();
     } else {
         return path1 === path2;
+    }
+}
+
+export async function captureScreenShot(fileNamePrefix: string) {
+    try {
+        const fileName = `${fileNamePrefix}.${uuid()}.-screenshot.png`.replace(/[\W]+/g, '_');
+        const screenshot = require('screenshot-desktop');
+        await screenshot({ filename: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, fileName) });
+    } catch {
+        console.error(`Failed to capture screenshot with prefix ${fileNamePrefix}`, ex);
     }
 }
