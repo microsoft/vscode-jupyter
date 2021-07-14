@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Label for Triage
-        uses: andymckay/labeler@1.0.2
+        uses: andymckay/labeler@1.0.3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           add-labels: needs-triage
