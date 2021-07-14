@@ -202,7 +202,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
 
         // Change kernel
-        await waitForKernelToChange({ labelOrId: venvKernelDisplayName });
+        await waitForKernelToChange({ interpreterPath: venvKernelPythonPath });
 
         // Clear the cells & execute again
         await commands.executeCommand('notebook.clearAllCellsOutputs');
