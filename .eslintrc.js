@@ -803,7 +803,6 @@ module.exports = {
         'src/client/datascience/interactive-common/showPlotListener.ts',
         'src/client/datascience/interactive-common/debugListener.ts',
         'src/client/datascience/interactive-common/types.ts',
-        'src/client/datascience/interactive-common/linkProvider.ts',
         'src/client/datascience/interactive-common/interactiveWindowMessageListener.ts',
         'src/client/datascience/interactive-common/intellisense/wordHelper.ts',
         'src/client/datascience/interactive-common/intellisense/intellisenseLine.ts',
