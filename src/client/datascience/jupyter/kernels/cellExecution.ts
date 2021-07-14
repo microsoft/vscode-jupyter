@@ -679,7 +679,7 @@ export class CellExecution {
     private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
         // eslint-disable-next-line complexity
         await chainWithPendingUpdates(this.cell.notebook, async () => {
-            traceCellMessage(this.cell, 'Update streamed output');
+            traceCellMessage(this.cell, `Update streamed output '${msg.content.text}'`);
             let exitingCellOutputs = this.cell.outputs;
             // Possible execution of cell has completed (the task would have been disposed).
             // This message could have come from a background thread.
@@ -701,11 +701,13 @@ export class CellExecution {
             const existingOutputToAppendTo =
                 lastOutput && isStreamOutput(lastOutput, msg.content.name) ? lastOutput : undefined;
             if (existingOutputToAppendTo) {
+                console.error(`TESTING_Append '${msg.content.text}'`);
                 // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
                 const outputs = existingOutputToAppendTo ? [translateCellDisplayOutput(existingOutputToAppendTo)] : [];
                 let existingOutputText: string = outputs.length
                     ? concatMultilineString((outputs[0] as nbformat.IStream).text)
                     : '';
+                console.error(`TESTING_Append to existing '${existingOutputText}'`);
                 let newContent = msg.content.text;
                 // Look for the ansi code `<char27>[A`. (this means move up)
                 // Not going to support `[2A` (not for now).
@@ -730,6 +732,7 @@ export class CellExecution {
                 });
                 promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo);
             } else if (clearOutput) {
+                console.error('TESTING_Clear');
                 // Replace the current outputs with a single new output.
                 const output = cellOutputToVSCCellOutput({
                     output_type: 'stream',
@@ -738,6 +741,7 @@ export class CellExecution {
                 });
                 promise = task?.replaceOutput([output]);
             } else {
+                console.error('TESTING_New');
                 // Create a new output
                 const output = cellOutputToVSCCellOutput({
                     output_type: 'stream',
