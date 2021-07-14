@@ -275,6 +275,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.updateOwners(fileUri);
         const id = uuid();
         const notebookCell = await this.addNotebookCell(code, fileUri, line, id);
+        this.revealCell(notebookCell);
         const notebook = this.kernel?.notebook;
         if (!notebook) {
             return false;
@@ -511,22 +512,16 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     public async scrollToCell(id: string): Promise<void> {
         const matchingCell = this.notebookDocument.getCells().find((cell) => cell.metadata.executionId === id);
-        // Activate the interactive window's editor group
-        // This should make activeNotebookEditor.document the interactive window NotebookDocument
-        await this.commandManager.executeCommand(
-            'interactive.open',
-            { preserveFocus: false },
-            this.notebookUri,
-            undefined
-        );
-        if (
-            matchingCell &&
-            window.activeNotebookEditor &&
-            window.activeNotebookEditor.document === this.notebookDocument
-        ) {
-            const notebookRange = new NotebookRange(matchingCell.index, matchingCell.index + 1);
-            window.activeNotebookEditor.selections = [notebookRange];
-            window.activeNotebookEditor.revealRange(notebookRange, NotebookEditorRevealType.InCenterIfOutsideViewport);
+        if (matchingCell) {
+            this.revealCell(matchingCell);
+        }
+    }
+
+    private revealCell(notebookCell: NotebookCell) {
+        const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
+        if (editor) {
+            const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
+            editor.revealRange(notebookRange, NotebookEditorRevealType.InCenterIfOutsideViewport);
         }
     }
 
