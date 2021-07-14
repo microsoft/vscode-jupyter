@@ -4,6 +4,7 @@
 import './styles.css';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
 import ansiToHtml from 'ansi-to-html';
+import escape from 'lodash/escape';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -58,7 +59,7 @@ export const activate: ActivationFunction = (_context) => {
             console.log(outputItem.json());
             const traceback: string[] = metadata?.outputType === 'error' && metadata?.transient && Array.isArray(metadata?.transient)
                 ? metadata?.transient
-                : (Array.isArray(outputItemJson.stack) ? outputItemJson.stack : [outputItemJson.stack]);
+                : (Array.isArray(outputItemJson.stack) ? outputItemJson.stack.map((item: string) => escape(item)) : [escape(outputItemJson.stack)]);
             const html = traceback ? converter.toHtml(traceback.join('\n')) : outputItemJson.message;
             const container = document.createElement('div');
             container.classList.add('cell-output-text');
