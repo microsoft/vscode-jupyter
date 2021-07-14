@@ -740,7 +740,7 @@ export async function captureScreenShot(fileNamePrefix: string) {
     try {
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename });
-        console.info(`Screenshot captured ${filename}`);
+        console.info(`Screenshot captured into ${filename}`);
     } catch (ex) {
         console.error(`Failed to capture screenshot into ${filename}`, ex);
     }
