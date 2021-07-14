@@ -451,6 +451,7 @@ function translateDisplayDataOutput(
     const data: Record<string, any> = output.data || {};
     // eslint-disable-next-line
     for (const key in data) {
+        console.error(`Adding Output for mime type${key}`);
         items.push(new NotebookCellOutputItem(convertJupyterOutputToBuffer(key, data[key]), key));
     }
 
