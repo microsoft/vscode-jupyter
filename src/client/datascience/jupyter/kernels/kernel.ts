@@ -50,6 +50,7 @@ import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { isCI, MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
+import { DataScience } from '../../../common/utils/localize';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -291,8 +292,8 @@ export class Kernel implements IKernel {
                 const markdownCell = new NotebookCellData(
                     NotebookCellKind.Markup,
                     kernelConnection.interpreter?.displayName
-                        ? `_Connecting to ${kernelConnection.interpreter?.displayName}..._`
-                        : '_Connecting to kernel ..._',
+                        ? DataScience.startingNewKernelCustomHeader().format(kernelConnection.interpreter?.displayName)
+                        : DataScience.startingNewKernelHeader(),
                     MARKDOWN_LANGUAGE
                 );
                 markdownCell.metadata = { isSysInfoCell: true, isPlaceholder: true };
