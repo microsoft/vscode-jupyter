@@ -214,7 +214,10 @@ export class Kernel implements IKernel {
                 const stopWatch = new StopWatch();
                 try {
                     try {
-                        await this.populateStartKernelInfoForInteractive(options.document, this.kernelConnectionMetadata);
+                        await this.populateStartKernelInfoForInteractive(
+                            options.document,
+                            this.kernelConnectionMetadata
+                        );
                         traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
                         this.notebook = await this.notebookProvider.getOrCreateNotebook({
                             identity: this.uri,
@@ -278,13 +281,18 @@ export class Kernel implements IKernel {
         );
     }
 
-    private async populateStartKernelInfoForInteractive(notebookDocument: NotebookDocument, kernelConnection: KernelConnectionMetadata) {
+    private async populateStartKernelInfoForInteractive(
+        notebookDocument: NotebookDocument,
+        kernelConnection: KernelConnectionMetadata
+    ) {
         if (notebookDocument.notebookType === InteractiveWindowView) {
             // add fake sys info
             await chainWithPendingUpdates(notebookDocument, (edit) => {
                 const markdownCell = new NotebookCellData(
                     NotebookCellKind.Markup,
-                    kernelConnection.interpreter?.displayName ? `_Connecting to ${kernelConnection.interpreter?.displayName}..._` : '_Connecting to kernel ..._',
+                    kernelConnection.interpreter?.displayName
+                        ? `_Connecting to ${kernelConnection.interpreter?.displayName}..._`
+                        : '_Connecting to kernel ..._',
                     MARKDOWN_LANGUAGE
                 );
                 markdownCell.metadata = { isSysInfoCell: true, isPlaceholder: true };
@@ -384,10 +392,18 @@ export class Kernel implements IKernel {
             // Append a markdown cell containing the sys info to the end of the NotebookDocument
             return chainWithPendingUpdates(notebookDocument, (edit) => {
                 if (notebookDocument.cellCount) {
-                    const lastCell = notebookDocument.cellAt(notebookDocument.cellCount - 1)
-                    
-                    if (lastCell.kind === NotebookCellKind.Markup && lastCell.metadata.isSysInfoCell && lastCell.metadata.isPlaceholder) {
-                        edit.replace(lastCell.document.uri, new Range(0, 0, lastCell.document.lineCount, 0), sysInfoMessages.join('  \n'));
+                    const lastCell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
+
+                    if (
+                        lastCell.kind === NotebookCellKind.Markup &&
+                        lastCell.metadata.isSysInfoCell &&
+                        lastCell.metadata.isPlaceholder
+                    ) {
+                        edit.replace(
+                            lastCell.document.uri,
+                            new Range(0, 0, lastCell.document.lineCount, 0),
+                            sysInfoMessages.join('  \n')
+                        );
                         edit.replaceNotebookCellMetadata(notebookDocument.uri, lastCell.index, { isSysInfoCell: true });
                         return;
                     }
