@@ -88,6 +88,8 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         const completions = await completionProvider.provideCompletionItems(cell2.document, position, token, context);
         console.log(JSON.stringify(completions));
         const items = completions.map((item) => item.label);
+        console.error('items.forEach');
+        items.forEach((item) => (typeof item === 'string' ? console.error(item) : console.error(item.label)));
         assert.isOk(items.length);
         assert.include(items, 'bit_length');
         assert.include(items, 'to_bytes');
