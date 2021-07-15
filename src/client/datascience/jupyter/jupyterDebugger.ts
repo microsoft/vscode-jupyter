@@ -63,6 +63,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         traceInfo(`Running by line for ${cellHashFileName}`);
         const config: Partial<DebugConfiguration> = {
             justMyCode: false,
+            logToFile: true,
             rules: [
                 {
                     include: false,

@@ -195,6 +195,9 @@ import { PythonVariablesRequester } from './jupyter/pythonVariableRequester';
 import { DebuggingManager } from '../debugger/jupyter/debuggingManager';
 import { DebuggingCellMap } from '../debugger/jupyter/debuggingCellMap';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
+import { NativeInteractiveWindowCommandListener } from './interactive-window/nativeInteractiveWindowCommandListener';
+import { workspace } from 'vscode';
+import { NativeInteractiveWindowProvider } from './interactive-window/nativeInteractiveWindowProvider';
 import { JupyterPaths } from './kernel-launcher/jupyterPaths';
 import { LocalKnownPathKernelSpecFinder } from './kernel-launcher/localKnownPathKernelSpecFinder';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
@@ -293,8 +296,21 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, MigrateJupyterInterpreterStateService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, VariableViewActivationService);
     serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
-    serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
+    const configuration = workspace.getConfiguration();
+    if (
+        configuration.get<boolean>('jupyter.experiments.enabled') === true &&
+        !configuration.get<string[]>('jupyter.experiments.optOutFrom')?.includes('All') &&
+        // If in Daily Insiders channel and in VS Code Insiders, opt in by default
+        ((configuration.get<string>('python.insidersChannelasfaf') === 'daily' && isVSCInsiders) ||
+            // If user explicitly asked to be in the experiment, also opt in
+            configuration.get<boolean>('jupyter.enableNativeInteractiveWindow') === true)
+    ) {
+        serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, NativeInteractiveWindowProvider);
+        serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
+    } else {
+        serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+        serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
+    }
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
