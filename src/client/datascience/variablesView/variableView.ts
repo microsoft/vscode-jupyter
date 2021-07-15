@@ -14,7 +14,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import {
@@ -136,6 +136,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         let visible = false;
         if (this.webviewView) {
             visible = this.webviewView.visible;
+            traceInfo(`#IANHU# Visible: ${visible}`);
         }
         context.set(visible).ignoreErrors();
 
@@ -192,6 +193,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     // The active variable view notebook has executed a new cell so update the execution count in the variable view
     private async activeNotebookExecuted(args: { executionCount: number }) {
+        //this.handleVisibilityChanged();
         this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
             executionCount: args.executionCount
         }).ignoreErrors();
