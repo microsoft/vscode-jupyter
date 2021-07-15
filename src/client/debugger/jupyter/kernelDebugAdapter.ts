@@ -98,6 +98,7 @@ export class KernelDebugAdapter implements DebugAdapter {
         number,
         Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg>
     >();
+    private isRunByLine = false;
 
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
 
@@ -109,6 +110,9 @@ export class KernelDebugAdapter implements DebugAdapter {
         private commandManager: ICommandManager,
         private fs: IFileSystem
     ) {
+        if (this.session.name.includes('RBL=')) {
+            this.isRunByLine = true;
+        }
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((msg.content as any).event === 'stopped') {
@@ -123,6 +127,8 @@ export class KernelDebugAdapter implements DebugAdapter {
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
         // intercept 'setBreakpoints' request
         if (message.type === 'request' && (message as DebugProtocol.Request).command === 'setBreakpoints') {
+            console.error('-------------------');
+            console.error(message)
             const args = (message as DebugProtocol.Request).arguments;
             if (args.source && args.source.path && args.source.path.indexOf('vscode-notebook-cell:') === 0) {
                 await this.dumpCell(args.source.path);
@@ -138,8 +144,12 @@ export class KernelDebugAdapter implements DebugAdapter {
         }
 
         // after disconnecting, hide the breakpoint margin
-        if (message.type === 'request' && (message as DebugProtocol.Request).command === 'disconnect') {
+        if (message.type === 'request' && (message as DebugProtocol.Request).command === 'disconnect' && !this.isRunByLine) {
             void this.commandManager.executeCommand('notebook.toggleBreakpointMargin', this.notebookDocument);
+        }
+
+        if (message.type === 'request' && (message as DebugProtocol.Request).command === 'configurationDone' && this.isRunByLine) {
+            await this.initializeRunByLine(message.seq);
         }
 
         // map Source paths from VS Code to Ipykernel temp files
@@ -167,6 +177,8 @@ export class KernelDebugAdapter implements DebugAdapter {
                 this.messageListener.set(message.seq, control);
             }
         } else if (message.type === 'response') {
+            console.error('-------------------');
+            console.error(message)
             // responses of reverse requests
             const response = debugResponse(message as DebugProtocol.Response, this.jupyterSession.sessionId);
             this.jupyterSession.requestDebug({
@@ -265,6 +277,11 @@ export class KernelDebugAdapter implements DebugAdapter {
         });
 
         this.sendMessage.fire(message);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((message as any).command == 'setBreakpoints') {
+            console.error('**************');
+            console.error(message)
+        }
     }
 
     private getMessageSourceAndHookIt(
@@ -342,5 +359,89 @@ export class KernelDebugAdapter implements DebugAdapter {
                 }
                 break;
         }
+    }
+
+    private async initializeRunByLine(seq: number) {
+        const response = await this.session.customRequest('debugInfo');
+
+        // If there's breakpoints at this point, send a message to VS Code to delete them
+        (response as debugInfoResponse).breakpoints.forEach((breakpoint) => {
+            const message: DebugProtocol.SetBreakpointsRequest = {
+                seq: 0,
+                type: 'request',
+                command: 'setBreakpoints',
+                arguments: {
+                    source: {
+                        path: breakpoint.source
+                    },
+                    breakpoints: []
+                }
+            };
+            this.sendMessage.fire(message);
+        });
+
+        // 'vscode-notebook-cell:/c%3A/Users/DAKUTUGA/Desktop/extensions/test/Demo.ipynb#ch0000000'
+        // put breakpoint at the beginning of the cell
+        const index = this.session.name.indexOf('RBL=');
+        const cellIndex = Number(this.session.name.substring(index + 4));
+        const cell = this.notebookDocument.cellAt(cellIndex);
+        // await this.dumpCell(cell.document.uri.toString());
+        // const uri = this.cellToFile.get(cell.document.uri.toString());
+
+        const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
+            line: 1
+        };
+        const splitPath = cell.notebook.uri.path.split('/');
+        const name = splitPath[splitPath.length - 1];
+        const message: DebugProtocol.SetBreakpointsRequest = {
+            seq: seq + 2,
+            type: 'request',
+            command: 'setBreakpoints',
+            arguments: {
+                source: {
+                    name: name,
+                    path: cell.document.uri.toString()
+                },
+                lines: [
+                    1
+                ],
+                breakpoints: [initialBreakpoint],
+                sourceModified: false
+            }
+        };
+        console.error('3333333333333333333333');
+        console.error(message);
+
+        const args = (message as DebugProtocol.Request).arguments;
+        if (args.source && args.source.path && args.source.path.indexOf('vscode-notebook-cell:') === 0) {
+            await this.dumpCell(args.source.path);
+        }
+        this.getMessageSourceAndHookIt(message, (source) => {
+            if (source && source.path) {
+                const path = this.cellToFile.get(source.path);
+                if (path) {
+                    source.path = path;
+                }
+            }
+        });
+
+        const request = debugRequest(message as DebugProtocol.Request, this.jupyterSession.sessionId);
+        const control = this.jupyterSession.requestDebug({
+            seq: request.content.seq,
+            type: 'request',
+            command: request.content.command,
+            arguments: request.content.arguments
+        });
+
+        if (control) {
+            control.onReply = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
+            control.onIOPub = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
+        }
+
+        // Run cell
+        await this.commandManager.executeCommand('notebook.cell.execute');
+
+        // activate run by line context
+
     }
 }

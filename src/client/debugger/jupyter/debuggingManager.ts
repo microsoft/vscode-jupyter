@@ -34,7 +34,8 @@ class Debugger {
 
     readonly session: Promise<DebugSession>;
 
-    constructor(public readonly document: NotebookDocument) {
+    constructor(public readonly document: NotebookDocument, public readonly cell?: NotebookCell) {
+        const name = cell ? `${document.uri.toString()}?RBL=${cell.index}` : document.uri.toString();
         this.session = new Promise<DebugSession>((resolve, reject) => {
             this.resolveFunc = resolve;
             this.rejectFunc = reject;
@@ -42,7 +43,7 @@ class Debugger {
             debug
                 .startDebugging(undefined, {
                     type: DataScience.pythonKernelDebugAdapter(),
-                    name: `${path.basename(document.uri.toString())}`,
+                    name: `${path.basename(name)}`,
                     request: 'attach',
                     internalConsoleOptions: 'neverOpen',
                     __document: document.uri.toString()
@@ -162,8 +163,14 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
                 }
             }),
 
-            this.commandManager.registerCommand(DSCommands.RunByLine, (_cell: NotebookCell) => {
-                // TODO
+            this.commandManager.registerCommand(DSCommands.RunByLine, (cell: NotebookCell) => {
+                const editor = this.vscNotebook.activeNotebookEditor;
+                if (editor) {
+                    this.updateToolbar(true);
+                    void this.startDebugging(editor.document, cell);
+                } else {
+                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+                }
             })
         );
     }
@@ -176,17 +183,19 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
         this.debuggingInProgress.set(debugging).ignoreErrors();
     }
 
-    private async startDebugging(doc: NotebookDocument) {
+    private async startDebugging(doc: NotebookDocument, cell?: NotebookCell) {
         let dbg = this.notebookToDebugger.get(doc);
         if (!dbg) {
-            dbg = new Debugger(doc);
+            dbg = new Debugger(doc, cell);
             this.notebookToDebugger.set(doc, dbg);
 
             try {
                 await dbg.session;
 
-                // toggle the breakpoint margin
-                void this.commandManager.executeCommand('notebook.toggleBreakpointMargin', doc);
+                if (!cell) {
+                    // toggle the breakpoint margin
+                    void this.commandManager.executeCommand('notebook.toggleBreakpointMargin', doc);
+                }
             } catch (err) {
                 traceError(`Can't start debugging (${err})`);
                 void this.appShell.showErrorMessage(DataScience.cantStartDebugging());
