@@ -289,10 +289,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // Add message to the notebook document
         const edit = new WorkspaceEdit();
         const notebookDocument = this.notebookDocument;
+        const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
+        markdownCell.metadata = { isInteractiveWindowMessageCell: true };
         edit.replaceNotebookCells(
             notebookDocument.uri,
             new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
-            [new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE)]
+            [markdownCell]
         );
         await workspace.applyEdit(edit);
     }
@@ -390,20 +392,21 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
             // Sign up for cell changes
             observable.subscribe(
-                async (cells: ICell[]) => {
+                (cells: ICell[]) => {
                     // Then send the combined output to the UI
                     const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
-                    await temporaryExecution.replaceOutput(converted);
-                    // Scroll to the newly added output. First recompute visibility.
-                    // User might have scrolled away while cell was executing.
-                    // We don't want to force them back down unless they configured
-                    // alwaysScrollOnNewCell.
-                    const isInsertedCellVisible = editor?.visibleRanges.find((r) => {
-                        return r.end === this.notebookDocument.cellCount - 1;
+                    void temporaryExecution.replaceOutput(converted).then(() => {
+                        // Scroll to the newly added output. First recompute visibility.
+                        // User might have scrolled away while cell was executing.
+                        // We don't want to force them back down unless they configured
+                        // alwaysScrollOnNewCell.
+                        const isInsertedCellVisible = editor?.visibleRanges.find((r) => {
+                            return r.end === this.notebookDocument.cellCount - 1;
+                        });
+                        if (settings.alwaysScrollOnNewCell || isInsertedCellVisible) {
+                            this.revealCell(notebookCell);
+                        }
                     });
-                    if (settings.alwaysScrollOnNewCell || isInsertedCellVisible) {
-                        this.revealCell(notebookCell);
-                    }
                     const executionCount = (cells[0].data as nbformat.ICodeCell).execution_count;
                     if (executionCount) {
                         temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10);
@@ -430,7 +433,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             await finishedAddingCode.promise;
             traceInfo(`Finished execution for ${id}`);
         } finally {
-            await this.jupyterDebugger.stopDebugging(notebook);
+            if (isDebug) {
+                await this.jupyterDebugger.stopDebugging(notebook);
+            }
         }
         return result;
     }

@@ -415,7 +415,7 @@ export class Kernel implements IKernel {
                     sysInfoMessages.join('  \n'),
                     MARKDOWN_LANGUAGE
                 );
-                markdownCell.metadata = { isSysInfoCell: true };
+                markdownCell.metadata = { isInteractiveWindowMessageCell: true };
                 edit.replaceNotebookCells(
                     notebookDocument.uri,
                     new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
