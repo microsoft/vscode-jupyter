@@ -395,7 +395,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 (cells: ICell[]) => {
                     // Then send the combined output to the UI
                     const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
-                    temporaryExecution.replaceOutput(converted).then(() => {
+                    void temporaryExecution.replaceOutput(converted).then(() => {
                         // Scroll to the newly added output. First recompute visibility.
                         // User might have scrolled away while cell was executing.
                         // We don't want to force them back down unless they configured
