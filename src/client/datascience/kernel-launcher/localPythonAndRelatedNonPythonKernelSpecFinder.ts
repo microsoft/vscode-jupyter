@@ -75,7 +75,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     private async listGlobalPythonKernelSpecs(
         includeKernelsRegisteredByUs: boolean,
         cancelToken?: CancellationToken
-    ): Promise<(KernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+    ): Promise<KernelSpecConnectionMetadata[]> {
         const kernelSpecs = await this.kernelSpecsFromKnownLocations.listKernelSpecs(true, cancelToken);
         return (
             kernelSpecs
@@ -84,6 +84,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 // Those were registered by us to start kernels from Jupyter extension (not stuff that user created).
                 // We should only return global kernels the user created themselves, others will appear when searching for interprters.
                 .filter((item) => (includeKernelsRegisteredByUs ? true : !isKernelRegisteredByUs(item.kernelSpec)))
+                .map((item) => <KernelSpecConnectionMetadata>item)
         );
     }
     /**
@@ -113,6 +114,24 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const globalPythonKernelSpecsRegisteredByUs = globalKernelSpecs.filter((item) =>
             isKernelRegisteredByUs(item.kernelSpec)
         );
+        // Possible there are Python kernels (language=python, but not necessarily using ipykernel).
+        // E.g. cadabra2 is one such kernel (similar to powershell kernel but language is still python).
+        const usingNonIpyKernelLauncher = (item: KernelSpecConnectionMetadata | PythonKernelConnectionMetadata) => {
+            if (item.kernelSpec.language !== PYTHON_LANGUAGE) {
+                return false;
+            }
+            const args = item.kernelSpec.argv.map((arg) => arg.toLowerCase());
+            const moduleIndex = args.indexOf('-m');
+            if (moduleIndex === -1) {
+                return false;
+            }
+            const moduleName = args.length - 1 >= moduleIndex ? args[moduleIndex + 1] : undefined;
+            if (!moduleName) {
+                return false;
+            }
+            // We are only interested in global kernels that don't use ipykernel_launcher.
+            return moduleName !== 'ipykernel_launcher';
+        };
         // Copy the interpreter list. We need to filter out those items
         // which have matched one or more kernelspecs
         let filteredInterpreters = [...interpreters];
@@ -125,6 +144,31 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
 
         // Then go through all of the kernels and generate their metadata
         const distinctKernelMetadata = new Map<string, KernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
+
+        // Go through the global kernelspecs that use python to launch the kernel but don't use ipykernel.
+        globalKernelSpecs
+            .filter((item) => !isKernelRegisteredByUs(item.kernelSpec) && usingNonIpyKernelLauncher(item))
+            .forEach((item) => {
+                // If we cannot find a matching interpreter, then too bad.
+                // We can't use any interpreter, because the module used is not `ipykernel_laucnher`.
+                // Its something special, hence ignore if we cannot find a matching interpreter.
+                const matchingInterpreter = this.findMatchingInterpreter(item.kernelSpec, interpreters);
+                if (!matchingInterpreter) {
+                    traceInfo(
+                        `Kernel Spec for ${
+                            item.kernelSpec.display_name
+                        } ignored as we cannot find a matching interpreter ${JSON.stringify(item)}`
+                    );
+                    return;
+                }
+                const kernelSpec: KernelSpecConnectionMetadata = {
+                    kind: 'startUsingKernelSpec',
+                    kernelSpec: item.kernelSpec,
+                    interpreter: matchingInterpreter,
+                    id: getKernelId(item.kernelSpec, matchingInterpreter)
+                };
+                distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
+            });
         await Promise.all(
             [...kernelSpecs, ...globalPythonKernelSpecsRegisteredByUs.map((item) => item.kernelSpec)]
                 .filter((kernelspec) => {
@@ -151,9 +195,15 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                             id: getKernelId(k, matchingInterpreter)
                         };
 
-                        // If interpreters were found, remove them from the interpreter list we'll eventually
-                        // return as interpreter only items
-                        filteredInterpreters = filteredInterpreters.filter((i) => matchingInterpreter !== i);
+                        // Hide the interpreters from list of kernels only if this kernel is not something the user created.
+                        // Users can create their own kernels with custom environment variables, in such cases, we should list that
+                        // kernel as well as the interpreter (so they can use both).
+                        const isUserCreatedKernel =
+                            !isKernelRegisteredByUs(result.kernelSpec) &&
+                            Object.keys(result.kernelSpec.env || {}).length > 0;
+                        if (!isUserCreatedKernel) {
+                            filteredInterpreters = filteredInterpreters.filter((i) => matchingInterpreter !== i);
+                        }
 
                         // Return our metadata that uses an interpreter to start
                         return result;
