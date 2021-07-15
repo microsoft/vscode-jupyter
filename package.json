@@ -1489,7 +1489,7 @@
                 },
                 "jupyter.enableNativeInteractiveWindow": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Enables the preview native interactive window experience. Set to false to opt back into the webview interactive window experience.",
                     "scope": "machine"
                 },
