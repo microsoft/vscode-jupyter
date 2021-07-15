@@ -20,6 +20,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { IKernelDebugAdapter } from '../types';
 
 const debugRequest = (message: DebugProtocol.Request, jupyterSessionId: string): KernelMessage.IDebugRequestMsg => {
     return {
@@ -90,7 +91,7 @@ interface debugInfoResponseBreakpoint {
 // For info on the custom requests implemented by jupyter see:
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#additions-to-the-dap
-export class KernelDebugAdapter implements DebugAdapter {
+export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
     private readonly fileToCell = new Map<string, NotebookCell>();
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
@@ -127,8 +128,6 @@ export class KernelDebugAdapter implements DebugAdapter {
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
         // intercept 'setBreakpoints' request
         if (message.type === 'request' && (message as DebugProtocol.Request).command === 'setBreakpoints') {
-            console.error('-------------------');
-            console.error(message)
             const args = (message as DebugProtocol.Request).arguments;
             if (args.source && args.source.path && args.source.path.indexOf('vscode-notebook-cell:') === 0) {
                 await this.dumpCell(args.source.path);
@@ -177,8 +176,6 @@ export class KernelDebugAdapter implements DebugAdapter {
                 this.messageListener.set(message.seq, control);
             }
         } else if (message.type === 'response') {
-            console.error('-------------------');
-            console.error(message)
             // responses of reverse requests
             const response = debugResponse(message as DebugProtocol.Response, this.jupyterSession.sessionId);
             this.jupyterSession.requestDebug({
@@ -189,6 +186,76 @@ export class KernelDebugAdapter implements DebugAdapter {
         } else {
             // cannot send via iopub, no way to handle events even if they existed
             traceError(`Unknown message type to send ${message.type}`);
+        }
+    }
+
+    public runByLineContinue() {
+        if (this.isRunByLine) {
+            const message: DebugProtocol.StepInRequest = {
+                seq: 0,
+                type: 'request',
+                command: 'stepIn',
+                arguments: {
+                    threadId: 1
+                }
+            };
+
+            this.getMessageSourceAndHookIt(message, (source) => {
+                if (source && source.path) {
+                    const path = this.cellToFile.get(source.path);
+                    if (path) {
+                        source.path = path;
+                    }
+                }
+            });
+
+            const request = debugRequest(message as DebugProtocol.Request, this.jupyterSession.sessionId);
+            const control = this.jupyterSession.requestDebug({
+                seq: request.content.seq,
+                type: 'request',
+                command: request.content.command,
+                arguments: request.content.arguments
+            });
+
+            if (control) {
+                control.onReply = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
+                control.onIOPub = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
+            }
+        }
+    }
+
+    public runByLineStop() {
+        if (this.isRunByLine) {
+            const message: DebugProtocol.DisconnectRequest = {
+                seq: 0,
+                type: 'request',
+                command: 'disconnect',
+                arguments: {
+                    restart: false
+                }
+            };
+
+            this.getMessageSourceAndHookIt(message, (source) => {
+                if (source && source.path) {
+                    const path = this.cellToFile.get(source.path);
+                    if (path) {
+                        source.path = path;
+                    }
+                }
+            });
+
+            const request = debugRequest(message as DebugProtocol.Request, this.jupyterSession.sessionId);
+            const control = this.jupyterSession.requestDebug({
+                seq: request.content.seq,
+                type: 'request',
+                command: request.content.command,
+                arguments: request.content.arguments
+            });
+
+            if (control) {
+                control.onReply = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
+                control.onIOPub = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
+            }
         }
     }
 
@@ -277,11 +344,6 @@ export class KernelDebugAdapter implements DebugAdapter {
         });
 
         this.sendMessage.fire(message);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((message as any).command == 'setBreakpoints') {
-            console.error('**************');
-            console.error(message)
-        }
     }
 
     private getMessageSourceAndHookIt(
@@ -380,13 +442,10 @@ export class KernelDebugAdapter implements DebugAdapter {
             this.sendMessage.fire(message);
         });
 
-        // 'vscode-notebook-cell:/c%3A/Users/DAKUTUGA/Desktop/extensions/test/Demo.ipynb#ch0000000'
         // put breakpoint at the beginning of the cell
         const index = this.session.name.indexOf('RBL=');
         const cellIndex = Number(this.session.name.substring(index + 4));
         const cell = this.notebookDocument.cellAt(cellIndex);
-        // await this.dumpCell(cell.document.uri.toString());
-        // const uri = this.cellToFile.get(cell.document.uri.toString());
 
         const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
             line: 1
@@ -409,8 +468,6 @@ export class KernelDebugAdapter implements DebugAdapter {
                 sourceModified: false
             }
         };
-        console.error('3333333333333333333333');
-        console.error(message);
 
         const args = (message as DebugProtocol.Request).arguments;
         if (args.source && args.source.path && args.source.path.indexOf('vscode-notebook-cell:') === 0) {

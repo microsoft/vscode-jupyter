@@ -75,7 +75,9 @@ class Debugger {
 @injectable()
 export class DebuggingManager implements IExtensionSingleActivationService, IDisposable {
     private debuggingInProgress: ContextKey;
+    private runByLineInProgress: ContextKey;
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
+    private notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapter>();
     private readonly disposables: IDisposable[] = [];
 
     public constructor(
@@ -89,7 +91,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
         @inject(IFileSystem) private fs: IFileSystem
     ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
+        this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
         this.updateToolbar(false);
+        this.updateCellToolbar(false);
     }
 
     public async activate() {
@@ -97,6 +101,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
             // track termination of debug sessions
             debug.onDidTerminateDebugSession(async (session) => {
                 this.updateToolbar(false);
+                this.updateCellToolbar(false);
                 for (const [doc, dbg] of this.notebookToDebugger.entries()) {
                     if (dbg && session === (await dbg.session)) {
                         this.debuggingCellMap.getCellsAnClearQueue(doc);
@@ -112,6 +117,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
                 const dbg = this.notebookToDebugger.get(document);
                 if (dbg) {
                     this.updateToolbar(false);
+                    this.updateCellToolbar(false);
                     await dbg.stop();
                 }
             }),
@@ -133,16 +139,16 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
                             });
                             if (notebook && notebook.session) {
                                 debug.resolve(session);
-                                return new DebugAdapterInlineImplementation(
-                                    new KernelDebugAdapter(
-                                        session,
-                                        debug.document,
-                                        notebook.session,
-                                        this.debuggingCellMap,
-                                        this.commandManager,
-                                        this.fs
-                                    )
+                                const adapter = new KernelDebugAdapter(
+                                    session,
+                                    debug.document,
+                                    notebook.session,
+                                    this.debuggingCellMap,
+                                    this.commandManager,
+                                    this.fs
                                 );
+                                this.notebookToDebugAdapter.set(debug.document, adapter);
+                                return new DebugAdapterInlineImplementation(adapter);
                             } else {
                                 void this.appShell.showInformationMessage(DataScience.kernelWasNotStarted());
                             }
@@ -167,7 +173,26 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
                 const editor = this.vscNotebook.activeNotebookEditor;
                 if (editor) {
                     this.updateToolbar(true);
+                    this.updateCellToolbar(true);
                     void this.startDebugging(editor.document, cell);
+                } else {
+                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+                }
+            }),
+
+            this.commandManager.registerCommand(DSCommands.RunByLineContinue, (cell: NotebookCell) => {
+                const adapter = this.notebookToDebugAdapter.get(cell.notebook);
+                if (adapter) {
+                    adapter.runByLineContinue();
+                } else {
+                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+                }
+            }),
+
+            this.commandManager.registerCommand(DSCommands.RunByLineStop, (cell: NotebookCell) => {
+                const adapter = this.notebookToDebugAdapter.get(cell.notebook);
+                if (adapter) {
+                    adapter.runByLineStop();
                 } else {
                     void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
                 }
@@ -181,6 +206,10 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
 
     private updateToolbar(debugging: boolean) {
         this.debuggingInProgress.set(debugging).ignoreErrors();
+    }
+
+    private updateCellToolbar(runningByLine: boolean) {
+        this.runByLineInProgress.set(runningByLine).ignoreErrors();
     }
 
     private async startDebugging(doc: NotebookDocument, cell?: NotebookCell) {
