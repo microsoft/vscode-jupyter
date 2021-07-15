@@ -346,7 +346,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const id = uuid();
         const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
 
-        // Compute isAtBottom based on last notebook cell before adding a notebook cell
+        // Compute isAtBottom based on last notebook cell before adding a notebook cell,
+        // since the notebook cell we're going to add is by definition not visible
         const isLastCellVisible = editor?.visibleRanges.find((r) => {
             return r.end === this.notebookDocument.cellCount - 1;
         });
@@ -393,6 +394,16 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                     // Then send the combined output to the UI
                     const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
                     await temporaryExecution.replaceOutput(converted);
+                    // Scroll to the newly added output. First recompute visibility.
+                    // User might have scrolled away while cell was executing.
+                    // We don't want to force them back down unless they configured
+                    // alwaysScrollOnNewCell.
+                    const isInsertedCellVisible = editor?.visibleRanges.find((r) => {
+                        return r.end === this.notebookDocument.cellCount - 1;
+                    });
+                    if (settings.alwaysScrollOnNewCell || isInsertedCellVisible) {
+                        this.revealCell(notebookCell);
+                    }
                     const executionCount = (cells[0].data as nbformat.ICodeCell).execution_count;
                     if (executionCount) {
                         temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10);
@@ -615,7 +626,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
         if (editor) {
             const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
-            editor.revealRange(notebookRange, NotebookEditorRevealType.InCenterIfOutsideViewport);
+            // This will always try to reveal the whole cell--input + output combined
+            setTimeout(() => {
+                editor.revealRange(notebookRange, NotebookEditorRevealType.Default);
+            }, 200); // Rendering output is async so the output is not guaranteed to immediately exist
         }
     }
 
