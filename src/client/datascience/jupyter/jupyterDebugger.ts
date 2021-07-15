@@ -84,6 +84,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             (c) => this.debugService.startDebugging(undefined, c),
             notebook,
             {
+                logToFile: true,
                 justMyCode: settings.debugJustMyCode
             },
             false
