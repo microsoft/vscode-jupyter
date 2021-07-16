@@ -225,12 +225,6 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                         case ColumnContextMenuItem.SortDescending:
                             return this.sortColumn(this.contextMenuColumnName, false);
 
-                        case ColumnContextMenuItem.GetColumnStats:
-                            return this.props.submitCommand({
-                                command: DataWranglerCommands.Describe,
-                                args: { targetColumn: this.contextMenuColumnName } as IDescribeColReq
-                            });
-
                         case ColumnContextMenuItem.DropColumns:
                             this.props.submitCommand({
                                 command: DataWranglerCommands.Drop,
@@ -375,7 +369,6 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                         </>
                     ) : (
                         <>
-                            <li id={ColumnContextMenuItem.GetColumnStats}>{ColumnContextMenuItem.GetColumnStats}</li>
                             <li id={ColumnContextMenuItem.SortAscending}>{ColumnContextMenuItem.SortAscending}</li>
                             <li id={ColumnContextMenuItem.SortDescending}>{ColumnContextMenuItem.SortDescending}</li>
                             <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>
@@ -424,12 +417,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
 
         // Also select on context menu (right click) events
         if (!this.state.selectedColumns?.includes(this.contextMenuColumnName!)) {
-            this.setState({
-                primarySelectedColumn: this.contextMenuColumnName,
-                selectedColumns: [this.contextMenuColumnName!]
-            });
-            const columns = this.styleColumns(this.state.grid!.getColumns());
-            this.state.grid!.setColumns(columns);
+            this.setSelectedColumns([this.contextMenuColumnName!], this.contextMenuColumnName);
         }
 
         // Show our context menu
