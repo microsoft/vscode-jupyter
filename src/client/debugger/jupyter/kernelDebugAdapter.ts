@@ -140,7 +140,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
         // after disconnecting, hide the breakpoint margin
         if (
-            !this.isRunByLine && message.type === 'request' &&
+            !this.isRunByLine &&
+            message.type === 'request' &&
             (message as DebugProtocol.Request).command === 'disconnect'
         ) {
             void this.commandManager.executeCommand('notebook.toggleBreakpointMargin', this.notebookDocument);
@@ -148,7 +149,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
         // initialize Run By Line
         if (
-            this.isRunByLine && message.type === 'request' &&
+            this.isRunByLine &&
+            message.type === 'request' &&
             (message as DebugProtocol.Request).command === 'configurationDone'
         ) {
             await this.initializeRunByLine(message.seq);
