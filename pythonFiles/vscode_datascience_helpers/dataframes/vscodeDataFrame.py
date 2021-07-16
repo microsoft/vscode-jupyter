@@ -8,6 +8,19 @@ import pandas.io.json as _VSCODE_pd_json
 _VSCODE_allowedTensorTypes = ["Tensor", "EagerTensor"]
 
 
+class NumpyEncoder(_VSCODE_json.JSONEncoder):
+    # Special json encoder for numpy types because they aren't serializable
+
+    def default(self, obj):
+        if isinstance(obj, _VSCODE_np.integer):
+            return int(obj)
+        elif isinstance(obj, _VSCODE_np.floating):
+            return float(obj)
+        elif isinstance(obj, _VSCODE_np.ndarray):
+            return obj.tolist()
+        return _VSCODE_json.JSONEncoder.default(self, obj)
+
+
 def _VSCODE_stringifyElement(element):
     if isinstance(element, _VSCODE_np.ndarray):
         # Ensure no rjust or ljust padding is applied to stringified elements
@@ -330,4 +343,4 @@ def _VSCODE_getDataFrameInfo(df):
     target["nanRows"] = df[df.isnull().any(axis=1)].index.values.tolist()
 
     # return our json object as a string
-    return _VSCODE_json.dumps(target)
+    return _VSCODE_json.dumps(target, cls=NumpyEncoder)
