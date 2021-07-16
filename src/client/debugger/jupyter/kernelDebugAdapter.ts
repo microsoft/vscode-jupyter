@@ -143,11 +143,20 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         }
 
         // after disconnecting, hide the breakpoint margin
-        if (message.type === 'request' && (message as DebugProtocol.Request).command === 'disconnect' && !this.isRunByLine) {
+        if (
+            message.type === 'request' &&
+            (message as DebugProtocol.Request).command === 'disconnect' &&
+            !this.isRunByLine
+        ) {
             void this.commandManager.executeCommand('notebook.toggleBreakpointMargin', this.notebookDocument);
         }
 
-        if (message.type === 'request' && (message as DebugProtocol.Request).command === 'configurationDone' && this.isRunByLine) {
+        // initialize Run By Line
+        if (
+            message.type === 'request' &&
+            (message as DebugProtocol.Request).command === 'configurationDone' &&
+            this.isRunByLine
+        ) {
             await this.initializeRunByLine(message.seq);
         }
 
@@ -461,9 +470,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
                     name: name,
                     path: cell.document.uri.toString()
                 },
-                lines: [
-                    1
-                ],
+                lines: [1],
                 breakpoints: [initialBreakpoint],
                 sourceModified: false
             }
@@ -497,8 +504,5 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
         // Run cell
         await this.commandManager.executeCommand('notebook.cell.execute');
-
-        // activate run by line context
-
     }
 }
