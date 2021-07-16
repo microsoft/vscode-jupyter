@@ -9,6 +9,7 @@ import * as vsls from 'vsls/vscode';
 import { concatMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IPythonDebuggerPathProvider } from '../../api/types';
+import { IWorkspaceService } from '../../common/application/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
@@ -45,7 +46,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         @inject(IJupyterDebugService)
         @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
         private debugService: IJupyterDebugService,
-        @inject(IPlatformService) private platform: IPlatformService
+        @inject(IPlatformService) private platform: IPlatformService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {
         this.debuggerPackage = 'debugpy';
         this.enableDebuggerCode = `import debugpy;debugpy.listen(('localhost', 0))`;
@@ -60,9 +62,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     public startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void> {
         this.runningByLine = true;
+        const enableDebuggerLogging = this.workspaceService
+            .getConfiguration('jupyter', undefined)
+            .get<boolean>('enableDebuggerLogging', false);
         traceInfo(`Running by line for ${cellHashFileName}`);
         const config: Partial<DebugConfiguration> = {
             justMyCode: false,
+            logToFile: enableDebuggerLogging,
             rules: [
                 {
                     include: false,
@@ -78,12 +84,16 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     public async startDebugging(notebook: INotebook): Promise<void> {
+        const enableDebuggerLogging = this.workspaceService
+            .getConfiguration('jupyter', undefined)
+            .get<boolean>('enableDebuggerLogging', false);
         const settings = this.configService.getSettings(notebook.resource);
         return this.startDebugSession(
             (c) => this.debugService.startDebugging(undefined, c),
             notebook,
             {
-                justMyCode: settings.debugJustMyCode
+                justMyCode: settings.debugJustMyCode,
+                logToFile: enableDebuggerLogging
             },
             false
         );
