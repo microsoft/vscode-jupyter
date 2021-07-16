@@ -503,6 +503,9 @@
     "DataScience.interactiveClearAllCells": "Clear All",
     "DataScience.interactiveRemoveCell": "Remove Cell",
     "DataScience.interactiveGoToCode": "Go to code",
+    "DataScience.kernelWasNotStarted": "Kernel was not started. A kernel session is needed to start debugging.",
+    "DataScience.noNotebookToDebug": "No active notebook document to debug.",
+    "DataScience.cantStartDebugging": "Can't start debugging.",
     "DataScience.dataWranglerCoerceColumnDescription": "Cast column(s): {0} to {1}",
     "DataScience.dataWranglerRenameColumnDescription": "Renamed column '{0}' to '{1}'",
     "DataScience.dataWranglerReplaceAllDescription": "Replaced all instances of '{0}' with '{1}' in column(s): {2}",
@@ -515,7 +518,7 @@
     "DataScience.dataWranglerDropNaRowsOnColumnDescription": "Dropped rows with missing data in column: '{0}'",
     "DataScience.dataWranglerNormalizeColumnDescription": "Normalized column: '{0}'",
     "DataScience.dataWranglerFillNaDescription": "Replaced missing values with: '{0}' in column(s): '{1}'",
-    "DataScience.DataWranglerImportDescription": "Imported data",
+    "DataScience.dataWranglerImportDescription": "Imported data",
     "DataScience.dataWranglerStandalone": "Open just the Data Wrangler",
     "DataScience.dataWranglerStandaloneLoading": "Importing Data and Launching Data Wrangler...",
     "DataScience.dataWranglerTitle": "Data Wrangler",
@@ -528,10 +531,8 @@
     "DataScience.dataWranglerReplaceAllTooltip": "Replace specified values with a new given value.",
     "DataScience.dataWranglerDropNARowsTooltip": "Remove rows with missing values.",
     "DataScience.dataWranglerDropDuplicateRowTooltip": "Remove duplicate rows.",
-    "DataScience.DataWranglerSaveCsv": "Save CSV",
-    "DataScience.DataWranglerExportCsv": "Export to CSV",
-    "DataScience.DataWranglerExportPython": "Open as Python script",
-    "DataScience.kernelWasNotStarted": "Kernel was not started. A kernel session is needed to start debugging.",
-    "DataScience.noNotebookToDebug": "No active notebook document to debug.",
-    "DataScience.cantStartDebugging": "Can't start debugging."
+    "DataScience.dataWranglerSaveCsv": "Save CSV",
+    "DataScience.dataWranglerExportCsv": "Export to CSV",
+    "DataScience.dataWranglerExportPython": "Open as Python script",
+    "DataScience.dataWranglerExperimentDisabledError": "Data Wrangler is not enabled. Enable it in the experiments section in settings.json to use it."
 }

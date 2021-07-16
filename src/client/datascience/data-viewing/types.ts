@@ -80,7 +80,6 @@ export type IDataViewerMapping = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [DataWranglerMessages.SubmitCommand]: { command: string; args: any };
     [DataWranglerMessages.RefreshDataWrangler]: never | undefined;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [DataWranglerMessages.UpdateHistoryList]: IHistoryItem[] | undefined;
     [DataWranglerMessages.GetHistogramResponse]: IGetColsResponse | undefined;
     [DataWranglerMessages.SetSidePanels]: SidePanelSections[];
@@ -99,6 +98,8 @@ export type IDataViewerMapping = {
 export interface IDataFrameColumnInfo {
     key: string;
     type: ColumnType | string;
+
+    // For Data Wrangler specifically
     describe?: string;
     uniqueCount?: number;
     missingCount?: number;
@@ -144,6 +145,7 @@ export interface IDataViewerDataProvider {
     getDataFrameInfo(sliceExpression?: string, isRefresh?: boolean): Promise<IDataFrameInfo>;
     getAllRows(sliceExpression?: string): Promise<IRowsResponse>;
     getRows(start: number, end: number, sliceExpression?: string): Promise<IRowsResponse>;
+    // For data wrangler specifically
     getCols?(columnName: string): Promise<IColsResponse>;
 }
 

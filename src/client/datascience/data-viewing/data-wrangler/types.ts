@@ -9,13 +9,6 @@ import { Event, WebviewPanel } from 'vscode';
 import { IDisposable } from '../../../common/types';
 import { IDataViewerDataProvider } from '../types';
 
-export enum OpenDataWranglerSetting {
-    STANDALONE = 'standalone'
-    // WITH_JUPYTER_NOTEBOOK = 'jupyter_notebook'
-    // WITH_PYTHON_FILE,
-    // WITH_INTERACTIVE_WINDOW
-}
-
 export enum SidePanelSections {
     Summary = 'summary',
     Columns = 'columns',

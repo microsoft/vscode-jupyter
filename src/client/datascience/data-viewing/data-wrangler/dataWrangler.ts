@@ -161,7 +161,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
             this.historyList.push({
                 description: DataScience.dataWranglerImportDescription(),
-                code: `import pandas as pd\r\ndf = pd.read_csv(r'${this.sourceFile ?? 'broken'}')\n`,
+                code: `import pandas as pd\r\ndf = pd.read_csv(r'${this.sourceFile ?? ''}')\n`,
                 variableName: 'df'
             });
             this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
@@ -215,11 +215,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         super.setTitle(`Data Wrangler`);
 
         this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
-    }
-
-    public async getHistoryItem(req: IGetHistoryItem) {
-        const variableName = this.historyList[req.index].variableName;
-        await this.updateWithNewVariable(variableName);
     }
 
     protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
@@ -298,19 +293,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         await updateCellCode(blankCell, dataCleanCode);
     }
 
-    private async getColumnStats(req: IGetColumnStatsReq) {
-        if (req.targetColumn !== undefined && this.dataProvider && this.dataProvider.getCols) {
-            const columnData = await this.dataProvider.getCols(req.targetColumn);
-            void this.postMessage(DataWranglerMessages.GetHistogramResponse, {
-                cols: columnData,
-                columnName: req.targetColumn
-            });
-        } else {
-            // Don't show a specific column in summary panel
-            void this.postMessage(DataWranglerMessages.GetHistogramResponse, undefined);
-        }
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleCommand(payload: { command: DataWranglerCommands; args: any }) {
         console.log('handle command', payload);
@@ -342,8 +324,8 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         }
 
         if (historyItem) {
-            // Add the history item to the history list to be displayed
             if (historyItem?.shouldAdd) {
+                // Add the history item to the history list to be displayed
                 this.addToHistory(historyItem);
             }
 
@@ -358,12 +340,30 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
                 }
             }
 
-            // Scroll columns into view
+            // Scroll new columns into view if necessary
             if (historyItem.columnsToShow) {
                 historyItem.columnsToShow.forEach((col) =>
                     this.postMessage(DataWranglerMessages.ScrollColumnIntoView, col).ignoreErrors()
                 );
             }
+        }
+    }
+
+    public async getHistoryItem(req: IGetHistoryItem) {
+        const variableName = this.historyList[req.index].variableName;
+        await this.updateWithNewVariable(variableName);
+    }
+
+    private async getColumnStats(req: IGetColumnStatsReq) {
+        if (req.targetColumn !== undefined && this.dataProvider && this.dataProvider.getCols) {
+            const columnData = await this.dataProvider.getCols(req.targetColumn);
+            void this.postMessage(DataWranglerMessages.GetHistogramResponse, {
+                cols: columnData,
+                columnName: req.targetColumn
+            });
+        } else {
+            // Don't show a specific column in summary panel
+            void this.postMessage(DataWranglerMessages.GetHistogramResponse, undefined);
         }
     }
 
@@ -393,12 +393,12 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         const currVar = vars.currentVariableName;
         const newVar = vars.newVariableName;
 
-        const columns = req.targetColumns.map((col) => `'${col}'`).join(', ');
-        const astypeDict = req.targetColumns.map((col) => `'${col}': '${req.newType}'`).join(', ');
+        const targetColumns = this.generateStringListOfColumns(req.targetColumns);
+        const astypeDict = this.generateColumnValueDict(req.targetColumns, req.newType, true);
         const code = `${newVar} = ${currVar}.astype({${astypeDict}})\n`;
         const historyItem = {
             type: DataWranglerCommands.CoerceColumn,
-            description: DataScience.dataWranglerCoerceColumnDescription().format(columns, req.newType),
+            description: DataScience.dataWranglerCoerceColumnDescription().format(targetColumns, req.newType),
             variableName: newVar,
             code: code,
             shouldAdd: true
@@ -411,21 +411,11 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         const currVar = vars.currentVariableName;
         const newVar = vars.newVariableName;
 
-        const columns = req.targetColumns.map((col) => `'${col}'`).join(', ');
+        const targetColumns = this.generateStringListOfColumns(req.targetColumns);
 
         // Find type of each column
         // It is necessary so we replace the values in the columns with the correct column type
-        const dataFrameInfo = await this.dataFrameInfoPromise;
-        const stringColumns: string[] = [];
-        const boolNumColumns: string[] = [];
-        req.targetColumns.forEach((col) => {
-            const type = dataFrameInfo?.columns?.find((c) => c.key === col)?.type;
-            if (type && type === ColumnType.String) {
-                stringColumns.push(col);
-            } else if (type && (type === ColumnType.Bool || type === ColumnType.Number)) {
-                boolNumColumns.push(col);
-            }
-        });
+        const { stringColumns, boolNumColumns } = await this.splitColumnTypes(req.targetColumns);
 
         // Make a copy of dataframe
         let code = `${newVar} = ${currVar}.copy()\r\n`;
@@ -433,28 +423,32 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
         // Replace columns that have type string
         if (stringColumns.length > 0) {
-            const strCols = stringColumns.map((col) => `'${col}'`).join(', ');
+            const strCols = this.generateStringListOfColumns(stringColumns);
             code += `${newVar}[[${strCols}]] = ${newVar}[[${strCols}]].replace(to_replace='${req.oldValue}', value='${req.newValue}')\r\n`;
 
             if (req.isPreview) {
                 stringColumns.forEach((col) => {
-                    previewCode += `idx = ${newVar}.columns.get_loc("${col}")\r\n`;
-                    previewCode += `data = ${newVar}[['${col}']].replace(to_replace='${req.oldValue}', value='${req.newValue}')\r\n`;
-                    previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
+                    previewCode += this.generatePreviewCode(
+                        newVar,
+                        col,
+                        `${newVar}[['${col}']].replace(to_replace='${req.oldValue}', value='${req.newValue}')\r\n`
+                    );
                 });
             }
         }
 
         // Replace columns that have type boolean or number
         if (boolNumColumns.length > 0) {
-            const boolNumCols = boolNumColumns.map((col) => `'${col}'`).join(', ');
+            const boolNumCols = this.generateStringListOfColumns(boolNumColumns);
             code += `${newVar}[[${boolNumCols}]] = ${newVar}[[${boolNumCols}]].replace(to_replace=${req.oldValue}, value=${req.newValue})\n`;
 
             if (req.isPreview) {
                 boolNumColumns.forEach((col) => {
-                    previewCode += `idx = ${newVar}.columns.get_loc("${col}")\r\n`;
-                    previewCode += `data = ${newVar}[['${col}']].replace(to_replace=${req.oldValue}, value=${req.newValue})\r\n`;
-                    previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
+                    previewCode += this.generatePreviewCode(
+                        newVar,
+                        col,
+                        `${newVar}[['${col}']].replace(to_replace=${req.oldValue}, value=${req.newValue})\r\n`
+                    );
                 });
             }
         }
@@ -464,7 +458,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             description: DataScience.dataWranglerReplaceAllDescription().format(
                 req.oldValue as string,
                 req.newValue as string,
-                columns
+                targetColumns
             ),
             variableName: newVar,
             code: code,
@@ -514,12 +508,11 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             return historyItem;
         } else if (req.targetColumns) {
             // Drop columns by column name
-            const labels = req.targetColumns;
-            const columnNames = labels.map((label) => `'${label}'`).join(', ');
-            const code = `${newVar} = ${currVar}.drop(columns=[${columnNames}])\n`;
+            const targetColumns = this.generateStringListOfColumns(req.targetColumns);
+            const code = `${newVar} = ${currVar}.drop(columns=[${targetColumns}])\n`;
             const historyItem = {
                 type: DataWranglerCommands.Drop,
-                description: DataScience.dataWranglerDropColumnDescription().format(columnNames),
+                description: DataScience.dataWranglerDropColumnDescription().format(targetColumns),
                 variableName: newVar,
                 code: code,
                 shouldAdd: true
@@ -536,7 +529,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
         if (req.targetColumns !== undefined) {
             // Drop duplicates in a column
-            const targetColumns = req.targetColumns.map((col: string) => `'${col}'`).join(', ');
+            const targetColumns = this.generateStringListOfColumns(req.targetColumns);
             const code = `${newVar} = ${currVar}.drop_duplicates(subset=[${targetColumns}])\n`;
             const historyItem = {
                 type: DataWranglerCommands.DropDuplicates,
@@ -567,7 +560,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
         if (req.targetColumns !== undefined) {
             // Only drop rows where there are Na values in the target columns
-            const targetColumns = req.targetColumns.map((col: string) => `'${col}'`).join(', ');
+            const targetColumns = this.generateStringListOfColumns(req.targetColumns);
             const code = `${newVar} = ${currVar}.dropna(subset=[${targetColumns}])\n`;
             const historyItem = {
                 type: DataWranglerCommands.DropNa,
@@ -593,6 +586,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             };
             if (req.isPreview) {
                 historyItem.isPreview = req.isPreview;
+                // This preview doesn't actually change anything
                 historyItem.previewCode = `${newVar} = ${currVar}`;
             }
             return historyItem;
@@ -612,9 +606,11 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
         if (req.isPreview) {
             previewCode = code.slice();
-            previewCode += `idx = ${currVar}.columns.get_loc("${req.targetColumn}")\r\n`;
-            previewCode += `data = (${currVar}[['${req.targetColumn}']] - old_min) / (old_max - old_min) * (new_max - new_min) + new_min\r\n`;
-            previewCode += `${newVar}.insert(idx + 1, '${req.targetColumn} (preview)', data)\n`;
+            previewCode += this.generatePreviewCode(
+                newVar,
+                req.targetColumn,
+                `(${currVar}[['${req.targetColumn}']] - old_min) / (old_max - old_min) * (new_max - new_min) + new_min\r\n`
+            );
         }
 
         code += `${newVar}['${req.targetColumn}'] = (${currVar}[['${req.targetColumn}']] - old_min) / (old_max - old_min) * (new_max - new_min) + new_min\n`;
@@ -641,19 +637,8 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
         // Find type of each column
         // It is necessary so we replace the values in the columns with the correct column type
-        const dataFrameInfo = await this.dataFrameInfoPromise;
-        const stringColumns: string[] = [];
-        const boolNumColumns: string[] = [];
-        req.targetColumns.forEach((col) => {
-            const type = dataFrameInfo?.columns?.find((c) => c.key === col)?.type;
-            if (type && type === ColumnType.String) {
-                stringColumns.push(col);
-            } else if (type && (type === ColumnType.Bool || type === ColumnType.Number)) {
-                boolNumColumns.push(col);
-            }
-        });
-
-        const targetColumns = req.targetColumns.map((col: string) => `'${col}'`).join(', ');
+        const { stringColumns, boolNumColumns } = await this.splitColumnTypes(req.targetColumns);
+        const targetColumns = this.generateStringListOfColumns(req.targetColumns);
 
         // Create replacement dictionary where key is column and value is the value that will replace Na values
         const fillNaDict = [
@@ -667,18 +652,22 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         // Replace columns that have type string
         if (stringColumns.length > 0 && req.isPreview) {
             stringColumns.forEach((col) => {
-                previewCode += `idx = ${newVar}.columns.get_loc("${col}")\r\n`;
-                previewCode += `data = ${newVar}[['${col}']].fillna(value='${req.value}')\r\n`;
-                previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
+                previewCode += this.generatePreviewCode(
+                    newVar,
+                    col,
+                    `${newVar}[['${col}']].fillna(value='${req.value}')\r\n`
+                );
             });
         }
 
         // Replace columns that have type boolean or number
         if (boolNumColumns.length > 0 && req.isPreview) {
             boolNumColumns.forEach((col) => {
-                previewCode += `idx = ${newVar}.columns.get_loc("${col}")\r\n`;
-                previewCode += `data = ${newVar}[['${col}']].fillna(value=${req.value})\r\n`;
-                previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
+                previewCode += this.generatePreviewCode(
+                    newVar,
+                    col,
+                    `${newVar}[['${col}']].fillna(value=${req.value})\r\n`
+                );
             });
         }
 
@@ -698,12 +687,16 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     private async respondToPreview(req: { doesAccept: boolean }): Promise<IHistoryItem> {
+        // Response to preview came in so we can tell slick grid that there is no preview anymore
         this.postMessage(DataWranglerMessages.OperationPreview, { type: undefined }).ignoreErrors();
         if (!this.historyList[this.historyList.length - 1].isPreview) {
-            // Most recent operation is not a preview operation
+            // Most recent operation was not a preview operation
             return {} as IHistoryItem;
         }
         if (req.doesAccept) {
+            // User accepted preview
+            // Change latest history item into non-preview and turn shouldAdd to false so we don't add it to history list again
+            // Changing isPreview to false will run historyItem.code instead of historyItem.previewCode
             this.historyList[this.historyList.length - 1].isPreview = false;
             this.historyList[this.historyList.length - 1].shouldAdd = false;
             this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
@@ -714,7 +707,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             this.historyList.pop();
             this.postMessage(DataWranglerMessages.UpdateHistoryList, this.historyList).ignoreErrors();
 
-            // Go back to oldest variable and display its data
+            // Go back to latest variable and display its data
             const newVariableName = this.historyList[this.historyList.length - 1].variableName;
             await this.updateWithNewVariable(newVariableName);
             return {} as IHistoryItem;
@@ -745,6 +738,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             // Newest operation was based off an intermediate stable operation
             return { currentVariableName, newVariableName: 'df' + (Number(currVarIndex) + 1).toString() };
         } else if (currentVariableName === 'df') {
+            // currentVariableName is the original dataframe so the next one will be df1
             this.historyList = this.historyList.slice(0, 1);
             return { currentVariableName: 'df', newVariableName: 'df1' };
         } else {
@@ -782,9 +776,48 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
                 );
             }
         } else if ([DataWranglerCommands.ReplaceAllColumn, DataWranglerCommands.FillNa].includes(operation)) {
+            // These commands have the stylings created on the python side by looking at the diff between
+            // a column and its (preview) counterpart
             const dataFrameInfo = await this.dataFrameInfoPromise;
             return dataFrameInfo?.previewDiffs ?? {};
         }
         return {};
+    }
+
+    private generateStringListOfColumns(columns: string[]) {
+        return columns.map((col) => `'${col}'`).join(', ');
+    }
+
+    private generateColumnValueDict(columns: string[], value: string, hasQuotes: boolean) {
+        const correctValue = hasQuotes ? `'${value}'` : value;
+        return columns.map((col) => `'${col}': ${correctValue}`).join(', ');
+    }
+
+    private async splitColumnTypes(columns: string[]) {
+        const stringColumns: string[] = [];
+        const boolNumColumns: string[] = [];
+        const dataFrameInfo = await this.dataFrameInfoPromise;
+        columns.forEach((col) => {
+            const type = dataFrameInfo?.columns?.find((c) => c.key === col)?.type;
+            if (type && type === ColumnType.String) {
+                stringColumns.push(col);
+            } else if (type && (type === ColumnType.Bool || type === ColumnType.Number)) {
+                boolNumColumns.push(col);
+            }
+        });
+        return {
+            stringColumns,
+            boolNumColumns
+        };
+    }
+
+    private generatePreviewCode(newVar: string, col: string, columnGenerationCode: string) {
+        // Find index of old column
+        let previewCode = `idx = ${newVar}.columns.get_loc("${col}")\r\n`;
+        // Generate preview column
+        previewCode += `data = ${columnGenerationCode}`;
+        // Insert new preview column beside old column
+        previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
+        return previewCode;
     }
 }

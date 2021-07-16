@@ -110,9 +110,7 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
 
         const isDataWranglerEnabled = await this.experimentService.inExperiment(Experiments.DataWrangler);
         if (!isDataWranglerEnabled) {
-            await this.appShell.showErrorMessage(
-                'Data Wrangler is not enabled. Enable it in the experiments section to use it.'
-            );
+            await this.appShell.showErrorMessage(DataScience.dataWranglerExperimentDisabledError());
             await this.commandManager.executeCommand('workbench.action.closeActiveEditor');
             return;
         }

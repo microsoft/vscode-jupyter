@@ -1077,6 +1077,10 @@ export namespace DataScience {
     export const dataWranglerSaveCsv = localize('DataScience.dataWranglerSaveCsv', 'Save CSV');
     export const dataWranglerExportCsv = localize('DataScience.dataWranglerExportCsv', 'Export to CSV');
     export const dataWranglerExportPython = localize('DataScience.dataWranglerExportPython', 'Open as Python script');
+    export const dataWranglerExperimentDisabledError = localize(
+        'DataScience.dataWranglerExperimentDisabledError',
+        'Data Wrangler is not enabled. Enable it in the experiments section in settings.json to use it.'
+    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
