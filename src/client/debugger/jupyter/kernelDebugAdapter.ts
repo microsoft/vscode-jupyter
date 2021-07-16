@@ -96,6 +96,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private isRunByLine = false;
+    private runByLineThreadId: number = 1;
 
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
 
@@ -112,7 +113,9 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         }
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((msg.content as any).event === 'stopped') {
+            const content = (msg.content as any);
+            if (content.event === 'stopped') {
+                this.runByLineThreadId = content.body.threadId;
                 this.sendMessage.fire(msg.content);
             }
         };
@@ -160,13 +163,14 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
     }
 
     public runByLineContinue() {
+        const threadId = this.runByLineThreadId;
         if (this.isRunByLine) {
             const message: DebugProtocol.StepInRequest = {
                 seq: 0,
                 type: 'request',
                 command: 'stepIn',
                 arguments: {
-                    threadId: 1
+                    threadId: threadId
                 }
             };
 
