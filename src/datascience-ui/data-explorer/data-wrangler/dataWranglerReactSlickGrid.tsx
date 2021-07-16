@@ -564,12 +564,10 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             selectedColumns,
             primarySelectedColumn
         }, () => {
-            // style columns after state is set
             const columns = this.styleColumns(grid.getColumns());
             grid.setColumns(columns);
+            this.updateCssStyles();
         });
-
-
     }
 
     /**

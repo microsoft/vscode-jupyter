@@ -31,10 +31,9 @@
     padding: 4px;
     background-color: var(--vscode-editor-background);
     color: var(--vscode-editor-foreground);
-    /* border-right: 1px solid transparent; */
     box-sizing: content-box;
     padding-left: 7px;
-    /* Removed box-sizing: border-box; because when changing cell color it messed up the sizing and it's too expensive to re-size everything */
+    box-sizing: border-box;
 }
 
 /* Some overrides necessary to get the colors we want */
