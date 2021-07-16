@@ -79,6 +79,7 @@ import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
 
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -140,7 +141,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly kernelProvider: IKernelProvider,
         private readonly disposables: IDisposableRegistry,
-        private readonly jupyterDebugger: IJupyterDebugger
+        private readonly jupyterDebugger: IJupyterDebugger,
+        private readonly pythonExecFactory: IPythonExecutionFactory
     ) {
         // Set our owner and first submitter
         this._owner = owner;
@@ -376,7 +378,21 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             }
 
             if (isDebug) {
-                await this.jupyterDebugger.startDebugging(notebook);
+                const interpreter = notebook.getKernelConnection()?.interpreter;
+                let execService: IPythonExecutionService | undefined;
+                if (interpreter) {
+                    execService = await this.pythonExecFactory.createActivatedEnvironment({
+                        interpreter: notebook.getKernelConnection()?.interpreter
+                    });
+                }
+                let ipykernelVersion: string | undefined;
+                if (execService) {
+                    const result = await execService
+                        .exec(['-c', 'import ipykernel;print(ipykernel.__version__)'], { env: process.env })
+                        .catch(noop);
+                    ipykernelVersion = result ? (result.stdout || result.stderr || '').trim() : undefined;
+                }
+                await this.jupyterDebugger.startDebugging(notebook, ipykernelVersion);
             }
 
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
