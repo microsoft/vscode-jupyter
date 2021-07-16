@@ -11,6 +11,7 @@ import { IInstaller, InstallerResponse, Product } from '../../../../client/commo
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { Commands } from '../../../../client/datascience/constants';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 
@@ -22,17 +23,20 @@ suite('DataScience - Kernel Dependency Service', () => {
     let appShell: IApplicationShell;
     let cmdManager: ICommandManager;
     let installer: IInstaller;
+    let serviceContainer: IServiceContainer;
     let memento: Memento;
     const interpreter = createPythonInterpreter({ displayName: 'name', envType: EnvironmentType.Conda, path: 'abc' });
     setup(() => {
         appShell = mock<IApplicationShell>();
         installer = mock<IInstaller>();
+        serviceContainer = mock<IServiceContainer>();
         cmdManager = mock<ICommandManager>();
         memento = mock<Memento>();
         when(memento.get(anything(), anything())).thenReturn(false);
         dependencyService = new KernelDependencyService(
             instance(appShell),
             instance(installer),
+            instance(serviceContainer),
             instance(memento),
             false,
             instance(cmdManager),

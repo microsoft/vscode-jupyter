@@ -766,6 +766,13 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
+      - name: Install screen capture dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install imagemagick
+
+      - name: Install screen capture
+        run: npm i -D screenshot-desktop
+
         # Check to see if we should build webviews or not
       - name: Check if we need to build webviews
         if: matrix.test-suite != 'integration' && matrix.test-suite != 'notebookAndWebview'
@@ -918,6 +925,14 @@ jobs:
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
+          retention-days: 1
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Screenshots-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
+          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
           retention-days: 1
 
   smoke-tests:

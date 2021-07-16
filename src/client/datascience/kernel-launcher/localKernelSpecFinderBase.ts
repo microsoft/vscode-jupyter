@@ -11,6 +11,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { ReadWrite } from '../../common/types';
+import { testOnlyMethod } from '../../common/utils/decorators';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
@@ -42,6 +43,10 @@ export abstract class LocalKernelSpecFinderBase {
         protected readonly extensionChecker: IPythonExtensionChecker
     ) {}
 
+    @testOnlyMethod()
+    public clearCache() {
+        this.kernelSpecCache.clear();
+    }
     /**
      * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.
      * If for instance first Python Extension isn't installed, then we call this again, after installing it, then the cache will be blown away

@@ -5,6 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
+import { IPythonInstaller } from '../../../api/types';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { UseVSCodeNotebookEditorApi } from '../../../common/constants';
@@ -18,10 +19,12 @@ import {
     InstallerResponse,
     IsCodeSpace,
     Product,
+    ProductInstallStatus,
     Resource
 } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
+import { IServiceContainer } from '../../../ioc/types';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -40,6 +43,7 @@ export class KernelDependencyService implements IKernelDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
@@ -87,13 +91,16 @@ export class KernelDependencyService implements IKernelDependencyService {
         _token?: CancellationToken
     ): Promise<boolean> {
         try {
-            const version = await this.installer.getVersion(Product.ipykernel, interpreter);
-            if (version) {
-                const versionSplit = version.split('.');
-                const mainVersionNumber = Number(versionSplit[0]);
-                return mainVersionNumber >= 6;
+            const installer = await this.serviceContainer.get<IPythonInstaller>(IPythonInstaller);
+            const result = await installer.isProductVersionCompatible(Product.ipykernel, '>=6.0.0', interpreter);
+            switch (result) {
+                case ProductInstallStatus.Installed:
+                    return true;
+                case ProductInstallStatus.NotInstalled:
+                case ProductInstallStatus.NeedsUpgrade:
+                default:
+                    return false;
             }
-            return false;
         } catch {
             return false;
         }

@@ -201,7 +201,7 @@ export function generateCellsFromNotebookDocument(
 ): ICell[] {
     return notebookDocument
         .getCells()
-        .filter((cell) => !cell.metadata.isSysInfoCell)
+        .filter((cell) => !cell.metadata.isInteractiveWindowMessageCell)
         .map((cell) => {
             // Reinstate cell structure + comments from cell metadata
             let code = cell.document.getText().splitLines();

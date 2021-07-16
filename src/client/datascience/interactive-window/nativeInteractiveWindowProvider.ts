@@ -64,6 +64,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private _windows: NativeInteractiveWindow[] = [];
+    private mapOfResourcesToInteractiveWindowPromises = new Map<string, Promise<NativeInteractiveWindow>>();
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -109,69 +110,83 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         noop();
     }
 
-    protected async create(resource: Resource, mode: InteractiveWindowMode): Promise<NativeInteractiveWindow> {
-        // When this is not undefined, VS Code will always pick this controller for the interactive window
-        // When this is undefined, VS Code will fallback to its own cached notebook-controller association
-        // If VS Code does not have a cached association, the user will be asked to select a kernel from the
-        // kernel picker quickpick UI
-        const preferredControllerId = await this.getControllerForInteractiveWindow();
+    private async createInteractiveWindowPromise(resource: Resource, mode: InteractiveWindowMode) {
+        return this.getControllerForInteractiveWindow()
+            .then((preferredControllerId) => {
+                const hasOwningFile = resource !== undefined;
+                return (this.commandManager.executeCommand(
+                    'interactive.open',
+                    // Keep focus on the owning file if there is one
+                    { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
+                    undefined,
+                    preferredControllerId
+                ) as unknown) as INativeInteractiveWindow;
+            })
+            .then(({ notebookUri }: INativeInteractiveWindow) => {
+                const notebookDocument = workspace.notebookDocuments.find(
+                    (doc) => doc.uri.toString() === notebookUri.toString()
+                );
+                if (!notebookDocument) {
+                    // This means VS Code failed to create an interactive window.
+                    // This should never happen.
+                    throw new Error('Failed to request creation of interactive window from VS Code.');
+                }
+                // Set it as soon as we create it. The .ctor for the interactive window
+                // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
+                const result = new NativeInteractiveWindow(
+                    this.serviceContainer.get<IApplicationShell>(IApplicationShell),
+                    this.serviceContainer.get<IDocumentManager>(IDocumentManager),
+                    this.serviceContainer.get<IStatusProvider>(IStatusProvider),
+                    this.serviceContainer.get<IFileSystem>(IFileSystem),
+                    this.serviceContainer.get<IConfigurationService>(IConfigurationService),
+                    this.serviceContainer.get<ICommandManager>(ICommandManager),
+                    this.serviceContainer.get<INotebookExporter>(INotebookExporter),
+                    this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+                    resource,
+                    mode,
+                    this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
+                    this.serviceContainer.get<IExportDialog>(IExportDialog),
+                    notebookDocument,
+                    this.notebookControllerManager,
+                    this.kernelProvider,
+                    this.disposables,
+                    this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger)
+                );
+                this._windows.push(result);
 
-        const hasOwningFile = resource !== undefined;
-        const { notebookUri } = (await this.commandManager.executeCommand(
-            'interactive.open',
-            // Keep focus on the owning file if there is one
-            { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
-            undefined,
-            preferredControllerId
-        )) as INativeInteractiveWindow;
-        const notebookDocument = workspace.notebookDocuments.find(
-            (doc) => doc.uri.toString() === notebookUri.toString()
-        );
-        if (!notebookDocument) {
-            // This means VS Code failed to create an interactive window.
-            // This should never happen.
-            throw new Error('Failed to request creation of interactive window from VS Code.');
+                // This is the last interactive window at the moment (as we're about to create it)
+                this.lastActiveInteractiveWindow = result;
+
+                // When shutting down, we fire an event
+                const handler = result.closed(this.onInteractiveWindowClosed);
+                this.disposables.push(result);
+                this.disposables.push(handler);
+                this.disposables.push(
+                    result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this))
+                );
+
+                // fire created event
+                this._onDidCreateInteractiveWindow.fire(result);
+                return result;
+            });
+    }
+
+    protected async create(resource: Resource, mode: InteractiveWindowMode): Promise<NativeInteractiveWindow> {
+        // If there's no resource, just create a new one
+        if (resource === undefined) {
+            return this.createInteractiveWindowPromise(resource, mode);
         }
 
-        // Set it as soon as we create it. The .ctor for the interactive window
-        // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
-        const result = new NativeInteractiveWindow(
-            this.serviceContainer.get<IApplicationShell>(IApplicationShell),
-            this.serviceContainer.get<IDocumentManager>(IDocumentManager),
-            this.serviceContainer.get<IStatusProvider>(IStatusProvider),
-            this.serviceContainer.get<IFileSystem>(IFileSystem),
-            this.serviceContainer.get<IConfigurationService>(IConfigurationService),
-            this.serviceContainer.get<ICommandManager>(ICommandManager),
-            this.serviceContainer.get<INotebookExporter>(INotebookExporter),
-            this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
-            resource,
-            mode,
-            this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
-            this.serviceContainer.get<IExportDialog>(IExportDialog),
-            notebookDocument,
-            this.notebookControllerManager,
-            this.kernelProvider,
-            this.disposables,
-            this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger)
-        );
-        this._windows.push(result);
-
-        // This is the last interactive window at the moment (as we're about to create it)
-        this.lastActiveInteractiveWindow = result;
-
-        // When shutting down, we fire an event
-        const handler = result.closed(this.onInteractiveWindowClosed);
-        this.disposables.push(result);
-        this.disposables.push(handler);
-        this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
-
-        // Show in the background
-        result.show().ignoreErrors();
-
-        // fire created event
-        this._onDidCreateInteractiveWindow.fire(result);
-
-        return result;
+        const existingPromise = this.mapOfResourcesToInteractiveWindowPromises.get(resource.toString());
+        // If there's a resource and no existing promise, create a new one
+        if (existingPromise === undefined) {
+            const promise = this.createInteractiveWindowPromise(resource, mode);
+            this.mapOfResourcesToInteractiveWindowPromises.set(resource.toString(), promise);
+            return promise;
+        } else {
+            // Otherwise return existing promise
+            return existingPromise;
+        }
     }
 
     private async getInteractiveMode(resource: Resource): Promise<InteractiveWindowMode> {
@@ -255,6 +270,10 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         this._windows = this._windows.filter((w) => w !== interactiveWindow);
         if (this.lastActiveInteractiveWindow === interactiveWindow) {
             this.lastActiveInteractiveWindow = this._windows[0];
+        }
+        if (interactiveWindow.owner !== undefined) {
+            // Make sure we don't try to reuse the promise for an interactive window which has already been disposed
+            this.mapOfResourcesToInteractiveWindowPromises.delete(interactiveWindow.owner.toString());
         }
         this.raiseOnDidChangeActiveInteractiveWindow();
     };

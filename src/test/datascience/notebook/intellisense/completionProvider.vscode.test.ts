@@ -86,10 +86,17 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         };
         traceInfo('Get completions in test');
         const completions = await completionProvider.provideCompletionItems(cell2.document, position, token, context);
-        console.log(JSON.stringify(completions));
         const items = completions.map((item) => item.label);
         assert.isOk(items.length);
-        assert.include(items, 'bit_length');
-        assert.include(items, 'to_bytes');
+        assert.ok(
+            items.find((item) =>
+                typeof item === 'string' ? item.includes('bit_length') : item.label.includes('bit_length')
+            )
+        );
+        assert.ok(
+            items.find((item) =>
+                typeof item === 'string' ? item.includes('to_bytes') : item.label.includes('to_bytes')
+            )
+        );
     });
 });
