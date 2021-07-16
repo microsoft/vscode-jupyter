@@ -24,7 +24,7 @@ import { ServerStatus } from '../../../../datascience-ui/interactive-common/main
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext, Resource } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -89,7 +89,7 @@ export class Kernel implements IKernel {
     private startCancellation = new CancellationTokenSource();
     constructor(
         public readonly notebookUri: Uri,
-        public readonly resourceUri: Uri,
+        public readonly resourceUri: Resource,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
@@ -311,7 +311,9 @@ export class Kernel implements IKernel {
         }
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             await this.disableJedi();
-            await this.notebook.setLaunchingFile(this.resourceUri.fsPath);
+            if (this.resourceUri) {
+                await this.notebook.setLaunchingFile(this.resourceUri.fsPath);
+            }
             await this.initializeMatplotlib();
         }
         await this.notebook
@@ -387,7 +389,7 @@ export class Kernel implements IKernel {
                 ? CodeSnippets.MatplotLibInitSvg
                 : CodeSnippets.MatplotLibInitPng;
 
-            traceInfo(`Initialize matplotlib for ${this.resourceUri.toString()}`);
+            traceInfo(`Initialize matplotlib for ${(this.resourceUri || this.notebookUri).toString()}`);
             await this.executeSilently(matplobInit);
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
             if (!settings.ignoreVscodeTheme) {
@@ -400,7 +402,7 @@ export class Kernel implements IKernel {
             }
         } else {
             const configInit = !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
-            traceInfoIf(isCI, `Initialize config for plots for ${this.resourceUri.toString()}`);
+            traceInfoIf(isCI, `Initialize config for plots for ${(this.resourceUri || this.notebookUri).toString()}`);
             await this.executeSilently(configInit);
         }
     }
@@ -409,7 +411,7 @@ export class Kernel implements IKernel {
             return;
         }
         const deferred = createDeferred<void>();
-        const observable = this.notebook.executeObservable(code, this.resourceUri.fsPath, 0, uuid(), true);
+        const observable = this.notebook.executeObservable(code, (this.resourceUri || this.notebookUri).fsPath, 0, uuid(), true);
         const subscription = observable.subscribe(
             noop,
             (ex) => deferred.reject(ex),
