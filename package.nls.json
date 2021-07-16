@@ -451,6 +451,8 @@
     "DataScience.unhandledMessage": "Unhandled kernel message from a widget: {0} : {1}",
     "DataScience.qgridWidgetScriptVersionCompatibilityWarning": "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1.",
     "DataScience.kernelStarted": "Started kernel {0}",
+    "DataScience.kernelStarting": "_Connecting to kernel..._",
+    "DataScience.kernelStartingCustom": "_Connecting to {0}..._",
     "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "Running cells with '{0}' requires {1}.",
     "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate": "Running cells with '{0}' requires {1} installed or requires an update.",
     "DataScience.runByLine": "Run by line (F10)",

@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
-import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, Uri } from 'vscode';
+import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, NotebookCellOutput, Uri } from 'vscode';
 import { Common } from '../../../client/common/utils/localize';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo, traceInfoIf } from '../../../client/common/logger';
@@ -539,7 +539,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             'output from cell 2 should be printed before last background output from cell 1'
         );
     });
-    test('Outputs with support for ansic code `\u001b[A`', async () => {
+    test('Outputs with support for ansic code `\u001b[A`', async function () {
         // Ansi Code `<esc>[A` means move cursor up, i.e. replace previous line with the new output (or erase previous line & start there).
         await insertCodeCell(
             dedent`
@@ -586,10 +586,13 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Line1
         // Line2
         // Line3
-        assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
-        // assert.equal(cells[0].outputs[0].outputKind, CellOutputKind.Rich, 'Incorrect output type');
-        assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
-        // assert.equal(cells[1].outputs[0].outputKind, CellOutputKind.Rich, 'Incorrect output type');
+
+        // Work around https://github.com/ipython/ipykernel/issues/729
+        const ignoreEmptyOutputs = (output: NotebookCellOutput) => {
+            return output.items.filter((item) => item.mime !== 'text/plain').length > 0;
+        };
+        assert.equal(cells[0].outputs.filter(ignoreEmptyOutputs).length, 1, 'Incorrect number of output');
+        assert.equal(cells[1].outputs.filter(ignoreEmptyOutputs).length, 1, 'Incorrect number of output');
 
         // Confirm the output
         const output1Lines: string[] = getTextOutputValue(cells[0].outputs[0]).splitLines({

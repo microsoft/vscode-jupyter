@@ -76,8 +76,9 @@ export class NotebookSerializer implements VSCNotebookSerializer {
         return Buffer.from(this.serialize(data), 'utf-8');
     }
     private serialize(data: NotebookDocument | NotebookData): string {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const notebookContent: Partial<nbformat.INotebookContent> = (data.metadata?.custom as any) || {};
+        const notebookContent: Partial<nbformat.INotebookContent> =
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            JSON.parse(JSON.stringify(data.metadata?.custom as any)) || {};
         notebookContent.cells = notebookContent.cells || [];
         notebookContent.nbformat = notebookContent.nbformat || 4;
         notebookContent.nbformat_minor = notebookContent.nbformat_minor || 2;

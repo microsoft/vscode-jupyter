@@ -435,6 +435,8 @@ export enum Telemetry {
     PreferredKernel = 'DS_INTERNAL.PREFERRED_KERNEL',
     KernelFinderPerf = 'DS_INTERNAL.KERNEL_FINDER_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
+    InterpreterListingPerf = 'DS_INTERNAL.INTERPRETER_LISTING_PERF',
+    ActiveInterpreterListingPerf = 'DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     PythonModuleInstal = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',

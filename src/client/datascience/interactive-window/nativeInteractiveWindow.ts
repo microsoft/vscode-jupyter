@@ -16,7 +16,13 @@ import {
     Uri,
     window,
     workspace,
-    WorkspaceEdit
+    WorkspaceEdit,
+    notebooks,
+    Position,
+    Range,
+    Selection,
+    commands,
+    TextEditorRevealType
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
@@ -46,7 +52,11 @@ import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
-import { INotebookIdentity, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
+import {
+    INotebookIdentity,
+    InteractiveWindowMessages,
+    ISubmitNewCell
+} from '../interactive-common/interactiveWindowTypes';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
@@ -67,6 +77,8 @@ import {
 import { createInteractiveIdentity } from './identity';
 import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
+import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
+import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
 
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -145,6 +157,31 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         if (controller !== undefined) {
             this.registerKernel(this.notebookDocument, controller);
             this.initialControllerSelected.resolve();
+
+            const messageChannel = notebooks.createRendererMessaging('jupyter-error-renderer');
+            this.disposables.push(
+                messageChannel.onDidReceiveMessage(async (e) => {
+                    const message = e.message;
+                    if (message.message === InteractiveWindowMessages.OpenLink) {
+                        const href = message.payload;
+                        if (href.startsWith('file')) {
+                            await this.openFile(href);
+                        } else if (href.startsWith('https://command:')) {
+                            const temp: string = href.split(':')[2];
+                            const params: string[] = temp.includes('/?') ? temp.split('/?')[1].split(',') : [];
+                            let command = temp.split('/?')[0];
+                            if (command.endsWith('/')) {
+                                command = command.substring(0, command.length - 1);
+                            }
+                            if (linkCommandAllowList.includes(command)) {
+                                await commands.executeCommand(command, params);
+                            }
+                        } else {
+                            this.applicationShell.openUrl(href);
+                        }
+                    }
+                })
+            );
         }
 
         // Ensure we hear about any controller changes so we can update our cache accordingly
@@ -185,6 +222,40 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         });
     }
 
+    private openFile(fileUri: string) {
+        const uri = Uri.parse(fileUri);
+        let selection: Range = new Range(new Position(0, 0), new Position(0, 0));
+        if (uri.query) {
+            // Might have a line number query on the file name
+            const lineMatch = LineQueryRegex.exec(uri.query);
+            if (lineMatch) {
+                const lineNumber = parseInt(lineMatch[1], 10);
+                selection = new Range(new Position(lineNumber, 0), new Position(lineNumber, 0));
+            }
+        }
+
+        // Show the matching editor if there is one
+        let editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
+        if (editor) {
+            return this.documentManager
+                .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
+                .then((e) => {
+                    e.revealRange(selection, TextEditorRevealType.InCenter);
+                });
+        } else {
+            // Not a visible editor, try opening otherwise
+            return this.commandManager.executeCommand('vscode.open', uri).then(() => {
+                // See if that opened a text document
+                editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
+                if (editor) {
+                    // Force the selection to change
+                    editor.revealRange(selection);
+                    editor.selection = new Selection(selection.start, selection.start);
+                }
+            });
+        }
+    }
+
     private registerKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
         const kernel = this.kernelProvider.getOrCreate(notebookDocument.uri, {
             metadata: controller.connection,
@@ -218,10 +289,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // Add message to the notebook document
         const edit = new WorkspaceEdit();
         const notebookDocument = this.notebookDocument;
+        const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
+        markdownCell.metadata = { isInteractiveWindowMessageCell: true };
         edit.replaceNotebookCells(
             notebookDocument.uri,
             new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
-            [new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE)]
+            [markdownCell]
         );
         await workspace.applyEdit(edit);
     }
@@ -273,7 +346,23 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         await this.updateOwners(fileUri);
         const id = uuid();
+        const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
+
+        // Compute isAtBottom based on last notebook cell before adding a notebook cell,
+        // since the notebook cell we're going to add is by definition not visible
+        const isLastCellVisible = editor?.visibleRanges.find((r) => {
+            return r.end === this.notebookDocument.cellCount - 1;
+        });
         const notebookCell = await this.addNotebookCell(code, fileUri, line, id);
+        const settings = this.configuration.getSettings();
+        // The default behavior is to scroll to the last cell if the user is already at the bottom
+        // of the history, but not to scroll if the user has scrolled somewhere in the middle
+        // of the history. The jupyter.alwaysScrollOnNewCell setting overrides this to always scroll
+        // to newly-inserted cells.
+        if (settings.alwaysScrollOnNewCell || isLastCellVisible) {
+            this.revealCell(notebookCell);
+        }
+
         const notebook = this.kernel?.notebook;
         if (!notebook) {
             return false;
@@ -303,10 +392,21 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
             // Sign up for cell changes
             observable.subscribe(
-                async (cells: ICell[]) => {
+                (cells: ICell[]) => {
                     // Then send the combined output to the UI
                     const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
-                    await temporaryExecution.replaceOutput(converted);
+                    void temporaryExecution.replaceOutput(converted).then(() => {
+                        // Scroll to the newly added output. First recompute visibility.
+                        // User might have scrolled away while cell was executing.
+                        // We don't want to force them back down unless they configured
+                        // alwaysScrollOnNewCell.
+                        const isInsertedCellVisible = editor?.visibleRanges.find((r) => {
+                            return r.end === this.notebookDocument.cellCount - 1;
+                        });
+                        if (settings.alwaysScrollOnNewCell || isInsertedCellVisible) {
+                            this.revealCell(notebookCell);
+                        }
+                    });
                     const executionCount = (cells[0].data as nbformat.ICodeCell).execution_count;
                     if (executionCount) {
                         temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10);
@@ -333,7 +433,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             await finishedAddingCode.promise;
             traceInfo(`Finished execution for ${id}`);
         } finally {
-            await this.jupyterDebugger.stopDebugging(notebook);
+            if (isDebug) {
+                await this.jupyterDebugger.stopDebugging(notebook);
+            }
         }
         return result;
     }
@@ -510,22 +612,29 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     public async scrollToCell(id: string): Promise<void> {
         const matchingCell = this.notebookDocument.getCells().find((cell) => cell.metadata.executionId === id);
-        // Activate the interactive window's editor group
-        // This should make activeNotebookEditor.document the interactive window NotebookDocument
-        await this.commandManager.executeCommand(
-            'interactive.open',
-            { preserveFocus: false },
-            this.notebookUri,
-            undefined
-        );
-        if (
-            matchingCell &&
-            window.activeNotebookEditor &&
-            window.activeNotebookEditor.document === this.notebookDocument
-        ) {
-            const notebookRange = new NotebookRange(matchingCell.index, matchingCell.index + 1);
-            window.activeNotebookEditor.selections = [notebookRange];
-            window.activeNotebookEditor.revealRange(notebookRange, NotebookEditorRevealType.InCenterIfOutsideViewport);
+        if (matchingCell) {
+            this.revealCell(matchingCell);
+        }
+    }
+
+    // This function's implementation is temporary and will change.
+    // It looks at all visibleNotebookEditors to find a matching notebookDocument,
+    // since currently the only way to scroll to a particular cell is to use
+    // NotebookEditor.revealRange, and the interactive window at this point may be
+    // visible but not active, so we can't use activeNotebookEditor.
+    // Note that this implementation only reveals the cell editor, and in fact we want
+    // to reveal the output. This is therefore an incomplete solution that requires further
+    // upstream changes, which are nontrivial due to the fact that cell output is
+    // asynchronously rendered, so we cannot guarantee that the output exists at the
+    // time that we try to reveal the output.
+    private revealCell(notebookCell: NotebookCell) {
+        const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
+        if (editor) {
+            const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
+            // This will always try to reveal the whole cell--input + output combined
+            setTimeout(() => {
+                editor.revealRange(notebookRange, NotebookEditorRevealType.Default);
+            }, 200); // Rendering output is async so the output is not guaranteed to immediately exist
         }
     }
 
@@ -647,7 +756,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
         // Insert code cell into NotebookDocument
-        const edit = new WorkspaceEdit();
         const language =
             workspace.textDocuments.find((document) => document.uri.toString() === this.owner?.toString())
                 ?.languageId ?? PYTHON_LANGUAGE;
@@ -664,14 +772,13 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             },
             executionId: id
         };
-        edit.replaceNotebookCells(
-            this.notebookDocument.uri,
-            new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),
-            [
-                notebookCellData // TODO generalize to arbitrary languages and cell types
-            ]
-        );
-        await workspace.applyEdit(edit);
+        await chainWithPendingUpdates(this.notebookDocument, (edit) => {
+            edit.replaceNotebookCells(
+                this.notebookDocument.uri,
+                new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),
+                [notebookCellData]
+            );
+        });
         return this.notebookDocument.cellAt(this.notebookDocument.cellCount - 1);
     }
 
