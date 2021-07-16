@@ -18,7 +18,6 @@ import {
 } from '../../common/application/types';
 import { JUPYTER_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
-import { IPythonExecutionFactory } from '../../common/process/types';
 
 import {
     GLOBAL_MEMENTO,
@@ -227,8 +226,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
-            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
-            this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
+            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage)
         );
         this.activeEditors.set(model.file.fsPath, editor);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));

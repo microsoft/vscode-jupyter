@@ -46,7 +46,6 @@ import {
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import { IPythonExecutionFactory } from '../../common/process/types';
 
 export enum AskForSaveResult {
     Yes,
@@ -99,8 +98,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
         extensionChecker: IPythonExtensionChecker,
-        serverStorage: IJupyterServerUriStorage,
-        pythonExecFactory: IPythonExecutionFactory
+        serverStorage: IJupyterServerUriStorage
     ) {
         super(
             listeners,
@@ -134,8 +132,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             webviewPanel,
             selector,
             extensionChecker,
-            serverStorage,
-            pythonExecFactory
+            serverStorage
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.

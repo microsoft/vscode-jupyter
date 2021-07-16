@@ -18,7 +18,6 @@ import {
 import { UseCustomEditorApi } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IPythonExecutionFactory } from '../../common/process/types';
 
 import {
     GLOBAL_MEMENTO,
@@ -210,8 +209,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<KernelSelector>(KernelSelector),
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
             this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
-            this.serviceContainer.get<IExportDialog>(IExportDialog),
-            this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
+            this.serviceContainer.get<IExportDialog>(IExportDialog)
         );
         this._windows.push(result);
 

@@ -14,7 +14,6 @@ import {
 import { JVSC_EXTENSION_ID } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IPythonExecutionFactory } from '../../common/process/types';
 
 import {
     GLOBAL_MEMENTO,
@@ -151,8 +150,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
                     this.notebookControllerManager,
                     this.kernelProvider,
                     this.disposables,
-                    this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger),
-                    this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
+                    this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger)
                 );
                 this._windows.push(result);
 
