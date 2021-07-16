@@ -163,14 +163,13 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
     }
 
     public runByLineContinue() {
-        const threadId = this.runByLineThreadId;
         if (this.isRunByLine) {
             const message: DebugProtocol.StepInRequest = {
                 seq: 0,
                 type: 'request',
                 command: 'stepIn',
                 arguments: {
-                    threadId: threadId
+                    threadId: this.runByLineThreadId
                 }
             };
 
