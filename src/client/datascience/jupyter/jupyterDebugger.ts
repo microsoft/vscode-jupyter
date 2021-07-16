@@ -79,12 +79,10 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     public async startDebugging(notebook: INotebook, ipykernelVersion?: string): Promise<void> {
+        const settings = this.configService.getSettings(notebook.resource);
         this.ipykernelVersion = ipykernelVersion;
         return this.startDebugSession(
-            (c) => {
-                console.log('1234');
-                return this.debugService.startDebugging(undefined, c);
-            },
+            (c) => this.debugService.startDebugging(undefined, c),
             notebook,
             {
                 justMyCode: settings.debugJustMyCode
