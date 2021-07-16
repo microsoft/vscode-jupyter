@@ -411,7 +411,13 @@ export class Kernel implements IKernel {
             return;
         }
         const deferred = createDeferred<void>();
-        const observable = this.notebook.executeObservable(code, (this.resourceUri || this.notebookUri).fsPath, 0, uuid(), true);
+        const observable = this.notebook.executeObservable(
+            code,
+            (this.resourceUri || this.notebookUri).fsPath,
+            0,
+            uuid(),
+            true
+        );
         const subscription = observable.subscribe(
             noop,
             (ex) => deferred.reject(ex),
