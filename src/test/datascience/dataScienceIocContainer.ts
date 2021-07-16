@@ -26,7 +26,12 @@ import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kerne
 
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { PythonExtensionChecker } from '../../client/api/pythonApi';
-import { ILanguageServerProvider, IPythonDebuggerPathProvider, IPythonExtensionChecker } from '../../client/api/types';
+import {
+    ILanguageServerProvider,
+    IPythonDebuggerPathProvider,
+    IPythonExtensionChecker,
+    IPythonInstaller
+} from '../../client/api/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
@@ -98,6 +103,7 @@ import {
     IsCodeSpace,
     IsWindows,
     IWatchableJupyterSettings,
+    ProductInstallStatus,
     Resource,
     WORKSPACE_MEMENTO
 } from '../../client/common/types';
@@ -500,7 +506,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             INbConvertExportToPythonService,
             NbConvertExportToPythonService
         );
-
+        const mockInstaller = mock<IPythonInstaller>();
+        when(mockInstaller.isProductVersionCompatible(anything(), anything(), anything())).thenResolve(
+            ProductInstallStatus.Installed
+        );
+        this.serviceManager.addSingletonInstance<IPythonInstaller>(IPythonInstaller, instance(instance(mockInstaller)));
         this.serviceManager.addSingletonInstance<InterpreterPackages>(
             InterpreterPackages,
             instance(mock(InterpreterPackages))
