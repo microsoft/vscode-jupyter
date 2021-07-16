@@ -63,7 +63,9 @@ export const activate: ActivationFunction = (_context) => {
                     : Array.isArray(outputItemJson.stack)
                     ? outputItemJson.stack.map((item: string) => escape(item))
                     : [escape(outputItemJson.stack)];
-            const html = traceback.some(item => item.trim().length) ? converter.toHtml(traceback.join('\n')) : outputItemJson.message;
+            const html = traceback.some((item) => item.trim().length)
+                ? converter.toHtml(traceback.join('\n'))
+                : outputItemJson.message;
             const container = document.createElement('div');
             container.classList.add('cell-output-text');
             container.innerHTML = html;
