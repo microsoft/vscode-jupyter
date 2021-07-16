@@ -26,6 +26,7 @@ interface IControlPanelProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
 
+    primarySelectedColumn?: string;
     selectedColumns: string[];
     setSelectedColumns(selectedColumns: string[], primarySelectedColumn?: string | undefined): void;
     setSelectedRows(selectedRows: number[], primarySelectedRow?: number | undefined): void;
@@ -70,6 +71,7 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                         submitCommand={this.props.submitCommand}
                         options={columnDropdownOptions}
                         selectedColumns={this.props.selectedColumns}
+                        primarySelectedColumn={this.props.primarySelectedColumn}
                         setSelectedColumns={this.props.setSelectedColumns}
                         setSelectedRows={this.props.setSelectedRows}
                     />

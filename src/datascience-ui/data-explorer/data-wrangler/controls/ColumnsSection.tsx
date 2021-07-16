@@ -15,6 +15,7 @@ interface IProps {
     collapsed: boolean;
     options: IDropdownOption[];
     submitCommand(data: { command: string; args: { [key: string]: string | number | boolean | string[] } }): void;
+    primarySelectedColumn?: string;
     selectedColumns: string[];
     setSelectedColumns(selectedColumns: string[], primarySelectedColumn?: string | undefined): void;
     setSelectedRows(selectedRows: number[], primarySelectedRow?: number | undefined): void;
@@ -167,7 +168,14 @@ export class ColumnsSection extends React.Component<IProps, IState> {
             </div>
         );
 
-        return <SidePanelSection title="COLUMNS" panel={columnsComponent} collapsed={this.props.collapsed}  height={"220px"}/>;
+        return (
+            <SidePanelSection
+                title="COLUMNS"
+                panel={columnsComponent}
+                collapsed={this.props.collapsed}
+                height={'220px'}
+            />
+        );
     }
 
     private generateColumnOptions() {
@@ -287,7 +295,7 @@ export class ColumnsSection extends React.Component<IProps, IState> {
         if (cols.length === 0) {
             // No columns are selected
             // Resets the operation dropdown for now until another column is selected
-            this.props.setSelectedColumns([]);
+            this.props.setSelectedColumns([], undefined);
             this.setState({ operationType: NON_SELECTABLE_OPTIONS.ChooseOperation });
         } else if (
             cols.length > 1 &&
@@ -296,10 +304,16 @@ export class ColumnsSection extends React.Component<IProps, IState> {
         ) {
             // Deselects the operation because the current operation was a
             // single column operation only and we have more than one column selected
-            this.props.setSelectedColumns(cols);
+
+            // If current primary selected column is deselected, then there should be no primary selected column
+            const primarySelectedColumn =
+                this.props.primarySelectedColumn && cols.includes(this.props.primarySelectedColumn)
+                    ? this.props.primarySelectedColumn
+                    : undefined;
+            this.props.setSelectedColumns(cols, primarySelectedColumn);
             this.setState({ operationType: NON_SELECTABLE_OPTIONS.ChooseOperation });
         } else {
-            this.props.setSelectedColumns(cols);
+            this.props.setSelectedColumns(cols, cols[0]);
         }
     }
 
@@ -321,6 +335,8 @@ export class ColumnsSection extends React.Component<IProps, IState> {
 
     // If nothing is selected, select "Select target column(s)" option so it shows up in the dropdown field
     private handleColumnSelection() {
-        return this.props.selectedColumns.length === 0 ? [NON_SELECTABLE_OPTIONS.SelectTargetsColumn] : this.props.selectedColumns;
+        return this.props.selectedColumns.length === 0
+            ? [NON_SELECTABLE_OPTIONS.SelectTargetsColumn]
+            : this.props.selectedColumns;
     }
 }

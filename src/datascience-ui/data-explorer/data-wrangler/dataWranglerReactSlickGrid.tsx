@@ -359,6 +359,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             submitCommand={this.props.submitCommand ?? ((_data: { command: string; args: any }) => {})}
                             /* eslint-enable no-return-assign, no-param-reassign */
                             sidePanels={this.props.sidePanels}
+                            primarySelectedColumn={this.state.primarySelectedColumn}
                             selectedColumns={this.state.selectedColumns ?? []}
                             setSelectedColumns={this.setSelectedColumns.bind(this)}
                             setSelectedRows={this.setSelectedRows.bind(this)}
@@ -533,7 +534,6 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             } else {
                 // Add column to selection
                 selectedColumns = [data.column.name!];
-                primarySelectedColumn = data.column.name;
             }
         }
 
@@ -545,13 +545,16 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     /**
      * Updates the internal state to the currently selected columns
      */
-    private setSelectedColumns(selectedColumns: string[], primarySelectedColumn?: string) {
+    private setSelectedColumns(selectedColumns: string[], selectedColumn?: string) {
         const grid = this.state.grid;
         if (!grid) {
             return;
         }
 
-        // Tell summary panel which column summary to dispaly
+        // If there's one column selected, it will always be the primary column
+        const primarySelectedColumn = selectedColumns.length === 1 ? selectedColumns[0] : selectedColumn
+
+        // Tell summary panel which column summary to display
         this.props.submitCommand!({
             command: DataWranglerCommands.Describe,
             args: { targetColumn: primarySelectedColumn } as IDescribeColReq
