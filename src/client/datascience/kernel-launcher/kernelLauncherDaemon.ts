@@ -51,7 +51,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         interpreter?: PythonEnvironment
     ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
         traceInfo(`Launching kernel daemon for ${kernelSpec.display_name} # ${interpreter?.path}`);
-        const [daemon, wdExists, env] = await Promise.all([
+        let [daemon, wdExists, env] = await Promise.all([
             this.daemonPool.get(resource, kernelSpec, interpreter),
             fs.pathExists(workingDirectory),
             this.kernelEnvVarsService.getEnvironmentVariables(resource, interpreter, kernelSpec)
@@ -59,6 +59,12 @@ export class PythonKernelLauncherDaemon implements IDisposable {
 
         // Check to see if we have the type of kernelspec that we expect
         const args = kernelSpec.argv.slice();
+        if (resource && resource.fsPath.toLowerCase().endsWith('.py')) {
+            env = env || {};
+            // When staring for debugging of python files, just initialize this env variable.
+            // This is for IPyKernel6, https://github.com/ipython/ipykernel/blob/69a0b793adad52329e63658ca7f40ee67de4d3d7/ipykernel/compiler.py#L51
+            env['IPYKERNEL_CELL_NAME'] = resource.fsPath;
+        }
         const modulePrefixIndex = args.findIndex((item) => item === '-m');
         if (modulePrefixIndex === -1) {
             throw new UnsupportedKernelSpec(args);

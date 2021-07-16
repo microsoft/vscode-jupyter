@@ -39,6 +39,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private readonly tracingEnableCode: string;
     private readonly tracingDisableCode: string;
     private runningByLine: boolean = false;
+    private ipykernelVersion?: string;
     constructor(
         @inject(IPythonDebuggerPathProvider) private readonly debuggerPathProvider: IPythonDebuggerPathProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
@@ -78,14 +79,17 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return this.startDebugSession((c) => this.debugService.startRunByLine(c), notebook, config, true);
     }
 
-    public async startDebugging(notebook: INotebook): Promise<void> {
-        const settings = this.configService.getSettings(notebook.resource);
+    public async startDebugging(notebook: INotebook, ipykernelVersion?: string): Promise<void> {
+        this.ipykernelVersion = ipykernelVersion;
         return this.startDebugSession(
-            (c) => this.debugService.startDebugging(undefined, c),
+            (c) => {
+                console.log('1234');
+                return this.debugService.startDebugging(undefined, c);
+            },
             notebook,
             {
                 logToFile: true,
-                justMyCode: settings.debugJustMyCode
+                justMyCode: true
             },
             false
         );
@@ -277,12 +281,14 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private buildSourceMap(fileHash: IFileHashes): ISourceMapRequest {
         const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.file }, pydevdSourceMaps: [] };
-
+        const isIPyKernel6 = this.ipykernelVersion?.toLowerCase().trim().startsWith('6') === true;
         sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map((cellHash) => {
             return {
                 line: cellHash.line,
                 endLine: cellHash.endLine,
-                runtimeSource: { path: `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>` },
+                runtimeSource: {
+                    path: isIPyKernel6 ? fileHash.file : `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>`
+                },
                 runtimeLine: cellHash.runtimeLine
             };
         });

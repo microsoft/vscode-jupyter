@@ -85,6 +85,7 @@ import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { NativeEditorNotebookModel } from '../notebookStorage/notebookModel';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
 import { noop } from '../../common/utils/misc';
+import { IPythonExecutionFactory } from '../../common/process/types';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -181,7 +182,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         webviewPanel: WebviewPanel | undefined,
         selector: KernelSelector,
         private extensionChecker: IPythonExtensionChecker,
-        serverStorage: IJupyterServerUriStorage
+        serverStorage: IJupyterServerUriStorage,
+        pythonExecFactory: IPythonExecutionFactory
     ) {
         super(
             listeners,
@@ -218,7 +220,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             notebookProvider,
             useCustomEditorApi,
             selector,
-            serverStorage
+            serverStorage,
+            pythonExecFactory
         );
         asyncRegistry.push(this);
         this.synchronizer.subscribeToUserActions(this, this.postMessage.bind(this));

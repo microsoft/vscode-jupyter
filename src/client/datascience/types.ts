@@ -300,7 +300,7 @@ export const IJupyterDebugger = Symbol('IJupyterDebugger');
 export interface IJupyterDebugger {
     readonly isRunningByLine: boolean;
     startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void>;
-    startDebugging(notebook: INotebook): Promise<void>;
+    startDebugging(notebook: INotebook, ipyKernelVersion?: string): Promise<void>;
     stopDebugging(notebook: INotebook): Promise<void>;
     onRestart(notebook: INotebook): void;
 }

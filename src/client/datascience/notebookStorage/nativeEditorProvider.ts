@@ -26,6 +26,7 @@ import {
 import { UseCustomEditorApi } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 
 import {
     GLOBAL_MEMENTO,
@@ -267,7 +268,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             panel,
             this.serviceContainer.get<KernelSelector>(KernelSelector),
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
-            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage)
+            this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
+            this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
         );
         this.openedEditor(editor);
         return editor;

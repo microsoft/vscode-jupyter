@@ -17,6 +17,7 @@ import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 
 import {
     IConfigurationService,
@@ -135,7 +136,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         selector: KernelSelector,
         private readonly extensionChecker: IPythonExtensionChecker,
         serverStorage: IJupyterServerUriStorage,
-        private readonly exportDialog: IExportDialog
+        private readonly exportDialog: IExportDialog,
+        pythonExecFactory: IPythonExecutionFactory
     ) {
         super(
             listeners,
@@ -172,7 +174,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             notebookProvider,
             useCustomEditorApi,
             selector,
-            serverStorage
+            serverStorage,
+            pythonExecFactory
         );
 
         // Send a telemetry event to indicate window is opening

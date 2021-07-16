@@ -109,6 +109,7 @@ import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import { serializeLanguageConfiguration } from './serialization';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
 
 export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
     public get notebook(): INotebook | undefined {
@@ -176,7 +177,8 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         private readonly notebookProvider: INotebookProvider,
         useCustomEditorApi: boolean,
         private selector: KernelSelector,
-        private serverStorage: IJupyterServerUriStorage
+        private serverStorage: IJupyterServerUriStorage,
+        private readonly pythonExecFactory: IPythonExecutionFactory
     ) {
         super(
             configuration,
@@ -676,7 +678,21 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     if (debugInfo.runByLine && debugInfo.hashFileName) {
                         await this.jupyterDebugger.startRunByLine(this._notebook, debugInfo.hashFileName);
                     } else if (!debugInfo.runByLine) {
-                        await this.jupyterDebugger.startDebugging(this._notebook);
+                        const interpreter = this._notebook.getKernelConnection()?.interpreter;
+                        let execService: IPythonExecutionService | undefined;
+                        if (interpreter) {
+                            execService = await this.pythonExecFactory.createActivatedEnvironment({
+                                interpreter: this._notebook.getKernelConnection()?.interpreter
+                            });
+                        }
+                        let ipykernelVersion: string | undefined;
+                        if (execService) {
+                            const result = await execService
+                                .exec(['-c', 'import ipykernel;print(ipykernel.__version__)'], { env: process.env })
+                                .catch(noop);
+                            ipykernelVersion = result ? (result.stdout || result.stderr || '').trim() : undefined;
+                        }
+                        await this.jupyterDebugger.startDebugging(this._notebook, ipykernelVersion);
                     } else {
                         throw Error('Missing hash file name when running by line');
                     }
