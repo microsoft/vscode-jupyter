@@ -339,19 +339,13 @@ export class KernelProcess implements IKernelProcess {
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
             traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
-            let [executionService, env] = await Promise.all([
+            const [executionService, env] = await Promise.all([
                 this.processExecutionFactory.create(this.resource),
                 // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
                 // Note that there might still be python env vars to merge from the kernel spec in the case of something like
                 // a Java kernel registered in a conda environment
                 this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec)
             ]);
-            if (this.resource?.fsPath.toLowerCase().endsWith('.py')) {
-                env = env || {};
-                // When staring for debugging of python files, just initialize this env variable.
-                // This is for IPyKernel6, https://github.com/ipython/ipykernel/blob/69a0b793adad52329e63658ca7f40ee67de4d3d7/ipykernel/compiler.py#L51
-                env['IPYKERNEL_CELL_NAME'] = this.resource.fsPath;
-            }
 
             // Add quotations to arguments if they have a blank space in them.
             // This will mainly quote paths so that they can run, other arguments shouldn't be quoted or it may cause errors.

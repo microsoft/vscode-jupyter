@@ -379,6 +379,11 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             }
 
             if (isDebug) {
+                const promise = this.kernel!.executeHidden(
+                    `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`,
+                    file,
+                    this.notebookDocument
+                );
                 const interpreter = notebook.getKernelConnection()?.interpreter;
                 let execService: IPythonExecutionService | undefined;
                 if (interpreter) {
@@ -393,6 +398,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                         .catch(noop);
                     ipykernelVersion = result ? (result.stdout || result.stderr || '').trim() : undefined;
                 }
+                await promise;
                 await this.jupyterDebugger.startDebugging(notebook, ipykernelVersion);
             }
 

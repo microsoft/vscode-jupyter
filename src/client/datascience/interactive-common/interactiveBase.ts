@@ -678,6 +678,14 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     if (debugInfo.runByLine && debugInfo.hashFileName) {
                         await this.jupyterDebugger.startRunByLine(this._notebook, debugInfo.hashFileName);
                     } else if (!debugInfo.runByLine) {
+                        const promise = this._notebook.execute(
+                            `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`,
+                            file,
+                            0,
+                            uuid(),
+                            undefined,
+                            true
+                        );
                         const interpreter = this._notebook.getKernelConnection()?.interpreter;
                         let execService: IPythonExecutionService | undefined;
                         if (interpreter) {
@@ -692,6 +700,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                                 .catch(noop);
                             ipykernelVersion = result ? (result.stdout || result.stderr || '').trim() : undefined;
                         }
+                        await promise;
                         await this.jupyterDebugger.startDebugging(this._notebook, ipykernelVersion);
                     } else {
                         throw Error('Missing hash file name when running by line');
