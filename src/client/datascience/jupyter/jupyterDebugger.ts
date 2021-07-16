@@ -39,7 +39,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private readonly tracingEnableCode: string;
     private readonly tracingDisableCode: string;
     private runningByLine: boolean = false;
-    private isUsingPyKernel6?: boolean;
+    private isUsingPyKernel6OrLater?: boolean;
     constructor(
         @inject(IPythonDebuggerPathProvider) private readonly debuggerPathProvider: IPythonDebuggerPathProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
@@ -86,7 +86,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             notebook.getKernelConnection()?.interpreter
         );
         const settings = this.configService.getSettings(notebook.resource);
-        this.isUsingPyKernel6 = result === ProductInstallStatus.Installed;
+        this.isUsingPyKernel6OrLater = result === ProductInstallStatus.Installed;
         return this.startDebugSession(
             (c) => this.debugService.startDebugging(undefined, c),
             notebook,
@@ -288,7 +288,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 line: cellHash.line,
                 endLine: cellHash.endLine,
                 runtimeSource: {
-                    path: this.isUsingPyKernel6
+                    path: this.isUsingPyKernel6OrLater
                         ? fileHash.file
                         : `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>`
                 },
