@@ -16,7 +16,7 @@ interface IProps {
 
 interface IState {
     operationType: string;
-    args: { [key: string]: string | number | boolean| string[] };
+    args: { [key: string]: string | number | boolean | string[] };
 }
 
 const rowOperationInfo: { [key: string]: { text: string; tooltip: string } } = {
@@ -34,7 +34,7 @@ const rowOperationInfo: { [key: string]: { text: string; tooltip: string } } = {
     }
 };
 
-const ChooseOperation = "Choose"
+const ChooseOperation = 'Choose';
 
 export class RowsSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
@@ -93,7 +93,9 @@ export class RowsSection extends React.Component<IProps, IState> {
             </div>
         );
 
-        return <SidePanelSection title="ROWS" panel={rowsComponent} collapsed={this.props.collapsed} height={"120px"} />;
+        return (
+            <SidePanelSection title="ROWS" panel={rowsComponent} collapsed={this.props.collapsed} height={'120px'} />
+        );
     }
 
     private generateTransformOperations = () => {
@@ -114,11 +116,11 @@ export class RowsSection extends React.Component<IProps, IState> {
 
     private updateOperationType = (_data: React.FormEvent, item: IDropdownOption | undefined) => {
         if (item) {
-            const operation = item.key as DataWranglerCommands
+            const operation = item.key as DataWranglerCommands;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const newState = { operationType:  operation } as any;
+            const newState = { operationType: operation } as any;
             if (operation === DataWranglerCommands.DropNa) {
-                newState['args'] = {target: 'row', isPreview: true}
+                newState['args'] = { target: 'row', isPreview: true };
             }
             this.setState(newState);
         }

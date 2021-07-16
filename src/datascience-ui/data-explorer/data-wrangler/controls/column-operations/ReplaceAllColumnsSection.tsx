@@ -22,7 +22,7 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
             oldValue: '',
             newValue: '',
             isPreview: true
-        })
+        });
     }
 
     render() {
@@ -56,7 +56,7 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
             oldValue: event.currentTarget.value,
             newValue: this.state.newValue,
             isPreview: true
-        })
+        });
     };
 
     private handleChangeNewValue = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,6 +65,6 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
             oldValue: this.state.oldValue,
             newValue: event.currentTarget.value,
             isPreview: true
-        })
+        });
     };
 }

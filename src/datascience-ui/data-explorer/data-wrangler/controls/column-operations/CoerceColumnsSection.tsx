@@ -1,8 +1,6 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
-import {
-    ICoerceColumnRequest
-} from '../../../../../client/datascience/data-viewing/data-wrangler/types';
+import { ICoerceColumnRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
 import { dropdownStyle, dropdownStyles } from '../styles';
 
 interface IProps {

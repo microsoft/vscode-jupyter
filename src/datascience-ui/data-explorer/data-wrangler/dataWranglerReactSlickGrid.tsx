@@ -409,7 +409,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     private maybeDropColumns = (e: any, data: Slick.OnHeaderContextMenuEventArgs<ISlickRow>) => {
         this.contextMenuColumnName = data.column.name;
         // Don't show context menu for the row numbering column or index column or preview columns
-        if (data.column.field === 'No.' || data.column.field === 'index' || data.column.name?.includes("(preview)")) {
+        if (data.column.field === 'No.' || data.column.field === 'index' || data.column.name?.includes('(preview)')) {
             return;
         }
         e.preventDefault();
@@ -468,7 +468,12 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         const selectedColumnId = data.column.id;
 
         // Disallow selection of the index columns
-        if (!selectedColumnId || selectedColumnId === '0' || selectedColumnId === '1' || data.column.name?.includes("(preview)")) {
+        if (
+            !selectedColumnId ||
+            selectedColumnId === '0' ||
+            selectedColumnId === '1' ||
+            data.column.name?.includes('(preview)')
+        ) {
             return;
         }
 
@@ -490,7 +495,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
 
             // Find ID of first selected column
             const firstSelectedColumnName = this.state.selectedColumns[0] ?? '';
-            const firstSelectedColumn = columns.find(c => c.name! === firstSelectedColumnName);
+            const firstSelectedColumn = columns.find((c) => c.name! === firstSelectedColumnName);
             const firstColumnIndex = this.state.grid.getColumnIndex(firstSelectedColumn?.id!);
 
             const secondColumnIndex = this.state.grid.getColumnIndex(selectedColumnId);
@@ -499,7 +504,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             selectedColumns = columns
                 .slice(Math.min(firstColumnIndex, secondColumnIndex), Math.max(firstColumnIndex, secondColumnIndex) + 1)
                 .map((c) => c.name ?? '')
-                .filter(name => !name.includes("(preview)"));
+                .filter((name) => !name.includes('(preview)'));
 
             primarySelectedColumn = firstSelectedColumnName;
         } else if (e.ctrlKey) {
@@ -508,7 +513,10 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 // Remove column from selection
                 selectedColumns = this.state.selectedColumns?.filter((c) => c !== data.column.name);
                 // If primarySelectedColumn was deselected, then set primarySelectedColumn to undefined
-                primarySelectedColumn = this.state.primarySelectedColumn === data.column.name ? undefined : this.state.primarySelectedColumn
+                primarySelectedColumn =
+                    this.state.primarySelectedColumn === data.column.name
+                        ? undefined
+                        : this.state.primarySelectedColumn;
             } else {
                 // Add column to selection
                 selectedColumns = [...(this.state.selectedColumns ?? []), data.column.name!].sort();
@@ -540,7 +548,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         }
 
         // If there's one column selected, it will always be the primary column
-        const primarySelectedColumn = selectedColumns.length === 1 ? selectedColumns[0] : selectedColumn
+        const primarySelectedColumn = selectedColumns.length === 1 ? selectedColumns[0] : selectedColumn;
 
         // Tell summary panel which column summary to display
         this.props.submitCommand!({
@@ -548,14 +556,17 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             args: { targetColumn: primarySelectedColumn } as IDescribeColReq
         });
 
-        this.setState({
-            selectedColumns,
-            primarySelectedColumn
-        }, () => {
-            const columns = this.styleColumns(grid.getColumns());
-            grid.setColumns(columns);
-            this.updateCssStyles();
-        });
+        this.setState(
+            {
+                selectedColumns,
+                primarySelectedColumn
+            },
+            () => {
+                const columns = this.styleColumns(grid.getColumns());
+                grid.setColumns(columns);
+                this.updateCssStyles();
+            }
+        );
     }
 
     /**
@@ -604,32 +615,34 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         if (!grid) {
             return;
         }
-        this.setState({
-            selectedRows,
-            primarySelectedRow
-        }, () => {
-            // Style rows after state is set
+        this.setState(
+            {
+                selectedRows,
+                primarySelectedRow
+            },
+            () => {
+                // Style rows after state is set
 
-            // force re-render for the styles to be applied
-            let stylings: ICellCssStylesHash;
-            const rowStyling: {[id: number]: string} = {};
-            const columns = this.state.grid?.getColumns().length;
-            // Create individual row styling that will be given to each row
-            // It is an object with the keys as all the column names
-            for (let i = 0; i < (columns ?? 0); i++) {
-                rowStyling[i] = 'react-grid-row-cell-selected';
+                // force re-render for the styles to be applied
+                let stylings: ICellCssStylesHash;
+                const rowStyling: { [id: number]: string } = {};
+                const columns = this.state.grid?.getColumns().length;
+                // Create individual row styling that will be given to each row
+                // It is an object with the keys as all the column names
+                for (let i = 0; i < (columns ?? 0); i++) {
+                    rowStyling[i] = 'react-grid-row-cell-selected';
+                }
+                // Create whole styling
+                // It is an object with the keys as the rows and the values as the stylings defined above
+                stylings =
+                    selectedRows?.reduce((result, row) => {
+                        result[row] = rowStyling;
+                        return result;
+                    }, {} as ICellCssStylesHash) ?? {};
+
+                grid.setCellCssStyles('Selected rows', stylings);
             }
-            // Create whole styling
-            // It is an object with the keys as the rows and the values as the stylings defined above
-            stylings = (
-                selectedRows?.reduce((result, row) => {
-                    result[row] = rowStyling;
-                    return result;
-                }, {} as ICellCssStylesHash) ?? {}
-            );
-
-            grid.setCellCssStyles('Selected rows', stylings);
-        });
+        );
     }
 
     protected autoResizeColumns() {

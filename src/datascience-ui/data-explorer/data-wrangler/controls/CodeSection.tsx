@@ -17,7 +17,7 @@ interface IState {
     currentVariableIndex: number | undefined;
 }
 
-export class  CodeSection extends React.Component<IProps, IState> {
+export class CodeSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
         this.state = { currentVariableIndex: 0 };
@@ -56,7 +56,7 @@ export class  CodeSection extends React.Component<IProps, IState> {
                     editorOptions={{
                         renderFinalNewline: false,
                         lineNumbers: 'on',
-                        lineDecorationsWidth: 8,
+                        lineDecorationsWidth: 8
                         // wordWrap: 'bounded', TODOV
                         // wordWrapColumn: 10
                     }}
@@ -69,6 +69,8 @@ export class  CodeSection extends React.Component<IProps, IState> {
             </div>
         );
 
-        return <SidePanelSection title="CODE" panel={codeComponent} collapsed={this.props.collapsed} height={"100px"}/>;
+        return (
+            <SidePanelSection title="CODE" panel={codeComponent} collapsed={this.props.collapsed} height={'100px'} />
+        );
     }
 }

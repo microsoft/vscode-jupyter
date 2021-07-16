@@ -14,12 +14,12 @@ export class FillNaSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
         this.state = {
-            value: '',
+            value: ''
         };
         this.props.setArgs({
             value: '',
             isPreview: true
-        })
+        });
     }
 
     render() {
@@ -44,6 +44,6 @@ export class FillNaSection extends React.Component<IProps, IState> {
         this.props.setArgs({
             value: event.currentTarget.value,
             isPreview: true
-        })
+        });
     };
 }

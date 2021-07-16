@@ -120,18 +120,24 @@ export class HistorySection extends React.Component<IProps, IState> {
         return (
             <div data-is-focusable>
                 <div className={className} style={{ paddingBottom: '4px', paddingTop: '2px' }}>
-                    <div style={{flexGrow: 1}} onClick={() => this.viewHistoryItem(index)} title={`Click to view intermediate state`}>
-                        <span
-                            style={{ verticalAlign: 'middle', width: '100%' }}
-                        >
-                            {item?.description}
-                        </span>
-                        {item?.isPreview &&
-                        <span
-                            style={{ verticalAlign: 'bottom', width: '100%', color: 'var(--vscode-descriptionForeground)', fontSize: '10px' }}
-                        >
-                            &nbsp;&nbsp;&nbsp;Preview
-                        </span>}
+                    <div
+                        style={{ flexGrow: 1 }}
+                        onClick={() => this.viewHistoryItem(index)}
+                        title={`Click to view intermediate state`}
+                    >
+                        <span style={{ verticalAlign: 'middle', width: '100%' }}>{item?.description}</span>
+                        {item?.isPreview && (
+                            <span
+                                style={{
+                                    verticalAlign: 'bottom',
+                                    width: '100%',
+                                    color: 'var(--vscode-descriptionForeground)',
+                                    fontSize: '10px'
+                                }}
+                            >
+                                &nbsp;&nbsp;&nbsp;Preview
+                            </span>
+                        )}
                     </div>
 
                     {index !== 0 && item?.isPreview && (
@@ -182,6 +188,13 @@ export class HistorySection extends React.Component<IProps, IState> {
                 </span>
             );
 
-        return <SidePanelSection title="HISTORY" panel={historyComponent} collapsed={this.props.collapsed}  height={"100px"}/>;
+        return (
+            <SidePanelSection
+                title="HISTORY"
+                panel={historyComponent}
+                collapsed={this.props.collapsed}
+                height={'100px'}
+            />
+        );
     }
 }

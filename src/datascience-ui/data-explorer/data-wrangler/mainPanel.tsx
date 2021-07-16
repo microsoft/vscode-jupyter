@@ -134,7 +134,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableType: undefined,
                 historyList: [],
                 histogramData: undefined,
-                monacoThemeObj: {base: 'vs-dark'},
+                monacoThemeObj: { base: 'vs-dark' },
                 sidePanels: [],
                 dataframeSummary: {},
                 operationPreview: undefined,
@@ -158,7 +158,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 originalVariableType: undefined,
                 historyList: [],
                 histogramData: undefined,
-                monacoThemeObj: {base: 'vs-dark'},
+                monacoThemeObj: { base: 'vs-dark' },
                 sidePanels: [],
                 dataframeSummary: {},
                 operationPreview: undefined,
@@ -456,10 +456,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.setState({ historyList: response });
     }
 
-    private handleOperationPreview(response: {
-        type: DataWranglerCommands | undefined;
-        cssStylings?: ICellCssStylesHash;
-    } | undefined) {
+    private handleOperationPreview(
+        response:
+            | {
+                  type: DataWranglerCommands | undefined;
+                  cssStylings?: ICellCssStylesHash;
+              }
+            | undefined
+    ) {
         // This is so we know how to color the columns/rows for different types of operation previews
         this.setState({ operationPreview: response?.type, cssStylings: response?.cssStylings });
     }
@@ -523,33 +527,22 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 type: ColumnType.Number
             } as IDataFrameColumnInfo;
             const columns = [rowNumberColumn].concat(variable.columns);
-            return columns.reduce(
-                (
-                    accum: Slick.Column<Slick.SlickData>[],
-                    c: IDataFrameColumnInfo,
-                    i: number
-                ) => {
-                    // Only show index column for pandas DataFrame and Series
-                    if (
-                        variable?.type === 'DataFrame' ||
-                        variable?.type === 'Series' ||
-                        c.key !== this.state.indexColumn
-                    ) {
-                        accum.push({
-                            type: c.type,
-                            field: c.key.toString(),
-                            id: `${i}`,
-                            name: c.key === RowNumberColumnName ? '' : c.key.toString(),
-                            sortable: true,
-                            toolTip: c.describe,
-                            formatter: cellFormatterFunc,
-                            isPreview: c.key.includes(" (preview)")
-                        } as Slick.Column<Slick.SlickData>);
-                    }
-                    return accum;
-                },
-                []
-            );
+            return columns.reduce((accum: Slick.Column<Slick.SlickData>[], c: IDataFrameColumnInfo, i: number) => {
+                // Only show index column for pandas DataFrame and Series
+                if (variable?.type === 'DataFrame' || variable?.type === 'Series' || c.key !== this.state.indexColumn) {
+                    accum.push({
+                        type: c.type,
+                        field: c.key.toString(),
+                        id: `${i}`,
+                        name: c.key === RowNumberColumnName ? '' : c.key.toString(),
+                        sortable: true,
+                        toolTip: c.describe,
+                        formatter: cellFormatterFunc,
+                        isPreview: c.key.includes(' (preview)')
+                    } as Slick.Column<Slick.SlickData>);
+                }
+                return accum;
+            }, []);
         }
         return [];
     }
@@ -661,5 +654,5 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private scrollColumnIntoView(column: string) {
         this.gridScrollColumnIntoView.notify(column);
-      }
+    }
 }

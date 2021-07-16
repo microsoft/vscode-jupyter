@@ -69,6 +69,6 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
     };
 
     private getNumber(num: string) {
-        return num === "" ? NaN : +num;
+        return num === '' ? NaN : +num;
     }
 }

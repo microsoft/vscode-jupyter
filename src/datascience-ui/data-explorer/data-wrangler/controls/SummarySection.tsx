@@ -290,7 +290,8 @@ export class SummarySection extends React.Component<ISummarySectionProps, IState
                 columnInfo = columnInfos[0];
             }
         }
-        const summaryComponent = columnInfo !== undefined ? (
+        const summaryComponent =
+            columnInfo !== undefined ? (
                 <>
                     <ColumnSummary
                         columnSummary={columnInfo}
@@ -299,7 +300,11 @@ export class SummarySection extends React.Component<ISummarySectionProps, IState
                         showDefaultSummary={this.showDefaultSummary.bind(this)}
                     />
                     {this.props.histogramData && this.props.histogramData.cols.length > 0 && (
-                        <Histogram data={this.props.histogramData.cols} themeObj={this.props.monacoThemeObj} column={this.props.histogramData?.columnName} />
+                        <Histogram
+                            data={this.props.histogramData.cols}
+                            themeObj={this.props.monacoThemeObj}
+                            column={this.props.histogramData?.columnName}
+                        />
                     )}
                 </>
             ) : (
