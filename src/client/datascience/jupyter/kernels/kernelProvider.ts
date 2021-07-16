@@ -16,7 +16,7 @@ import {
     IExtensionContext
 } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { isJupyterNotebook } from '../../notebook/helpers/helpers';
+import { InteractiveWindowView } from '../../notebook/constants';
 import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
@@ -58,7 +58,7 @@ export class KernelProvider implements IKernelProvider {
         if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
             return existingKernelInfo.kernel;
         }
-        const resourceUri = isJupyterNotebook(notebook) ? notebook.uri : options.resourceUri;
+        const resourceUri = notebook.notebookType === InteractiveWindowView ? options.resourceUri : notebook.uri;
         this.disposeOldKernel(notebook);
 
         const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;

@@ -379,7 +379,7 @@ export class VSCodeNotebookController implements Disposable {
         // Before we start the notebook, make sure the metadata is set to this new kernel.
         await updateNotebookDocumentMetadata(document, this.documentManager, selectedKernelConnectionMetadata);
 
-        if (!isJupyterNotebook(document)) {
+        if (document.notebookType === InteractiveWindowView) {
             // Possible its an interactive window, in that case we'll create the kernel manually.
             return;
         }
