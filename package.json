@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.59.0-insider"
+        "vscode": "^1.58.0"
     },
     "keywords": [
         "jupyter",
@@ -281,28 +281,28 @@
                 "title": "Debug",
                 "icon": "$(bug)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging"
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
             },
             {
                 "command": "jupyter.runByLine",
                 "title": "Run by Line",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging"
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
             },
             {
                 "command": "jupyter.runByLineContinue",
                 "title": "Continue",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging"
+                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
             },
             {
                 "command": "jupyter.runByLineStop",
                 "title": "Stop",
                 "icon": "$(debug-stop)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging"
+                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -954,17 +954,17 @@
             "notebook/cell/title": [
                 {
                     "command": "jupyter.runByLine",
-                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && !jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging",
+                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
                     "group": "inline/cell@0"
                 },
                 {
                     "command": "jupyter.runByLineContinue",
-                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging",
+                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
                     "group": "inline/cell@0"
                 },
                 {
                     "command": "jupyter.runByLineStop",
-                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging",
+                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
                     "group": "inline/cell@0"
                 }
             ],
