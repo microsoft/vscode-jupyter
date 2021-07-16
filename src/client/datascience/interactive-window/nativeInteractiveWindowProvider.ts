@@ -152,7 +152,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
                     this.kernelProvider,
                     this.disposables,
                     this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger),
-                    this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory),
+                    this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
                 );
                 this._windows.push(result);
 
