@@ -1030,7 +1030,7 @@ export namespace DataScience {
     );
     export const dataWranglerFillNaDescription = localize(
         'DataScience.dataWranglerFillNaDescription',
-        "Replaced Na values with: '{0}'"
+        "Replaced missing values with: '{0}' in column(s): '{1}'"
     );
     export const dataWranglerImportDescription = localize('DataScience.DataWranglerImportDescription', 'Imported data');
     export const dataWranglerStandalone = localize('DataScience.dataWranglerStandalone', 'Open just the Data Wrangler');

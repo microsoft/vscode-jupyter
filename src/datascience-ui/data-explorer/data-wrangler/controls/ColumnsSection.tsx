@@ -5,6 +5,7 @@ import { CoerceColumnsSection } from './column-operations/CoerceColumnsSection';
 import { NormalizeDataSection } from './column-operations/NormalizeDataSection';
 import { RenameColumnsSection } from './column-operations/RenameColumnsSection';
 import { ReplaceAllColumnsSection } from './column-operations/ReplaceAllColumnsSection';
+import { FillNaSection } from './column-operations/FillNaSection';
 import { SidePanelSection } from './SidePanelSection';
 import { clearButtonStyle, dropdownStyle, dropdownStyles } from './styles';
 import '../controlPanel.css';
@@ -57,6 +58,11 @@ const ColumnOperationInfo: { [key: string]: { text: string; tooltip: string; wor
     [DataWranglerCommands.DropNa]: {
         text: 'Remove missing values',
         tooltip: getLocString('DataScience.dataWranglerDropNATooltip', 'Remove missing values from selected columns'),
+        worksWithMultipleCols: true
+    },
+    [DataWranglerCommands.FillNa]: {
+        text: 'Replace missing values',
+        tooltip: getLocString('DataScience.dataWranglerFillNATooltip', 'Replace missing values from selected columns'),
         worksWithMultipleCols: true
     },
     [DataWranglerCommands.CoerceColumn]: {
@@ -246,6 +252,8 @@ export class ColumnsSection extends React.Component<IProps, IState> {
                 return <CoerceColumnsSection setArgs={this.setArgs.bind(this)} />;
             case DataWranglerCommands.ReplaceAllColumn:
                 return <ReplaceAllColumnsSection setArgs={this.setArgs.bind(this)} />;
+            case DataWranglerCommands.FillNa:
+                return <FillNaSection setArgs={this.setArgs.bind(this)} />;
             default:
                 return <></>;
         }

@@ -512,7 +512,7 @@
     "DataScience.dataWranglerDropNaColumnsDescription": "Dropped columns with missing data",
     "DataScience.dataWranglerDropNaRowsOnColumnDescription": "Dropped rows with missing data in column: '{0}'",
     "DataScience.dataWranglerNormalizeColumnDescription": "Normalized column: '{0}'",
-    "DataScience.dataWranglerFillNaDescription": "Replaced Na values with: '{0}'",
+    "DataScience.dataWranglerFillNaDescription": "Replaced missing values with: '{0}' in column(s): '{1}'",
     "DataScience.DataWranglerImportDescription": "Imported data",
     "DataScience.dataWranglerStandalone": "Open just the Data Wrangler",
     "DataScience.dataWranglerStandaloneLoading": "Importing Data and Launching Data Wrangler...",

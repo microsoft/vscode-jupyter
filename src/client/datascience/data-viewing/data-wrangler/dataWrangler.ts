@@ -416,16 +416,16 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         // Find type of each column
         // It is necessary so we replace the values in the columns with the correct column type
         const dataFrameInfo = await this.dataFrameInfoPromise;
-        const stringColumns = [];
-        const boolNumColumns = [];
-        for (const col of req.targetColumns) {
+        const stringColumns: string[] = [];
+        const boolNumColumns: string[] = [];
+        req.targetColumns.forEach((col) => {
             const type = dataFrameInfo?.columns?.find((c) => c.key === col)?.type;
             if (type && type === ColumnType.String) {
                 stringColumns.push(col);
             } else if (type && (type === ColumnType.Bool || type === ColumnType.Number)) {
                 boolNumColumns.push(col);
             }
-        }
+        });
 
         // Make a copy of dataframe
         let code = `${newVar} = ${currVar}.copy()\r\n`;
@@ -437,11 +437,11 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             code += `${newVar}[[${strCols}]] = ${newVar}[[${strCols}]].replace(to_replace='${req.oldValue}', value='${req.newValue}')\r\n`;
 
             if (req.isPreview) {
-                for (const col of stringColumns) {
+                stringColumns.forEach((col) => {
                     previewCode += `idx = ${newVar}.columns.get_loc("${col}")\r\n`;
                     previewCode += `data = ${newVar}[['${col}']].replace(to_replace='${req.oldValue}', value='${req.newValue}')\r\n`;
                     previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
-                }
+                });
             }
         }
 
@@ -451,11 +451,11 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             code += `${newVar}[[${boolNumCols}]] = ${newVar}[[${boolNumCols}]].replace(to_replace=${req.oldValue}, value=${req.newValue})\n`;
 
             if (req.isPreview) {
-                for (const col of boolNumColumns) {
+                boolNumColumns.forEach((col) => {
                     previewCode += `idx = ${newVar}.columns.get_loc("${col}")\r\n`;
                     previewCode += `data = ${newVar}[['${col}']].replace(to_replace=${req.oldValue}, value=${req.newValue})\r\n`;
                     previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
-                }
+                });
             }
         }
 
@@ -627,6 +627,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             previewCode: previewCode,
             isPreview: req.isPreview,
             shouldAdd: true,
+            // At least show first preview column
             columnsToShow: [req.targetColumn, `${req.targetColumn} (preview)`]
         };
 
@@ -638,13 +639,59 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         const currVar = vars.currentVariableName;
         const newVar = vars.newVariableName;
 
-        const code = `${newVar} = ${currVar}.fillna(${req.newValue.toString()})\n`;
+        // Find type of each column
+        // It is necessary so we replace the values in the columns with the correct column type
+        const dataFrameInfo = await this.dataFrameInfoPromise;
+        const stringColumns: string[] = [];
+        const boolNumColumns: string[] = [];
+        req.targetColumns.forEach((col) => {
+            const type = dataFrameInfo?.columns?.find((c) => c.key === col)?.type;
+            if (type && type === ColumnType.String) {
+                stringColumns.push(col);
+            } else if (type && (type === ColumnType.Bool || type === ColumnType.Number)) {
+                boolNumColumns.push(col);
+            }
+        });
+
+        const targetColumns = req.targetColumns.map((col: string) => `'${col}'`).join(', ');
+
+        // Create replacement dictionary where key is column and value is the value that will replace Na values
+        const fillNaDict = [
+            ...stringColumns.map((c) => `'${c}': '${req.value}'`),
+            ...boolNumColumns.map((c) => `'${c}': ${req.value}`)
+        ].join(', ');
+        const code = `${newVar} = ${currVar}.fillna({${fillNaDict}})\n`;
+
+        let previewCode = `${newVar} = ${currVar}.copy()\r\n`;
+
+        // Replace columns that have type string
+        if (stringColumns.length > 0 && req.isPreview) {
+            stringColumns.forEach((col) => {
+                previewCode += `idx = ${newVar}.columns.get_loc("${col}")\r\n`;
+                previewCode += `data = ${newVar}[['${col}']].fillna(value='${req.value}')\r\n`;
+                previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
+            });
+        }
+
+        // Replace columns that have type boolean or number
+        if (boolNumColumns.length > 0 && req.isPreview) {
+            boolNumColumns.forEach((col) => {
+                previewCode += `idx = ${newVar}.columns.get_loc("${col}")\r\n`;
+                previewCode += `data = ${newVar}[['${col}']].fillna(value=${req.value})\r\n`;
+                previewCode += `${newVar}.insert(idx + 1, '${col} (preview)', data)\n`;
+            });
+        }
+
         const historyItem = {
             type: DataWranglerCommands.FillNa,
-            description: DataScience.dataWranglerFillNaDescription().format(req.newValue.toString()),
+            description: DataScience.dataWranglerFillNaDescription().format(req.value.toString(), targetColumns),
             variableName: newVar,
             code: code,
-            shouldAdd: true
+            previewCode: previewCode,
+            isPreview: req.isPreview,
+            shouldAdd: true,
+            // At least show first preview column
+            columnsToShow: [req.targetColumns[0], `${req.targetColumns[0]} (preview)`]
         };
 
         return historyItem;
@@ -734,7 +781,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
                     }, {} as ICellCssStylesHash) ?? {}
                 );
             }
-        } else if (operation === DataWranglerCommands.ReplaceAllColumn) {
+        } else if ([DataWranglerCommands.ReplaceAllColumn, DataWranglerCommands.FillNa].includes(operation)) {
             const dataFrameInfo = await this.dataFrameInfoPromise;
             return dataFrameInfo?.previewDiffs ?? {};
         }

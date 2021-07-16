@@ -30,7 +30,7 @@ export class SidePanelSection extends React.Component<IProps, IState> {
                         overflowY: 'auto', // Bug: When given the ability to scroll, the resize element does not move with scroll
                         zIndex: 99997
                     }}
-                    defaultSize={{width: '100%', height: this.props.height}}
+                    defaultSize={{ width: '100%', height: this.props.height }}
                     handleStyles={{
                         bottom: {
                             bottom: '0px'

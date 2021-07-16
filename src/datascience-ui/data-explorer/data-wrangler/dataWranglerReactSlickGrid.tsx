@@ -298,6 +298,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         grid.removeCellCssStyles(DataWranglerCommands.NormalizeColumn);
         grid.removeCellCssStyles(DataWranglerCommands.DropNa);
         grid.removeCellCssStyles(DataWranglerCommands.ReplaceAllColumn);
+        grid.removeCellCssStyles(DataWranglerCommands.FillNa);
         grid.removeCellCssStyles('Selected rows');
     }
 

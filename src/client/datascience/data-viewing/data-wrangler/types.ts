@@ -139,7 +139,9 @@ export interface INormalizeColumnRequest {
 }
 
 export interface IFillNaRequest {
-    newValue: string | Number;
+    targetColumns: string[];
+    value: string | Number;
+    isPreview: boolean;
 }
 
 export interface ICoerceColumnRequest {
