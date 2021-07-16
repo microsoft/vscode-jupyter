@@ -1,3 +1,4 @@
+import fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 // Need to do like this because react-plotly depends on poltly.js normally
 // but we will use plotly.js-dist
@@ -14,8 +15,9 @@ import { summaryChildRowStyle, summaryInnerRowStyle, summaryRowStyle } from './s
 interface ISummarySectionProps {
     collapsed: boolean;
     resizeEvent: Slick.Event<void>;
-    histogramData?: IGetColsResponse;
+    histogramData: IGetColsResponse | undefined;
     dataframeSummary: IDataFrameInfo;
+    selectedColumns: string[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     monacoThemeObj: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,6 +28,7 @@ interface IDataframeColumnSummaryProps {
     columnSummary?: IDataFrameColumnInfo;
     shape: string;
     rowCount: number;
+    showDefaultSummary(show: boolean): void;
 }
 
 interface ISummaryRowProps {
@@ -41,6 +44,7 @@ interface IInnerRowsProps {
 interface ISummaryTitleProps {
     name: string;
     canClose: boolean;
+    showDefaultSummary(show: boolean): void;
 }
 
 interface IHistogramProps {
@@ -48,9 +52,13 @@ interface IHistogramProps {
     data: any[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     themeObj: any;
+    column: string;
 }
 
-interface IState {}
+interface IState {
+    showDefaultSummary: boolean;
+    isStateUpdate: boolean;
+}
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -68,12 +76,14 @@ class SummaryRow extends React.Component<ISummaryRowProps> {
 class SummaryTitle extends React.Component<ISummaryTitleProps> {
     render() {
         return (
-            <div style={{...summaryRowStyle, fontWeight: 'bold'}}>
+            <div style={{ ...summaryRowStyle, fontWeight: 'bold' }}>
                 <span>Column: {this.props.name}</span>
                 {this.props.canClose && (
                     <div
                         className="codicon codicon-close codicon-button"
-                        onClick={() => {console.log('button clicked');}}
+                        onClick={() => {
+                            this.props.showDefaultSummary(true);
+                        }}
                         style={{ verticalAlign: 'middle' }}
                         title={'Close column summary'}
                     />
@@ -102,7 +112,11 @@ class ColumnSummary extends React.Component<IDataframeColumnSummaryProps> {
         }
         return (
             <div>
-                <SummaryTitle name={this.props.columnSummary.key} canClose={true} />
+                <SummaryTitle
+                    name={this.props.columnSummary.key}
+                    canClose={true}
+                    showDefaultSummary={this.props.showDefaultSummary}
+                />
                 <SummaryRow name={'Data frame shape'} value={this.props.shape} />
                 <SummaryRow name={'Unique values'} value={this.props.columnSummary.uniqueCount} />
                 <SummaryRow name={'Rows'} value={this.props.rowCount} />
@@ -193,11 +207,12 @@ export class Histogram extends React.Component<IHistogramProps> {
             paper_bgcolor: this.props.themeObj.colors['editor.background'],
             font: {
                 color: this.props.themeObj.colors['editor.foreground']
-            }
+            },
+            title: this.props.column
         } as Plotly.Layout;
 
         return (
-            <div style={{marginRight: '15px', paddingRight: '15px'}}>
+            <div style={{ marginRight: '15px', paddingRight: '15px' }}>
                 <Plot
                     style={{
                         marginLeft: '20px',
@@ -212,7 +227,6 @@ export class Histogram extends React.Component<IHistogramProps> {
                             type: 'histogram'
                         }
                     ]}
-
                     layout={layout}
                     useResizeHandler={true}
                 />
@@ -224,36 +238,82 @@ export class Histogram extends React.Component<IHistogramProps> {
 export class SummarySection extends React.Component<ISummarySectionProps, IState> {
     constructor(props: ISummarySectionProps) {
         super(props);
+        this.state = { showDefaultSummary: true, isStateUpdate: false };
         this.props.resizeEvent.subscribe(() => {
             this.forceUpdate();
         });
     }
 
-    render() {
-        const columnInfos = this.props.dataframeSummary.columns?.filter(
-            (c) => c.key === this.props.histogramData?.columnName
-        );
-        let columnInfo;
-        if (columnInfos && columnInfos.length > 0) {
-            columnInfo = columnInfos[0];
+    private showDefaultSummary(show: boolean) {
+        this.setState({ showDefaultSummary: show, isStateUpdate: true });
+    }
+
+    static getDerivedStateFromProps(nextProps: ISummarySectionProps, nextState: IState) {
+        if (nextState.isStateUpdate) {
+            // Someone pressed X button so show default summary
+            return { showDefaultSummary: nextState.showDefaultSummary, isStateUpdate: false };
         }
+        if (nextProps.histogramData === undefined) {
+            // If histogram data is undefined, don't need to change state because it only renders when it is defined
+            return null;
+        }
+        return { showDefaultSummary: false, isStateUpdate: false };
+    }
 
-        const summaryComponent = columnInfo ? (
-            <>
-                <ColumnSummary
-                    columnSummary={columnInfo}
-                    shape={shapeAsString(this.props.dataframeSummary.shape)}
-                    rowCount={this.props.dataframeSummary.rowCount ?? 0}
-                />
-                {this.props.histogramData && this.props.histogramData.cols.length > 0 && (
-                    <Histogram data={this.props.histogramData.cols} themeObj={this.props.monacoThemeObj} />
-                )}
-            </>
-        ) : (
-            <DataframeSummary {...this.props.dataframeSummary} />
+    shouldComponentUpdate(nextProps: ISummarySectionProps, nextState: IState) {
+        if (this.state.showDefaultSummary && nextState.showDefaultSummary) {
+            // Next state and this state both shows default summary so don't need to re-render
+            return false;
+        }
+        if (fastDeepEqual(this.props.histogramData, nextProps.histogramData) && !nextState.showDefaultSummary) {
+            // Next props and this props have same histogram data so don't need to re-render
+            return false;
+        }
+        if (nextState.showDefaultSummary && this.props.histogramData === undefined) {
+            // Currently showing default summary because of undefined props.histogramData so we would still show default summary
+            return false;
+        }
+        if (this.state.showDefaultSummary && nextProps.histogramData === undefined) {
+            // Currently showing default summary because of state.showDefaultSummary and next props.histogramData is undefined so we would sitll show default summary
+            return false;
+        }
+        return true;
+    }
+
+    render() {
+        let columnInfo = undefined;
+        if (!this.state.showDefaultSummary && this.props.histogramData !== undefined) {
+            const columnInfos = this.props.dataframeSummary.columns?.filter(
+                (c) => c.key === this.props.histogramData?.columnName
+            );
+            if (columnInfos && columnInfos.length > 0) {
+                columnInfo = columnInfos[0];
+            }
+        }
+        const summaryComponent = columnInfo !== undefined ? (
+                <>
+                    <ColumnSummary
+                        columnSummary={columnInfo}
+                        shape={shapeAsString(this.props.dataframeSummary.shape)}
+                        rowCount={this.props.dataframeSummary.rowCount ?? 0}
+                        showDefaultSummary={this.showDefaultSummary.bind(this)}
+                    />
+                    {this.props.histogramData && this.props.histogramData.cols.length > 0 && (
+                        <Histogram data={this.props.histogramData.cols} themeObj={this.props.monacoThemeObj} column={this.props.histogramData?.columnName} />
+                    )}
+                </>
+            ) : (
+                <DataframeSummary {...this.props.dataframeSummary} />
+            );
+
+        return (
+            <SidePanelSection
+                title="SUMMARY"
+                panel={summaryComponent}
+                collapsed={this.props.collapsed}
+                height={'200px'}
+            />
         );
-
-        return <SidePanelSection title="SUMMARY" panel={summaryComponent} collapsed={this.props.collapsed} />;
     }
 }
 

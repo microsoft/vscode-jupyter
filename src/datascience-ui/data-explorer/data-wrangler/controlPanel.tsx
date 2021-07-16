@@ -19,12 +19,16 @@ interface IControlPanelProps {
     historyList: IHistoryItem[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     monacoThemeObj: any;
-    histogramData: IGetColsResponse;
+    histogramData: IGetColsResponse | undefined;
     currentVariableName: string;
     dataframeSummary: IDataFrameInfo;
     sidePanels: SidePanelSections[] | undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
+
+    selectedColumns: string[];
+    setSelectedColumns(selectedColumns: string[], primarySelectedColumn?: string | undefined): void;
+    setSelectedRows(selectedRows: number[], primarySelectedRow?: number | undefined): void;
 }
 
 export class ControlPanel extends React.Component<IControlPanelProps> {
@@ -57,6 +61,7 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                         submitCommand={this.props.submitCommand}
                         resizeEvent={this.props.resizeEvent}
                         dataframeSummary={this.props.dataframeSummary}
+                        selectedColumns={this.props.selectedColumns}
                     />
                 )}
                 {showColumns && (
@@ -64,7 +69,9 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                         collapsed={true}
                         submitCommand={this.props.submitCommand}
                         options={columnDropdownOptions}
-                        headers={this.props.headers}
+                        selectedColumns={this.props.selectedColumns}
+                        setSelectedColumns={this.props.setSelectedColumns}
+                        setSelectedRows={this.props.setSelectedRows}
                     />
                 )}
                 {showRows && (
@@ -72,7 +79,8 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                         collapsed={true}
                         submitCommand={this.props.submitCommand}
                         options={columnDropdownOptions}
-                        headers={this.props.headers}
+                        setSelectedColumns={this.props.setSelectedColumns}
+                        setSelectedRows={this.props.setSelectedRows}
                     />
                 )}
                 {showHistory && (
@@ -81,7 +89,6 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                         historyList={this.props.historyList}
                         currentVariableName={this.props.currentVariableName}
                         submitCommand={this.props.submitCommand}
-                        headers={this.props.headers}
                     />
                 )}
                 {showCode && (
@@ -98,16 +105,11 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
     }
 
     private generateColumnDropdownOptions() {
-        const result = [];
-        if (this.props.headers && this.props.headers.length) {
-            const range = this.props.headers.length;
-            for (let i = 0; i < range; i++) {
-                const text = this.props.headers[i];
-                if (text) {
-                    result.push({ key: i, text });
-                }
-            }
+        if (this.props.headers) {
+            return this.props.headers.map(col => {
+                return {key: col, text: col}
+            })
         }
-        return result;
+        return [];
     }
 }

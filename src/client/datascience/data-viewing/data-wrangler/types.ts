@@ -49,6 +49,7 @@ export namespace DataWranglerMessages {
     export const GetHistogramResponse = 'get_histogram_response';
     export const SetSidePanels = 'set_side_panels';
     export const OperationPreview = 'operation_preview';
+    export const ScrollColumnIntoView = 'scroll_column_into_view';
 }
 
 export const IDataWranglerFactory = Symbol('IDataWranglerFactory');
@@ -85,6 +86,7 @@ export interface IHistoryItem {
     isPreview?: boolean;
     previewCode?: string;
     shouldAdd?: boolean;
+    columnsToShow?: string[];
 }
 
 export interface IGetHistoryItem {
@@ -96,7 +98,7 @@ export interface IRenameColumnsRequest {
 }
 
 export interface IDescribeColReq {
-    targetColumn: string;
+    targetColumn: string | undefined;
 }
 
 export interface IGetColumnStatsReq {
@@ -116,7 +118,7 @@ export interface IReplaceAllColumnsRequest {
 }
 export interface IDropRequest {
     targetColumns?: string[];
-    rowIndex?: number;
+    rowIndices?: number[];
 }
 
 export interface IDropDuplicatesRequest {

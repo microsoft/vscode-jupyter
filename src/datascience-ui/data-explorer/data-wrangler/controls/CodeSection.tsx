@@ -69,6 +69,6 @@ export class  CodeSection extends React.Component<IProps, IState> {
             </div>
         );
 
-        return <SidePanelSection title="CODE" panel={codeComponent} collapsed={this.props.collapsed} />;
+        return <SidePanelSection title="CODE" panel={codeComponent} collapsed={this.props.collapsed} height={"100px"}/>;
     }
 }

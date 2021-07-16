@@ -7,7 +7,6 @@ import { DataWranglerCommands, IHistoryItem } from '../../../../client/datascien
 
 interface IProps {
     collapsed: boolean;
-    headers: string[];
     currentVariableName: string | undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     historyList: IHistoryItem[];
@@ -183,6 +182,6 @@ export class HistorySection extends React.Component<IProps, IState> {
                 </span>
             );
 
-        return <SidePanelSection title="HISTORY" panel={historyComponent} collapsed={this.props.collapsed} />;
+        return <SidePanelSection title="HISTORY" panel={historyComponent} collapsed={this.props.collapsed}  height={"100px"}/>;
     }
 }

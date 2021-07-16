@@ -17,7 +17,6 @@ import './globalJQueryImports';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
 import { generateDisplayValue } from './cellFormatter';
 import { getLocString } from '../react-common/locReactSide';
-import { DataWranglerCommands, ICellCssStylesHash, IHistoryItem, SidePanelSections } from '../../client/datascience/data-viewing/data-wrangler/types';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -46,6 +45,7 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
+import { DataWranglerCommands, ICellCssStylesHash, IHistoryItem, SidePanelSections } from '../../client/datascience/data-viewing/data-wrangler/types';
 
 /*
 WARNING: Do not change the order of these imports.
@@ -91,13 +91,19 @@ export interface ISlickGridProps {
     dataframeSummary?: IDataFrameInfo;
     operationPreview?: DataWranglerCommands;
     cssStylings?: ICellCssStylesHash;
+    scrollColumnIntoViewEvent?: Slick.Event<string>;
 }
 
 interface ISlickGridState {
     grid?: Slick.Grid<ISlickRow>;
     showingFilters?: boolean;
     fontSize: number;
-    selectedColumn?: string;
+
+    // For Data Wrangler
+    selectedColumns?: string[];
+    primarySelectedColumn?: string;
+    selectedRows?: number[];
+    primarySelectedRow?: number;
 }
 
 export class ColumnFilter {
@@ -563,7 +569,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         return null;
     }
 
-    private resetGrid = (_e: Slick.EventData, data: ISlickGridSlice) => {
+    protected resetGrid = (_e: Slick.EventData, data: ISlickGridSlice) => {
         this.dataView.setItems([]);
         const styledColumns = this.styleColumns(data.columns);
         this.setColumns(styledColumns);
@@ -574,7 +580,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.state.grid?.render(); // We might be able to skip this rerender?
     };
 
-    private setColumns = (newColumns: Slick.Column<Slick.SlickData>[]) => {
+    protected setColumns = (newColumns: Slick.Column<Slick.SlickData>[]) => {
         // HACK: SlickGrid header row does not rerender if its visibility is false when columns
         // are updated, and this causes the header to simply not show up when clicking the
         // filter button after we update the grid column headers on receiving a slice response.

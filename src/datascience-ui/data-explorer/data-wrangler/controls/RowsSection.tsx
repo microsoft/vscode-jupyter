@@ -7,10 +7,11 @@ import { clearButtonStyle, dropdownStyle, dropdownStyles } from './styles';
 
 interface IProps {
     collapsed: boolean;
-    headers: string[];
     options: IDropdownOption[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     submitCommand(data: { command: string; args: any }): void;
+    setSelectedColumns(selectedColumns: string[], primarySelectedColumn?: string | undefined): void;
+    setSelectedRows(selectedRows: number[], primarySelectedRow?: number | undefined): void;
 }
 
 interface IState {
@@ -20,23 +21,25 @@ interface IState {
 
 const rowOperationInfo: { [key: string]: { text: string; tooltip: string } } = {
     Choose: {
-        text: 'Choose',
-        tooltip: 'Choose an operation'
+        text: 'Choose operation',
+        tooltip: ''
     },
     [DataWranglerCommands.DropNa]: {
-        text: 'Drop Missing Values',
+        text: 'Drop missing values',
         tooltip: getLocString('DataScience.dataWranglerDropNARowsTooltip', 'Remove rows with missing values')
     },
     [DataWranglerCommands.DropDuplicates]: {
-        text: 'Drop Duplicates',
+        text: 'Drop duplicates',
         tooltip: getLocString('DataScience.dataWranglerDropDuplicateRowsTooltip', 'Remove duplicate rows')
     }
 };
 
+const ChooseOperation = "Choose"
+
 export class RowsSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
-        this.state = { operationType: 'Choose', args: {} };
+        this.state = { operationType: ChooseOperation, args: {} };
     }
 
     render() {
@@ -50,7 +53,6 @@ export class RowsSection extends React.Component<IProps, IState> {
                     options={this.generateTransformOperations()}
                     className="dropdownTitleOverrides"
                     onChange={this.updateOperationType}
-                    defaultSelectedKeys={[-2]}
                     selectedKey={this.state.operationType}
                 />
                 {this.state.operationType && (
@@ -67,20 +69,23 @@ export class RowsSection extends React.Component<IProps, IState> {
                                     ...this.state.args
                                 }
                             });
-                            this.setState({ operationType: 'Choose' });
+                            this.setState({ operationType: ChooseOperation }, () => {
+                                this.props.setSelectedColumns([]);
+                                this.props.setSelectedRows([]);
+                            });
                         }}
-                        disabled={this.state.operationType === 'Choose'}
+                        disabled={this.state.operationType === ChooseOperation}
                         className="dataWranglerButton"
                     >
                         Apply
                     </button>
                     <button
                         onClick={() => {
-                            this.setState({ operationType: 'Choose' });
+                            this.setState({ operationType: ChooseOperation });
                         }}
                         style={clearButtonStyle}
                         className="dataWranglerButton"
-                        disabled={this.state.operationType === 'Choose'}
+                        disabled={this.state.operationType === ChooseOperation}
                     >
                         Clear
                     </button>
@@ -88,7 +93,7 @@ export class RowsSection extends React.Component<IProps, IState> {
             </div>
         );
 
-        return <SidePanelSection title="ROWS" panel={rowsComponent} collapsed={this.props.collapsed} />;
+        return <SidePanelSection title="ROWS" panel={rowsComponent} collapsed={this.props.collapsed} height={"120px"} />;
     }
 
     private generateTransformOperations = () => {
@@ -98,7 +103,7 @@ export class RowsSection extends React.Component<IProps, IState> {
                 key: operation,
                 title: rowOperationInfo[operation].tooltip
             };
-            if (operation === 'Choose') {
+            if (operation === ChooseOperation) {
                 option['disabled'] = true;
                 option['hidden'] = true;
                 option['selected'] = true;

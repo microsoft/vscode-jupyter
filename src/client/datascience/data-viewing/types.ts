@@ -82,12 +82,13 @@ export type IDataViewerMapping = {
     [DataWranglerMessages.RefreshDataWrangler]: never | undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [DataWranglerMessages.UpdateHistoryList]: IHistoryItem[] | undefined;
-    [DataWranglerMessages.GetHistogramResponse]: IGetColsResponse;
+    [DataWranglerMessages.GetHistogramResponse]: IGetColsResponse | undefined;
     [DataWranglerMessages.SetSidePanels]: SidePanelSections[];
     [DataWranglerMessages.OperationPreview]: {
         type: DataWranglerCommands | undefined;
         cssStylings?: ICellCssStylesHash;
     };
+    [DataWranglerMessages.ScrollColumnIntoView]: string;
     [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
     [InteractiveWindowMessages.LoadTmLanguageRequest]: string;

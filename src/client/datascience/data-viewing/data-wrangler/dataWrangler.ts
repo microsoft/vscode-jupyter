@@ -299,12 +299,15 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     }
 
     private async getColumnStats(req: IGetColumnStatsReq) {
-        if (this.dataProvider && this.dataProvider.getCols && req.targetColumn !== undefined) {
+        if (req.targetColumn !== undefined && this.dataProvider && this.dataProvider.getCols) {
             const columnData = await this.dataProvider.getCols(req.targetColumn);
             void this.postMessage(DataWranglerMessages.GetHistogramResponse, {
                 cols: columnData,
                 columnName: req.targetColumn
             });
+        } else {
+            // Don't show a specific column in summary panel
+            void this.postMessage(DataWranglerMessages.GetHistogramResponse, undefined);
         }
     }
 
@@ -353,6 +356,13 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
                         cssStylings: stylings
                     });
                 }
+            }
+
+            // Scroll columns into view
+            if (historyItem.columnsToShow) {
+                historyItem.columnsToShow.forEach((col) =>
+                    this.postMessage(DataWranglerMessages.ScrollColumnIntoView, col).ignoreErrors()
+                );
             }
         }
     }
@@ -460,7 +470,8 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             code: code,
             previewCode: previewCode,
             isPreview: req.isPreview,
-            shouldAdd: true
+            shouldAdd: true,
+            columnsToShow: [req.targetColumns[0], `${req.targetColumns[0]} (preview)`]
         };
         return historyItem;
     }
@@ -486,12 +497,16 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         const currVar = vars.currentVariableName;
         const newVar = vars.newVariableName;
 
-        if (req.rowIndex !== undefined) {
+        if (req.rowIndices !== undefined) {
             // Drop rows by index
-            const code = `${newVar} = ${currVar}.drop(index=${req.rowIndex})\n`;
+            const rows = req.rowIndices.join(', ');
+            const code =
+                req.rowIndices.length === 1
+                    ? `${newVar} = ${currVar}.drop(index=${req.rowIndices[0]})\n`
+                    : `${newVar} = ${currVar}.drop(index=[${rows}])\n`;
             const historyItem = {
                 type: DataWranglerCommands.Drop,
-                description: DataScience.dataWranglerDropRowDescription().format(req.rowIndex.toString()),
+                description: DataScience.dataWranglerDropRowDescription().format(rows),
                 variableName: newVar,
                 code: code,
                 shouldAdd: true
@@ -611,7 +626,8 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             code: code,
             previewCode: previewCode,
             isPreview: req.isPreview,
-            shouldAdd: true
+            shouldAdd: true,
+            columnsToShow: [req.targetColumn, `${req.targetColumn} (preview)`]
         };
 
         return historyItem;
@@ -622,7 +638,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         const currVar = vars.currentVariableName;
         const newVar = vars.newVariableName;
 
-        const code = `${currVar} = ${currVar}.fillna(${req.newValue.toString()})\n`;
+        const code = `${newVar} = ${currVar}.fillna(${req.newValue.toString()})\n`;
         const historyItem = {
             type: DataWranglerCommands.FillNa,
             description: DataScience.dataWranglerFillNaDescription().format(req.newValue.toString()),

@@ -82,7 +82,7 @@ interface IMainPanelState {
     fileName?: string;
     sliceExpression?: string;
     historyList: IHistoryItem[];
-    histogramData?: IGetColsResponse;
+    histogramData: IGetColsResponse | undefined;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     monacoThemeObj: any;
     sidePanels: SidePanelSections[];
@@ -102,6 +102,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private gridColumnUpdateEvent: Slick.Event<Slick.Column<Slick.SlickData>[]> = new Slick.Event<
         Slick.Column<Slick.SlickData>[]
     >();
+    private gridScrollColumnIntoView: Slick.Event<string> = new Slick.Event<string>();
     private rowFetchSizeFirst: number = 0;
     private rowFetchSizeSubsequent: number = 0;
     private rowFetchSizeAll: number = 0;
@@ -270,6 +271,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.handleOperationPreview(payload);
                 break;
 
+            case DataWranglerMessages.ScrollColumnIntoView:
+                this.scrollColumnIntoView(payload);
+                break;
+
             case SharedMessages.UpdateSettings:
                 this.updateSettings(payload);
                 break;
@@ -369,6 +374,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 dataframeSummary={this.state.dataframeSummary}
                 operationPreview={this.state.operationPreview}
                 cssStylings={this.state.cssStylings}
+                scrollColumnIntoViewEvent={this.gridScrollColumnIntoView}
             />
         );
     }
@@ -442,7 +448,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.setState({ sidePanels: response });
     }
 
-    private handleGetHistogram(response: IGetColsResponse) {
+    private handleGetHistogram(response: IGetColsResponse | undefined) {
         this.setState({ histogramData: response });
     }
 
@@ -652,4 +658,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
         this.sendMessage(DataWranglerMessages.SubmitCommand, arg);
     };
+
+    private scrollColumnIntoView(column: string) {
+        this.gridScrollColumnIntoView.notify(column);
+      }
 }

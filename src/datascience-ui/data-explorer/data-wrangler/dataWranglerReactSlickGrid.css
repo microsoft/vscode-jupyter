@@ -7,10 +7,13 @@
 }
 
 .resizable-span:hover {
-    transition: background-color .1s ease-out 0.4s !important;
+    transition: background-color 0.1s ease-out 0.4s !important;
 }
 
-.resizable-span:hover, .resizable-span:active, .resizable-span:focus, .resizable-span:target {
+.resizable-span:hover,
+.resizable-span:active,
+.resizable-span:focus,
+.resizable-span:target {
     background: var(--vscode-focusBorder) !important;
 }
 
@@ -22,6 +25,16 @@
     border: none;
     margin-left: 8px;
     width: 100%;
+}
+
+.react-grid-cell {
+    padding: 4px;
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    /* border-right: 1px solid transparent; */
+    box-sizing: content-box;
+    padding-left: 7px;
+    /* Removed box-sizing: border-box; because when changing cell color it messed up the sizing and it's too expensive to re-size everything */
 }
 
 /* Some overrides necessary to get the colors we want */
@@ -39,6 +52,8 @@
     padding-right: 0px;
     padding-left: 6px;
     padding-bottom: 2px;
+    height: 20px;
+    line-height: 20px;
     display: flex;
 }
 
@@ -46,7 +61,8 @@
     padding-left: 3px;
     padding-right: 3px;
     padding-bottom: 2px;
-    padding-top: 1px;
+    padding-top: 3px;
+    margin-top: -1px;
     border-left: 1px solid var(--vscode-editor-lineHighlightBorder);
     border-right: 1px solid var(--vscode-editor-lineHighlightBorder);
     border-bottom: 1px solid var(--vscode-editor-lineHighlightBorder);
@@ -58,11 +74,11 @@
 }
 
 .show-on-hover {
-    opacity: 0
+    opacity: 0;
 }
 
 .show-on-hover:hover {
-    opacity: 1
+    opacity: 1;
 }
 
 .react-grid-cell.active {
@@ -71,7 +87,7 @@
 }
 
 .react-grid-header-cell-active {
-    background-color: #264F78;
+    background-color: #264f78;
 }
 
 .react-grid-cell-active {
@@ -88,29 +104,54 @@
 }
 
 .react-grid-cell-focus {
-    background-color: #062F4A;
+    background-color: #062f4a;
 }
 
 .react-grid-header-cell-before {
-    background-color: #6F1313;
+    background-color: #6f1313;
 }
 
 .react-grid-cell-before {
-    background-color: #4B1818;
+    background-color: #4b1818;
 }
 
 .react-grid-cell-before-diff {
-    background-color: #6F1313 !important;
+    background-color: #6f1313 !important;
 }
 
 .react-grid-header-cell-preview {
-    background-color: #4B5632;
+    background-color: #4b5632;
 }
 
 .react-grid-cell-preview {
-    background-color: #373D29;
+    background-color: #373d29;
 }
 
 .react-grid-cell-preview-diff {
-    background-color: #4B5632 !important;
+    background-color: #4b5632 !important;
+}
+
+.react-grid-header-cell-selected {
+    background-color: #187bdf;
+    /* color: white; */
+}
+
+.react-grid-cell-selected {
+    background-color: #0060c0;
+    /* color: white; */
+}
+
+.react-grid-row-cell-selected {
+    background-color: #0060c0;
+    /* color: white; */
+}
+
+.slick-row:hover:not(.selected-row) > .react-grid-cell {
+    /* background-color: #e8e8e8; */
+    background-color: var(--override-selection-background, var(--vscode-list-hoverBackground));
+}
+
+.slick-cell.active {
+    background-color: #187bdf;
+    /* color: #ffffff; */
 }
