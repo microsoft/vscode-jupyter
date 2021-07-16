@@ -121,7 +121,7 @@ export interface IKernelSelectionListProvider<T extends KernelConnectionMetadata
 }
 
 export interface IKernel extends IAsyncDisposable {
-    readonly uri: Uri;
+    readonly notebookUri: Uri;
     readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>;
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
@@ -143,16 +143,23 @@ export interface IKernel extends IAsyncDisposable {
     executeHidden(code: string, file: string, document: NotebookDocument): Promise<void>;
 }
 
-export type KernelOptions = { metadata: KernelConnectionMetadata; controller: NotebookController };
+export type KernelOptions = {
+    metadata: KernelConnectionMetadata;
+    controller: NotebookController;
+    /**
+     * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
+     */
+    resourceUri?: Uri;
+};
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
     /**
-     * Get hold of the active kernel for a given Uri (Notebook or other file).
+     * Get hold of the active kernel for a given Notebook.
      */
-    get(uri: Uri): IKernel | undefined;
+    get(notebook: NotebookDocument): IKernel | undefined;
     /**
-     * Gets or creates a kernel for a given Uri.
-     * WARNING: If called with different options for same Uri, old kernel associated with the Uri will be disposed.
+     * Gets or creates a kernel for a given Notebook.
+     * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
-    getOrCreate(uri: Uri, options: KernelOptions): IKernel | undefined;
+    getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel | undefined;
 }

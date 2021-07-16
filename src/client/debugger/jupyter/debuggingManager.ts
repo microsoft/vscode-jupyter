@@ -195,9 +195,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
         await this.notebookControllerManager.loadNotebookControllers();
         const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
 
-        let kernel = this.kernelProvider.get(doc.uri);
+        let kernel = this.kernelProvider.get(doc);
         if (!kernel && controller) {
-            kernel = this.kernelProvider.getOrCreate(doc.uri, {
+            kernel = this.kernelProvider.getOrCreate(doc, {
                 metadata: controller.connection,
                 controller: controller?.controller
             });

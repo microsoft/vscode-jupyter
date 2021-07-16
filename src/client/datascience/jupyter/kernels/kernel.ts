@@ -88,7 +88,8 @@ export class Kernel implements IKernel {
     private readonly kernelExecution: KernelExecution;
     private startCancellation = new CancellationTokenSource();
     constructor(
-        public readonly uri: Uri,
+        public readonly notebookUri: Uri,
+        public readonly resourceUri: Uri,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
@@ -153,7 +154,7 @@ export class Kernel implements IKernel {
         return interruptResultPromise;
     }
     public async dispose(): Promise<void> {
-        traceInfo(`Dispose kernel ${this.uri.toString()}`);
+        traceInfo(`Dispose kernel ${this.notebookUri.toString()}`);
         this.restarting = undefined;
         this._notebookPromise = undefined;
         if (this.notebook) {
@@ -215,8 +216,8 @@ export class Kernel implements IKernel {
                     try {
                         traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
                         this.notebook = await this.notebookProvider.getOrCreateNotebook({
-                            identity: this.uri,
-                            resource: this.uri,
+                            identity: this.notebookUri,
+                            resource: this.resourceUri,
                             disableUI: options?.disableUI,
                             getOnly: false,
                             metadata: getNotebookMetadata(options.document), // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
@@ -234,7 +235,7 @@ export class Kernel implements IKernel {
                     }
                     await this.initializeAfterStart(SysInfoReason.Start, options.document);
                     sendKernelTelemetryEvent(
-                        this.uri,
+                        this.resourceUri,
                         Telemetry.PerceivedJupyterStartupNotebook,
                         stopWatch.elapsedTime
                     );
@@ -282,7 +283,7 @@ export class Kernel implements IKernel {
         }
 
         // Set the notebook property on the matching editor
-        const editor = this.editorProvider.editors.find((item) => this.fs.arePathsSame(item.file, this.uri));
+        const editor = this.editorProvider.editors.find((item) => this.fs.arePathsSame(item.file, this.notebookUri));
         if (editor) {
             editor.notebook = this.notebook;
         }
@@ -291,7 +292,7 @@ export class Kernel implements IKernel {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
             this.notebook.onDisposed(() => {
-                traceInfo(`Kernel got disposed as a result of notebook.onDisposed ${this.uri.toString()}`);
+                traceInfo(`Kernel got disposed as a result of notebook.onDisposed ${this.notebookUri.toString()}`);
                 this._notebookPromise = undefined;
                 this._onDisposed.fire();
             });
@@ -310,7 +311,7 @@ export class Kernel implements IKernel {
         }
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             await this.disableJedi();
-            await this.notebook.setLaunchingFile(this.uri.fsPath);
+            await this.notebook.setLaunchingFile(this.resourceUri.fsPath);
             await this.initializeMatplotlib();
         }
         await this.notebook
@@ -380,13 +381,13 @@ export class Kernel implements IKernel {
         if (!this.notebook) {
             return;
         }
-        const settings = this.configService.getSettings(this.uri);
+        const settings = this.configService.getSettings(this.resourceUri);
         if (settings && settings.themeMatplotlibPlots) {
             const matplobInit = settings.enablePlotViewer
                 ? CodeSnippets.MatplotLibInitSvg
                 : CodeSnippets.MatplotLibInitPng;
 
-            traceInfo(`Initialize matplotlib for ${this.uri.toString()}`);
+            traceInfo(`Initialize matplotlib for ${this.resourceUri.toString()}`);
             await this.executeSilently(matplobInit);
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
             if (!settings.ignoreVscodeTheme) {
@@ -399,7 +400,7 @@ export class Kernel implements IKernel {
             }
         } else {
             const configInit = !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
-            traceInfoIf(isCI, `Initialize config for plots for ${this.uri.toString()}`);
+            traceInfoIf(isCI, `Initialize config for plots for ${this.resourceUri.toString()}`);
             await this.executeSilently(configInit);
         }
     }
@@ -408,7 +409,7 @@ export class Kernel implements IKernel {
             return;
         }
         const deferred = createDeferred<void>();
-        const observable = this.notebook.executeObservable(code, this.uri.fsPath, 0, uuid(), true);
+        const observable = this.notebook.executeObservable(code, this.resourceUri.fsPath, 0, uuid(), true);
         const subscription = observable.subscribe(
             noop,
             (ex) => deferred.reject(ex),

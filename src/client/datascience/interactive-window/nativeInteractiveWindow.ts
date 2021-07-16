@@ -259,9 +259,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private registerKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
-        const kernel = this.kernelProvider.getOrCreate(notebookDocument.uri, {
+        const kernel = this.kernelProvider.getOrCreate(notebookDocument, {
             metadata: controller.connection,
-            controller: controller.controller
+            controller: controller.controller,
+            resourceUri: this.owner
         });
         this.kernelLoadPromise = kernel?.start({ disableUI: false, document: notebookDocument });
         this.kernel = kernel;

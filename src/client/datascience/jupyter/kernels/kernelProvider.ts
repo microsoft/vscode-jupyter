@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { NotebookDocument } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -27,7 +27,7 @@ import { IKernel, IKernelProvider, KernelOptions } from './types';
 
 @injectable()
 export class KernelProvider implements IKernelProvider {
-    private readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IKernel }>();
+    private readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
     constructor(
         @inject(IAsyncDisposableRegistry) private asyncDisposables: IAsyncDisposableRegistry,
@@ -44,26 +44,27 @@ export class KernelProvider implements IKernelProvider {
         this.asyncDisposables.push(this);
     }
 
-    public get(uri: Uri): IKernel | undefined {
-        return this.kernelsByUri.get(uri.toString())?.kernel;
+    public get(notebook: NotebookDocument): IKernel | undefined {
+        return this.kernelsByNotebook.get(notebook)?.kernel;
     }
     public async dispose() {
         const items = Array.from(this.pendingDisposables.values());
         this.pendingDisposables.clear();
         await Promise.all(items);
     }
-    public getOrCreate(uri: Uri, options: KernelOptions): IKernel | undefined {
-        const existingKernelInfo = this.kernelsByUri.get(uri.toString());
+    public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel | undefined {
+        const existingKernelInfo = this.kernelsByNotebook.get(notebook);
         if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
             return existingKernelInfo.kernel;
         }
+        const resourceUri = options.resourceUri || notebook.uri;
+        this.disposeOldKernel(notebook);
 
-        this.disposeOldKernel(uri);
-
-        const waitForIdleTimeout = this.configService.getSettings(uri).jupyterLaunchTimeout;
-        const interruptTimeout = this.configService.getSettings(uri).jupyterInterruptTimeout;
+        const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
+        const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
         const kernel = new Kernel(
-            uri,
+            notebook.uri,
+            resourceUri,
             options.metadata,
             this.notebookProvider,
             this.disposables,
@@ -80,22 +81,22 @@ export class KernelProvider implements IKernelProvider {
             this.configService
         );
         this.asyncDisposables.push(kernel);
-        this.kernelsByUri.set(uri.toString(), { options, kernel });
-        this.deleteMappingIfKernelIsDisposed(uri, kernel);
+        this.kernelsByNotebook.set(notebook, { options, kernel });
+        this.deleteMappingIfKernelIsDisposed(notebook, kernel);
         return kernel;
     }
     /**
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.
      */
-    private deleteMappingIfKernelIsDisposed(uri: Uri, kernel: IKernel) {
+    private deleteMappingIfKernelIsDisposed(notebook: NotebookDocument, kernel: IKernel) {
         kernel.onDisposed(
             () => {
                 // If the same kernel is associated with this document & it was disposed, then delete it.
-                if (this.kernelsByUri.get(uri.toString())?.kernel === kernel) {
-                    this.kernelsByUri.delete(uri.toString());
+                if (this.kernelsByNotebook.get(notebook)?.kernel === kernel) {
+                    this.kernelsByNotebook.delete(notebook);
                     traceInfo(
-                        `Kernel got disposed, hence there is no longer a kernel associated with ${uri.toString()}`,
-                        kernel.uri.toString()
+                        `Kernel got disposed, hence there is no longer a kernel associated with ${notebook.uri.toString()}`,
+                        kernel.notebookUri.toString()
                     );
                 }
             },
@@ -103,8 +104,8 @@ export class KernelProvider implements IKernelProvider {
             this.disposables
         );
     }
-    private disposeOldKernel(uri: Uri) {
-        const kernelToDispose = this.kernelsByUri.get(uri.toString());
+    private disposeOldKernel(notebook: NotebookDocument) {
+        const kernelToDispose = this.kernelsByNotebook.get(notebook);
         if (kernelToDispose) {
             this.pendingDisposables.add(kernelToDispose.kernel);
             kernelToDispose.kernel
@@ -113,7 +114,7 @@ export class KernelProvider implements IKernelProvider {
                 .finally(() => this.pendingDisposables.delete(kernelToDispose.kernel))
                 .catch(noop);
         }
-        this.kernelsByUri.delete(uri.toString());
+        this.kernelsByNotebook.delete(notebook);
     }
 }
 
