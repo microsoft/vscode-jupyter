@@ -35,7 +35,9 @@ class Debugger {
     readonly session: Promise<DebugSession>;
 
     constructor(public readonly document: NotebookDocument, public readonly cell?: NotebookCell) {
-        const name = cell ? `${path.basename(document.uri.toString())}?RBL=${cell.index}` : path.basename(document.uri.toString());
+        const name = cell
+            ? `${path.basename(document.uri.toString())}?RBL=${cell.index}`
+            : path.basename(document.uri.toString());
         this.session = new Promise<DebugSession>((resolve, reject) => {
             this.resolveFunc = resolve;
             this.rejectFunc = reject;
