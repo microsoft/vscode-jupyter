@@ -719,7 +719,6 @@ module.exports = {
         'src/client/debugger/extension/attachQuickPick/provider.ts',
         'src/client/debugger/extension/attachQuickPick/picker.ts',
         'src/client/debugger/extension/helpers/protocolParser.ts',
-        'src/client/debugger/types.ts',
         'src/client/debugger/constants.ts',
         'src/client/languageServices/jediProxyFactory.ts',
         'src/client/languageServices/proposeLanguageServerBanner.ts',

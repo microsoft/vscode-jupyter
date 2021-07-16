@@ -281,7 +281,28 @@
                 "title": "Debug",
                 "icon": "$(bug)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging"
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+            },
+            {
+                "command": "jupyter.runByLine",
+                "title": "Run by Line",
+                "icon": "$(debug-line-by-line)",
+                "category": "Jupyter",
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+            },
+            {
+                "command": "jupyter.runByLineContinue",
+                "title": "Continue",
+                "icon": "$(debug-line-by-line)",
+                "category": "Jupyter",
+                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+            },
+            {
+                "command": "jupyter.runByLineStop",
+                "title": "Stop",
+                "icon": "$(debug-stop)",
+                "category": "Jupyter",
+                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -930,6 +951,23 @@
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && config.jupyter.experimental.debugging"
                 }
             ],
+            "notebook/cell/title": [
+                {
+                    "command": "jupyter.runByLine",
+                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
+                    "group": "inline/cell@0"
+                },
+                {
+                    "command": "jupyter.runByLineContinue",
+                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
+                    "group": "inline/cell@0"
+                },
+                {
+                    "command": "jupyter.runByLineStop",
+                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
+                    "group": "inline/cell@0"
+                }
+            ],
             "interactive/toolbar": [
                 {
                     "command": "jupyter.interactive.clearAllCells",
@@ -1012,6 +1050,26 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.debugNotebook",
+                    "title": "Debug",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.runByLine",
+                    "title": "Run by Line",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.runByLineContinue",
+                    "title": "Continue",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.runByLineStop",
+                    "title": "Stop",
+                    "when": "false"
+                },
                 {
                     "command": "jupyter.notebookeditor.keybind.toggleOutput",
                     "title": "%DataScience.toggleCellOutput%",
