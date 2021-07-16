@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IPythonExtensionChecker } from '../../api/types';
-import { IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
+import { IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { generateCellRangesFromDocument } from '../cellFactory';
@@ -15,6 +15,8 @@ import { generateCellRangesFromDocument } from '../cellFactory';
 export class Decorator implements IExtensionSingleActivationService, IDisposable {
     private activeCellTop: vscode.TextEditorDecorationType | undefined;
     private activeCellBottom: vscode.TextEditorDecorationType | undefined;
+    private activeCellTopUnfocused: vscode.TextEditorDecorationType | undefined;
+    private activeCellBottomUnfocused: vscode.TextEditorDecorationType | undefined;
     private cellSeparatorType: vscode.TextEditorDecorationType | undefined;
     private timer: NodeJS.Timer | undefined | number;
 
@@ -22,7 +24,6 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IVSCodeNotebook) private vsCodeNotebook: IVSCodeNotebook,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
     ) {
         this.computeDecorations();
@@ -53,8 +54,8 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
         }
     }
 
-    private changedEditor(editor: vscode.TextEditor | undefined) {
-        this.triggerUpdate(editor);
+    private changedEditor() {
+        this.triggerUpdate(undefined);
     }
 
     private changedDocument(e: vscode.TextDocumentChangeEvent) {
@@ -78,6 +79,18 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
     }
 
     private computeDecorations() {
+        this.activeCellTopUnfocused = this.documentManager.createTextEditorDecorationType({
+            borderColor: new vscode.ThemeColor('editor.lineHighlightBorder'),
+            borderWidth: '2px 0px 0px 0px',
+            borderStyle: 'solid',
+            isWholeLine: true
+        });
+        this.activeCellBottomUnfocused = this.documentManager.createTextEditorDecorationType({
+            borderColor: new vscode.ThemeColor('editor.lineHighlightBorder'),
+            borderWidth: '0px 0px 1px 0px',
+            borderStyle: 'solid',
+            isWholeLine: true
+        });
         this.activeCellTop = this.documentManager.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('peekView.border'),
             borderWidth: '2px 0px 0px 0px',
@@ -98,39 +111,59 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
         });
     }
 
+    /**
+     *
+     * @param editor The editor to update cell decorations in.
+     * If left undefined, this function will update all visible text editors.
+     */
     private update(editor: vscode.TextEditor | undefined) {
-        if (
-            editor &&
-            editor.document &&
-            editor.document.languageId === PYTHON_LANGUAGE &&
-            !this.vsCodeNotebook.activeNotebookEditor &&
-            editor.document.notebook === undefined &&
-            this.activeCellTop &&
-            this.cellSeparatorType &&
-            this.activeCellBottom &&
-            this.extensionChecker.isPythonExtensionInstalled
-        ) {
-            const settings = this.configuration.getSettings(editor.document.uri);
-            if (settings.decorateCells) {
-                // Find all of the cells
-                const cells = generateCellRangesFromDocument(editor.document, settings);
+        // Don't look through all visible editors unless we have to i.e. the active editor has changed
+        const editorsToCheck = editor === undefined ? this.documentManager.visibleTextEditors : [editor];
+        for (const editor of editorsToCheck) {
+            if (
+                editor &&
+                editor.document &&
+                editor.document.languageId === PYTHON_LANGUAGE &&
+                editor.document.notebook === undefined &&
+                this.activeCellTop &&
+                this.activeCellTopUnfocused &&
+                this.activeCellBottomUnfocused &&
+                this.cellSeparatorType &&
+                this.activeCellBottom &&
+                this.extensionChecker.isPythonExtensionInstalled
+            ) {
+                const settings = this.configuration.getSettings(editor.document.uri);
+                if (settings.decorateCells) {
+                    // Find all of the cells
+                    const cells = generateCellRangesFromDocument(editor.document, settings);
+                    // Find the range for our active cell.
+                    const currentRange = cells.map((c) => c.range).filter((r) => r.contains(editor.selection.anchor));
+                    const rangeTop =
+                        currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
+                    const rangeBottom =
+                        currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
+                    if (this.documentManager.activeTextEditor === editor) {
+                        editor.setDecorations(this.activeCellTop, rangeTop);
+                        editor.setDecorations(this.activeCellBottom, rangeBottom);
+                        editor.setDecorations(this.activeCellTopUnfocused, []);
+                        editor.setDecorations(this.activeCellBottomUnfocused, []);
+                    } else {
+                        editor.setDecorations(this.activeCellTop, []);
+                        editor.setDecorations(this.activeCellBottom, []);
+                        editor.setDecorations(this.activeCellTopUnfocused, rangeTop);
+                        editor.setDecorations(this.activeCellBottomUnfocused, rangeBottom);
+                    }
 
-                // Find the range for our active cell.
-                const currentRange = cells.map((c) => c.range).filter((r) => r.contains(editor.selection.anchor));
-                const rangeTop =
-                    currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
-                const rangeBottom =
-                    currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
-                editor.setDecorations(this.activeCellTop, rangeTop);
-                editor.setDecorations(this.activeCellBottom, rangeBottom);
-
-                // Find the start range for the rest
-                const startRanges = cells.map((c) => new vscode.Range(c.range.start, c.range.start));
-                editor.setDecorations(this.cellSeparatorType, startRanges);
-            } else {
-                editor.setDecorations(this.activeCellTop, []);
-                editor.setDecorations(this.activeCellBottom, []);
-                editor.setDecorations(this.cellSeparatorType, []);
+                    // Find the start range for the rest
+                    const startRanges = cells.map((c) => new vscode.Range(c.range.start, c.range.start));
+                    editor.setDecorations(this.cellSeparatorType, startRanges);
+                } else {
+                    editor.setDecorations(this.activeCellTop, []);
+                    editor.setDecorations(this.activeCellBottom, []);
+                    editor.setDecorations(this.activeCellTopUnfocused, []);
+                    editor.setDecorations(this.activeCellBottomUnfocused, []);
+                    editor.setDecorations(this.cellSeparatorType, []);
+                }
             }
         }
     }
