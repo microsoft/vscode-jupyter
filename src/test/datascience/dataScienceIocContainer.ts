@@ -508,7 +508,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         const mockInstaller = mock<IPythonInstaller>();
         when(mockInstaller.isProductVersionCompatible(anything(), anything(), anything())).thenResolve(
-            ProductInstallStatus.Installed
+            ProductInstallStatus.NeedsUpgrade
         );
         this.serviceManager.addSingletonInstance<IPythonInstaller>(IPythonInstaller, instance(mockInstaller));
         this.serviceManager.addSingletonInstance<InterpreterPackages>(
