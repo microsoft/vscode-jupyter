@@ -250,7 +250,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
         if (!kernel && controller) {
             kernel = this.kernelProvider.getOrCreate(doc, {
                 metadata: controller.connection,
-                controller: controller?.controller
+                controller: controller?.controller,
+                resourceUri: doc.uri
             });
         }
         if (kernel && kernel.status === ServerStatus.NotStarted) {
