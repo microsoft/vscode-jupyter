@@ -231,7 +231,7 @@ export class KernelExecution implements IDisposable {
             () => {
                 // We're only interested in restarts of the kernel associated with this document.
                 const executionQueue = this.documentExecutions.get(document);
-                if (kernel !== this.kernelProvider.get(document.uri) || !executionQueue) {
+                if (kernel !== this.kernelProvider.get(document) || !executionQueue) {
                     return;
                 }
 
@@ -243,9 +243,9 @@ export class KernelExecution implements IDisposable {
         );
     }
     private async getKernel(document: NotebookDocument): Promise<IKernel> {
-        let kernel = this.kernelProvider.get(document.uri);
+        let kernel = this.kernelProvider.get(document);
         if (!kernel) {
-            kernel = this.kernelProvider.getOrCreate(document.uri, {
+            kernel = this.kernelProvider.getOrCreate(document, {
                 metadata: this.metadata,
                 controller: this.controller
             });
