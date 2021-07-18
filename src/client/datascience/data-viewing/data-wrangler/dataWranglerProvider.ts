@@ -65,6 +65,13 @@ export class DataWranglerProvider implements IDataWranglerProvider, IExtensionSi
         const filtersObject: { [name: string]: string[] } = {};
         filtersObject['Data Wrangler'] = ['csv'];
 
+        const isDataWranglerEnabled = await this.experimentService.inExperiment(Experiments.DataWrangler);
+        if (!isDataWranglerEnabled) {
+            await this.appShell.showErrorMessage(DataScience.dataWranglerExperimentDisabledError());
+            await this.commandManager.executeCommand('workbench.action.closeActiveEditor');
+            return;
+        }
+
         const uris = await this.appShell.showOpenDialog({
             canSelectMany: false,
             filters: filtersObject
