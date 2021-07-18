@@ -1074,6 +1074,10 @@ export namespace DataScience {
         'DataScience.dataWranglerDropDuplicateRowTooltip',
         'Remove duplicate rows.'
     );
+    export const dataWranglerdataWranglerFillNaTooltip = localize(
+        'DataScience.dataWranglerFillNaTooltip',
+        'Replace missing values from selected columns'
+    );
     export const dataWranglerSaveCsv = localize('DataScience.dataWranglerSaveCsv', 'Save CSV');
     export const dataWranglerExportCsv = localize('DataScience.dataWranglerExportCsv', 'Export to CSV');
     export const dataWranglerExportPython = localize('DataScience.dataWranglerExportPython', 'Open as Python script');
@@ -1081,6 +1085,91 @@ export namespace DataScience {
         'DataScience.dataWranglerExperimentDisabledError',
         'Data Wrangler is not enabled. Enable it in the experiments section in settings.json to use it.'
     );
+    export const dataWranglerDropRow = localize('DataScience.dataWranglerDropRow', 'Drop Row');
+    export const dataWranglerDropRows = localize('DataScience.dataWranglerDropRows', 'Drop Rows');
+    export const dataWranglerDropColumn = localize('DataScience.dataWranglerDropColumn', 'Drop Column');
+    export const dataWranglerDropColumns = localize('DataScience.dataWranglerDropColumns', 'Drop Columns');
+    export const dataWranglerNormalizeColumn = localize('DataScience.dataWranglerNormalizeColumn', 'Normalize Column');
+    export const dataWranglerDropNa = localize('DataScience.dataWranglerDropNa', 'Remove Missing Values');
+    export const dataWranglerDropDuplicatesOnColumn = localize(
+        'DataScience.dataWranglerDropDuplicatesOnColumn',
+        'Drop Duplicates On Column'
+    );
+    export const dataWranglerDropDuplicatesOnColumns = localize(
+        'DataScience.dataWranglerDropDuplicatesOnColumns',
+        'Drop Duplicates On Columns'
+    );
+
+    export const dataWranglerApply = localize('DataScience.dataWranglerApply', 'Apply');
+    export const dataWranglerClear = localize('DataScience.dataWranglerClear', 'Clear');
+    export const dataWranglerChooseOperation = localize('DataScience.dataWranglerChooseOperation', 'Choose Operation');
+    export const dataWranglerSelectTargetColumns = localize(
+        'DataScience.dataWranglerSelectTargetColumns',
+        'Select target column(s)'
+    );
+    export const dataWranglerTargetColumns = localize('DataScience.dataWranglerTargetColumns', 'Target column(s)');
+    export const dataWranglerDrop = localize('DataScience.dataWranglerDrop', 'Drop');
+    export const dataWranglerRename = localize('DataScience.dataWranglerRename', 'Rename');
+    export const dataWranglerNormalize = localize('DataScience.dataWranglerNormalize', 'Normalize');
+    export const dataWranglerFillNa = localize('DataScience.dataWranglerFillNa', 'Replace Missing Values');
+    export const dataWranglerCoerce = localize('DataScience.dataWranglerCoerce', 'Coerce');
+    export const dataWranglerReplaceAll = localize('DataScience.dataWranglerReplaceAll', 'Replace All');
+    export const dataWranglerNewType = localize('DataScience.dataWranglerNewType', 'New Type');
+    export const dataWranglerNewValue = localize('DataScience.dataWranglerNewValue', 'New Value');
+    export const dataWranglerOldValue = localize('DataScience.dataWranglerOldValue', 'Old Value');
+    export const dataWranglerNewStartRange = localize('DataScience.dataWranglerNewStartRange', 'New Start Range');
+    export const dataWranglerNewEndRange = localize('DataScience.dataWranglerNewEndRange', 'New End Range');
+    export const dataWranglerNewName = localize('DataScience.dataWranglerNewName', 'New Name');
+    export const dataWranglerPanelCode = localize('DataScience.dataWranglerPanelCode', 'CODE');
+    export const dataWranglerPanelColumns = localize('DataScience.dataWranglerPanelColumns', 'COLUMNS');
+    export const dataWranglerPanelRows = localize('DataScience.dataWranglerPanelRows', 'ROWS');
+    export const dataWranglerPanelHistory = localize('DataScience.dataWranglerPanelHistory', 'HISTORY');
+    export const dataWranglerPanelSummary = localize('DataScience.dataWranglerPanelSummary', 'SUMMARY');
+    export const dataWranglerPanelDatasets = localize('DataScience.dataWranglerPanelDatasets', 'DATASETS');
+    export const dataWranglerViewIntermediateState = localize(
+        'DataScience.dataWranglerViewIntermediateState',
+        'Click to view intermediate state'
+    );
+    export const dataWranglerAcceptStep = localize('DataScience.dataWranglerAcceptStep', 'Accept Step');
+    export const dataWranglerRejectStep = localize('DataScience.dataWranglerRejectStep', 'Reject Step');
+    export const dataWranglerRemoveStep = localize('DataScience.dataWranglerRemoveStep', 'Remove Step');
+    export const dataWranglerPreview = localize('DataScience.dataWranglerPreview', 'Preview');
+    export const dataWranglerCloseColumnSummary = localize(
+        'DataScience.dataWranglerCloseColumnSummary',
+        'Close column summary'
+    );
+    export const dataWranglerDataFrameShape = localize('DataScience.dataWranglerDataFrameShape', 'Data frame shape');
+    export const dataWranglerUniqueValues = localize('DataScience.dataWranglerUniqueValues', 'Unique values');
+    export const dataWranglerRows = localize('DataScience.dataWranglerRows', 'Rows');
+    export const dataWranglerNumberMissingValues = localize(
+        'DataScience.dataWranglerNumberMissingValues',
+        '# Missing values'
+    );
+    export const dataWranglerPercentMissingValues = localize(
+        'DataScience.dataWranglerPercentMissingValues',
+        '% Missing values'
+    );
+    export const dataWranglerStatistics = localize('DataScience.dataWranglerStatistics', 'Statistics');
+    export const dataWranglerAverage = localize('DataScience.dataWranglerAverage', 'Average');
+    export const dataWranglerMedian = localize('DataScience.dataWranglerMedian', 'Median');
+    export const dataWranglerMin = localize('DataScience.dataWranglerMin', 'Min');
+    export const dataWranglerMax = localize('DataScience.dataWranglerMax', 'Max');
+    export const dataWranglerStandardDeviation = localize(
+        'DataScience.dataWranglerStandardDeviation',
+        'Standard deviation'
+    );
+    export const dataWranglerMostFrequent = localize('DataScience.dataWranglerMostFrequent', 'Most frequent');
+    export const dataWranglerNumberOccurences = localize('DataScience.dataWranglerNumberOccurences', '# Occurences');
+    export const dataWranglerColumns = localize('DataScience.dataWranglerColumns', 'Columns');
+    export const dataWranglerNumberDuplicateRows = localize(
+        'DataScience.dataWranglerNumberDuplicateRows',
+        '# Duplicate rows'
+    );
+    export const dataWranglerPercentDuplicateRows = localize(
+        'DataScience.dataWranglerPercentDuplicateRows',
+        '% Rows with duplicates'
+    );
+    export const dataWranglerMissingValues = localize('DataScience.dataWranglerMissingValues', 'Missing values');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

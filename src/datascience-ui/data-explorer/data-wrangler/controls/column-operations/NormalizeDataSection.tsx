@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { getLocString } from '../../../../react-common/locReactSide';
 import { inputStyle } from '../styles';
 
 interface IProps {
@@ -27,26 +28,24 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
 
     render() {
         return (
-            <div className="slice-control-row" style={{ paddingBottom: '5px', paddingTop: '6px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '98%' }}>
-                    <span>{'New start range'}</span>
-                    <input
-                        value={this.state.normalizeRangeStart}
-                        onChange={this.handleNormalizeStartChange}
-                        className={'slice-data'}
-                        style={inputStyle}
-                        autoComplete="on"
-                    />
-                    <span>{'New end range'}</span>
-                    <input
-                        value={this.state.normalizeRangeEnd}
-                        onChange={this.handleNormalizeEndChange}
-                        className={'slice-data'}
-                        style={inputStyle}
-                        autoComplete="on"
-                    />
-                </div>
-            </div>
+            <>
+                <span>{getLocString("DataScience.dataWranglerNewStartRange", "New Start Range")}</span>
+                <input
+                    value={this.state.normalizeRangeStart}
+                    onChange={this.handleNormalizeStartChange}
+                    className={'slice-data'}
+                    style={inputStyle}
+                    autoComplete="on"
+                />
+                <span>{getLocString("DataScience.dataWranglerNewEndRange", "New End Range")}</span>
+                <input
+                    value={this.state.normalizeRangeEnd}
+                    onChange={this.handleNormalizeEndChange}
+                    className={'slice-data'}
+                    style={inputStyle}
+                    autoComplete="on"
+                />
+            </>
         );
     }
 
@@ -69,6 +68,8 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
     };
 
     private getNumber(num: string) {
+        // If it's empty, send NaN as the arg
+        // +'' gives 0
         return num === '' ? NaN : +num;
     }
 }

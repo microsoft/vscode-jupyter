@@ -56,20 +56,31 @@ WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
 */
 
-enum RowContextMenuItem {
-    DropRow = 'Drop Row',
-    CopyData = 'Copy Cell Data'
-}
+const RowContextMenuItem = {
+    DropRow: getLocString('DataScience.dataWranglerDropRow', 'Drop Row'),
+    DropRows: getLocString('DataScience.dataWranglerDropRows', 'Drop Rows'),
+    CopyData: getLocString('DataScience.interactiveCopyCell', 'Copy Cell')
+};
 
-enum ColumnContextMenuItem {
-    GetColumnStats = 'Get Column Stats',
-    DropColumns = 'Drop Column',
-    NormalizeColumn = 'Normalize Column',
-    DropNA = 'Remove Missing Values',
-    DropDuplicates = 'Drop Duplicates On Column',
-    SortAscending = 'Sort Ascending',
-    SortDescending = 'Sort Descending'
-}
+const ColumnContextMenuItem = {
+    DropColumn: getLocString('DataScience.dataWranglerDropColumn', 'Drop Column'),
+    DropColumns: getLocString('DataScience.dataWranglerDropColumns', 'Drop Columns'),
+    NormalizeColumn: getLocString('DataScience.dataWranglerNormalizeColumn', 'Normalize Column'),
+    DropNa: getLocString('DataScience.dataWranglerDropNa', 'Remove Missing Values'),
+    DropDuplicatesOnColumn: getLocString('DataScience.dataWranglerDropDuplicatesOnColumn', 'Drop Duplicates On Column'),
+    DropDuplicatesOnColumns: getLocString('DataScience.dataWranglerDropDuplicatesOnColumns', 'Drop Duplicates On Columns'),
+    SortAscending: 'Sort Ascending', // Will be removed from context menu
+    SortDescending: 'Sort Descending' // Will be removed from context menu
+};
+
+const STYLING_OPERATIONS = [
+    DataWranglerCommands.NormalizeColumn,
+    DataWranglerCommands.DropNa,
+    DataWranglerCommands.ReplaceAllColumn,
+    DataWranglerCommands.FillNa,
+    'Selected rows'
+];
+const PREVIEW_TITLE = '(preview)';
 
 export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     private contextMenuRowId: number | undefined;
@@ -225,6 +236,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                         case ColumnContextMenuItem.SortDescending:
                             return this.sortColumn(this.contextMenuColumnName, false);
 
+                        case ColumnContextMenuItem.DropColumn:
                         case ColumnContextMenuItem.DropColumns:
                             this.props.submitCommand({
                                 command: DataWranglerCommands.Drop,
@@ -244,7 +256,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             });
                             return this.resetSelections();
 
-                        case ColumnContextMenuItem.DropNA:
+                        case ColumnContextMenuItem.DropNa:
                             this.props.submitCommand({
                                 command: DataWranglerCommands.DropNa,
                                 args: {
@@ -254,7 +266,8 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             });
                             return this.resetSelections();
 
-                        case ColumnContextMenuItem.DropDuplicates:
+                        case ColumnContextMenuItem.DropDuplicatesOnColumn:
+                        case ColumnContextMenuItem.DropDuplicatesOnColumns:
                             this.props.submitCommand({
                                 command: DataWranglerCommands.DropDuplicates,
                                 args: { targetColumns: this.state.selectedColumns } as IDropDuplicatesRequest
@@ -289,11 +302,9 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     }
 
     private removeAllCellStyles(grid: Slick.Grid<ISlickRow>) {
-        grid.removeCellCssStyles(DataWranglerCommands.NormalizeColumn);
-        grid.removeCellCssStyles(DataWranglerCommands.DropNa);
-        grid.removeCellCssStyles(DataWranglerCommands.ReplaceAllColumn);
-        grid.removeCellCssStyles(DataWranglerCommands.FillNa);
-        grid.removeCellCssStyles('Selected rows');
+        STYLING_OPERATIONS.forEach((key) => {
+            grid.removeCellCssStyles(key);
+        });
     }
 
     public render() {
@@ -349,9 +360,13 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                                     .filter((c) => c !== undefined) as string[]
                             }
                             currentVariableName={this.props.currentVariableName ?? ''}
-                            /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-function */
-                            submitCommand={this.props.submitCommand ?? ((_data: { command: string; args: any }) => {})}
-                            /* eslint-enable no-return-assign, no-param-reassign */
+                            submitCommand={
+                                this.props.submitCommand ??
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                ((_data: { command: string; args: any }) => {
+                                    return;
+                                })
+                            }
                             sidePanels={this.props.sidePanels}
                             primarySelectedColumn={this.state.primarySelectedColumn}
                             selectedColumns={this.state.selectedColumns ?? []}
@@ -363,25 +378,29 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 <ul id="headerContextMenu" style={{ display: 'none', position: 'absolute' }}>
                     {this.state.selectedColumns && this.state.selectedColumns.length > 1 ? (
                         <>
-                            <li id={ColumnContextMenuItem.DropColumns}>{'Drop Columns'}</li>
-                            <li id={ColumnContextMenuItem.DropNA}>{ColumnContextMenuItem.DropNA}</li>
-                            <li id={ColumnContextMenuItem.DropDuplicates}>{'Drop Duplicates On Columns'}</li>
+                            <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>
+                            <li id={ColumnContextMenuItem.DropNa}>{ColumnContextMenuItem.DropNa}</li>
+                            <li id={ColumnContextMenuItem.DropDuplicatesOnColumn}>
+                                {ColumnContextMenuItem.DropDuplicatesOnColumn}
+                            </li>
                         </>
                     ) : (
                         <>
                             <li id={ColumnContextMenuItem.SortAscending}>{ColumnContextMenuItem.SortAscending}</li>
                             <li id={ColumnContextMenuItem.SortDescending}>{ColumnContextMenuItem.SortDescending}</li>
-                            <li id={ColumnContextMenuItem.DropColumns}>{ColumnContextMenuItem.DropColumns}</li>
+                            <li id={ColumnContextMenuItem.DropColumn}>{ColumnContextMenuItem.DropColumn}</li>
                             <li id={ColumnContextMenuItem.NormalizeColumn}>{ColumnContextMenuItem.NormalizeColumn}</li>
-                            <li id={ColumnContextMenuItem.DropNA}>{ColumnContextMenuItem.DropNA}</li>
-                            <li id={ColumnContextMenuItem.DropDuplicates}>{ColumnContextMenuItem.DropDuplicates}</li>
+                            <li id={ColumnContextMenuItem.DropNa}>{ColumnContextMenuItem.DropNa}</li>
+                            <li id={ColumnContextMenuItem.DropDuplicatesOnColumns}>
+                                {ColumnContextMenuItem.DropDuplicatesOnColumns}
+                            </li>
                         </>
                     )}
                 </ul>
                 <ul id="contextMenu" style={{ display: 'none', position: 'absolute' }}>
                     {this.state.selectedRows && this.state.selectedRows.length > 1 ? (
                         <>
-                            <li id={RowContextMenuItem.DropRow}>{'Drop rows'}</li>
+                            <li id={RowContextMenuItem.DropRow}>{RowContextMenuItem.DropRows}</li>
                         </>
                     ) : (
                         <>
@@ -399,6 +418,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             const cols = this.state.grid?.getColumns();
             const idx = cols?.findIndex((c) => c.name === sortCol);
             if (cols && idx) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.dataView.sort((l: any, r: any) => this.compareElements(l, r, cols[idx]), sortAscending);
                 this.state.grid?.setSortColumn(idx?.toString(), sortAscending);
             }
@@ -408,8 +428,9 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private maybeDropColumns = (e: any, data: Slick.OnHeaderContextMenuEventArgs<ISlickRow>) => {
         this.contextMenuColumnName = data.column.name;
+
         // Don't show context menu for the row numbering column or index column or preview columns
-        if (data.column.field === 'No.' || data.column.field === 'index' || data.column.name?.includes('(preview)')) {
+        if (data.column.id === '0' || data.column.id === '1' || data.column.name?.includes(PREVIEW_TITLE)) {
             return;
         }
         e.preventDefault();
@@ -440,11 +461,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
 
         // Also select on context menu (right click) events
         if (!this.state.selectedRows?.includes(cell.row)) {
-            this.setState({
-                primarySelectedRow: cell.row,
-                selectedRows: [cell.row]
-            });
-            this.state.grid!.invalidate();
+            this.setSelectedRows([cell.row], cell.row);
         }
 
         this.contextMenuRowId = cell.row;
@@ -464,15 +481,16 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     /**
      * Header click handler, handles column selection
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private selectColumn = (e: any, data: Slick.OnHeaderClickEventArgs<ISlickRow>) => {
         const selectedColumnId = data.column.id;
 
-        // Disallow selection of the index columns
+        // Disallow selection for the row numbering column or index column or preview columns
         if (
             !selectedColumnId ||
             selectedColumnId === '0' ||
             selectedColumnId === '1' ||
-            data.column.name?.includes('(preview)')
+            data.column.name?.includes(PREVIEW_TITLE)
         ) {
             return;
         }
@@ -504,7 +522,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             selectedColumns = columns
                 .slice(Math.min(firstColumnIndex, secondColumnIndex), Math.max(firstColumnIndex, secondColumnIndex) + 1)
                 .map((c) => c.name ?? '')
-                .filter((name) => !name.includes('(preview)'));
+                .filter((name) => !name.includes(PREVIEW_TITLE));
 
             primarySelectedColumn = firstSelectedColumnName;
         } else if (e.ctrlKey) {
@@ -562,6 +580,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 primarySelectedColumn
             },
             () => {
+                // Style columns after state is set
                 const columns = this.styleColumns(grid.getColumns());
                 grid.setColumns(columns);
                 this.updateCssStyles();
@@ -572,6 +591,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     /**
      * Cell click handler, handles row selection
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private selectRow = (e: any, data: Slick.OnClickEventArgs<ISlickRow>) => {
         const selectedRowIndex = data.row;
         let selectedRows: number[];
@@ -739,14 +759,10 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         // Transform columns so they are sortable and stylable
         const oldColumns = this.getBeforePreviewColumns(columns);
         return columns.map((c) => {
-            // Disable sorting by clicking on header
             c.sortable = false;
-            // c.editor = readonlyCellEditor;
             c.headerCssClass = 'react-grid-header-cell';
             c.cssClass = 'react-grid-cell';
 
-            // It might be faster to do grid.setCellCssStyles instead because currently
-            // we have to autoResizeColumns() which takes long
             const isSelectedColumn = this.state.selectedColumns?.includes(c.name!);
             if (isSelectedColumn) {
                 c.headerCssClass += ' react-grid-header-cell-selected';
@@ -769,7 +785,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     };
 
     private getBeforePreviewColumns(columns: Slick.Column<ISlickRow>[]) {
-        const previewTitle = ' (preview)';
+        const previewTitle = ` ${PREVIEW_TITLE}`;
         const previewColumns = columns.filter((c) => c.isPreview).map((c) => c.name);
         const oldColumns = previewColumns?.map((name) => name?.substring(0, name.length - previewTitle.length));
         return new Set(oldColumns);

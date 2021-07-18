@@ -15,7 +15,6 @@ interface IControlPanelProps {
     headers: string[];
     resizeEvent: Slick.Event<void>;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     historyList: IHistoryItem[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     monacoThemeObj: any;
@@ -107,11 +106,6 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
     }
 
     private generateColumnDropdownOptions() {
-        if (this.props.headers) {
-            return this.props.headers.map((col) => {
-                return { key: col, text: col };
-            });
-        }
-        return [];
+        return this.props.headers ? this.props.headers.map((col) => ({ key: col, text: col })) : [];
     }
 }

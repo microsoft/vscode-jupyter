@@ -9,6 +9,7 @@ import {
     IDataFrameInfo,
     IGetColsResponse
 } from '../../../../client/datascience/data-viewing/types';
+import { getLocString } from '../../../react-common/locReactSide';
 import { SidePanelSection } from './SidePanelSection';
 import { summaryChildRowStyle, summaryInnerRowStyle, summaryRowStyle } from './styles';
 
@@ -85,7 +86,7 @@ class SummaryTitle extends React.Component<ISummaryTitleProps> {
                             this.props.showDefaultSummary(true);
                         }}
                         style={{ verticalAlign: 'middle' }}
-                        title={'Close column summary'}
+                        title={getLocString('DataScience.dataWranglerCloseColumnSummary', 'Close column summary')}
                     />
                 )}
             </div>
@@ -117,14 +118,23 @@ class ColumnSummary extends React.Component<IDataframeColumnSummaryProps> {
                     canClose={true}
                     showDefaultSummary={this.props.showDefaultSummary}
                 />
-                <SummaryRow name={'Data frame shape'} value={this.props.shape} />
-                <SummaryRow name={'Unique values'} value={this.props.columnSummary.uniqueCount} />
-                <SummaryRow name={'Rows'} value={this.props.rowCount} />
+                <SummaryRow
+                    name={getLocString('DataScience.dataWranglerDataFrameShape', 'Data frame shape')}
+                    value={this.props.shape}
+                />
+                <SummaryRow
+                    name={getLocString('DataScience.dataWranglerUniqueValues', 'Unique values')}
+                    value={this.props.columnSummary.uniqueCount}
+                />
+                <SummaryRow name={getLocString('DataScience.dataWranglerRows', 'Rows')} value={this.props.rowCount} />
                 <InnerRows
                     children={[
-                        { name: '# Missing value', value: this.props.columnSummary.missingCount },
                         {
-                            name: '% Missing values',
+                            name: getLocString('DataScience.dataWranglerNumberMissingValues', '# Missing values'),
+                            value: this.props.columnSummary.missingCount
+                        },
+                        {
+                            name: getLocString('DataScience.dataWranglerPercentMissingValues', '% Missing values'),
                             value: calculatePercent(
                                 this.props.columnSummary.missingCount ?? 0,
                                 this.props.rowCount ?? 0
@@ -135,14 +145,35 @@ class ColumnSummary extends React.Component<IDataframeColumnSummaryProps> {
                 {/* Only shows up for numerical columns */}
                 {this.props.columnSummary.statistics && (
                     <>
-                        <SummaryRow name={'Statistics'} value={undefined} />
+                        <SummaryRow
+                            name={getLocString('DataScience.dataWranglerStatistics', 'Statistics')}
+                            value={undefined}
+                        />
                         <InnerRows
                             children={[
-                                { name: 'Average', value: this.props.columnSummary.statistics.average },
-                                { name: 'Median', value: this.props.columnSummary.statistics.median },
-                                { name: 'Min', value: this.props.columnSummary.statistics.min },
-                                { name: 'Max', value: this.props.columnSummary.statistics.max },
-                                { name: 'Standard deviation', value: this.props.columnSummary.statistics.sd }
+                                {
+                                    name: getLocString('DataScience.dataWranglerAverage', 'Average'),
+                                    value: this.props.columnSummary.statistics.average
+                                },
+                                {
+                                    name: getLocString('DataScience.dataWranglerMedian', 'Median'),
+                                    value: this.props.columnSummary.statistics.median
+                                },
+                                {
+                                    name: getLocString('DataScience.dataWranglerMin', 'Min'),
+                                    value: this.props.columnSummary.statistics.min
+                                },
+                                {
+                                    name: getLocString('DataScience.dataWranglerMax', 'Max'),
+                                    value: this.props.columnSummary.statistics.max
+                                },
+                                {
+                                    name: getLocString(
+                                        'DataScience.dataWranglerStandardDeviation',
+                                        'Standard deviation'
+                                    ),
+                                    value: this.props.columnSummary.statistics.sd
+                                }
                             ]}
                         />
                     </>
@@ -150,10 +181,16 @@ class ColumnSummary extends React.Component<IDataframeColumnSummaryProps> {
                 {/* Only shows up for string/object columns */}
                 {this.props.columnSummary.mostFrequentValue && (
                     <>
-                        <SummaryRow name={'Most frequent'} value={this.props.columnSummary.mostFrequentValue} />
+                        <SummaryRow
+                            name={getLocString('DataScience.dataWranglerMostFrequent', 'Most frequent')}
+                            value={this.props.columnSummary.mostFrequentValue}
+                        />
                         <InnerRows
                             children={[
-                                { name: '# Occurences', value: this.props.columnSummary.mostFrequentValueAppearances }
+                                {
+                                    name: getLocString('DataScience.dataWranglerNumberOccurences', '# Occurences'),
+                                    value: this.props.columnSummary.mostFrequentValueAppearances
+                                }
                             ]}
                         />
                     </>
@@ -167,24 +204,39 @@ class DataframeSummary extends React.Component<IDataFrameInfo> {
     render() {
         return (
             <div>
-                <SummaryRow name={'Data frame shape'} value={shapeAsString(this.props.shape)} />
-                <SummaryRow name={'Columns'} value={this.props.columns?.length} />
-                <SummaryRow name={'Rows'} value={this.props.rowCount} />
+                <SummaryRow
+                    name={getLocString('DataScience.dataWranglerDataFrameShape', 'Data frame shape')}
+                    value={shapeAsString(this.props.shape)}
+                />
+                <SummaryRow
+                    name={getLocString('DataScience.dataWranglerColumns', 'Columns')}
+                    value={this.props.columns?.length}
+                />
+                <SummaryRow name={getLocString('DataScience.dataWranglerRows', 'Rows')} value={this.props.rowCount} />
                 <InnerRows
                     children={[
-                        { name: '# Missing value', value: this.props.nanRows?.length },
                         {
-                            name: '% Missing values',
+                            name: getLocString('DataScience.dataWranglerNumberMissingValues', '# Missing values'),
+                            value: this.props.nanRows?.length
+                        },
+                        {
+                            name: getLocString('DataScience.dataWranglerPercentMissingValues', '% Missing values'),
                             value: calculatePercent(this.props.nanRows?.length ?? 0, this.props.rowCount ?? 0)
                         },
-                        { name: '# Duplicate rows', value: this.props.duplicateRowsCount },
                         {
-                            name: '% Rows with duplicates',
+                            name: getLocString('DataScience.dataWranglerNumberDuplicateRows', '# Duplicate rows'),
+                            value: this.props.duplicateRowsCount
+                        },
+                        {
+                            name: getLocString(
+                                'DataScience.dataWranglerPercentDuplicateRows',
+                                '% Rows with duplicates'
+                            ),
                             value: calculatePercent(this.props.duplicateRowsCount ?? 0, this.props.rowCount ?? 0)
                         }
                     ]}
                 />
-                <SummaryRow name={'Missing values'} value={this.props.nanRows?.length} />
+                <SummaryRow name={getLocString("DataScience.dataWranglerMissingValues", "Missing values")} value={this.props.nanRows?.length} />
                 <InnerRows children={getColumnsWithMissingValues(this.props.columns ?? [])} />
             </div>
         );
@@ -313,7 +365,7 @@ export class SummarySection extends React.Component<ISummarySectionProps, IState
 
         return (
             <SidePanelSection
-                title="SUMMARY"
+                title={getLocString('DataScience.dataWranglerPanelSummary', 'SUMMARY')}
                 panel={summaryComponent}
                 collapsed={this.props.collapsed}
                 height={'200px'}
@@ -323,7 +375,7 @@ export class SummarySection extends React.Component<ISummarySectionProps, IState
 }
 
 function shapeAsString(shape: number[] | undefined) {
-    return shape ? shape.join(' x ') : 'Error calculating shape';
+    return shape ? shape.join(' x ') : '';
 }
 
 function calculatePercent(partialValue: number, totalValue: number) {

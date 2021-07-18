@@ -67,6 +67,17 @@
     border-bottom: 1px solid var(--vscode-editor-lineHighlightBorder);
 }
 
+.column-operation-section {
+    padding-bottom: 5px;
+    padding-top: 6px;
+}
+
+.column-operation-section .inner {
+    display: flex;
+    flex-direction: column;
+    width: 98%;
+}
+
 .no-data {
     margin: 4px;
     padding: 4px;

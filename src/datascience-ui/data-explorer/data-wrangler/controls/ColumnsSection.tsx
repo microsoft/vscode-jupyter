@@ -39,17 +39,17 @@ const ColumnOperationInfo: { [key: string]: { text: string; tooltip: string; wor
         worksWithMultipleCols: false
     },
     [DataWranglerCommands.Drop]: {
-        text: 'Drop',
+        text: getLocString('DataScience.dataWranglerDrop', 'Drop'),
         tooltip: getLocString('DataScience.dataWranglerDropTooltip', 'Drop specified labels from selected columns'),
         worksWithMultipleCols: true
     },
     [DataWranglerCommands.RenameColumn]: {
-        text: 'Rename',
+        text: getLocString('DataScience.dataWranglerRename', 'Rename'),
         tooltip: getLocString('DataScience.dataWranglerRenameTooltip', 'Rename column label'),
         worksWithMultipleCols: false
     },
     [DataWranglerCommands.NormalizeColumn]: {
-        text: 'Normalize',
+        text: getLocString('DataScience.dataWranglerNormalize', 'Normalize'),
         tooltip: getLocString(
             'DataScience.dataWranglerNormalizeTooltip',
             'Transform column by scaling each feature to a given range'
@@ -57,22 +57,22 @@ const ColumnOperationInfo: { [key: string]: { text: string; tooltip: string; wor
         worksWithMultipleCols: false
     },
     [DataWranglerCommands.DropNa]: {
-        text: 'Remove missing values',
+        text: getLocString('DataScience.dataWranglerDropNa', 'Remove Missing Values'),
         tooltip: getLocString('DataScience.dataWranglerDropNATooltip', 'Remove missing values from selected columns'),
         worksWithMultipleCols: true
     },
     [DataWranglerCommands.FillNa]: {
-        text: 'Replace missing values',
-        tooltip: getLocString('DataScience.dataWranglerFillNATooltip', 'Replace missing values from selected columns'),
+        text: getLocString('DataScience.dataWranglerFillNa', 'Replace Missing Values'),
+        tooltip: getLocString('DataScience.dataWranglerFillNaTooltip', 'Replace missing values from selected columns'),
         worksWithMultipleCols: true
     },
     [DataWranglerCommands.CoerceColumn]: {
-        text: 'Coerce',
+        text: getLocString('DataScience.dataWranglerCoerce', 'Coerce'),
         tooltip: getLocString('DataScience.dataWranglerCoerceTooltip', 'Cast a column to a specified type'),
         worksWithMultipleCols: true
     },
     [DataWranglerCommands.ReplaceAllColumn]: {
-        text: 'Replace all',
+        text: getLocString('DataScience.dataWranglerReplaceAll', 'Replace All'),
         tooltip: getLocString(
             'DataScience.dataWranglerReplaceAllTooltip',
             'Replace specified values with a new given value'
@@ -88,12 +88,53 @@ export class ColumnsSection extends React.Component<IProps, IState> {
     }
 
     render() {
+        const applyButton = (
+            <button
+                onClick={() => {
+                    this.props.submitCommand({
+                        command: this.state.operationType!,
+                        args: {
+                            ...this.state.args,
+                            targetColumn: this.props.selectedColumns[0],
+                            targetColumns: this.props.selectedColumns
+                        }
+                    });
+                    this.clearSelection();
+                }}
+                disabled={
+                    this.state.operationType === NON_SELECTABLE_OPTIONS.ChooseOperation ||
+                    !this.state.operationType ||
+                    this.props.selectedColumns.includes(NON_SELECTABLE_OPTIONS.SelectTargetsColumn) ||
+                    Object.values(this.state.args).includes('') ||
+                    Object.values(this.state.args).includes(NaN)
+                }
+                className="dataWranglerButton"
+            >
+                {getLocString('DataScience.dataWranglerApply', 'Apply')}
+            </button>
+        );
+
+        const clearButton = (
+            <button
+                onClick={this.clearSelection}
+                style={clearButtonStyle}
+                className="dataWranglerButton"
+                disabled={
+                    (this.state.operationType === NON_SELECTABLE_OPTIONS.ChooseOperation ||
+                        this.state.operationType === null) &&
+                    this.props.selectedColumns.length === 0
+                }
+            >
+                {getLocString('DataScience.dataWranglerClear', 'Clear')}
+            </button>
+        );
+
         const columnsComponent = (
             <div className="slice-form-container" style={{ paddingBottom: '5px', marginTop: '10px' }}>
                 <Dropdown
                     multiSelect={true}
                     responsiveMode={ResponsiveMode.xxxLarge}
-                    label={'Target column(s)'}
+                    label={getLocString('DataScience.dataWranglerTargetColumns', 'Target column(s)')}
                     style={dropdownStyle}
                     styles={dropdownStyles}
                     options={this.generateColumnOptions()}
@@ -103,7 +144,7 @@ export class ColumnsSection extends React.Component<IProps, IState> {
                 />
                 <Dropdown
                     responsiveMode={ResponsiveMode.xxxLarge}
-                    label={'Operation'}
+                    label={getLocString('DataScience.dataWranglerOperations', 'Operation')}
                     style={dropdownStyle}
                     styles={dropdownStyles}
                     options={this.generateOperationOptions()}
@@ -111,66 +152,28 @@ export class ColumnsSection extends React.Component<IProps, IState> {
                     onChange={this.updateSelectedOperation.bind(this)}
                     selectedKey={this.state.operationType}
                 />
-                {this.state.operationType !== null && ColumnOperationInfo[this.state.operationType] !== undefined && (
+                {/* Show operation description if operation is selected */}
+                {this.state.operationType && ColumnOperationInfo[this.state.operationType] && (
                     <div style={{ color: 'var(--vscode-descriptionForeground)', marginBottom: '4px' }}>
                         <span>{ColumnOperationInfo[this.state.operationType].tooltip}</span>
                     </div>
                 )}
-                {this.props.selectedColumns.length > 0 && this.renderOperationControls()}
+                {/* Show specific column operation if a column is selected */}
+                {this.props.selectedColumns.length > 0 && (
+                    <div className="slice-control-row column-operation-section">
+                        <div className="inner">{this.renderOperationControls()}</div>
+                    </div>
+                )}
                 <div style={{ display: 'flex', flexDirection: 'row' }}>
-                    <button
-                        onClick={() => {
-                            if (
-                                this.state.operationType &&
-                                this.state.operationType !== NON_SELECTABLE_OPTIONS.ChooseOperation
-                            ) {
-                                this.props.submitCommand({
-                                    command: this.state.operationType,
-                                    args: {
-                                        ...this.state.args,
-                                        targetColumn: this.props.selectedColumns[0],
-                                        targetColumns: this.props.selectedColumns
-                                    }
-                                });
-                                this.setColumns([]);
-                                this.props.setSelectedRows([]);
-                                this.setArgs({});
-                                this.setState({ operationType: NON_SELECTABLE_OPTIONS.ChooseOperation });
-                            }
-                        }}
-                        disabled={
-                            this.state.operationType === NON_SELECTABLE_OPTIONS.ChooseOperation ||
-                            !this.state.operationType ||
-                            this.props.selectedColumns.includes(NON_SELECTABLE_OPTIONS.SelectTargetsColumn) ||
-                            Object.values(this.state.args).includes('') ||
-                            Object.values(this.state.args).includes(NaN)
-                        }
-                        className="dataWranglerButton"
-                    >
-                        Apply
-                    </button>
-                    <button
-                        onClick={() => {
-                            this.setColumns([]);
-                            this.props.setSelectedRows([]);
-                        }}
-                        style={clearButtonStyle}
-                        className="dataWranglerButton"
-                        disabled={
-                            (this.state.operationType === NON_SELECTABLE_OPTIONS.ChooseOperation ||
-                                this.state.operationType === null) &&
-                            this.props.selectedColumns.length === 0
-                        }
-                    >
-                        Clear
-                    </button>
+                    {applyButton}
+                    {clearButton}
                 </div>
             </div>
         );
 
         return (
             <SidePanelSection
-                title="COLUMNS"
+                title={getLocString("DataScience.dataWranglerPanelColumns", "COLUMNS")}
                 panel={columnsComponent}
                 collapsed={this.props.collapsed}
                 height={'220px'}
@@ -181,7 +184,7 @@ export class ColumnsSection extends React.Component<IProps, IState> {
     private generateColumnOptions() {
         const selectTargetColumn: IDropdownOption = {
             key: NON_SELECTABLE_OPTIONS.SelectTargetsColumn,
-            text: 'Select target column(s)',
+            text: getLocString('DataScience.dataWranglerSelectTargetColumns', 'Select target column(s)'),
             disabled: true,
             hidden: true,
             selected: true
@@ -201,7 +204,7 @@ export class ColumnsSection extends React.Component<IProps, IState> {
         // Create 'Choose operation' operation so text will show up in dropdown by default but can't be selected
         const chooseOperationOption: IDropdownOption = {
             key: NON_SELECTABLE_OPTIONS.ChooseOperation,
-            text: 'Choose operation',
+            text: getLocString('DataScience.dataWranglerChooseOperation', 'Choose Operation'),
             disabled: true,
             hidden: true,
             selected: true
@@ -270,11 +273,11 @@ export class ColumnsSection extends React.Component<IProps, IState> {
     private updateSelectedColumnsTarget(_data: React.FormEvent, option: IDropdownOption | undefined) {
         if (option) {
             const cols = option.selected
-                ? // User selected an option
+                ? // User selected an option so add it to selected columns
                   [...this.props.selectedColumns, option.key as string].filter(
                       (key) => key !== NON_SELECTABLE_OPTIONS.SelectTargetsColumn
                   )
-                : // User unselected an option
+                : // User unselected an option so remove it from selected columns
                   this.props.selectedColumns.filter(
                       (key) => key !== option.key && key !== NON_SELECTABLE_OPTIONS.SelectTargetsColumn
                   );
@@ -326,9 +329,14 @@ export class ColumnsSection extends React.Component<IProps, IState> {
             const operation = item.key as DataWranglerCommands;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const newState = { operationType: operation } as any;
-            if (operation === DataWranglerCommands.DropNa) {
+
+            // These commands do not have their own component so we set their args here
+            if ([DataWranglerCommands.DropNa].includes(operation)) {
                 newState['args'] = { isPreview: false };
+            } else if ([DataWranglerCommands.Drop].includes(operation)) {
+                newState['args'] = {};
             }
+
             this.setState(newState);
         }
     }
@@ -338,5 +346,12 @@ export class ColumnsSection extends React.Component<IProps, IState> {
         return this.props.selectedColumns.length === 0
             ? [NON_SELECTABLE_OPTIONS.SelectTargetsColumn]
             : this.props.selectedColumns;
+    }
+
+    private clearSelection() {
+        this.setColumns([]);
+        this.props.setSelectedRows([]);
+        this.setArgs({});
+        this.setState({ operationType: NON_SELECTABLE_OPTIONS.ChooseOperation });
     }
 }

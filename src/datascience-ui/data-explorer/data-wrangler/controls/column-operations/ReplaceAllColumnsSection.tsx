@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { getLocString } from '../../../../react-common/locReactSide';
 import { inputStyle } from '../styles';
 
 interface IProps {
@@ -27,26 +28,24 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
 
     render() {
         return (
-            <div className="slice-control-row" style={{ paddingBottom: '5px', paddingTop: '6px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '98%' }}>
-                    <span>{'Replace all values of:'}</span>
-                    <input
-                        value={this.state.oldValue}
-                        onChange={this.handleChangeOldValue}
-                        className={'slice-data'}
-                        style={inputStyle}
-                        autoComplete="on"
-                    />
-                    <span>{'New value'}</span>
-                    <input
-                        value={this.state.newValue}
-                        onChange={this.handleChangeNewValue}
-                        className={'slice-data'}
-                        style={inputStyle}
-                        autoComplete="on"
-                    />
-                </div>
-            </div>
+            <>
+                <span>{getLocString("DataScience.dataWranglerOldValue", "Old Value")}</span>
+                <input
+                    value={this.state.oldValue}
+                    onChange={this.handleChangeOldValue}
+                    className={'slice-data'}
+                    style={inputStyle}
+                    autoComplete="on"
+                />
+                <span>{getLocString("DataScience.dataWranglerNewValue", "New Value")}</span>
+                <input
+                    value={this.state.newValue}
+                    onChange={this.handleChangeNewValue}
+                    className={'slice-data'}
+                    style={inputStyle}
+                    autoComplete="on"
+                />
+            </>
         );
     }
 

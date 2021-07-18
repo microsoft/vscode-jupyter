@@ -3,6 +3,7 @@ import { Code } from '../../../interactive-common/code';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { SidePanelSection } from './SidePanelSection';
 import { Identifiers } from '../../../../client/datascience/constants';
+import { getLocString } from '../../../react-common/locReactSide';
 
 interface IProps {
     collapsed: boolean;
@@ -70,7 +71,7 @@ export class CodeSection extends React.Component<IProps, IState> {
         );
 
         return (
-            <SidePanelSection title="CODE" panel={codeComponent} collapsed={this.props.collapsed} height={'100px'} />
+            <SidePanelSection title={getLocString("DataScience.dataWranglerPanelCode", "CODE")} panel={codeComponent} collapsed={this.props.collapsed} height={'100px'} />
         );
     }
 }

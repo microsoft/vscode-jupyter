@@ -1,6 +1,7 @@
 import { Dropdown, IDropdownOption, ResponsiveMode } from '@fluentui/react';
 import * as React from 'react';
 import { ICoerceColumnRequest } from '../../../../../client/datascience/data-viewing/data-wrangler/types';
+import { getLocString } from '../../../../react-common/locReactSide';
 import { dropdownStyle, dropdownStyles } from '../styles';
 
 interface IProps {
@@ -12,6 +13,8 @@ interface IState {
     newColumnType: string;
 }
 
+const COERCABLE_TYPES = ['string', 'float', 'bool', 'int'];
+
 export class CoerceColumnsSection extends React.Component<IProps, IState> {
     constructor(props: IProps) {
         super(props);
@@ -22,30 +25,22 @@ export class CoerceColumnsSection extends React.Component<IProps, IState> {
     }
 
     private getCoercableTypes() {
-        const coercableTypes = ['string', 'float', 'bool', 'int'];
-        const coercableOptions = [];
-        for (let i = 0; i < coercableTypes.length; i++) {
-            const option = { key: i, text: coercableTypes[i] };
-            coercableOptions.push(option);
-        }
-        return coercableOptions;
+        return COERCABLE_TYPES.map((type, index) => ({ key: index, text: type }));
     }
 
     render() {
         return (
-            <div className="slice-control-row" style={{ paddingBottom: '5px', paddingTop: '6px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                    <Dropdown
-                        label={'New column type'}
-                        responsiveMode={ResponsiveMode.xxxLarge}
-                        style={dropdownStyle}
-                        styles={dropdownStyles}
-                        options={this.getCoercableTypes()}
-                        className="dropdownTitleOverrides"
-                        onChange={this.updateTypeTarget}
-                    />
-                </div>
-            </div>
+            <>
+                <Dropdown
+                    label={getLocString("DataScience.dataWranglerNewType", "New Type")}
+                    responsiveMode={ResponsiveMode.xxxLarge}
+                    style={dropdownStyle}
+                    styles={dropdownStyles}
+                    options={this.getCoercableTypes()}
+                    className="dropdownTitleOverrides"
+                    onChange={this.updateTypeTarget}
+                />
+            </>
         );
     }
 

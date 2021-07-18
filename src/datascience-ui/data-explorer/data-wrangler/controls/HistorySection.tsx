@@ -4,6 +4,7 @@ import { mergeStyleSets, getTheme, normalize } from 'office-ui-fabric-react/lib/
 import './HistorySection.css';
 import { SidePanelSection } from './SidePanelSection';
 import { DataWranglerCommands, IHistoryItem } from '../../../../client/datascience/data-viewing/data-wrangler/types';
+import { getLocString } from '../../../react-common/locReactSide';
 
 interface IProps {
     collapsed: boolean;
@@ -67,7 +68,6 @@ export class HistorySection extends React.Component<IProps, IState> {
             const currentVariableIndex = this.props.currentVariableName!.slice(2)
                 ? parseInt(this.props.currentVariableName!.slice(2))
                 : 0;
-            console.log('Current variable index', currentVariableIndex);
             this.setState({ currentVariableIndex });
             setTimeout(() => {
                 this.listRef.current?.forceUpdate();
@@ -123,7 +123,7 @@ export class HistorySection extends React.Component<IProps, IState> {
                     <div
                         style={{ flexGrow: 1 }}
                         onClick={() => this.viewHistoryItem(index)}
-                        title={`Click to view intermediate state`}
+                        title={getLocString("DataScience.dataWranglerViewIntermediateState", "Click to view intermediate state")}
                     >
                         <span style={{ verticalAlign: 'middle', width: '100%' }}>{item?.description}</span>
                         {item?.isPreview && (
@@ -135,7 +135,7 @@ export class HistorySection extends React.Component<IProps, IState> {
                                     fontSize: '10px'
                                 }}
                             >
-                                &nbsp;&nbsp;&nbsp;Preview
+                                &nbsp;&nbsp;&nbsp;{getLocString("DataScience.dataWranglerPreview", "Preview")}
                             </span>
                         )}
                     </div>
@@ -146,13 +146,13 @@ export class HistorySection extends React.Component<IProps, IState> {
                                 className="codicon codicon-check codicon-button"
                                 onClick={() => this.respondToPreview(true)}
                                 style={{ verticalAlign: 'middle' }}
-                                title={'Accept step'}
+                                title={getLocString("DataScience.dataWranglerAcceptStep", "Accept Step")}
                             />
                             <div
                                 className="codicon codicon-close codicon-button"
                                 onClick={() => this.respondToPreview(false)}
                                 style={{ verticalAlign: 'middle' }}
-                                title={'Reject step'}
+                                title={getLocString("DataScience.dataWranglerRejectStep", "Reject Step")}
                             />
                         </>
                     )}
@@ -162,7 +162,7 @@ export class HistorySection extends React.Component<IProps, IState> {
                             className="codicon codicon-discard codicon-button show-on-hover"
                             onClick={() => this.handleDeleteHistoryItem(index)}
                             style={{ verticalAlign: 'middle' }}
-                            title={'Remove step'}
+                            title={getLocString("DataScience.dataWranglerRemoveStep", "Remove Step")}
                         />
                     )}
                 </div>
@@ -190,7 +190,7 @@ export class HistorySection extends React.Component<IProps, IState> {
 
         return (
             <SidePanelSection
-                title="HISTORY"
+                title={getLocString("DataScience.dataWranglerPanelHistory", "HISTORY")}
                 panel={historyComponent}
                 collapsed={this.props.collapsed}
                 height={'100px'}

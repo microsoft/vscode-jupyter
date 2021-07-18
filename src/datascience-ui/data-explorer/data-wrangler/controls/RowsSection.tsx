@@ -21,15 +21,15 @@ interface IState {
 
 const rowOperationInfo: { [key: string]: { text: string; tooltip: string } } = {
     Choose: {
-        text: 'Choose operation',
+        text: getLocString('DataScience.dataWranglerChooseOperation', 'Choose Operation'),
         tooltip: ''
     },
     [DataWranglerCommands.DropNa]: {
-        text: 'Drop missing values',
+        text: getLocString('DataScience.dataWranglerDropNa', 'Remove Missing Values'),
         tooltip: getLocString('DataScience.dataWranglerDropNARowsTooltip', 'Remove rows with missing values')
     },
     [DataWranglerCommands.DropDuplicates]: {
-        text: 'Drop duplicates',
+        text: getLocString('DataScience.dataWranglerDropDuplicates', 'Drop Duplicates'),
         tooltip: getLocString('DataScience.dataWranglerDropDuplicateRowsTooltip', 'Remove duplicate rows')
     }
 };
@@ -77,7 +77,7 @@ export class RowsSection extends React.Component<IProps, IState> {
                         disabled={this.state.operationType === ChooseOperation}
                         className="dataWranglerButton"
                     >
-                        Apply
+                        {getLocString('DataScience.dataWranglerApply', 'Apply')}
                     </button>
                     <button
                         onClick={() => {
@@ -87,14 +87,19 @@ export class RowsSection extends React.Component<IProps, IState> {
                         className="dataWranglerButton"
                         disabled={this.state.operationType === ChooseOperation}
                     >
-                        Clear
+                        {getLocString('DataScience.dataWranglerClear', 'Clear')}
                     </button>
                 </div>
             </div>
         );
 
         return (
-            <SidePanelSection title="ROWS" panel={rowsComponent} collapsed={this.props.collapsed} height={'120px'} />
+            <SidePanelSection
+                title={getLocString('DataScience.dataWranglerPanelRows', 'ROWS')}
+                panel={rowsComponent}
+                collapsed={this.props.collapsed}
+                height={'120px'}
+            />
         );
     }
 
