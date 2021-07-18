@@ -29,7 +29,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
     render() {
         return (
             <>
-                <span>{getLocString("DataScience.dataWranglerNewStartRange", "New Start Range")}</span>
+                <span>{getLocString('DataScience.dataWranglerNewStartRange', 'New Start Range')}</span>
                 <input
                     value={this.state.normalizeRangeStart}
                     onChange={this.handleNormalizeStartChange}
@@ -37,7 +37,7 @@ export class NormalizeDataSection extends React.Component<IProps, IState> {
                     style={inputStyle}
                     autoComplete="on"
                 />
-                <span>{getLocString("DataScience.dataWranglerNewEndRange", "New End Range")}</span>
+                <span>{getLocString('DataScience.dataWranglerNewEndRange', 'New End Range')}</span>
                 <input
                     value={this.state.normalizeRangeEnd}
                     onChange={this.handleNormalizeEndChange}

@@ -25,7 +25,7 @@ export class RenameColumnsSection extends React.Component<IProps, IState> {
     render() {
         return (
             <>
-                <span>{getLocString("DataScience.dataWranglerNewName", "New Name")}</span>
+                <span>{getLocString('DataScience.dataWranglerNewName', 'New Name')}</span>
                 <input
                     value={this.state.newColumnName}
                     onChange={this.handleChange}

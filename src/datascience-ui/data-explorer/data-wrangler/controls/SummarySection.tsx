@@ -236,7 +236,10 @@ class DataframeSummary extends React.Component<IDataFrameInfo> {
                         }
                     ]}
                 />
-                <SummaryRow name={getLocString("DataScience.dataWranglerMissingValues", "Missing values")} value={this.props.nanRows?.length} />
+                <SummaryRow
+                    name={getLocString('DataScience.dataWranglerMissingValues', 'Missing values')}
+                    value={this.props.nanRows?.length}
+                />
                 <InnerRows children={getColumnsWithMissingValues(this.props.columns ?? [])} />
             </div>
         );

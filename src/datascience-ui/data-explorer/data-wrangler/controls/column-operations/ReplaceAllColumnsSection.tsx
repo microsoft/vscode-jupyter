@@ -29,7 +29,7 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
     render() {
         return (
             <>
-                <span>{getLocString("DataScience.dataWranglerOldValue", "Old Value")}</span>
+                <span>{getLocString('DataScience.dataWranglerOldValue', 'Old Value')}</span>
                 <input
                     value={this.state.oldValue}
                     onChange={this.handleChangeOldValue}
@@ -37,7 +37,7 @@ export class ReplaceAllColumnsSection extends React.Component<IProps, IState> {
                     style={inputStyle}
                     autoComplete="on"
                 />
-                <span>{getLocString("DataScience.dataWranglerNewValue", "New Value")}</span>
+                <span>{getLocString('DataScience.dataWranglerNewValue', 'New Value')}</span>
                 <input
                     value={this.state.newValue}
                     onChange={this.handleChangeNewValue}

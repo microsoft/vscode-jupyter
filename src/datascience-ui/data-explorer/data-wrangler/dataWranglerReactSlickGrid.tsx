@@ -68,7 +68,10 @@ const ColumnContextMenuItem = {
     NormalizeColumn: getLocString('DataScience.dataWranglerNormalizeColumn', 'Normalize Column'),
     DropNa: getLocString('DataScience.dataWranglerDropNa', 'Remove Missing Values'),
     DropDuplicatesOnColumn: getLocString('DataScience.dataWranglerDropDuplicatesOnColumn', 'Drop Duplicates On Column'),
-    DropDuplicatesOnColumns: getLocString('DataScience.dataWranglerDropDuplicatesOnColumns', 'Drop Duplicates On Columns'),
+    DropDuplicatesOnColumns: getLocString(
+        'DataScience.dataWranglerDropDuplicatesOnColumns',
+        'Drop Duplicates On Columns'
+    ),
     SortAscending: 'Sort Ascending', // Will be removed from context menu
     SortDescending: 'Sort Descending' // Will be removed from context menu
 };

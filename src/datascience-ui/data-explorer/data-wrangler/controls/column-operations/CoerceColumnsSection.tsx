@@ -32,7 +32,7 @@ export class CoerceColumnsSection extends React.Component<IProps, IState> {
         return (
             <>
                 <Dropdown
-                    label={getLocString("DataScience.dataWranglerNewType", "New Type")}
+                    label={getLocString('DataScience.dataWranglerNewType', 'New Type')}
                     responsiveMode={ResponsiveMode.xxxLarge}
                     style={dropdownStyle}
                     styles={dropdownStyles}

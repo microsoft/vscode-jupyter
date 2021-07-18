@@ -173,7 +173,7 @@ export class ColumnsSection extends React.Component<IProps, IState> {
 
         return (
             <SidePanelSection
-                title={getLocString("DataScience.dataWranglerPanelColumns", "COLUMNS")}
+                title={getLocString('DataScience.dataWranglerPanelColumns', 'COLUMNS')}
                 panel={columnsComponent}
                 collapsed={this.props.collapsed}
                 height={'220px'}
