@@ -257,9 +257,10 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private registerKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
-        const kernel = this.kernelProvider.getOrCreate(notebookDocument.uri, {
+        const kernel = this.kernelProvider.getOrCreate(notebookDocument, {
             metadata: controller.connection,
-            controller: controller.controller
+            controller: controller.controller,
+            resourceUri: this.owner
         });
         this.kernelLoadPromise = kernel?.start({ disableUI: false, document: notebookDocument });
         this.kernel = kernel;
@@ -379,6 +380,11 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             }
 
             if (isDebug) {
+                await this.kernel!.executeHidden(
+                    `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`,
+                    file,
+                    this.notebookDocument
+                );
                 await this.jupyterDebugger.startDebugging(notebook);
             }
 

@@ -172,6 +172,9 @@ export namespace Commands {
     export const InteractiveExportAsNotebook = 'jupyter.interactive.exportasnotebook';
     export const InteractiveExportAs = 'jupyter.interactive.exportas';
     export const DebugNotebook = 'jupyter.debugNotebook';
+    export const RunByLine = 'jupyter.runByLine';
+    export const RunByLineContinue = 'jupyter.runByLineContinue';
+    export const RunByLineStop = 'jupyter.runByLineStop';
 
     // Data Wrangler
     export const OpenDataWrangler = 'jupyter.openDataWrangler';
@@ -210,6 +213,7 @@ export namespace EditorContexts {
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
     export const CanDebug = 'jupyter.notebookeditor.canDebug';
     export const DebuggingInProgress = 'jupyter.notebookeditor.debuggingInProgress';
+    export const RunByLineInProgress = 'jupyter.notebookeditor.runByLineInProgress';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
