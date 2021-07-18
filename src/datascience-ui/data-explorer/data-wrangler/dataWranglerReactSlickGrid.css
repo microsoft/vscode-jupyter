@@ -1,9 +1,16 @@
 @import url('../reactSlickGrid.css');
 
-.resizable-span {
+.resizable-span-vertical {
     cursor: ew-resize !important;
     width: 5px !important;
     z-index: 99999 !important;
+}
+
+.resizable-span-horizontal {
+    cursor: ns-resize !important;
+    height: 10px !important;
+    z-index: 999999 !important;
+    bottom: -5px !important;
 }
 
 .resizable-span:hover {

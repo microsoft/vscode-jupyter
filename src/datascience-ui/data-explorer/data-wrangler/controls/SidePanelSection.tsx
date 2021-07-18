@@ -27,15 +27,11 @@ export class SidePanelSection extends React.Component<IProps, IState> {
                 </summary>
                 <Resizable
                     style={{
-                        overflowY: 'auto', // Bug: When given the ability to scroll, the resize element does not move with scroll
+                        overflowY: 'hidden',
                         zIndex: 99997
                     }}
                     defaultSize={{ width: '100%', height: this.props.height }}
-                    handleStyles={{
-                        bottom: {
-                            bottom: '0px'
-                        }
-                    }}
+                    handleClasses={{ bottom: 'resizable-span resizable-span-horizontal' }}
                     enable={{
                         left: false,
                         top: false,
@@ -47,7 +43,16 @@ export class SidePanelSection extends React.Component<IProps, IState> {
                         topLeft: false
                     }}
                 >
-                    {this.props.panel}
+                    {/* Needs to be put in another div like this because otherwise the resizable span does not move with scroll */}
+                    <div
+                        style={{
+                            height: '100%',
+                            width: '100%',
+                            overflowY: 'scroll'
+                        }}
+                    >
+                        {this.props.panel}
+                    </div>
                 </Resizable>
             </details>
         );

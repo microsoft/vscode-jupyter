@@ -328,7 +328,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             flexDirection: 'column',
                             zIndex: 99998
                         }}
-                        handleClasses={{ left: 'resizable-span' }}
+                        handleClasses={{ left: 'resizable-span resizable-span-vertical' }}
                         defaultSize={{ width: '40%', height: '95%' }}
                         onResize={() => {
                             this.props.resizeGridEvent.notify();
