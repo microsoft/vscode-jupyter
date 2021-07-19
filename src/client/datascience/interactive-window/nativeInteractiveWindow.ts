@@ -771,6 +771,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
         notebookCellData.metadata = {
+            inputCollapsed: true,
             interactiveWindowCellMarker,
             interactive: {
                 file: file.fsPath,
