@@ -130,6 +130,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private initialControllerSelected: Deferred<void>;
     private _documentReadyPromise: Promise<NotebookDocument>;
     private notebookDocument: NotebookDocument | undefined;
+    private executionPromise: Promise<boolean> | undefined;
 
     constructor(
         private readonly applicationShell: IApplicationShell,
@@ -385,6 +386,15 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
+        if (this.executionPromise) {
+            this.executionPromise = this.executionPromise.then(() => this.createExecutionPromise(code, fileUri, line, isDebug));
+        } else {
+            this.executionPromise = this.createExecutionPromise(code, fileUri, line, isDebug);
+        }
+        return this.executionPromise;
+    }
+
+    private async createExecutionPromise(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         const notebookDocument = await this._documentReadyPromise;
         await this.updateOwners(fileUri);
         const id = uuid();
