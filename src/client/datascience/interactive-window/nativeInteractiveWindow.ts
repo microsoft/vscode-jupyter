@@ -419,7 +419,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                         if (executionCount) {
                             temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10);
                         }
-    
+
                         // Any errors will move our result to false (if allowed)
                         if (this.configuration.getSettings(owningResource).stopOnError) {
                             result = result && cells.find((c) => c.state === CellState.error) === undefined;
