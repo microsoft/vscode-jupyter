@@ -684,7 +684,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     // asynchronously rendered, so we cannot guarantee that the output exists at the
     // time that we try to reveal the output.
     private revealCell(notebookCell: NotebookCell) {
-        const editor = window.visibleNotebookEditors.find((editor) => editor.document === notebookCell.document.notebook);
+        const editor = window.visibleNotebookEditors.find(
+            (editor) => editor.document === notebookCell.document.notebook
+        );
         if (editor) {
             const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
             // This will always try to reveal the whole cell--input + output combined
@@ -790,7 +792,13 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.show();
     }
 
-    private async addNotebookCell(notebookDocument: NotebookDocument, code: string, file: Uri, line: number, id: string): Promise<NotebookCell> {
+    private async addNotebookCell(
+        notebookDocument: NotebookDocument,
+        code: string,
+        file: Uri,
+        line: number,
+        id: string
+    ): Promise<NotebookCell> {
         // Ensure we have a controller to execute code against
         if (!this.notebookController) {
             await this.commandManager.executeCommand('notebook.selectKernel');
