@@ -267,7 +267,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // Ensure we hear about any controller changes so we can update our cache accordingly
         this.notebookControllerManager.onNotebookControllerSelected(
             (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
-                if (e.notebook !== this.notebookDocument) {
+                if (e.notebook !== notebookDocument) {
                     return;
                 }
 
