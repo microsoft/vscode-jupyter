@@ -94,7 +94,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
     // Promise that resolves when the interactive window is ready to handle code execution.
     public get readyPromise(): Promise<NotebookDocument> {
-        return this._readyPromise;
+        return this._documentReadyPromise;
     }
 
     public get closed(): Event<IInteractiveWindow> {
@@ -128,7 +128,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private kernel: IKernel | undefined;
     private kernelLoadPromise: Promise<void> | undefined;
     private initialControllerSelected: Deferred<void>;
-    private _readyPromise: Promise<NotebookDocument>;
+    private _documentReadyPromise: Promise<NotebookDocument>;
     private notebookDocument: NotebookDocument | undefined;
 
     constructor(
@@ -160,7 +160,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         this.initialControllerSelected = createDeferred<void>();
 
         // Request creation of the interactive window from VS Code
-        this._readyPromise = this.createReadyPromise();
+        this._documentReadyPromise = this.createReadyPromise();
 
         workspace.onDidCloseNotebookDocument((notebookDocument) => {
             if (notebookDocument === this.notebookDocument) {
@@ -169,34 +169,29 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         });
     }
 
-    private createReadyPromise(): Promise<NotebookDocument> {
-        return this.notebookControllerManager
-            .getInteractiveController()
-            .then((preferredController) => {
-                const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
-                const hasOwningFile = this.owner !== undefined;
-                return (this.commandManager.executeCommand(
-                    'interactive.open',
-                    // Keep focus on the owning file if there is one
-                    { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
-                    undefined,
-                    controllerId
-                ) as unknown) as INativeInteractiveWindow;
-            })
-            .then(({ notebookUri }: INativeInteractiveWindow) => {
-                const notebookDocument = workspace.notebookDocuments.find(
-                    (doc) => doc.uri.toString() === notebookUri.toString()
-                );
-                if (!notebookDocument) {
-                    // This means VS Code failed to create an interactive window.
-                    // This should never happen.
-                    throw new Error('Failed to request creation of interactive window from VS Code.');
-                }
-                this.notebookDocument = notebookDocument;
-                this.loadController(notebookDocument);
-                this.initializeRendererCommunication();
-                return notebookDocument;
-            });
+    private async createReadyPromise(): Promise<NotebookDocument> {
+        const preferredController = await this.notebookControllerManager.getInteractiveController();
+        const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
+        const hasOwningFile = this.owner !== undefined;
+        const { notebookUri } = (await this.commandManager.executeCommand(
+            'interactive.open',
+            // Keep focus on the owning file if there is one
+            { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
+            undefined,
+            controllerId
+        ) as unknown) as INativeInteractiveWindow;
+        const notebookDocument = workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === notebookUri.toString()
+        );
+        if (!notebookDocument) {
+            // This means VS Code failed to create an interactive window.
+            // This should never happen.
+            throw new Error('Failed to request creation of interactive window from VS Code.');
+        }
+        this.notebookDocument = notebookDocument;
+        this.loadController(notebookDocument);
+        this.initializeRendererCommunication();
+        return notebookDocument;
     }
 
     private initializeRendererCommunication() {
@@ -331,9 +326,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         this.isDisposed = true;
     }
 
+    // Add message to the notebook document in a markdown cell
     public async addMessage(message: string): Promise<void> {
-        const notebookDocument = await this._readyPromise;
-        // Add message to the notebook document
+        const notebookDocument = await this._documentReadyPromise;
         const edit = new WorkspaceEdit();
         const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
         markdownCell.metadata = { isInteractiveWindowMessageCell: true };
@@ -390,7 +385,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
-        const notebookDocument = await this._readyPromise;
+        const notebookDocument = await this._documentReadyPromise;
         await this.updateOwners(fileUri);
         const id = uuid();
         const editor = window.visibleNotebookEditors.find((editor) => editor.document === notebookDocument);
@@ -495,7 +490,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     // TODO Migrate all of this code into a common command handler
     public async interruptKernel(): Promise<void> {
         // trackKernelResourceInformation(this._notebook?.resource, { interruptKernel: true });
-        const notebookDocument = await this._readyPromise;
+        const notebookDocument = await this._documentReadyPromise;
         if (this.kernel && !this.restartingKernel) {
             const status = this.statusProvider.set(
                 localize.DataScience.interruptKernelStatus(),
@@ -577,7 +572,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     private async restartKernelInternal(): Promise<void> {
         this.restartingKernel = true;
-        const notebookDocument = await this._readyPromise;
+        const notebookDocument = await this._documentReadyPromise;
 
         // Set our status
         const status = this.statusProvider.set(
@@ -639,7 +634,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async expandAllCells() {
-        const target = await this._readyPromise;
+        const target = await this._documentReadyPromise;
         const edit = new WorkspaceEdit();
         target.getCells().forEach((cell, index) => {
             const metadata = {
@@ -653,7 +648,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async collapseAllCells() {
-        const target = await this._readyPromise;
+        const target = await this._documentReadyPromise;
         const edit = new WorkspaceEdit();
         target.getCells().forEach((cell, index) => {
             if (cell.kind !== NotebookCellKind.Code) {
@@ -666,7 +661,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async scrollToCell(id: string): Promise<void> {
-        const target = await this._readyPromise;
+        const target = await this._documentReadyPromise;
         const matchingCell = target.getCells().find((cell) => cell.metadata.executionId === id);
         if (matchingCell) {
             this.revealCell(matchingCell);
@@ -698,7 +693,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     // TODO this does not need to be async since we no longer need to roundtrip to the UI
     public async hasCell(id: string): Promise<boolean> {
-        const target = await this._readyPromise;
+        const target = await this._documentReadyPromise;
         if (!target) {
             return false;
         }
@@ -853,7 +848,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
     public async export() {
-        const notebookDocument = await this._readyPromise;
+        const notebookDocument = await this._documentReadyPromise;
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
@@ -873,7 +868,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async exportAs() {
-        const notebookDocument = await this._readyPromise;
+        const notebookDocument = await this._documentReadyPromise;
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
