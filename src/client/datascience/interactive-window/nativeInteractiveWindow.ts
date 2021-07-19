@@ -387,7 +387,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         if (this.executionPromise) {
-            this.executionPromise = this.executionPromise.then(() => this.createExecutionPromise(code, fileUri, line, isDebug));
+            this.executionPromise = this.executionPromise.then(() =>
+                this.createExecutionPromise(code, fileUri, line, isDebug)
+            );
         } else {
             this.executionPromise = this.createExecutionPromise(code, fileUri, line, isDebug);
         }
