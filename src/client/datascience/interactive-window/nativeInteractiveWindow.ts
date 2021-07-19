@@ -400,7 +400,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             observable.subscribe(
                 (cells: ICell[]) => {
                     // Then send the combined output to the UI
-                    const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
+                    const converted = (cells[0].data as nbformat.ICodeCell).outputs?.map(cellOutputToVSCCellOutput);
                     void temporaryExecution.replaceOutput(converted).then(() => {
                         // Scroll to the newly added output. First recompute visibility.
                         // User might have scrolled away while cell was executing.
