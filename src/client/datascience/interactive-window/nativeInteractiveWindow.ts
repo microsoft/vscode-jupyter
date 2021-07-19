@@ -169,7 +169,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private createLoadPromise(): Promise<void> {
-        return this.notebookControllerManager.getInteractiveController()
+        return this.notebookControllerManager
+            .getInteractiveController()
             .then((preferredController) => {
                 const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
                 const hasOwningFile = this.owner !== undefined;
@@ -198,29 +199,29 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     private initializeRendererCommunication() {
         const messageChannel = notebooks.createRendererMessaging('jupyter-error-renderer');
-            this.disposables.push(
-                messageChannel.onDidReceiveMessage(async (e) => {
-                    const message = e.message;
-                    if (message.message === InteractiveWindowMessages.OpenLink) {
-                        const href = message.payload;
-                        if (href.startsWith('file')) {
-                            await this.openFile(href);
-                        } else if (href.startsWith('https://command:')) {
-                            const temp: string = href.split(':')[2];
-                            const params: string[] = temp.includes('/?') ? temp.split('/?')[1].split(',') : [];
-                            let command = temp.split('/?')[0];
-                            if (command.endsWith('/')) {
-                                command = command.substring(0, command.length - 1);
-                            }
-                            if (linkCommandAllowList.includes(command)) {
-                                await commands.executeCommand(command, params);
-                            }
-                        } else {
-                            this.applicationShell.openUrl(href);
+        this.disposables.push(
+            messageChannel.onDidReceiveMessage(async (e) => {
+                const message = e.message;
+                if (message.message === InteractiveWindowMessages.OpenLink) {
+                    const href = message.payload;
+                    if (href.startsWith('file')) {
+                        await this.openFile(href);
+                    } else if (href.startsWith('https://command:')) {
+                        const temp: string = href.split(':')[2];
+                        const params: string[] = temp.includes('/?') ? temp.split('/?')[1].split(',') : [];
+                        let command = temp.split('/?')[0];
+                        if (command.endsWith('/')) {
+                            command = command.substring(0, command.length - 1);
                         }
+                        if (linkCommandAllowList.includes(command)) {
+                            await commands.executeCommand(command, params);
+                        }
+                    } else {
+                        this.applicationShell.openUrl(href);
                     }
-                })
-            );
+                }
+            })
+        );
     }
 
     private async openFile(fileUri: string) {

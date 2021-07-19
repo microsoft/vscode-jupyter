@@ -52,7 +52,9 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     }
     public get activeWindow(): IInteractiveWindow | undefined {
         return this._windows.find(
-            (win) => window.activeNotebookEditor !== undefined && win.notebookUri?.toString() === window.activeNotebookEditor?.document.uri.toString()
+            (win) =>
+                window.activeNotebookEditor !== undefined &&
+                win.notebookUri?.toString() === window.activeNotebookEditor?.document.uri.toString()
         );
     }
     public get windows(): ReadonlyArray<IInteractiveWindow> {
@@ -74,7 +76,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
+        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
     ) {
         asyncRegistry.push(this);
     }
@@ -141,9 +143,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         const handler = result.closed(this.onInteractiveWindowClosed);
         this.disposables.push(result);
         this.disposables.push(handler);
-        this.disposables.push(
-            result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this))
-        );
+        this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
 
         // fire created event
         this._onDidCreateInteractiveWindow.fire(result);
