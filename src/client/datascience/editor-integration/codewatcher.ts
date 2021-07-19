@@ -990,6 +990,7 @@ export class CodeWatcher implements ICodeWatcher {
         try {
             const stopWatch = new StopWatch();
             const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreate(file);
+            await activeInteractiveWindow.readyPromise;
             if (debug) {
                 result = await activeInteractiveWindow.debugCode(code, file, line, editor);
             } else {
