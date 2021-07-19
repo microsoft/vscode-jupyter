@@ -2338,6 +2338,7 @@
         "monaco-textmate": "^3.0.1",
         "nocache": "^2.1.0",
         "nock": "^10.0.6",
+        "node-gyp-build": "^4.2.3",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
