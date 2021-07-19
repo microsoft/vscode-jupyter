@@ -92,8 +92,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get active(): boolean {
         return true; // TODO VS Code needs to provide an API for this
     }
-    public get ready(): Promise<void> {
-        return this.loadPromise;
+    // Promise that resolves when the interactive window is ready to handle code execution.
+    public get readyPromise(): Promise<NotebookDocument> {
+        return this._readyPromise;
     }
 
     public get closed(): Event<IInteractiveWindow> {
@@ -127,7 +128,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private kernel: IKernel | undefined;
     private kernelLoadPromise: Promise<void> | undefined;
     private initialControllerSelected: Deferred<void>;
-    private loadPromise: Promise<void>;
+    private _readyPromise: Promise<NotebookDocument>;
     private notebookDocument: NotebookDocument | undefined;
 
     constructor(
@@ -159,7 +160,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         this.initialControllerSelected = createDeferred<void>();
 
         // Request creation of the interactive window from VS Code
-        this.loadPromise = this.createLoadPromise();
+        this._readyPromise = this.createReadyPromise();
 
         workspace.onDidCloseNotebookDocument((notebookDocument) => {
             if (notebookDocument === this.notebookDocument) {
@@ -168,7 +169,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         });
     }
 
-    private createLoadPromise(): Promise<void> {
+    private createReadyPromise(): Promise<NotebookDocument> {
         return this.notebookControllerManager
             .getInteractiveController()
             .then((preferredController) => {
@@ -194,6 +195,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 this.notebookDocument = notebookDocument;
                 this.loadController(notebookDocument);
                 this.initializeRendererCommunication();
+                return notebookDocument;
             });
     }
 
@@ -330,15 +332,14 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async addMessage(message: string): Promise<void> {
-        await this.loadPromise;
+        const notebookDocument = await this._readyPromise;
         // Add message to the notebook document
         const edit = new WorkspaceEdit();
-        const notebookDocument = this.notebookDocument;
         const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
         markdownCell.metadata = { isInteractiveWindowMessageCell: true };
         edit.replaceNotebookCells(
-            notebookDocument!.uri,
-            new NotebookRange(notebookDocument!.cellCount, notebookDocument!.cellCount),
+            notebookDocument.uri,
+            new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
             [markdownCell]
         );
         await workspace.applyEdit(edit);
@@ -389,17 +390,17 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
-        await this.loadPromise;
+        const notebookDocument = await this._readyPromise;
         await this.updateOwners(fileUri);
         const id = uuid();
-        const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
+        const editor = window.visibleNotebookEditors.find((editor) => editor.document === notebookDocument);
 
         // Compute isAtBottom based on last notebook cell before adding a notebook cell,
         // since the notebook cell we're going to add is by definition not visible
         const isLastCellVisible = editor?.visibleRanges.find((r) => {
-            return r.end === this.notebookDocument!.cellCount - 1;
+            return r.end === notebookDocument.cellCount - 1;
         });
-        const notebookCell = await this.addNotebookCell(code, fileUri, line, id);
+        const notebookCell = await this.addNotebookCell(notebookDocument, code, fileUri, line, id);
         const settings = this.configuration.getSettings();
         // The default behavior is to scroll to the last cell if the user is already at the bottom
         // of the history, but not to scroll if the user has scrolled somewhere in the middle
@@ -428,13 +429,13 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 await this.kernel!.executeHidden(
                     `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`,
                     file,
-                    this.notebookDocument!
+                    notebookDocument
                 );
                 await this.jupyterDebugger.startDebugging(notebook);
             }
 
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-            await this.setFileInKernel(file, this.notebookDocument!);
+            await this.setFileInKernel(file, notebookDocument);
 
             const owningResource = this.owningResource;
             const observable = this.kernel!.notebook!.executeObservable(code, file, line, id, false);
@@ -452,7 +453,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                         // We don't want to force them back down unless they configured
                         // alwaysScrollOnNewCell.
                         const isInsertedCellVisible = editor?.visibleRanges.find((r) => {
-                            return r.end === this.notebookDocument!.cellCount - 1;
+                            return r.end === notebookDocument.cellCount - 1;
                         });
                         if (settings.alwaysScrollOnNewCell || isInsertedCellVisible) {
                             this.revealCell(notebookCell);
@@ -494,7 +495,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     // TODO Migrate all of this code into a common command handler
     public async interruptKernel(): Promise<void> {
         // trackKernelResourceInformation(this._notebook?.resource, { interruptKernel: true });
-        await this.loadPromise;
+        const notebookDocument = await this._readyPromise;
         if (this.kernel && !this.restartingKernel) {
             const status = this.statusProvider.set(
                 localize.DataScience.interruptKernelStatus(),
@@ -505,7 +506,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             );
 
             try {
-                const result = await this.kernel.interrupt(this.notebookDocument!);
+                const result = await this.kernel.interrupt(notebookDocument);
                 status.dispose();
 
                 // We timed out, ask the user if they want to restart instead.
@@ -576,7 +577,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     private async restartKernelInternal(): Promise<void> {
         this.restartingKernel = true;
-        const notebookDocument = this.notebookDocument;
+        const notebookDocument = await this._readyPromise;
 
         // Set our status
         const status = this.statusProvider.set(
@@ -638,10 +639,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async expandAllCells() {
-        const target = this.notebookDocument;
-        if (!target) {
-            return;
-        }
+        const target = await this._readyPromise;
         const edit = new WorkspaceEdit();
         target.getCells().forEach((cell, index) => {
             const metadata = {
@@ -655,10 +653,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async collapseAllCells() {
-        const target = this.notebookDocument;
-        if (!target) {
-            return;
-        }
+        const target = await this._readyPromise;
         const edit = new WorkspaceEdit();
         target.getCells().forEach((cell, index) => {
             if (cell.kind !== NotebookCellKind.Code) {
@@ -671,10 +666,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async scrollToCell(id: string): Promise<void> {
-        const target = this.notebookDocument;
-        if (!target) {
-            return;
-        }
+        const target = await this._readyPromise;
         const matchingCell = target.getCells().find((cell) => cell.metadata.executionId === id);
         if (matchingCell) {
             this.revealCell(matchingCell);
@@ -692,7 +684,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     // asynchronously rendered, so we cannot guarantee that the output exists at the
     // time that we try to reveal the output.
     private revealCell(notebookCell: NotebookCell) {
-        const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
+        const editor = window.visibleNotebookEditors.find((editor) => editor.document === notebookCell.document.notebook);
         if (editor) {
             const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
             // This will always try to reveal the whole cell--input + output combined
@@ -704,7 +696,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     // TODO this does not need to be async since we no longer need to roundtrip to the UI
     public async hasCell(id: string): Promise<boolean> {
-        const target = this.notebookDocument;
+        const target = await this._readyPromise;
         if (!target) {
             return false;
         }
@@ -798,7 +790,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.show();
     }
 
-    private async addNotebookCell(code: string, file: Uri, line: number, id: string): Promise<NotebookCell> {
+    private async addNotebookCell(notebookDocument: NotebookDocument, code: string, file: Uri, line: number, id: string): Promise<NotebookCell> {
         // Ensure we have a controller to execute code against
         if (!this.notebookController) {
             await this.commandManager.executeCommand('notebook.selectKernel');
@@ -810,7 +802,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.commandManager.executeCommand(
             'interactive.open',
             { preserveFocus: true },
-            this.notebookDocument!.uri,
+            notebookDocument.uri,
             this.notebookController?.id
         );
 
@@ -841,26 +833,26 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             },
             executionId: id
         };
-        await chainWithPendingUpdates(this.notebookDocument!, (edit) => {
+        await chainWithPendingUpdates(notebookDocument, (edit) => {
             edit.replaceNotebookCells(
-                this.notebookDocument!.uri,
-                new NotebookRange(this.notebookDocument!.cellCount, this.notebookDocument!.cellCount),
+                notebookDocument.uri,
+                new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
                 [notebookCellData]
             );
         });
-        return this.notebookDocument!.cellAt(this.notebookDocument!.cellCount - 1);
+        return notebookDocument.cellAt(notebookDocument.cellCount - 1);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
     public async export() {
-        await this.loadPromise;
+        const notebookDocument = await this._readyPromise;
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
         const { magicCommandsAsComments } = this.configuration.getSettings();
-        const cells = generateCellsFromNotebookDocument(this.notebookDocument!, magicCommandsAsComments);
+        const cells = generateCellsFromNotebookDocument(notebookDocument, magicCommandsAsComments);
 
         // Should be an array of cells
         if (cells && this.exportDialog) {
@@ -873,14 +865,14 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async exportAs() {
-        await this.loadPromise;
+        const notebookDocument = await this._readyPromise;
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
         const { magicCommandsAsComments } = this.configuration.getSettings();
-        const cells = generateCellsFromNotebookDocument(this.notebookDocument!, magicCommandsAsComments);
+        const cells = generateCellsFromNotebookDocument(notebookDocument, magicCommandsAsComments);
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };

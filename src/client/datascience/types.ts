@@ -559,7 +559,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly identity: Uri;
     readonly title: string;
     readonly notebookUri?: Uri;
-    readonly readyPromise?: Promise<void>;
+    readonly readyPromise?: Promise<NotebookDocument>;
     closed: Event<IInteractiveWindow>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
