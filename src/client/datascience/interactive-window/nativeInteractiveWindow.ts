@@ -399,28 +399,31 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             // Sign up for cell changes
             observable.subscribe(
                 (cells: ICell[]) => {
-                    // Then send the combined output to the UI
-                    const converted = (cells[0].data as nbformat.ICodeCell).outputs.map(cellOutputToVSCCellOutput);
-                    void temporaryExecution.replaceOutput(converted).then(() => {
-                        // Scroll to the newly added output. First recompute visibility.
-                        // User might have scrolled away while cell was executing.
-                        // We don't want to force them back down unless they configured
-                        // alwaysScrollOnNewCell.
-                        const isInsertedCellVisible = editor?.visibleRanges.find((r) => {
-                            return r.end === this.notebookDocument.cellCount - 1;
+                    const cell = cells[0].data;
+                    if (cell.cell_type === 'code') {
+                        // Then send the combined output to the UI
+                        const converted = cell.outputs.map(cellOutputToVSCCellOutput);
+                        void temporaryExecution.replaceOutput(converted).then(() => {
+                            // Scroll to the newly added output. First recompute visibility.
+                            // User might have scrolled away while cell was executing.
+                            // We don't want to force them back down unless they configured
+                            // alwaysScrollOnNewCell.
+                            const isInsertedCellVisible = editor?.visibleRanges.find((r) => {
+                                return r.end === this.notebookDocument.cellCount - 1;
+                            });
+                            if (settings.alwaysScrollOnNewCell || isInsertedCellVisible) {
+                                this.revealCell(notebookCell);
+                            }
                         });
-                        if (settings.alwaysScrollOnNewCell || isInsertedCellVisible) {
-                            this.revealCell(notebookCell);
+                        const executionCount = cell.execution_count;
+                        if (executionCount) {
+                            temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10);
                         }
-                    });
-                    const executionCount = (cells[0].data as nbformat.ICodeCell).execution_count;
-                    if (executionCount) {
-                        temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10);
-                    }
 
-                    // Any errors will move our result to false (if allowed)
-                    if (this.configuration.getSettings(owningResource).stopOnError) {
-                        result = result && cells.find((c) => c.state === CellState.error) === undefined;
+                        // Any errors will move our result to false (if allowed)
+                        if (this.configuration.getSettings(owningResource).stopOnError) {
+                            result = result && cells.find((c) => c.state === CellState.error) === undefined;
+                        }
                     }
                 },
                 (error) => {
