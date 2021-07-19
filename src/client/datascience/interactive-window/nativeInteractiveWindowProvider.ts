@@ -64,7 +64,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private _windows: NativeInteractiveWindow[] = [];
-    private mapOfResourcesToInteractiveWindowPromises = new Map<string, Promise<NativeInteractiveWindow>>();
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -226,10 +225,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         this._windows = this._windows.filter((w) => w !== interactiveWindow);
         if (this.lastActiveInteractiveWindow === interactiveWindow) {
             this.lastActiveInteractiveWindow = this._windows[0];
-        }
-        if (interactiveWindow.owner !== undefined) {
-            // Make sure we don't try to reuse the promise for an interactive window which has already been disposed
-            this.mapOfResourcesToInteractiveWindowPromises.delete(interactiveWindow.owner.toString());
         }
         this.raiseOnDidChangeActiveInteractiveWindow();
     };
