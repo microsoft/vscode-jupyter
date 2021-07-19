@@ -74,6 +74,14 @@
     border-bottom: 1px solid var(--vscode-editor-lineHighlightBorder);
 }
 
+.slick-column-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: small;
+}
+
 .column-operation-section {
     padding-bottom: 5px;
     padding-top: 6px;
@@ -90,12 +98,26 @@
     padding: 4px;
 }
 
-.show-on-hover {
-    opacity: 0;
+.codicon-button {
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 5px;
+    max-height: 16px;
+    color: var(--vscode-sideBar-foreground);
 }
 
-.show-on-hover:hover {
+.codicon-button:hover {
+    background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+.show-on-hover-child {
+    opacity: 0;
+    display: none !important;
+}
+
+.show-on-hover-parent:hover > .show-on-hover-child {
     opacity: 1;
+    display: inline-block !important;
 }
 
 .react-grid-cell.active {

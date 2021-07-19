@@ -46,10 +46,10 @@ import 'slickgrid/slick.grid.css';
 // eslint-disable-next-line import/order
 import './reactSlickGrid.css';
 import {
-    DataWranglerCommands,
-    ICellCssStylesHash,
     IHistoryItem,
-    SidePanelSections
+    SidePanelSections,
+    DataWranglerCommands,
+    ICellCssStylesHash
 } from '../../client/datascience/data-viewing/data-wrangler/types';
 
 /*
@@ -99,7 +99,7 @@ export interface ISlickGridProps {
     scrollColumnIntoViewEvent?: Slick.Event<string>;
 }
 
-interface ISlickGridState {
+export interface ISlickGridState {
     grid?: Slick.Grid<ISlickRow>;
     showingFilters?: boolean;
     fontSize: number;

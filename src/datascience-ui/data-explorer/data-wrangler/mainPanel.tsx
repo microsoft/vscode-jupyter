@@ -536,7 +536,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         id: `${i}`,
                         name: c.key === RowNumberColumnName ? '' : c.key.toString(),
                         sortable: true,
-                        toolTip: c.describe,
+                        toolTip: c.key.toString(),
                         formatter: cellFormatterFunc,
                         isPreview: c.key.includes(' (preview)')
                     } as Slick.Column<Slick.SlickData>);

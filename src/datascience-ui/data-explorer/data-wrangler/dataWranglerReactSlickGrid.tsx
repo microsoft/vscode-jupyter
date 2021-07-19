@@ -71,9 +71,7 @@ const ColumnContextMenuItem = {
     DropDuplicatesOnColumns: getLocString(
         'DataScience.dataWranglerDropDuplicatesOnColumns',
         'Drop Duplicates On Columns'
-    ),
-    SortAscending: 'Sort Ascending', // Will be removed from context menu
-    SortDescending: 'Sort Descending' // Will be removed from context menu
+    )
 };
 
 const STYLING_OPERATIONS = [
@@ -84,6 +82,7 @@ const STYLING_OPERATIONS = [
     'Selected rows'
 ];
 const PREVIEW_TITLE = '(preview)';
+const INDEX_COLUMN_ID = '1';
 
 export class DataWranglerReactSlickGrid extends ReactSlickGrid {
     private contextMenuRowId: number | undefined;
@@ -92,7 +91,12 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
 
     constructor(props: ISlickGridProps) {
         super(props);
-        this.state = { fontSize: 15, showingFilters: true, selectedColumns: [], selectedRows: [] };
+        this.state = {
+            fontSize: 12,
+            showingFilters: true,
+            selectedColumns: [],
+            selectedRows: []
+        };
         this.props.toggleFilterEvent?.subscribe(this.clickFilterButton);
         this.props.scrollColumnIntoViewEvent?.subscribe(this.scrollColumnIntoView);
     }
@@ -104,13 +108,13 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         window.addEventListener('resize', this.windowResized);
 
         if (this.containerRef.current) {
-            // Compute font size. Default to 15 if not found.
+            // Compute font size. Default to 12 if not found.
             let fontSize = parseInt(
                 getComputedStyle(this.containerRef.current).getPropertyValue('--code-font-size'),
                 10
             );
             if (isNaN(fontSize)) {
-                fontSize = 15;
+                fontSize = 12;
             }
 
             // Setup options for the grid
@@ -141,13 +145,19 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
 
             this.dataView.onRowCountChanged.subscribe((_e, _args) => {
                 grid.updateRowCount();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.changeCellStylings(grid);
                 grid.render();
+                grid.setSortColumn(INDEX_COLUMN_ID, true);
+                setSortGlyphs(grid);
             });
 
             this.dataView.onRowsChanged.subscribe((_e, args) => {
                 grid.invalidateRows(args.rows);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 grid.render();
+                grid.setSortColumn(INDEX_COLUMN_ID, true);
+                setSortGlyphs(grid);
             });
 
             // Setup the filter render
@@ -200,7 +210,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                     return;
                 }
                 const contextMenuItem = e.target.id;
-                const columnName = this.props.columns[this.contextMenuCellId].name;
+                const columnName = this.props.columns[this.contextMenuCellId].field;
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const cellData = (this.dataView.getItemById(this.contextMenuRowId) as any)[columnName!];
                 switch (contextMenuItem) {
@@ -233,12 +243,6 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 const contextMenuItem = e?.target?.id;
                 if (this.props.submitCommand) {
                     switch (contextMenuItem) {
-                        case ColumnContextMenuItem.SortAscending:
-                            return this.sortColumn(this.contextMenuColumnName, true);
-
-                        case ColumnContextMenuItem.SortDescending:
-                            return this.sortColumn(this.contextMenuColumnName, false);
-
                         case ColumnContextMenuItem.DropColumn:
                         case ColumnContextMenuItem.DropColumns:
                             this.props.submitCommand({
@@ -359,7 +363,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                             headers={
                                 this.state.grid
                                     ?.getColumns()
-                                    .map((c) => c.name)
+                                    .map((c) => c.field)
                                     .filter((c) => c !== undefined) as string[]
                             }
                             currentVariableName={this.props.currentVariableName ?? ''}
@@ -389,8 +393,6 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                         </>
                     ) : (
                         <>
-                            <li id={ColumnContextMenuItem.SortAscending}>{ColumnContextMenuItem.SortAscending}</li>
-                            <li id={ColumnContextMenuItem.SortDescending}>{ColumnContextMenuItem.SortDescending}</li>
                             <li id={ColumnContextMenuItem.DropColumn}>{ColumnContextMenuItem.DropColumn}</li>
                             <li id={ColumnContextMenuItem.NormalizeColumn}>{ColumnContextMenuItem.NormalizeColumn}</li>
                             <li id={ColumnContextMenuItem.DropNa}>{ColumnContextMenuItem.DropNa}</li>
@@ -416,24 +418,45 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         );
     }
 
+    private sortColumnFromHeader(sortCol: string | undefined) {
+        const { columnId: currentSortColId, sortAsc: currentSortAsc } = this.state.grid?.getSortColumns()[0] ?? {
+            columnId: INDEX_COLUMN_ID,
+            sortAsc: true
+        };
+        if (sortCol) {
+            if (sortCol === currentSortColId) {
+                this.sortColumn(sortCol, !(currentSortAsc ?? false));
+            } else {
+                this.sortColumn(sortCol, true);
+            }
+        }
+    }
+
     private sortColumn(sortCol: string | undefined, sortAscending: boolean) {
         if (sortCol) {
             const cols = this.state.grid?.getColumns();
-            const idx = cols?.findIndex((c) => c.name === sortCol);
-            if (cols && idx) {
+            if (cols) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                this.dataView.sort((l: any, r: any) => this.compareElements(l, r, cols[idx]), sortAscending);
-                this.state.grid?.setSortColumn(idx?.toString(), sortAscending);
+                this.dataView.sort((l: any, r: any) => this.compareElements(l, r, cols[+sortCol]), sortAscending);
+
+                // Because column.sortable is false, this function only italicizes the column text
+                this.state.grid?.setSortColumn(sortCol?.toString(), sortAscending);
+
+                setSortGlyphs(this.state.grid);
             }
         }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private maybeDropColumns = (e: any, data: Slick.OnHeaderContextMenuEventArgs<ISlickRow>) => {
-        this.contextMenuColumnName = data.column.name;
+        this.contextMenuColumnName = data.column.field;
 
         // Don't show context menu for the row numbering column or index column or preview columns
-        if (data.column.id === '0' || data.column.id === '1' || data.column.name?.includes(PREVIEW_TITLE)) {
+        if (
+            data.column.id === '0' ||
+            data.column.id === INDEX_COLUMN_ID ||
+            data.column.field?.includes(PREVIEW_TITLE)
+        ) {
             return;
         }
         e.preventDefault();
@@ -492,8 +515,8 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         if (
             !selectedColumnId ||
             selectedColumnId === '0' ||
-            selectedColumnId === '1' ||
-            data.column.name?.includes(PREVIEW_TITLE)
+            selectedColumnId === INDEX_COLUMN_ID ||
+            data.column.field?.includes(PREVIEW_TITLE)
         ) {
             return;
         }
@@ -516,7 +539,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
 
             // Find ID of first selected column
             const firstSelectedColumnName = this.state.selectedColumns[0] ?? '';
-            const firstSelectedColumn = columns.find((c) => c.name! === firstSelectedColumnName);
+            const firstSelectedColumn = columns.find((c) => c.field! === firstSelectedColumnName);
             const firstColumnIndex = this.state.grid.getColumnIndex(firstSelectedColumn?.id!);
 
             const secondColumnIndex = this.state.grid.getColumnIndex(selectedColumnId);
@@ -524,33 +547,33 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             // Select all columns in between the two columns
             selectedColumns = columns
                 .slice(Math.min(firstColumnIndex, secondColumnIndex), Math.max(firstColumnIndex, secondColumnIndex) + 1)
-                .map((c) => c.name ?? '')
+                .map((c) => c.field ?? '')
                 .filter((name) => !name.includes(PREVIEW_TITLE));
 
             primarySelectedColumn = firstSelectedColumnName;
         } else if (e.ctrlKey) {
             // Handle ctrl click
-            if (this.state.selectedColumns?.includes(data.column.name!)) {
+            if (this.state.selectedColumns?.includes(data.column.field!)) {
                 // Remove column from selection
-                selectedColumns = this.state.selectedColumns?.filter((c) => c !== data.column.name);
+                selectedColumns = this.state.selectedColumns?.filter((c) => c !== data.column.field);
                 // If primarySelectedColumn was deselected, then set primarySelectedColumn to undefined
                 primarySelectedColumn =
-                    this.state.primarySelectedColumn === data.column.name
+                    this.state.primarySelectedColumn === data.column.field
                         ? undefined
                         : this.state.primarySelectedColumn;
             } else {
                 // Add column to selection
-                selectedColumns = [...(this.state.selectedColumns ?? []), data.column.name!].sort();
-                primarySelectedColumn = this.state.primarySelectedColumn ?? data.column.name;
+                selectedColumns = [...(this.state.selectedColumns ?? []), data.column.field!].sort();
+                primarySelectedColumn = this.state.primarySelectedColumn ?? data.column.field;
             }
         } else {
             // Handle ordinary click
-            if (this.state.primarySelectedColumn === data.column.name) {
+            if (this.state.primarySelectedColumn === data.column.field) {
                 // Remove column from selection
                 selectedColumns = [];
             } else {
                 // Add column to selection
-                selectedColumns = [data.column.name!];
+                selectedColumns = [data.column.field!];
             }
         }
 
@@ -586,7 +609,9 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 // Style columns after state is set
                 const columns = this.styleColumns(grid.getColumns());
                 grid.setColumns(columns);
-                this.updateCssStyles();
+                setTimeout(() => {
+                    this.updateCssStyles();
+                }, 0);
             }
         );
     }
@@ -672,29 +697,83 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         if (this.state.grid) {
             const fontString = this.computeFont();
             const columns = this.state.grid.getColumns();
-            const placeholder = '99999999999';
+            const placeholder = '999999999999999';
             const maxFieldWidth = measureText(placeholder, fontString);
-
-            // Removes first column that was similar to index column but had no name
-            // columns.shift();
+            const oldColumns = this.getBeforePreviewColumns(columns);
 
             columns.forEach((c) => {
-                if (c.field !== this.props.idProperty) {
-                    c.width = maxFieldWidth;
-                } else {
+                c.header = {
+                    buttons: []
+                };
+
+                // First column (that has the filter button)
+                if (c.field === this.props.idProperty) {
                     c.width = maxFieldWidth / 2;
                     c.name = '';
-                    c.header = {
-                        buttons: [
-                            {
-                                cssClass: 'codicon codicon-filter codicon-button header-cell-button',
-                                handler: this.clickFilterButton,
-                                tooltip: this.state.showingFilters
-                                    ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
-                                    : getLocString('DataScience.dataViewerShowFilters', 'Show filters')
-                            }
-                        ]
-                    };
+                    c.header.buttons.push({
+                        cssClass: 'codicon codicon-filter codicon-button header-cell-button',
+                        handler: this.clickFilterButton,
+                        tooltip: this.state.showingFilters
+                            ? getLocString('DataScience.dataViewerHideFilters', 'Hide filters')
+                            : getLocString('DataScience.dataViewerShowFilters', 'Show filters')
+                    });
+                    return;
+                }
+
+                const {
+                    columnId: currentSortColId,
+                    sortAsc: currentSortAsc
+                } = this.state.grid?.getSortColumns()[0] ?? { columnId: INDEX_COLUMN_ID, sortAsc: true };
+                const sortGlyphClass =
+                    currentSortColId === c.id && currentSortAsc ? 'codicon-arrow-down' : 'codicon-arrow-up';
+                const sortTooltip =
+                    currentSortColId === c.id && currentSortAsc
+                        ? getLocString('Common.sortDesc', 'Sort Descending')
+                        : getLocString('Common.sortAsc', 'Sort Ascending');
+
+                c.width = maxFieldWidth;
+
+                if (c.field?.includes(PREVIEW_TITLE)) {
+                    // Preview column
+                    c.name = `+ ${c.field}`;
+                    c.header.buttons.push(
+                        {
+                            cssClass: 'codicon codicon-close codicon-button',
+                            handler: () => {
+                                this.respondToPreview(false);
+                            },
+                            tooltip: getLocString('DataScience.dataWranglerRejectStep', 'Reject Step')
+                        },
+                        {
+                            cssClass: 'codicon codicon-check codicon-button',
+                            handler: () => {
+                                this.respondToPreview(true);
+                            },
+                            tooltip: getLocString('DataScience.dataWranglerAcceptStep', 'Accept Step')
+                        },
+                        {
+                            cssClass: `codicon codicon-button show-on-hover-child codicon-sort ${sortGlyphClass}`,
+                            handler: () => {
+                                this.sortColumnFromHeader(c.id);
+                            },
+                            tooltip: sortTooltip
+                        }
+                    );
+                } else {
+                    // Regular column
+
+                    // Original column that has been previewed
+                    if (oldColumns.has(c.field)) {
+                        c.name = `- ${c.field}`;
+                    }
+
+                    c.header.buttons.push({
+                        cssClass: `codicon codicon-button show-on-hover-child codicon-sort ${sortGlyphClass}`,
+                        handler: () => {
+                            this.sortColumnFromHeader(c.id);
+                        },
+                        tooltip: sortTooltip
+                    });
                 }
             });
             this.state.grid.setColumns(columns);
@@ -704,6 +783,17 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             setTimeout(() => {
                 this.updateCssStyles();
             }, 0);
+        }
+    }
+
+    private respondToPreview(doesAccept: boolean) {
+        if (this.props.submitCommand) {
+            this.props.submitCommand({
+                command: DataWranglerCommands.RespondToPreview,
+                args: {
+                    doesAccept
+                }
+            });
         }
     }
 
@@ -747,12 +837,12 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
             );
 
             // Style background of filter depending on state of columns
-            const isSelectedColumn = this.state.selectedColumns?.includes(args.column.name!);
+            const isSelectedColumn = this.state.selectedColumns?.includes(args.column.field!);
             if (isSelectedColumn) {
                 args.node.classList.add('react-grid-header-cell-selected');
             } else if (args.column.isPreview) {
                 args.node.classList.add('react-grid-header-cell-preview');
-            } else if (oldColumns.has(args.column.name)) {
+            } else if (oldColumns.has(args.column.field)) {
                 args.node.classList.add('react-grid-header-cell-before');
             }
         }
@@ -762,18 +852,19 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         // Transform columns so they are sortable and stylable
         const oldColumns = this.getBeforePreviewColumns(columns);
         return columns.map((c) => {
+            // Disable because clicking header makes it sort still so we have to implement our own glyph
             c.sortable = false;
-            c.headerCssClass = 'react-grid-header-cell';
+            c.headerCssClass = 'show-on-hover-parent react-grid-header-cell';
             c.cssClass = 'react-grid-cell';
 
-            const isSelectedColumn = this.state.selectedColumns?.includes(c.name!);
+            const isSelectedColumn = this.state.selectedColumns?.includes(c.field!);
             if (isSelectedColumn) {
                 c.headerCssClass += ' react-grid-header-cell-selected';
                 c.cssClass += ' react-grid-cell-selected';
             } else if (c.isPreview) {
                 c.headerCssClass += ' react-grid-header-cell-preview';
                 c.cssClass += ' react-grid-cell-preview';
-            } else if (oldColumns.has(c.name)) {
+            } else if (oldColumns.has(c.field)) {
                 c.headerCssClass += ' react-grid-header-cell-before';
                 c.cssClass += ' react-grid-cell-before';
             }
@@ -783,14 +874,14 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
 
     private scrollColumnIntoView = (_e: Slick.EventData, column: string) => {
         const cell = this.state.grid?.getActiveCell();
-        const columnIdx = this.state.grid?.getColumns().findIndex((c) => c.name === column);
+        const columnIdx = this.state.grid?.getColumns().findIndex((c) => c.field === column);
         this.state.grid?.scrollCellIntoView(cell?.row || 0, columnIdx || 0, false);
     };
 
     private getBeforePreviewColumns(columns: Slick.Column<ISlickRow>[]) {
         const previewTitle = ` ${PREVIEW_TITLE}`;
-        const previewColumns = columns.filter((c) => c.isPreview).map((c) => c.name);
-        const oldColumns = previewColumns?.map((name) => name?.substring(0, name.length - previewTitle.length));
+        const previewColumns = columns.filter((c) => c.isPreview).map((c) => c.field);
+        const oldColumns = previewColumns?.map((field) => field?.substring(0, field.length - previewTitle.length));
         return new Set(oldColumns);
     }
 
@@ -798,4 +889,26 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         this.setSelectedRows([]);
         this.setSelectedColumns([]);
     }
+}
+
+function setSortGlyphs(grid: Slick.Grid<ISlickRow> | undefined) {
+    const { columnId: currentSortColId, sortAsc: currentSortAsc } = grid?.getSortColumns()[0] ?? {
+        columnId: INDEX_COLUMN_ID,
+        sortAsc: true
+    };
+
+    // Reset all columns to have arrow up
+    slickgridJQ('.slick-header-columns')
+        .children()
+        .find('.codicon-sort')
+        .removeClass('codicon-arrow-up codicon-arrow-down')
+        .addClass('codicon-arrow-up');
+
+    // Give sortColumn correct arrow direction
+    slickgridJQ('.slick-header-columns')
+        .children()
+        .eq(+currentSortColId)
+        .find('.codicon-sort')
+        .removeClass('codicon-arrow-up codicon-arrow-down')
+        .addClass(currentSortAsc ? 'codicon-arrow-down' : 'codicon-arrow-up');
 }

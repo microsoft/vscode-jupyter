@@ -49,7 +49,7 @@ export const styles = mergeStyleSets({
             fontWeight: 'var(--vscode-font-weight)',
             display: 'flex',
             paddingLeft: 10,
-            paddingRight: 15
+            paddingRight: 0
         }
     ]
 });
@@ -116,10 +116,11 @@ export class HistorySection extends React.Component<IProps, IState> {
 
     onRenderCell = (item?: IHistoryItem, index?: number): JSX.Element => {
         const isCurrentStep = (this.state.currentVariableIndex ?? 0) === index!; // df1 corresponds to history item 0
-        const className = styles.itemContent + ' history-item' + (isCurrentStep ? ' selected-history-item' : '');
+        const className =
+            styles.itemContent + ' history-item show-on-hover-parent' + (isCurrentStep ? ' selected-history-item' : '');
         return (
             <div data-is-focusable>
-                <div className={className} style={{ paddingBottom: '4px', paddingTop: '2px' }}>
+                <div className={className} style={{ paddingBottom: '4px', paddingTop: '2px', paddingRight: '4px' }}>
                     <div
                         style={{ flexGrow: 1 }}
                         onClick={() => this.viewHistoryItem(index)}
@@ -146,15 +147,13 @@ export class HistorySection extends React.Component<IProps, IState> {
                     {index !== 0 && item?.isPreview && (
                         <>
                             <div
-                                className="codicon codicon-check codicon-button"
+                                className="codicon codicon-check codicon-button codicon-history-list"
                                 onClick={() => this.respondToPreview(true)}
-                                style={{ verticalAlign: 'middle' }}
                                 title={getLocString('DataScience.dataWranglerAcceptStep', 'Accept Step')}
                             />
                             <div
-                                className="codicon codicon-close codicon-button"
+                                className="codicon codicon-close codicon-button codicon-history-list"
                                 onClick={() => this.respondToPreview(false)}
-                                style={{ verticalAlign: 'middle' }}
                                 title={getLocString('DataScience.dataWranglerRejectStep', 'Reject Step')}
                             />
                         </>
@@ -162,9 +161,8 @@ export class HistorySection extends React.Component<IProps, IState> {
                     {/* Need to check that it is the latest operation that is not preview */}
                     {index !== 0 && this.props.historyList.length - 1 === index && !item?.isPreview && (
                         <div
-                            className="codicon codicon-discard codicon-button show-on-hover"
+                            className="codicon codicon-discard codicon-button codicon-history-list show-on-hover-child"
                             onClick={() => this.handleDeleteHistoryItem(index)}
-                            style={{ verticalAlign: 'middle' }}
                             title={getLocString('DataScience.dataWranglerRemoveStep', 'Remove Step')}
                         />
                     )}
@@ -174,22 +172,17 @@ export class HistorySection extends React.Component<IProps, IState> {
     };
 
     render() {
-        const historyComponent =
-            this.props.historyList.length > 0 ? (
-                <div className={styles.container} data-is-scrollable>
-                    <List
-                        componentRef={this.listRef}
-                        items={this.props.historyList}
-                        style={{ marginLeft: '5px' }}
-                        className="historyList"
-                        onRenderCell={this.onRenderCell}
-                    />
-                </div>
-            ) : (
-                <span style={{ paddingLeft: '19px', display: 'inline-block', paddingTop: '10px' }}>
-                    No transformations applied.
-                </span>
-            );
+        const historyComponent = (
+            <div className={styles.container} data-is-scrollable>
+                <List
+                    componentRef={this.listRef}
+                    items={this.props.historyList}
+                    style={{ marginLeft: '5px' }}
+                    className="historyList"
+                    onRenderCell={this.onRenderCell}
+                />
+            </div>
+        );
 
         return (
             <SidePanelSection

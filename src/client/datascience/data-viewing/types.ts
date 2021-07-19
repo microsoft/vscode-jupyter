@@ -100,7 +100,6 @@ export interface IDataFrameColumnInfo {
     type: ColumnType | string;
 
     // For Data Wrangler specifically
-    describe?: string;
     uniqueCount?: number;
     missingCount?: number;
     totalCount?: number;

@@ -30,6 +30,8 @@ export namespace Common {
     export const learnMore = localize('Common.learnMore', 'Learn more');
     export const and = localize('Common.and', 'and');
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
+    export const sortDesc = localize('Common.sortDesc', 'Sort Descending');
+    export const sortAsc = localize('Common.sortAsc', 'Sort Ascending');
 }
 
 export namespace CommonSurvey {

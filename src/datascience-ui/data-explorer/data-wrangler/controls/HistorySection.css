@@ -5,3 +5,9 @@
 .selected-history-item {
     border-left: 3px solid var(--vscode-focusBorder);
 }
+
+.codicon-history-list {
+    vertical-align: middle;
+    position: relative;
+    top: 1px;
+}

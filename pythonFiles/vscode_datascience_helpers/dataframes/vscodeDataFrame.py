@@ -199,32 +199,6 @@ def _VSCODE_getDataFrameInfo(df):
             col = df[int(column_name)]
             return col
 
-    def describe_repeated(col):
-        isduplicate_series = col.duplicated()
-        describe = ""
-        isduplicate = 0
-        if len(isduplicate_series):
-            isduplicate = isduplicate_series.sum()
-            describe += "\n# repeated\t" + str(isduplicate)
-            describe += "\n% repeated\t" + str(isduplicate / length * 100)[:4] + "%"
-        else:
-            describe += "\n# repeated\t0"
-            describe += "\n% repeated\t0%"
-        return describe, isduplicate
-
-    def describe_null(col):
-        isna_series = col.isna()
-        describe = ""
-        isna = 0
-        if len(isna_series) != 0:
-            isna = isna_series.sum()
-            describe += "\n# null\t" + str(isna)
-            describe += "\n% null\t" + str(isna / length * 100)[:4] + "%"
-        else:
-            describe += "\n# null\t0"
-            describe += "\n% null\t0%"
-        return describe, isna
-
     df = _VSCODE_convertToDataFrame(df)
     rowCount = _VSCODE_getRowCount(df)
 
@@ -272,25 +246,18 @@ def _VSCODE_getDataFrameInfo(df):
 
         # Needed for Data Wrangler
         length = len(df)
-        null_count = 0
-        duplicate_count = 0
         if column_name != "index":
             col = get_col(df, column_name)
             describe_obj = col.describe()
-            describe_text = describe_obj.to_string(header=False)
-            describe_null_text, null_count = describe_null(col)
-            describe_text += describe_null_text
-            describe_repeated_text, duplicate_count = describe_repeated(col)
-            describe_text += describe_repeated_text
 
-            colobj["totalCount"] = int(col.count())
-            colobj["missingCount"] = int(null_count)
+            colobj["totalCount"] = col.count()
+            colobj["missingCount"] = col.isna().sum()
             # Unique count is number of rows minus number of repeated values
-            colobj["uniqueCount"] = int(col.shape[0] - duplicate_count)
+            colobj["uniqueCount"] = col.shape[0] - col.duplicated().sum()
             if str(column_type) == "object" or str(column_type) == "string":
                 colobj["mostFrequentValue"] = describe_obj.top
                 colobj["mostFrequentValueAppearances"] = (
-                    0 if _VSCODE_np.isnan(describe_obj.freq) else int(describe_obj.freq)
+                    0 if _VSCODE_np.isnan(describe_obj.freq) else describe_obj.freq
                 )
             else:
                 statistics = {}
@@ -300,12 +267,7 @@ def _VSCODE_getDataFrameInfo(df):
                 statistics["max"] = col.max()
                 statistics["sd"] = round(col.std(), 2)
                 colobj["statistics"] = statistics
-        else:
-            describe_text = df.describe().to_string()
-            describe_repeated_text, duplicate_count = describe_repeated(df)
-            describe_text += describe_repeated_text
 
-        colobj["describe"] = describe_text
         columns.append(colobj)
 
         # Check if column is a preview column and if so, check to see if old column and preview column have different values

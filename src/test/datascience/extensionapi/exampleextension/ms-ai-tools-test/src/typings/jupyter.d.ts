@@ -28,7 +28,6 @@ export interface IJupyterExtensionApi {
 export interface IDataFrameColumnInfo {
     key: string;
     type: ColumnType | string;
-    describe?: string;
     uniqueEntries?: number;
     totalEntries?: number;
     missingEntries?: number;
