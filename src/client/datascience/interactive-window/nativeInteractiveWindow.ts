@@ -92,9 +92,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get active(): boolean {
         return true; // TODO VS Code needs to provide an API for this
     }
-    public get ready(): Promise<void> {
-        return this.loadPromise;
-    }
 
     public get closed(): Event<IInteractiveWindow> {
         return this.closedEvent.event;
