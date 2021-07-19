@@ -37,7 +37,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "## Awaiting community thoughts issues\r\n\r\nThese issues represent those that when we triaged we thought they represented a potentially new or good idea, but weren't sure how much interest there might be. This label identifies those. If after 3 months, there's been no interest, they can be closed. "
+    "value": "----\r\n## Awaiting community thoughts issues\r\n\r\nThese issues represent those that when we triaged we thought they represented a potentially new or good idea, but weren't sure how much interest there might be. This label identifies those. If after 3 months, there's been no interest, they can be closed. "
   },
   {
     "kind": 2,
