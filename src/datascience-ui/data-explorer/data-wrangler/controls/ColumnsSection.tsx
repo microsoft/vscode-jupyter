@@ -193,7 +193,7 @@ export class ColumnsSection extends React.Component<IProps, IState> {
         return [
             selectTargetColumn,
             ...this.props.options.filter(
-                (option) => option.text && option.text !== 'index' && !option.text.includes('(preview)')
+                (option) => option.text && option.text !== 'index' && option.text !== 'No.' && !option.text.includes('(preview)')
             )
         ];
     }

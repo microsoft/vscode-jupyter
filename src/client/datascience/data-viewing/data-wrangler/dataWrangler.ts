@@ -171,7 +171,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
     protected async showInitialData(title: string): Promise<IDataFrameInfo> {
         super.setTitle(title);
 
-        // Then show our web panel. Eventually we need to consume the data
+        // Show our web panel. Eventually we need to consume the data
         await super.show(true);
 
         let dataFrameInfo = await this.prepDataFrameInfo();
@@ -212,7 +212,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
         this.dataFrameInfoPromise = jupyterVariableDataProvider.getDataFrameInfo();
         this.dataProvider = jupyterVariableDataProvider;
         const dataFrameInfo = await this.dataFrameInfoPromise;
-        super.setTitle(`Data Wrangler`);
 
         this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
     }
@@ -295,7 +294,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleCommand(payload: { command: DataWranglerCommands; args: any }) {
-        console.log('handle command', payload);
         const notebook = (this.dataProvider as IJupyterVariableDataProvider).notebook;
         let codeToRun;
         const currentVariableName = (await this.dataFrameInfoPromise)!.name ?? '';

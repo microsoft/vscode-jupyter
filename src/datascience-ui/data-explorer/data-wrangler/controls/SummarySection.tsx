@@ -1,4 +1,3 @@
-import fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 // Need to do like this because react-plotly depends on poltly.js normally
 // but we will use plotly.js-dist
@@ -201,6 +200,15 @@ class ColumnSummary extends React.Component<IDataframeColumnSummaryProps> {
 }
 
 class DataframeSummary extends React.Component<IDataFrameInfo> {
+    private getColumnsWithMissingValues(cols: IDataFrameColumnInfo[]): ISummaryRowProps[] {
+        // Filters for columns that have missing values then sorts them by who is missing the most
+        const resultCols = cols
+            .filter((col) => col.missingCount && col.missingCount > 0)
+            ?.map((col) => ({ name: col.key, value: col.missingCount } as ISummaryRowProps))
+            .sort((a, b) => (b.value as number) - (a.value as number));
+        return resultCols;
+    }
+
     render() {
         return (
             <div>
@@ -240,7 +248,7 @@ class DataframeSummary extends React.Component<IDataFrameInfo> {
                     name={getLocString('DataScience.dataWranglerMissingValues', 'Missing values')}
                     value={this.props.nanRows?.length}
                 />
-                <InnerRows children={getColumnsWithMissingValues(this.props.columns ?? [])} />
+                <InnerRows children={this.getColumnsWithMissingValues(this.props.columns ?? [])} />
             </div>
         );
     }
@@ -315,26 +323,6 @@ export class SummarySection extends React.Component<ISummarySectionProps, IState
         return { showDefaultSummary: false, isStateUpdate: false };
     }
 
-    shouldComponentUpdate(nextProps: ISummarySectionProps, nextState: IState) {
-        if (this.state.showDefaultSummary && nextState.showDefaultSummary) {
-            // Next state and this state both shows default summary so don't need to re-render
-            return false;
-        }
-        if (fastDeepEqual(this.props.histogramData, nextProps.histogramData) && !nextState.showDefaultSummary) {
-            // Next props and this props have same histogram data so don't need to re-render
-            return false;
-        }
-        if (nextState.showDefaultSummary && this.props.histogramData === undefined) {
-            // Currently showing default summary because of undefined props.histogramData so we would still show default summary
-            return false;
-        }
-        if (this.state.showDefaultSummary && nextProps.histogramData === undefined) {
-            // Currently showing default summary because of state.showDefaultSummary and next props.histogramData is undefined so we would sitll show default summary
-            return false;
-        }
-        return true;
-    }
-
     render() {
         let columnInfo = undefined;
         if (!this.state.showDefaultSummary && this.props.histogramData !== undefined) {
@@ -371,7 +359,7 @@ export class SummarySection extends React.Component<ISummarySectionProps, IState
                 title={getLocString('DataScience.dataWranglerPanelSummary', 'SUMMARY')}
                 panel={summaryComponent}
                 collapsed={this.props.collapsed}
-                height={'200px'}
+                height={'260px'}
             />
         );
     }
@@ -387,13 +375,4 @@ function calculatePercent(partialValue: number, totalValue: number) {
     }
     // Convert it to a float with 1 decimal point then cast it as number to get rid of any trailing zeros if there are some
     return Number(((partialValue / totalValue) * 100).toFixed(2)).toString() + '%';
-}
-
-function getColumnsWithMissingValues(cols: IDataFrameColumnInfo[]): ISummaryRowProps[] {
-    // Filters for columns that have missing values then sorts them by who is missing the most
-    const resultCols = cols
-        .filter((col) => col.missingCount && col.missingCount > 0)
-        ?.map((col) => ({ name: col.key, value: col.missingCount } as ISummaryRowProps))
-        .sort((a, b) => (b.value as number) - (a.value as number));
-    return resultCols;
 }
