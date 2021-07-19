@@ -22,7 +22,8 @@ import {
     Range,
     Selection,
     commands,
-    TextEditorRevealType
+    TextEditorRevealType,
+    ViewColumn
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
@@ -31,7 +32,7 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../common/application/types';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
+import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError, traceInfo } from '../../common/logger';
@@ -79,6 +80,7 @@ import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
+import { INativeInteractiveWindow } from './types';
 
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -89,6 +91,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
     public get active(): boolean {
         return true; // TODO VS Code needs to provide an API for this
+    }
+    public get ready(): Promise<void> {
+        return this.loadPromise;
     }
 
     public get closed(): Event<IInteractiveWindow> {
@@ -103,8 +108,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get identity(): Uri {
         return this._identity;
     }
-    public get notebookUri(): Uri {
-        return this.notebookDocument.uri;
+    public get notebookUri(): Uri | undefined {
+        return this.notebookDocument?.uri;
     }
     public isInteractive = true;
     public notebookController: VSCodeNotebookController | undefined;
@@ -122,6 +127,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private kernel: IKernel | undefined;
     private kernelLoadPromise: Promise<void> | undefined;
     private initialControllerSelected: Deferred<void>;
+    private loadPromise: Promise<void>;
+    private notebookDocument: NotebookDocument | undefined;
 
     constructor(
         private readonly applicationShell: IApplicationShell,
@@ -136,7 +143,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         mode: InteractiveWindowMode,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly exportDialog: IExportDialog,
-        private notebookDocument: NotebookDocument, // This remains the same for the lifetime of the InteractiveWindow object
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly kernelProvider: IKernelProvider,
         private readonly disposables: IDisposableRegistry,
@@ -149,16 +155,49 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             this._submitters.push(owner);
         }
 
+        // Wait for a controller to get selected
         this.initialControllerSelected = createDeferred<void>();
 
-        // Immediately try to find a selected controller for our NotebookDocument,
-        // as it's possible that a selection event fired before our ctor was able to run
-        const controller = this.notebookControllerManager.getSelectedNotebookController(this.notebookDocument);
-        if (controller !== undefined) {
-            this.registerKernel(this.notebookDocument, controller);
-            this.initialControllerSelected.resolve();
+        // Request creation of the interactive window from VS Code
+        this.loadPromise = this.createLoadPromise();
 
-            const messageChannel = notebooks.createRendererMessaging('jupyter-error-renderer');
+        workspace.onDidCloseNotebookDocument((notebookDocument) => {
+            if (notebookDocument === this.notebookDocument) {
+                this.closedEvent.fire(this);
+            }
+        });
+    }
+
+    private createLoadPromise(): Promise<void> {
+        return this.notebookControllerManager.getInteractiveController()
+            .then((preferredController) => {
+                const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
+                const hasOwningFile = this.owner !== undefined;
+                return (this.commandManager.executeCommand(
+                    'interactive.open',
+                    // Keep focus on the owning file if there is one
+                    { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
+                    undefined,
+                    controllerId
+                ) as unknown) as INativeInteractiveWindow;
+            })
+            .then(({ notebookUri }: INativeInteractiveWindow) => {
+                const notebookDocument = workspace.notebookDocuments.find(
+                    (doc) => doc.uri.toString() === notebookUri.toString()
+                );
+                if (!notebookDocument) {
+                    // This means VS Code failed to create an interactive window.
+                    // This should never happen.
+                    throw new Error('Failed to request creation of interactive window from VS Code.');
+                }
+                this.notebookDocument = notebookDocument;
+                this.loadController(notebookDocument);
+                this.initializeRendererCommunication();
+            });
+    }
+
+    private initializeRendererCommunication() {
+        const messageChannel = notebooks.createRendererMessaging('jupyter-error-renderer');
             this.disposables.push(
                 messageChannel.onDidReceiveMessage(async (e) => {
                     const message = e.message;
@@ -182,47 +221,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                     }
                 })
             );
-        }
-
-        // Ensure we hear about any controller changes so we can update our cache accordingly
-        this.notebookControllerManager.onNotebookControllerSelected(
-            (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
-                if (e.notebook !== this.notebookDocument) {
-                    return;
-                }
-
-                // Clear cached kernel when the selected controller for this document changes
-                const controllerChangeListener = (
-                    this.notebookController || e.controller
-                ).controller.onDidChangeSelectedNotebooks(
-                    (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
-                        // Controller was deselected for this InteractiveWindow's NotebookDocument
-                        if (selectedEvent.selected === false && selectedEvent.notebook === this.notebookDocument) {
-                            this.kernelLoadPromise = undefined;
-                            this.kernel = undefined;
-                            this.notebookController = undefined;
-                            controllerChangeListener.dispose();
-                        }
-                    },
-                    this,
-                    this.disposables
-                );
-
-                this.registerKernel(e.notebook, e.controller);
-                this.initialControllerSelected.resolve();
-            },
-            this,
-            this.disposables
-        );
-
-        workspace.onDidCloseNotebookDocument((notebookDocument) => {
-            if (notebookDocument === this.notebookDocument) {
-                this.closedEvent.fire(this);
-            }
-        });
     }
 
-    private openFile(fileUri: string) {
+    private async openFile(fileUri: string) {
         const uri = Uri.parse(fileUri);
         let selection: Range = new Range(new Position(0, 0), new Position(0, 0));
         if (uri.query) {
@@ -256,6 +257,47 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
+    private loadController(notebookDocument: NotebookDocument) {
+        // Immediately try to find a selected controller for our NotebookDocument,
+        // as it's possible that a selection event fired before our ctor was able to run
+        const controller = this.notebookControllerManager.getSelectedNotebookController(notebookDocument);
+        if (controller !== undefined) {
+            this.registerKernel(notebookDocument, controller);
+            this.initialControllerSelected.resolve();
+        }
+
+        // Ensure we hear about any controller changes so we can update our cache accordingly
+        this.notebookControllerManager.onNotebookControllerSelected(
+            (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
+                if (e.notebook !== this.notebookDocument) {
+                    return;
+                }
+
+                // Clear cached kernel when the selected controller for this document changes
+                const controllerChangeListener = (
+                    this.notebookController || e.controller
+                ).controller.onDidChangeSelectedNotebooks(
+                    (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
+                        // Controller was deselected for this InteractiveWindow's NotebookDocument
+                        if (selectedEvent.selected === false && selectedEvent.notebook === notebookDocument) {
+                            this.kernelLoadPromise = undefined;
+                            this.kernel = undefined;
+                            this.notebookController = undefined;
+                            controllerChangeListener.dispose();
+                        }
+                    },
+                    this,
+                    this.disposables
+                );
+
+                this.registerKernel(e.notebook, e.controller);
+                this.initialControllerSelected.resolve();
+            },
+            this,
+            this.disposables
+        );
+    }
+
     private registerKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
         const kernel = this.kernelProvider.getOrCreate(notebookDocument, {
             metadata: controller.connection,
@@ -287,14 +329,15 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async addMessage(message: string): Promise<void> {
+        await this.loadPromise;
         // Add message to the notebook document
         const edit = new WorkspaceEdit();
         const notebookDocument = this.notebookDocument;
         const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
         markdownCell.metadata = { isInteractiveWindowMessageCell: true };
         edit.replaceNotebookCells(
-            notebookDocument.uri,
-            new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
+            notebookDocument!.uri,
+            new NotebookRange(notebookDocument!.cellCount, notebookDocument!.cellCount),
             [markdownCell]
         );
         await workspace.applyEdit(edit);
@@ -345,6 +388,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
+        await this.loadPromise;
         await this.updateOwners(fileUri);
         const id = uuid();
         const editor = window.visibleNotebookEditors.find((editor) => editor.document === this.notebookDocument);
@@ -352,7 +396,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // Compute isAtBottom based on last notebook cell before adding a notebook cell,
         // since the notebook cell we're going to add is by definition not visible
         const isLastCellVisible = editor?.visibleRanges.find((r) => {
-            return r.end === this.notebookDocument.cellCount - 1;
+            return r.end === this.notebookDocument!.cellCount - 1;
         });
         const notebookCell = await this.addNotebookCell(code, fileUri, line, id);
         const settings = this.configuration.getSettings();
@@ -383,13 +427,13 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 await this.kernel!.executeHidden(
                     `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`,
                     file,
-                    this.notebookDocument
+                    this.notebookDocument!
                 );
                 await this.jupyterDebugger.startDebugging(notebook);
             }
 
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-            await this.setFileInKernel(file, this.notebookDocument);
+            await this.setFileInKernel(file, this.notebookDocument!);
 
             const owningResource = this.owningResource;
             const observable = this.kernel!.notebook!.executeObservable(code, file, line, id, false);
@@ -407,7 +451,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                         // We don't want to force them back down unless they configured
                         // alwaysScrollOnNewCell.
                         const isInsertedCellVisible = editor?.visibleRanges.find((r) => {
-                            return r.end === this.notebookDocument.cellCount - 1;
+                            return r.end === this.notebookDocument!.cellCount - 1;
                         });
                         if (settings.alwaysScrollOnNewCell || isInsertedCellVisible) {
                             this.revealCell(notebookCell);
@@ -449,6 +493,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     // TODO Migrate all of this code into a common command handler
     public async interruptKernel(): Promise<void> {
         // trackKernelResourceInformation(this._notebook?.resource, { interruptKernel: true });
+        await this.loadPromise;
         if (this.kernel && !this.restartingKernel) {
             const status = this.statusProvider.set(
                 localize.DataScience.interruptKernelStatus(),
@@ -459,7 +504,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             );
 
             try {
-                const result = await this.kernel.interrupt(this.notebookDocument);
+                const result = await this.kernel.interrupt(this.notebookDocument!);
                 status.dispose();
 
                 // We timed out, ask the user if they want to restart instead.
@@ -592,32 +637,44 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async expandAllCells() {
+        const target = this.notebookDocument;
+        if (!target) {
+            return;
+        }
         const edit = new WorkspaceEdit();
-        this.notebookDocument.getCells().forEach((cell, index) => {
+        target.getCells().forEach((cell, index) => {
             const metadata = {
                 ...(cell.metadata || {}),
                 inputCollapsed: false,
                 outputCollapsed: false
             };
-            edit.replaceNotebookCellMetadata(this.notebookDocument.uri, index, metadata);
+            edit.replaceNotebookCellMetadata(target.uri, index, metadata);
         });
         await workspace.applyEdit(edit);
     }
 
     public async collapseAllCells() {
+        const target = this.notebookDocument;
+        if (!target) {
+            return;
+        }
         const edit = new WorkspaceEdit();
-        this.notebookDocument.getCells().forEach((cell, index) => {
+        target.getCells().forEach((cell, index) => {
             if (cell.kind !== NotebookCellKind.Code) {
                 return;
             }
             const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: false };
-            edit.replaceNotebookCellMetadata(this.notebookDocument.uri, index, metadata);
+            edit.replaceNotebookCellMetadata(target.uri, index, metadata);
         });
         await workspace.applyEdit(edit);
     }
 
     public async scrollToCell(id: string): Promise<void> {
-        const matchingCell = this.notebookDocument.getCells().find((cell) => cell.metadata.executionId === id);
+        const target = this.notebookDocument;
+        if (!target) {
+            return;
+        }
+        const matchingCell = target.getCells().find((cell) => cell.metadata.executionId === id);
         if (matchingCell) {
             this.revealCell(matchingCell);
         }
@@ -646,7 +703,11 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     // TODO this does not need to be async since we no longer need to roundtrip to the UI
     public async hasCell(id: string): Promise<boolean> {
-        return this.notebookDocument.getCells().find((cell) => cell.metadata.executionId === id) !== undefined;
+        const target = this.notebookDocument;
+        if (!target) {
+            return false;
+        }
+        return target.getCells().find((cell) => cell.metadata.executionId === id) !== undefined;
     }
 
     public get owningResource(): Resource {
@@ -748,7 +809,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         await this.commandManager.executeCommand(
             'interactive.open',
             { preserveFocus: true },
-            this.notebookDocument.uri,
+            this.notebookDocument!.uri,
             this.notebookController?.id
         );
 
@@ -779,25 +840,26 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             },
             executionId: id
         };
-        await chainWithPendingUpdates(this.notebookDocument, (edit) => {
+        await chainWithPendingUpdates(this.notebookDocument!, (edit) => {
             edit.replaceNotebookCells(
-                this.notebookDocument.uri,
-                new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),
+                this.notebookDocument!.uri,
+                new NotebookRange(this.notebookDocument!.cellCount, this.notebookDocument!.cellCount),
                 [notebookCellData]
             );
         });
-        return this.notebookDocument.cellAt(this.notebookDocument.cellCount - 1);
+        return this.notebookDocument!.cellAt(this.notebookDocument!.cellCount - 1);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
     public async export() {
+        await this.loadPromise;
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
         const { magicCommandsAsComments } = this.configuration.getSettings();
-        const cells = generateCellsFromNotebookDocument(this.notebookDocument, magicCommandsAsComments);
+        const cells = generateCellsFromNotebookDocument(this.notebookDocument!, magicCommandsAsComments);
 
         // Should be an array of cells
         if (cells && this.exportDialog) {
@@ -810,13 +872,14 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async exportAs() {
+        await this.loadPromise;
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
         const { magicCommandsAsComments } = this.configuration.getSettings();
-        const cells = generateCellsFromNotebookDocument(this.notebookDocument, magicCommandsAsComments);
+        const cells = generateCellsFromNotebookDocument(this.notebookDocument!, magicCommandsAsComments);
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
