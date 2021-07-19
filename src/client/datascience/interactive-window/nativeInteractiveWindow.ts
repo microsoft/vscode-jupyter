@@ -173,13 +173,13 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const preferredController = await this.notebookControllerManager.getInteractiveController();
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
         const hasOwningFile = this.owner !== undefined;
-        const { notebookUri } = (await this.commandManager.executeCommand(
+        const { notebookUri } = ((await this.commandManager.executeCommand(
             'interactive.open',
             // Keep focus on the owning file if there is one
             { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
             undefined,
             controllerId
-        ) as unknown) as INativeInteractiveWindow;
+        )) as unknown) as INativeInteractiveWindow;
         const notebookDocument = workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === notebookUri.toString()
         );
