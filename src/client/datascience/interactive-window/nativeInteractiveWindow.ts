@@ -75,7 +75,7 @@ import {
     IStatusProvider,
     WebViewViewChangeEventArgs
 } from '../types';
-import { createInteractiveIdentity } from './identity';
+import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
 import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
@@ -179,7 +179,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             // Keep focus on the owning file if there is one
             { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
             undefined,
-            controllerId
+            controllerId,
+            this.owner && this.mode === 'perFile' ? getInteractiveWindowTitle(this.owner) : undefined
         )) as unknown) as INativeInteractiveWindow;
         const notebookDocument = workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === notebookUri.toString()
@@ -313,6 +314,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             'interactive.open',
             { preserveFocus: true },
             this.notebookUri,
+            undefined,
             undefined
         );
     }
@@ -821,7 +823,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             'interactive.open',
             { preserveFocus: true },
             notebookDocument.uri,
-            this.notebookController?.id
+            this.notebookController?.id,
+            undefined
         );
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
