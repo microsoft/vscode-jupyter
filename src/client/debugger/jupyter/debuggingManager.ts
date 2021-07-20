@@ -35,7 +35,11 @@ class Debugger {
 
     readonly session: Promise<DebugSession>;
 
-    constructor(public readonly document: NotebookDocument, public readonly cell?: NotebookCell, options?: DebugSessionOptions) {
+    constructor(
+        public readonly document: NotebookDocument,
+        public readonly cell?: NotebookCell,
+        options?: DebugSessionOptions
+    ) {
         const name = cell
             ? `${path.basename(document.uri.toString())}?RBL=${cell.index}`
             : path.basename(document.uri.toString());
@@ -44,13 +48,17 @@ class Debugger {
             this.rejectFunc = reject;
 
             debug
-                .startDebugging(undefined, {
-                    type: DataScience.pythonKernelDebugAdapter(),
-                    name: name,
-                    request: 'attach',
-                    internalConsoleOptions: 'neverOpen',
-                    __document: document.uri.toString()
-                }, options)
+                .startDebugging(
+                    undefined,
+                    {
+                        type: DataScience.pythonKernelDebugAdapter(),
+                        name: name,
+                        request: 'attach',
+                        internalConsoleOptions: 'neverOpen',
+                        __document: document.uri.toString()
+                    },
+                    options
+                )
                 .then(undefined, reject);
         });
     }
