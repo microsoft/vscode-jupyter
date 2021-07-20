@@ -80,6 +80,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: small;
+    padding-right: 2px;
 }
 
 .column-operation-section {
@@ -100,10 +101,12 @@
 
 .codicon-button {
     cursor: pointer;
-    padding: 3px;
+    padding: 2px;
     border-radius: 5px;
-    max-height: 16px;
+    font-size: var(--vscode-editor-font-size);
     color: var(--vscode-sideBar-foreground);
+    max-width: 16px;
+    max-height: 16px;
 }
 
 .codicon-button:hover {
@@ -138,59 +141,60 @@
     box-sizing: border-box;
 }
 
-.react-grid-header-cell-focus {
-    background-color: #094771;
-}
-
-.react-grid-cell-focus {
-    background-color: #062f4a;
-}
-
 .react-grid-header-cell-before {
-    background-color: #6f1313;
+    background-color: var(--vscode-editorOverviewRuler-errorForeground);
 }
 
 .react-grid-cell-before {
-    background-color: #4b1818;
+    background-color: var(--vscode-diffEditor-removedTextBackground);
 }
 
 .react-grid-cell-before-diff {
-    background-color: #6f1313 !important;
+    background-color: var(--vscode-editorOverviewRuler-errorForeground) !important;
 }
 
 .react-grid-header-cell-preview {
-    background-color: #4b5632;
+    background-color: var(--vscode-editorOverviewRuler-addedForeground);
 }
 
 .react-grid-cell-preview {
-    background-color: #373d29;
+    background-color: var(--vscode-diffEditor-insertedTextBackground);
 }
 
 .react-grid-cell-preview-diff {
-    background-color: #4b5632 !important;
+    background-color: var(--vscode-editorOverviewRuler-addedForeground) !important;
 }
 
 .react-grid-header-cell-selected {
-    background-color: #187bdf;
-    /* color: white; */
+    background-color: var(--vscode-activityBarBadge-background);
+    color: var(--vscode-list-activeSelectionForeground);
 }
 
 .react-grid-cell-selected {
-    background-color: #0060c0;
-    /* color: white; */
+    background-color: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
 }
 
 .react-grid-row-cell-selected {
-    background-color: #0060c0;
-    /* color: white; */
+    background-color: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
 }
 
 .slick-row:hover:not(.selected-row) > .react-grid-cell {
-    /* background-color: #e8e8e8; */
     background-color: var(--override-selection-background, var(--vscode-list-hoverBackground));
 }
 
 .slick-cell.active {
-    background-color: #187bdf;
-    /* color: #ffffff; */
+    background-color: var(--vscode-activityBarBadge-background);
+    color: var(--vscode-list-activeSelectionForeground);
+}
+
+/* Override from reactSlickGridFilterBox to match multi-select dropdown */
+[class*='ms-Button'] {
+    color: var(--vscode-dropdown-foreground) !important;
+    opacity: 1;
+}
+
+[class*='ms-Dropdown-label'] {
+    color: var(--vscode-descriptionForeground) !important;
 }

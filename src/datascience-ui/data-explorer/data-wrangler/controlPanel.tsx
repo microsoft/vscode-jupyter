@@ -49,7 +49,7 @@ export class ControlPanel extends React.Component<IControlPanelProps> {
                     overflowX: 'hidden',
                     overflowY: 'scroll',
                     border: '1px solid var(--vscode-sideBar-border)',
-                    color: 'var(--vscode-sideBar-foreground)',
+                    color: 'var(--vscode-sideBarTitle-foreground)',
                     backgroundColor: 'var(--vscode-sideBar-background)'
                 }}
             >
