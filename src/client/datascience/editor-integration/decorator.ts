@@ -17,9 +17,6 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
     private currentCellBottom: vscode.TextEditorDecorationType | undefined;
     private currentCellTopUnfocused: vscode.TextEditorDecorationType | undefined;
     private currentCellBottomUnfocused: vscode.TextEditorDecorationType | undefined;
-    private currentCellBackground: vscode.TextEditorDecorationType | undefined;
-    private currentCellBackgroundUnfocused: vscode.TextEditorDecorationType | undefined;
-    private cellSeparatorType: vscode.TextEditorDecorationType | undefined;
     private timer: NodeJS.Timer | undefined | number;
 
     constructor(
@@ -105,20 +102,6 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
             borderStyle: 'solid',
             isWholeLine: true
         });
-        this.currentCellBackground = this.documentManager.createTextEditorDecorationType({
-            backgroundColor: new vscode.ThemeColor('interactive.activeCodeBackground'),
-            isWholeLine: true
-        });
-        this.currentCellBackgroundUnfocused = this.documentManager.createTextEditorDecorationType({
-            backgroundColor: new vscode.ThemeColor('interactive.inactiveCodeBackground'),
-            isWholeLine: true
-        });
-        this.cellSeparatorType = this.documentManager.createTextEditorDecorationType({
-            borderColor: new vscode.ThemeColor('editor.lineHighlightBorder'),
-            borderWidth: '1px 0px 0px 0px',
-            borderStyle: 'solid',
-            isWholeLine: true
-        });
     }
 
     /**
@@ -139,38 +122,26 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
                 this.currentCellBottom &&
                 this.currentCellTopUnfocused &&
                 this.currentCellBottomUnfocused &&
-                this.currentCellBackground &&
-                this.currentCellBackgroundUnfocused &&
-                this.cellSeparatorType &&
                 this.extensionChecker.isPythonExtensionInstalled
             ) {
                 const settings = this.configuration.getSettings(editor.document.uri);
                 if (settings.decorateCells) {
                     // Find all of the cells
                     const cells = generateCellRangesFromDocument(editor.document, settings);
-                    // Find the start range for the rest
-                    const startRanges = cells.map((c) => new vscode.Range(c.range.start, c.range.start));
-                    editor.setDecorations(this.cellSeparatorType, startRanges);
                     // Find the range for our active cell.
                     const currentRange = cells.map((c) => c.range).filter((r) => r.contains(editor.selection.anchor));
                     const rangeTop =
                         currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
                     const rangeBottom =
                         currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
-                    const cellRange =
-                        currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].end)] : [];
                     if (this.documentManager.activeTextEditor === editor) {
-                        editor.setDecorations(this.currentCellBackground, cellRange);
                         editor.setDecorations(this.currentCellTop, rangeTop);
                         editor.setDecorations(this.currentCellBottom, rangeBottom);
-                        editor.setDecorations(this.currentCellBackgroundUnfocused, []);
                         editor.setDecorations(this.currentCellTopUnfocused, []);
                         editor.setDecorations(this.currentCellBottomUnfocused, []);
                     } else {
-                        editor.setDecorations(this.currentCellBackground, []);
                         editor.setDecorations(this.currentCellTop, []);
                         editor.setDecorations(this.currentCellBottom, []);
-                        editor.setDecorations(this.currentCellBackgroundUnfocused, cellRange);
                         editor.setDecorations(this.currentCellTopUnfocused, rangeTop);
                         editor.setDecorations(this.currentCellBottomUnfocused, rangeBottom);
                     }
@@ -179,9 +150,6 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
                     editor.setDecorations(this.currentCellBottom, []);
                     editor.setDecorations(this.currentCellTopUnfocused, []);
                     editor.setDecorations(this.currentCellBottomUnfocused, []);
-                    editor.setDecorations(this.currentCellBackground, []);
-                    editor.setDecorations(this.currentCellBackgroundUnfocused, []);
-                    editor.setDecorations(this.cellSeparatorType, []);
                 }
             }
         }
