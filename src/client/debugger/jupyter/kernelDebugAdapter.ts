@@ -118,6 +118,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             if (content.event === 'stopped') {
                 this.runByLineThreadId = content.body.threadId;
                 this.runByLineSeq = content.seq;
+
+                if (this.isRunByLine) {
+                    this.RunByLineStackTrace();
+                }
                 this.sendMessage.fire(msg.content);
             }
         };
@@ -206,6 +210,19 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
                 traceError('Error deleting temporary debug files');
             }
         });
+    }
+
+    private RunByLineStackTrace(): void {
+        const message: DebugProtocol.StackTraceRequest = {
+            seq: this.runByLineSeq,
+            type: 'request',
+            command: 'stackTrace',
+            arguments: {
+                threadId: this.runByLineThreadId
+            }
+        };
+
+        this.sendRequestToJupyterSession(message);
     }
 
     private async dumpCellsThatRanBeforeDebuggingBegan() {
@@ -312,6 +329,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
                 }
             }
         });
+
+        if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
+            console.error('-----------------------');
+            console.error((message as DebugProtocol.StackTraceResponse).body.stackFrames[0].source);
+        }
 
         this.sendMessage.fire(message);
     }
