@@ -31,6 +31,7 @@ export class CodeSection extends React.Component<IProps, IState> {
                 onClick={(e) => {
                     // Prevents details from opening and closing
                     e.preventDefault();
+                    e.stopPropagation();
                     void navigator.clipboard.writeText(this.props.code);
                 }}
                 title={getLocString("Common.copy", "Copy")}

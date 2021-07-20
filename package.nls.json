@@ -593,5 +593,6 @@
     "DataScience.dataWranglerColumns": "Columns",
     "DataScience.dataWranglerNumberDuplicateRows": "# Duplicate rows",
     "DataScience.dataWranglerPercentDuplicateRows": "% Rows with duplicates",
-    "DataScience.dataWranglerMissingValues": "Missing values"
+    "DataScience.dataWranglerMissingValues": "Missing values",
+    "DataScience.dataWranglerHistogram": "Histogram"
 }

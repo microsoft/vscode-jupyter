@@ -50,7 +50,8 @@ export const styles = mergeStyleSets({
             fontWeight: 'var(--vscode-font-weight)',
             display: 'flex',
             paddingLeft: 10,
-            paddingRight: 0
+            paddingRight: 0,
+            height: 26
         }
     ]
 });
@@ -121,12 +122,12 @@ export class HistorySection extends React.Component<IProps, IState> {
             return (
                 <>
                     <div
-                        className="codicon codicon-check codicon-button codicon-history-list"
+                        className="codicon codicon-check codicon-button"
                         onClick={() => this.respondToPreview(true)}
                         title={getLocString('DataScience.dataWranglerAcceptStep', 'Accept Step')}
                     />
                     <div
-                        className="codicon codicon-close codicon-button codicon-history-list"
+                        className="codicon codicon-close codicon-button"
                         onClick={() => this.respondToPreview(false)}
                         title={getLocString('DataScience.dataWranglerRejectStep', 'Reject Step')}
                     />
@@ -136,7 +137,7 @@ export class HistorySection extends React.Component<IProps, IState> {
             // Need to check that it is the latest operation that is not preview
             return (
                 <div
-                    className="codicon codicon-discard codicon-button codicon-history-list show-on-hover-child"
+                    className="codicon codicon-discard codicon-button show-on-hover-child"
                     onClick={() => this.handleDeleteHistoryItem(index)}
                     title={getLocString('DataScience.dataWranglerRemoveStep', 'Remove Step')}
                 />
@@ -163,7 +164,7 @@ export class HistorySection extends React.Component<IProps, IState> {
 
         return (
             <div data-is-focusable>
-                <div className={className} style={{ paddingBottom: '4px', paddingTop: '2px', paddingRight: '4px' }}>
+                <div className={className} style={{ paddingBottom: '3px', paddingTop: '3px', paddingRight: '4px' }}>
                     <div
                         style={{ flexGrow: 1 }}
                         onClick={() => this.viewHistoryItem(adjustedIndex)}
@@ -204,6 +205,7 @@ export class HistorySection extends React.Component<IProps, IState> {
                 onClick={(e) => {
                     // Prevents details from opening and closing
                     e.preventDefault();
+                    e.stopPropagation();
                     this.setState({ sortAsc: !this.state.sortAsc });
                 }}
                 title={sortTooltip}

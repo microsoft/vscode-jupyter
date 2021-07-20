@@ -9,13 +9,20 @@ interface IProps {
     icon?: React.ReactElement;
 }
 
-interface IState {}
+interface IState {
+    collapsed: boolean;
+}
 
 export class SidePanelSection extends React.Component<IProps, IState> {
+    constructor(props: IProps) {
+        super(props);
+        this.state = { collapsed: this.props.collapsed };
+    }
+
     render() {
         return (
             <details
-                open={this.props.collapsed ? undefined : true}
+                open={this.state.collapsed ? undefined : true}
                 className="slicing-control"
                 style={{
                     borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)'
@@ -23,11 +30,22 @@ export class SidePanelSection extends React.Component<IProps, IState> {
             >
                 <summary
                     className="slice-summary"
-                    style={{ display: 'flex', alignItems: 'center' /* keeps arrow vertically centered */ }}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center' /* keeps arrow vertically centered */,
+                        height: '24px'
+                    }}
                 >
-                    <div className="show-on-hover-parent" style={{ display: 'inline-flex', flexGrow: 1, justifyContent: 'space-between' }}>
+                    <div
+                        className="show-on-hover-parent"
+                        style={{ display: 'inline-flex', flexGrow: 1, justifyContent: 'space-between' }}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            this.setState({ collapsed: !this.state.collapsed });
+                        }}
+                    >
                         <h3 className="slice-summary-detail">{this.props.title}</h3>
-                        {!this.props.collapsed && this.props.icon}
+                        {!this.state.collapsed && this.props.icon}
                     </div>
                 </summary>
                 <Resizable

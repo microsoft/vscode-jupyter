@@ -1173,6 +1173,7 @@ export namespace DataScience {
         '% Rows with duplicates'
     );
     export const dataWranglerMissingValues = localize('DataScience.dataWranglerMissingValues', 'Missing values');
+    export const dataWranglerHistogram = localize('DataScience.dataWranglerHistogram', 'Histogram');
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
