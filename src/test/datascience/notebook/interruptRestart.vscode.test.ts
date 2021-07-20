@@ -149,7 +149,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         traceInfo(`Step 7. Cell output`);
 
         // Restart the kernel & use event handler to check if it was restarted successfully.
-        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell.notebook.uri);
+        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell.notebook);
         if (!kernel) {
             throw new Error('Kernel not available');
         }

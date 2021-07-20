@@ -676,6 +676,14 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                     if (debugInfo.runByLine && debugInfo.hashFileName) {
                         await this.jupyterDebugger.startRunByLine(this._notebook, debugInfo.hashFileName);
                     } else if (!debugInfo.runByLine) {
+                        await this._notebook.execute(
+                            `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`,
+                            file,
+                            0,
+                            uuid(),
+                            undefined,
+                            true
+                        );
                         await this.jupyterDebugger.startDebugging(this._notebook);
                     } else {
                         throw Error('Missing hash file name when running by line');
