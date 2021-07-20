@@ -12,8 +12,6 @@ import { JupyterNotebookRenderer } from '../constants';
 import { PlotSaveHandler } from './plotSaveHandler';
 import { PlotViewHandler } from './plotViewHandler';
 
-type RendererMessageTypes = { type: 'saveAs'; outputId: string; mimeType: string };
-
 @injectable()
 export class RendererCommunication implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
@@ -31,7 +29,7 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
             return;
         }
 
-        const api = notebooks.createRendererMessaging<unknown, RendererMessageTypes>(JupyterNotebookRenderer);
+        const api = notebooks.createRendererMessaging(JupyterNotebookRenderer);
         api.onDidReceiveMessage(
             ({ editor, message }) => {
                 if (message.type === 'saveAs') {
