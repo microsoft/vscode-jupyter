@@ -100,7 +100,12 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.save']: [Uri];
     ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
     ['undo']: [];
-    ['interactive.open']: [{ preserveFocus?: boolean; viewColumn?: ViewColumn }, Uri | undefined, string | undefined];
+    ['interactive.open']: [
+        { preserveFocus?: boolean; viewColumn?: ViewColumn },
+        Uri | undefined,
+        string | undefined,
+        string | undefined
+    ];
     ['interactive.execute']: [string];
     [DSCommands.NotebookEditorInterruptKernel]: [Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
