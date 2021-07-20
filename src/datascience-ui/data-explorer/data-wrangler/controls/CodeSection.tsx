@@ -24,6 +24,20 @@ export class CodeSection extends React.Component<IProps, IState> {
         this.state = { currentVariableIndex: 0 };
     }
 
+    renderCopyIcon() {
+        return (
+            <div
+                className={`codicon codicon-copy codicon-button show-on-hover-child`}
+                onClick={(e) => {
+                    // Prevents details from opening and closing
+                    e.preventDefault();
+                    void navigator.clipboard.writeText(this.props.code);
+                }}
+                title={getLocString("Common.copy", "Copy")}
+            />
+        );
+    }
+
     render() {
         const codeComponent = (
             <div
@@ -76,6 +90,7 @@ export class CodeSection extends React.Component<IProps, IState> {
                 panel={codeComponent}
                 collapsed={this.props.collapsed}
                 height={'150px'}
+                icon={this.renderCopyIcon()}
             />
         );
     }

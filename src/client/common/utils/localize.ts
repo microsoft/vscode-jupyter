@@ -32,6 +32,7 @@ export namespace Common {
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
     export const sortDesc = localize('Common.sortDesc', 'Sort Descending');
     export const sortAsc = localize('Common.sortAsc', 'Sort Ascending');
+    export const copy = localize('Common.copy', 'Copy');
 }
 
 export namespace CommonSurvey {
