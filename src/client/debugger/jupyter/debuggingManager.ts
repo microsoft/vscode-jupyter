@@ -10,7 +10,8 @@ import {
     workspace,
     DebugAdapterInlineImplementation,
     DebugSession,
-    NotebookCell
+    NotebookCell,
+    DebugSessionOptions
 } from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
@@ -34,7 +35,7 @@ class Debugger {
 
     readonly session: Promise<DebugSession>;
 
-    constructor(public readonly document: NotebookDocument, public readonly cell?: NotebookCell) {
+    constructor(public readonly document: NotebookDocument, public readonly cell?: NotebookCell, options?: DebugSessionOptions) {
         const name = cell
             ? `${path.basename(document.uri.toString())}?RBL=${cell.index}`
             : path.basename(document.uri.toString());
@@ -49,7 +50,7 @@ class Debugger {
                     request: 'attach',
                     internalConsoleOptions: 'neverOpen',
                     __document: document.uri.toString()
-                })
+                }, options)
                 .then(undefined, reject);
         });
     }
@@ -176,7 +177,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
                 if (editor) {
                     this.updateToolbar(true);
                     this.updateCellToolbar(true);
-                    void this.startDebugging(editor.document, cell);
+                    void this.startDebugging(editor.document, cell, { debugUI: { simple: true } });
                 } else {
                     void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
                 }
@@ -214,10 +215,10 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
         this.runByLineInProgress.set(runningByLine).ignoreErrors();
     }
 
-    private async startDebugging(doc: NotebookDocument, cell?: NotebookCell) {
+    private async startDebugging(doc: NotebookDocument, cell?: NotebookCell, options?: DebugSessionOptions) {
         let dbg = this.notebookToDebugger.get(doc);
         if (!dbg) {
-            dbg = new Debugger(doc, cell);
+            dbg = new Debugger(doc, cell, options);
             this.notebookToDebugger.set(doc, dbg);
 
             try {
