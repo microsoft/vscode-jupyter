@@ -337,13 +337,6 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
                     });
                 }
             }
-
-            // Scroll new columns into view if necessary
-            if (historyItem.columnsToShow) {
-                historyItem.columnsToShow.forEach((col) =>
-                    this.postMessage(DataWranglerMessages.ScrollColumnIntoView, col).ignoreErrors()
-                );
-            }
         }
     }
 
@@ -462,8 +455,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             code: code,
             previewCode: previewCode,
             isPreview: req.isPreview,
-            shouldAdd: true,
-            columnsToShow: [req.targetColumns[0], `${req.targetColumns[0]} (preview)`]
+            shouldAdd: true
         };
         return historyItem;
     }
@@ -620,9 +612,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             code: code,
             previewCode: previewCode,
             isPreview: req.isPreview,
-            shouldAdd: true,
-            // At least show first preview column
-            columnsToShow: [req.targetColumn, `${req.targetColumn} (preview)`]
+            shouldAdd: true
         };
 
         return historyItem;
@@ -676,9 +666,7 @@ export class DataWrangler extends DataViewer implements IDataWrangler, IDisposab
             code: code,
             previewCode: previewCode,
             isPreview: req.isPreview,
-            shouldAdd: true,
-            // At least show first preview column
-            columnsToShow: [req.targetColumns[0], `${req.targetColumns[0]} (preview)`]
+            shouldAdd: true
         };
 
         return historyItem;
