@@ -95,7 +95,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             // No match. Create a new item.
             result = this.create(resource, mode);
         }
-        
+
         await result.readyPromise;
         return result;
     }
