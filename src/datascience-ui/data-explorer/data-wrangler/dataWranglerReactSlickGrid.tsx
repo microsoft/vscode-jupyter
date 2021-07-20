@@ -93,7 +93,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
         super(props);
         this.state = {
             fontSize: 12,
-            showingFilters: true,
+            showingFilters: false,
             selectedColumns: [],
             selectedRows: []
         };
@@ -609,9 +609,7 @@ export class DataWranglerReactSlickGrid extends ReactSlickGrid {
                 // Style columns after state is set
                 const columns = this.styleColumns(grid.getColumns());
                 grid.setColumns(columns);
-                setTimeout(() => {
-                    this.updateCssStyles();
-                }, 0);
+                this.updateCssStyles();
             }
         );
     }

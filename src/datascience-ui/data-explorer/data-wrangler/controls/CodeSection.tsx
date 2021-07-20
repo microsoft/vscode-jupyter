@@ -75,7 +75,7 @@ export class CodeSection extends React.Component<IProps, IState> {
                 title={getLocString('DataScience.dataWranglerPanelCode', 'CODE')}
                 panel={codeComponent}
                 collapsed={this.props.collapsed}
-                height={'100px'}
+                height={'150px'}
             />
         );
     }
