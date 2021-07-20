@@ -6,6 +6,7 @@ interface IProps {
     panel: React.ReactElement;
     collapsed: boolean;
     height: string;
+    icon?: React.ReactElement;
 }
 
 interface IState {}
@@ -17,13 +18,17 @@ export class SidePanelSection extends React.Component<IProps, IState> {
                 open={this.props.collapsed ? undefined : true}
                 className="slicing-control"
                 style={{
-                    borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)',
-                    paddingTop: '4px',
-                    paddingBottom: '4px'
+                    borderBottom: '1px solid var(--vscode-editor-inactiveSelectionBackground)'
                 }}
             >
-                <summary className="slice-summary">
-                    <h3 className="slice-summary-detail">{this.props.title}</h3>
+                <summary
+                    className="slice-summary"
+                    style={{ display: 'flex', alignItems: 'center' /* keeps arrow vertically centered */ }}
+                >
+                    <div className="show-on-hover-parent" style={{ display: 'inline-flex', flexGrow: 1, justifyContent: 'space-between' }}>
+                        <h3 className="slice-summary-detail">{this.props.title}</h3>
+                        {!this.props.collapsed && this.props.icon}
+                    </div>
                 </summary>
                 <Resizable
                     style={{

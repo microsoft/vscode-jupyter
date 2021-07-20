@@ -19,13 +19,15 @@
     font-weight: var(--vscode-font-weight);
     font-size: var(--vscode-font-size);
     padding-left: 4px;
-    padding-top: 6px !important;
+    padding-top: 1px;
+    padding-bottom: 1px;
 }
 
 .slice-summary-detail {
     font-size: 11px;
     margin: 0;
     padding-left: 2px;
+    margin-top: 3px;
 }
 
 .slice-form-container {
