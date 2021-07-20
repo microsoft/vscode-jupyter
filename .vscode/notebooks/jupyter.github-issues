@@ -1,0 +1,92 @@
+[
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "---\r\n## Setup"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode\r\n$REPO=$JUPYTER_ALL_REPOS $VSCODE_REPOS \r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n\r\n$CURRENT_MILESTONE=milestone:\"August 2021 Release\"\r\n$NEXT_MILESTONE=milestone:\"September 2021 Releas"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "---\r\n## Triage\r\n\r\n\r\nIssues that should be looked at *by the team* should remain tagged with the \"*needs-triage*\" label by the engineer on issue-duty."
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Customer Entered"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_REPO is:open is:issue label:needs-triage -author:DavidKutu -author:joyceerhl -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Engineering Team Entered and Internal Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_INTERNAL_REPO is:open is:issue label:needs-triage author:DavidKutu author:joyceerhl author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "----\r\n## Awaiting community thoughts issues\r\n\r\nThese issues represent those that when we triaged we thought they represented a potentially new or good idea, but weren't sure how much interest there might be. This label identifies those. If after 3 months, there's been no interest, they can be closed. "
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_REPO is:open is:issue label:awaiting-community-thoughts sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "---\r\n## Epics\r\n"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Current Iteration"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:Epic $PROJECT_BOARDS $CURRENT_MILESTONE"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "---\r\n## Interactive Window"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Blockers for rolling out to more users"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:interactive-window label:important -label:feature-request -label:enhancement -label:unreleased"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### All bugs"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:interactive-window label:bug -label:unreleased"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:interactive-window"
+  }
+]

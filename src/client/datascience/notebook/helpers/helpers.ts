@@ -19,7 +19,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
-import { IVSCodeNotebook } from '../../../common/application/types';
+import { IDocumentManager, IVSCodeNotebook } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
@@ -69,6 +69,7 @@ export function getNotebookMetadata(document: NotebookDocument | NotebookData): 
 
 export async function updateNotebookDocumentMetadata(
     document: NotebookDocument,
+    editManager: IDocumentManager,
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
@@ -87,7 +88,8 @@ export async function updateNotebookDocumentMetadata(
 
         docMetadata.custom = docMetadata.custom || {};
         docMetadata.custom.metadata = metadata;
-        await edit.replaceNotebookMetadata(document.uri, { ...(document.metadata || {}), custom: docMetadata.custom });
+        edit.replaceNotebookMetadata(document.uri, { ...(document.metadata || {}), custom: docMetadata.custom });
+        await editManager.applyEdit(edit);
     }
 }
 
@@ -440,6 +442,10 @@ function translateDisplayDataOutput(
     }
     */
     const metadata = getOutputMetadata(output);
+    // If we have both SVG & PNG, then add special metadata to indicate whether to display `open plot`
+    if ('image/svg+xml' in output.data && 'image/png' in output.data) {
+        metadata.__displayOpenPlotIcon = true;
+    }
     const items: NotebookCellOutputItem[] = [];
     // eslint-disable-next-line
     const data: Record<string, any> = output.data || {};
@@ -523,6 +529,10 @@ export type CellOutputMetadata = {
      * (this is something we have added)
      */
     __isJson?: boolean;
+    /**
+     * Whether to display the open plot icon.
+     */
+    __displayOpenPlotIcon?: boolean;
 };
 
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {

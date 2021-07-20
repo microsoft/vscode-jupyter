@@ -5,9 +5,9 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import { NotebookCellKind, NotebookDocument } from 'vscode';
-import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
+import { isCI } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -148,7 +148,7 @@ export class CellOutputMimeTypeTracker
             e.model?.getCellsWithId().forEach(this.checkCell.bind(this));
         } catch (ex) {
             // Can fail on CI, if the notebook has been closed or the like
-            if (!IS_CI_SERVER) {
+            if (!isCI) {
                 throw ex;
             }
         }

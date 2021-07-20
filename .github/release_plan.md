@@ -24,10 +24,8 @@
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
 -   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
-    -   [ ] Bump the version number to the next monthly ("YYYY.MM.0") release in the `main` branch
-        -   [ ] `package.json`
-        -   [ ] `package-lock.json`
     -   [ ] Merge the changes from release (Changelog, delete news, ThirdPartyNotices) into `main` branch
+    -   [ ] [Turn off automatic uploads for insider builds from main](https://github.com/microsoft/vscode-jupyter/blob/f05fedf399d34684b408245ba27bc29aa25c13f6/.github/workflows/build-test.yml#L73). This prevents stable customers from getting insiders builds.
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
 -   [ ] GDPR bookkeeping (@greazer) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
@@ -57,7 +55,6 @@
     -   [ ] Create pull request against `release-YYYY.MM` (🤖)
     -   [ ] Merge pull request into `release-YYYY.MM`
 -   [ ] Make sure component governance is happy
--   [ ] [Turn off automatic uploads for insider builds from main](https://github.com/microsoft/vscode-jupyter/blob/f05fedf399d34684b408245ba27bc29aa25c13f6/.github/workflows/build-test.yml#L73). This prevents stable customers from getting insiders builds as they have the same engine version and higher build numbers.
 -   [ ] Do a quick sanity check on the appropriate VS Code version (try to get the candidate build from VS Code, if not available, build the release branch locally, if there's no release branch, use the latest insiders).
 -   [ ] Make sure there is nothing in the validation queue targeting this release that still needs to be validated.
 
@@ -87,7 +84,12 @@
 
 -   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+label%3A%22info+needed%22+-label%3A%22data+science%22+sort%3Aupdated-asc) and close any that have no activity for over a month (🤖)
 -   [ ] GDPR bookkeeping (🤖)
--   [ ] When a new engine update is released for VS Code insiders update the engine version in main and turn insiders builds back on. With the engine updated it will not be shipped to stable customers.
+-   [ ] Update `main` after the release is published.
+    -   [ ] Bump the engines.vscode version on the `main` branch. For example, from `1.58.0-insider` to `1.59.0-insider`
+    -   [ ] Bump the version number to the next monthly ("YYYY.MM.0") release in the `main` branch
+        -   [ ] `package.json`
+        -   [ ] `package-lock.json`
+    -   [ ] Turn insiders daily builds back on
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
 
 ## Prep for the _next_ release

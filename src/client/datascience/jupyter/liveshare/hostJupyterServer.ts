@@ -49,7 +49,7 @@ import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
-import { IS_CI_SERVER } from '../../../../test/ciConstants';
+import { isCI } from '../../../common/constants';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
@@ -348,13 +348,13 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         ) {
             let kernelInfo: KernelConnectionMetadata | undefined;
             if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'connectToLiveKernel') {
-                traceInfoIf(IS_CI_SERVER, `kernelConnection?.kind === 'connectToLiveKernel'`);
+                traceInfoIf(isCI, `kernelConnection?.kind === 'connectToLiveKernel'`);
                 kernelInfo = kernelConnection;
             } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'startUsingKernelSpec') {
-                traceInfoIf(IS_CI_SERVER, `kernelConnection?.kind === 'startUsingKernelSpec'`);
+                traceInfoIf(isCI, `kernelConnection?.kind === 'startUsingKernelSpec'`);
                 kernelInfo = kernelConnection;
             } else if (launchInfo.connectionInfo.localLaunch && kernelConnection) {
-                traceInfoIf(IS_CI_SERVER, `launchInfo.connectionInfo.localLaunch && kernelConnection'`);
+                traceInfoIf(isCI, `launchInfo.connectionInfo.localLaunch && kernelConnection'`);
                 kernelInfo = kernelConnection;
             } else {
                 kernelInfo = await (launchInfo.connectionInfo.localLaunch
@@ -365,7 +365,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                           notebookMetadata,
                           cancelToken
                       ));
-                traceInfoIf(IS_CI_SERVER, `kernelInfo found ${kernelInfo?.id}`);
+                traceInfoIf(isCI, `kernelInfo found ${kernelInfo?.id}`);
             }
             if (kernelInfo && kernelInfo.id !== launchInfo.kernelConnectionMetadata?.id) {
                 // Update kernel info if we found a new one.
@@ -378,7 +378,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         }
         if (!changedKernel && kernelConnection && kernelConnection.id !== launchInfo.kernelConnectionMetadata?.id) {
             // Update kernel info if its different from what was originally provided.
-            traceInfoIf(IS_CI_SERVER, `kernelConnection provided is different from launch info ${kernelConnection.id}`);
+            traceInfoIf(isCI, `kernelConnection provided is different from launch info ${kernelConnection.id}`);
             launchInfo.kernelConnectionMetadata = kernelConnection;
             changedKernel = true;
         }

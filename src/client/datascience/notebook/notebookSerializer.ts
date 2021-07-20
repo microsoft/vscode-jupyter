@@ -13,8 +13,8 @@ import { createJupyterCellFromVSCNotebookCell, notebookModelToVSCNotebookData } 
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { pruneCell } from '../common';
 import { traceInfoIf } from '../../common/logger';
-import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { defaultNotebookFormat } from '../constants';
+import { isCI } from '../../common/constants';
 
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
@@ -29,7 +29,7 @@ export class NotebookSerializer implements VSCNotebookSerializer {
     public deserializeNotebook(content: Uint8Array, _token: CancellationToken): NotebookData {
         const contents = Buffer.from(content).toString();
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : {};
-        traceInfoIf(IS_CI_SERVER, `NotebookJSON ${JSON.stringify(json)}`);
+        traceInfoIf(isCI, `NotebookJSON ${JSON.stringify(json)}`);
 
         // Then compute indent. It's computed from the contents
         const indentAmount = contents ? detectIndent(contents).indent : ' ';
@@ -40,7 +40,7 @@ export class NotebookSerializer implements VSCNotebookSerializer {
             sendLanguageTelemetry(json);
         }
         const preferredCellLanguage = this.cellLanguageService.getPreferredLanguage(json?.metadata);
-        traceInfoIf(IS_CI_SERVER, `Preferred language in deserializer ${preferredCellLanguage}`);
+        traceInfoIf(isCI, `Preferred language in deserializer ${preferredCellLanguage}`);
         // Ensure we always have a blank cell.
         if ((json?.cells || []).length === 0) {
             json.cells = [
@@ -76,8 +76,9 @@ export class NotebookSerializer implements VSCNotebookSerializer {
         return Buffer.from(this.serialize(data), 'utf-8');
     }
     private serialize(data: NotebookDocument | NotebookData): string {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const notebookContent: Partial<nbformat.INotebookContent> = (data.metadata?.custom as any) || {};
+        const notebookContent: Partial<nbformat.INotebookContent> =
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            JSON.parse(JSON.stringify(data.metadata?.custom as any)) || {};
         notebookContent.cells = notebookContent.cells || [];
         notebookContent.nbformat = notebookContent.nbformat || 4;
         notebookContent.nbformat_minor = notebookContent.nbformat_minor || 2;

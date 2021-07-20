@@ -11,6 +11,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { ReadWrite } from '../../common/types';
+import { testOnlyMethod } from '../../common/utils/decorators';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getInterpreterKernelSpecName } from '../jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
@@ -18,6 +19,7 @@ import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '..
 import { IJupyterKernelSpec } from '../types';
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
+export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
 
 @injectable()
 export abstract class LocalKernelSpecFinderBase {
@@ -41,6 +43,10 @@ export abstract class LocalKernelSpecFinderBase {
         protected readonly extensionChecker: IPythonExtensionChecker
     ) {}
 
+    @testOnlyMethod()
+    public clearCache() {
+        this.kernelSpecCache.clear();
+    }
     /**
      * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.
      * If for instance first Python Extension isn't installed, then we call this again, after installing it, then the cache will be blown away
@@ -153,8 +159,21 @@ export abstract class LocalKernelSpecFinderBase {
         kernelJson.name = interpreter ? getInterpreterKernelSpecName(interpreter) : kernelJson.name;
 
         // Update the display name too if we have an interpreter.
+        const isDefaultPythonName = kernelJson.display_name.toLowerCase().match(isDefaultPythonKernelSpecSpecName);
+        if (!isDefaultPythonName && kernelJson.language === PYTHON_LANGUAGE && kernelJson.argv.length > 2) {
+            // Default kernel spec argv for Python kernels is `"python","-m","ipykernel_launcher","-f","{connection_file}"`
+            // Some older versions had `ipykernel` instead of `ipykernel_launcher`
+            // If its different, then use that as an identifier for the kernel name.
+            const argv = kernelJson.argv
+                .slice(1) // ignore python
+                .map((arg) => arg.toLowerCase())
+                .filter((arg) => !['-m', 'ipykernel', 'ipykernel_launcher', '-f', '{connection_file}'].includes(arg));
+            if (argv.length) {
+                kernelJson.name = `${kernelJson.name}.${argv.join('#')}`;
+            }
+        }
         kernelJson.display_name =
-            kernelJson.language === PYTHON_LANGUAGE
+            kernelJson.language === PYTHON_LANGUAGE && isDefaultPythonName
                 ? interpreter?.displayName || kernelJson.display_name
                 : kernelJson.display_name;
 

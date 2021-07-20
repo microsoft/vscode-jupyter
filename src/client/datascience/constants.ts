@@ -168,10 +168,13 @@ export namespace Commands {
     export const InteractiveClearAll = 'jupyter.interactive.clearAllCells';
     export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
     export const InteractiveGoToCode = 'jupyter.interactive.goToCode';
-    export const InteractiveCopyCode = 'jupyter.interactive.copyCode';
+    export const InteractiveCopyCell = 'jupyter.interactive.copyCell';
     export const InteractiveExportAsNotebook = 'jupyter.interactive.exportasnotebook';
     export const InteractiveExportAs = 'jupyter.interactive.exportas';
     export const DebugNotebook = 'jupyter.debugNotebook';
+    export const RunByLine = 'jupyter.runByLine';
+    export const RunByLineContinue = 'jupyter.runByLineContinue';
+    export const RunByLineStop = 'jupyter.runByLineStop';
 }
 
 export namespace CodeLensCommands {
@@ -204,6 +207,7 @@ export namespace EditorContexts {
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
     export const CanDebug = 'jupyter.notebookeditor.canDebug';
     export const DebuggingInProgress = 'jupyter.notebookeditor.debuggingInProgress';
+    export const RunByLineInProgress = 'jupyter.notebookeditor.runByLineInProgress';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
     export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
@@ -431,6 +435,8 @@ export enum Telemetry {
     PreferredKernel = 'DS_INTERNAL.PREFERRED_KERNEL',
     KernelFinderPerf = 'DS_INTERNAL.KERNEL_FINDER_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
+    InterpreterListingPerf = 'DS_INTERNAL.INTERPRETER_LISTING_PERF',
+    ActiveInterpreterListingPerf = 'DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     PythonModuleInstal = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',

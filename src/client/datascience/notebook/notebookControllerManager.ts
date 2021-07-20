@@ -5,7 +5,13 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../common/application/types';
 import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import {
     IConfigurationService,
@@ -16,8 +22,14 @@ import {
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { Telemetry } from '../constants';
-import { getDisplayNameOrNameOfKernelConnection, isLocalLaunch } from '../jupyter/kernels/helpers';
-import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import {
+    createInterpreterKernelSpec,
+    getDisplayNameOrNameOfKernelConnection,
+    getKernelId,
+    isLocalLaunch,
+    isPythonKernelConnection
+} from '../jupyter/kernels/helpers';
+import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { INotebookProvider } from '../types';
@@ -30,9 +42,11 @@ import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
-import { IS_CI_SERVER } from '../../../test/ciConstants';
 import { noop } from '../../common/utils/misc';
-import { IPythonExtensionChecker } from '../../api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { isCI } from '../../common/constants';
+import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -52,6 +66,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     private readonly isLocalLaunch: boolean;
     private wasPythonInstalledWhenFetchingControllers?: boolean;
+    private interactiveNoPythonController?: NoPythonKernelsNotebookController;
+    private notbeookNoPythonController?: NoPythonKernelsNotebookController;
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -70,7 +86,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
         @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IDocumentManager) private readonly docManager: IDocumentManager,
+        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -78,6 +97,16 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }>();
         this.disposables.push(this._onNotebookControllerSelected);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
+    }
+    public async getInteractiveController(): Promise<VSCodeNotebookController | undefined> {
+        // Fetch the active interpreter and use the matching controller
+        const api = await this.pythonApi.getApi();
+        const activeInterpreter = await api.getActiveInterpreter();
+
+        if (!activeInterpreter) {
+            return;
+        }
+        return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
     }
 
     get onNotebookControllerSelected() {
@@ -131,6 +160,34 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.controllersPromise;
     }
 
+    public getOrCreateController(
+        pythonInterpreter: PythonEnvironment,
+        notebookType: 'interactive' | 'jupyter-notebook'
+    ): VSCodeNotebookController | undefined {
+        // Ensure that the controller corresponding to the active interpreter
+        // has been successfully created
+        const spec = createInterpreterKernelSpec(pythonInterpreter);
+        const result: PythonKernelConnectionMetadata = {
+            kind: 'startUsingPythonInterpreter',
+            kernelSpec: spec,
+            interpreter: pythonInterpreter,
+            id: getKernelId(spec, pythonInterpreter)
+        };
+        this.createNotebookControllers([result]);
+
+        // Return the created controller
+        return this.registeredNotebookControllers().find(
+            (controller) =>
+                // We register each of our kernels as two controllers
+                // because controllers are currently per-viewtype. Find
+                // the one for the interactive viewtype for now
+                controller.controller.notebookType === notebookType &&
+                controller.connection.kind === 'startUsingPythonInterpreter' &&
+                controller.connection.interpreter?.path === pythonInterpreter?.path &&
+                controller.connection.interpreter.displayName === pythonInterpreter.displayName
+        );
+    }
+
     /**
      * Turn all our kernelConnections that we know about into registered NotebookControllers
      */
@@ -138,11 +195,47 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const cancelToken = new CancellationTokenSource();
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
         const connections = await this.getKernelConnectionMetadata(listLocalNonPythonKernels, cancelToken.token);
-
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
+        // If we're listing Python kernels & there aren't any, then add a placeholder for `Python` which will prompt users to install python
+        if (!listLocalNonPythonKernels) {
+            if (connections.some((item) => isPythonKernelConnection(item))) {
+                this.removeNoPythonControllers();
+            } else {
+                this.regsiterNoPythonControllers();
+            }
+        }
     }
+    private removeNoPythonControllers() {
+        this.notbeookNoPythonController?.dispose();
+        this.interactiveNoPythonController?.dispose();
 
+        this.notbeookNoPythonController = undefined;
+        this.interactiveNoPythonController = undefined;
+    }
+    private regsiterNoPythonControllers() {
+        if (this.notbeookNoPythonController) {
+            return;
+        }
+        this.notbeookNoPythonController = new NoPythonKernelsNotebookController(
+            JupyterNotebookView,
+            this.notebook,
+            this.commandManager,
+            this.disposables,
+            this.extensionChecker,
+            this.appShell
+        );
+        this.interactiveNoPythonController = new NoPythonKernelsNotebookController(
+            InteractiveWindowView,
+            this.notebook,
+            this.commandManager,
+            this.disposables,
+            this.extensionChecker,
+            this.appShell
+        );
+        this.disposables.push(this.interactiveNoPythonController);
+        this.disposables.push(this.notbeookNoPythonController);
+    }
     private async onDidChangeExtensions() {
         if (!this.isLocalLaunch || !this.controllersPromise) {
             return;
@@ -173,7 +266,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         );
 
         // Prep so that we can track the selected controller for this document
-        traceInfoIf(IS_CI_SERVER, `Clear controller mapping for ${document.uri.toString()}`);
+        traceInfoIf(isCI, `Clear controller mapping for ${document.uri.toString()}`);
         const loadControllersPromise = this.loadNotebookControllers();
 
         try {
@@ -207,10 +300,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 return;
             }
             if (!preferredConnection) {
-                traceInfoIf(
-                    IS_CI_SERVER,
-                    `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`
-                );
+                traceInfoIf(isCI, `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`);
                 return;
             }
 
@@ -229,7 +319,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
             } else {
                 traceInfoIf(
-                    IS_CI_SERVER,
+                    isCI,
                     `TargetController nof found ID: ${preferredConnection.id} for document ${document.uri.toString()}`
                 );
             }
@@ -285,7 +375,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.isLocalLaunch ? 'local' : 'remote',
                         this.interpreterPackages,
                         this.configuration,
-                        this.widgetCoordinator
+                        this.widgetCoordinator,
+                        this.docManager
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     controller.onNotebookControllerSelected(
@@ -383,7 +474,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // If we have any out of date connections, dispose of them
         disposedControllers.forEach((controller) => {
             this.registeredControllers.delete(controller.id);
-            traceInfoIf(IS_CI_SERVER, `Disposing controller ${controller.id}`);
+            traceInfoIf(isCI, `Disposing controller ${controller.id}`);
             controller.dispose();
         });
     }

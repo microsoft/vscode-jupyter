@@ -150,6 +150,10 @@ export namespace DataScience {
         'DataScience.pythonExtensionRequiredToRunNotebook',
         'Python Extension required to run Python notebooks.'
     );
+    export const newNotebookUI = localize(
+        'DataScience.newNotebookUI',
+        "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use. [Learn more...](https://aka.ms/NewNotebookUI)"
+    );
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
         'The Python extension is required to perform that task. Click Yes to open Python extension installation page.'
@@ -405,6 +409,8 @@ export namespace DataScience {
     );
     export const restartedKernelHeader = localize('DataScience.restartedKernelHeader', 'Restarted {0}');
     export const startedNewKernelHeader = localize('DataScience.startedNewKernelHeader', 'Started {0}');
+    export const startingNewKernelHeader = localize('DataScience.kernelStarting', '_Connecting to kernel..._');
+    export const startingNewKernelCustomHeader = localize('DataScience.kernelStartingCustom', '_Connecting to {0}..._');
     export const connectKernelHeader = localize('DataScience.connectKernelHeader', 'Connected to {0}');
 
     export const jupyterSelectURIPrompt = localize(

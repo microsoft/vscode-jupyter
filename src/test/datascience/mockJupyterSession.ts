@@ -16,6 +16,7 @@ import { ServerStatus } from '../../datascience-ui/interactive-common/mainState'
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
 import { Resource } from '../../client/common/types';
+import { randomBytes } from 'crypto';
 
 const LineFeedRegEx = /(\r\n|\n)/g;
 
@@ -65,6 +66,10 @@ export class MockJupyterSession implements IJupyterSession {
     }
     public get status(): ServerStatus {
         return this._status;
+    }
+
+    public get sessionId(): string {
+        return randomBytes(8).toString('hex');
     }
 
     public async restart(_timeout: number): Promise<void> {

@@ -16,7 +16,7 @@ import {
     NotebookRendererScript,
     Uri
 } from 'vscode';
-import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import { ICommandManager, IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { isCI, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo, traceInfoIf } from '../../common/logger';
@@ -100,7 +100,8 @@ export class VSCodeNotebookController implements Disposable {
         private readonly localOrRemoteKernel: 'local' | 'remote',
         private readonly interpreterPackages: InterpreterPackages,
         private readonly configuration: IConfigurationService,
-        private readonly widgetCoordinator: NotebookIPyWidgetCoordinator
+        private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
+        private readonly documentManager: IDocumentManager
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -252,7 +253,7 @@ export class VSCodeNotebookController implements Disposable {
 
     private executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${cell.notebook.uri.toString()}`);
-        const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, {
+        const kernel = this.kernelProvider.getOrCreate(cell.notebook, {
             metadata: this.kernelConnection,
             controller: this.controller
         });
@@ -302,7 +303,12 @@ export class VSCodeNotebookController implements Disposable {
             if (!this.associatedDocuments.has(doc)) {
                 return;
             }
-            await updateNotebookDocumentMetadata(doc, kernel.kernelConnectionMetadata, kernel.info);
+            await updateNotebookDocumentMetadata(
+                doc,
+                this.documentManager,
+                kernel.kernelConnectionMetadata,
+                kernel.info
+            );
             if (this.kernelConnection.kind === 'startUsingKernelSpec') {
                 if (kernel.info.status === 'ok') {
                     saveKernelInfo();
@@ -320,7 +326,7 @@ export class VSCodeNotebookController implements Disposable {
     }
     private async onDidSelectController(document: NotebookDocument) {
         const selectedKernelConnectionMetadata = this.connection;
-        const existingKernel = this.kernelProvider.get(document.uri);
+        const existingKernel = this.kernelProvider.get(document);
         if (
             existingKernel &&
             areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
@@ -371,14 +377,18 @@ export class VSCodeNotebookController implements Disposable {
         }
 
         // Before we start the notebook, make sure the metadata is set to this new kernel.
-        await updateNotebookDocumentMetadata(document, selectedKernelConnectionMetadata);
+        await updateNotebookDocumentMetadata(document, this.documentManager, selectedKernelConnectionMetadata);
 
+        if (document.notebookType === InteractiveWindowView) {
+            // Possible its an interactive window, in that case we'll create the kernel manually.
+            return;
+        }
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This will dispose any existing (older kernels) associated with this notebook.
         // This way other parts of extension have access to this kernel immediately after event is handled.
         // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
-        const newKernel = this.kernelProvider.getOrCreate(document.uri, {
+        const newKernel = this.kernelProvider.getOrCreate(document, {
             metadata: selectedKernelConnectionMetadata,
             controller: this.controller
         });

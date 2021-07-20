@@ -22,6 +22,7 @@ import { RemoteSwitcher } from './remoteSwitcher';
 import { INotebookControllerManager } from './types';
 import { RendererCommunication } from './outputs/rendererCommunication';
 import { PlotSaveHandler } from './outputs/plotSaveHandler';
+import { PlotViewHandler } from './outputs/plotViewHandler';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<NotebookSerializer>(NotebookSerializer, NotebookSerializer);
@@ -58,6 +59,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
     serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
+    serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RendererCommunication

@@ -58,7 +58,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri } }];
     [DSCommands.InteractiveRemoveCell]: [NotebookCell];
     [DSCommands.InteractiveGoToCode]: [NotebookCell];
-    [DSCommands.InteractiveCopyCode]: [NotebookCell];
+    [DSCommands.InteractiveCopyCell]: [NotebookCell];
     [DSCommands.InteractiveExportAsNotebook]: [{ notebookEditor: { notebookUri: Uri } }];
     [DSCommands.InteractiveExportAs]: [{ notebookEditor: { notebookUri: Uri } }];
     ['notebook.cell.quitEdit']: [];
@@ -100,7 +100,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.save']: [Uri];
     ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
     ['undo']: [];
-    ['interactive.open']: [ViewColumn | undefined, Uri | undefined, string | undefined];
+    ['interactive.open']: [{ preserveFocus?: boolean; viewColumn?: ViewColumn }, Uri | undefined, string | undefined];
     ['interactive.execute']: [string];
     [DSCommands.NotebookEditorInterruptKernel]: [Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
@@ -146,7 +146,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ExportToHTML]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.ExportToPDF]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.Export]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
-    [DSCommands.NativeNotebookExport]: [Uri];
+    [DSCommands.NativeNotebookExport]: [Uri | undefined];
     [DSCommands.SetJupyterKernel]: [KernelConnectionMetadata, Uri, undefined | Uri];
     [DSCommands.SwitchJupyterKernel]: [ISwitchKernelOptions | undefined] | [];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
@@ -167,4 +167,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.NotebookEditorKeybindSave]: [];
     [DSCommands.NotebookEditorKeybindUndo]: [];
     [DSCommands.DebugNotebook]: [];
+    [DSCommands.RunByLine]: [NotebookCell];
+    [DSCommands.RunByLineContinue]: [NotebookCell];
+    [DSCommands.RunByLineStop]: [NotebookCell];
 }

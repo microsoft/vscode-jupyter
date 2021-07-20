@@ -184,6 +184,7 @@ export interface INotebook extends IAsyncDisposable {
     onKernelChanged: Event<KernelConnectionMetadata>;
     onKernelRestarted: Event<void>;
     onKernelInterrupted: Event<void>;
+    onDidFinishExecuting?: Event<ICell>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(
@@ -322,6 +323,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    readonly sessionId: string;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
