@@ -68,11 +68,3 @@ export const clearButtonStyle = {
 };
 
 export const inputStyle = { width: '100%', marginTop: '4px', marginBottom: '16px' };
-
-// Summary section
-export const summaryRowStyle = { display: 'flex', justifyContent: 'space-between', margin: '1px 8px 1px 12px' };
-export const summaryChildRowStyle = { ...summaryRowStyle, margin: '1px 8px 1px 6px' };
-export const summaryInnerRowStyle = {
-    marginLeft: '16px',
-    borderLeft: '2px solid var(--vscode-editor-selectionHighlightBackground)'
-};

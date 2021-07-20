@@ -1,0 +1,26 @@
+.summaryRow {
+    display: flex;
+    justify-content: space-between;
+    margin: 1px 8px 1px 16px;
+    padding: 2px 0px 2px 8px;
+}
+
+.summaryChildRow {
+    margin: 1px 8px 1px 0px;
+}
+
+.summaryInnerRow {
+    margin-left: 28px;
+    border-left: 2px solid var(--vscode-editor-selectionHighlightBackground);
+    padding: 2px 0px 2px 0px;
+}
+
+.summaryRowDetails {
+    cursor: pointer;
+    margin: 1px 8px 1px 4px;
+}
+
+.summaryValue {
+    opacity: 0.8;
+    text-align: right;
+}

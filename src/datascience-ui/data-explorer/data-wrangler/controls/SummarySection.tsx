@@ -10,7 +10,7 @@ import {
 } from '../../../../client/datascience/data-viewing/types';
 import { getLocString } from '../../../react-common/locReactSide';
 import { SidePanelSection } from './SidePanelSection';
-import { summaryChildRowStyle, summaryInnerRowStyle, summaryRowStyle } from './styles';
+import './SummarySection.css';
 
 interface ISummarySectionProps {
     collapsed: boolean;
@@ -28,6 +28,9 @@ interface IDataframeColumnSummaryProps {
     columnSummary?: IDataFrameColumnInfo;
     shape: string;
     rowCount: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    monacoThemeObj: any;
+    histogramData: IGetColsResponse | undefined;
     showDefaultSummary(show: boolean): void;
 }
 
@@ -35,6 +38,13 @@ interface ISummaryRowProps {
     name: string;
     value: string | number | undefined;
     child?: boolean;
+}
+
+interface ISummaryRowDetailsProps {
+    name: string;
+    value?: string | number | undefined;
+    children?: ISummaryRowProps[];
+    component?: React.ReactElement;
 }
 
 interface IInnerRowsProps {
@@ -65,10 +75,27 @@ const Plot = createPlotlyComponent(Plotly);
 class SummaryRow extends React.Component<ISummaryRowProps> {
     render() {
         return (
-            <div style={this.props.child ? summaryChildRowStyle : summaryRowStyle}>
+            <div className={`summaryRow ${this.props.child ? "summaryChildRow" : ""}`}>
                 <span>{this.props.name}</span>
-                <span>{this.props.value}</span>
+                <span className="summaryValue">{this.props.value}</span>
             </div>
+        );
+    }
+}
+
+class SummaryRowDetails extends React.Component<ISummaryRowDetailsProps> {
+    render() {
+        return (
+            <details className="slicing-control" style={{marginLeft: '-10px'}} open>
+                <summary className="summaryRowDetails summaryRow">
+                    <div style={{ display: 'inline-flex', flexGrow: 1, justifyContent: 'space-between' }}>
+                        <span style={{paddingLeft: '3px'}}>{this.props.name}</span>
+                        <span className="summaryValue">{this.props.value}</span>
+                    </div>
+                </summary>
+                {this.props.children && <InnerRows children={this.props.children}></InnerRows>}
+                {this.props.component}
+            </details>
         );
     }
 }
@@ -76,8 +103,8 @@ class SummaryRow extends React.Component<ISummaryRowProps> {
 class SummaryTitle extends React.Component<ISummaryTitleProps> {
     render() {
         return (
-            <div style={{ ...summaryRowStyle, fontWeight: 'bold' }}>
-                <span>Column: {this.props.name}</span>
+            <div className="summaryRow" >
+                <span style={{ fontWeight: 'bold' }}>Column: {this.props.name}</span>
                 {this.props.canClose && (
                     <div
                         className="codicon codicon-close codicon-button"
@@ -96,7 +123,7 @@ class SummaryTitle extends React.Component<ISummaryTitleProps> {
 class InnerRows extends React.Component<IInnerRowsProps> {
     render() {
         return (
-            <div style={summaryInnerRowStyle}>
+            <div className="summaryInnerRow">
                 {this.props.children.map((c) => (
                     <SummaryRow key={c.name} child={true} name={c.name} value={c.value} />
                 ))}
@@ -125,8 +152,9 @@ class ColumnSummary extends React.Component<IDataframeColumnSummaryProps> {
                     name={getLocString('DataScience.dataWranglerUniqueValues', 'Unique values')}
                     value={this.props.columnSummary.uniqueCount}
                 />
-                <SummaryRow name={getLocString('DataScience.dataWranglerRows', 'Rows')} value={this.props.rowCount} />
-                <InnerRows
+                <SummaryRowDetails
+                    name={getLocString('DataScience.dataWranglerRows', 'Rows')}
+                    value={this.props.rowCount}
                     children={[
                         {
                             name: getLocString('DataScience.dataWranglerNumberMissingValues', '# Missing values'),
@@ -143,56 +171,57 @@ class ColumnSummary extends React.Component<IDataframeColumnSummaryProps> {
                 />
                 {/* Only shows up for numerical columns */}
                 {this.props.columnSummary.statistics && (
-                    <>
-                        <SummaryRow
-                            name={getLocString('DataScience.dataWranglerStatistics', 'Statistics')}
-                            value={undefined}
-                        />
-                        <InnerRows
-                            children={[
-                                {
-                                    name: getLocString('DataScience.dataWranglerAverage', 'Average'),
-                                    value: this.props.columnSummary.statistics.average
-                                },
-                                {
-                                    name: getLocString('DataScience.dataWranglerMedian', 'Median'),
-                                    value: this.props.columnSummary.statistics.median
-                                },
-                                {
-                                    name: getLocString('DataScience.dataWranglerMin', 'Min'),
-                                    value: this.props.columnSummary.statistics.min
-                                },
-                                {
-                                    name: getLocString('DataScience.dataWranglerMax', 'Max'),
-                                    value: this.props.columnSummary.statistics.max
-                                },
-                                {
-                                    name: getLocString(
-                                        'DataScience.dataWranglerStandardDeviation',
-                                        'Standard deviation'
-                                    ),
-                                    value: this.props.columnSummary.statistics.sd
-                                }
-                            ]}
-                        />
-                    </>
+                    <SummaryRowDetails
+                        name={getLocString('DataScience.dataWranglerStatistics', 'Statistics')}
+                        value={undefined}
+                        children={[
+                            {
+                                name: getLocString('DataScience.dataWranglerAverage', 'Average'),
+                                value: this.props.columnSummary.statistics.average
+                            },
+                            {
+                                name: getLocString('DataScience.dataWranglerMedian', 'Median'),
+                                value: this.props.columnSummary.statistics.median
+                            },
+                            {
+                                name: getLocString('DataScience.dataWranglerMin', 'Min'),
+                                value: this.props.columnSummary.statistics.min
+                            },
+                            {
+                                name: getLocString('DataScience.dataWranglerMax', 'Max'),
+                                value: this.props.columnSummary.statistics.max
+                            },
+                            {
+                                name: getLocString('DataScience.dataWranglerStandardDeviation', 'Standard deviation'),
+                                value: this.props.columnSummary.statistics.sd
+                            }
+                        ]}
+                    />
                 )}
                 {/* Only shows up for string/object columns */}
                 {this.props.columnSummary.mostFrequentValue && (
-                    <>
-                        <SummaryRow
-                            name={getLocString('DataScience.dataWranglerMostFrequent', 'Most frequent')}
-                            value={this.props.columnSummary.mostFrequentValue}
-                        />
-                        <InnerRows
-                            children={[
-                                {
-                                    name: getLocString('DataScience.dataWranglerNumberOccurences', '# Occurences'),
-                                    value: this.props.columnSummary.mostFrequentValueAppearances
-                                }
-                            ]}
-                        />
-                    </>
+                    <SummaryRowDetails
+                        name={getLocString('DataScience.dataWranglerMostFrequent', 'Most frequent')}
+                        value={this.props.columnSummary.mostFrequentValue}
+                        children={[
+                            {
+                                name: getLocString('DataScience.dataWranglerNumberOccurences', '# Occurences'),
+                                value: this.props.columnSummary.mostFrequentValueAppearances
+                            }
+                        ]}
+                    />
+                )}
+                {this.props.histogramData && this.props.histogramData.cols.length > 0 && (
+                    <SummaryRowDetails
+                        name={'Histogram'}
+                        component={
+                            <Histogram
+                                data={this.props.histogramData.cols}
+                                themeObj={this.props.monacoThemeObj}
+                                column={this.props.histogramData?.columnName}
+                            />
+                        }
+                    />
                 )}
             </div>
         );
@@ -220,8 +249,9 @@ class DataframeSummary extends React.Component<IDataFrameInfo> {
                     name={getLocString('DataScience.dataWranglerColumns', 'Columns')}
                     value={this.props.columns?.length}
                 />
-                <SummaryRow name={getLocString('DataScience.dataWranglerRows', 'Rows')} value={this.props.rowCount} />
-                <InnerRows
+                <SummaryRowDetails
+                    name={getLocString('DataScience.dataWranglerRows', 'Rows')}
+                    value={this.props.rowCount}
                     children={[
                         {
                             name: getLocString('DataScience.dataWranglerNumberMissingValues', '# Missing values'),
@@ -244,11 +274,11 @@ class DataframeSummary extends React.Component<IDataFrameInfo> {
                         }
                     ]}
                 />
-                <SummaryRow
+                <SummaryRowDetails
                     name={getLocString('DataScience.dataWranglerMissingValues', 'Missing values')}
                     value={this.props.nanRows?.length}
+                    children={this.getColumnsWithMissingValues(this.props.columns ?? [])}
                 />
-                <InnerRows children={this.getColumnsWithMissingValues(this.props.columns ?? [])} />
             </div>
         );
     }
@@ -275,7 +305,7 @@ export class Histogram extends React.Component<IHistogramProps> {
         } as Plotly.Layout;
 
         return (
-            <div style={{ marginRight: '15px', paddingRight: '15px' }}>
+            <div style={{ marginRight: '15px', paddingRight: '15px', marginTop: '-10px' }}>
                 <Plot
                     style={{
                         marginLeft: '20px',
@@ -341,14 +371,9 @@ export class SummarySection extends React.Component<ISummarySectionProps, IState
                         shape={shapeAsString(this.props.dataframeSummary.shape)}
                         rowCount={this.props.dataframeSummary.rowCount ?? 0}
                         showDefaultSummary={this.showDefaultSummary.bind(this)}
+                        monacoThemeObj={this.props.monacoThemeObj}
+                        histogramData={this.props.histogramData}
                     />
-                    {this.props.histogramData && this.props.histogramData.cols.length > 0 && (
-                        <Histogram
-                            data={this.props.histogramData.cols}
-                            themeObj={this.props.monacoThemeObj}
-                            column={this.props.histogramData?.columnName}
-                        />
-                    )}
                 </>
             ) : (
                 <DataframeSummary {...this.props.dataframeSummary} />

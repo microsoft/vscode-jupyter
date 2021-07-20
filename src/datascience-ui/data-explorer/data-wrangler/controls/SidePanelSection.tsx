@@ -53,7 +53,7 @@ export class SidePanelSection extends React.Component<IProps, IState> {
                         style={{
                             height: '100%',
                             width: '100%',
-                            overflowY: 'scroll'
+                            overflowY: 'auto'
                         }}
                     >
                         {this.props.panel}
