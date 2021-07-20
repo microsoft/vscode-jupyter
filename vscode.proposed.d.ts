@@ -1494,7 +1494,7 @@ declare module 'vscode' {
 		*/
 		// todo@API can ANY extension talk to renderer or is there a check that the calling extension
 		// declared the renderer in its package.json?
-		export function createRendererMessaging<TSend = any, TReceive = TSend>(rendererId: string): NotebookRendererMessaging<TSend, TReceive>;
+		export function createRendererMessaging(rendererId: string): NotebookRendererMessaging;
 	}
 
 	//#endregion
