@@ -213,7 +213,7 @@ class ColumnSummary extends React.Component<IDataframeColumnSummaryProps> {
                 )}
                 {this.props.histogramData && this.props.histogramData.cols.length > 0 && (
                     <SummaryRowDetails
-                        name={'Histogram'}
+                        name={getLocString('DataScience.dataWranglerHistogram', 'Histogram')}
                         component={
                             <Histogram
                                 data={this.props.histogramData.cols}

@@ -2120,7 +2120,7 @@
                         "filenamePattern": "*.csv"
                     }
                 ],
-                "priority": "default"
+                "priority": "option"
             }
         ],
         "viewsContainers": {
@@ -2241,11 +2241,9 @@
         "portfinder": "^1.0.25",
         "re-resizable": "^6.5.5",
         "react": "^16.5.2",
-        "react-chartjs-2": "^2.11.1",
         "react-data-grid": "^6.0.2-0",
         "react-dom": "^16.5.2",
         "react-draggable": "^4.4.2",
-        "react-google-charts": "^3.0.15",
         "react-plotly.js": "^2.5.1",
         "react-redux": "^7.1.1",
         "react-svg-pan-zoom": "^3.1.0",
@@ -2254,7 +2252,6 @@
         "redux": "^4.0.4",
         "redux-logger": "^3.0.6",
         "reflect-metadata": "^0.1.12",
-        "remark-parse": "^5.0.0",
         "request": "^2.87.0",
         "request-progress": "^3.0.0",
         "requirejs": "^2.3.6",
