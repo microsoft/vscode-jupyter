@@ -23,7 +23,7 @@ on:
       - 'release/*'
       - 'release-*'
   schedule:
-    - cron: "0 9 * * 1-5" # 9am UTC, Monday-Friday (2am PDT, after VS Code Insider builds which is 11pm PDT)
+    - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code Insider builds which is 11pm PDT)
   workflow_dispatch:
 env:
   NODE_VERSION: 12.14.1
@@ -101,7 +101,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.3.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -209,7 +209,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.3.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -271,7 +271,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.3.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -391,7 +391,7 @@ jobs:
         run: python --version
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.3.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -647,7 +647,7 @@ jobs:
         if: matrix.python != 'conda' && matrix.python != 'noPython'
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.3.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -917,7 +917,6 @@ jobs:
           check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
         if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
 
-
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
@@ -968,7 +967,7 @@ jobs:
         run: python -m pip install -U pip
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.3.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -1029,7 +1028,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Node
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.3.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -1112,7 +1111,7 @@ jobs:
           python-version: ${{env.PYTHON_VERSION}}
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v2.3.0
         with:
           node-version: ${{env.NODE_VERSION}}
 
