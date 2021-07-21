@@ -5,12 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { CustomDocument, Uri, WebviewPanel } from 'vscode';
 
-import {
-    ICommandManager,
-    ICustomEditorService,
-    IDocumentManager,
-    IWorkspaceService
-} from '../../client/common/application/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
@@ -121,10 +116,10 @@ export class TestNativeEditorProvider extends TestNativeEditorProviderMixin(Nati
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICustomEditorService) customEditorService: ICustomEditorService,
         @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(IFileSystem) fs: IFileSystem
+        @inject(IFileSystem) fs: IFileSystem,
+        @inject(ICommandManager) commandManager: ICommandManager
     ) {
         super(
             serviceContainer,
@@ -132,10 +127,10 @@ export class TestNativeEditorProvider extends TestNativeEditorProviderMixin(Nati
             disposables,
             workspace,
             configuration,
-            customEditorService,
             storage,
             notebookProvider,
-            fs
+            fs,
+            commandManager
         );
     }
 }
@@ -149,13 +144,13 @@ export class TestNativeEditorProviderOld extends TestNativeEditorProviderMixin(N
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICustomEditorService) customEditorService: ICustomEditorService,
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(ICommandManager) cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider
+        @inject(INotebookProvider) notebookProvider: INotebookProvider,
+        @inject(ICommandManager) commandManager: ICommandManager
     ) {
         super(
             serviceContainer,
@@ -163,13 +158,13 @@ export class TestNativeEditorProviderOld extends TestNativeEditorProviderMixin(N
             disposables,
             workspace,
             configuration,
-            customEditorService,
             fs,
             documentManager,
             cmdManager,
             dataScienceErrorHandler,
             storage,
-            notebookProvider
+            notebookProvider,
+            commandManager
         );
     }
 }

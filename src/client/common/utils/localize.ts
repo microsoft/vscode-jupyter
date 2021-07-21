@@ -956,10 +956,6 @@ export namespace DataScience {
         'DataScience.illegalEditorConfig',
         'CustomEditor and NativeNotebook experiments cannot be turned on together'
     );
-    export const invalidCustomEditor = localize(
-        'DataScience.invalidCustomEditor',
-        'Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled.'
-    );
     export const showDataViewerFail = localize(
         'DataScience.showDataViewerFail',
         'Failed to create the Data Viewer. Check the Jupyter tab of the Output window for more info.'
