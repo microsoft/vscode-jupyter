@@ -174,14 +174,14 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const preferredController = await this.notebookControllerManager.getInteractiveController();
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
         const hasOwningFile = this.owner !== undefined;
-        const { notebookEditor } = (await this.commandManager.executeCommand(
+        const { notebookEditor } = ((await this.commandManager.executeCommand(
             'interactive.open',
             // Keep focus on the owning file if there is one
             { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
             undefined,
             controllerId,
             this.owner && this.mode === 'perFile' ? getInteractiveWindowTitle(this.owner) : undefined
-        ) as unknown) as INativeInteractiveWindow;
+        )) as unknown) as INativeInteractiveWindow;
         if (!notebookEditor) {
             // This means VS Code failed to create an interactive window.
             // This should never happen.
