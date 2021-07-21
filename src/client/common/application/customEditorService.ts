@@ -12,7 +12,7 @@ import {
 import { sendTelemetryEvent } from '../../telemetry';
 
 import { UseCustomEditorApi } from '../constants';
-import { CustomEditorProvider, ICustomEditorService, IWorkspaceService } from './types';
+import { CustomEditorProvider, ICommandManager, ICustomEditorService, IWorkspaceService } from './types';
 
 export const ViewType = 'jupyter.notebook.ipynb';
 
@@ -21,8 +21,16 @@ export class CustomEditorService implements ICustomEditorService, IExtensionSing
     constructor(
         @inject(UseCustomEditorApi) private readonly useCustomEditorApi: boolean,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(OurNotebookProvider) private readonly editorProvider: CustomEditorProvider
+        @inject(OurNotebookProvider) private readonly editorProvider: CustomEditorProvider,
+        @inject(ICommandManager) private commandManager: ICommandManager
     ) {}
+
+    public async openEditor(file: vscode.Uri, viewType: string): Promise<void> {
+        // This is necessary to abstract the open for functional tests.
+        if (this.useCustomEditorApi) {
+            await this.commandManager.executeCommand('vscode.openWith', file, viewType);
+        }
+    }
 
     public async activate() {
         let updateType: 'added' | 'removed' | undefined;

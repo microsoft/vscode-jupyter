@@ -17,6 +17,7 @@ import {
     CustomEditorProvider,
     IApplicationShell,
     ICommandManager,
+    ICustomEditorService,
     IDocumentManager,
     ILiveShareApi,
     IWebviewPanelProvider,
@@ -109,8 +110,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         @inject(IConfigurationService) protected readonly configuration: IConfigurationService,
         @inject(INotebookStorageProvider) protected readonly storage: INotebookStorageProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IFileSystem) protected readonly fs: IFileSystem,
-        @inject(ICommandManager) private commandManager: ICommandManager
+        @inject(IFileSystem) protected readonly fs: IFileSystem
     ) {
         traceInfo(`id is ${this._id}`);
     }
@@ -183,7 +183,12 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         disposable = this._onDidOpenNotebookEditor.event(handler);
 
         // Send an open command.
-        void this.commandManager.executeCommand('vscode.openWith', file, NativeEditorProvider.customEditorViewType);
+        if (this.serviceContainer) {
+            // Use service container to prevent circular dependency
+            this.serviceContainer
+                .get<ICustomEditorService>(ICustomEditorService)
+                .openEditor(file, NativeEditorProvider.customEditorViewType);
+        }
 
         // Promise should resolve when the file opens.
         return deferred.promise;

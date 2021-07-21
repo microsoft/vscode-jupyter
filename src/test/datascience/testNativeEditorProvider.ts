@@ -118,20 +118,9 @@ export class TestNativeEditorProvider extends TestNativeEditorProviderMixin(Nati
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(IFileSystem) fs: IFileSystem,
-        @inject(ICommandManager) commandManager: ICommandManager
+        @inject(IFileSystem) fs: IFileSystem
     ) {
-        super(
-            serviceContainer,
-            asyncRegistry,
-            disposables,
-            workspace,
-            configuration,
-            storage,
-            notebookProvider,
-            fs,
-            commandManager
-        );
+        super(serviceContainer, asyncRegistry, disposables, workspace, configuration, storage, notebookProvider, fs);
     }
 }
 
@@ -149,8 +138,7 @@ export class TestNativeEditorProviderOld extends TestNativeEditorProviderMixin(N
         @inject(ICommandManager) cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(ICommandManager) commandManager: ICommandManager
+        @inject(INotebookProvider) notebookProvider: INotebookProvider
     ) {
         super(
             serviceContainer,
@@ -163,8 +151,7 @@ export class TestNativeEditorProviderOld extends TestNativeEditorProviderMixin(N
             cmdManager,
             dataScienceErrorHandler,
             storage,
-            notebookProvider,
-            commandManager
+            notebookProvider
         );
     }
 }

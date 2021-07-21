@@ -1505,7 +1505,12 @@ export interface CustomEditorProvider<T extends CustomDocument = CustomDocument>
 // #endregion
 
 export const ICustomEditorService = Symbol('ICustomEditorService');
-export interface ICustomEditorService {}
+export interface ICustomEditorService {
+    /**
+     * Opens a file with a custom editor
+     */
+    openEditor(file: Uri, viewType: string): Promise<void>;
+}
 export const IClipboard = Symbol('IClipboard');
 export interface IClipboard {
     /**

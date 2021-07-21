@@ -85,20 +85,9 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(ICommandManager) commandManager: ICommandManager
+        @inject(INotebookProvider) notebookProvider: INotebookProvider
     ) {
-        super(
-            serviceContainer,
-            asyncRegistry,
-            disposables,
-            workspace,
-            configuration,
-            storage,
-            notebookProvider,
-            fs,
-            commandManager
-        );
+        super(serviceContainer, asyncRegistry, disposables, workspace, configuration, storage, notebookProvider, fs);
 
         // No live share sync required as open document from vscode will give us our contents.
 
