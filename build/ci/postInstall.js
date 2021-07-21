@@ -117,14 +117,9 @@ function makeVariableExplorerAlwaysSorted() {
     }
 }
 
-function installWithoutScripts() {
-    spawnSync('npm', ['install', '--ignore-scripts']);
-}
-
 (async () => {
     makeVariableExplorerAlwaysSorted();
     fixJupyterLabDTSFiles();
     createJupyterKernelWithoutSerialization();
     await downloadRendererExtension();
-    installWithoutScripts();
 })().catch((ex) => console.error('Encountered error while running postInstall step', ex));
