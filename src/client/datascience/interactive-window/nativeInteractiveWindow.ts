@@ -454,7 +454,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                     if (cell.cell_type === 'code') {
                         // Then send the combined output to the UI
                         const converted = cell.outputs.map(cellOutputToVSCCellOutput);
-                        temporaryExecution.replaceOutput(converted);
+                        void temporaryExecution.replaceOutput(converted);
                         const executionCount = cell.execution_count;
                         if (executionCount) {
                             temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10);
