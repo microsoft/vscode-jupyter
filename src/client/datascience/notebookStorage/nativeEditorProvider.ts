@@ -17,7 +17,6 @@ import {
     CustomEditorProvider,
     IApplicationShell,
     ICommandManager,
-    ICustomEditorService,
     IDocumentManager,
     ILiveShareApi,
     IWebviewPanelProvider,
@@ -108,20 +107,12 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         @inject(IDisposableRegistry) protected readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IConfigurationService) protected readonly configuration: IConfigurationService,
-        @inject(ICustomEditorService) private customEditorService: ICustomEditorService,
         @inject(INotebookStorageProvider) protected readonly storage: INotebookStorageProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IFileSystem) protected readonly fs: IFileSystem
+        @inject(IFileSystem) protected readonly fs: IFileSystem,
+        @inject(ICommandManager) private commandManager: ICommandManager
     ) {
         traceInfo(`id is ${this._id}`);
-        // Register for the custom editor service.
-        customEditorService.registerCustomEditorProvider(NativeEditorProvider.customEditorViewType, this, {
-            webviewOptions: {
-                enableFindWidget: true,
-                retainContextWhenHidden: true
-            },
-            supportsMultipleEditorsPerDocument: false
-        });
     }
 
     public async openCustomDocument(
@@ -192,7 +183,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         disposable = this._onDidOpenNotebookEditor.event(handler);
 
         // Send an open command.
-        this.customEditorService.openEditor(file, NativeEditorProvider.customEditorViewType).ignoreErrors();
+        void this.commandManager.executeCommand('vscode.openWith', file, NativeEditorProvider.customEditorViewType);
 
         // Promise should resolve when the file opens.
         return deferred.promise;

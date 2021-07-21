@@ -6,6 +6,7 @@ const colors = require('colors/safe');
 const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
+const { spawnSync } = require('child_process');
 const { downloadRendererExtension } = require('./downloadRenderer');
 
 /**
@@ -116,9 +117,14 @@ function makeVariableExplorerAlwaysSorted() {
     }
 }
 
+function installWithoutScripts() {
+    spawnSync('npm', ['install', '--ignore-scripts']);
+}
+
 (async () => {
     makeVariableExplorerAlwaysSorted();
     fixJupyterLabDTSFiles();
     createJupyterKernelWithoutSerialization();
     await downloadRendererExtension();
+    installWithoutScripts();
 })().catch((ex) => console.error('Encountered error while running postInstall step', ex));
