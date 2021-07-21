@@ -82,7 +82,7 @@ export class MockCustomEditorService implements ICustomEditorService {
         if (!this.provider) {
             this.provider = (this.serviceContainer.get<INotebookEditorProvider>(
                 INotebookEditorProvider
-            ) as any) as CustomEditorProvider;
+            ) as unknown) as CustomEditorProvider;
             // Sign up for close so we can clear our resolved map
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ((this.provider as any) as INotebookEditorProvider).onDidCloseNotebookEditor(this.closedEditor.bind(this));

@@ -187,7 +187,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             // Use service container to prevent circular dependency
             this.serviceContainer
                 .get<ICustomEditorService>(ICustomEditorService)
-                .openEditor(file, NativeEditorProvider.customEditorViewType);
+                .openEditor(file, NativeEditorProvider.customEditorViewType)
+                .ignoreErrors();
         }
 
         // Promise should resolve when the file opens.
