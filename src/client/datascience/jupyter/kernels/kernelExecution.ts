@@ -247,7 +247,8 @@ export class KernelExecution implements IDisposable {
         if (!kernel) {
             kernel = this.kernelProvider.getOrCreate(document, {
                 metadata: this.metadata,
-                controller: this.controller
+                controller: this.controller,
+                resourceUri: document.uri
             });
         }
         if (!kernel) {

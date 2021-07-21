@@ -154,8 +154,9 @@ export type KernelOptions = {
     controller: NotebookController;
     /**
      * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
+     * In the case of Notebooks, just pass the uri of the notebook.
      */
-    resourceUri?: Uri;
+    resourceUri: Resource;
 };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {

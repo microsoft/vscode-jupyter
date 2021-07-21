@@ -255,7 +255,8 @@ export class VSCodeNotebookController implements Disposable {
         traceInfo(`Execute Cell ${cell.index} ${cell.notebook.uri.toString()}`);
         const kernel = this.kernelProvider.getOrCreate(cell.notebook, {
             metadata: this.kernelConnection,
-            controller: this.controller
+            controller: this.controller,
+            resourceUri: doc.uri
         });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
@@ -390,7 +391,8 @@ export class VSCodeNotebookController implements Disposable {
         // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
         const newKernel = this.kernelProvider.getOrCreate(document, {
             metadata: selectedKernelConnectionMetadata,
-            controller: this.controller
+            controller: this.controller,
+            resourceUri: document.uri // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
         });
         traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}`);
 
