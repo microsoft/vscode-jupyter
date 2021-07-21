@@ -225,6 +225,33 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         this.sendRequestToJupyterSession(message);
     }
 
+    private runByLineScope(frameId: number): void {
+        const message: DebugProtocol.ScopesRequest = {
+            seq: this.runByLineSeq,
+            type: 'request',
+            command: 'scopes',
+            arguments: {
+                frameId: frameId
+            }
+        };
+
+        this.sendRequestToJupyterSession(message);
+    }
+
+    private RunByLineVariables(variablesReference: number): void {
+        const message: DebugProtocol.VariablesRequest = {
+            seq: this.runByLineSeq,
+            type: 'request',
+            command: 'variables',
+            arguments: {
+                variablesReference: variablesReference
+            }
+        };
+
+        this.sendRequestToJupyterSession(message);
+        // this.sendMessage.fire(message);
+    }
+
     private async dumpCellsThatRanBeforeDebuggingBegan() {
         this.cellMap.getCellsAnClearQueue(this.notebookDocument).forEach(async (cell) => {
             await this.dumpCell(cell.document.uri.toString());
@@ -331,8 +358,21 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         });
 
         if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
+            (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
+                this.runByLineScope(sf.id);
+                // check if sf.source?.path is on the cell, if its not, stepInto again
+            });
+        }
+
+        if ((message as DebugProtocol.ScopesResponse).command === 'scopes') {
+            (message as DebugProtocol.ScopesResponse).body.scopes.forEach((s) => {
+                this.RunByLineVariables(s.variablesReference);
+            });
+        }
+
+        if ((message as DebugProtocol.VariablesResponse).command === 'variables') {
             console.error('-----------------------');
-            console.error((message as DebugProtocol.StackTraceResponse).body.stackFrames[0].source);
+            console.error(message as DebugProtocol.VariablesResponse);
         }
 
         this.sendMessage.fire(message);

@@ -13,6 +13,7 @@ import {
     DebugConfigurationProvider,
     DebugConsole,
     DebugProtocolBreakpoint,
+    DebugProtocolMessage,
     DebugSession,
     DebugSessionCustomEvent,
     Disposable,
@@ -250,6 +251,18 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
 
     public stop(): void {
         this.onClose();
+    }
+
+    public requestKernelDebugAdapterVariables(msg: DebugProtocolMessage): void {
+        this.debugAdapterTrackers.forEach((d) => {
+            d.onDidSendMessage!(msg);
+        });
+    }
+
+    public startKernelDebugAdapterSession(session: DebugSession): void {
+        this.debugAdapterTrackers = this.debugAdapterTrackerFactories.map(
+            (f) => f.createDebugAdapterTracker(session) as DebugAdapterTracker // NOSONAR
+        );
     }
 
     private sendToTrackers(args: any) {

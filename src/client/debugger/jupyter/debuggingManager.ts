@@ -11,7 +11,11 @@ import {
     DebugAdapterInlineImplementation,
     DebugSession,
     NotebookCell,
-    DebugSessionOptions
+    DebugSessionOptions,
+    DebugAdapterTrackerFactory,
+    DebugAdapterTracker,
+    ProviderResult,
+    DebugConfiguration
 } from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
@@ -28,6 +32,7 @@ import { traceError } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IFileSystem } from '../../common/platform/types';
+import { DebugLocationTracker } from '../../datascience/debugLocationTracker';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -37,29 +42,14 @@ class Debugger {
 
     constructor(
         public readonly document: NotebookDocument,
-        public readonly cell?: NotebookCell,
+        public readonly config: DebugConfiguration,
         options?: DebugSessionOptions
     ) {
-        const name = cell
-            ? `${path.basename(document.uri.toString())}?RBL=${cell.index}`
-            : path.basename(document.uri.toString());
         this.session = new Promise<DebugSession>((resolve, reject) => {
             this.resolveFunc = resolve;
             this.rejectFunc = reject;
 
-            debug
-                .startDebugging(
-                    undefined,
-                    {
-                        type: DataScience.pythonKernelDebugAdapter(),
-                        name: name,
-                        request: 'attach',
-                        internalConsoleOptions: 'neverOpen',
-                        __document: document.uri.toString()
-                    },
-                    options
-                )
-                .then(undefined, reject);
+            debug.startDebugging(undefined, config, options).then(undefined, reject);
         });
     }
 
@@ -84,11 +74,12 @@ class Debugger {
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
 @injectable()
-export class DebuggingManager implements IExtensionSingleActivationService, IDisposable {
+export class DebuggingManager implements IExtensionSingleActivationService, DebugAdapterTrackerFactory, IDisposable {
     private debuggingInProgress: ContextKey;
     private runByLineInProgress: ContextKey;
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
     private notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapter>();
+    private activeTrackers: Map<string, DebugLocationTracker> = new Map<string, DebugLocationTracker>();
     private readonly disposables: IDisposable[] = [];
 
     public constructor(
@@ -99,8 +90,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystem) private fs: IFileSystem
-    ) {
+        @inject(IFileSystem) private fs: IFileSystem // @inject(IJupyterDebugService) // @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
+    ) // private debugService: IJupyterDebugService
+    {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
         this.updateToolbar(false);
@@ -158,6 +150,15 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
                                     this.commandManager,
                                     this.fs
                                 );
+                                // this.disposables.push(
+                                //     adapter.onDidSendMessage((msg: DebugProtocolMessage) => {
+                                //         this.debugService.requestKernelDebugAdapterVariables(msg);
+                                //         // const tracker = this.activeTrackers.get(session.id);
+                                //         // if (tracker) {
+                                //         //     // tracker.onDidSendMessage(msg as DebugProtocol.Response);
+                                //         // }
+                                //     })
+                                // );
                                 this.notebookToDebugAdapter.set(debug.document, adapter);
                                 return new DebugAdapterInlineImplementation(adapter);
                             } else {
@@ -169,6 +170,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
                     return;
                 }
             }),
+
+            debug.registerDebugAdapterTrackerFactory(DataScience.pythonKernelDebugAdapter(), this),
 
             this.commandManager.registerCommand(DSCommands.DebugNotebook, () => {
                 const editor = this.vscNotebook.activeNotebookEditor;
@@ -211,8 +214,23 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
         );
     }
 
+    public createDebugAdapterTracker(session: DebugSession): ProviderResult<DebugAdapterTracker> {
+        const result = new DebugLocationTracker(session.id);
+        this.activeTrackers.set(session.id, result);
+        result.sessionEnded(this.onSessionEnd.bind(this));
+        // result.debugLocationUpdated(this.onLocationUpdated.bind(this));
+        // this.onLocationUpdated();
+        return result;
+    }
+
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
+    }
+
+    private onSessionEnd(locationTracker: DebugLocationTracker) {
+        if (locationTracker.sessionId) {
+            this.activeTrackers.delete(locationTracker.sessionId);
+        }
     }
 
     private updateToolbar(debugging: boolean) {
@@ -226,11 +244,33 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
     private async startDebugging(doc: NotebookDocument, cell?: NotebookCell, options?: DebugSessionOptions) {
         let dbg = this.notebookToDebugger.get(doc);
         if (!dbg) {
-            dbg = new Debugger(doc, cell, options);
+            const name = cell
+                ? `${path.basename(doc.uri.toString())}?RBL=${cell.index}`
+                : path.basename(doc.uri.toString());
+            const justMyCode = cell ? true : false;
+            const config: DebugConfiguration = {
+                type: DataScience.pythonKernelDebugAdapter(),
+                name: name,
+                request: 'attach',
+                internalConsoleOptions: 'neverOpen',
+                justMyCode: justMyCode,
+                port: 666,
+                __document: doc.uri.toString()
+            };
+            dbg = new Debugger(doc, config, options);
             this.notebookToDebugger.set(doc, dbg);
+
+            // if (cell) {
+            //     if (debugging) {
+            //         this.debugService.requestVariables();
+            //     }
+            // } else {
+            //     this.debugService.startDebugging(undefined, config);
+            // }
 
             try {
                 await dbg.session;
+                // this.debugService.startKernelDebugAdapterSession(sesh);
 
                 if (!cell) {
                     // toggle the breakpoint margin
