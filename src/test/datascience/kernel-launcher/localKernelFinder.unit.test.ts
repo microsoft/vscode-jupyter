@@ -278,7 +278,7 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
                 ),
                 jupyterPaths,
                 instance(memeto),
-                fs
+                instance(fs)
             );
         });
         teardown(() => {
