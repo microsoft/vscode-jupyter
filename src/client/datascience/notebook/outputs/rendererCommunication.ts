@@ -11,8 +11,6 @@ import { noop } from '../../../common/utils/misc';
 import { JupyterNotebookRenderer } from '../constants';
 import { PlotSaveHandler } from './plotSaveHandler';
 
-type RendererMessageTypes = { type: 'saveAs'; outputId: string; mimeType: string };
-
 @injectable()
 export class RendererCommunication implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
