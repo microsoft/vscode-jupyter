@@ -28,7 +28,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnviro
 import { IPythonExtensionChecker } from '../../../client/api/types';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { arePathsSame } from '../../common';
-import { Uri } from 'vscode';
+import { Memento, Uri } from 'vscode';
 import { IExtensions } from '../../../client/common/types';
 import { LocalKnownPathKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
 import { JupyterPaths } from '../../../client/datascience/kernel-launcher/jupyterPaths';
@@ -260,6 +260,9 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
                 jupyterPaths,
                 instance(extensionChecker)
             );
+            const memeto = mock<Memento>();
+            when(memeto.get('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenReturn([]);
+            when(memeto.update('JUPYTER_GLOBAL_KERNELSPECS', anything())).thenResolve();
             kernelFinder = new LocalKernelFinder(
                 instance(interpreterService),
                 instance(extensionChecker),
@@ -273,7 +276,9 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
                     instance(extensionChecker),
                     nonPythonKernelSpecFinder
                 ),
-                jupyterPaths
+                jupyterPaths,
+                instance(memeto),
+                instance(fs)
             );
         });
         teardown(() => {

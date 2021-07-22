@@ -33,7 +33,7 @@ import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetada
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { INotebookProvider } from '../types';
-import { getNotebookMetadata } from './helpers/helpers';
+import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
@@ -60,7 +60,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
-
+    private activeInterpreterControllerPromise?: Promise<VSCodeNotebookController | undefined>;
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
 
@@ -99,14 +99,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
     public async getInteractiveController(): Promise<VSCodeNotebookController | undefined> {
-        // Fetch the active interpreter and use the matching controller
-        const api = await this.pythonApi.getApi();
-        const activeInterpreter = await api.getActiveInterpreter();
-
-        if (!activeInterpreter) {
-            return;
-        }
-        return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
+        return this.createActiveInterpreterController();
     }
 
     get onNotebookControllerSelected() {
@@ -134,9 +127,16 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (!this.controllersPromise) {
             const stopWatch = new StopWatch();
 
+            // Fetch the list of kernels ignoring the cache.
+            Promise.all([
+                this.loadNotebookControllersImpl(true, 'ignoreCache'),
+                this.loadNotebookControllersImpl(false, 'ignoreCache')
+            ]).catch((ex) => console.error('Failed to fetch controllers without cache', ex));
+
+            // Fetch the list of kernels from the cache (note: if there's nothing in the case, it will fallback to searching).
             this.controllersPromise = Promise.all([
-                this.loadNotebookControllersImpl(true),
-                this.loadNotebookControllersImpl(false)
+                this.loadNotebookControllersImpl(true, 'useCache'),
+                this.loadNotebookControllersImpl(false, 'useCache')
             ])
                 .then(() => noop())
                 .catch((error) => {
@@ -188,13 +188,37 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         );
     }
 
+    private async createActiveInterpreterController() {
+        if (this.activeInterpreterControllerPromise) {
+            return this.activeInterpreterControllerPromise;
+        }
+        const promise = async () => {
+            // Fetch the active interpreter and use the matching controller
+            const api = await this.pythonApi.getApi();
+            const activeInterpreter = await api.getActiveInterpreter();
+
+            if (!activeInterpreter) {
+                return;
+            }
+            return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
+        };
+        this.activeInterpreterControllerPromise = promise();
+        return this.activeInterpreterControllerPromise;
+    }
     /**
      * Turn all our kernelConnections that we know about into registered NotebookControllers
      */
-    private async loadNotebookControllersImpl(listLocalNonPythonKernels: boolean): Promise<void> {
+    private async loadNotebookControllersImpl(
+        listLocalNonPythonKernels: boolean,
+        useCache?: 'useCache' | 'ignoreCache'
+    ): Promise<void> {
         const cancelToken = new CancellationTokenSource();
         this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
-        const connections = await this.getKernelConnectionMetadata(listLocalNonPythonKernels, cancelToken.token);
+        const connections = await this.getKernelConnectionMetadata(
+            listLocalNonPythonKernels,
+            cancelToken.token,
+            useCache
+        );
         // Now create the actual controllers from our connections
         this.createNotebookControllers(connections);
         // If we're listing Python kernels & there aren't any, then add a placeholder for `Python` which will prompt users to install python
@@ -269,6 +293,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         traceInfoIf(isCI, `Clear controller mapping for ${document.uri.toString()}`);
         const loadControllersPromise = this.loadNotebookControllers();
 
+        if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
+            // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
+            this.createActiveInterpreterController().catch(noop);
+        }
         try {
             let preferredConnection: KernelConnectionMetadata | undefined;
             if (this.isLocalLaunch) {
@@ -412,12 +440,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     private async getKernelConnectionMetadata(
         listLocalNonPythonKernels: boolean,
-        token: CancellationToken
+        token: CancellationToken,
+        useCache: 'useCache' | 'ignoreCache' = 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
         if (this.isLocalLaunch) {
             return listLocalNonPythonKernels
-                ? this.localKernelFinder.listNonPythonKernels(token)
-                : this.localKernelFinder.listKernels(undefined, token);
+                ? this.localKernelFinder.listNonPythonKernels(token, useCache)
+                : this.localKernelFinder.listKernels(undefined, token, useCache);
         } else {
             if (listLocalNonPythonKernels) {
                 return [];
