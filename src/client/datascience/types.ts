@@ -267,7 +267,7 @@ export interface INotebookServerOptions {
     allowUI(): boolean;
 }
 
-export interface IHoverProvider extends HoverProvider { }
+export interface IHoverProvider extends HoverProvider {}
 export const IHoverProvider = Symbol('IHoverProvider');
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');

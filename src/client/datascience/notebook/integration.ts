@@ -4,11 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, languages, Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import {
-    IApplicationEnvironment,
-    ICommandManager,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { NotebookCellScheme, PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -32,7 +28,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.

@@ -5,11 +5,7 @@
 
 import { assert } from 'chai';
 import { Memento, workspace, WorkspaceConfiguration } from 'vscode';
-import {
-    IApplicationEnvironment,
-    IWorkspaceService,
-    ICommandManager
-} from '../../../client/common/application/types';
+import { IApplicationEnvironment, IWorkspaceService, ICommandManager } from '../../../client/common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../../client/common/constants';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../../client/common/types';
 import {
