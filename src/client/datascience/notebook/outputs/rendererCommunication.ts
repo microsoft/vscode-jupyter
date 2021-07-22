@@ -29,7 +29,7 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
             return;
         }
 
-        const api = notebooks.createRendererMessaging<unknown, RendererMessageTypes>(JupyterNotebookRenderer);
+        const api = notebooks.createRendererMessaging(JupyterNotebookRenderer);
         api.onDidReceiveMessage(
             ({ editor, message }) => {
                 if (message.type === 'saveAs') {
