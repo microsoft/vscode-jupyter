@@ -178,6 +178,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                 let somethingIsInvalid = false;
                 const promises: Promise<void>[] = [];
                 if (item.interpreter?.path) {
+                    // Possible the interpreter no longer exists, in such cases, exclude this cached kernel from the list.
                     promises.push(
                         this.fs
                             .localFileExists(item.interpreter.path)
@@ -190,6 +191,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                     );
                 }
                 if (item.kind === 'startUsingKernelSpec' && item.kernelSpec?.specFile) {
+                    // Possible the kernelspec file no longer exists, in such cases, exclude this cached kernel from the list.
                     promises.push(
                         this.fs
                             .localFileExists(item.kernelSpec.specFile)
