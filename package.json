@@ -1568,9 +1568,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "CustomEditor"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "List of experiment to opt into. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
                     "scope": "application"
@@ -1579,10 +1577,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "NativeNotebookEditor",
-                            "CustomEditor"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
                     "scope": "application"
