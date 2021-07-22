@@ -249,7 +249,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         };
 
         this.sendRequestToJupyterSession(message);
-        // this.sendMessage.fire(message);
     }
 
     private async dumpCellsThatRanBeforeDebuggingBegan() {
@@ -368,11 +367,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             (message as DebugProtocol.ScopesResponse).body.scopes.forEach((s) => {
                 this.RunByLineVariables(s.variablesReference);
             });
-        }
-
-        if ((message as DebugProtocol.VariablesResponse).command === 'variables') {
-            console.error('-----------------------');
-            console.error(message as DebugProtocol.VariablesResponse);
         }
 
         this.sendMessage.fire(message);

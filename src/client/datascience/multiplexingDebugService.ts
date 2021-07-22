@@ -145,10 +145,7 @@ export class MultiplexingDebugService implements IJupyterDebugService {
     }
 
     public requestKernelDebugAdapterVariables(msg: DebugProtocolMessage): void {
-        // if (this.lastStartedService === this.jupyterDebugService) {
         return this.jupyterDebugService.requestKernelDebugAdapterVariables(msg);
-        // }
-        // throw new Error('Requesting jupyter specific variables when not debugging.');
     }
 
     public startKernelDebugAdapterSession(session: DebugSession): void {

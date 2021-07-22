@@ -170,7 +170,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, Debu
                 }
             }),
 
-            debug.registerDebugAdapterTrackerFactory(DataScience.pythonKernelDebugAdapter(), this),
+            this.debugService.registerDebugAdapterTrackerFactory(DataScience.pythonKernelDebugAdapter(), this),
 
             this.commandManager.registerCommand(DSCommands.DebugNotebook, () => {
                 const editor = this.vscNotebook.activeNotebookEditor;
@@ -217,8 +217,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, Debu
         const result = new DebugLocationTracker(session.id);
         this.activeTrackers.set(session.id, result);
         result.sessionEnded(this.onSessionEnd.bind(this));
-        // result.debugLocationUpdated(this.onLocationUpdated.bind(this));
-        // this.onLocationUpdated();
         return result;
     }
 
