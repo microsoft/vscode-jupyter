@@ -172,7 +172,6 @@ module.exports = {
         'src/test/datascience/shiftEnterBanner.unit.test.ts',
         'src/test/datascience/executionServiceMock.ts',
         'src/test/datascience/mockCommandManager.ts',
-        'src/test/datascience/mockCustomEditorService.ts',
         'src/test/datascience/mockInputBox.ts',
         'src/test/datascience/mockDocumentManager.ts',
         'src/test/datascience/cellMatcher.unit.test.ts',

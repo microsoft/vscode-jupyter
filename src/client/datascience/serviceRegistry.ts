@@ -233,12 +233,12 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
     serviceManager.addSingleton<INotebookEditorProvider>(OurNotebookProvider, NativeEditorProvider);
+    serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProviderWrapper);
     serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookEditorCompatibilitySupport);
     serviceManager.add<NotebookEditorCompatibilitySupport>(NotebookEditorCompatibilitySupport, NotebookEditorCompatibilitySupport);
     if (!useVSCodeNotebookAPI) {
         serviceManager.add<INotebookEditor>(INotebookEditor, NativeEditor);
-        serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     }
 
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);

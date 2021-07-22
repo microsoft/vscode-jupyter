@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { Telemetry } from '../../datascience/constants';
+import { OurNotebookProvider, Telemetry } from '../../datascience/constants';
 import {
     NewEditorAssociationSetting,
     ensureUpdatedEditorAssociationSettingFormat
@@ -12,7 +12,6 @@ import {
 import { sendTelemetryEvent } from '../../telemetry';
 
 import { UseCustomEditorApi } from '../constants';
-import { InvalidCustomEditor } from './invalidCustomEditor';
 import { CustomEditorProvider, ICommandManager, ICustomEditorService, IWorkspaceService } from './types';
 
 export const ViewType = 'jupyter.notebook.ipynb';
@@ -20,29 +19,14 @@ export const ViewType = 'jupyter.notebook.ipynb';
 @injectable()
 export class CustomEditorService implements ICustomEditorService, IExtensionSingleActivationService {
     constructor(
-        @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(UseCustomEditorApi) private readonly useCustomEditorApi: boolean,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(OurNotebookProvider) private readonly editorProvider: CustomEditorProvider,
+        @inject(ICommandManager) private commandManager: ICommandManager
     ) {}
 
-    public registerCustomEditorProvider(
-        viewType: string,
-        provider: CustomEditorProvider,
-        options?: {
-            readonly webviewOptions?: vscode.WebviewPanelOptions;
-            readonly supportsMultipleEditorsPerDocument?: boolean;
-        }
-    ): vscode.Disposable {
-        if (this.useCustomEditorApi) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return (vscode.window as any).registerCustomEditorProvider(viewType, provider, options);
-        } else {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return (vscode.window as any).registerCustomEditorProvider(viewType, new InvalidCustomEditor(), options);
-        }
-    }
-
     public async openEditor(file: vscode.Uri, viewType: string): Promise<void> {
+        // This is necessary to abstract the open for functional tests.
         if (this.useCustomEditorApi) {
             await this.commandManager.executeCommand('vscode.openWith', file, viewType);
         }
@@ -75,5 +59,15 @@ export class CustomEditorService implements ICustomEditorService, IExtensionSing
         } catch (ex) {
             sendTelemetryEvent(Telemetry.UpdateCustomEditorAssociation, undefined, { type: updateType! }, ex, true);
         }
+
+        // Always register our custom editor provider even if not in the experiment. This allows us
+        // to handle custom editor requests even when not the default
+        vscode.window.registerCustomEditorProvider('jupyter.notebook.ipynb', this.editorProvider, {
+            webviewOptions: {
+                enableFindWidget: true,
+                retainContextWhenHidden: true
+            },
+            supportsMultipleEditorsPerDocument: false
+        });
     }
 }

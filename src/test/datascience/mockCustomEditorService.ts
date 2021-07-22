@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { CancellationTokenSource, Disposable, Uri, WebviewPanel, WebviewPanelOptions } from 'vscode';
+import { CancellationTokenSource, Uri, WebviewPanel } from 'vscode';
 import { CancellationToken } from 'vscode-languageclient/node';
 import {
     CustomDocument,
@@ -16,6 +16,7 @@ import { NativeEditorProvider } from '../../client/datascience/notebookStorage/n
 import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
 import { INotebookStorageProvider } from '../../client/datascience/notebookStorage/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import { IServiceContainer } from '../../client/ioc/types';
 import { createTemporaryFile } from '../utils/fs';
 
 @injectable()
@@ -28,7 +29,8 @@ export class MockCustomEditorService implements ICustomEditorService {
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider
+        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
+        @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer
     ) {
         disposableRegistry.push(
             commandManager.registerCommand('workbench.action.files.save', this.onFileSave.bind(this))
@@ -38,40 +40,8 @@ export class MockCustomEditorService implements ICustomEditorService {
         );
     }
 
-    public registerCustomEditorProvider(
-        _viewType: string,
-        provider: CustomEditorProvider,
-        _options?: {
-            readonly webviewOptions?: WebviewPanelOptions;
-
-            /**
-             * Only applies to `CustomReadonlyEditorProvider | CustomEditorProvider`.
-             *
-             * Indicates that the provider allows multiple editor instances to be open at the same time for
-             * the same resource.
-             *
-             * If not set, VS Code only allows one editor instance to be open at a time for each resource. If the
-             * user tries to open a second editor instance for the resource, the first one is instead moved to where
-             * the second one was to be opened.
-             *
-             * When set, users can split and create copies of the custom editor. The custom editor must make sure it
-             * can properly synchronize the states of all editor instances for a resource so that they are consistent.
-             */
-            readonly supportsMultipleEditorsPerDocument?: boolean;
-        }
-    ): Disposable {
-        // Only support one view type, so just save the provider
-        this.provider = provider;
-
-        // Sign up for close so we can clear our resolved map
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ((this.provider as any) as INotebookEditorProvider).onDidCloseNotebookEditor(this.closedEditor.bind(this));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ((this.provider as any) as INotebookEditorProvider).onDidOpenNotebookEditor(this.openedEditor.bind(this));
-
-        return { dispose: noop };
-    }
     public async openEditor(file: Uri, _viewType: string): Promise<void> {
+        this.registerProvider();
         if (!this.provider) {
             throw new Error('Opening before registering');
         }
@@ -106,6 +76,19 @@ export class MockCustomEditorService implements ICustomEditorService {
                 .then((m) => m?.applyEdits([e as NotebookModelChange]))
                 .ignoreErrors();
         });
+    }
+
+    private registerProvider() {
+        if (!this.provider) {
+            this.provider = (this.serviceContainer.get<INotebookEditorProvider>(
+                INotebookEditorProvider
+            ) as unknown) as CustomEditorProvider;
+            // Sign up for close so we can clear our resolved map
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((this.provider as any) as INotebookEditorProvider).onDidCloseNotebookEditor(this.closedEditor.bind(this));
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((this.provider as any) as INotebookEditorProvider).onDidOpenNotebookEditor(this.openedEditor.bind(this));
+        }
     }
 
     private popAndApply(
