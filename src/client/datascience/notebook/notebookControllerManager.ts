@@ -60,7 +60,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
-
+    private activeInterpreterControllerPromise: Promise<VSCodeNotebookController | undefined>;
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
 
@@ -189,14 +189,21 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     private async createActiveInterpreterController() {
-        // Fetch the active interpreter and use the matching controller
-        const api = await this.pythonApi.getApi();
-        const activeInterpreter = await api.getActiveInterpreter();
-
-        if (!activeInterpreter) {
-            return;
+        if (this.activeInterpreterControllerPromise) {
+            return this.activeInterpreterControllerPromise;
         }
-        return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
+        const promise = async () => {
+            // Fetch the active interpreter and use the matching controller
+            const api = await this.pythonApi.getApi();
+            const activeInterpreter = await api.getActiveInterpreter();
+
+            if (!activeInterpreter) {
+                return;
+            }
+            return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
+        };
+        this.activeInterpreterControllerPromise = promise();
+        return this.activeInterpreterControllerPromise;
     }
     /**
      * Turn all our kernelConnections that we know about into registered NotebookControllers
