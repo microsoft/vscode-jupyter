@@ -4,10 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { languages } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import {
-    IApplicationEnvironment,
-    ICommandManager,
-    IVSCodeNotebook} from '../../common/application/types';
+import { IApplicationEnvironment, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { NotebookCellScheme, PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
