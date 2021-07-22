@@ -30,6 +30,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { noop } from '../../common/utils/misc';
 import { createPromiseFromCancellation } from '../../common/cancellation';
 
+const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS';
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
@@ -160,7 +161,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
         const kernels = this.filterKernels(nonPythonKernelSpecs.concat(pythonRelatedKernelSpecs));
         this.lastFetchedKernelsWithoutCache = kernels;
-        this.globalState.update('JUPYTER_GLOBAL_KERNELSPECS', kernels).then(noop, (ex) => {
+        this.globalState.update(GlobalKernelSpecsCacheKey, kernels).then(noop, (ex) => {
             console.error('Failed to update global kernel cache', ex);
         });
         return kernels;
@@ -171,7 +172,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     ): Promise<LocalKernelConnectionMetadata[]> {
         const values = this.lastFetchedKernelsWithoutCache.length
             ? this.lastFetchedKernelsWithoutCache
-            : this.globalState.get<LocalKernelConnectionMetadata[]>('JUPYTER_GLOBAL_KERNELSPECS', []);
+            : this.globalState.get<LocalKernelConnectionMetadata[]>(GlobalKernelSpecsCacheKey, []);
         const validValues: LocalKernelConnectionMetadata[] = [];
         const promise = Promise.all(
             values.map(async (item) => {
