@@ -128,7 +128,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     if (
                         kernelspec.language === PYTHON_LANGUAGE &&
                         hideDefaultKernelSpecs &&
-                        kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName)
+                        (kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
+                            kernelspec.display_name.toLowerCase() === 'python 3 (ipykernel)')
                     ) {
                         traceInfo(`Hiding default kernel spec ${kernelspec.display_name}, ${kernelspec.argv[0]}`);
                         return false;

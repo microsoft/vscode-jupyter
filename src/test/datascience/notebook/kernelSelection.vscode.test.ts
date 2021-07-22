@@ -55,7 +55,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     let venvKernelPythonPath: string;
     let venvNoRegPythonPath: string;
     let venvNoKernelDisplayName: string;
-    let venvKernelDisplayName: string;
     let vscodeNotebook: IVSCodeNotebook;
     this.timeout(60_000); // Slow test, we need to uninstall/install ipykernel.
     /*
@@ -101,7 +100,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         venvKernelPythonPath = interpreter2.path;
         venvNoRegPythonPath = interpreter3.path;
         venvNoKernelDisplayName = IS_REMOTE_NATIVE_TEST ? interpreter1.displayName || '.venvnokernel' : '.venvnokernel';
-        venvKernelDisplayName = IS_REMOTE_NATIVE_TEST ? interpreter2.displayName || '.venvkernel' : '.venvkernel';
 
         // Ensure IPykernel is in all environments.
         const proc = new ProcessService(new BufferDecoder());
@@ -202,7 +200,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
 
         // Change kernel
-        await waitForKernelToChange({ labelOrId: venvKernelDisplayName });
+        await waitForKernelToChange({ interpreterPath: venvKernelPythonPath });
 
         // Clear the cells & execute again
         await commands.executeCommand('notebook.clearAllCellsOutputs');
