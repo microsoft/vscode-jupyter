@@ -234,7 +234,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Sign up for dirty events
         this._model.changed(this.modelChanged.bind(this));
     }
-    public getContent() {
+    public async getContent(): Promise<string> {
         return this.model.getContent();
     }
     @captureTelemetry(Telemetry.SyncAllCells)

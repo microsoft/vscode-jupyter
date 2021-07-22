@@ -14,7 +14,8 @@ import {
     Uri,
     WebviewPanel,
     NotebookCellData,
-    NotebookCell
+    NotebookCell,
+    workspace
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
@@ -38,7 +39,6 @@ import {
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 import { getNotebookMetadata } from './helpers/helpers';
-import { NotebookSerializer } from './notebookSerializer';
 import type { nbformat } from '@jupyterlab/coreutils';
 
 export class NotebookEditor implements INotebookEditor {
@@ -88,8 +88,7 @@ export class NotebookEditor implements INotebookEditor {
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
-        private readonly cellLanguageService: NotebookCellLanguageService,
-        private readonly serializer: NotebookSerializer
+        private readonly cellLanguageService: NotebookCellLanguageService
     ) {
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
     }
@@ -98,8 +97,10 @@ export class NotebookEditor implements INotebookEditor {
         return getNotebookMetadata(this.document);
     }
     onExecutedCode?: Event<string> | undefined;
-    public getContent() {
-        return this.serializer.serializeNotebookDocument(this.document);
+    public async getContent(): Promise<string> {
+        await workspace.saveAll(false);
+        const content = await workspace.fs.readFile(this.document.uri);
+        return new TextDecoder().decode(content);
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {

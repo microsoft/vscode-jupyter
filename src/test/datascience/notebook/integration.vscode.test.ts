@@ -6,14 +6,12 @@
 import { assert } from 'chai';
 import { Memento, workspace, WorkspaceConfiguration } from 'vscode';
 import {
-    IVSCodeNotebook,
     IApplicationEnvironment,
     IWorkspaceService,
     ICommandManager
 } from '../../../client/common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../../client/common/constants';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../../client/common/types';
-import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerializer';
 import {
     HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING,
     NotebookIntegration
@@ -43,10 +41,8 @@ suite('VS Code notebook integration', () => {
         const memento = api.serviceManager.get<Memento>(IMemento, GLOBAL_MEMENTO);
         await memento.update(HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING, false);
         notebookIntegration = (new NotebookIntegration(
-            api.serviceManager.get(IVSCodeNotebook),
             api.serviceManager.get(UseVSCodeNotebookEditorApi),
             api.serviceManager.get(IDisposableRegistry),
-            api.serviceManager.get(NotebookSerializer),
             api.serviceManager.get(IApplicationEnvironment),
             api.serviceManager.get(IWorkspaceService),
             api.serviceManager.get(ICommandManager),

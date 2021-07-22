@@ -5,7 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
-import { QuickPickItem, QuickPickOptions, Uri } from 'vscode';
+import { QuickPickItem, QuickPickOptions, Uri, workspace } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
@@ -69,8 +69,10 @@ export class ExportCommands implements IDisposable {
             : this.notebookProvider.activeEditor;
 
         if (editor) {
+            await workspace.saveAll(false);
+            const contents = await this.fs.readFile(editor.file);
             const interpreter = editor.notebook?.getMatchingInterpreter();
-            return this.export(editor.getContent(), editor.file, undefined, undefined, interpreter);
+            return this.export(contents, editor.file, undefined, undefined, interpreter);
         } else {
             return this.export(undefined, undefined, undefined, undefined);
         }
@@ -90,7 +92,7 @@ export class ExportCommands implements IDisposable {
             if (!activeEditor) {
                 return;
             }
-            contents = contents ? contents : activeEditor.getContent();
+            contents = contents ? contents : await activeEditor.getContent();
             source = source ? source : activeEditor.file;
 
             // At this point also see if the active editor has a candidate interpreter to use

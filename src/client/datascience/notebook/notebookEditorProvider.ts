@@ -10,7 +10,9 @@ import {
     Uri,
     NotebookDocument,
     NotebookEditor as VSCodeNotebookEditor,
-    CancellationTokenSource
+    NotebookData,
+    NotebookCellData,
+    NotebookCellKind
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
@@ -21,7 +23,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
-import { Commands, defaultNotebookFormat, Telemetry } from '../constants';
+import { Commands, Telemetry } from '../constants';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
@@ -29,8 +31,7 @@ import { JupyterNotebookView } from './constants';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
-import type { nbformat } from '@jupyterlab/coreutils';
-import { NotebookSerializer } from './notebookSerializer';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 
 /**
  * Notebook Editor provider used by other parts of DS code.
@@ -131,28 +132,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<INotebookEditor> {
-        const nbJson: nbformat.INotebookContent = {
-            cells: [],
-            metadata: { orig_nbformat: defaultNotebookFormat.major },
-            nbformat: defaultNotebookFormat.major,
-            nbformat_minor: defaultNotebookFormat.minor
-        };
-        if (options?.contents) {
-            Object.assign(nbJson, JSON.parse(options.contents));
-        }
-        if (options?.defaultCellLanguage) {
-            if (!nbJson.metadata) {
-                nbJson.metadata = nbJson.metadata || { orig_nbformat: 4 };
-            }
-            if (nbJson.metadata.language_info) {
-                nbJson.metadata.language_info.name = options.defaultCellLanguage;
-            } else {
-                nbJson.metadata.language_info = { name: options.defaultCellLanguage };
-            }
-        }
-        const json = JSON.stringify(nbJson, undefined, 4);
-        const serializer = this.serviceContainer.get<NotebookSerializer>(NotebookSerializer);
-        const data = serializer.deserializeNotebook(Buffer.from(json, 'utf8'), new CancellationTokenSource().token);
+        // contents will be ignored
+        const cell = new NotebookCellData(NotebookCellKind.Code, '', options?.defaultCellLanguage ?? PYTHON_LANGUAGE);
+        const data = new NotebookData([cell]);
         const doc = await this.vscodeNotebook.openNotebookDocument(JupyterNotebookView, data);
         await this.vscodeNotebook.showNotebookDocument(doc);
         return this.open(doc.uri);
@@ -191,7 +173,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         let editor = this.notebookEditorsByUri.get(uri.toString());
         if (!editor) {
             const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
-            const serializer = this.serviceContainer.get<NotebookSerializer>(NotebookSerializer);
             const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
             editor = new NotebookEditor(
                 doc,
@@ -203,8 +184,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 this.appShell,
                 this.configurationService,
                 this.disposables,
-                this.cellLanguageService,
-                serializer
+                this.cellLanguageService
             );
             this.onEditorOpened(editor);
         }

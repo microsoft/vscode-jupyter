@@ -39,7 +39,7 @@ import { IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
-import { KernelConnectionMetadata, NotebookCellRunState } from './jupyter/kernels/types';
+import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './jupyter/kernels/types';
 import { KernelStateEventArgs } from './notebookExtensibility';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -267,7 +267,7 @@ export interface INotebookServerOptions {
     allowUI(): boolean;
 }
 
-export interface IHoverProvider extends HoverProvider {}
+export interface IHoverProvider extends HoverProvider { }
 export const IHoverProvider = Symbol('IHoverProvider');
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
@@ -493,7 +493,7 @@ export interface IInteractiveWindowProvider {
      * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
      * @param owner file that started this interactive window
      */
-    getOrCreate(owner: Resource): Promise<IInteractiveWindow>;
+    getOrCreate(owner: Resource, kernel?: IKernel): Promise<IInteractiveWindow>;
     /**
      * Synchronizes with the other peers in a live share connection to make sure it has the same window open
      * @param window window on this side
@@ -634,7 +634,7 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
     syncAllCells(): Promise<void>;
-    getContent(): string;
+    getContent(): Promise<string>;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');
