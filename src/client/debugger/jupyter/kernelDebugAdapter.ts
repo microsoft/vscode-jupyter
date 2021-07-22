@@ -118,6 +118,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             if (content.event === 'stopped') {
                 this.runByLineThreadId = content.body.threadId;
                 this.runByLineSeq = content.seq;
+
+                if (this.isRunByLine) {
+                    this.RunByLineStackTrace();
+                }
                 this.sendMessage.fire(msg.content);
             }
         };
@@ -206,6 +210,45 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
                 traceError('Error deleting temporary debug files');
             }
         });
+    }
+
+    private RunByLineStackTrace(): void {
+        const message: DebugProtocol.StackTraceRequest = {
+            seq: this.runByLineSeq,
+            type: 'request',
+            command: 'stackTrace',
+            arguments: {
+                threadId: this.runByLineThreadId
+            }
+        };
+
+        this.sendRequestToJupyterSession(message);
+    }
+
+    private runByLineScope(frameId: number): void {
+        const message: DebugProtocol.ScopesRequest = {
+            seq: this.runByLineSeq,
+            type: 'request',
+            command: 'scopes',
+            arguments: {
+                frameId: frameId
+            }
+        };
+
+        this.sendRequestToJupyterSession(message);
+    }
+
+    private RunByLineVariables(variablesReference: number): void {
+        const message: DebugProtocol.VariablesRequest = {
+            seq: this.runByLineSeq,
+            type: 'request',
+            command: 'variables',
+            arguments: {
+                variablesReference: variablesReference
+            }
+        };
+
+        this.sendRequestToJupyterSession(message);
     }
 
     private async dumpCellsThatRanBeforeDebuggingBegan() {
@@ -312,6 +355,19 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
                 }
             }
         });
+
+        if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
+            (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
+                this.runByLineScope(sf.id);
+                // check if sf.source?.path is on the cell, if its not, stepInto again
+            });
+        }
+
+        if ((message as DebugProtocol.ScopesResponse).command === 'scopes') {
+            (message as DebugProtocol.ScopesResponse).body.scopes.forEach((s) => {
+                this.RunByLineVariables(s.variablesReference);
+            });
+        }
 
         this.sendMessage.fire(message);
     }

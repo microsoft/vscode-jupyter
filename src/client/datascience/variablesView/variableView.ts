@@ -78,6 +78,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.notebookWatcher.onDidExecuteActiveNotebook(this.activeNotebookExecuted, this, this.disposables);
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
+        this.variables.refreshRequired(this.sendRefreshMessage, this, this.disposables);
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
@@ -214,5 +215,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     private async activeNotebookRestarted() {
         this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+    }
+
+    private async sendRefreshMessage() {
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 }

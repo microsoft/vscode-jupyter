@@ -12,6 +12,7 @@ import {
     CodeLens,
     CodeLensProvider,
     DebugConfiguration,
+    DebugProtocolMessage,
     DebugSession,
     Disposable,
     Event,
@@ -1419,6 +1420,8 @@ export interface IJupyterDebugService extends IDebugService {
      * Stop debugging
      */
     stop(): void;
+    requestKernelDebugAdapterVariables(msg: DebugProtocolMessage): void;
+    startKernelDebugAdapterSession(session: DebugSession): void;
 }
 
 export interface IJupyterServerUri {

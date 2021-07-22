@@ -242,8 +242,8 @@ export class DebuggerVariables extends DebugLocationTracker
         } else if (
             message.type === 'response' &&
             message.command === 'variables' &&
-            message.body &&
-            this.currentSeqNumsForVariables.has(message.request_seq)
+            message.body
+            // this.currentSeqNumsForVariables.has(message.request_seq)
         ) {
             // If using the interactive debugger, update our variables.
             // eslint-disable-next-line

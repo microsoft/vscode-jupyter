@@ -90,6 +90,13 @@ export class MockDebuggerService implements IJupyterDebugService {
     public stop(): void {
         return this.activeService.stop();
     }
+    public requestKernelDebugAdapterVariables(): void {
+        return;
+    }
+
+    public startKernelDebugAdapterSession(): void {
+        return;
+    }
     private get activeService(): IJupyterDebugService {
         return this.jupyterDebugService;
     }
