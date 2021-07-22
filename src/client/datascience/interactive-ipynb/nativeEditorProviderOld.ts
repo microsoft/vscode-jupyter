@@ -10,7 +10,6 @@ import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
-    ICustomEditorService,
     IDocumentManager,
     ILiveShareApi,
     IWebviewPanelProvider,
@@ -81,7 +80,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICustomEditorService) customEditorService: ICustomEditorService,
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
@@ -89,17 +87,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
         @inject(INotebookProvider) notebookProvider: INotebookProvider
     ) {
-        super(
-            serviceContainer,
-            asyncRegistry,
-            disposables,
-            workspace,
-            configuration,
-            customEditorService,
-            storage,
-            notebookProvider,
-            fs
-        );
+        super(serviceContainer, asyncRegistry, disposables, workspace, configuration, storage, notebookProvider, fs);
 
         // No live share sync required as open document from vscode will give us our contents.
 

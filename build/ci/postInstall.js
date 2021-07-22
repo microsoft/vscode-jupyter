@@ -6,6 +6,7 @@ const colors = require('colors/safe');
 const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
+const { spawnSync } = require('child_process');
 const { downloadRendererExtension } = require('./downloadRenderer');
 
 /**
