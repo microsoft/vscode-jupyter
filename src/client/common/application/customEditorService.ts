@@ -17,7 +17,7 @@ export class CustomEditorService implements ICustomEditorService, IExtensionSing
         @inject(UseCustomEditorApi) private readonly useCustomEditorApi: boolean,
         @inject(OurNotebookProvider) private readonly editorProvider: CustomEditorProvider,
         @inject(ICommandManager) private commandManager: ICommandManager
-    ) { }
+    ) {}
 
     public async openEditor(file: vscode.Uri, viewType: string): Promise<void> {
         // This is necessary to abstract the open for functional tests.
