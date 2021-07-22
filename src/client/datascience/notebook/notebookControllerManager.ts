@@ -33,7 +33,7 @@ import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetada
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { INotebookProvider } from '../types';
-import { getNotebookMetadata } from './helpers/helpers';
+import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
@@ -99,14 +99,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
     public async getInteractiveController(): Promise<VSCodeNotebookController | undefined> {
-        // Fetch the active interpreter and use the matching controller
-        const api = await this.pythonApi.getApi();
-        const activeInterpreter = await api.getActiveInterpreter();
-
-        if (!activeInterpreter) {
-            return;
-        }
-        return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
+        return this.createActiveInterpreterController();
     }
 
     get onNotebookControllerSelected() {
@@ -195,6 +188,16 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         );
     }
 
+    private async createActiveInterpreterController() {
+        // Fetch the active interpreter and use the matching controller
+        const api = await this.pythonApi.getApi();
+        const activeInterpreter = await api.getActiveInterpreter();
+
+        if (!activeInterpreter) {
+            return;
+        }
+        return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
+    }
     /**
      * Turn all our kernelConnections that we know about into registered NotebookControllers
      */
@@ -283,6 +286,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         traceInfoIf(isCI, `Clear controller mapping for ${document.uri.toString()}`);
         const loadControllersPromise = this.loadNotebookControllers();
 
+        if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
+            // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
+            this.createActiveInterpreterController().catch(noop);
+        }
         try {
             let preferredConnection: KernelConnectionMetadata | undefined;
             if (this.isLocalLaunch) {
