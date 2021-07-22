@@ -254,9 +254,18 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     }
 
     public requestKernelDebugAdapterVariables(msg: DebugProtocolMessage): void {
-        this.debugAdapterTrackers.forEach((d) => {
-            d.onDidSendMessage!(msg);
-        });
+        switch ((msg as any).type) {
+            case 'request':
+                this.debugAdapterTrackers.forEach((d) => {
+                    if (d.onWillReceiveMessage) {
+                        d.onWillReceiveMessage(msg);
+                    }
+                });
+                break;
+            default:
+                this.debugAdapterTrackers.forEach((d) => d.onDidSendMessage!(msg));
+                break;
+        }
     }
 
     public startKernelDebugAdapterSession(session: DebugSession): void {

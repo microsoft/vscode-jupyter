@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import {
     debug,
     NotebookDocument,
@@ -15,18 +15,19 @@ import {
     DebugAdapterTrackerFactory,
     DebugAdapterTracker,
     ProviderResult,
-    DebugConfiguration
+    DebugConfiguration,
+    DebugProtocolMessage
 } from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
-import { IDebuggingCellMap, INotebookProvider } from '../../datascience/types';
+import { IDebuggingCellMap, IJupyterDebugService, INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { INotebookControllerManager } from '../../datascience/notebook/types';
 import { ContextKey } from '../../common/contextKey';
-import { EditorContexts } from '../../datascience/constants';
+import { EditorContexts, Identifiers } from '../../datascience/constants';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
@@ -90,9 +91,11 @@ export class DebuggingManager implements IExtensionSingleActivationService, Debu
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystem) private fs: IFileSystem // @inject(IJupyterDebugService) // @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
-    ) // private debugService: IJupyterDebugService
-    {
+        @inject(IFileSystem) private fs: IFileSystem,
+        @inject(IJupyterDebugService)
+        @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
+        private debugService: IJupyterDebugService
+    ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
         this.updateToolbar(false);
@@ -150,15 +153,11 @@ export class DebuggingManager implements IExtensionSingleActivationService, Debu
                                     this.commandManager,
                                     this.fs
                                 );
-                                // this.disposables.push(
-                                //     adapter.onDidSendMessage((msg: DebugProtocolMessage) => {
-                                //         this.debugService.requestKernelDebugAdapterVariables(msg);
-                                //         // const tracker = this.activeTrackers.get(session.id);
-                                //         // if (tracker) {
-                                //         //     // tracker.onDidSendMessage(msg as DebugProtocol.Response);
-                                //         // }
-                                //     })
-                                // );
+                                this.disposables.push(
+                                    adapter.onDidSendMessage((msg: DebugProtocolMessage) => {
+                                        this.debugService.requestKernelDebugAdapterVariables(msg);
+                                    })
+                                );
                                 this.notebookToDebugAdapter.set(debug.document, adapter);
                                 return new DebugAdapterInlineImplementation(adapter);
                             } else {
@@ -254,23 +253,14 @@ export class DebuggingManager implements IExtensionSingleActivationService, Debu
                 request: 'attach',
                 internalConsoleOptions: 'neverOpen',
                 justMyCode: justMyCode,
-                port: 666,
                 __document: doc.uri.toString()
             };
             dbg = new Debugger(doc, config, options);
             this.notebookToDebugger.set(doc, dbg);
 
-            // if (cell) {
-            //     if (debugging) {
-            //         this.debugService.requestVariables();
-            //     }
-            // } else {
-            //     this.debugService.startDebugging(undefined, config);
-            // }
-
             try {
-                await dbg.session;
-                // this.debugService.startKernelDebugAdapterSession(sesh);
+                const session = await dbg.session;
+                this.debugService.startKernelDebugAdapterSession(session);
 
                 if (!cell) {
                     // toggle the breakpoint margin
