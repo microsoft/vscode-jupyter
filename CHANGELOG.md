@@ -1,5 +1,30 @@
 # Changelog
 
+## 2021.8.2 (22 July 2021)
+
+### Fixes
+
+1. Fix for existing windows not opening when being put into the new native notebook UI
+   ([#6735](https://github.com/Microsoft/vscode-jupyter/issues/6735))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+
 ## 2021.8.1 (19 July 2021)
 
 ### Fixes
