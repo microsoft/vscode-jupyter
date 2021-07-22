@@ -202,11 +202,11 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
                 await this.disable(DSSurveyLabelIndex.Yes, type);
                 break;
             }
-            case this.bannerLabels[DSSurveyLabelIndex.No]: {
+            // Treat clicking on x as equivalent to clicking No
+            default: {
                 await this.disable(DSSurveyLabelIndex.No, type);
                 break;
             }
-            default:
         }
     }
 
