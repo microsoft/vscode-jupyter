@@ -60,7 +60,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
-    private activeInterpreterControllerPromise: Promise<VSCodeNotebookController | undefined>;
+    private activeInterpreterControllerPromise?: Promise<VSCodeNotebookController | undefined>;
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
 
