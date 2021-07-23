@@ -133,11 +133,12 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<INotebookEditor> {
         // contents will be ignored
-        const cell = new NotebookCellData(NotebookCellKind.Code, '', options?.defaultCellLanguage ?? PYTHON_LANGUAGE);
+        const language = options?.defaultCellLanguage ?? PYTHON_LANGUAGE;
+        const cell = new NotebookCellData(NotebookCellKind.Code, '', language);
         const data = new NotebookData([cell]);
         data.metadata = {
             language_info: {
-                name: options?.defaultCellLanguage
+                name: language
             }
         };
         const doc = await this.vscodeNotebook.openNotebookDocument(JupyterNotebookView, data);
