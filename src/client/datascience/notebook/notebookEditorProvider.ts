@@ -12,10 +12,7 @@ import {
     NotebookEditor as VSCodeNotebookEditor,
     NotebookData,
     NotebookCellData,
-    NotebookCellKind,
-    WorkspaceEdit,
-    workspace
-} from 'vscode';
+    NotebookCellKind} from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -34,7 +31,6 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { cloneDeep } from 'lodash';
 
 /**
  * Notebook Editor provider used by other parts of DS code.
@@ -138,18 +134,12 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // contents will be ignored
         const cell = new NotebookCellData(NotebookCellKind.Code, '', options?.defaultCellLanguage ?? PYTHON_LANGUAGE);
         const data = new NotebookData([cell]);
-        const edit = new WorkspaceEdit();
-        const doc = await this.vscodeNotebook.openNotebookDocument(JupyterNotebookView, data);
-        const metadata = cloneDeep(doc.metadata);
-        if (metadata.language_info !== undefined) {
-            metadata.language_info.name = options?.defaultCellLanguage;
-        } else {
-            metadata.language_info = {
+        data.metadata = {
+            language_info: {
                 name: options?.defaultCellLanguage
-            };
+            }
         }
-        edit.replaceNotebookMetadata(doc.uri, metadata);
-        await workspace.applyEdit(edit);
+        const doc = await this.vscodeNotebook.openNotebookDocument(JupyterNotebookView, data);
         await this.vscodeNotebook.showNotebookDocument(doc);
         return this.open(doc.uri);
     }
