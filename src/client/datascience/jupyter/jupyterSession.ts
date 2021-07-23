@@ -46,7 +46,7 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly idleTimeout: number,
         private readonly kernelService: JupyterKernelService
     ) {
-        super(resource, restartSessionUsed, workingDirectory, idleTimeout);
+        super(resource, restartSessionUsed, workingDirectory);
         this.kernelConnectionMetadata = kernelSpec;
     }
 

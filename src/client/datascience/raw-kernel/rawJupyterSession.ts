@@ -52,10 +52,9 @@ export class RawJupyterSession extends BaseJupyterSession {
         private readonly outputChannel: IOutputChannel,
         private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
-        workingDirectory: string,
-        timeout: number
+        workingDirectory: string
     ) {
-        super(resource, restartSessionUsed, workingDirectory, timeout);
+        super(resource, restartSessionUsed, workingDirectory);
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
