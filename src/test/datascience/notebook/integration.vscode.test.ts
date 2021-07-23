@@ -8,7 +8,6 @@ import { Memento, workspace, WorkspaceConfiguration } from 'vscode';
 import {
     IVSCodeNotebook,
     IApplicationEnvironment,
-    IWorkspaceService,
     ICommandManager
 } from '../../../client/common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../../client/common/constants';
@@ -48,10 +47,8 @@ suite('VS Code notebook integration', () => {
             api.serviceManager.get(IDisposableRegistry),
             api.serviceManager.get(NotebookSerializer),
             api.serviceManager.get(IApplicationEnvironment),
-            api.serviceManager.get(IWorkspaceService),
             api.serviceManager.get(ICommandManager),
             api.serviceManager.get(NotebookCompletionProvider),
-            api.serviceManager.get(IMemento, GLOBAL_MEMENTO)
         ) as unknown) as INotebookIntegrationTestAPI;
         // Delete this setting if it's present
         notebookConfiguration = workspace.getConfiguration('notebook', null);
