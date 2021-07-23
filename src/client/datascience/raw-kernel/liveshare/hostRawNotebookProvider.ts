@@ -198,8 +198,7 @@ export class HostRawNotebookProvider
                 this.outputChannel,
                 noop,
                 noop,
-                workingDirectory,
-                launchTimeout
+                workingDirectory
             );
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
