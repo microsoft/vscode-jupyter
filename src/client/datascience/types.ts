@@ -39,7 +39,7 @@ import { IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
-import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './jupyter/kernels/types';
+import { KernelConnectionMetadata, NotebookCellRunState } from './jupyter/kernels/types';
 import { KernelStateEventArgs } from './notebookExtensibility';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -493,7 +493,7 @@ export interface IInteractiveWindowProvider {
      * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
      * @param owner file that started this interactive window
      */
-    getOrCreate(owner: Resource, kernel?: IKernel): Promise<IInteractiveWindow>;
+    getOrCreate(owner: Resource): Promise<IInteractiveWindow>;
     /**
      * Synchronizes with the other peers in a live share connection to make sure it has the same window open
      * @param window window on this side
