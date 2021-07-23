@@ -4,11 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, languages, Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import {
-    IApplicationEnvironment,
-    ICommandManager,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { NotebookCellScheme, PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { noop } from '../../common/utils/misc';
