@@ -4,18 +4,11 @@
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, languages, Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import {
-    IApplicationEnvironment,
-    ICommandManager,
-    IVSCodeNotebook,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { NotebookCellScheme, PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
-import { traceError } from '../../common/logger';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
-import { NotebookSerializer } from './notebookSerializer';
 import { NotebookCellStateTracker } from './helpers/helpers';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
 
@@ -28,10 +21,8 @@ export const HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING = 'CELL_TOOLBAR_SETTI
 @injectable()
 export class NotebookIntegration implements IExtensionSingleActivationService {
     constructor(
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNb: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(NotebookSerializer) private readonly notebookSerializer: NotebookSerializer,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
@@ -56,27 +47,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             // Possible user was in experiment, then they opted out. In this case we need to revert the changes made to the settings file.
             // Again, this is temporary code.
             await this.disableNotebooks();
-        }
-        if (this.useNativeNb) {
-            try {
-                this.disposables.push(
-                    this.vscNotebook.registerNotebookSerializer(JupyterNotebookView, this.notebookSerializer, {
-                        transientOutputs: false,
-                        transientCellMetadata: {
-                            breakpointMargin: true,
-                            inputCollapsed: true,
-                            outputCollapsed: true,
-                            custom: false
-                        }
-                    })
-                );
-            } catch (ex) {
-                // If something goes wrong, and we're not in Insiders & not using the NativeEditor experiment, then swallow errors.
-                traceError('Failed to register VS Code Notebook API', ex);
-                if (this.useNativeNb) {
-                    throw ex;
-                }
-            }
         }
     }
 
