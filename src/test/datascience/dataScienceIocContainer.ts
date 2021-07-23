@@ -55,12 +55,7 @@ import { WebviewPanelProvider } from '../../client/common/application/webviewPan
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { JupyterSettings } from '../../client/common/configSettings';
-import {
-    EXTENSION_ROOT_DIR,
-    UseCustomEditorApi,
-    UseProposedApi,
-    UseVSCodeNotebookEditorApi
-} from '../../client/common/constants';
+import { EXTENSION_ROOT_DIR, UseCustomEditorApi, UseVSCodeNotebookEditorApi } from '../../client/common/constants';
 import { CryptoUtils } from '../../client/common/crypto';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
@@ -523,7 +518,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IInteractiveWindowProvider,
             TestInteractiveWindowProvider
         );
-        this.serviceManager.addSingletonInstance(UseProposedApi, false);
         this.serviceManager.addSingletonInstance(IsCodeSpace, false);
         this.serviceManager.addSingletonInstance(UseCustomEditorApi, useCustomEditor);
         this.serviceManager.addSingletonInstance(UseVSCodeNotebookEditorApi, false);
