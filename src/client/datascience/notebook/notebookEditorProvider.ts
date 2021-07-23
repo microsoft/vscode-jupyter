@@ -12,7 +12,8 @@ import {
     NotebookEditor as VSCodeNotebookEditor,
     NotebookData,
     NotebookCellData,
-    NotebookCellKind} from 'vscode';
+    NotebookCellKind
+} from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -138,7 +139,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             language_info: {
                 name: options?.defaultCellLanguage
             }
-        }
+        };
         const doc = await this.vscodeNotebook.openNotebookDocument(JupyterNotebookView, data);
         await this.vscodeNotebook.showNotebookDocument(doc);
         return this.open(doc.uri);
