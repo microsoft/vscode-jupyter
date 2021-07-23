@@ -41,7 +41,7 @@ suite('VS Code notebook integration', () => {
             api.serviceManager.get(IDisposableRegistry),
             api.serviceManager.get(IApplicationEnvironment),
             api.serviceManager.get(ICommandManager),
-            api.serviceManager.get(NotebookCompletionProvider),
+            api.serviceManager.get(NotebookCompletionProvider)
         ) as unknown) as INotebookIntegrationTestAPI;
         // Delete this setting if it's present
         notebookConfiguration = workspace.getConfiguration('notebook', null);

@@ -76,7 +76,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
+                outputChannel
             );
 
             sinon.assert.calledWithExactly(
@@ -100,7 +100,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
+                outputChannel
             );
 
             sinon.assert.calledWithExactly(
@@ -123,7 +123,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
+                outputChannel
             );
 
             assert.deepEqual(experimentService._optInto, ['Foo - experiment']);
@@ -138,7 +138,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
+                outputChannel
             );
 
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
@@ -157,7 +157,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 instance(globalMemento),
-                outputChannel,
+                outputChannel
             );
             const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
 
@@ -200,7 +200,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
+                outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -216,7 +216,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
+                outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -232,7 +232,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
+                outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -252,7 +252,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
+                outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -287,7 +287,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
+                outputChannel
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -302,7 +302,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
+                outputChannel
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -317,7 +317,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
+                outputChannel
             );
             const result = await experimentService.getExperimentValue(experiment);
 
