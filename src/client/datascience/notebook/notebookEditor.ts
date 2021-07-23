@@ -14,8 +14,7 @@ import {
     Uri,
     WebviewPanel,
     NotebookCellData,
-    NotebookCell,
-    workspace
+    NotebookCell
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
@@ -40,6 +39,7 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 import { getNotebookMetadata } from './helpers/helpers';
 import type { nbformat } from '@jupyterlab/coreutils';
+import { generateCellsFromNotebookDocument } from '../cellFactory';
 
 export class NotebookEditor implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
@@ -98,9 +98,13 @@ export class NotebookEditor implements INotebookEditor {
     }
     onExecutedCode?: Event<string> | undefined;
     public async getContent(): Promise<string> {
-        await workspace.saveAll(false);
-        const content = await workspace.fs.readFile(this.document.uri);
-        return new TextDecoder().decode(content);
+        const cells = generateCellsFromNotebookDocument(this.document, false);
+        return JSON.stringify({
+            cells: cells.map((cell) => cell.data),
+            nbformat: this.document.metadata.custom.nbformat,
+            nbformat_minor: this.document.metadata.custom.nbformat_minor,
+            metadata: this.document.metadata
+        });
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
