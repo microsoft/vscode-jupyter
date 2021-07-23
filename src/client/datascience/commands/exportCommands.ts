@@ -5,7 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
-import { QuickPickItem, QuickPickOptions, Uri, workspace } from 'vscode';
+import { QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
@@ -69,8 +69,7 @@ export class ExportCommands implements IDisposable {
             : this.notebookProvider.activeEditor;
 
         if (editor) {
-            await workspace.saveAll(false);
-            const contents = await this.fs.readFile(editor.file);
+            const contents = await editor.getContent();
             const interpreter = editor.notebook?.getMatchingInterpreter();
             return this.export(contents, editor.file, undefined, undefined, interpreter);
         } else {
