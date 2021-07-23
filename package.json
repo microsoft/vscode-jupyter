@@ -1974,18 +1974,6 @@
                 ]
             }
         ],
-        "notebooks": [
-            {
-                "type": "jupyter-notebook",
-                "displayName": "Jupyter Notebook (preview)",
-                "selector": [
-                    {
-                        "filenamePattern": "*.ipynb"
-                    }
-                ],
-                "priority": "option"
-            }
-        ],
         "notebookRenderer": [
             {
                 "id": "jupyter-ipywidget-renderer",

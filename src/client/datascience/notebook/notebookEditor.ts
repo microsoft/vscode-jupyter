@@ -38,8 +38,8 @@ import {
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 import { getNotebookMetadata } from './helpers/helpers';
-import { NotebookSerializer } from './notebookSerializer';
 import type { nbformat } from '@jupyterlab/coreutils';
+import { generateCellsFromNotebookDocument } from '../cellFactory';
 
 export class NotebookEditor implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
@@ -88,8 +88,7 @@ export class NotebookEditor implements INotebookEditor {
         private readonly applicationShell: IApplicationShell,
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
-        private readonly cellLanguageService: NotebookCellLanguageService,
-        private readonly serializer: NotebookSerializer
+        private readonly cellLanguageService: NotebookCellLanguageService
     ) {
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
     }
@@ -98,8 +97,14 @@ export class NotebookEditor implements INotebookEditor {
         return getNotebookMetadata(this.document);
     }
     onExecutedCode?: Event<string> | undefined;
-    public getContent() {
-        return this.serializer.serializeNotebookDocument(this.document);
+    public getContent(): string {
+        const cells = generateCellsFromNotebookDocument(this.document, false);
+        return JSON.stringify({
+            cells: cells.map((cell) => cell.data),
+            nbformat: this.document.metadata.custom.nbformat,
+            nbformat_minor: this.document.metadata.custom.nbformat_minor,
+            metadata: this.document.metadata
+        });
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
