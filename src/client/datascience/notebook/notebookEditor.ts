@@ -97,7 +97,7 @@ export class NotebookEditor implements INotebookEditor {
         return getNotebookMetadata(this.document);
     }
     onExecutedCode?: Event<string> | undefined;
-    public async getContent(): Promise<string> {
+    public getContent(): string {
         const cells = generateCellsFromNotebookDocument(this.document, false);
         return JSON.stringify({
             cells: cells.map((cell) => cell.data),
