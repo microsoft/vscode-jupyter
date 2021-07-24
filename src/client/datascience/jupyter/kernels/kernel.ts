@@ -408,7 +408,9 @@ export class Kernel implements IKernel {
                             new Range(0, 0, lastCell.document.lineCount, 0),
                             sysInfoMessages.join('  \n')
                         );
-                        edit.replaceNotebookCellMetadata(notebookDocument.uri, lastCell.index, { isInteractiveWindowMessageCell: true });
+                        edit.replaceNotebookCellMetadata(notebookDocument.uri, lastCell.index, {
+                            isInteractiveWindowMessageCell: true
+                        });
                         return;
                     }
                 }
