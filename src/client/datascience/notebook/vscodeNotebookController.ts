@@ -417,6 +417,10 @@ export class VSCodeNotebookController implements Disposable {
         if (this.context.extensionMode !== ExtensionMode.Test) {
             return;
         }
+        // Don't force selection for interactive window, as it gets started with the right controller
+        if (notebook.notebookType === InteractiveWindowView) {
+            return;
+        }
         traceInfoIf(isCI, `Command notebook.selectKernel executing for ${notebook.uri.toString()} ${this.id}`);
         await this.commandManager.executeCommand('notebook.selectKernel', {
             id: this.id,
