@@ -13,7 +13,6 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ExperimentService } from '../../../client/common/experiments/service';
 import { IConfigurationService } from '../../../client/common/types';
-import { Experiments } from '../../../client/common/utils/localize';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
@@ -142,26 +141,6 @@ suite('Experimentation service', () => {
             );
 
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
-        });
-
-        test('Experiment data in Memento storage should be logged if it starts with "python"', () => {
-            const experiments = ['ExperimentOne', 'pythonExperiment'];
-            globalMemento = mock(MockMemento);
-            configureSettings(true, [], []);
-            configureApplicationEnvironment('stable', extensionVersion);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            when(globalMemento.get(anything(), anything())).thenReturn({ features: experiments } as any);
-
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            new ExperimentService(
-                instance(configurationService),
-                instance(appEnvironment),
-                instance(globalMemento),
-                outputChannel
-            );
-            const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
-
-            assert.equal(outputChannel.output, output);
         });
     });
 
