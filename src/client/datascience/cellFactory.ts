@@ -4,16 +4,16 @@
 import '../common/extensions';
 
 import * as uuid from 'uuid/v4';
-import { NotebookDocument, Range, TextDocument, Uri } from 'vscode';
+import { NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
 
 import { appendLineFeed, parseForComments } from '../../datascience-ui/common';
-import { createCodeCell, createMarkdownCell } from '../../datascience-ui/common/cellFactory';
+import { createCodeCell, createMarkdownCell, uncommentMagicCommands } from '../../datascience-ui/common/cellFactory';
 import { IJupyterSettings, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { CellMatcher } from './cellMatcher';
 import { Identifiers } from './constants';
 import { CellState, ICell, ICellRange } from './types';
-import { MARKDOWN_LANGUAGE } from '../common/constants';
+import { createJupyterCellFromVSCNotebookCell } from './notebook/helpers/helpers';
 
 function generateCodeCell(
     code: string[],
@@ -208,8 +208,17 @@ export function generateCellsFromNotebookDocument(
             if (cell.metadata.interactiveWindowCellMarker !== undefined) {
                 code.unshift(cell.metadata.interactiveWindowCellMarker + '\n');
             }
-            return cell.document.languageId === MARKDOWN_LANGUAGE
-                ? generateMarkdownCell(appendLineFeed(code), '', 0, uuid(), true)
-                : generateCodeCell(appendLineFeed(code), '', 0, uuid(), magicCommandsAsComments);
+            const data = createJupyterCellFromVSCNotebookCell(cell);
+            data.source =
+                cell.kind === NotebookCellKind.Code
+                    ? appendLineFeed(code, magicCommandsAsComments ? uncommentMagicCommands : undefined)
+                    : appendLineFeed(code);
+            return {
+                data,
+                id: uuid(),
+                file: '',
+                line: 0,
+                state: CellState.init
+            };
         });
 }

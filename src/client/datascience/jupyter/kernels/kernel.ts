@@ -297,7 +297,7 @@ export class Kernel implements IKernel {
                         : DataScience.startingNewKernelHeader(),
                     MARKDOWN_LANGUAGE
                 );
-                markdownCell.metadata = { isSysInfoCell: true, isPlaceholder: true };
+                markdownCell.metadata = { isInteractiveWindowMessageCell: true, isPlaceholder: true };
                 edit.replaceNotebookCells(
                     notebookDocument.uri,
                     new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
@@ -400,7 +400,7 @@ export class Kernel implements IKernel {
 
                     if (
                         lastCell.kind === NotebookCellKind.Markup &&
-                        lastCell.metadata.isSysInfoCell &&
+                        lastCell.metadata.isInteractiveWindowMessageCell &&
                         lastCell.metadata.isPlaceholder
                     ) {
                         edit.replace(
@@ -408,7 +408,9 @@ export class Kernel implements IKernel {
                             new Range(0, 0, lastCell.document.lineCount, 0),
                             sysInfoMessages.join('  \n')
                         );
-                        edit.replaceNotebookCellMetadata(notebookDocument.uri, lastCell.index, { isSysInfoCell: true });
+                        edit.replaceNotebookCellMetadata(notebookDocument.uri, lastCell.index, {
+                            isInteractiveWindowMessageCell: true
+                        });
                         return;
                     }
                 }

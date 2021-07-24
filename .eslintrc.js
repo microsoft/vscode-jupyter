@@ -350,7 +350,6 @@ module.exports = {
         'src/datascience-ui/react-common/codicon/codicon.ts',
         'src/datascience-ui/react-common/errorBoundary.tsx',
         'src/datascience-ui/common/main.ts',
-        'src/datascience-ui/common/cellFactory.ts',
         'src/datascience-ui/common/index.ts',
         'src/datascience-ui/startPage/index.tsx',
         'src/datascience-ui/startPage/startPage.tsx',
