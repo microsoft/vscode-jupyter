@@ -177,6 +177,9 @@ export class Kernel implements IKernel {
         const restartPromise = this.kernelExecution.restart(notebookDocument, this._notebookPromise);
         await restartPromise;
 
+        // Interactive window needs a restart sys info
+        await this.initializeAfterStart(SysInfoReason.Restart, notebookDocument);
+
         // Indicate a restart occurred if it succeeds
         this._onRestarted.fire();
     }
