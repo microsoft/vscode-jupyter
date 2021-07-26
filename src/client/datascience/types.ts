@@ -120,7 +120,9 @@ export interface INotebookCompletion {
         start: number;
         end: number;
     };
-    metadata: {};
+    metadata: {
+        _jupyter_types_experimental?: { end: number; start: number; text: string; type?: string }[];
+    };
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
