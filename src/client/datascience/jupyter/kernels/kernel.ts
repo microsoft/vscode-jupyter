@@ -172,18 +172,16 @@ export class Kernel implements IKernel {
         if (this.restarting) {
             return this.restarting.promise;
         }
-        if (this.notebook) {
-            this.restarting = createDeferred<void>();
-            try {
-                await this.notebook.restartKernel(this.launchTimeout);
-                await this.initializeAfterStart(SysInfoReason.Restart, notebookDocument);
-                this.restarting.resolve();
-            } catch (ex) {
-                this.restarting.reject(ex);
-            } finally {
-                this.restarting = undefined;
-            }
-        }
+        traceInfo(`Restart requested ${notebookDocument.uri}`);
+        this.startCancellation.cancel();
+        const restartPromise = this.kernelExecution.restart(notebookDocument, this._notebookPromise);
+        await restartPromise;
+
+        // Interactive window needs a restart sys info
+        await this.initializeAfterStart(SysInfoReason.Restart, notebookDocument);
+
+        // Indicate a restart occurred if it succeeds
+        this._onRestarted.fire();
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
@@ -325,10 +323,6 @@ export class Kernel implements IKernel {
                 traceInfo(`Kernel got disposed as a result of notebook.onDisposed ${this.notebookUri.toString()}`);
                 this._notebookPromise = undefined;
                 this._onDisposed.fire();
-            });
-            this.notebook.onKernelRestarted(() => {
-                traceInfo(`Notebook Kernel restarted ${this.notebook?.identity}`);
-                this._onRestarted.fire();
             });
             this.notebook.onSessionStatusChanged(
                 (e) => {
