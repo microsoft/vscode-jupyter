@@ -198,7 +198,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         traceInfo('Step 1');
         await insertCodeCell('print(1)', { index: 0 });
         await insertCodeCell('import time\nprint(2)\ntime.sleep(60)', { index: 1 });
-        await insertCodeCell('print(3)', { index: 0 });
+        await insertCodeCell('print(3)', { index: 2 });
         const cell = vscEditor.document.cellAt(1);
         // Ensure we click `Yes` when prompted to restart the kernel.
         const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
