@@ -170,43 +170,6 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
         }
     }
-
-    public async showPythonExtensionInstallRecommendedPrompt() {
-        // If workspace is not trusted, then don't show prompt
-        if (!this.workspace.isTrusted) {
-            return;
-        }
-        const key = 'ShouldShowPythonExtensionInstallRecommendedPrompt';
-        const surveyPrompt = this.persistentStateFactory.createGlobalPersistentState(key, true);
-        if (surveyPrompt.value) {
-            const yes = localize.Common.bannerLabelYes();
-            const no = localize.Common.bannerLabelNo();
-            const doNotShowAgain = localize.Common.doNotShowAgain();
-
-            const promise = (this.waitingOnInstallPrompt = new Promise<void>(async (resolve) => {
-                const answer = await this.appShell.showWarningMessage(
-                    localize.DataScience.pythonExtensionRecommended(),
-                    yes,
-                    no,
-                    doNotShowAgain
-                );
-                switch (answer) {
-                    case yes:
-                        await this.installPythonExtension();
-                        break;
-                    case doNotShowAgain:
-                        await surveyPrompt.updateValue(false);
-                        break;
-                    default:
-                        break;
-                }
-                resolve();
-            }));
-            await promise;
-            this.waitingOnInstallPrompt = undefined;
-        }
-    }
-
     private async installPythonExtension() {
         // Have the user install python
         void this.commandManager.executeCommand('extension.open', PythonExtension);

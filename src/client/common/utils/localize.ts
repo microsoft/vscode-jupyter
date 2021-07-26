@@ -159,11 +159,6 @@ export namespace DataScience {
         'The Python extension is required to perform that task. Click Yes to open Python extension installation page.'
     );
 
-    export const pythonExtensionRecommended = localize(
-        'DataScience.pythonExtensionRecommended',
-        'Installation of the Python Extension is strongly recommended when working with Python notebooks. For all features and the most seamless experience, would you like to install now?'
-    );
-
     export const pythonExtensionInstalled = localize(
         'DataScience.pythonInstalledReloadPromptMessage',
         'Python extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.'
