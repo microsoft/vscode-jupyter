@@ -4,7 +4,7 @@
 'use strict';
 
 /**
- * Serialize ArraBuffer and ArrayBufferView into a fomat such that they are json serializable.
+ * Serialize ArrayBuffer and ArrayBufferView into a format such that they are json serializable.
  *
  * @export
  * @param {(undefined | (ArrayBuffer | ArrayBufferView)[])} buffers
