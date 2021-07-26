@@ -23,7 +23,6 @@ import {
     IExtensions,
     IMemento,
     InstallerResponse,
-    IPersistentStateFactory,
     Product,
     ProductInstallStatus,
     Resource
@@ -132,7 +131,6 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     private waitingOnInstallPrompt?: Promise<void>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
