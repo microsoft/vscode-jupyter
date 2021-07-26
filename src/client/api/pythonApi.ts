@@ -271,7 +271,7 @@ export class PythonInstaller implements IPythonInstaller {
     }
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(InterpreterPackages) private readonly interpreterPacakges: InterpreterPackages,
+        @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
     ) {}
 
@@ -282,7 +282,7 @@ export class PythonInstaller implements IPythonInstaller {
         reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse> {
         if (resource && !isResource(resource)) {
-            this.interpreterPacakges.trackPackages(resource);
+            this.interpreterPackages.trackPackages(resource);
         }
         let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
         try {
