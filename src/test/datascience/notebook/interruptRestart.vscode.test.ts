@@ -32,8 +32,7 @@ import {
     waitForExecutionInProgress,
     waitForExecutionCompletedSuccessfully,
     waitForQueuedForExecution,
-    runCell,
-    assertNotHasTextOutputInVSCode
+    runCell
 } from './helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
@@ -238,23 +237,14 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
         await commands.executeCommand('jupyter.notebookeditor.restartkernel').then(noop, noop);
 
-        await waitForCondition(
-            async () => {
-                traceCellMessage(cell, 'Step 8 Cell Status');
-                return assertVSCCellIsNotRunning(cell);
-            },
-            15_000,
-            'Execution not cancelled first time.'
-        );
-
         // Wait for kernel to restart before we execute cells again.
-        traceInfo('Step 9 Wait for restart');
+        traceInfo('Step 8 Wait for restart');
         await waitForKernelToRestart.assertFired(15_000);
-        traceInfo('Step 10 Restarted');
+        traceInfo('Step 9 Restarted');
 
         // Confirm last cell is empty
-        const lastCell = vscEditor.document.cellAt(1);
-        assertNotHasTextOutputInVSCode(lastCell, '3', 2, false);
+        const lastCell = vscEditor.document.cellAt(2);
+        assert.equal(lastCell.outputs.length, 0, 'Last cell should not have run');
     });
     test('Interrupt and running cells again should only run the necessary cells', async function () {
         // Interrupts on windows doesn't work well, not as well as on Unix.
