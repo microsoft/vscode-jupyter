@@ -156,15 +156,6 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
         await commands.executeCommand('jupyter.notebookeditor.restartkernel').then(noop, noop);
 
-        await waitForCondition(
-            async () => {
-                traceCellMessage(cell, 'Step 8 Cell Status');
-                return assertVSCCellIsNotRunning(cell);
-            },
-            15_000,
-            'Execution not cancelled first time.'
-        );
-
         // Wait for kernel to restart before we execute cells again.
         traceInfo('Step 9 Wait for restart');
         await waitForKernelToRestart.assertFired(15_000);
