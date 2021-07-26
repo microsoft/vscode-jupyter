@@ -12,7 +12,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internabacklog\r\n$REPO=$JUPYTER_ALL_REPOS $VSCODE_REPOS \r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
+    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internabacklog\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS \r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
   },
   {
     "kind": 1,
@@ -22,7 +22,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TEAM_AUTHOR_INCLUSION = author:DavidKutu author:joyceerhl author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff\r\n$TEAM_AUTHOR_EXLUSION = -author:DavidKutu -author:joyceerhl -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff"
+    "value": "$TEAM_AUTHOR_INCLUSION = author:DavidKutu author:joyceerhl author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff\r\n$TEAM_AUTHOR_EXLUSION = -author:DavidKutu -author:joyceerhl -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff\r\n\r\n$TEAM_ASSIGNMENT = assignee:DavidKutu assignee:joyceerhl assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff"
   },
   {
     "kind": 1,
@@ -72,7 +72,17 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$REPO is:open is:issue label:testplan-item $CURRENT_MILESTONE $TEAM_AUTHOR_INCLUSION sort:created-asc"
+    "value": "$ALL_REPOS is:open is:issue label:testplan-item $CURRENT_MILESTONE $TEAM_AUTHOR_INCLUSION sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### *testplan-items* assigned to us from all repos\r\nAssignment of \"testplan-items\" occurs by Tuesday morning of of end game week. So on Monday, this won't be accurate."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$ALL_REPOS is:open is:issue label:testplan-item $CURRENT_MILESTONE $TEAM_ASSIGNMENT sort:created-asc"
   },
   {
     "kind": 1,
@@ -117,7 +127,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$REPO is:open is:issue label:Epic $PROJECT_BOARDS $CURRENT_MILESTONE"
+    "value": "$ALL_REPOS is:open is:issue label:Epic $PROJECT_BOARDS $CURRENT_MILESTONE"
   },
   {
     "kind": 1,
@@ -132,7 +142,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$REPO is:open is:issue label:interactive-window label:important -label:feature-request -label:enhancement -label:unreleased"
+    "value": "$ALL_REPOS is:open is:issue label:interactive-window label:important -label:feature-request -label:enhancement -label:unreleased"
   },
   {
     "kind": 1,
@@ -142,11 +152,11 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$REPO is:open is:issue label:interactive-window label:bug -label:unreleased"
+    "value": "$ALL_REPOS is:open is:issue label:interactive-window label:bug -label:unreleased"
   },
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$REPO is:open is:issue label:interactive-window"
+    "value": "$ALL_REPOS is:open is:issue label:interactive-window"
   }
 ]
