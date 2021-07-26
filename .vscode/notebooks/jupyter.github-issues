@@ -5,9 +5,34 @@
     "value": "---\r\n## Setup"
   },
   {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Repos"
+  },
+  {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode\r\n$REPO=$JUPYTER_ALL_REPOS $VSCODE_REPOS \r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n\r\n$CURRENT_MILESTONE=milestone:\"August 2021 Release\"\r\n$NEXT_MILESTONE=milestone:\"September 2021 Releas"
+    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internabacklog\r\n$REPO=$JUPYTER_ALL_REPOS $VSCODE_REPOS \r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Team Members"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$TEAM_AUTHOR_INCLUSION = author:DavidKutu author:joyceerhl author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff\r\n$TEAM_AUTHOR_EXLUSION = -author:DavidKutu -author:joyceerhl -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Milestones"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$CURRENT_MILESTONE=milestone:\"July 2021\"\r\n$NEXT_MILESTONE=milestone:\"August 2021\""
   },
   {
     "kind": 1,
@@ -22,7 +47,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue label:needs-triage -author:DavidKutu -author:joyceerhl -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:open is:issue label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
   },
   {
     "kind": 1,
@@ -32,7 +57,42 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue label:needs-triage author:DavidKutu author:joyceerhl author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:open is:issue label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "-----\r\n## End Game for current milestone"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### *testplan-items* created by us in all repos"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$REPO is:open is:issue label:testplan-item $CURRENT_MILESTONE $TEAM_AUTHOR_INCLUSION sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### *verification-needed* issues in our repo"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_ALL_REPOS is:closed is:issue label:verification-needed $CURRENT_MILESTONE sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Bugs closed but not marked as verified or verification-needed\r\nTechnically, all bugs fixed during the milestone should be verified. This query shows any stragglers we may have missed."
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_ALL_REPOS is:closed is:issue -label:verified -label:verification-needed label:bug -label:duplicate -label:invalid $CURRENT_MILESTONE sort:created-asc  "
   },
   {
     "kind": 1,
