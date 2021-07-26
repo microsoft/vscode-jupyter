@@ -157,7 +157,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
 
         // Wait for kernel to restart before we execute cells again.
         traceInfo('Step 9 Wait for restart');
-        await waitForKernelToRestart.assertFired(15_000);
+        await waitForKernelToRestart.assertFired(30_000);
         traceInfo('Step 10 Restarted');
 
         // Confirm we can execute a cell (using the new kernel session).
@@ -229,7 +229,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
 
         // Wait for kernel to restart before we execute cells again.
         traceInfo('Step 8 Wait for restart');
-        await waitForKernelToRestart.assertFired(15_000);
+        await waitForKernelToRestart.assertFired(30_000);
         traceInfo('Step 9 Restarted');
 
         // Confirm last cell is empty
