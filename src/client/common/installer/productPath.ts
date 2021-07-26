@@ -31,7 +31,7 @@ export abstract class BaseProductPathsService implements IProductPathService {
             // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         } catch {}
 
-        // User may have customized the module name or provided the fully qualifieid path.
+        // User may have customized the module name or provided the fully qualified path.
         const executableName = this.getExecutableNameFromSettings(product, resource);
 
         return (
