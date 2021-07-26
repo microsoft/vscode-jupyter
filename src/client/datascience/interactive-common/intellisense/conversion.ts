@@ -99,7 +99,7 @@ const reverseMapCompletionItemKind: Map<number, vscode.CompletionItemKind> = new
     ]
 );
 
-const mapJupyterKind: Map<string, number> = new Map<string, number>([
+export const mapJupyterKind: Map<string, number> = new Map<string, number>([
     ['method', monacoCompletionItemKind.Method],
     ['function', monacoCompletionItemKind.Function],
     ['constructor', monacoCompletionItemKind.Constructor],
