@@ -13,7 +13,6 @@ import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { Commands } from '../../../client/datascience/constants';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
-import { traceCellMessage } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
