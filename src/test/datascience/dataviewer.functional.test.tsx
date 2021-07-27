@@ -346,18 +346,56 @@ suite('DataScience DataViewer tests', () => {
         }
     });
 
-    runMountedTest('Sorting', async (wrapper) => {
-        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3, np.inf, -np.inf, np.nan])');
+    runMountedTest('Sorting numbers', async (wrapper) => {
+        await injectCode('import numpy as np\r\nx = np.array([np.nan, 1, 2, 3, np.inf, -np.inf, np.nan])');
         const gotAllRows = getCompletedPromise(wrapper);
         const dv = await createJupyterVariableDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
-        verifyRows(wrapper.wrapper, [0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 5, '-inf', 6, 'nan']);
+        verifyRows(wrapper.wrapper, [0, 'nan', 1, 1, 2, 2, 3, 3, 4, 'inf', 5, '-inf', 6, 'nan']);
         sortRows(wrapper.wrapper, '0', false);
-        verifyRows(wrapper.wrapper, [6, 'nan', 4, 'inf', 3, 3, 2, 2, 1, 1, 0, 0, 5, '-inf']);
+        verifyRows(wrapper.wrapper, [0, 'nan', 6, 'nan', 4, 'inf', 3, 3, 2, 2, 1, 1, 5, '-inf']);
         sortRows(wrapper.wrapper, '0', true);
-        verifyRows(wrapper.wrapper, [5, '-inf', 0, 0, 1, 1, 2, 2, 3, 3, 4, 'inf', 6, 'nan']);
+        verifyRows(wrapper.wrapper, [5, '-inf', 1, 1, 2, 2, 3, 3, 4, 'inf', 0, 'nan', 6, 'nan']);
+    });
+
+    runMountedTest('Sorting strings', async (wrapper) => {
+        await injectCode(
+            'import pandas as pd\r\nimport numpy as np\r\ndata = ["Alice", np.nan, "Tracy", "Bob", np.nan]\r\ndf = pd.DataFrame(data)'
+        );
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('df', 'DataFrame');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        verifyRows(wrapper.wrapper, [0, 0, 'Alice', 1, 1, 'NaN', 2, 2, 'Tracy', 3, 3, 'Bob', 4, 4, 'NaN']);
+        sortRows(wrapper.wrapper, '0', false);
+        verifyRows(wrapper.wrapper, [1, 1, 'NaN', 4, 4, 'NaN', 2, 2, 'Tracy', 3, 3, 'Bob', 0, 0, 'Alice']);
+        sortRows(wrapper.wrapper, '0', true);
+        verifyRows(wrapper.wrapper, [0, 0, 'Alice', 3, 3, 'Bob', 2, 2, 'Tracy', 1, 1, 'NaN', 4, 4, 'NaN']);
+    });
+
+    runMountedTest('Filter booleans', async (wrapper) => {
+        await injectCode(
+            'import pandas as pd\r\ndata = [False, True, True, False]\r\ndf = pd.DataFrame(data, dtype=bool)'
+        );
+        const gotAllRows = getCompletedPromise(wrapper);
+        const dv = await createJupyterVariableDataViewer('df', 'DataFrame');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+        verifyRows(wrapper.wrapper, [0, 0, 'false', 1, 1, 'true', 2, 2, 'true', 3, 3, 'false']);
+
+        const filtersAndExpectedResults = {
+            true: [1, 1, 'true', 2, 2, 'true'],
+            false: [0, 0, 'false', 3, 3, 'false'],
+            '': [0, 0, 'false', 1, 1, 'true', 2, 2, 'true', 3, 3, 'false']
+        };
+
+        for (const [filter, expectedResult] of Object.entries(filtersAndExpectedResults)) {
+            await filterRows(wrapper.wrapper, '0', filter);
+            verifyRows(wrapper.wrapper, expectedResult);
+        }
     });
 
     runMountedTest('Filter strings with wildcards', async (wrapper) => {
