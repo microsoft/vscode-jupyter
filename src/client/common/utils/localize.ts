@@ -460,6 +460,10 @@ export namespace DataScience {
         'DataScience.installPython',
         'Python is not installed. \nPlease [download](https://www.python.org/downloads) and install Python in order to execute cells in this notebook.'
     );
+    export const pythonNotInstalledNonMarkdown = localize(
+        'DataScience.installPythonNonMarkdown',
+        'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook from here https://www.python.org/downloads.'
+    );
     export const kernelNotInstalled = localize(
         'DataScience.installKernel',
         "The Jupyter Kernel '{0}' could not be found and needs to be installed in order to execute cells in this notebook."
