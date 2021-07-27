@@ -56,10 +56,10 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
         const customizeLayout = DataScience.customizeLayout();
         const selection = await this.appShell.showInformationMessage(DataScience.newNotebookUI(), customizeLayout);
         switch (selection) {
-            case customizeLayout: 
+            case customizeLayout:
                 void commands.executeCommand('workbench.action.openSettings', '@tag:notebookLayout').then(noop, noop);
                 break;
-            default: 
+            default:
                 break;
         }
     }

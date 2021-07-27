@@ -154,10 +154,7 @@ export namespace DataScience {
         'DataScience.newNotebookUI',
         "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use. [Learn more...](https://aka.ms/NewNotebookUI)"
     );
-    export const customizeLayout = localize(
-        'DataScience.customizeLayout',
-        "Customize Layout"
-    );
+    export const customizeLayout = localize('DataScience.customizeLayout', 'Customize Layout');
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
         'The Python extension is required to perform that task. Click Yes to open Python extension installation page.'
