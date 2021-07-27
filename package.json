@@ -942,7 +942,7 @@
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
-                    "group": "navigation@2",
+                    "group": "Jupyter",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
                 },
                 {
