@@ -39,12 +39,12 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
 
         this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         if (this.vscodeNotebook.notebookDocuments.length) {
-            this.notify();
+            void this.notify();
         }
     }
     private onDidOpenNotebookDocument(doc: NotebookDocument) {
         if (isJupyterNotebook(doc)) {
-            this.notify();
+            void this.notify();
         }
     }
     private async notify() {
