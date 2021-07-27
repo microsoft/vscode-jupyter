@@ -389,7 +389,7 @@ suite('DataScience DataViewer tests', () => {
         const filtersAndExpectedResults = {
             true: [1, 1, 'true', 2, 2, 'true'],
             false: [0, 0, 'false', 3, 3, 'false'],
-            '': [0, 0, 'false', 1, 1, 'true', 2, 2, 'true', 3, 3, 'false'],
+            '': [0, 0, 'false', 1, 1, 'true', 2, 2, 'true', 3, 3, 'false']
         };
 
         for (const [filter, expectedResult] of Object.entries(filtersAndExpectedResults)) {
