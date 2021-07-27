@@ -241,7 +241,7 @@ than the next sprint from when it was submitted (see
 
 ### Release cycle
 
-Planning is done as monthly releases.
+Planning is done as monthly releases. 
 
 The extension aims to do a new release once a month. A
 [release plan](https://github.com/Microsoft/vscode-jupyter/labels/release%20plan)
@@ -287,7 +287,7 @@ Steps to build the extension on your machine once you've cloned the repo:
 > npm install -g vsce
 # Perform the next steps in the vscode-jupyter folder.
 > npm ci
-> python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+> python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
 > npm run clean
 > npm run package # This step takes around 10 minutes.
 ```
