@@ -76,7 +76,7 @@ export class NoPythonKernelsNotebookController implements Disposable {
     private async handleExecutionWithoutPython() {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
         const selection = await this.appShell.showErrorMessage(
-            DataScience.pythonNotInstalled(),
+            DataScience.pythonNotInstalledNonMarkdown(),
             { modal: true },
             Common.install()
         );

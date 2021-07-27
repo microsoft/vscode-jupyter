@@ -18,6 +18,7 @@
     "DataScience.insecureSessionMessage": "Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?",
     "DataScience.insecureSessionDenied": "Denied connection to insecure server.",
     "DataScience.installPython": "Python is not installed. \nPlease [download](https://www.python.org/downloads) and install Python in order to execute cells in this notebook.",
+    "DataScience.installPythonNonMarkdown": "Python is not installed. \nPlease download and install Python in order to execute cells in this notebook from here https://www.python.org/downloads.",
     "DataScience.installKernel": "The Jupyter Kernel '{0}' could not be found and needs to be installed in order to execute cells in this notebook.",
     "DataScience.newNotebookUI": "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use. [Learn more...](https://aka.ms/NewNotebookUI)",
     "jupyter.command.jupyter.viewLanguageServerOutput.title": "Show Language Server Output",
