@@ -109,7 +109,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
 ${buildSettingsCss(this.props.settings)}`}</style>
                 </div>
                 <div className="custom-editor-banner">
-                    <BannerTransform data={getLocString('DataScience.customEditorBanner', 'This is going away')}/>
+                    <BannerTransform data={getLocString('DataScience.customEditorBanner', 'This is going away')} />
                 </div>
                 <header ref={this.mainPanelToolbarRef} id="main-panel-toolbar">
                     {this.renderToolbarPanel()}
