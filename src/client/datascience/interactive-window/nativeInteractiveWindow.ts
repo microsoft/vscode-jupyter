@@ -385,6 +385,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
+        // Do not execute or render empty cells
+        const cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
+        if (cellMatcher.stripFirstMarker(code).length === 0) {
+            return true;
+        }
+        // Chain execution promises so that cells are executed in the right order
         if (this.executionPromise) {
             this.executionPromise = this.executionPromise.then(() =>
                 this.createExecutionPromise(code, fileUri, line, isDebug)
