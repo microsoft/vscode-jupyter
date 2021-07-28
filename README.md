@@ -12,7 +12,7 @@ The Jupyter Extension uses the built-in notebook support from VS code. This UI g
 -   VS code allows notebooks to be diff'd using a custom notebook diff tool. No more diffing json entries in an ipynb.
 -   Notebooks are extensible beyond what the Jupyter extension provides. Other extensions can now add new features to notebooks.
 
-<img src=images/Jupyter%20README/notebookui.png?>
+<img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/notebookui.png?>
 
 ## Working with Python
 
