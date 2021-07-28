@@ -2,6 +2,18 @@
 
 A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today. Many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
+## Notebook support
+
+The Jupyter Extension uses the built-in notebook support from VS code. This UI gives a number of advantages to users of notebooks:
+
+-   Editor extensions can load inside of each cell. This means linting, semantic colorization, keyboard navigation, code lenses and more work in notebook cells.
+-   Intellisense is provided just like for other documents. Each cell is a code editor in of itself, so intellisense behaves like any other code file.
+-   VS code treats notebooks like any other file. They support hot exit, save as, search, and other operations that normally work on files.
+-   VS code allows notebooks to be diff'd using a custom notebook diff tool. No more diffing json entries in an ipynb.
+-   Notebooks are extensible beyond what the Jupyter extension provides. Other extensions can now add new features to notebooks.
+
+<img src=images/Jupyter%20README/notebookui.png?>
+
 ## Working with Python
 
 Whether you are on VS Code Stable or VS Code Insiders, if you would like to work with Python just make sure you're using the latest version of the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) to enjoy the joint partnership of the Python and Juypter Extensions.
