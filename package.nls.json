@@ -506,5 +506,5 @@
     "DataScience.kernelWasNotStarted": "Kernel was not started. A kernel session is needed to start debugging.",
     "DataScience.noNotebookToDebug": "No active notebook document to debug.",
     "DataScience.cantStartDebugging": "Can't start debugging.",
-    "DataScience.customEditorBanner": "This notebook interface will be updated after the 1.59 build of Visual Studio Code.  [Read the blog post for more information](https://aka.ms/vscodeNotebookEditorBanner). "
+    "DataScience.customEditorBanner": "This notebook interface will be updated and the old version will no longer be available after the 1.59 build of Visual Studio Code.  [Read the blog post for more information](https://aka.ms/vscodeNotebookEditorBanner). "
 }
