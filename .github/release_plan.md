@@ -19,7 +19,7 @@
         -   [ ] Check the Markdown rendering to make sure everything looks good
     -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Distribution.txt) by using https://dev.azure.com/vscode-python-datascience/vscode-python-datascience/_componentGovernance and downloading the notice (Notes for this process are in the Team OneNote under Python VS Code -> Dev Process -> Third-Party Notices / TPN file)
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
-    -   [ ] Update the `vscode` version number in the `engines` section of package.json. Update to the next upcoming major version. So if current stable VS Code is `1.54.3` update to `^1.55.0`.
+    -   [ ] Update the `vscode` version number in the `engines` section of package.json. Update to the next upcoming major version. So if current stable VS Code is `1.54.3` and main is `1.55-insiders`, update the engine in the release branch to `^1.55.0`.
     -   [ ] Merge pull request into `release-YYYY.MM`
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time
@@ -43,7 +43,7 @@
 
 -  [ ] Obtain VS Code prebuild for sanity testing
 -  [ ] Sanity test release candidate VSIX against VS Code prebuild
--  [ ] Candidate bug fixes found from sanity test should be checked into `main` and `release` branches
+-  [ ] Candidate bug fixes found from sanity test should be checked into `main` and cherry-picked to `release` branch
 -  [ ] Manually publish Monday's VS Code Insiders release from `main` branch to minimize gap in Insiders program
 
 # Release (Tuesday or day before VS Code publishes, whichever is later)
@@ -57,6 +57,8 @@
 ## Release
 
 -   [ ] Publish the release
+    -   [ ] Increase the extension version on the `release` branch. E.g. if the extension version was 2021.7.x, increase it to 2021.8.x. This should be the only difference between the `main` and `release` branches.
+    -   [ ] Generate a VSIX and sanity test the VSIX against VS Code prebuild
     -   [ ] For an automated release
         -   [ ] Create a commit which contains the words `publish` and `release` in it (you can use --allow-empty if needed)
         -   [ ] Directly push (PR not required) the commit to the `release-xxxx.xx` branch
