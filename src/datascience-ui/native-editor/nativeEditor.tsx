@@ -16,6 +16,7 @@ import {
     IMainState
 } from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
+import { getTransform } from '../interactive-common/transforms';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { getOSType } from '../react-common/constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
@@ -98,11 +99,17 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                 />
             );
 
+        // Use markdown to render the banner
+        const BannerTransform = getTransform('text/markdown');
+
         return (
             <div id="main-panel" role="Main" style={dynamicFont}>
                 <div className="styleSetter">
                     <style>{`${this.props.rootCss ? this.props.rootCss : ''}
 ${buildSettingsCss(this.props.settings)}`}</style>
+                </div>
+                <div className="custom-editor-banner">
+                    <BannerTransform data={getLocString('DataScience.customEditorBanner', 'This is going away')} />
                 </div>
                 <header ref={this.mainPanelToolbarRef} id="main-panel-toolbar">
                     {this.renderToolbarPanel()}
