@@ -7,7 +7,7 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 The Jupyter Extension uses the built-in notebook support from VS Code. This UI gives a number of advantages to users of notebooks:
 
 -   Editor extensions can load inside of each cell. This means linting, semantic colorization, keyboard navigation, code lenses and more work in notebook cells.
--   Intellisense is provided just like for other documents. Each cell is a code editor in of itself, so intellisense behaves like any other code file.
+-   IntelliSense is provided just like for other documents. Each cell is a code editor in of itself, so IntelliSense behaves like any other code file.
 -   VS code treats notebooks like any other file. They support hot exit, save as, search, and other operations that normally work on files.
 -   VS code allows notebooks to be diff'd using a custom notebook diff tool. No more diffing json entries in an ipynb.
 -   Notebooks can be [live-shared](https://docs.microsoft.com/en-us/visualstudio/liveshare/reference/notebooks)
