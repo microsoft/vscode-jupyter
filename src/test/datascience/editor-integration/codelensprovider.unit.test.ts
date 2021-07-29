@@ -67,7 +67,6 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             disposables,
             debugService.object,
             fileSystem.object,
-            vscodeNotebook.object,
             instance(workspace)
         );
     });
