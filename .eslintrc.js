@@ -619,7 +619,6 @@ module.exports = {
         'src/client/common/utils/multiStepInput.ts',
         'src/client/common/utils/stopWatch.ts',
         'src/client/common/utils/random.ts',
-        'src/client/common/utils/serializers.ts',
         'src/client/common/utils/icons.ts',
         'src/client/common/utils/sysTypes.ts',
         'src/client/common/utils/version.ts',
