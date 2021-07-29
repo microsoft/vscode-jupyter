@@ -12,7 +12,6 @@ import {
     ICommandManager,
     IDebugService,
     IDocumentManager,
-    IVSCodeNotebook,
     IWorkspaceService
 } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
@@ -75,7 +74,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let tokenSource: CancellationTokenSource;
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
-    let vscodeNotebook: TypeMoq.IMock<IVSCodeNotebook>;
     const contexts: Map<string, boolean> = new Map<string, boolean>();
     const jupyterSettings = new MockJupyterSettings(undefined);
     const disposables: Disposable[] = [];
@@ -92,7 +90,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
         helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
-        vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
 
         // Setup default settings
         jupyterSettings.assign({
@@ -125,7 +122,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
             interactiveWindowMode: 'single'
         });
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
-        vscodeNotebook.setup((d) => d.activeNotebookEditor).returns(() => undefined);
 
         // Setup the service container to return code watchers
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -976,7 +972,6 @@ testing2`;
             disposables,
             debugService.object,
             fileSystem.object,
-            vscodeNotebook.object,
             instance(workspace)
         );
 
