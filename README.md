@@ -2,6 +2,19 @@
 
 A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today. Many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
+## Notebook support
+
+The Jupyter Extension uses the [built-in notebook support](https://code.visualstudio.com/api/extension-guides/notebook#:~:text=The%20Notebook%20API%20allows%20Visual%20Studio%20Code%20extensions,allows%20for%20similar%20experiences%20inside%20Visual%20Studio%20Code.) from VS code. This UI gives a number of advantages to users of notebooks:
+
+-   Out of the box support for VS Code's vast array of basic code editing features like [hot exit](https://code.visualstudio.com/docs/editor/codebasics#_hot-exit), [find & replace](https://code.visualstudio.com/docs/editor/codebasics#_find-and-replace), and [code folding](https://code.visualstudio.com/docs/editor/codebasics#_folding). 
+-   Editor extensions like [VIM](https://marketplace.visualstudio.com/items?itemName=vscodevim.vim), [bracket colorization](https://marketplace.visualstudio.com/items?itemName=CoenraadS.bracket-pair-colorizer), linters and many more are available while editing a cell. 
+-   Deep integration with general workbench and file-based features in VS Code like [outline view](https://code.visualstudio.com/docs/getstarted/userinterface#_outline-view) (Table of Contents), [breadcrumbs](https://code.visualstudio.com/docs/getstarted/userinterface#_breadcrumbs) and [other operations](https://code.visualstudio.com/docs/getstarted/userinterface).
+-   Fast load times for Jupyter notebook (.ipynb) files. Any notebook file is loaded and rendered as quickly as possible, while execution-related operations are initialized behind the scenes.
+-   Includes a [notebook-friendly diff tool](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_custom-notebook-diffing), making it much easier to compare and see differences between code cells, output and metadata.
+-   Extensibility beyond what the Jupyter extension provides. Extensions can now add their own language or runtime-specific take on notebooks, such as the [.NET Interactive Notebooks](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.dotnet-interactive-vscode) and [Gather](https://marketplace.visualstudio.com/items?itemName=ms-python.gather)
+-   While the Jupyter extension comes packaged with a large set of the most commonly used renderers for output, the marketplace supports [custom installable renderers](https://marketplace.visualstudio.com/search?term=tag%3Arenderer&target=VSCode&category=All%20categories&sortBy=Relevance) to make working with your notebooks even more productive. To get started writing your own, see [VS Code's renderer api documentation](https://code.visualstudio.com/api/extension-guides/notebook#notebook-renderer).
+<img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/notebookui.png?>
+
 ## Working with Python
 
 Whether you are on VS Code Stable or VS Code Insiders, if you would like to work with Python just make sure you're using the latest version of the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) to enjoy the joint partnership of the Python and Juypter Extensions.
