@@ -42,6 +42,7 @@ export abstract class BaseProductPathsService implements IProductPathService {
 
 @injectable()
 export class DataScienceProductPathService extends BaseProductPathsService {
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
