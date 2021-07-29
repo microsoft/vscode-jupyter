@@ -5,7 +5,7 @@ import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
+import { PYTHON_FILE, PYTHON_LANGUAGE, PYTHON_UNTITLED } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import '../common/extensions';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from '../common/types';
@@ -42,7 +42,7 @@ export class DataScience implements IDataScience {
         this.commandRegistry.register();
 
         this.extensionContext.subscriptions.push(
-            vscode.languages.registerCodeLensProvider(PYTHON_ALLFILES, this.dataScienceCodeLensProvider)
+            vscode.languages.registerCodeLensProvider([PYTHON_FILE, PYTHON_UNTITLED], this.dataScienceCodeLensProvider)
         );
 
         // Set our initial settings and sign up for changes

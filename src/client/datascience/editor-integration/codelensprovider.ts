@@ -5,7 +5,6 @@ import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
 import { ICommandManager, IDebugService, IDocumentManager, IWorkspaceService } from '../../common/application/types';
-import { NotebookCellScheme } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import { disposeAllDisposables } from '../../common/helpers';
 import { IFileSystem } from '../../common/platform/types';
@@ -65,10 +64,6 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     // CodeLensProvider interface
     // Some implementation based on DonJayamanne's jupyter extension work
     public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.CodeLens[] {
-        // Don't show codelenses for notebook cells
-        if (document.uri.scheme === NotebookCellScheme) {
-            return [];
-        }
         // Get the list of code lens for this document.
         return this.getCodeLensTimed(document);
     }

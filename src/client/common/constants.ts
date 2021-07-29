@@ -3,11 +3,10 @@ export const MARKDOWN_LANGUAGE = 'markdown';
 export const JUPYTER_LANGUAGE = 'jupyter';
 
 export const NotebookCellScheme = 'vscode-notebook-cell';
-export const PYTHON = [
-    { scheme: 'file', language: PYTHON_LANGUAGE },
-    { scheme: 'untitled', language: PYTHON_LANGUAGE },
-    { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE }
-];
+export const PYTHON_UNTITLED = { scheme: 'untitled', language: PYTHON_LANGUAGE };
+export const PYTHON_FILE = { scheme: 'file', language: PYTHON_LANGUAGE };
+export const PYTHON_CELL = { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE };
+export const PYTHON = [PYTHON_UNTITLED, PYTHON_FILE, PYTHON_CELL];
 export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 export const GITHUB_ISSUE_MARKDOWN_FILE = [{ language: MARKDOWN_LANGUAGE, scheme: 'untitled', pattern: '**/issue.md' }];
 
