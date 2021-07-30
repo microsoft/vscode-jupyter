@@ -1,14 +1,14 @@
 # Changelog
 
-## 2021.8.0 (30 July 2021)
+## 2021.8.9 (3 August 2021)
 
 ### Enhancements
 
+1. Updated the preview to run by line in native notebooks. Set the `jupyter.experimental.debugging` setting to true, install ipykernel 6 on your selected kernel and a `Run by Line` button will appear on cell toolbars. Pressing it will start a lightweight debugging session and let you run the cell line by line.
+   ([#5607](https://github.com/microsoft/vscode-jupyter/issues/5607))
 
 ### Fixes
 
-1. Fix for kernel not starting with correct path (causes DLL load and import modules failures).
-   ([#5833](https://github.com/Microsoft/vscode-jupyter/issues/5833))
 1. Add a placeholder `Python 3` kernel if user doesn't have any Python interpreters, with ability to notify user to install Python extenssion or Python runtime.
    ([#5864](https://github.com/Microsoft/vscode-jupyter/issues/5864))
 1. Fixes to completion items received from Jupyter.
@@ -57,6 +57,13 @@ make this extension useful:
 
 ### Code Health
 
+
+## 2021.8.1 (19 July 2021)
+
+### Fixes
+
+1. Fix for kernel not starting with correct path (causes DLL load and import modules failures).
+   ([#5833](https://github.com/Microsoft/vscode-jupyter/issues/5833))
 
 ## 2021.8.0 (8 July 2021)
 
