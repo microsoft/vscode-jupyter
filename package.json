@@ -2176,6 +2176,7 @@
         "underscore": "^1.12.1",
         "unicode": "^10.0.0",
         "untildify": "^3.0.2",
+        "url-parse": "^1.5.0",
         "uuid": "^3.3.2",
         "vscode-debugprotocol": "^1.41.0",
         "vscode-extension-telemetry": "0.1.4",
