@@ -23,7 +23,7 @@ import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { MillisecondsInADay } from '../constants';
 import { InteractiveWindowMessages, IReExecuteCells } from './interactive-common/interactiveWindowTypes';
-import { isJupyterNotebook } from './notebook/helpers/helpers';
+import { JupyterNotebookView } from './notebook/constants';
 import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
 import { IInteractiveWindowListener, INotebookEditorProvider, INotebookExtensibility } from './types';
 
@@ -177,7 +177,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     public async activate() {
         this.vscodeNotebook.onDidOpenNotebookDocument(
             (e) => {
-                if (isJupyterNotebook(e)) {
+                if (e.notebookType === JupyterNotebookView) {
                     this.openedNotebook().catch(noop);
                 }
             },
@@ -202,11 +202,11 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
                 await this.disable(DSSurveyLabelIndex.Yes, type);
                 break;
             }
-            case this.bannerLabels[DSSurveyLabelIndex.No]: {
+            // Treat clicking on x as equivalent to clicking No
+            default: {
                 await this.disable(DSSurveyLabelIndex.No, type);
                 break;
             }
-            default:
         }
     }
 

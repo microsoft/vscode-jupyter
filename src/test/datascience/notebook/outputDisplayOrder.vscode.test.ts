@@ -192,7 +192,7 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
                     metadata: {},
                     output_type: 'display_data'
                 },
-                expectedMimeTypesOrder: ['image/svg+xml', 'image/png', 'text/plain']
+                expectedMimeTypesOrder: ['image/png', 'image/svg+xml', 'text/plain']
             }
         ];
 

@@ -18,8 +18,10 @@
     "DataScience.insecureSessionMessage": "Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?",
     "DataScience.insecureSessionDenied": "Denied connection to insecure server.",
     "DataScience.installPython": "Python is not installed. \nPlease [download](https://www.python.org/downloads) and install Python in order to execute cells in this notebook.",
+    "DataScience.installPythonNonMarkdown": "Python is not installed. \nPlease download and install Python in order to execute cells in this notebook from here https://www.python.org/downloads.",
     "DataScience.installKernel": "The Jupyter Kernel '{0}' could not be found and needs to be installed in order to execute cells in this notebook.",
     "DataScience.newNotebookUI": "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use. [Learn more...](https://aka.ms/NewNotebookUI)",
+    "DataScience.customizeLayout": "Customize Layout",
     "jupyter.command.jupyter.viewLanguageServerOutput.title": "Show Language Server Output",
     "jupyter.command.jupyter.selectAndRunTestMethod.title": "Run Test Method ...",
     "jupyter.command.jupyter.selectAndDebugTestMethod.title": "Debug Test Method ...",
@@ -174,7 +176,6 @@
     "DataScience.connectedToKernel": "Connected.",
     "DataScience.connected": "Connected",
     "DataScience.disconnected": "Disconnected",
-    "DataScience.pythonExtensionRecommended": "Installation of the Python Extension is strongly recommended when working with Python notebooks. For all features and the most seamless experience, would you like to install now?",
     "Experiments.inGroup": "User belongs to experiment group '{0}'",
     "Logging.CurrentWorkingDirectory": "cwd:",
     "Logging.WarnUserAboutDebugLoggingSetting": "You have enabled debug logging for the Jupyter extension, which will continue to write logs to disk. Would you like to turn debug logging off?",
@@ -483,7 +484,6 @@
     "DataScience.pythonExtensionRequired": "The Python extension is required to perform that task. Click Yes to open Python extension installation page.",
     "DataScience.pythonExtensionRequiredToRunNotebook": "Python Extension required to run Python notebooks.",
     "DataScience.pythonExtensionInstalled": "Python extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.",
-    "DataScience.invalidCustomEditor": "Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled.",
     "DataScience.showDataViewerFail": "Failed to create the Data Viewer. Check the Jupyter tab of the Output window for more info.",
     "DataScience.notebookCreationPickerPlaceHolder": "Select an option to create a blank notebook",
     "DataScience.refreshDataViewer": "Refresh data viewer",
@@ -505,5 +505,6 @@
     "DataScience.interactiveGoToCode": "Go to code",
     "DataScience.kernelWasNotStarted": "Kernel was not started. A kernel session is needed to start debugging.",
     "DataScience.noNotebookToDebug": "No active notebook document to debug.",
-    "DataScience.cantStartDebugging": "Can't start debugging."
+    "DataScience.cantStartDebugging": "Can't start debugging.",
+    "DataScience.customEditorBanner": "This editor is deprecated and we'll remove it after 1.59 of VS Code.  [Learn more about our new notebook editor](https://aka.ms/vscodeNotebookEditorBanner)."
 }

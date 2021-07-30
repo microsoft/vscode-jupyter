@@ -158,7 +158,6 @@
     "DataScience.connectedToKernel": "已连接。",
     "DataScience.connected": "已连接",
     "DataScience.disconnected": "连接断开",
-    "DataScience.pythonExtensionRecommended": "在使用Python笔记本时，强烈建议安装Python扩展。 对于所有功能和最无缝的体验，您想立即安装吗？",
     "Experiments.inGroup": "用户属于实验组 '{0}'",
     "Logging.CurrentWorkingDirectory": "cwd:",
     "Logging.WarnUserAboutDebugLoggingSetting": "您已经为 Jupyter 扩展启用了调试日志，它将继续向磁盘写入日志。是否关闭调试日志？",
@@ -459,6 +458,5 @@
     "DataScience.illegalEditorConfig": "CustomEditor 和 NativeNotebook 实验不能同时开启",
     "DataScience.pythonExtensionRequired": "执行该任务需要 Python 扩展。点击 \"是\" 打开 Python 扩展的安装页面。",
     "DataScience.pythonExtensionInstalled": "Python 扩展已安装。在笔记本或交互式窗口会话重新启动之前，某些功能可能无法使用。",
-    "DataScience.invalidCustomEditor": "使用 Jupyter 笔记本编辑器需要 VS Code 的稳定版本并启用 CustomEditor 实验。",
     "DataScience.showDataViewerFail": "创建数据查看器失败。查看输出窗口的 Jupyter 标签页了解更多信息。"
 }

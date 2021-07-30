@@ -665,7 +665,7 @@ export class JupyterNotebookBase implements INotebook {
                 return {
                     matches: [],
                     cursor: { start: 0, end: 0 },
-                    metadata: []
+                    metadata: {}
                 };
             }
             const result = await Promise.race([
@@ -690,7 +690,7 @@ export class JupyterNotebookBase implements INotebook {
             return {
                 matches: [],
                 cursor: { start: 0, end: 0 },
-                metadata: []
+                metadata: {}
             };
         }
 

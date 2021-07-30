@@ -20,6 +20,7 @@ import {
     LanguageConfiguration,
     NotebookCell,
     NotebookDocument,
+    NotebookEditor,
     QuickPickItem,
     Range,
     TextDocument,
@@ -120,7 +121,9 @@ export interface INotebookCompletion {
         start: number;
         end: number;
     };
-    metadata: {};
+    metadata: {
+        _jupyter_types_experimental?: { end: number; start: number; text: string; type?: string }[];
+    };
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
@@ -560,7 +563,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly identity: Uri;
     readonly title: string;
     readonly notebookUri?: Uri;
-    readonly readyPromise?: Promise<NotebookDocument>;
+    readonly readyPromise?: Promise<NotebookEditor>;
     closed: Event<IInteractiveWindow>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;

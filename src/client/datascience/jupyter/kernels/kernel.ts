@@ -172,18 +172,16 @@ export class Kernel implements IKernel {
         if (this.restarting) {
             return this.restarting.promise;
         }
-        if (this.notebook) {
-            this.restarting = createDeferred<void>();
-            try {
-                await this.notebook.restartKernel(this.launchTimeout);
-                await this.initializeAfterStart(SysInfoReason.Restart, notebookDocument);
-                this.restarting.resolve();
-            } catch (ex) {
-                this.restarting.reject(ex);
-            } finally {
-                this.restarting = undefined;
-            }
-        }
+        traceInfo(`Restart requested ${notebookDocument.uri}`);
+        this.startCancellation.cancel();
+        const restartPromise = this.kernelExecution.restart(notebookDocument, this._notebookPromise);
+        await restartPromise;
+
+        // Interactive window needs a restart sys info
+        await this.initializeAfterStart(SysInfoReason.Restart, notebookDocument);
+
+        // Indicate a restart occurred if it succeeds
+        this._onRestarted.fire();
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
@@ -297,7 +295,7 @@ export class Kernel implements IKernel {
                         : DataScience.startingNewKernelHeader(),
                     MARKDOWN_LANGUAGE
                 );
-                markdownCell.metadata = { isSysInfoCell: true, isPlaceholder: true };
+                markdownCell.metadata = { isInteractiveWindowMessageCell: true, isPlaceholder: true };
                 edit.replaceNotebookCells(
                     notebookDocument.uri,
                     new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
@@ -325,10 +323,6 @@ export class Kernel implements IKernel {
                 traceInfo(`Kernel got disposed as a result of notebook.onDisposed ${this.notebookUri.toString()}`);
                 this._notebookPromise = undefined;
                 this._onDisposed.fire();
-            });
-            this.notebook.onKernelRestarted(() => {
-                traceInfo(`Notebook Kernel restarted ${this.notebook?.identity}`);
-                this._onRestarted.fire();
             });
             this.notebook.onSessionStatusChanged(
                 (e) => {
@@ -400,7 +394,7 @@ export class Kernel implements IKernel {
 
                     if (
                         lastCell.kind === NotebookCellKind.Markup &&
-                        lastCell.metadata.isSysInfoCell &&
+                        lastCell.metadata.isInteractiveWindowMessageCell &&
                         lastCell.metadata.isPlaceholder
                     ) {
                         edit.replace(
@@ -408,7 +402,9 @@ export class Kernel implements IKernel {
                             new Range(0, 0, lastCell.document.lineCount, 0),
                             sysInfoMessages.join('  \n')
                         );
-                        edit.replaceNotebookCellMetadata(notebookDocument.uri, lastCell.index, { isSysInfoCell: true });
+                        edit.replaceNotebookCellMetadata(notebookDocument.uri, lastCell.index, {
+                            isInteractiveWindowMessageCell: true
+                        });
                         return;
                     }
                 }
