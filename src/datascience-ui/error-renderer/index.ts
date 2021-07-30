@@ -60,7 +60,10 @@ export const activate: ActivationFunction = (_context) => {
             container.classList.add('cell-output-text');
 
             const header = document.createElement('div');
-            const headerMessage = outputItemJson.name && outputItemJson.message ? `${outputItemJson.name}: ${outputItemJson.message}` : outputItemJson.name || outputItemJson.message;
+            const headerMessage =
+                outputItemJson.name && outputItemJson.message
+                    ? `${outputItemJson.name}: ${outputItemJson.message}`
+                    : outputItemJson.name || outputItemJson.message;
             if (headerMessage) {
                 header.classList.add('output-error-header');
                 header.innerText = headerMessage;
@@ -69,11 +72,11 @@ export const activate: ActivationFunction = (_context) => {
 
             const metadata: any = outputItem.metadata;
             const traceback: string[] =
-            metadata?.outputType === 'error' && metadata?.transient && Array.isArray(metadata?.transient)
-                ? metadata?.transient
-                : Array.isArray(outputItemJson.stack)
-                ? outputItemJson.stack.map((item: string) => escape(item))
-                : [escape(outputItemJson.stack)];
+                metadata?.outputType === 'error' && metadata?.transient && Array.isArray(metadata?.transient)
+                    ? metadata?.transient
+                    : Array.isArray(outputItemJson.stack)
+                    ? outputItemJson.stack.map((item: string) => escape(item))
+                    : [escape(outputItemJson.stack)];
 
             const html = traceback.some((item) => item.trim().length)
                 ? converter.toHtml(traceback.join('\n'))
