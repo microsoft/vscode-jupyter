@@ -127,7 +127,7 @@ gulp.task('compile-viewers', async () => {
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
-    gulp.task('compile-webviews', async () => {
+    gulp.task('compile-webviews', async () => { 
         // Do nothing, just eliminate js errors
     });
 } else {
@@ -175,7 +175,7 @@ async function updateBuildNumber(args) {
             versionParts.length > 1
                 ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}`
                 : packageJson.version;
-        packageJson.version = `9${newVersion.substring(1)}`;
+        packageJson.version = newVersion;
 
         // Write back to the package json
         await fs.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
