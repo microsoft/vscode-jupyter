@@ -218,6 +218,16 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     }
 
     private async sendRefreshMessage() {
+        if (this.notebookWatcher.activeNotebookExecutionCount !== undefined) {
+            this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
+                executionCount: this.notebookWatcher.activeNotebookExecutionCount
+            }).ignoreErrors();
+        }
+        // No active view, so just trigger refresh to clear
         this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+        // this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
+        //     executionCount: 0
+        // }).ignoreErrors();
+        // this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 }
