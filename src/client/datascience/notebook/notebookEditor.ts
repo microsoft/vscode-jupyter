@@ -30,6 +30,7 @@ import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
     INotebook,
     INotebookEditor,
+    INotebookExecutionLogger,
     INotebookModel,
     INotebookProvider,
     InterruptResult,
@@ -89,7 +90,8 @@ export class NotebookEditor implements INotebookEditor {
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
         private readonly cellLanguageService: NotebookCellLanguageService,
-        private readonly serializer: NotebookSerializer
+        private readonly serializer: NotebookSerializer,
+        private loggers: INotebookExecutionLogger[]
     ) {
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
     }
@@ -340,6 +342,7 @@ export class NotebookEditor implements INotebookEditor {
         } finally {
             status.dispose();
             this.restartingKernel = false;
+            this.loggers.forEach((l) => l.onKernelRestarted(this.file));
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {
