@@ -31,7 +31,6 @@ const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
 export const activate: ActivationFunction = (_context) => {
     return {
         renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
-            console.log(outputItem.metadata);
             const converter = new ansiToHtml({
                 fg: 'var(--vscode-terminal-foreground)',
                 bg: 'var(--vscode-terminal-background)',
@@ -54,25 +53,43 @@ export const activate: ActivationFunction = (_context) => {
                     'var(--vscode-terminal-ansiBrightWhite)' // 15
                 ]
             });
-            const metadata: any = outputItem.metadata;
             const outputItemJson = outputItem.json();
-            console.log(outputItem.json());
+
+            const container = document.createElement('div');
+            element.appendChild(container);
+            container.classList.add('cell-output-text');
+
+            const header = document.createElement('div');
+            const headerMessage =
+                outputItemJson.name && outputItemJson.message
+                    ? `${outputItemJson.name}: ${outputItemJson.message}`
+                    : outputItemJson.name || outputItemJson.message;
+            if (headerMessage) {
+                header.classList.add('output-error-header');
+                header.innerText = headerMessage;
+                container.appendChild(header);
+            }
+
+            const metadata: any = outputItem.metadata;
             const traceback: string[] =
                 metadata?.outputType === 'error' && metadata?.transient && Array.isArray(metadata?.transient)
                     ? metadata?.transient
                     : Array.isArray(outputItemJson.stack)
                     ? outputItemJson.stack.map((item: string) => escape(item))
                     : [escape(outputItemJson.stack)];
+
             const html = traceback.some((item) => item.trim().length)
                 ? converter.toHtml(traceback.join('\n'))
-                : outputItemJson.message;
-            const container = document.createElement('div');
-            container.classList.add('cell-output-text');
-            container.innerHTML = html;
-            element.appendChild(container);
-            container.addEventListener('click', (e) => {
-                handleInnerClick(e, _context);
-            });
+                : undefined;
+
+            if (html) {
+                const traceback = document.createElement('div');
+                container.appendChild(traceback);
+                traceback.innerHTML = html;
+                traceback.addEventListener('click', (e) => {
+                    handleInnerClick(e, _context);
+                });
+            }
         }
     };
 };
