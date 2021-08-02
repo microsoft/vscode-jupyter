@@ -173,9 +173,9 @@ async function updateBuildNumber(args) {
             versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
         const newVersion =
             versionParts.length > 1
-                ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}`
+                ? `${versionParts[0]}.${versionParts[1]}.9${buildNumberPortion.substring(1)}`
                 : packageJson.version;
-        packageJson.version = `9${newVersion.substring(1)}`;
+        packageJson.version = newVersion;
 
         // Write back to the package json
         await fs.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
