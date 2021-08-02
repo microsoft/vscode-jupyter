@@ -12,12 +12,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, Disposable, env, Event, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
-import { traceWarning } from '../common/logger';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
@@ -247,15 +246,6 @@ export class PythonInstaller implements IPythonInstaller {
             this.interpreterPackages.trackPackages(resource);
         }
         let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
-        if (env.remoteName && reInstallAndUpdate) {
-            // Temporary work around for https://github.com/microsoft/vscode-jupyter/issues/6896
-            traceWarning(
-                `Disabling -U and flag when installing Dependencies in containers for ${ProductNames.get(product)} in ${
-                    isResource(resource) ? resource?.fsPath : resource.path
-                }`
-            );
-            reInstallAndUpdate = false;
-        }
         try {
             const api = await this.apiProvider.getApi();
             const result = await api.install(ProductMapping[product], resource, cancel, reInstallAndUpdate);
