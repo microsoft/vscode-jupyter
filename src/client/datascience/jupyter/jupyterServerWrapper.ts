@@ -6,7 +6,6 @@ import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import * as vsls from 'vsls/vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
@@ -35,7 +34,6 @@ import {
 import { KernelConnectionMetadata } from './kernels/types';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
-import { ILiveShareHasRole } from './liveshare/types';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
 
@@ -66,7 +64,7 @@ type JupyterServerClassType = {
 // This class wraps either a HostJupyterServer or a GuestJupyterServer based on the liveshare state. It abstracts
 // out the live share specific parts.
 @injectable()
-export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole {
+export class JupyterServerWrapper implements INotebookServer {
     private serverFactory: RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>;
 
     private launchInfo: INotebookServerLaunchInfo | undefined;
@@ -113,10 +111,6 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             extensionChecker,
             vscodeNotebook
         );
-    }
-
-    public get role(): vsls.Role {
-        return this.serverFactory.role;
     }
 
     public get id(): string {

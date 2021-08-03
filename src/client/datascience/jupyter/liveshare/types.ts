@@ -39,11 +39,7 @@ export interface ICatchupRequest {
     since: number;
 }
 
-export interface ILiveShareHasRole {
-    readonly role: vsls.Role;
-}
-
-export interface ILiveShareParticipant extends IAsyncDisposable, ILiveShareHasRole {
+export interface ILiveShareParticipant extends IAsyncDisposable {
     onSessionChange(api: vsls.LiveShare | null): Promise<void>;
     onAttach(api: vsls.LiveShare | null): Promise<void>;
     onDetach(api: vsls.LiveShare | null): Promise<void>;

@@ -2,21 +2,18 @@
 // Licensed under the MIT License.
 'use strict';
 import * as vscode from 'vscode';
-import * as vsls from 'vsls/vscode';
 
 import { IAsyncDisposable } from '../../../common/types';
 import { ClassType } from '../../../ioc/types';
-import { ILiveShareHasRole, ILiveShareParticipant } from './types';
+import { ILiveShareParticipant } from './types';
 
 export interface IRoleBasedObject extends IAsyncDisposable, ILiveShareParticipant {}
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends ClassType<T>> implements ILiveShareHasRole {
+export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends ClassType<T>> {
     private ctorArgs: ConstructorParameters<CtorType>[];
     private createPromise: Promise<T> | undefined;
     private sessionChangedEmitter = new vscode.EventEmitter<void>();
-    private _role: vsls.Role = vsls.Role.None;
-
     constructor(private hostCtor: CtorType, ...args: ConstructorParameters<CtorType>) {
         this.ctorArgs = args;
         this.createPromise = this.createBasedOnRole(); // We need to start creation immediately or one side may call before we init.
@@ -24,10 +21,6 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
 
     public get sessionChanged(): vscode.Event<void> {
         return this.sessionChangedEmitter.event;
-    }
-
-    public get role(): vsls.Role {
-        return this._role;
     }
 
     public get(): Promise<T> {

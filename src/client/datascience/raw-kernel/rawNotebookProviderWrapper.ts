@@ -5,7 +5,6 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import * as vsls from 'vsls/vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
@@ -23,7 +22,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { DataScienceStartupTime } from '../constants';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
-import { ILiveShareHasRole } from '../jupyter/liveshare/types';
 import { IKernelLauncher, ILocalKernelFinder } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
@@ -63,7 +61,7 @@ type RawNotebookProviderClassType = {
 // This class wraps either a HostRawNotebookProvider or a GuestRawNotebookProvider based on the liveshare state. It abstracts
 // out the live share specific parts.
 @injectable()
-export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveShareHasRole {
+export class RawNotebookProviderWrapper implements IRawNotebookProvider {
     private serverFactory: RoleBasedFactory<IRawNotebookProviderInterface, RawNotebookProviderClassType>;
 
     constructor(
@@ -105,10 +103,6 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             extensionChecker,
             vscNotebook
         );
-    }
-
-    public get role(): vsls.Role {
-        return this.serverFactory.role;
     }
 
     public async supported(): Promise<boolean> {
