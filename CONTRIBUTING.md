@@ -16,7 +16,7 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 12.14.1
+1. [Node.js](https://nodejs.org/) 14.17.4
 1. [Python](https://www.python.org/) 2.7 or later
 1. Windows, macOS, or Linux
 1. [Visual Studio Code](https://code.visualstudio.com/)
@@ -241,7 +241,7 @@ than the next sprint from when it was submitted (see
 
 ### Release cycle
 
-Planning is done as monthly releases. 
+Planning is done as monthly releases.
 
 The extension aims to do a new release once a month. A
 [release plan](https://github.com/Microsoft/vscode-jupyter/labels/release%20plan)
