@@ -33,6 +33,7 @@ suite('Hover provider', async () => {
             console.log('Hover provider tests require webview build to be enabled');
             return this.skip();
         }
+        return this.skip();
         api = await initialize();
         const configService = api.serviceManager.get<IConfigurationService>(IConfigurationService);
         dsSettings = configService.getSettings();

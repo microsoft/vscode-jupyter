@@ -23,7 +23,7 @@ on:
       - 'release/*'
       - 'release-*'
   schedule:
-    - cron: "0 9 * * 1-5" # 9am UTC, Monday-Friday (2am PDT, after VS Code Insider builds which is 11pm PDT)
+    - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code Insider builds which is 11pm PDT)
   workflow_dispatch:
 env:
   NODE_VERSION: 12.14.1
@@ -73,11 +73,11 @@ jobs:
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-      - name: insiders channel
-        # Scheduled builds will publish Insider builds.
-        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
-        run: |
-          echo "release_channel=insider" >> $GITHUB_ENV
+    #   - name: insiders channel
+    #     # Scheduled builds will publish Insider builds.
+    #     if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+    #     run: |
+    #       echo "release_channel=insider" >> $GITHUB_ENV
 
       - name: release
         if: github.event_name == 'push' && contains(github.ref, 'refs/heads/release')
@@ -766,6 +766,13 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
+      - name: Install screen capture dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install imagemagick
+
+      - name: Install screen capture
+        run: npm i -D screenshot-desktop
+
         # Check to see if we should build webviews or not
       - name: Check if we need to build webviews
         if: matrix.test-suite != 'integration' && matrix.test-suite != 'notebookAndWebview'
@@ -910,7 +917,6 @@ jobs:
           check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
         if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
 
-
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
@@ -918,6 +924,14 @@ jobs:
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
+          retention-days: 1
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Screenshots-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
+          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
           retention-days: 1
 
   smoke-tests:

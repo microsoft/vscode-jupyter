@@ -687,7 +687,7 @@ export class IntellisenseDocument implements TextDocument {
     }
 
     private createSerializableRange(start: Position, end: Position): Range {
-        // This funciton is necessary so that the Range can be passed back
+        // This function is necessary so that the Range can be passed back
         // over a remote connection without including all of the extra fields that
         // VS code puts into a Range object.
         const result = {

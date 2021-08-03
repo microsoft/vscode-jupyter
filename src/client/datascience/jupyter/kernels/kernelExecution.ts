@@ -26,8 +26,8 @@ export class KernelExecution implements IDisposable {
     private readonly documentExecutions = new WeakMap<NotebookDocument, CellExecutionQueue>();
     private readonly executionFactory: CellExecutionFactory;
     private readonly disposables: IDisposable[] = [];
-    private readonly kernelRestartHandlerAdded = new WeakSet<IKernel>();
     private _interruptPromise?: Promise<InterruptResult>;
+    private _restartPromise?: Promise<void>;
     constructor(
         private readonly kernelProvider: IKernelProvider,
         errorHandler: IDataScienceErrorHandler,
@@ -47,6 +47,12 @@ export class KernelExecution implements IDisposable {
             return;
         }
         sendKernelTelemetryEvent(cell.notebook.uri, Telemetry.ExecuteNativeCell);
+
+        // If we're restarting, wait for it to finish
+        if (this._restartPromise) {
+            await this._restartPromise;
+        }
+
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, notebookPromise);
         executionQueue.queueCell(cell);
         await executionQueue.waitForCompletion([cell]);
@@ -56,6 +62,12 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
     public async executeAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
         sendKernelTelemetryEvent(document.uri, Telemetry.ExecuteNativeCell);
+
+        // If we're restarting, wait for it to finish
+        if (this._restartPromise) {
+            await this._restartPromise;
+        }
+
         // Only run code cells that are not already running.
         const cellsThatWeCanRun = document.getCells().filter((cell) => cell.kind === NotebookCellKind.Code);
         if (cellsThatWeCanRun.length === 0) {
@@ -111,6 +123,40 @@ export class KernelExecution implements IDisposable {
 
         return result;
     }
+    /**
+     * Restarts the kernel
+     * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
+     */
+    public async restart(document: NotebookDocument, notebookPromise?: Promise<INotebook>): Promise<void> {
+        trackKernelResourceInformation(document.uri, { restartKernel: true });
+        const executionQueue = this.documentExecutions.get(document);
+        if (!executionQueue) {
+            return;
+        }
+        // Possible we don't have a notebook.
+        const notebook = notebookPromise ? await notebookPromise.catch(() => undefined) : undefined;
+        traceInfo('Restart kernel execution');
+        // First cancel all the cells & then wait for them to complete.
+        // Both must happen together, we cannot just wait for cells to complete, as its possible
+        // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
+        // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
+        const pendingCells = executionQueue.cancel().then(() => executionQueue.waitForCompletion());
+
+        if (!notebook) {
+            traceInfo('No notebook to interrupt');
+            this._restartPromise = undefined;
+            await pendingCells;
+            return;
+        }
+
+        // Restart the active execution
+        await (this._restartPromise
+            ? this._restartPromise
+            : (this._restartPromise = this.restartExecution(document, notebook.session)));
+
+        // Done restarting, clear restart promise
+        this._restartPromise = undefined;
+    }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
@@ -122,9 +168,7 @@ export class KernelExecution implements IDisposable {
         }
 
         // We need to add the handler to kernel immediately (before we resolve the notebook, else its possible user hits restart or the like and we miss that event).
-        const wrappedNotebookPromise = this.getKernel(document)
-            .then((kernel) => this.addKernelRestartHandler(kernel, document))
-            .then(() => notebookPromise);
+        const wrappedNotebookPromise = this.getKernel(document).then(() => notebookPromise);
 
         const newCellExecutionQueue = new CellExecutionQueue(
             wrappedNotebookPromise,
@@ -221,33 +265,23 @@ export class KernelExecution implements IDisposable {
             return result;
         });
     }
-    private addKernelRestartHandler(kernel: IKernel, document: NotebookDocument) {
-        if (this.kernelRestartHandlerAdded.has(kernel)) {
-            return;
-        }
-        this.kernelRestartHandlerAdded.add(kernel);
-        traceInfo('Hooked up kernel restart handler');
-        kernel.onRestarted(
-            () => {
-                // We're only interested in restarts of the kernel associated with this document.
-                const executionQueue = this.documentExecutions.get(document);
-                if (kernel !== this.kernelProvider.get(document.uri) || !executionQueue) {
-                    return;
-                }
 
-                traceInfo('Cancel all executions as Kernel was restarted');
-                return executionQueue.cancel(true);
-            },
-            this,
-            this.disposables
-        );
+    @captureTelemetry(Telemetry.RestartKernel)
+    @captureTelemetry(Telemetry.RestartJupyterTime)
+    private async restartExecution(_document: NotebookDocument, session: IJupyterSession): Promise<void> {
+        // Just use the internal session. Pending cells should have been canceled by the caller
+        return session.restart(this.interruptTimeout).catch((exc) => {
+            traceWarning(`Error during restart: ${exc}`);
+        });
     }
+
     private async getKernel(document: NotebookDocument): Promise<IKernel> {
-        let kernel = this.kernelProvider.get(document.uri);
+        let kernel = this.kernelProvider.get(document);
         if (!kernel) {
-            kernel = this.kernelProvider.getOrCreate(document.uri, {
+            kernel = this.kernelProvider.getOrCreate(document, {
                 metadata: this.metadata,
-                controller: this.controller
+                controller: this.controller,
+                resourceUri: document.uri
             });
         }
         if (!kernel) {

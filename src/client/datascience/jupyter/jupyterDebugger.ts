@@ -7,10 +7,10 @@ import * as uuid from 'uuid/v4';
 import { DebugConfiguration, Disposable } from 'vscode';
 import { concatMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { IPythonDebuggerPathProvider } from '../../api/types';
+import { IPythonDebuggerPathProvider, IPythonInstaller } from '../../api/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, Product, ProductInstallStatus } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { traceCellResults } from '../common';
 import { Identifiers } from '../constants';
@@ -37,13 +37,15 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private readonly tracingEnableCode: string;
     private readonly tracingDisableCode: string;
     private runningByLine: boolean = false;
+    private isUsingPyKernel6OrLater?: boolean;
     constructor(
         @inject(IPythonDebuggerPathProvider) private readonly debuggerPathProvider: IPythonDebuggerPathProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IJupyterDebugService)
         @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
         private debugService: IJupyterDebugService,
-        @inject(IPlatformService) private platform: IPlatformService
+        @inject(IPlatformService) private platform: IPlatformService,
+        @inject(IPythonInstaller) private installer: IPythonInstaller
     ) {
         this.debuggerPackage = 'debugpy';
         this.enableDebuggerCode = `import debugpy;debugpy.listen(('localhost', 0))`;
@@ -76,7 +78,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     public async startDebugging(notebook: INotebook): Promise<void> {
+        const result = await this.installer.isProductVersionCompatible(
+            Product.ipykernel,
+            '>=6.0.0',
+            notebook.getKernelConnection()?.interpreter
+        );
         const settings = this.configService.getSettings(notebook.resource);
+        this.isUsingPyKernel6OrLater = result === ProductInstallStatus.Installed;
         return this.startDebugSession(
             (c) => this.debugService.startDebugging(undefined, c),
             notebook,
@@ -265,12 +273,15 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private buildSourceMap(fileHash: IFileHashes): ISourceMapRequest {
         const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.file }, pydevdSourceMaps: [] };
-
         sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map((cellHash) => {
             return {
                 line: cellHash.line,
                 endLine: cellHash.endLine,
-                runtimeSource: { path: `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>` },
+                runtimeSource: {
+                    path: this.isUsingPyKernel6OrLater
+                        ? fileHash.file
+                        : `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>`
+                },
                 runtimeLine: cellHash.runtimeLine
             };
         });

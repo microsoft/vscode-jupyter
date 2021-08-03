@@ -30,6 +30,7 @@ import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
     INotebook,
     INotebookEditor,
+    INotebookExecutionLogger,
     INotebookModel,
     INotebookProvider,
     InterruptResult,
@@ -89,7 +90,8 @@ export class NotebookEditor implements INotebookEditor {
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
         private readonly cellLanguageService: NotebookCellLanguageService,
-        private readonly serializer: NotebookSerializer
+        private readonly serializer: NotebookSerializer,
+        private loggers: INotebookExecutionLogger[]
     ) {
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
     }
@@ -215,7 +217,7 @@ export class NotebookEditor implements INotebookEditor {
             trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
-        const kernel = this.kernelProvider.get(this.file);
+        const kernel = this.kernelProvider.get(this.document);
         if (!kernel || this.restartingKernel) {
             traceInfo(
                 `Interrupt requested & no kernel or currently restarting ${this.document.uri} in notebookEditor.`
@@ -255,7 +257,7 @@ export class NotebookEditor implements INotebookEditor {
             trackKernelResourceInformation(this.document.uri, { restartKernel: true });
             return;
         }
-        const kernel = this.kernelProvider.get(this.file);
+        const kernel = this.kernelProvider.get(this.document);
 
         if (kernel && !this.restartingKernel) {
             if (await this.shouldAskForRestart()) {
@@ -340,6 +342,7 @@ export class NotebookEditor implements INotebookEditor {
         } finally {
             status.dispose();
             this.restartingKernel = false;
+            this.loggers.forEach((l) => l.onKernelRestarted(this.file));
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {

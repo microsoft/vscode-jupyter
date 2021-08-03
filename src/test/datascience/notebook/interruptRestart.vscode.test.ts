@@ -13,7 +13,6 @@ import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { Commands } from '../../../client/datascience/constants';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
-import { traceCellMessage } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
@@ -149,25 +148,16 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         traceInfo(`Step 7. Cell output`);
 
         // Restart the kernel & use event handler to check if it was restarted successfully.
-        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell.notebook.uri);
+        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell.notebook);
         if (!kernel) {
             throw new Error('Kernel not available');
         }
         const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
         await commands.executeCommand('jupyter.notebookeditor.restartkernel').then(noop, noop);
 
-        await waitForCondition(
-            async () => {
-                traceCellMessage(cell, 'Step 8 Cell Status');
-                return assertVSCCellIsNotRunning(cell);
-            },
-            15_000,
-            'Execution not cancelled first time.'
-        );
-
         // Wait for kernel to restart before we execute cells again.
         traceInfo('Step 9 Wait for restart');
-        await waitForKernelToRestart.assertFired(15_000);
+        await waitForKernelToRestart.assertFired(30_000);
         traceInfo('Step 10 Restarted');
 
         // Confirm we can execute a cell (using the new kernel session).
@@ -192,6 +182,59 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
 
         // KERNELPUSH
         //await vscEditor.kernel!.interrupt!(vscEditor.document);
+    });
+    test('Restarting kernel during run all will skip the rest of the cells', async function () {
+        traceInfo('Step 1');
+        await insertCodeCell('print(1)', { index: 0 });
+        await insertCodeCell('import time\nprint(2)\ntime.sleep(60)', { index: 1 });
+        await insertCodeCell('print(3)', { index: 2 });
+        const cell = vscEditor.document.cellAt(1);
+        // Ensure we click `Yes` when prompted to restart the kernel.
+        const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
+        const showInformationMessage = sinon
+            .stub(appShell, 'showInformationMessage')
+            .callsFake(function (message: string) {
+                traceInfo(`Step 2. ShowInformationMessage ${message}`);
+                if (message === DataScience.restartKernelMessage()) {
+                    traceInfo(`Step 3. ShowInformationMessage & yes to restart`);
+                    // User clicked ok to restart it.
+                    return DataScience.restartKernelMessageYes();
+                }
+                return (appShell.showInformationMessage as any).wrappedMethod.apply(appShell, arguments);
+            });
+        disposables.push({ dispose: () => showInformationMessage.restore() });
+
+        (editorProvider.activeEditor as any).shouldAskForRestart = () => Promise.resolve(false);
+        traceInfo(`Step 4. Before execute`);
+        await runAllCellsInActiveNotebook();
+        traceInfo(`Step 5. After execute`);
+
+        // Wait for cell to get busy.
+        await waitForCondition(async () => assertVSCCellIsRunning(cell), 15_000, 'Cell not being executed');
+        traceInfo(`Step 6. Cell is busy`);
+
+        // Wait for ?s, and verify cell is still running.
+        assertVSCCellIsRunning(cell);
+        // Wait for some output.
+        await waitForTextOutputInVSCode(cell, '2', 0, false, 15_000); // Wait for 15 seconds for it to start (possibly kernel is still starting).
+        traceInfo(`Step 7. Cell output`);
+
+        // Restart the kernel & use event handler to check if it was restarted successfully.
+        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell.notebook);
+        if (!kernel) {
+            throw new Error('Kernel not available');
+        }
+        const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
+        await commands.executeCommand('jupyter.notebookeditor.restartkernel').then(noop, noop);
+
+        // Wait for kernel to restart before we execute cells again.
+        traceInfo('Step 8 Wait for restart');
+        await waitForKernelToRestart.assertFired(30_000);
+        traceInfo('Step 9 Restarted');
+
+        // Confirm last cell is empty
+        const lastCell = vscEditor.document.cellAt(2);
+        assert.equal(lastCell.outputs.length, 0, 'Last cell should not have run');
     });
     test('Interrupt and running cells again should only run the necessary cells', async function () {
         // Interrupts on windows doesn't work well, not as well as on Unix.

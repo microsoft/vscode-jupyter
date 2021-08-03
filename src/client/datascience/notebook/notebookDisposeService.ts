@@ -32,9 +32,9 @@ export class NotebookDisposeService implements IExtensionSingleActivationService
     }
     private onDidCloseNotebookDocument(document: NotebookDocument) {
         traceInfo(`Notebook Closed ${document.uri.toString()}`);
-        const kernel = this.kernelProvider.get(document.uri);
+        const kernel = this.kernelProvider.get(document);
         if (kernel) {
-            traceInfo(`Kernel got disposed as a result of closing the notebook`, kernel.uri.toString());
+            traceInfo(`Kernel got disposed as a result of closing the notebook`, kernel.notebookUri.toString());
             kernel.dispose().catch(noop);
         }
         this.notebookProvider.disposeAssociatedNotebook({ identity: document.uri });

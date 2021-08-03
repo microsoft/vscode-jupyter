@@ -281,7 +281,28 @@
                 "title": "Debug",
                 "icon": "$(bug)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && config.jupyter.experimental.debugging"
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+            },
+            {
+                "command": "jupyter.runByLine",
+                "title": "Run by Line",
+                "icon": "$(debug-line-by-line)",
+                "category": "Jupyter",
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+            },
+            {
+                "command": "jupyter.runByLineContinue",
+                "title": "Continue",
+                "icon": "$(debug-line-by-line)",
+                "category": "Jupyter",
+                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+            },
+            {
+                "command": "jupyter.runByLineStop",
+                "title": "Stop",
+                "icon": "$(debug-stop)",
+                "category": "Jupyter",
+                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -921,13 +942,30 @@
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
-                    "group": "navigation@2",
+                    "group": "Jupyter",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.debugNotebook",
                     "group": "navigation@3",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && config.jupyter.experimental.debugging"
+                }
+            ],
+            "notebook/cell/title": [
+                {
+                    "command": "jupyter.runByLine",
+                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
+                    "group": "inline/cell@0"
+                },
+                {
+                    "command": "jupyter.runByLineContinue",
+                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
+                    "group": "inline/cell@0"
+                },
+                {
+                    "command": "jupyter.runByLineStop",
+                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.canDebug && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
+                    "group": "inline/cell@0"
                 }
             ],
             "interactive/toolbar": [
@@ -1012,6 +1050,26 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.debugNotebook",
+                    "title": "Debug",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.runByLine",
+                    "title": "Run by Line",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.runByLineContinue",
+                    "title": "Continue",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.runByLineStop",
+                    "title": "Stop",
+                    "when": "false"
+                },
                 {
                     "command": "jupyter.notebookeditor.keybind.toggleOutput",
                     "title": "%DataScience.toggleCellOutput%",
@@ -1489,7 +1547,7 @@
                 },
                 "jupyter.enableNativeInteractiveWindow": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Enables the preview native interactive window experience. Set to false to opt back into the webview interactive window experience.",
                     "scope": "machine"
                 },
@@ -1510,9 +1568,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "CustomEditor"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "List of experiment to opt into. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
                     "scope": "application"
@@ -1521,10 +1577,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "NativeNotebookEditor",
-                            "CustomEditor"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
                     "scope": "application"
@@ -1916,18 +1969,6 @@
                 ]
             }
         ],
-        "notebooks": [
-            {
-                "type": "jupyter-notebook",
-                "displayName": "Jupyter Notebook (preview)",
-                "selector": [
-                    {
-                        "filenamePattern": "*.ipynb"
-                    }
-                ],
-                "priority": "option"
-            }
-        ],
         "notebookRenderer": [
             {
                 "id": "jupyter-ipywidget-renderer",
@@ -1935,6 +1976,15 @@
                 "displayName": "Jupyter IPyWidget Renderer",
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
+                ]
+            },
+            {
+                "id": "jupyter-error-renderer",
+                "entrypoint": "./out/datascience-ui/errorRenderer/errorRenderer.js",
+                "displayName": "Jupyter Error Renderer",
+                "requiresMessaging": "always",
+                "mimeTypes": [
+                    "application/vnd.code.notebook.error"
                 ]
             },
             {
@@ -2126,6 +2176,7 @@
         "underscore": "^1.12.1",
         "unicode": "^10.0.0",
         "untildify": "^3.0.2",
+        "url-parse": "^1.5.0",
         "uuid": "^3.3.2",
         "vscode-debugprotocol": "^1.41.0",
         "vscode-extension-telemetry": "0.1.4",
@@ -2213,6 +2264,7 @@
         "@typescript-eslint/eslint-plugin": "^3.10.1",
         "@typescript-eslint/eslint-plugin-tslint": "^4.13.0",
         "@typescript-eslint/parser": "^3.10.1",
+        "@vscode/test-electron": "^1.6.1",
         "acorn": "^6.4.1",
         "babel-polyfill": "^6.26.0",
         "cache-loader": "^4.1.0",
@@ -2270,6 +2322,7 @@
         "monaco-textmate": "^3.0.1",
         "nocache": "^2.1.0",
         "nock": "^10.0.6",
+        "node-gyp-build": "^4.2.3",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
@@ -2291,6 +2344,7 @@
         "terser-webpack-plugin": "^3.1.0",
         "thread-loader": "^2.1.3",
         "transform-loader": "^0.2.4",
+        "trim": "^0.0.3",
         "ts-loader": "^5.3.0",
         "ts-mock-imports": "^1.3.0",
         "ts-mockito": "^2.5.0",
@@ -2308,7 +2362,6 @@
         "url-loader": "^1.1.2",
         "vsce": "^1.59.0",
         "vscode-dts": "^0.3.1",
-        "vscode-test": "^1.4.0",
         "webpack": "^4.37.0",
         "webpack-bundle-analyzer": "^3.6.0",
         "webpack-cli": "^3.1.2",

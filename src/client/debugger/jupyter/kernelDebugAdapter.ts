@@ -16,10 +16,11 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { randomBytes } from 'crypto';
 import * as path from 'path';
 import { IDebuggingCellMap, IJupyterSession } from '../../datascience/types';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { KernelMessage } from '@jupyterlab/services';
 import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { IKernelDebugAdapter } from '../types';
 
 const debugRequest = (message: DebugProtocol.Request, jupyterSessionId: string): KernelMessage.IDebugRequestMsg => {
     return {
@@ -90,14 +91,13 @@ interface debugInfoResponseBreakpoint {
 // For info on the custom requests implemented by jupyter see:
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#additions-to-the-dap
-export class KernelDebugAdapter implements DebugAdapter {
+export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
     private readonly fileToCell = new Map<string, NotebookCell>();
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
-    private readonly messageListener = new Map<
-        number,
-        Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg>
-    >();
+    private isRunByLine = false;
+    private runByLineThreadId: number = 1;
+    private runByLineSeq: number = 0;
 
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
 
@@ -109,9 +109,15 @@ export class KernelDebugAdapter implements DebugAdapter {
         private commandManager: ICommandManager,
         private fs: IFileSystem
     ) {
+        if (this.session.name.includes('RBL=')) {
+            this.isRunByLine = true;
+        }
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if ((msg.content as any).event === 'stopped') {
+            const content = msg.content as any;
+            if (content.event === 'stopped') {
+                this.runByLineThreadId = content.body.threadId;
+                this.runByLineSeq = content.seq;
                 this.sendMessage.fire(msg.content);
             }
         };
@@ -138,52 +144,57 @@ export class KernelDebugAdapter implements DebugAdapter {
         }
 
         // after disconnecting, hide the breakpoint margin
-        if (message.type === 'request' && (message as DebugProtocol.Request).command === 'disconnect') {
+        if (
+            !this.isRunByLine &&
+            message.type === 'request' &&
+            (message as DebugProtocol.Request).command === 'disconnect'
+        ) {
             void this.commandManager.executeCommand('notebook.toggleBreakpointMargin', this.notebookDocument);
         }
 
-        // map Source paths from VS Code to Ipykernel temp files
-        this.getMessageSourceAndHookIt(message, (source) => {
-            if (source && source.path) {
-                const path = this.cellToFile.get(source.path);
-                if (path) {
-                    source.path = path;
+        // initialize Run By Line
+        if (
+            this.isRunByLine &&
+            message.type === 'request' &&
+            (message as DebugProtocol.Request).command === 'configurationDone'
+        ) {
+            await this.initializeRunByLine(message.seq);
+        }
+
+        this.sendRequestToJupyterSession(message);
+    }
+
+    public runByLineContinue() {
+        if (this.isRunByLine) {
+            const message: DebugProtocol.StepInRequest = {
+                seq: this.runByLineSeq,
+                type: 'request',
+                command: 'stepIn',
+                arguments: {
+                    threadId: this.runByLineThreadId
                 }
-            }
-        });
+            };
 
-        if (message.type === 'request') {
-            const request = debugRequest(message as DebugProtocol.Request, this.jupyterSession.sessionId);
-            const control = this.jupyterSession.requestDebug({
-                seq: request.content.seq,
-                type: 'request',
-                command: request.content.command,
-                arguments: request.content.arguments
-            });
+            this.sendRequestToJupyterSession(message);
+        }
+    }
 
-            if (control) {
-                control.onReply = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
-                control.onIOPub = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
-                this.messageListener.set(message.seq, control);
-            }
-        } else if (message.type === 'response') {
-            // responses of reverse requests
-            const response = debugResponse(message as DebugProtocol.Response, this.jupyterSession.sessionId);
-            this.jupyterSession.requestDebug({
-                seq: response.content.seq,
+    public runByLineStop() {
+        if (this.isRunByLine) {
+            const message: DebugProtocol.DisconnectRequest = {
+                seq: this.runByLineSeq,
                 type: 'request',
-                command: response.content.command
-            });
-        } else {
-            // cannot send via iopub, no way to handle events even if they existed
-            traceError(`Unknown message type to send ${message.type}`);
+                command: 'disconnect',
+                arguments: {
+                    restart: false
+                }
+            };
+
+            this.sendRequestToJupyterSession(message);
         }
     }
 
     dispose() {
-        this.messageListener.forEach((ml) => ml.dispose());
-        this.messageListener.clear();
-
         // clean temp files
         this.cellToFile.forEach((tempPath) => {
             const norm = path.normalize(tempPath);
@@ -248,6 +259,44 @@ export class KernelDebugAdapter implements DebugAdapter {
                 }
             });
         });
+    }
+
+    private sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
+        // map Source paths from VS Code to Ipykernel temp files
+        this.getMessageSourceAndHookIt(message, (source) => {
+            if (source && source.path) {
+                const path = this.cellToFile.get(source.path);
+                if (path) {
+                    source.path = path;
+                }
+            }
+        });
+
+        if (message.type === 'request') {
+            const request = debugRequest(message as DebugProtocol.Request, this.jupyterSession.sessionId);
+            const control = this.jupyterSession.requestDebug({
+                seq: request.content.seq,
+                type: 'request',
+                command: request.content.command,
+                arguments: request.content.arguments
+            });
+
+            if (control) {
+                control.onReply = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
+                control.onIOPub = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
+            }
+        } else if (message.type === 'response') {
+            // responses of reverse requests
+            const response = debugResponse(message as DebugProtocol.Response, this.jupyterSession.sessionId);
+            this.jupyterSession.requestDebug({
+                seq: response.content.seq,
+                type: 'request',
+                command: response.content.command
+            });
+        } else {
+            // cannot send via iopub, no way to handle events even if they existed
+            traceError(`Unknown message type to send ${message.type}`);
+        }
     }
 
     private controlCallback(message: DebugProtocol.ProtocolMessage): void {
@@ -342,5 +391,60 @@ export class KernelDebugAdapter implements DebugAdapter {
                 }
                 break;
         }
+    }
+
+    private async initializeRunByLine(seq: number) {
+        const response = await this.session.customRequest('debugInfo');
+
+        // If there's breakpoints at this point, send a message to VS Code to delete them
+        (response as debugInfoResponse).breakpoints.forEach((breakpoint) => {
+            const message: DebugProtocol.SetBreakpointsRequest = {
+                seq: 0,
+                type: 'request',
+                command: 'setBreakpoints',
+                arguments: {
+                    source: {
+                        path: breakpoint.source
+                    },
+                    breakpoints: []
+                }
+            };
+            this.sendMessage.fire(message);
+        });
+
+        // put breakpoint at the beginning of the cell
+        const index = this.session.name.indexOf('RBL=');
+        const cellIndex = Number(this.session.name.substring(index + 4));
+        const cell = this.notebookDocument.cellAt(cellIndex);
+
+        const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
+            line: 1
+        };
+        const splitPath = cell.notebook.uri.path.split('/');
+        const name = splitPath[splitPath.length - 1];
+        const message: DebugProtocol.SetBreakpointsRequest = {
+            seq: seq + 1,
+            type: 'request',
+            command: 'setBreakpoints',
+            arguments: {
+                source: {
+                    name: name,
+                    path: cell.document.uri.toString()
+                },
+                lines: [1],
+                breakpoints: [initialBreakpoint],
+                sourceModified: false
+            }
+        };
+
+        const args = (message as DebugProtocol.Request).arguments;
+        if (args.source && args.source.path && args.source.path.indexOf('vscode-notebook-cell:') === 0) {
+            await this.dumpCell(args.source.path);
+        }
+
+        this.sendRequestToJupyterSession(message);
+
+        // Run cell
+        await this.commandManager.executeCommand('notebook.cell.execute');
     }
 }

@@ -233,12 +233,12 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
     serviceManager.addSingleton<INotebookEditorProvider>(OurNotebookProvider, NativeEditorProvider);
+    serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProviderWrapper);
     serviceManager.add<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookEditorCompatibilitySupport);
     serviceManager.add<NotebookEditorCompatibilitySupport>(NotebookEditorCompatibilitySupport, NotebookEditorCompatibilitySupport);
     if (!useVSCodeNotebookAPI) {
         serviceManager.add<INotebookEditor>(INotebookEditor, NativeEditor);
-        serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     }
 
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
@@ -297,14 +297,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, VariableViewActivationService);
     serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
     const configuration = workspace.getConfiguration();
-    if (
-        configuration.get<boolean>('jupyter.experiments.enabled') === true &&
-        !configuration.get<string[]>('jupyter.experiments.optOutFrom')?.includes('All') &&
-        // If in Daily Insiders channel and in VS Code Insiders, opt in by default
-        ((configuration.get<string>('python.insidersChannel') === 'daily' && isVSCInsiders) ||
-            // If user explicitly asked to be in the experiment, also opt in
-            configuration.get<boolean>('jupyter.enableNativeInteractiveWindow') === true)
-    ) {
+    if (configuration.get<boolean>('jupyter.experiments.enabled') === true && !configuration.get<string[]>('jupyter.experiments.optOutFrom')?.includes('All') && configuration.get<boolean>('jupyter.enableNativeInteractiveWindow') === true) {
         serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, NativeInteractiveWindowProvider);
         serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
     } else {

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Event, EventEmitter, Memento, workspace, window, ViewColumn } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Memento, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 
 import {
@@ -11,7 +11,6 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../common/application/types';
-import { JVSC_EXTENSION_ID } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -39,7 +38,6 @@ import {
     IStatusProvider
 } from '../types';
 import { NativeInteractiveWindow } from './nativeInteractiveWindow';
-import { INativeInteractiveWindow } from './types';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -54,7 +52,9 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     }
     public get activeWindow(): IInteractiveWindow | undefined {
         return this._windows.find(
-            (win) => win.notebookUri.toString() === window.activeNotebookEditor?.document.uri.toString()
+            (win) =>
+                window.activeNotebookEditor !== undefined &&
+                win.notebookUri?.toString() === window.activeNotebookEditor?.document.uri.toString()
         );
     }
     public get windows(): ReadonlyArray<IInteractiveWindow> {
@@ -75,8 +75,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
     ) {
         asyncRegistry.push(this);
     }
@@ -94,9 +93,10 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         let result = this.get(resource, mode) as IInteractiveWindow;
         if (!result) {
             // No match. Create a new item.
-            result = await this.create(resource, mode);
+            result = this.create(resource, mode);
         }
 
+        await result.readyPromise;
         return result;
     }
 
@@ -109,30 +109,11 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         noop();
     }
 
-    protected async create(resource: Resource, mode: InteractiveWindowMode): Promise<NativeInteractiveWindow> {
-        // When this is not undefined, VS Code will always pick this controller for the interactive window
-        // When this is undefined, VS Code will fallback to its own cached notebook-controller association
-        // If VS Code does not have a cached association, the user will be asked to select a kernel from the
-        // kernel picker quickpick UI
-        const preferredControllerId = await this.getControllerForInteractiveWindow();
-
-        const hasOwningFile = resource !== undefined;
-        const { notebookUri } = (await this.commandManager.executeCommand(
-            'interactive.open',
-            // Keep focus on the owning file if there is one
-            { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
-            undefined,
-            preferredControllerId
-        )) as INativeInteractiveWindow;
-        const notebookDocument = workspace.notebookDocuments.find(
-            (doc) => doc.uri.toString() === notebookUri.toString()
-        );
-        if (!notebookDocument) {
-            // This means VS Code failed to create an interactive window.
-            // This should never happen.
-            throw new Error('Failed to request creation of interactive window from VS Code.');
-        }
-
+    // Note to future devs: this function must be synchronous. Do not await on anything before calling
+    // the interactive window ctor and adding the interactive window to the provider's list of known windows.
+    // Otherwise we risk a race condition where e.g. multiple run cell requests come in quick and we end up
+    // instantiating multiples.
+    private create(resource: Resource, mode: InteractiveWindowMode) {
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
         const result = new NativeInteractiveWindow(
@@ -148,7 +129,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             mode,
             this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
             this.serviceContainer.get<IExportDialog>(IExportDialog),
-            notebookDocument,
             this.notebookControllerManager,
             this.kernelProvider,
             this.disposables,
@@ -165,12 +145,8 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         this.disposables.push(handler);
         this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
 
-        // Show in the background
-        result.show().ignoreErrors();
-
         // fire created event
         this._onDidCreateInteractiveWindow.fire(result);
-
         return result;
     }
 
@@ -235,11 +211,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             }
             return false;
         });
-    }
-
-    private async getControllerForInteractiveWindow(): Promise<string | undefined> {
-        const preferredController = await this.notebookControllerManager.getInteractiveController();
-        return preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
     }
 
     // TODO: we don't currently have a way to know when the VS Code InteractiveEditor

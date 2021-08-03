@@ -8,6 +8,7 @@ import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
+import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
@@ -16,6 +17,7 @@ import { IDisposable, IJupyterSettings } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
+import { IS_CI_SERVER } from './ciConstants';
 
 const StreamZip = require('node-stream-zip');
 
@@ -722,5 +724,24 @@ export function arePathsSame(path1: string, path2: string) {
         return path1.toLowerCase() === path2.toLowerCase();
     } else {
         return path1 === path2;
+    }
+}
+
+/**
+ * Captures screenshots (png format) & dumpts into root directory (only on CI).
+ * If there's a failure, it will be logged (errors are swallowed).
+ */
+export async function captureScreenShot(fileNamePrefix: string) {
+    if (!IS_CI_SERVER) {
+        return;
+    }
+    const name = `${fileNamePrefix}_${uuid()}`.replace(/[\W]+/g, '_');
+    const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, `${name}-screenshot.png`);
+    try {
+        const screenshot = require('screenshot-desktop');
+        await screenshot({ filename });
+        console.info(`Screenshot captured into ${filename}`);
+    } catch (ex) {
+        console.error(`Failed to capture screenshot into ${filename}`, ex);
     }
 }
