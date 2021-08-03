@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import { injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -36,6 +37,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
+@injectable()
 export class JupyterServerBase implements INotebookServer {
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private _id = uuid();

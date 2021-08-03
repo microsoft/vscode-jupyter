@@ -37,31 +37,31 @@ import { computeWorkingDirectory } from '../jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
-import { IRoleBasedObject } from './roleBasedFactory';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
-import { isCI } from '../../../common/constants';
+import { isCI, STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
+import { inject, injectable, named } from 'inversify';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class HostJupyterServer extends JupyterServerBase implements IRoleBasedObject, INotebookServer {
+@injectable()
+export class HostJupyterServer extends JupyterServerBase implements INotebookServer {
     private disposed = false;
     constructor(
-        _startupTime: number,
-        asyncRegistry: IAsyncDisposableRegistry,
-        disposableRegistry: IDisposableRegistry,
-        configService: IConfigurationService,
-        sessionManager: IJupyterSessionManagerFactory,
-        private workspaceService: IWorkspaceService,
-        serviceContainer: IServiceContainer,
-        private appService: IApplicationShell,
-        private fs: IFileSystem,
-        private readonly localKernelFinder: ILocalKernelFinder,
-        private readonly remoteKernelFinder: IRemoteKernelFinder,
-        private readonly interpreterService: IInterpreterService,
-        outputChannel: IOutputChannel,
-        private readonly progressReporter: ProgressReporter,
-        private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly vscodeNotebook: IVSCodeNotebook
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IConfigurationService) configService: IConfigurationService,
+        @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IApplicationShell) private readonly appService: IApplicationShell,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
+        @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook
     ) {
         super(asyncRegistry, disposableRegistry, configService, sessionManager, serviceContainer, outputChannel);
     }

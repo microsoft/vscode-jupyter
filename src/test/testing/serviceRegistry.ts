@@ -8,8 +8,8 @@ import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
-import { JupyterServerWrapper } from '../../client/datascience/jupyter/jupyterServerWrapper';
 import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
+import { HostJupyterServer } from '../../client/datascience/jupyter/liveshare/hostJupyterServer';
 import {
     ICodeCssGenerator,
     IInteractiveWindow,
@@ -41,7 +41,7 @@ export class UnitTestIocContainer extends IocContainer {
         );
         this.serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
-        this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
+        this.serviceManager.add<INotebookServer>(INotebookServer, HostJupyterServer);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     }
 }

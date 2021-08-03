@@ -166,7 +166,6 @@ import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporte
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { JupyterNotebookProvider } from '../../client/datascience/jupyter/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyterPasswordConnect';
-import { JupyterServerWrapper } from '../../client/datascience/jupyter/jupyterServerWrapper';
 import { JupyterSessionManagerFactory } from '../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
 import { KernelDependencyService } from '../../client/datascience/jupyter/kernels/kernelDependencyService';
@@ -316,6 +315,7 @@ import { LocalKnownPathKernelSpecFinder } from '../../client/datascience/kernel-
 import { JupyterPaths } from '../../client/datascience/kernel-launcher/jupyterPaths';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
+import { HostJupyterServer } from '../../client/datascience/jupyter/liveshare/hostJupyterServer';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -569,7 +569,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(mockExtension.getExtension(anything())).thenReturn();
         when(mockExtension.onDidChange).thenReturn(new EventEmitter<void>().event);
         this.serviceManager.addSingletonInstance<IExtensions>(IExtensions, instance(mockExtension));
-        this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
+        this.serviceManager.add<INotebookServer>(INotebookServer, HostJupyterServer);
         this.serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
         this.serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
         this.serviceManager.addSingleton<IRawNotebookSupportedService>(

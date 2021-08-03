@@ -82,7 +82,6 @@ import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
 import { JupyterNotebookProvider } from './jupyter/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from './jupyter/jupyterPasswordConnect';
-import { JupyterServerWrapper } from './jupyter/jupyterServerWrapper';
 import { JupyterSessionManagerFactory } from './jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from './jupyter/jupyterVariables';
 import { isLocalLaunch } from './jupyter/kernels/helpers';
@@ -201,6 +200,7 @@ import { JupyterPaths } from './kernel-launcher/jupyterPaths';
 import { LocalKnownPathKernelSpecFinder } from './kernel-launcher/localKnownPathKernelSpecFinder';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 import { HostJupyterExecution } from './jupyter/liveshare/hostJupyterExecution';
+import { HostJupyterServer } from './jupyter/liveshare/hostJupyterServer';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -260,7 +260,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
-    serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
+    serviceManager.add<INotebookServer>(INotebookServer, HostJupyterServer);
     serviceManager.addSingleton<INotebookStorage>(INotebookStorage, NativeEditorStorage);
     serviceManager.addSingleton<INotebookStorageProvider>(INotebookStorageProvider, NotebookStorageProvider);
     serviceManager.addSingleton<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider, PreferredRemoteKernelIdProvider);
