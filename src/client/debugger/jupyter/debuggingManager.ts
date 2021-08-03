@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import {
     debug,
     NotebookDocument,
@@ -12,28 +12,23 @@ import {
     DebugSession,
     NotebookCell,
     DebugSessionOptions,
-    DebugAdapterTrackerFactory,
-    DebugAdapterTracker,
-    ProviderResult,
     DebugConfiguration,
-    DebugProtocolMessage
 } from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
-import { IDebuggingCellMap, IJupyterDebugService, INotebookProvider } from '../../datascience/types';
+import { IDebuggingCellMap, INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { INotebookControllerManager } from '../../datascience/notebook/types';
 import { ContextKey } from '../../common/contextKey';
-import { EditorContexts, Identifiers } from '../../datascience/constants';
+import { EditorContexts } from '../../datascience/constants';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IFileSystem } from '../../common/platform/types';
-import { DebugLocationTracker } from '../../datascience/debugLocationTracker';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -75,12 +70,11 @@ class Debugger {
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
 @injectable()
-export class DebuggingManager implements IExtensionSingleActivationService, DebugAdapterTrackerFactory, IDisposable {
+export class DebuggingManager implements IExtensionSingleActivationService, IDisposable {
     private debuggingInProgress: ContextKey;
     private runByLineInProgress: ContextKey;
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
     private notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapter>();
-    private activeTrackers: Map<string, DebugLocationTracker> = new Map<string, DebugLocationTracker>();
     private readonly disposables: IDisposable[] = [];
 
     public constructor(
@@ -91,10 +85,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, Debu
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IJupyterDebugService)
-        @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
-        private debugService: IJupyterDebugService
+        @inject(IFileSystem) private fs: IFileSystem
     ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
@@ -153,11 +144,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, Debu
                                     this.commandManager,
                                     this.fs
                                 );
-                                this.disposables.push(
-                                    adapter.onDidSendMessage((msg: DebugProtocolMessage) => {
-                                        this.debugService.requestKernelDebugAdapterVariables(msg);
-                                    })
-                                );
                                 this.notebookToDebugAdapter.set(debug.document, adapter);
                                 return new DebugAdapterInlineImplementation(adapter);
                             } else {
@@ -169,8 +155,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, Debu
                     return;
                 }
             }),
-
-            this.debugService.registerDebugAdapterTrackerFactory(DataScience.pythonKernelDebugAdapter(), this),
 
             this.commandManager.registerCommand(DSCommands.DebugNotebook, () => {
                 const editor = this.vscNotebook.activeNotebookEditor;
@@ -213,21 +197,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, Debu
         );
     }
 
-    public createDebugAdapterTracker(session: DebugSession): ProviderResult<DebugAdapterTracker> {
-        const result = new DebugLocationTracker(session.id);
-        this.activeTrackers.set(session.id, result);
-        result.sessionEnded(this.onSessionEnd.bind(this));
-        return result;
-    }
-
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
-    }
-
-    private onSessionEnd(locationTracker: DebugLocationTracker) {
-        if (locationTracker.sessionId) {
-            this.activeTrackers.delete(locationTracker.sessionId);
-        }
     }
 
     private updateToolbar(debugging: boolean) {
@@ -257,8 +228,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, Debu
             this.notebookToDebugger.set(doc, dbg);
 
             try {
-                const session = await dbg.session;
-                this.debugService.startKernelDebugAdapterSession(session);
+                await dbg.session;
 
                 if (!cell) {
                     // toggle the breakpoint margin

@@ -12,7 +12,6 @@ import {
     CodeLens,
     CodeLensProvider,
     DebugConfiguration,
-    DebugProtocolMessage,
     DebugSession,
     Disposable,
     Event,
@@ -271,7 +270,7 @@ export interface INotebookServerOptions {
     allowUI(): boolean;
 }
 
-export interface IHoverProvider extends HoverProvider {}
+export interface IHoverProvider extends HoverProvider { }
 export const IHoverProvider = Symbol('IHoverProvider');
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
@@ -1423,8 +1422,6 @@ export interface IJupyterDebugService extends IDebugService {
      * Stop debugging
      */
     stop(): void;
-    requestKernelDebugAdapterVariables(msg: DebugProtocolMessage): void;
-    startKernelDebugAdapterSession(session: DebugSession): void;
 }
 
 export interface IJupyterServerUri {

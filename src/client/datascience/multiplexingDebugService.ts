@@ -8,7 +8,6 @@ import {
     DebugConfiguration,
     DebugConfigurationProvider,
     DebugConsole,
-    DebugProtocolMessage,
     DebugSession,
     DebugSessionCustomEvent,
     Disposable,
@@ -142,14 +141,6 @@ export class MultiplexingDebugService implements IJupyterDebugService {
             // Stop our debugging UI session, no await as we just want it stopped
             void this.commandManager.executeCommand('workbench.action.debug.stop');
         }
-    }
-
-    public requestKernelDebugAdapterVariables(msg: DebugProtocolMessage): void {
-        return this.jupyterDebugService.requestKernelDebugAdapterVariables(msg);
-    }
-
-    public startKernelDebugAdapterSession(session: DebugSession): void {
-        return this.jupyterDebugService.startKernelDebugAdapterSession(session);
     }
 
     private get activeService(): IDebugService {

@@ -24,7 +24,7 @@ export class MockDebuggerService implements IJupyterDebugService {
         @inject(IJupyterDebugService)
         @named(Identifiers.RUN_BY_LINE_DEBUGSERVICE)
         private jupyterDebugService: IJupyterDebugService
-    ) {}
+    ) { }
     public get activeDebugSession(): DebugSession | undefined {
         return this.activeService.activeDebugSession;
     }
@@ -89,13 +89,6 @@ export class MockDebuggerService implements IJupyterDebugService {
     }
     public stop(): void {
         return this.activeService.stop();
-    }
-    public requestKernelDebugAdapterVariables(): void {
-        return;
-    }
-
-    public startKernelDebugAdapterSession(): void {
-        return;
     }
     private get activeService(): IJupyterDebugService {
         return this.jupyterDebugService;
