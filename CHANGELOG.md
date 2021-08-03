@@ -9,6 +9,10 @@
 
 ### Fixes
 
+1. Restore plotviewer in Native Notebooks.
+   ([#6315](https://github.com/Microsoft/vscode-jupyter/issues/6315))
+1. Fix debugging in `Interactive Window` when using `IPyKernel 6`.
+   ([#6534](https://github.com/Microsoft/vscode-jupyter/issues/6534))
 1. Add a placeholder `Python 3` kernel if user doesn't have any Python interpreters, with ability to notify user to install Python extenssion or Python runtime.
    ([#5864](https://github.com/Microsoft/vscode-jupyter/issues/5864))
 1. Fixes to completion items received from Jupyter.
@@ -17,14 +21,10 @@
    ([#5996](https://github.com/Microsoft/vscode-jupyter/issues/5996))
 1. Remove popup tip that indicates to users the kernel picker is in the bottom right.
    ([#6016](https://github.com/Microsoft/vscode-jupyter/issues/6016))
-1. Restore plotviewer in Native Notebooks.
-   ([#6315](https://github.com/Microsoft/vscode-jupyter/issues/6315))
 1. Ensure Pyspark kernels are listed.
    ([#6316](https://github.com/Microsoft/vscode-jupyter/issues/6316))
 1. Fix problem where the active interpreter is not being used for the interactive window when not running with raw kernel.
    ([#6409](https://github.com/Microsoft/vscode-jupyter/issues/6409))
-1. Fix debugging in `Interactive Window` when using `IPyKernel 6`.
-   ([#6534](https://github.com/Microsoft/vscode-jupyter/issues/6534))
 1. `Ctrl+Enter` in native notebooks should put cell into command mode immediately, then run the cell.
    ([#6582](https://github.com/Microsoft/vscode-jupyter/issues/6582))
 1. List non-traditional (not using `ipykernel`) global Python kernelspecs.
