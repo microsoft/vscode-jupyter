@@ -6,7 +6,7 @@ import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IPythonExtensionChecker } from '../../api/types';
-import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -38,7 +38,6 @@ interface IRawNotebookProviderInterface extends IRoleBasedObject, IRawNotebookPr
 /* eslint-disable @typescript-eslint/prefer-function-type */
 type RawNotebookProviderClassType = {
     new (
-        liveShare: ILiveShareApi,
         startupTime: number,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
@@ -65,7 +64,6 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider {
     private serverFactory: RoleBasedFactory<IRawNotebookProviderInterface, RawNotebookProviderClassType>;
 
     constructor(
-        @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(DataScienceStartupTime) startupTime: number,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -86,7 +84,6 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider {
         // the liveshare state.
         this.serverFactory = new RoleBasedFactory<IRawNotebookProviderInterface, RawNotebookProviderClassType>(
             HostRawNotebookProvider,
-            liveShare,
             startupTime,
             disposableRegistry,
             asyncRegistry,

@@ -7,12 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IPythonExtensionChecker } from '../../../api/types';
-import {
-    IApplicationShell,
-    ILiveShareApi,
-    IVSCodeNotebook,
-    IWorkspaceService
-} from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceInfoIf } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -51,7 +46,6 @@ import { isCI } from '../../../common/constants';
 export class HostJupyterServer extends JupyterServerBase implements IRoleBasedObject, INotebookServer {
     private disposed = false;
     constructor(
-        private liveShare: ILiveShareApi,
         _startupTime: number,
         asyncRegistry: IAsyncDisposableRegistry,
         disposableRegistry: IDisposableRegistry,
@@ -69,15 +63,7 @@ export class HostJupyterServer extends JupyterServerBase implements IRoleBasedOb
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly vscodeNotebook: IVSCodeNotebook
     ) {
-        super(
-            liveShare,
-            asyncRegistry,
-            disposableRegistry,
-            configService,
-            sessionManager,
-            serviceContainer,
-            outputChannel
-        );
+        super(asyncRegistry, disposableRegistry, configService, sessionManager, serviceContainer, outputChannel);
     }
 
     public async dispose(): Promise<void> {
@@ -181,7 +167,6 @@ export class HostJupyterServer extends JupyterServerBase implements IRoleBasedOb
             if (session) {
                 // Create our notebook
                 const notebook = new HostJupyterNotebook(
-                    this.liveShare,
                     session,
                     configService,
                     disposableRegistry,

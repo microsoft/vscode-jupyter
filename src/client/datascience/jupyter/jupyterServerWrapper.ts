@@ -7,7 +7,7 @@ import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IPythonExtensionChecker } from '../../api/types';
-import { IApplicationShell, ILiveShareApi, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
@@ -40,7 +40,6 @@ interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
 /* eslint-disable @typescript-eslint/prefer-function-type */
 type JupyterServerClassType = {
     new (
-        liveShare: ILiveShareApi,
         startupTime: number,
         asyncRegistry: IAsyncDisposableRegistry,
         disposableRegistry: IDisposableRegistry,
@@ -71,7 +70,6 @@ export class JupyterServerWrapper implements INotebookServer {
     private _id: string = uuid();
 
     constructor(
-        @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(DataScienceStartupTime) startupTime: number,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -93,7 +91,6 @@ export class JupyterServerWrapper implements INotebookServer {
         // the liveshare state.
         this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
             HostJupyterServer,
-            liveShare,
             startupTime,
             asyncRegistry,
             disposableRegistry,

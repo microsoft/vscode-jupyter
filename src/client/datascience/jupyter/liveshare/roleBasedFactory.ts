@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as vscode from 'vscode';
-
 import { IAsyncDisposable } from '../../../common/types';
 import { ClassType } from '../../../ioc/types';
 
@@ -12,14 +10,9 @@ export interface IRoleBasedObject extends IAsyncDisposable {}
 export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends ClassType<T>> {
     private ctorArgs: ConstructorParameters<CtorType>[];
     private createPromise: Promise<T> | undefined;
-    private sessionChangedEmitter = new vscode.EventEmitter<void>();
     constructor(private hostCtor: CtorType, ...args: ConstructorParameters<CtorType>) {
         this.ctorArgs = args;
         this.createPromise = this.createBasedOnRole(); // We need to start creation immediately or one side may call before we init.
-    }
-
-    public get sessionChanged(): vscode.Event<void> {
-        return this.sessionChangedEmitter.event;
     }
 
     public get(): Promise<T> {

@@ -3,12 +3,7 @@
 'use strict';
 import { Observable } from 'rxjs/Observable';
 import * as vscode from 'vscode';
-import {
-    IApplicationShell,
-    ILiveShareApi,
-    IVSCodeNotebook,
-    IWorkspaceService
-} from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
@@ -22,7 +17,6 @@ import {
     InterruptResult
 } from '../../types';
 import { JupyterNotebookBase } from '../jupyterNotebook';
-import { ResponseQueue } from './responseQueue';
 import { IRoleBasedObject } from './roleBasedFactory';
 
 import { IFileSystem } from '../../../common/platform/types';
@@ -31,12 +25,10 @@ import { IPythonExecutionFactory } from '../../../common/process/types';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostJupyterNotebook extends JupyterNotebookBase implements IRoleBasedObject, INotebook {
-    private localResponses: ResponseQueue = new ResponseQueue();
     private requestLog: Map<string, number> = new Map<string, number>();
     private isDisposed = false;
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
-        liveShare: ILiveShareApi,
         session: IJupyterSession,
         configService: IConfigurationService,
         disposableRegistry: IDisposableRegistry,
@@ -52,7 +44,6 @@ export class HostJupyterNotebook extends JupyterNotebookBase implements IRoleBas
         executionFactory: IPythonExecutionFactory
     ) {
         super(
-            liveShare,
             session,
             configService,
             disposableRegistry,
@@ -86,17 +77,7 @@ export class HostJupyterNotebook extends JupyterNotebookBase implements IRoleBas
         id: string,
         silent?: boolean
     ): Observable<ICell[]> {
-        // See if this has already been asked for not
-        if (this.requestLog.has(id)) {
-            // This must be a local call that occurred after a guest call. Just
-            // use the local responses to return the results.
-            return this.localResponses.waitForObservable(code, id);
-        } else {
-            // Otherwise make a new request and save response in the catchup list. THis is a
-            // a request that came directly from the host so the host will be listening to the observable returned
-            // and we don't need to save the response in the local queue.
-            return this.makeObservableRequest(code, file, line, id, silent);
-        }
+        return this.makeObservableRequest(code, file, line, id, silent);
     }
 
     public async restartKernel(timeoutMs: number): Promise<void> {

@@ -6,7 +6,7 @@ import '../../../common/extensions';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
 
 import { IFileSystem } from '../../../common/platform/types';
@@ -22,32 +22,31 @@ import { IJupyterExecution, INotebookServer, INotebookServerOptions } from '../.
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
 import { NotebookStarter } from '../notebookStarter';
-import { IRoleBasedObject } from './roleBasedFactory';
 import { ServerCache } from './serverCache';
+import { inject, injectable, named } from 'inversify';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-// This class is really just a wrapper around a jupyter execution that also provides a shared live share service
-export class HostJupyterExecution extends JupyterExecutionBase implements IRoleBasedObject, IJupyterExecution {
+@injectable()
+export class HostJupyterExecution extends JupyterExecutionBase implements IJupyterExecution {
     private serverCache: ServerCache;
     private _disposed = false;
     private _id = uuid();
     constructor(
-        liveShare: ILiveShareApi,
-        interpreterService: IInterpreterService,
-        disposableRegistry: IDisposableRegistry,
-        asyncRegistry: IAsyncDisposableRegistry,
-        fs: IFileSystem,
-        workspace: IWorkspaceService,
-        configService: IConfigurationService,
-        kernelSelector: KernelSelector,
-        notebookStarter: NotebookStarter,
-        appShell: IApplicationShell,
-        jupyterOutputChannel: IOutputChannel,
-        serviceContainer: IServiceContainer
+        @inject(IInterpreterService) interpreterService: IInterpreterService,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IWorkspaceService) workspace: IWorkspaceService,
+        @inject(IConfigurationService) configService: IConfigurationService,
+        @inject(KernelSelector) kernelSelector: KernelSelector,
+        @inject(NotebookStarter) notebookStarter: NotebookStarter,
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) jupyterOutputChannel: IOutputChannel,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         super(
-            liveShare,
             interpreterService,
             disposableRegistry,
             workspace,

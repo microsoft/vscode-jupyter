@@ -8,12 +8,7 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IPythonExtensionChecker } from '../../../api/types';
-import {
-    IApplicationShell,
-    ILiveShareApi,
-    IVSCodeNotebook,
-    IWorkspaceService
-} from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -62,7 +57,6 @@ import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 export class HostRawNotebookProvider extends RawNotebookProviderBase implements IRoleBasedObject, IRawNotebookProvider {
     private disposed = false;
     constructor(
-        private liveShare: ILiveShareApi,
         _t: number,
         private disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
@@ -79,7 +73,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly vscodeNotebook: IVSCodeNotebook
     ) {
-        super(liveShare, asyncRegistry, rawNotebookSupported);
+        super(asyncRegistry, rawNotebookSupported);
     }
 
     public async dispose(): Promise<void> {
@@ -173,7 +167,6 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                 if (rawSession.isConnected) {
                     // Create our notebook
                     const notebook = new HostJupyterNotebook(
-                        this.liveShare,
                         rawSession,
                         this.configService,
                         this.disposableRegistry,
