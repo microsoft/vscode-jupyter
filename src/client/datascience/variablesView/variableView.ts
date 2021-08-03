@@ -222,12 +222,16 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
                 executionCount: this.notebookWatcher.activeNotebookExecutionCount
             }).ignoreErrors();
+
+            const args: IJupyterVariablesRequest = {
+                executionCount: this.notebookWatcher.activeNotebookExecutionCount,
+                sortColumn: "name",
+                startIndex: 0,
+                sortAscending: true,
+                pageSize: 5,
+                refreshCount: 1
+            };
+            await this.requestVariables(args);
         }
-        // No active view, so just trigger refresh to clear
-        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
-        // this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
-        //     executionCount: 0
-        // }).ignoreErrors();
-        // this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 }
