@@ -4,7 +4,6 @@
 import '../../common/extensions';
 
 import { IWebviewPanel, IWebviewPanelMessageListener } from '../../common/application/types';
-import { InteractiveWindowRemoteMessages } from './interactiveWindowTypes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -33,13 +32,8 @@ export class InteractiveWindowMessageListener implements IWebviewPanelMessageLis
     }
 
     public onMessage(message: string, payload: any) {
-        // We received a message from the local webview. Broadcast it to everybody if it's a remote message
-        if (InteractiveWindowRemoteMessages.indexOf(message) >= 0) {
-            //
-        } else {
-            // Send to just our local callback.
-            this.callback(message, payload);
-        }
+        // Send to just our local callback.
+        this.callback(message, payload);
     }
 
     public onChangeViewState(panel: IWebviewPanel) {
