@@ -58,8 +58,6 @@ import {
     INotebookIdentity,
     InteractiveWindowMessages,
     IReExecuteCells,
-    IRemoteAddCode,
-    IRemoteReexecuteCode,
     IShowDataViewer,
     ISubmitNewCell,
     SysInfoReason,
@@ -313,14 +311,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
             case InteractiveWindowMessages.AddedSysInfo:
                 this.handleMessage(message, payload, this.onAddedSysInfo);
-                break;
-
-            case InteractiveWindowMessages.RemoteAddCode:
-                this.handleMessage(message, payload, this.onRemoteAddedCode);
-                break;
-
-            case InteractiveWindowMessages.RemoteReexecuteCode:
-                this.handleMessage(message, payload, this.onRemoteReexecuteCode);
                 break;
 
             case InteractiveWindowMessages.ShowDataViewer:
@@ -1071,57 +1061,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             }
         }
     }
-
-    private async onRemoteReexecuteCode(args: IRemoteReexecuteCode) {
-        // Make sure this is valid
-        if (args && args.id && args.file && args.originator !== this.id) {
-            try {
-                // On a reexecute clear the previous execution
-                if (this._notebook) {
-                    this._notebook.clear(args.id);
-                }
-
-                // Indicate this in our telemetry.
-                // Add new telemetry type
-                sendTelemetryEvent(Telemetry.RemoteReexecuteCode);
-
-                // Submit this item as new code.
-                this.submitCode(
-                    args.code,
-                    args.file,
-                    args.line,
-                    args.id,
-                    undefined,
-                    args.debug ? { runByLine: false } : undefined
-                ).ignoreErrors();
-            } catch (exc) {
-                this.errorHandler.handleError(exc).ignoreErrors();
-            }
-        }
-    }
-
-    private async onRemoteAddedCode(args: IRemoteAddCode) {
-        // Make sure this is valid
-        if (args && args.id && args.file && args.originator !== this.id) {
-            try {
-                // Indicate this in our telemetry.
-                sendTelemetryEvent(Telemetry.RemoteAddCode);
-
-                // Submit this item as new code.
-                await this.submitCode(
-                    args.code,
-                    args.file,
-                    args.line,
-                    args.id,
-                    undefined,
-                    args.debug ? { runByLine: false } : undefined
-                );
-            } catch (exc) {
-                this.errorHandler.handleError(exc).ignoreErrors();
-            }
-        }
-    }
-
     private finishOutstandingCells() {
         this.unfinishedCells.forEach((c) => {
             c.state = CellState.error;

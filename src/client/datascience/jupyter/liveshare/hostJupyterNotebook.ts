@@ -7,7 +7,6 @@ import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../
 import '../../../common/extensions';
 
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
-import { LiveShare } from '../../constants';
 import {
     ICell,
     IJupyterSession,
@@ -104,15 +103,6 @@ export class HostJupyterNotebook extends JupyterNotebookBase implements INoteboo
         try {
             this.requestLog.set(id, Date.now());
             const inner = super.executeObservable(code, file, line, id, silent);
-
-            // Cleanup old requests
-            const now = Date.now();
-            for (const [k, val] of this.requestLog) {
-                if (now - val > LiveShare.ResponseLifetime) {
-                    this.requestLog.delete(k);
-                }
-            }
-
             return inner;
         } catch (exc) {
             throw exc;
