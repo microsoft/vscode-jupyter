@@ -720,8 +720,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.OpenedInteractiveWindow]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
-    [Telemetry.RemoteAddCode]: never | undefined;
-    [Telemetry.RemoteReexecuteCode]: never | undefined;
     [Telemetry.RestartJupyterTime]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
     [Telemetry.RestartKernelCommand]: never | undefined;

@@ -336,8 +336,6 @@ export enum Telemetry {
     SwitchToExistingKernel = 'DS_INTERNAL.SWITCH_TO_EXISTING_KERNEL',
     SelfCertsMessageEnabled = 'DATASCIENCE.SELFCERTSMESSAGEENABLED',
     SelfCertsMessageClose = 'DATASCIENCE.SELFCERTSMESSAGECLOSE',
-    RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
-    RemoteReexecuteCode = 'DATASCIENCE.LIVESHARE.REEXECUTECODE',
     ShiftEnterBannerShown = 'DS_INTERNAL.SHIFTENTER_BANNER_SHOWN',
     EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
     DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
@@ -681,43 +679,6 @@ export enum JupyterCommands {
     NotebookCommand = 'notebook',
     ConvertCommand = 'nbconvert',
     KernelSpecCommand = 'kernelspec'
-}
-
-export namespace LiveShare {
-    export const JupyterExecutionService = 'jupyterExecutionService';
-    export const JupyterServerSharedService = 'jupyterServerSharedService';
-    export const JupyterNotebookSharedService = 'jupyterNotebookSharedService';
-    export const CommandBrokerService = 'commmandBrokerService';
-    export const WebPanelMessageService = 'webPanelMessageService';
-    export const InteractiveWindowProviderService = 'interactiveWindowProviderService';
-    export const GuestCheckerService = 'guestCheckerService';
-    export const LiveShareBroadcastRequest = 'broadcastRequest';
-    export const RawNotebookProviderService = 'rawNotebookProviderSharedService';
-    export const ResponseLifetime = 15000;
-    export const ResponseRange = 1000; // Range of time alloted to check if a response matches or not
-    export const InterruptDefaultTimeout = 10000;
-}
-
-export namespace LiveShareCommands {
-    export const isNotebookSupported = 'isNotebookSupported';
-    export const connectToNotebookServer = 'connectToNotebookServer';
-    export const getUsableJupyterPython = 'getUsableJupyterPython';
-    export const executeObservable = 'executeObservable';
-    export const getSysInfo = 'getSysInfo';
-    export const requestKernelInfo = 'requestKernelInfo';
-    export const serverResponse = 'serverResponse';
-    export const catchupRequest = 'catchupRequest';
-    export const syncRequest = 'synchRequest';
-    export const restart = 'restart';
-    export const interrupt = 'interrupt';
-    export const interactiveWindowCreate = 'interactiveWindowCreate';
-    export const interactiveWindowCreateSync = 'interactiveWindowCreateSync';
-    export const disposeServer = 'disposeServer';
-    export const guestCheck = 'guestCheck';
-    export const createNotebook = 'createNotebook';
-    export const inspect = 'inspect';
-    export const rawKernelSupported = 'rawKernelSupported';
-    export const createRawNotebook = 'createRawNotebook';
 }
 
 export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
