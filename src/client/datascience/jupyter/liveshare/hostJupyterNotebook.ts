@@ -17,14 +17,12 @@ import {
     InterruptResult
 } from '../../types';
 import { JupyterNotebookBase } from '../jupyterNotebook';
-import { IRoleBasedObject } from './roleBasedFactory';
-
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class HostJupyterNotebook extends JupyterNotebookBase implements IRoleBasedObject, INotebook {
+export class HostJupyterNotebook extends JupyterNotebookBase implements INotebook {
     private requestLog: Map<string, number> = new Map<string, number>();
     private isDisposed = false;
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor

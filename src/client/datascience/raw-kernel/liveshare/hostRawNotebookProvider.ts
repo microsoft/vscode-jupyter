@@ -32,7 +32,6 @@ import {
 } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
-import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher, ILocalKernelFinder } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
@@ -57,7 +56,7 @@ import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()
-export class HostRawNotebookProvider extends RawNotebookProviderBase implements IRoleBasedObject, IRawNotebookProvider {
+export class HostRawNotebookProvider extends RawNotebookProviderBase implements IRawNotebookProvider {
     private disposed = false;
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
