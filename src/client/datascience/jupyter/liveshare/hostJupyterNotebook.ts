@@ -22,7 +22,6 @@ import { IPythonExecutionFactory } from '../../../common/process/types';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostJupyterNotebook extends JupyterNotebookBase implements INotebook {
-    private requestLog: Map<string, number> = new Map<string, number>();
     private isDisposed = false;
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(
@@ -63,9 +62,6 @@ export class HostJupyterNotebook extends JupyterNotebookBase implements INoteboo
             await super.dispose();
         }
     };
-    public clear(id: string): void {
-        this.requestLog.delete(id);
-    }
 
     public executeObservable(
         code: string,
@@ -74,7 +70,7 @@ export class HostJupyterNotebook extends JupyterNotebookBase implements INoteboo
         id: string,
         silent?: boolean
     ): Observable<ICell[]> {
-        return this.makeObservableRequest(code, file, line, id, silent);
+        return super.executeObservable(code, file, line, id, silent);
     }
 
     public async restartKernel(timeoutMs: number): Promise<void> {
@@ -88,22 +84,6 @@ export class HostJupyterNotebook extends JupyterNotebookBase implements INoteboo
     public async interruptKernel(timeoutMs: number): Promise<InterruptResult> {
         try {
             return super.interruptKernel(timeoutMs);
-        } catch (exc) {
-            throw exc;
-        }
-    }
-
-    private makeObservableRequest(
-        code: string,
-        file: string,
-        line: number,
-        id: string,
-        silent: boolean | undefined
-    ): Observable<ICell[]> {
-        try {
-            this.requestLog.set(id, Date.now());
-            const inner = super.executeObservable(code, file, line, id, silent);
-            return inner;
         } catch (exc) {
             throw exc;
         }

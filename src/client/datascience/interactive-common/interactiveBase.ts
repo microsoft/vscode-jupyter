@@ -579,10 +579,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     protected async clearResult(id: string): Promise<void> {
         await this.ensureConnectionAndNotebook();
-        if (this._notebook) {
-            this._notebook.clear(id);
-        }
-    }
+\    }
 
     protected async setLaunchingFile(file: string): Promise<void> {
         if (file !== Identifiers.EmptyFileName && this._notebook) {
