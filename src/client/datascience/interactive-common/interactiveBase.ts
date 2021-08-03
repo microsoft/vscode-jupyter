@@ -577,9 +577,9 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
     protected abstract setFileInKernel(file: string, cancelToken: CancellationToken | undefined): Promise<void>;
 
-    protected async clearResult(id: string): Promise<void> {
+    protected async clearResult(_: string): Promise<void> {
         await this.ensureConnectionAndNotebook();
-\    }
+    }
 
     protected async setLaunchingFile(file: string): Promise<void> {
         if (file !== Identifiers.EmptyFileName && this._notebook) {
