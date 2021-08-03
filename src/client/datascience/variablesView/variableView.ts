@@ -225,7 +225,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
             const args: IJupyterVariablesRequest = {
                 executionCount: this.notebookWatcher.activeNotebookExecutionCount,
-                sortColumn: "name",
+                sortColumn: 'name',
                 startIndex: 0,
                 sortAscending: true,
                 pageSize: 5,
