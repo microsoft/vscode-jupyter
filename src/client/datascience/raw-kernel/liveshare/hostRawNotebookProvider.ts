@@ -50,28 +50,30 @@ import { KernelSpecNotFoundError } from './kernelSpecNotFoundError';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { getResourceType } from '../../common';
 import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
+import { inject, injectable, named } from 'inversify';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+@injectable()
 export class HostRawNotebookProvider extends RawNotebookProviderBase implements IRoleBasedObject, IRawNotebookProvider {
     private disposed = false;
     constructor(
-        _t: number,
-        private disposableRegistry: IDisposableRegistry,
-        asyncRegistry: IAsyncDisposableRegistry,
-        private configService: IConfigurationService,
-        private workspaceService: IWorkspaceService,
-        private appShell: IApplicationShell,
-        private fs: IFileSystem,
-        private serviceContainer: IServiceContainer,
-        private kernelLauncher: IKernelLauncher,
-        private localKernelFinder: ILocalKernelFinder,
-        private progressReporter: ProgressReporter,
-        private outputChannel: IOutputChannel,
-        rawNotebookSupported: IRawNotebookSupportedService,
-        private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly vscodeNotebook: IVSCodeNotebook
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
+        @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
+        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
+        @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook
     ) {
         super(asyncRegistry, rawNotebookSupported);
     }

@@ -122,7 +122,6 @@ import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
 import { ProgressReporter } from './progress/progressReporter';
-import { RawNotebookProviderWrapper } from './raw-kernel/rawNotebookProviderWrapper';
 import { RawNotebookSupportedService } from './raw-kernel/rawNotebookSupportedService';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
@@ -201,6 +200,7 @@ import { LocalKnownPathKernelSpecFinder } from './kernel-launcher/localKnownPath
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 import { HostJupyterExecution } from './jupyter/liveshare/hostJupyterExecution';
 import { HostJupyterServer } from './jupyter/liveshare/hostJupyterServer';
+import { HostRawNotebookProvider } from './raw-kernel/liveshare/hostRawNotebookProvider';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -264,7 +264,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<INotebookStorage>(INotebookStorage, NativeEditorStorage);
     serviceManager.addSingleton<INotebookStorageProvider>(INotebookStorageProvider, NotebookStorageProvider);
     serviceManager.addSingleton<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider, PreferredRemoteKernelIdProvider);
-    serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
+    serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, HostRawNotebookProvider);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);

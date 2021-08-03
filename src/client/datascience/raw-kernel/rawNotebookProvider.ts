@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import { injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -36,6 +37,7 @@ export class RawConnection implements IRawConnection {
     }
 }
 
+@injectable()
 export class RawNotebookProviderBase implements IRawNotebookProvider {
     public get id(): string {
         return this._id;

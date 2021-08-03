@@ -200,7 +200,6 @@ import { INotebookModelFactory } from '../../client/datascience/notebookStorage/
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { ProgressReporter } from '../../client/datascience/progress/progressReporter';
-import { RawNotebookProviderWrapper } from '../../client/datascience/raw-kernel/rawNotebookProviderWrapper';
 import { RawNotebookSupportedService } from '../../client/datascience/raw-kernel/rawNotebookSupportedService';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
@@ -316,6 +315,7 @@ import { JupyterPaths } from '../../client/datascience/kernel-launcher/jupyterPa
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
 import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
 import { HostJupyterServer } from '../../client/datascience/jupyter/liveshare/hostJupyterServer';
+import { HostRawNotebookProvider } from '../../client/datascience/raw-kernel/liveshare/hostRawNotebookProvider';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -571,7 +571,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IExtensions>(IExtensions, instance(mockExtension));
         this.serviceManager.add<INotebookServer>(INotebookServer, HostJupyterServer);
         this.serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
-        this.serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
+        this.serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, HostRawNotebookProvider);
         this.serviceManager.addSingleton<IRawNotebookSupportedService>(
             IRawNotebookSupportedService,
             RawNotebookSupportedService
