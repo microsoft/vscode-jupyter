@@ -319,11 +319,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0 ? kernelSpec.argv[0] : undefined;
         if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
             const exactMatchBasedOnArgv = interpreters.find((i) => {
-                if (
-                    pathInArgv &&
-                    path.basename(pathInArgv) !== pathInArgv &&
-                    this.fs.areLocalPathsSame(pathInArgv, i.path)
-                ) {
+                if (this.fs.areLocalPathsSame(pathInArgv, i.path)) {
                     traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
                     return true;
                 }
