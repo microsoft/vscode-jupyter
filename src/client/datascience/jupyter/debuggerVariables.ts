@@ -164,11 +164,11 @@ export class DebuggerVariables extends DebugLocationTracker
         // Results should be the updated variable.
         return results
             ? {
-                ...targetVariable,
-                ...JSON.parse(results.result),
-                maximumRowChunkSize: MaximumRowChunkSizeForDebugger,
-                fileName
-            }
+                  ...targetVariable,
+                  ...JSON.parse(results.result),
+                  maximumRowChunkSize: MaximumRowChunkSizeForDebugger,
+                  fileName
+              }
             : targetVariable;
     }
 
