@@ -20,7 +20,7 @@ suite('Experimentation telemetry', () => {
     setup(() => {
         sendTelemetryEventStub = sinon
             .stub(Telemetry, 'sendTelemetryEvent')
-            .callsFake((eventName: string, _, properties: object) => {
+            .callsFake((eventName: string, _, properties: any) => {
                 const telemetry = { eventName, properties };
                 telemetryEvents.push(telemetry);
             });

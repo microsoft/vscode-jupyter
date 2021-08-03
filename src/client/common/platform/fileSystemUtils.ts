@@ -25,7 +25,7 @@ import {
     WriteStream
 } from './types';
 
-const ENCODING: string = 'utf8';
+const ENCODING = 'utf8';
 
 // This helper function determines the file type of the given stats
 // object.  The type follows the convention of node's fs module, where
@@ -135,7 +135,7 @@ export class RawFileSystem implements IRawFileSystem {
             // The "fs-extra" module is effectively equivalent to node's "fs"
             // module (but is a bit more async-friendly).  So we use that
             // instead of "fs".
-            fsExtra || fs
+            (fsExtra || fs) as any
         );
     }
 
@@ -177,7 +177,7 @@ export class RawFileSystem implements IRawFileSystem {
         const options = { overwrite: false };
         try {
             await this.vscfs.rename(srcUri, tgtUri, options);
-        } catch (err) {
+        } catch (err: any) {
             if (!isFileExistsError(err)) {
                 throw err; // re-throw
             }

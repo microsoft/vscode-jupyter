@@ -70,7 +70,7 @@ export class PythonDaemonFactory {
         connection.listen();
         let stdError = '';
         let procEndEx: Error | undefined;
-        daemonProc.proc.stderr.on('data', (data: string | Buffer) => {
+        daemonProc.proc.stderr?.on('data', (data: string | Buffer) => {
             data = typeof data === 'string' ? data : data.toString('utf8');
             stdError += data;
         });
@@ -103,7 +103,7 @@ export class PythonDaemonFactory {
      * Protected so we can override for testing purposes.
      */
     protected createConnection(proc: ChildProcess) {
-        return createMessageConnection(new StreamMessageReader(proc.stdout), new StreamMessageWriter(proc.stdin));
+        return createMessageConnection(new StreamMessageReader(proc.stdout!), new StreamMessageWriter(proc.stdin!));
     }
     /**
      * Tests whether a daemon is usable or not by checking whether it responds to a simple ping.

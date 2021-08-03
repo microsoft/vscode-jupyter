@@ -369,9 +369,11 @@ suite('DataScience - JupyterSession', () => {
             setup(async () => {
                 newSession = mock(DefaultSession);
                 newKernelConnection = mock(DefaultKernel);
-                newStatusChangedSignal = mock(Signal);
-                newKernelChangedSignal = mock(Signal);
-                const newIoPubSignal = mock(Signal);
+                newStatusChangedSignal = mock<ISignal<Session.ISession, Kernel.Status>>();
+                newKernelChangedSignal = mock<ISignal<Session.ISession, IKernelChangedArgs>>();
+                const newIoPubSignal = mock<
+                    ISignal<Session.ISession, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
+                >();
                 restartSessionCreatedEvent = createDeferred();
                 restartSessionUsedEvent = createDeferred();
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
