@@ -1,5 +1,70 @@
 # Changelog
 
+## 2021.8.9 (3 August 2021)
+
+### Enhancements
+
+1. Updated the preview to run by line in native notebooks. Set the `jupyter.experimental.debugging` setting to true, install ipykernel 6 on your selected kernel and a `Run by Line` button will appear on cell toolbars. Pressing it will start a lightweight debugging session and let you run the cell line by line.
+   ([#5607](https://github.com/microsoft/vscode-jupyter/issues/5607))
+
+### Fixes
+
+1. Restore plotviewer in Native Notebooks.
+   ([#6315](https://github.com/Microsoft/vscode-jupyter/issues/6315))
+1. Fix debugging in `Interactive Window` when using `IPyKernel 6`.
+   ([#6534](https://github.com/Microsoft/vscode-jupyter/issues/6534))
+1. Add a placeholder `Python 3` kernel if user doesn't have any Python interpreters, with ability to notify user to install Python extenssion or Python runtime.
+   ([#5864](https://github.com/Microsoft/vscode-jupyter/issues/5864))
+1. Fixes to completion items received from Jupyter.
+   ([#5956](https://github.com/Microsoft/vscode-jupyter/issues/5956))
+1. Run all and restarting does not actually interrupt the rest of the running cells.
+   ([#5996](https://github.com/Microsoft/vscode-jupyter/issues/5996))
+1. Remove popup tip that indicates to users the kernel picker is in the bottom right.
+   ([#6016](https://github.com/Microsoft/vscode-jupyter/issues/6016))
+1. Ensure Pyspark kernels are listed.
+   ([#6316](https://github.com/Microsoft/vscode-jupyter/issues/6316))
+1. Fix problem where the active interpreter is not being used for the interactive window when not running with raw kernel.
+   ([#6409](https://github.com/Microsoft/vscode-jupyter/issues/6409))
+1. `Ctrl+Enter` in native notebooks should put cell into command mode immediately, then run the cell.
+   ([#6582](https://github.com/Microsoft/vscode-jupyter/issues/6582))
+1. List non-traditional (not using `ipykernel`) global Python kernelspecs.
+   ([#6622](https://github.com/Microsoft/vscode-jupyter/issues/6622))
+1. Clone the Notebook metadata before udpating it.
+   ([#6624](https://github.com/Microsoft/vscode-jupyter/issues/6624))
+1. Format the readme to render correctly on the VS Code extensions side bar. Thanks [jyooru](https://github.com/jyooru)!
+   ([#6648](https://github.com/Microsoft/vscode-jupyter/issues/6648))
+1. Ensure we get Jupyter Server info correctly in Python 3.6.
+   ([#6738](https://github.com/Microsoft/vscode-jupyter/issues/6738))
+1. List kernels in situations where extension is installed after opening a notebook.
+   ([#6824](https://github.com/Microsoft/vscode-jupyter/issues/6824))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+### Code Health
+
+
+## 2021.8.1 (19 July 2021)
+
+### Fixes
+
+1. Fix for kernel not starting with correct path (causes DLL load and import modules failures).
+   ([#5833](https://github.com/Microsoft/vscode-jupyter/issues/5833))
+
 ## 2021.8.0 (8 July 2021)
 
 ### Enhancements
