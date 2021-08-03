@@ -5,9 +5,8 @@ import * as vscode from 'vscode';
 
 import { IAsyncDisposable } from '../../../common/types';
 import { ClassType } from '../../../ioc/types';
-import { ILiveShareParticipant } from './types';
 
-export interface IRoleBasedObject extends IAsyncDisposable, ILiveShareParticipant {}
+export interface IRoleBasedObject extends IAsyncDisposable {}
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends ClassType<T>> {

@@ -6,7 +6,6 @@ import '../../../common/extensions';
 import { nbformat } from '@jupyterlab/coreutils';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import * as vsls from 'vsls/vscode';
 
 import { IPythonExtensionChecker } from '../../../api/types';
 import {
@@ -29,7 +28,7 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Identifiers, LiveShare, LiveShareCommands, Settings, Telemetry } from '../../constants';
+import { Identifiers, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import {
     getDisplayNameOrNameOfKernelConnection,
@@ -38,7 +37,6 @@ import {
 } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
-import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher, ILocalKernelFinder } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
@@ -61,9 +59,7 @@ import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class HostRawNotebookProvider
-    extends LiveShareParticipantHost(RawNotebookProviderBase, LiveShare.RawNotebookProviderService)
-    implements IRoleBasedObject, IRawNotebookProvider {
+export class HostRawNotebookProvider extends RawNotebookProviderBase implements IRoleBasedObject, IRawNotebookProvider {
     private disposed = false;
     constructor(
         private liveShare: ILiveShareApi,
@@ -92,62 +88,6 @@ export class HostRawNotebookProvider
             await super.dispose();
         }
     }
-
-    public async onAttach(api: vsls.LiveShare | null): Promise<void> {
-        await super.onAttach(api);
-        if (api && !this.disposed) {
-            const service = await this.waitForService();
-            // Attach event handlers to different requests
-            if (service) {
-                service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) =>
-                    this.onSync()
-                );
-                service.onRequest(
-                    LiveShareCommands.rawKernelSupported,
-                    (_args: any[], _cancellation: CancellationToken) => this.supported()
-                );
-                service.onRequest(
-                    LiveShareCommands.createRawNotebook,
-                    async (args: any[], _cancellation: CancellationToken) => {
-                        const resource = this.parseUri(args[0]);
-                        const identity = this.parseUri(args[1]);
-                        const notebookMetadata = JSON.parse(args[2]) as nbformat.INotebookMetadata;
-                        const kernelConnection = JSON.parse(args[3]) as KernelConnectionMetadata;
-                        // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
-                        const notebook = (await this.createNotebook(
-                            identity!,
-                            resource,
-                            true, // Disable UI for this creation
-                            notebookMetadata,
-                            kernelConnection,
-                            undefined
-                        )) as HostJupyterNotebook;
-                        await notebook.onAttach(api);
-                    }
-                );
-            }
-        }
-    }
-
-    public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
-        await super.onSessionChange(api);
-
-        this.getNotebooks().forEach(async (notebook) => {
-            const hostNotebook = (await notebook) as HostJupyterNotebook;
-            if (hostNotebook) {
-                await hostNotebook.onSessionChange(api);
-            }
-        });
-    }
-
-    public async onDetach(api: vsls.LiveShare | null): Promise<void> {
-        await super.onDetach(api);
-    }
-
-    public async waitForServiceName(): Promise<string> {
-        return LiveShare.RawNotebookProviderService;
-    }
-
     protected async createNotebookInstance(
         resource: Resource,
         identity: vscode.Uri,
@@ -285,19 +225,5 @@ export class HostRawNotebookProvider
             workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
             purpose: Identifiers.RawPurpose
         };
-    }
-
-    private parseUri(uri: string | undefined): Resource {
-        const parsed = uri ? vscode.Uri.parse(uri) : undefined;
-        return parsed &&
-            parsed.scheme &&
-            parsed.scheme !== Identifiers.InteractiveWindowIdentityScheme &&
-            parsed.scheme === 'vsls'
-            ? this.finishedApi!.convertSharedUriToLocal(parsed)
-            : parsed;
-    }
-
-    private onSync(): Promise<any> {
-        return Promise.resolve(true);
     }
 }
