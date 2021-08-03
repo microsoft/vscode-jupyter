@@ -300,7 +300,7 @@
             {
                 "command": "jupyter.runByLineStop",
                 "title": "Stop",
-                "icon": "$(debug-stop)",
+                "icon": "$(notebook-stop)",
                 "category": "Jupyter",
                 "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
             },
@@ -1543,7 +1543,7 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Enables the preview debugging experience. Set to true to enable the debugging mode button on native notebooks. Your selected kernel should also have ipykernel 6 installed in order to support debugging. Clicking the button will start a debugging session and will allow you to set and hit breakpoints.",
-                    "scope": "machine"
+                    "scope": "application"
                 },
                 "jupyter.enableNativeInteractiveWindow": {
                     "type": "boolean",
