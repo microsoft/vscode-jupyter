@@ -163,7 +163,6 @@ module.exports = {
         'src/test/performance/load.perf.test.ts',
         'src/test/datascience/mockLanguageServerCache.ts',
         'src/test/datascience/debugLocationTracker.unit.test.ts',
-        'src/test/datascience/mockLiveShare.ts',
         'src/test/datascience/mountedWebViewFactory.ts',
         'src/test/datascience/data-viewing/dataViewerPDependencyService.unit.test.ts',
         'src/test/datascience/mockPythonService.ts',
