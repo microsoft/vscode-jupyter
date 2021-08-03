@@ -33,7 +33,6 @@ import {
     INotebookServerLaunchInfo
 } from '../types';
 import { KernelConnectionMetadata } from './kernels/types';
-import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from './liveshare/types';
@@ -95,9 +94,7 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         // The server factory will create the appropriate HostJupyterServer or GuestJupyterServer based on
         // the liveshare state.
         this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
-            liveShare,
             HostJupyterServer,
-            GuestJupyterServer,
             liveShare,
             startupTime,
             asyncRegistry,

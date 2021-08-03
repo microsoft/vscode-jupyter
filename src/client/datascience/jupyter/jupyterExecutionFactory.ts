@@ -20,7 +20,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
-import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { NotebookStarter } from './notebookStarter';
@@ -70,9 +69,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
     ) {
         asyncRegistry.push(this);
         this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
-            liveShare,
             HostJupyterExecution,
-            GuestJupyterExecution,
             liveShare,
             interpreterService,
             disposableRegistry,

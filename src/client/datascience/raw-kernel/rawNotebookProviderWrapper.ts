@@ -33,7 +33,6 @@ import {
     IRawNotebookProvider,
     IRawNotebookSupportedService
 } from '../types';
-import { GuestRawNotebookProvider } from './liveshare/guestRawNotebookProvider';
 import { HostRawNotebookProvider } from './liveshare/hostRawNotebookProvider';
 
 interface IRawNotebookProviderInterface extends IRoleBasedObject, IRawNotebookProvider {}
@@ -88,9 +87,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
         this.serverFactory = new RoleBasedFactory<IRawNotebookProviderInterface, RawNotebookProviderClassType>(
-            liveShare,
             HostRawNotebookProvider,
-            GuestRawNotebookProvider,
             liveShare,
             startupTime,
             disposableRegistry,
