@@ -177,7 +177,7 @@ export class RawFileSystem implements IRawFileSystem {
         const options = { overwrite: false };
         try {
             await this.vscfs.rename(srcUri, tgtUri, options);
-        } catch (err: any) {
+        } catch (err) {
             if (!isFileExistsError(err)) {
                 throw err; // re-throw
             }
