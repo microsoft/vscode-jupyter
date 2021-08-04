@@ -5,9 +5,7 @@ import '../../common/extensions';
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
-import * as fsextra from 'fs-extra';
 import * as os from 'os';
-import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
@@ -34,8 +32,8 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
-import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
+import { traceError, traceInfo } from '../../common/logger';
 
 import { isNil } from 'lodash';
 import { IFileSystem } from '../../common/platform/types';
@@ -104,7 +102,6 @@ import { translateCellToNative } from '../utils';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
-import { serializeLanguageConfiguration } from './serialization';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 
 export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
@@ -321,14 +318,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 this.handleMessage(message, payload, this.requestVariables);
                 break;
 
-            case InteractiveWindowMessages.LoadTmLanguageRequest:
-                this.handleMessage(message, payload, this.requestTmLanguage);
-                break;
-
-            case InteractiveWindowMessages.LoadOnigasmAssemblyRequest:
-                this.handleMessage(message, payload, this.requestOnigasm);
-                break;
-
             case InteractiveWindowMessages.SelectKernel:
                 this.handleMessage(message, payload, this.selectNewKernel);
                 break;
@@ -339,10 +328,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
             case InteractiveWindowMessages.OpenSettings:
                 this.handleMessage(message, payload, this.openSettings);
-                break;
-
-            case InteractiveWindowMessages.MonacoReady:
-                this.readyEvent.fire();
                 break;
 
             case InteractiveWindowMessages.ExecuteExternalCommand:
@@ -1192,24 +1177,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     private async listenToNotebookEvents(notebook: INotebook): Promise<void> {
-        const statusChangeHandler = async (status: ServerStatus) => {
-            const connectionMetadata = notebook.getKernelConnection();
-            const name = getDisplayNameOrNameOfKernelConnection(connectionMetadata);
-
-            await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                jupyterServerStatus: status,
-                serverName: await this.getServerDisplayName(notebook.connection),
-                kernelName: name,
-                language: translateKernelLanguageToMonaco(
-                    getKernelConnectionLanguage(connectionMetadata) || PYTHON_LANGUAGE
-                )
-            });
-        };
-        notebook.onSessionStatusChanged(statusChangeHandler);
         this.disposables.push(notebook.onKernelChanged(this.kernelChangeHandler.bind(this)));
-
-        // Fire the status changed handler at least once (might have already been running and so won't show a status update)
-        statusChangeHandler(notebook.status).ignoreErrors();
 
         // Also listen to iopub messages so we can update other cells on update_display_data
         notebook.registerIOPubListener(this.handleKernelMessage.bind(this));
@@ -1483,45 +1451,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         const uriString = uri.toString();
         if (uriString in value) {
             return value[uriString];
-        }
-    }
-
-    private async requestTmLanguage(languageId: string) {
-        // Get the contents of the appropriate tmLanguage file.
-        traceInfo('Request for tmlanguage file.');
-        const languageJson = await this.themeFinder.findTmLanguage(languageId);
-        const languageConfiguration = serializeLanguageConfiguration(
-            await this.themeFinder.findLanguageConfiguration(languageId)
-        );
-        const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
-        const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
-        this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, {
-            languageJSON: languageJson ?? '',
-            languageConfiguration,
-            extensions,
-            scopeName,
-            languageId
-        }).ignoreErrors();
-    }
-
-    private async requestOnigasm(): Promise<void> {
-        // Look for the file next or our current file (this is where it's installed in the vsix)
-        let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
-        traceInfo(`Request for onigasm file at ${filePath}`);
-        if (await fsextra.pathExists(filePath)) {
-            const contents = await fsextra.readFile(filePath);
-            this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
-        } else {
-            // During development it's actually in the node_modules folder
-            filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
-            traceInfo(`Backup request for onigasm file at ${filePath}`);
-            if (await fsextra.pathExists(filePath)) {
-                const contents = await fsextra.readFile(filePath);
-                this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
-            } else {
-                traceWarning('Onigasm file not found. Colorization will not be available.');
-                this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
-            }
         }
     }
 

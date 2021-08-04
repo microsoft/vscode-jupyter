@@ -26,9 +26,10 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
+import { CssMessages, IGetCssRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 import { testOnlyMethod } from '../../common/utils/decorators';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
@@ -166,10 +167,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
             case CssMessages.GetCssRequest:
                 this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
-                break;
-
-            case CssMessages.GetMonacoThemeRequest:
-                this.handleMonacoThemeRequest(payload as IGetMonacoThemeRequest).ignoreErrors();
                 break;
 
             case InteractiveWindowMessages.GetHTMLByIdResponse:
@@ -334,16 +331,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             theme: settings.extraSettings.theme,
             knownDark: isDark
         });
-    }
-
-    @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
-    private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
-        const settings = await this.generateDataScienceExtraSettings();
-        const isDark = settings.ignoreVscodeTheme ? false : request?.isDark;
-        this.setTheme(isDark);
-        const resource = this.owningResource;
-        const monacoTheme = await this.cssGenerator.generateMonacoTheme(resource, isDark, settings.extraSettings.theme);
-        return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
     }
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {

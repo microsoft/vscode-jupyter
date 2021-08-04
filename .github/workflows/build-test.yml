@@ -347,7 +347,7 @@ jobs:
       matrix:
         os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
         python: [3.8]
-        test-suite: [group1, group2, group3, group4]
+        test-suite: [group1, group2]
     steps:
       - name: Checkout
         uses: actions/checkout@v2

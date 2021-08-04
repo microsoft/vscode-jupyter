@@ -4,9 +4,7 @@
 
 export enum CssMessages {
     GetCssRequest = 'get_css_request',
-    GetCssResponse = 'get_css_response',
-    GetMonacoThemeRequest = 'get_monaco_theme_request',
-    GetMonacoThemeResponse = 'get_monaco_theme_response'
+    GetCssResponse = 'get_css_response'
 }
 
 export enum SharedMessages {
@@ -17,10 +15,6 @@ export enum SharedMessages {
 }
 
 export interface IGetCssRequest {
-    isDark: boolean;
-}
-
-export interface IGetMonacoThemeRequest {
     isDark: boolean;
 }
 

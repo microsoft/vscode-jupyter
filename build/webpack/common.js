@@ -22,7 +22,6 @@ exports.nodeModulesToExternalize = [
     'request-progress',
     'diff-match-patch',
     'node-stream-zip',
-    'vsls/vscode',
     'pdfkit/js/pdfkit.standalone',
     'crypto-js',
     'fontkit',

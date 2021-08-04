@@ -16,7 +16,6 @@ import {
     Disposable,
     Event,
     HoverProvider,
-    LanguageConfiguration,
     NotebookCell,
     NotebookDocument,
     NotebookEditor,
@@ -789,14 +788,11 @@ export interface IMessageCell extends nbformat.IBaseCell {
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
     generateThemeCss(resource: Resource, isDark: boolean, theme: string): Promise<string>;
-    generateMonacoTheme(resource: Resource, isDark: boolean, theme: string): Promise<JSONObject>;
 }
 
 export const IThemeFinder = Symbol('IThemeFinder');
 export interface IThemeFinder {
     findThemeRootJson(themeName: string): Promise<string | undefined>;
-    findTmLanguage(language: string): Promise<string | undefined>;
-    findLanguageConfiguration(language: string): Promise<LanguageConfiguration | undefined>;
     isThemeDark(themeName: string): Promise<boolean | undefined>;
 }
 
