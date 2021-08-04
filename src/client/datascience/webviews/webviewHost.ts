@@ -29,6 +29,7 @@ import { InteractiveWindowMessages } from '../interactive-common/interactiveWind
 import { CssMessages, IGetCssRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 import { testOnlyMethod } from '../../common/utils/decorators';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
