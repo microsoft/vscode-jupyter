@@ -4,7 +4,6 @@
 'use strict';
 import type * as jupyterlabService from '@jupyterlab/services';
 import { sha256 } from 'hash.js';
-import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
@@ -14,6 +13,7 @@ import { IPythonExecutionFactory } from '../../common/process/types';
 
 import {
     IConfigurationService,
+    IDisposable,
     IDisposableRegistry,
     IExtensionContext,
     IHttpClient,

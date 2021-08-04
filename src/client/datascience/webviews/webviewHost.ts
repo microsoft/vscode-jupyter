@@ -341,9 +341,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         const settings = await this.generateDataScienceExtraSettings();
         const isDark = settings.ignoreVscodeTheme ? false : request?.isDark;
         this.setTheme(isDark);
-        const resource = this.owningResource;
-        const monacoTheme = await this.cssGenerator.generateMonacoTheme(resource, isDark, settings.extraSettings.theme);
-        return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
+        return this.postMessageInternal(CssMessages.GetMonacoThemeResponse);
     }
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {

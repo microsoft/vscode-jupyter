@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { DebugProtocolVariable, DebugProtocolVariableContainer, Uri } from 'vscode';
+import type { CompletionContext, Position } from 'vscode';
 import { DebugState, IServerState } from '../../../datascience-ui/interactive-common/mainState';
 
 import type { KernelMessage } from '@jupyterlab/services';
@@ -19,8 +19,7 @@ import { Resource } from '../../common/types';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
 import { WidgetScriptSource } from '../ipywidgets/types';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest, SharedMessages } from '../messages';
-import { IGetMonacoThemeResponse } from '../monacoMessages';
+import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import {
     ICell,
     IExternalCommandFromWebview,
@@ -90,8 +89,6 @@ export enum InteractiveWindowMessages {
     CancelResolveCompletionItemRequest = 'cancel_resolve_completion_item_request',
     ResolveCompletionItemResponse = 'resolve_completion_item_response',
     Sync = 'sync_message_used_to_broadcast_and_sync_editors',
-    LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request',
-    LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response',
     LoadTmLanguageRequest = 'load_tmlanguage_request',
     LoadTmLanguageResponse = 'load_tmlanguage_response',
     OpenLink = 'open_link',
@@ -248,87 +245,14 @@ export interface IReExecuteCells {
 }
 
 export interface IProvideCompletionItemsRequest {
-    position: monacoEditor.Position;
-    context: monacoEditor.languages.CompletionContext;
-    requestId: string;
-    cellId: string;
-}
-
-export interface IProvideHoverRequest {
-    position: monacoEditor.Position;
-    requestId: string;
-    cellId: string;
-    wordAtPosition: string | undefined;
-}
-
-export interface IProvideSignatureHelpRequest {
-    position: monacoEditor.Position;
-    context: monacoEditor.languages.SignatureHelpContext;
+    position: Position;
+    context: CompletionContext;
     requestId: string;
     cellId: string;
 }
 
 export interface ICancelIntellisenseRequest {
     requestId: string;
-}
-
-export interface IResolveCompletionItemRequest {
-    position: monacoEditor.Position;
-    item: monacoEditor.languages.CompletionItem;
-    requestId: string;
-    cellId: string;
-}
-
-export interface IProvideCompletionItemsResponse {
-    list: monacoEditor.languages.CompletionList;
-    requestId: string;
-}
-
-export interface IProvideHoverResponse {
-    hover: monacoEditor.languages.Hover;
-    requestId: string;
-}
-
-export interface IProvideSignatureHelpResponse {
-    signatureHelp: monacoEditor.languages.SignatureHelp;
-    requestId: string;
-}
-
-export interface IResolveCompletionItemResponse {
-    item: monacoEditor.languages.CompletionItem;
-    requestId: string;
-}
-
-export interface IPosition {
-    line: number;
-    ch: number;
-}
-
-export interface IEditCell {
-    changes: monacoEditor.editor.IModelContentChange[];
-    id: string;
-}
-
-export interface IAddCell {
-    fullText: string;
-    currentText: string;
-    cell: ICell;
-}
-
-export interface IRemoveCell {
-    id: string;
-}
-
-export interface ISwapCells {
-    firstCellId: string;
-    secondCellId: string;
-}
-
-export interface IInsertCell {
-    cell: ICell;
-    code: string;
-    index: number;
-    codeCellAboveId: string | undefined;
 }
 
 export interface IShowDataViewer {
@@ -339,10 +263,6 @@ export interface IShowDataViewer {
 export interface IShowDataViewerFromVariablePanel {
     container: DebugProtocolVariableContainer | undefined;
     variable: DebugProtocolVariable;
-}
-
-export interface IRefreshVariablesRequest {
-    newExecutionCount?: number;
 }
 
 export interface ILoadAllCells {
@@ -631,22 +551,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.VariableExplorerHeightResponse]: IVariableExplorerHeight;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
-    public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest;
-    public [CssMessages.GetMonacoThemeResponse]: IGetMonacoThemeResponse;
-    public [InteractiveWindowMessages.ProvideCompletionItemsRequest]: IProvideCompletionItemsRequest;
-    public [InteractiveWindowMessages.CancelCompletionItemsRequest]: ICancelIntellisenseRequest;
-    public [InteractiveWindowMessages.ProvideCompletionItemsResponse]: IProvideCompletionItemsResponse;
-    public [InteractiveWindowMessages.ProvideHoverRequest]: IProvideHoverRequest;
-    public [InteractiveWindowMessages.CancelHoverRequest]: ICancelIntellisenseRequest;
-    public [InteractiveWindowMessages.ProvideHoverResponse]: IProvideHoverResponse;
-    public [InteractiveWindowMessages.ProvideSignatureHelpRequest]: IProvideSignatureHelpRequest;
-    public [InteractiveWindowMessages.CancelSignatureHelpRequest]: ICancelIntellisenseRequest;
-    public [InteractiveWindowMessages.ProvideSignatureHelpResponse]: IProvideSignatureHelpResponse;
-    public [InteractiveWindowMessages.ResolveCompletionItemRequest]: IResolveCompletionItemRequest;
-    public [InteractiveWindowMessages.CancelResolveCompletionItemRequest]: ICancelIntellisenseRequest;
-    public [InteractiveWindowMessages.ResolveCompletionItemResponse]: IResolveCompletionItemResponse;
-    public [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
-    public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
     public [InteractiveWindowMessages.LoadTmLanguageRequest]: string;
     public [InteractiveWindowMessages.LoadTmLanguageResponse]: ILoadTmLanguageResponse;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;

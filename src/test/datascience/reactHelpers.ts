@@ -430,17 +430,6 @@ export function setUpDomEnvironment() {
     };
 }
 
-export function setupTranspile() {
-    // Some special work for getting the monaco editor to work.
-    // We need to babel transpile some modules. Monaco-editor is not in commonJS format so imports
-    // can't be loaded.
-    require('@babel/register')({ plugins: ['@babel/transform-modules-commonjs'], only: [/monaco-editor/] });
-
-    // Special case for editor api. Webpack bundles editor.all.js as well. Tests don't.
-    require('monaco-editor/esm/vs/editor/editor.api');
-    require('monaco-editor/esm/vs/editor/editor.all');
-}
-
 function copyProps(src: any, target: any) {
     const props = Object.getOwnPropertyNames(src).filter((prop) => typeof target[prop] === undefined);
     props.forEach((p: string) => {

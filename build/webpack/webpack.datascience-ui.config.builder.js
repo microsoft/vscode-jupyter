@@ -11,7 +11,6 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
@@ -72,9 +71,6 @@ function getPlugins(bundle) {
     switch (bundle) {
         case 'notebook':
             plugins.push(
-                new MonacoWebpackPlugin({
-                    languages: [] // force to empty so onigasm will be used
-                }),
                 new HtmlWebpackPlugin({
                     template: path.join(__dirname, '/nativeOrInteractivePicker.html'),
                     chunks: [],

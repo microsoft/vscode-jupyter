@@ -21,7 +21,6 @@ import {
     WorkspaceFolder,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
-import * as vsls from 'vsls/vscode';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
 import { IExtensionSingleActivationService } from '../../client/activation/types';
@@ -43,8 +42,6 @@ import {
     IDebugService,
     IDocumentManager,
     IEncryptedStorage,
-    ILiveShareApi,
-    ILiveShareTestingApi,
     IVSCodeNotebook,
     IWebviewPanelOptions,
     IWebviewPanelProvider,
@@ -63,7 +60,6 @@ import { DataScienceProductPathService } from '../../client/common/installer/pro
 import { IProductPathService } from '../../client/common/installer/types';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { BrowserService } from '../../client/common/net/browser';
-import { HttpClient } from '../../client/common/net/httpClient';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { PlatformService } from '../../client/common/platform/platformService';
@@ -88,7 +84,6 @@ import {
     IExperimentService,
     IExtensionContext,
     IExtensions,
-    IHttpClient,
     IInstaller,
     IJupyterSettings,
     IMemento,
@@ -139,7 +134,6 @@ import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
 import { ExportToPython } from '../../client/datascience/export/exportToPython';
 import { ExportUtil } from '../../client/datascience/export/exportUtil';
 import { ExportFormat, IExport, IExportManager, IExportDialog } from '../../client/datascience/export/types';
-import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
@@ -214,9 +208,7 @@ import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IDebugLocationTracker,
-    IInteractiveWindow,
     IInteractiveWindowListener,
-    IInteractiveWindowProvider,
     IJupyterCommandFactory,
     IJupyterDebugger,
     IJupyterDebugService,
@@ -237,8 +229,6 @@ import {
     INbConvertExportToPythonService,
     INbConvertInterpreterDependencyChecker,
     INotebookCreationTracker,
-    INotebookEditor,
-    INotebookEditorProvider,
     INotebookExecutionLogger,
     INotebookExporter,
     INotebookExtensibility,
@@ -289,17 +279,9 @@ import { MockWorkspaceFolder } from './mockWorkspaceFolder';
 import { IMountedWebView } from './mountedWebView';
 import { IMountedWebViewFactory, MountedWebViewFactory } from './mountedWebViewFactory';
 import { TestExecutionLogger } from './testexecutionLogger';
-import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
-import {
-    ITestNativeEditorProvider,
-    TestNativeEditorProvider,
-    TestNativeEditorProviderOld
-} from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
-import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
 import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
 import { MockEncryptedStorage } from './mockEncryptedStorage';
-import { WebviewIPyWidgetCoordinator } from '../../client/datascience/ipywidgets/webviewIPyWidgetCoordinator';
 import { WebviewViewProvider } from '../../client/common/application/webviewViews/webviewViewProvider';
 import { KernelEnvironmentVariablesService } from '../../client/datascience/kernel-launcher/kernelEnvVarsService';
 import { PreferredRemoteKernelIdProvider } from '../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
@@ -389,7 +371,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private pendingWebPanel: IMountedWebView | undefined;
     private pythonExtensionState: boolean = true;
 
-    constructor(private readonly uiTest: boolean = false) {
+    constructor() {
         super();
         this.useVSCodeAPI = false;
         const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
@@ -405,37 +387,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         await super.dispose();
         this.disposed = true;
 
-        if (!this.uiTest) {
-            // Blur window focus so we don't have editors polling
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
-            reactHelpers.blurWindow();
-        }
+        // Blur window focus so we don't have editors polling
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
+        reactHelpers.blurWindow();
 
         // Bounce this so that our editor has time to shutdown
         await sleep(150);
-
-        if (!this.uiTest) {
-            // Clear out the monaco global services. Some of these services are preventing shutdown.
-            /* eslint-disable @typescript-eslint/no-require-imports */
-            const services = require('monaco-editor/esm/vs/editor/standalone/browser/standaloneServices') as any;
-            if (services.StaticServices) {
-                const keys = Object.keys(services.StaticServices);
-                keys.forEach((k) => {
-                    const service = services.StaticServices[k] as any;
-                    if (service && service._value && service._value.dispose) {
-                        if (typeof service._value.dispose === 'function') {
-                            service._value.dispose();
-                        }
-                    }
-                });
-            }
-            // This file doesn't have an export so we can't force a dispose. Instead it has a 5 second timeout
-            const config = require('monaco-editor/esm/vs/editor/browser/config/configuration') as any;
-            if (config.getCSSBasedConfiguration) {
-                config.getCSSBasedConfiguration().dispose();
-            }
-        }
 
         // Because there are outstanding promises holding onto this object, clear out everything we can
         this.workspaceFolders = [];
@@ -457,19 +415,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Setup our webpanel provider to create our dummy web panel
         when(this.webPanelProvider.create(anything())).thenCall(this.onCreateWebPanel.bind(this));
-        if (this.uiTest) {
-            this.serviceManager.addSingleton<IWebviewPanelProvider>(IWebviewPanelProvider, WebBrowserPanelProvider);
-            this.serviceManager.add<IInteractiveWindowListener>(
-                IInteractiveWindowListener,
-                WebviewIPyWidgetCoordinator
-            );
-            this.serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
-        } else {
-            this.serviceManager.addSingletonInstance<IWebviewPanelProvider>(
-                IWebviewPanelProvider,
-                instance(this.webPanelProvider)
-            );
-        }
+        this.serviceManager.addSingletonInstance<IWebviewPanelProvider>(
+            IWebviewPanelProvider,
+            instance(this.webPanelProvider)
+        );
         this.serviceManager.addSingleton<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
         this.serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
         this.serviceManager.addSingleton<NotebookExtensibility>(
@@ -513,10 +462,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
         this.serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, new MockFileSystem());
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);
-        this.serviceManager.addSingleton<IInteractiveWindowProvider>(
-            IInteractiveWindowProvider,
-            TestInteractiveWindowProvider
-        );
         this.serviceManager.addSingletonInstance(IsCodeSpace, false);
         this.serviceManager.addSingletonInstance(UseCustomEditorApi, useCustomEditor);
         this.serviceManager.addSingletonInstance(UseVSCodeNotebookEditorApi, false);
@@ -628,10 +573,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ICellHashListener
         ]);
         this.serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
-        this.serviceManager.addSingleton<INotebookEditorProvider>(
-            INotebookEditorProvider,
-            useCustomEditor ? TestNativeEditorProvider : TestNativeEditorProviderOld
-        );
         this.serviceManager.addSingleton<DataViewerDependencyService>(
             DataViewerDependencyService,
             DataViewerDependencyService
@@ -681,19 +622,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
         this.serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
 
-        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, NativeEditorRunByLineListener);
         this.serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(
             IPyWidgetMessageDispatcherFactory,
             IPyWidgetMessageDispatcherFactory
         );
-        if (this.uiTest) {
-            this.serviceManager.add<IInteractiveWindowListener>(
-                IInteractiveWindowListener,
-                WebviewIPyWidgetCoordinator
-            );
-        }
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IJupyterDebugService>(
             IJupyterDebugService,
@@ -1031,38 +965,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     /* eslint-disable */
-    public createWebView(
-        mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
-        id: string,
-        role: vsls.Role = vsls.Role.None
-    ) {
-        // Force the container to mock actual live share if necessary
-        if (role !== vsls.Role.None) {
-            const liveShareTest = this.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
-            liveShareTest.forceRole(role);
-        }
-
+    public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, id: string) {
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.pendingWebPanel = this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(id, mount);
         return this.pendingWebPanel;
     }
-
-    public getWrapper(type: 'notebook' | 'interactive') {
-        if (type === 'notebook') {
-            return this.getNativeWebPanel(undefined).wrapper;
-        } else {
-            return this.getInteractiveWebPanel(undefined).wrapper;
-        }
-    }
-
-    public getInteractiveWebPanel(window: IInteractiveWindow | undefined) {
-        return this.get<TestInteractiveWindowProvider>(IInteractiveWindowProvider).getMountedWebView(window);
-    }
-
-    public getNativeWebPanel(window: INotebookEditor | undefined) {
-        return this.get<ITestNativeEditorProvider>(INotebookEditorProvider).getMountedWebView(window);
-    }
-
     public getContext(name: string): boolean {
         if (this.setContexts.hasOwnProperty(name)) {
             return this.setContexts[name];
