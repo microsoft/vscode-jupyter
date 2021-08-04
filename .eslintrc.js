@@ -834,7 +834,6 @@ module.exports = {
         'src/client/datascience/jupyter/liveshare/utils.ts',
         'src/client/datascience/jupyter/liveshare/guestJupyterSessionManagerFactory.ts',
         'src/client/datascience/jupyter/liveshare/types.ts',
-        'src/client/datascience/jupyter/debuggerVariableRegistration.ts',
         'src/client/datascience/jupyter/jupyterConnection.ts',
         'src/client/datascience/jupyter/jupyterPasswordConnect.ts',
         'src/client/datascience/jupyter/jupyterWebSocket.ts',
