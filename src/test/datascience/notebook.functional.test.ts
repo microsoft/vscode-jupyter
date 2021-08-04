@@ -28,8 +28,8 @@ import { ExportInterpreterFinder } from '../../client/datascience/export/exportI
 import { ExportFormat } from '../../client/datascience/export/types';
 import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
-import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
+import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
 import { HostJupyterNotebook } from '../../client/datascience/jupyter/liveshare/hostJupyterNotebook';
 import {
     CellState,
@@ -531,7 +531,7 @@ suite('DataScience notebook tests', () => {
             runTest('Failure', async (_this: Mocha.Context) => {
                 if (!useRawKernel) {
                     // Make a dummy class that will fail during launch
-                    class FailedProcess extends JupyterExecutionFactory {
+                    class FailedProcess extends HostJupyterExecution {
                         public isNotebookSupported = (): Promise<boolean> => {
                             return Promise.resolve(false);
                         };
@@ -1032,7 +1032,7 @@ plt.show()`,
             runTest('Invalid kernel spec works', async () => {
                 if (ioc.mockJupyter && !useRawKernel) {
                     // Make a dummy class that will fail during launch
-                    class FailedKernelSpec extends JupyterExecutionFactory {
+                    class FailedKernelSpec extends HostJupyterExecution {
                         protected async getMatchingKernelSpec(
                             _connection?: IJupyterConnection,
                             _cancelToken?: CancellationToken

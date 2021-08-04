@@ -78,12 +78,10 @@ import { NbConvertExportToPythonService } from './jupyter/interpreter/nbconvertE
 import { NbConvertInterpreterDependencyChecker } from './jupyter/interpreter/nbconvertInterpreterDependencyChecker';
 import { CellOutputMimeTypeTracker } from './jupyter/jupyterCellOutputMimeTypeTracker';
 import { JupyterDebugger } from './jupyter/jupyterDebugger';
-import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
 import { JupyterNotebookProvider } from './jupyter/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from './jupyter/jupyterPasswordConnect';
-import { JupyterServerWrapper } from './jupyter/jupyterServerWrapper';
 import { JupyterSessionManagerFactory } from './jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from './jupyter/jupyterVariables';
 import { isLocalLaunch } from './jupyter/kernels/helpers';
@@ -124,7 +122,6 @@ import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
 import { ProgressReporter } from './progress/progressReporter';
-import { RawNotebookProviderWrapper } from './raw-kernel/rawNotebookProviderWrapper';
 import { RawNotebookSupportedService } from './raw-kernel/rawNotebookSupportedService';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
@@ -201,6 +198,9 @@ import { NativeInteractiveWindowProvider } from './interactive-window/nativeInte
 import { JupyterPaths } from './kernel-launcher/jupyterPaths';
 import { LocalKnownPathKernelSpecFinder } from './kernel-launcher/localKnownPathKernelSpecFinder';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
+import { HostJupyterExecution } from './jupyter/liveshare/hostJupyterExecution';
+import { HostJupyterServer } from './jupyter/liveshare/hostJupyterServer';
+import { HostRawNotebookProvider } from './raw-kernel/liveshare/hostRawNotebookProvider';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -260,11 +260,11 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
-    serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
+    serviceManager.add<INotebookServer>(INotebookServer, HostJupyterServer);
     serviceManager.addSingleton<INotebookStorage>(INotebookStorage, NativeEditorStorage);
     serviceManager.addSingleton<INotebookStorageProvider>(INotebookStorageProvider, NotebookStorageProvider);
     serviceManager.addSingleton<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider, PreferredRemoteKernelIdProvider);
-    serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
+    serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, HostRawNotebookProvider);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
@@ -305,7 +305,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
         serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
     }
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
-    serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
+    serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
     serviceManager.addSingleton<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory, JupyterSessionManagerFactory);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebuggerVariableRegistration);

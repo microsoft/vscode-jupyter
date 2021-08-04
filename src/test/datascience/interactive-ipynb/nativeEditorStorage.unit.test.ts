@@ -33,7 +33,7 @@ import {
     IEditorContentChange,
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
+import { HostJupyterExecution } from '../../../client/datascience/jupyter/liveshare/hostJupyterExecution';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/cellLanguageService';
 import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 import { NativeEditorStorage } from '../../../client/datascience/notebookStorage/nativeEditorStorage';
@@ -253,7 +253,7 @@ suite('DataScience - Native Editor Storage', () => {
         workspace = mock(WorkspaceService);
         interpreterService = mock<IInterpreterService>();
         webPanelProvider = mock(WebviewPanelProvider);
-        executionProvider = mock(JupyterExecutionFactory);
+        executionProvider = mock(HostJupyterExecution);
         const settings = mock(JupyterSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 

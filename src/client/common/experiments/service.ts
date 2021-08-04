@@ -6,17 +6,14 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
-import { JupyterNotebookView } from '../../datascience/notebook/constants';
-import { NewEditorAssociationSetting } from '../../datascience/notebook/integration';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
+import { IApplicationEnvironment } from '../application/types';
 import { JVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
     IExperimentService,
-    IExtensions,
     IJupyterSettings,
     IMemento,
     IOutputChannel
@@ -51,9 +48,7 @@ export class ExperimentService implements IExperimentService {
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
-        @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
     ) {
         this.settings = configurationService.getSettings(undefined);
 
@@ -62,18 +57,6 @@ export class ExperimentService implements IExperimentService {
         const optOutFrom = this.settings.experiments.optOutFrom;
         this._optInto = optInto.filter((exp) => !exp.endsWith('control'));
         this._optOutFrom = optOutFrom.filter((exp) => !exp.endsWith('control'));
-
-        // Custom settings just for native notebook support.
-        const settings = workspaceService.getConfiguration('workbench', undefined);
-        const editorAssociations = settings.get('editorAssociations');
-        if (
-            (Array.isArray(editorAssociations) &&
-                editorAssociations.find((a) => a.viewType && a.viewType.includes(JupyterNotebookView))) ||
-            (!Array.isArray(editorAssociations) &&
-                (editorAssociations as NewEditorAssociationSetting)['*.ipynb'] === JupyterNotebookView)
-        ) {
-            this._optInto.push(`__${ExperimentGroups.NativeNotebook}__`);
-        }
 
         // Don't initialize the experiment service if the extension's experiments setting is disabled.
         if (!this.enabled) {
@@ -109,15 +92,6 @@ export class ExperimentService implements IExperimentService {
     public async inExperiment(experiment: ExperimentGroups): Promise<boolean> {
         if (!this.experimentationService) {
             return false;
-        }
-
-        // If user has .NET interactive installed, we HAVE to be in the native experiment. See this issue:
-        // https://github.com/microsoft/vscode-jupyter/issues/4771
-        if (
-            experiment === ExperimentGroups.NativeNotebook &&
-            this.extensions.getExtension('ms-dotnettools.dotnet-interactive-vscode')
-        ) {
-            return true;
         }
 
         // Currently the service doesn't support opting in and out of experiments,
@@ -159,7 +133,7 @@ export class ExperimentService implements IExperimentService {
         const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
         experiments.features.forEach((exp) => {
             // Filter out experiments groups that are not from the Python extension.
-            if (exp.toLowerCase().startsWith('python') || exp.toLowerCase().startsWith('jupyter')) {
+            if (exp.toLowerCase().startsWith('jupyter')) {
                 this.output.appendLine(Experiments.inGroup().format(exp));
             }
         });
@@ -178,17 +152,7 @@ export class ExperimentService implements IExperimentService {
             return 'optOut';
         }
 
-        // Users in stable cannot opt into notebook experiment unless we have `__NotebookEditor__` (used for testing).
-        if (this.appEnvironment.channel === 'stable' && experiment === ExperimentGroups.NativeNotebook) {
-            return this._optInto.includes(`__${experiment}__`) ? 'optIn' : undefined;
-        }
-
         if (this._optInto.includes(experiment)) {
-            return 'optIn';
-        }
-
-        // If using insiders VS Code, then always enable Native Editor.
-        if (this.appEnvironment.channel === 'insiders' && experiment === ExperimentGroups.NativeNotebook) {
             return 'optIn';
         }
     }

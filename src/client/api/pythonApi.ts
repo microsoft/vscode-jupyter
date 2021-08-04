@@ -23,7 +23,6 @@ import {
     IExtensions,
     IMemento,
     InstallerResponse,
-    IPersistentStateFactory,
     Product,
     ProductInstallStatus,
     Resource
@@ -132,7 +131,6 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     private waitingOnInstallPrompt?: Promise<void>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
@@ -170,43 +168,6 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
         }
     }
-
-    public async showPythonExtensionInstallRecommendedPrompt() {
-        // If workspace is not trusted, then don't show prompt
-        if (!this.workspace.isTrusted) {
-            return;
-        }
-        const key = 'ShouldShowPythonExtensionInstallRecommendedPrompt';
-        const surveyPrompt = this.persistentStateFactory.createGlobalPersistentState(key, true);
-        if (surveyPrompt.value) {
-            const yes = localize.Common.bannerLabelYes();
-            const no = localize.Common.bannerLabelNo();
-            const doNotShowAgain = localize.Common.doNotShowAgain();
-
-            const promise = (this.waitingOnInstallPrompt = new Promise<void>(async (resolve) => {
-                const answer = await this.appShell.showWarningMessage(
-                    localize.DataScience.pythonExtensionRecommended(),
-                    yes,
-                    no,
-                    doNotShowAgain
-                );
-                switch (answer) {
-                    case yes:
-                        await this.installPythonExtension();
-                        break;
-                    case doNotShowAgain:
-                        await surveyPrompt.updateValue(false);
-                        break;
-                    default:
-                        break;
-                }
-                resolve();
-            }));
-            await promise;
-            this.waitingOnInstallPrompt = undefined;
-        }
-    }
-
     private async installPythonExtension() {
         // Have the user install python
         void this.commandManager.executeCommand('extension.open', PythonExtension);
@@ -271,7 +232,7 @@ export class PythonInstaller implements IPythonInstaller {
     }
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(InterpreterPackages) private readonly interpreterPacakges: InterpreterPackages,
+        @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
     ) {}
 
@@ -282,7 +243,7 @@ export class PythonInstaller implements IPythonInstaller {
         reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse> {
         if (resource && !isResource(resource)) {
-            this.interpreterPacakges.trackPackages(resource);
+            this.interpreterPackages.trackPackages(resource);
         }
         let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
         try {

@@ -219,7 +219,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private async mirrorSend(data: any, _cb?: (err?: Error) => void): Promise<void> {
         // If this is shell control message, mirror to the other side. This is how
         // we get the kernel in the UI to have the same set of futures we have on this side
-        if (typeof data === 'string') {
+        if (typeof data === 'string' && data.includes('shell') && data.includes('execute_request')) {
             const startTime = Date.now();
             // eslint-disable-next-line @typescript-eslint/no-require-imports
             const msg = this.deserialize(data);
@@ -275,12 +275,22 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         let message;
 
         if (!this.isUsingIPyWidgets) {
-            if (!message) {
+            // Lets deserialize only if we know we have a potential case
+            // where this message contains some data we're interested in.
+            let mustDeserialize = false;
+            if (typeof data === 'string') {
+                mustDeserialize = data.includes(WIDGET_MIMETYPE) || data.includes(Identifiers.DefaultCommTarget);
+            } else {
+                // Array buffers (non-plain text data) must be deserialized.
+                mustDeserialize = true;
+            }
+            if (!message && mustDeserialize) {
                 message = this.deserialize(data as any) as any;
             }
 
             // Check for hints that would indicate whether ipywidgest are used in outputs.
             if (
+                message &&
                 message.content &&
                 message.content.data &&
                 (message.content.data[WIDGET_MIMETYPE] || message.content.target_name === Identifiers.DefaultCommTarget)

@@ -23,8 +23,8 @@ import { ExportFormat, IExportDialog, IExportManager } from '../../client/datasc
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
+import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
 import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
 import {
     IInteractiveWindow,
@@ -100,7 +100,7 @@ suite('Interactive window command listener', async () => {
 
     function createCommandListener(): InteractiveWindowCommandListener {
         notebookEditorProvider = mock(NativeEditorProvider);
-        jupyterExecution = mock(JupyterExecutionFactory);
+        jupyterExecution = mock(HostJupyterExecution);
         applicationShell = mock(ApplicationShell);
         exportDialog = mock(ExportDialog);
 

@@ -19,7 +19,6 @@ import {
     ICommandManager,
     ICustomEditorService,
     IDocumentManager,
-    ILiveShareApi,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -234,7 +233,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     protected createNotebookEditor(model: NativeEditorNotebookModel, panel?: WebviewPanel): NativeEditor {
         const editor = new NativeEditor(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
-            this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
             this.serviceContainer.get<IWebviewPanelProvider>(IWebviewPanelProvider),

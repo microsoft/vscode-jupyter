@@ -188,6 +188,7 @@ export class CellExecution {
             // End state is bool | undefined not optional. Undefined == not success or failure
             this.execution?.end(undefined);
             this.execution = undefined;
+            this._result.resolve();
             return;
         }
         if (this.started) {

@@ -154,14 +154,10 @@ export namespace DataScience {
         'DataScience.newNotebookUI',
         "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use. [Learn more...](https://aka.ms/NewNotebookUI)"
     );
+    export const customizeLayout = localize('DataScience.customizeLayout', 'Customize Layout');
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
         'The Python extension is required to perform that task. Click Yes to open Python extension installation page.'
-    );
-
-    export const pythonExtensionRecommended = localize(
-        'DataScience.pythonExtensionRecommended',
-        'Installation of the Python Extension is strongly recommended when working with Python notebooks. For all features and the most seamless experience, would you like to install now?'
     );
 
     export const pythonExtensionInstalled = localize(
@@ -464,6 +460,10 @@ export namespace DataScience {
     export const pythonNotInstalled = localize(
         'DataScience.installPython',
         'Python is not installed. \nPlease [download](https://www.python.org/downloads) and install Python in order to execute cells in this notebook.'
+    );
+    export const pythonNotInstalledNonMarkdown = localize(
+        'DataScience.installPythonNonMarkdown',
+        'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook from here https://www.python.org/downloads.'
     );
     export const kernelNotInstalled = localize(
         'DataScience.installKernel',

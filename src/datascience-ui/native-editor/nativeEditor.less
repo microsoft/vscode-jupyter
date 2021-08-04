@@ -1,6 +1,22 @@
 /* Import common styles and then override them below */
 @import '../interactive-common/common.css';
 
+.custom-editor-banner {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--override-badge-background, var(--vscode-badge-background));
+    color: var(--vscode-inputValidation-warningForeground, --vscode-foreground);
+    text-align: center;
+    overflow: hidden;
+    margin: 2px;
+    background-color: var(--vscode-inputValidation-warningBackground);
+    grid-area: banner;
+}
+
+.custom-editor-banner a {
+    color: var(--vscode-textLink-foreground);
+}
+
 .toolbar-panel-button {
     border-width: 1px;
     border-style: solid;

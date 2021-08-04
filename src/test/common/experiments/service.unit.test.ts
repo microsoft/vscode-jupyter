@@ -8,13 +8,11 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as tasClient from 'vscode-tas-client';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
-import { Extensions } from '../../../client/common/application/extensions';
 import { Channel, IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ExperimentService } from '../../../client/common/experiments/service';
-import { IConfigurationService, IExtensions } from '../../../client/common/types';
-import { Experiments } from '../../../client/common/utils/localize';
+import { IConfigurationService } from '../../../client/common/types';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
@@ -27,7 +25,6 @@ suite('Experimentation service', () => {
     let appEnvironment: IApplicationEnvironment;
     let globalMemento: MockMemento;
     let outputChannel: MockOutputChannel;
-    let extensionService: IExtensions;
     let workspace: IWorkspaceService;
 
     setup(() => {
@@ -35,7 +32,6 @@ suite('Experimentation service', () => {
         appEnvironment = mock(ApplicationEnvironment);
         globalMemento = new MockMemento();
         outputChannel = new MockOutputChannel('');
-        extensionService = instance(mock(Extensions));
         workspace = mock(WorkspaceService);
         when(workspace.getConfiguration(anything(), anything())).thenReturn({
             get: () => [],
@@ -79,9 +75,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
-                extensionService,
-                instance(workspace)
+                outputChannel
             );
 
             sinon.assert.calledWithExactly(
@@ -105,9 +99,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
-                extensionService,
-                instance(workspace)
+                outputChannel
             );
 
             sinon.assert.calledWithExactly(
@@ -130,9 +122,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
-                extensionService,
-                instance(workspace)
+                outputChannel
             );
 
             assert.deepEqual(experimentService._optInto, ['Foo - experiment']);
@@ -147,34 +137,10 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
-                extensionService,
-                instance(workspace)
+                outputChannel
             );
 
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
-        });
-
-        test('Experiment data in Memento storage should be logged if it starts with "python"', () => {
-            const experiments = ['ExperimentOne', 'pythonExperiment'];
-            globalMemento = mock(MockMemento);
-            configureSettings(true, [], []);
-            configureApplicationEnvironment('stable', extensionVersion);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            when(globalMemento.get(anything(), anything())).thenReturn({ features: experiments } as any);
-
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-            new ExperimentService(
-                instance(configurationService),
-                instance(appEnvironment),
-                instance(globalMemento),
-                outputChannel,
-                extensionService,
-                instance(workspace)
-            );
-            const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
-
-            assert.equal(outputChannel.output, output);
         });
     });
 
@@ -213,9 +179,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
-                extensionService,
-                instance(workspace)
+                outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -231,9 +195,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
-                extensionService,
-                instance(workspace)
+                outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -249,9 +211,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
-                extensionService,
-                instance(workspace)
+                outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -271,9 +231,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
-                extensionService,
-                instance(workspace)
+                outputChannel
             );
             const result = await experimentService.inExperiment(experiment);
 
@@ -308,9 +266,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
-                extensionService,
-                instance(workspace)
+                outputChannel
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -325,9 +281,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
-                extensionService,
-                instance(workspace)
+                outputChannel
             );
             const result = await experimentService.getExperimentValue(experiment);
 
@@ -342,9 +296,7 @@ suite('Experimentation service', () => {
                 instance(configurationService),
                 instance(appEnvironment),
                 globalMemento,
-                outputChannel,
-                extensionService,
-                instance(workspace)
+                outputChannel
             );
             const result = await experimentService.getExperimentValue(experiment);
 
