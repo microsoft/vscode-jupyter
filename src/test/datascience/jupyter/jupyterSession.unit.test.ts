@@ -10,7 +10,7 @@ import {
 } from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
 import { DefaultSession } from '@jupyterlab/services/lib/session/default';
-import { ISignal, Signal } from '@phosphor/commands/node_modules/@phosphor/signaling';
+import { ISignal } from '@phosphor/commands/node_modules/@phosphor/signaling';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
