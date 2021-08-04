@@ -343,9 +343,6 @@ export function setUpDomEnvironment() {
     (global as any)['self'] = window;
     copyProps(window, global);
 
-    // Special case. Monaco needs queryCommandSupported
-    (global as any)['document'].queryCommandSupported = () => false;
-
     // Special case. Transform needs createRange
     (global as any)['document'].createRange = () => ({
         createContextualFragment: (str: string) => JSDOM.fragment(str),

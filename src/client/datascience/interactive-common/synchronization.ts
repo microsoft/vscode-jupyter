@@ -148,7 +148,6 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.LoadAllCellsComplete]: MessageType.other,
     [InteractiveWindowMessages.LoadTmLanguageRequest]: MessageType.other,
     [InteractiveWindowMessages.LoadTmLanguageResponse]: MessageType.other,
-    [InteractiveWindowMessages.MonacoReady]: MessageType.other,
     [InteractiveWindowMessages.NativeCommand]: MessageType.other,
     [InteractiveWindowMessages.NotebookAddCellBelow]:
         MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,

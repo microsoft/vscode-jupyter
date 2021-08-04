@@ -102,7 +102,6 @@ import { translateCellToNative } from '../utils';
 import { WebviewPanelHost } from '../webviews/webviewPanelHost';
 import { DataViewerChecker } from './dataViewerChecker';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
-import { serializeLanguageConfiguration } from './serialization';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 
 export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindowMapping> implements IInteractiveBase {
@@ -319,10 +318,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
                 this.handleMessage(message, payload, this.requestVariables);
                 break;
 
-            case InteractiveWindowMessages.LoadTmLanguageRequest:
-                this.handleMessage(message, payload, this.requestTmLanguage);
-                break;
-
             case InteractiveWindowMessages.SelectKernel:
                 this.handleMessage(message, payload, this.selectNewKernel);
                 break;
@@ -333,10 +328,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
 
             case InteractiveWindowMessages.OpenSettings:
                 this.handleMessage(message, payload, this.openSettings);
-                break;
-
-            case InteractiveWindowMessages.MonacoReady:
-                this.readyEvent.fire();
                 break;
 
             case InteractiveWindowMessages.ExecuteExternalCommand:
@@ -1186,24 +1177,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
     }
 
     private async listenToNotebookEvents(notebook: INotebook): Promise<void> {
-        const statusChangeHandler = async (status: ServerStatus) => {
-            const connectionMetadata = notebook.getKernelConnection();
-            const name = getDisplayNameOrNameOfKernelConnection(connectionMetadata);
-
-            await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                jupyterServerStatus: status,
-                serverName: await this.getServerDisplayName(notebook.connection),
-                kernelName: name,
-                language: translateKernelLanguageToMonaco(
-                    getKernelConnectionLanguage(connectionMetadata) || PYTHON_LANGUAGE
-                )
-            });
-        };
-        notebook.onSessionStatusChanged(statusChangeHandler);
         this.disposables.push(notebook.onKernelChanged(this.kernelChangeHandler.bind(this)));
-
-        // Fire the status changed handler at least once (might have already been running and so won't show a status update)
-        statusChangeHandler(notebook.status).ignoreErrors();
 
         // Also listen to iopub messages so we can update other cells on update_display_data
         notebook.registerIOPubListener(this.handleKernelMessage.bind(this));
@@ -1478,24 +1452,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         if (uriString in value) {
             return value[uriString];
         }
-    }
-
-    private async requestTmLanguage(languageId: string) {
-        // Get the contents of the appropriate tmLanguage file.
-        traceInfo('Request for tmlanguage file.');
-        const languageJson = await this.themeFinder.findTmLanguage(languageId);
-        const languageConfiguration = serializeLanguageConfiguration(
-            await this.themeFinder.findLanguageConfiguration(languageId)
-        );
-        const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
-        const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
-        this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, {
-            languageJSON: languageJson ?? '',
-            languageConfiguration,
-            extensions,
-            scopeName,
-            languageId
-        }).ignoreErrors();
     }
 
     private async selectServer() {

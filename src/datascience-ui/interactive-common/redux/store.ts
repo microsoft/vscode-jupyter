@@ -209,7 +209,6 @@ function createMiddleWare(
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 main.settings = reduceLogMessage as any;
             }
-            rootState.monaco = reduceLogMessage;
 
             return rootState;
         },

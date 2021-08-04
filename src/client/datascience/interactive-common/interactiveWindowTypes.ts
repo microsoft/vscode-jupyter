@@ -116,7 +116,6 @@ export enum InteractiveWindowMessages {
     SelectedCell = 'selected_cell',
     OutputToggled = 'output_toggled',
     UnfocusedCellEditor = 'unfocused_cell_editor',
-    MonacoReady = 'monaco_ready',
     ClearAllOutputs = 'clear_all_outputs',
     SelectKernel = 'select_kernel',
     UpdateKernel = 'update_kernel',
@@ -584,7 +583,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SelectedCell]: IFocusedCellEditor;
     public [InteractiveWindowMessages.OutputToggled]: never | undefined;
     public [InteractiveWindowMessages.UnfocusedCellEditor]: never | undefined;
-    public [InteractiveWindowMessages.MonacoReady]: never | undefined;
     public [InteractiveWindowMessages.ClearAllOutputs]: never | undefined;
     public [InteractiveWindowMessages.UpdateKernel]: IServerState | undefined;
     public [InteractiveWindowMessages.UpdateModel]: NotebookModelChange;

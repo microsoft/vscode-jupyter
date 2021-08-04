@@ -26,7 +26,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
+import { CssMessages, IGetCssRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 import { testOnlyMethod } from '../../common/utils/decorators';
 
@@ -166,10 +166,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
             case CssMessages.GetCssRequest:
                 this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
-                break;
-
-            case CssMessages.GetMonacoThemeRequest:
-                this.handleMonacoThemeRequest(payload as IGetMonacoThemeRequest).ignoreErrors();
                 break;
 
             case InteractiveWindowMessages.GetHTMLByIdResponse:
@@ -336,13 +332,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         });
     }
 
-    @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
-    private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
-        const settings = await this.generateDataScienceExtraSettings();
-        const isDark = settings.ignoreVscodeTheme ? false : request?.isDark;
-        this.setTheme(isDark);
-        return this.postMessageInternal(CssMessages.GetMonacoThemeResponse);
-    }
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
         if (workspaceConfig) {
