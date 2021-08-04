@@ -10,9 +10,7 @@ import { IPythonExtensionChecker } from '../../api/types';
 import {
     IApplicationShell,
     ICommandManager,
-    ICustomEditorService,
     IDocumentManager,
-    ILiveShareApi,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -81,7 +79,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICustomEditorService) customEditorService: ICustomEditorService,
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
@@ -89,17 +86,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         @inject(INotebookStorageProvider) storage: INotebookStorageProvider,
         @inject(INotebookProvider) notebookProvider: INotebookProvider
     ) {
-        super(
-            serviceContainer,
-            asyncRegistry,
-            disposables,
-            workspace,
-            configuration,
-            customEditorService,
-            storage,
-            notebookProvider,
-            fs
-        );
+        super(serviceContainer, asyncRegistry, disposables, workspace, configuration, storage, notebookProvider, fs);
 
         // No live share sync required as open document from vscode will give us our contents.
 
@@ -195,7 +182,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     protected createNotebookEditor(model: NativeEditorNotebookModel, panel?: WebviewPanel): NativeEditor {
         const editor = new NativeEditorOldWebView(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
-            this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
             this.serviceContainer.get<IWebviewPanelProvider>(IWebviewPanelProvider),

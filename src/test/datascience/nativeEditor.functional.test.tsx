@@ -101,7 +101,7 @@ suite('DataScience Native Editor', () => {
         })(originalPlatform)
     );
 
-    [false, true].forEach((useCustomEditorApi) => {
+    [true].forEach((useCustomEditorApi) => {
         //import { asyncDump } from '../common/asyncDump';
         suite(`${useCustomEditorApi ? 'With' : 'Without'} Custom Editor API`, () => {
             function createFileCell(cell: any, data: any): ICell {

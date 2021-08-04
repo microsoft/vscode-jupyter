@@ -27,10 +27,11 @@ except Exception:
     """Usage of subprocess is safe here as we are using run and are in control of all the arguments passed to it
     flagging for execution of partial path is also not correct as it is a command, not a path"""
     import subprocess  # nosec
+    from subprocess import PIPE  # nosec
     import sys
 
     result = subprocess.run(  # nosec
-        ["jupyter", "notebook", "list", "--jsonlist"], capture_output=True
+        ["jupyter", "notebook", "list", "--jsonlist"], stdout=PIPE, stderr=PIPE
     )
     encoding = os.getenv("PYTHONIOENCODING", "utf-8")
     print(result.stdout.decode(encoding))

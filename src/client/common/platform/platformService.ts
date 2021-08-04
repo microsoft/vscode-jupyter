@@ -38,7 +38,7 @@ export class PlatformService implements IPlatformService {
             case OSType.OSX:
                 // Release section of https://en.wikipedia.org/wiki/MacOS_Sierra.
                 // Version 10.12 maps to Darwin 16.0.0.
-                // Using os.relase() we get the darwin release #.
+                // Using os.release() we get the darwin release #.
                 try {
                     const ver = coerce(os.release());
                     if (ver) {

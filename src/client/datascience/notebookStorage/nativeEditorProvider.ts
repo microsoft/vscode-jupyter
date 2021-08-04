@@ -19,7 +19,6 @@ import {
     ICommandManager,
     ICustomEditorService,
     IDocumentManager,
-    ILiveShareApi,
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
@@ -108,20 +107,11 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         @inject(IDisposableRegistry) protected readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IConfigurationService) protected readonly configuration: IConfigurationService,
-        @inject(ICustomEditorService) private customEditorService: ICustomEditorService,
         @inject(INotebookStorageProvider) protected readonly storage: INotebookStorageProvider,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IFileSystem) protected readonly fs: IFileSystem
     ) {
         traceInfo(`id is ${this._id}`);
-        // Register for the custom editor service.
-        customEditorService.registerCustomEditorProvider(NativeEditorProvider.customEditorViewType, this, {
-            webviewOptions: {
-                enableFindWidget: true,
-                retainContextWhenHidden: true
-            },
-            supportsMultipleEditorsPerDocument: false
-        });
     }
 
     public async openCustomDocument(
@@ -192,7 +182,13 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         disposable = this._onDidOpenNotebookEditor.event(handler);
 
         // Send an open command.
-        this.customEditorService.openEditor(file, NativeEditorProvider.customEditorViewType).ignoreErrors();
+        if (this.serviceContainer) {
+            // Use service container to prevent circular dependency
+            this.serviceContainer
+                .get<ICustomEditorService>(ICustomEditorService)
+                .openEditor(file, NativeEditorProvider.customEditorViewType)
+                .ignoreErrors();
+        }
 
         // Promise should resolve when the file opens.
         return deferred.promise;
@@ -237,7 +233,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     protected createNotebookEditor(model: NativeEditorNotebookModel, panel?: WebviewPanel): NativeEditor {
         const editor = new NativeEditor(
             this.serviceContainer.getAll<IInteractiveWindowListener>(IInteractiveWindowListener),
-            this.serviceContainer.get<ILiveShareApi>(ILiveShareApi),
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
             this.serviceContainer.get<IWebviewPanelProvider>(IWebviewPanelProvider),

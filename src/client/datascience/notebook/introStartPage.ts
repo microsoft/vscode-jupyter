@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Memento, NotebookDocument } from 'vscode';
+import { commands, Memento, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
@@ -39,20 +39,28 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
 
         this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         if (this.vscodeNotebook.notebookDocuments.length) {
-            this.notify();
+            void this.notify();
         }
     }
     private onDidOpenNotebookDocument(doc: NotebookDocument) {
         if (isJupyterNotebook(doc)) {
-            this.notify();
+            void this.notify();
         }
     }
-    private notify() {
+    private async notify() {
         if (this.messageDisplayed) {
             return;
         }
         this.messageDisplayed = true;
         this.memento.update(IntroduceNativeNotebookDisplayed, true).then(noop, noop);
-        this.appShell.showInformationMessage(DataScience.newNotebookUI()).then(noop, noop);
+        const customizeLayout = DataScience.customizeLayout();
+        const selection = await this.appShell.showInformationMessage(DataScience.newNotebookUI(), customizeLayout);
+        switch (selection) {
+            case customizeLayout:
+                void commands.executeCommand('workbench.action.openSettings', '@tag:notebookLayout').then(noop, noop);
+                break;
+            default:
+                break;
+        }
     }
 }

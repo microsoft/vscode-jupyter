@@ -67,7 +67,6 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             disposables,
             debugService.object,
             fileSystem.object,
-            vscodeNotebook.object,
             instance(workspace)
         );
     });
@@ -115,33 +114,6 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
                 return targetCodeWatcher.object;
             })
             .verifiable(TypeMoq.Times.once());
-        documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
-
-        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
-        await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
-
-        // getCodeLenses should be called twice, but getting the code watcher only once due to same doc
-        targetCodeWatcher.verifyAll();
-        serviceContainer.verifyAll();
-    });
-    test('Should not Initialize Code Lenses when a Native Notebook is open', async () => {
-        // Create our document
-        const document = TypeMoq.Mock.ofType<TextDocument>();
-        document.setup((d) => d.fileName).returns(() => 'test.py');
-        document.setup((d) => d.version).returns(() => 1);
-        vscodeNotebook.reset();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        vscodeNotebook.setup((c) => c.activeNotebookEditor).returns(() => ({} as any));
-
-        const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();
-        targetCodeWatcher
-            .setup((tc) => tc.getCodeLenses())
-            .returns(() => [])
-            .verifiable(TypeMoq.Times.never());
-        serviceContainer
-            .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
-            .returns(() => targetCodeWatcher.object)
-            .verifiable(TypeMoq.Times.never());
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
 
         await codeLensProvider.provideCodeLenses(document.object, tokenSource.token);

@@ -97,8 +97,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     constructor(
         protected resource: Resource,
         private restartSessionUsed: (id: Kernel.IKernelConnection) => void,
-        public workingDirectory: string,
-        private sessionTimeout: number
+        public workingDirectory: string
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
@@ -209,9 +208,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
         // Listen for session status changes
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
-
-        // Start the restart session promise too.
-        this.restartSessionPromise = this.createRestartSession(resource, kernelConnection, newSession, timeoutMS);
     }
 
     public async restart(timeout: number): Promise<void> {
@@ -244,13 +240,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             // Rewire our status changed event.
             this.session.statusChanged.connect(this.statusHandler);
 
-            // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createRestartSession(
-                this.session.resource,
-                this.kernelConnectionMetadata,
-                oldSession,
-                timeout
-            );
+            this.restartSessionPromise = undefined;
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
@@ -266,17 +256,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
-        const promise =
-            this.session && this.session.kernel
-                ? this.session.kernel.requestExecute(content, disposeOnDone, metadata)
-                : undefined;
-
-        // It has been observed that starting the restart session slows down first time to execute a cell.
-        // Solution is to start the restart session after the first execution of user code.
-        if (promise) {
-            promise.done.finally(() => this.startRestartSession(this.sessionTimeout)).catch(noop);
-        }
-        return promise;
+        return this.session && this.session.kernel
+            ? this.session.kernel.requestExecute(content, disposeOnDone, metadata)
+            : undefined;
     }
 
     public requestDebug(

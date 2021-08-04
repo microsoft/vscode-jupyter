@@ -73,11 +73,11 @@ jobs:
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-      - name: insiders channel
-        # Scheduled builds will publish Insider builds.
-        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
-        run: |
-          echo "release_channel=insider" >> $GITHUB_ENV
+    #   - name: insiders channel
+    #     # Scheduled builds will publish Insider builds.
+    #     if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+    #     run: |
+    #       echo "release_channel=insider" >> $GITHUB_ENV
 
       - name: release
         if: github.event_name == 'push' && contains(github.ref, 'refs/heads/release')
@@ -504,11 +504,19 @@ jobs:
         if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os == 'macos-latest'
         run: pip install torch torchvision torchaudio
 
+
+      - name: Use Conda Python ${{matrix.python}}
+        uses: conda-incubator/setup-miniconda@v2
+        if: env.conda_python
+        with:
+          auto-update-conda: true
+          activate-environment: functional_test_env_2
+          python-version: ${{matrix.python}}
+
       - name: Install secondary conda environment
         shell: bash -l {0}
         if: env.conda_python
         run: |
-          conda create --name functional_test_env_2
           conda activate functional_test_env_2
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt

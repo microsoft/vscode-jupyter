@@ -300,7 +300,7 @@
             {
                 "command": "jupyter.runByLineStop",
                 "title": "Stop",
-                "icon": "$(debug-stop)",
+                "icon": "$(notebook-stop)",
                 "category": "Jupyter",
                 "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
             },
@@ -942,7 +942,7 @@
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
-                    "group": "navigation@2",
+                    "group": "Jupyter",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
                 },
                 {
@@ -1543,7 +1543,7 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Enables the preview debugging experience. Set to true to enable the debugging mode button on native notebooks. Your selected kernel should also have ipykernel 6 installed in order to support debugging. Clicking the button will start a debugging session and will allow you to set and hit breakpoints.",
-                    "scope": "machine"
+                    "scope": "application"
                 },
                 "jupyter.enableNativeInteractiveWindow": {
                     "type": "boolean",
@@ -1568,9 +1568,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "CustomEditor"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "List of experiment to opt into. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
                     "scope": "application"
@@ -1579,10 +1577,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": [
-                            "NativeNotebookEditor",
-                            "CustomEditor"
-                        ]
+                        "enum": []
                     },
                     "markdownDescription": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
                     "scope": "application"
@@ -2181,6 +2176,7 @@
         "underscore": "^1.12.1",
         "unicode": "^10.0.0",
         "untildify": "^3.0.2",
+        "url-parse": "^1.5.0",
         "uuid": "^3.3.2",
         "vscode-debugprotocol": "^1.41.0",
         "vscode-extension-telemetry": "0.1.4",
@@ -2191,7 +2187,8 @@
         "vscode-tas-client": "^0.1.17",
         "vsls": "^0.3.1291",
         "winston": "^3.2.1",
-        "ws": "^6.0.0"
+        "ws": "^6.0.0",
+        "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {
         "@actions/core": "^1.2.6",
@@ -2375,7 +2372,6 @@
     },
     "optionalDependencies": {
         "canvas": "^2.7.0",
-        "playwright-chromium": "^1.10.0",
-        "zeromq": "^6.0.0-beta.6"
+        "playwright-chromium": "^1.10.0"
     }
 }

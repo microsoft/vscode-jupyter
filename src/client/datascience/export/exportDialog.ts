@@ -67,7 +67,12 @@ export class ExportDialog implements IExportDialog {
     }
 
     private async getDefaultUri(source: Uri | undefined, targetFileName: string): Promise<Uri> {
-        if (!source || source.scheme === 'file' || source.scheme === 'untitled') {
+        if (
+            !source ||
+            source.scheme === 'file' ||
+            source.scheme === 'untitled' ||
+            source.scheme === 'vscode-interactive'
+        ) {
             // Just combine the working directory with the file
             return Uri.file(path.join(await computeWorkingDirectory(source, this.workspaceService), targetFileName));
         }

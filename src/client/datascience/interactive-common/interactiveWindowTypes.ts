@@ -184,14 +184,6 @@ export enum IPyWidgetMessages {
     IPyWidgets_mirror_execute = 'IPyWidgets_mirror_execute'
 }
 
-// These are the messages that will mirror'd to guest/hosts in
-// a live share session
-export const InteractiveWindowRemoteMessages: string[] = [
-    InteractiveWindowMessages.AddedSysInfo.toString(),
-    InteractiveWindowMessages.RemoteAddCode.toString(),
-    InteractiveWindowMessages.RemoteReexecuteCode.toString()
-];
-
 export interface IGotoCode {
     file: string;
     line: number;

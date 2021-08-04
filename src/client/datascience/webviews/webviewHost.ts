@@ -215,7 +215,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
             this.webview = await this.provideWebview(cwd, settings, workspaceFolder, webView);
 
-            // Track to seee if our webview fails to load
+            // Track to see if our webview fails to load
             this._disposables.push(this.webview.loadFailed(this.onWebViewLoadFailed, this));
 
             traceInfo('Webview panel created.');
