@@ -1882,7 +1882,6 @@
 //                         assert.equal(wrapper.find('NativeCell').length, 4);
 //                     });
 
-
 //                     test('Navigating cells using up/down keys while focus is set to editor', async () => {
 //                         wrapper.update();
 

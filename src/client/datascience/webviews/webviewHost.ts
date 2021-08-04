@@ -332,7 +332,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         });
     }
 
-
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
         if (workspaceConfig) {
             return workspaceConfig.get(section, defaultValue);

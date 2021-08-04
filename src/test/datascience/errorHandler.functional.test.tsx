@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-export const __ ='';
+export const __ = '';
 // import { assert } from 'chai';
 // import * as sinon from 'sinon';
 // import * as TypeMoq from 'typemoq';
