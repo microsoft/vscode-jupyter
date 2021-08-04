@@ -192,7 +192,6 @@ import { IApplicationEnvironment } from '../common/application/types';
 import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
 import { ExtensionRecommendationService } from './extensionRecommendation';
 import { PythonVariablesRequester } from './jupyter/pythonVariableRequester';
-import { DebuggingManager } from '../debugger/jupyter/debuggingManager';
 import { DebuggingCellMap } from '../debugger/jupyter/debuggingCellMap';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { NativeInteractiveWindowCommandListener } from './interactive-window/nativeInteractiveWindowCommandListener';
@@ -201,6 +200,8 @@ import { NativeInteractiveWindowProvider } from './interactive-window/nativeInte
 import { JupyterPaths } from './kernel-launcher/jupyterPaths';
 import { LocalKnownPathKernelSpecFinder } from './kernel-launcher/localKnownPathKernelSpecFinder';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
+import { IDebuggingManager } from '../debugger/types';
+import { DebuggingManager } from '../debugger/jupyter/debuggingManager';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -366,7 +367,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IWebviewExtensibility>(IWebviewExtensibility, WebviewExtensibility);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ExtensionRecommendationService);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebuggingManager);
+    serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [IExtensionSingleActivationService]);
     serviceManager.addSingleton<IDebuggingCellMap>(IDebuggingCellMap, DebuggingCellMap);
     serviceManager.addBinding(IDebuggingCellMap, INotebookExecutionLogger);
 
