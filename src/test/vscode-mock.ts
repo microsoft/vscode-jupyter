@@ -113,6 +113,7 @@ mockedVSCode.SymbolInformation = vscodeMocks.vscMockExtHostedTypes.SymbolInforma
 mockedVSCode.CompletionItem = vscodeMocks.vscMockExtHostedTypes.CompletionItem;
 mockedVSCode.CompletionItemKind = vscodeMocks.vscMockExtHostedTypes.CompletionItemKind;
 mockedVSCode.CodeLens = vscodeMocks.vscMockExtHostedTypes.CodeLens;
+mockedVSCode.Diagnostic = vscodeMocks.vscMockExtHostedTypes.Diagnostic;
 mockedVSCode.DiagnosticSeverity = vscodeMocks.vscMockExtHostedTypes.DiagnosticSeverity;
 mockedVSCode.SnippetString = vscodeMocks.vscMockExtHostedTypes.SnippetString;
 mockedVSCode.ConfigurationTarget = vscodeMocks.vscMockExtHostedTypes.ConfigurationTarget;
