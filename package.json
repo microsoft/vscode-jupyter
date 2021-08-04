@@ -2106,9 +2106,7 @@
         "@nteract/messaging": "^7.0.0",
         "@octokit/rest": "^18.0.6",
         "@phosphor/widgets": "^1.9.3",
-        "ansi-regex": "^4.1.0",
         "ansi-to-html": "^0.6.7",
-        "ansi-to-react": "^6.0.8",
         "arch": "^2.1.0",
         "bootstrap": "^4.3.1",
         "bootstrap-less": "^3.3.8",
@@ -2177,7 +2175,6 @@
         "vscode-languageserver": "7.0.0",
         "vscode-languageserver-protocol": "3.16.0",
         "vscode-tas-client": "^0.1.17",
-        "vsls": "^0.3.1291",
         "winston": "^3.2.1",
         "ws": "^6.0.0",
         "zeromq": "^6.0.0-beta.6"
