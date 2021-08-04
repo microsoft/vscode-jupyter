@@ -207,7 +207,6 @@ module.exports = {
         'src/test/datascience/editor-integration/cellhashprovider.unit.test.ts',
         'src/test/datascience/jupyterPasswordConnect.unit.test.ts',
         'src/test/datascience/mockLanguageClient.ts',
-        'src/test/datascience/errorHandler.functional.test.tsx',
         'src/test/datascience/notebook/notebookTrust.native.vscode.test.ts',
         'src/test/datascience/notebook/survey.unit.test.ts',
         'src/test/datascience/notebook/interrupRestart.native.vscode.test.ts',
