@@ -2123,6 +2123,7 @@
         "detect-indent": "^6.0.0",
         "diff-match-patch": "^1.0.0",
         "download": "^8.0.0",
+        "encoding": "^0.1.13",
         "fast-deep-equal": "^2.0.1",
         "font-awesome": "^4.7.0",
         "fs-extra": "^4.0.3",
