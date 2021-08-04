@@ -68,7 +68,7 @@ suite('Daemon - Python Daemon Pool', () => {
         }
     });
     setup(async function () {
-        if (isPythonVersion('2.7')) {
+        if (await isPythonVersion('2.7')) {
             // eslint-disable-next-line no-invalid-this
             return this.skip();
         }
@@ -85,7 +85,11 @@ suite('Daemon - Python Daemon Pool', () => {
                 new StreamMessageWriter(pythonProc.stdin)
             );
             connection.listen();
-            disposables.push({ dispose: () => pythonProc.kill() });
+            disposables.push({
+                dispose: () => {
+                    pythonProc.kill();
+                }
+            });
             disposables.push({ dispose: () => connection.dispose() });
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return { proc: pythonProc, dispose: noop, out: undefined as any };
@@ -288,7 +292,7 @@ suite('Daemon - Python Daemon Pool', () => {
         const fileToExecute = await createPythonFile(source);
         const output = pythonDaemonPool.execObservable([fileToExecute], {});
         const outputsReceived: string[] = [];
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             output.out.subscribe((out) => outputsReceived.push(out.out.trim()), reject, resolve);
         });
         assert.deepEqual(
@@ -315,7 +319,7 @@ suite('Daemon - Python Daemon Pool', () => {
         const fileToExecute = await createPythonFile(source);
         const output = pythonDaemonPool.execObservable([fileToExecute], { throwOnStdErr: true });
         const outputsReceived: string[] = [];
-        const promise = new Promise((resolve, reject) => {
+        const promise = new Promise<void>((resolve, reject) => {
             output.out.subscribe((out) => outputsReceived.push(out.out.trim()), reject, resolve);
         });
         await expect(promise).to.eventually.be.rejectedWith('KABOOM');

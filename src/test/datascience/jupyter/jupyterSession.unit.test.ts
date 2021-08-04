@@ -63,9 +63,11 @@ suite('DataScience - JupyterSession', () => {
         session = mock<ISessionWithSocket>();
         kernel = mock(DefaultKernel);
         when(session.kernel).thenReturn(instance(kernel));
-        statusChangedSignal = mock(Signal);
-        kernelChangedSignal = mock(Signal);
-        const ioPubSignal = mock(Signal);
+        statusChangedSignal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
+        kernelChangedSignal = mock<ISignal<ISessionWithSocket, IKernelChangedArgs>>();
+        const ioPubSignal = mock<
+            ISignal<ISessionWithSocket, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
+        >();
         when(session.statusChanged).thenReturn(instance(statusChangedSignal));
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
         when(session.iopubMessage).thenReturn(instance(ioPubSignal));
@@ -320,7 +322,7 @@ suite('DataScience - JupyterSession', () => {
             });
             suite('Switching kernels', () => {
                 setup(async () => {
-                    const signal = mock(Signal);
+                    const signal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
                     when(remoteSession.statusChanged).thenReturn(instance(signal));
                     verify(sessionManager.startNew(anything())).once();
                     when(sessionManager.connectTo(newActiveRemoteKernel.session)).thenReturn(
