@@ -71,7 +71,8 @@ import {
     NotebookSerializer,
     NotebookData,
     NotebookDocumentShowOptions,
-    ColorTheme
+    ColorTheme,
+    NotebookCellExecutionStateChangeEvent
 } from 'vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
@@ -1230,6 +1231,7 @@ export type NotebookCellChangedEvent =
     | NotebookDocumentMetadataChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
+    readonly onDidChangeNotebookCellExecutionState: Event<NotebookCellExecutionStateChangeEvent>;
     readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;

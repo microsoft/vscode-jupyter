@@ -5,7 +5,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
+import { NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { IExtensionSingleActivationService } from '../activation/types';
@@ -64,6 +64,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         this.vscNotebook.onDidOpenNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t), this.disposables);
         this.vscNotebook.onDidCloseNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t), this.disposables);
         this.vscNotebook.onDidSaveNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t), this.disposables);
+        this.vscNotebook.onDidChangeNotebookCellExecutionState((e) => this.checkNotebookCell(e), this, disposables);
     }
 
     public dispose() {
@@ -112,6 +113,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         try {
             e.getCells()
                 .filter((cell) => cell.kind === NotebookCellKind.Code)
+                .filter((cell) => cell.document.languageId === PYTHON_LANGUAGE)
                 .forEach((c) => {
                     const cellArray = this.getCellLinesFromSource(c.document.getText());
                     if (result.length < MAX_DOCUMENT_LINES) {
@@ -195,6 +197,26 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         this.pendingChecks.delete(e.uri.fsPath);
         const lines = this.getNotebookDocumentLines(e);
         this.lookForImports(lines);
+    }
+
+    private checkNotebookCell(e: NotebookCellExecutionStateChangeEvent) {
+        this.pendingChecks.delete(e.cell.document.uri.toString());
+        const result: (string | undefined)[] = [];
+        try {
+            if (e.cell.kind === NotebookCellKind.Code && e.cell.document.languageId === PYTHON_LANGUAGE) {
+                const cellArray = this.getCellLinesFromSource(e.cell.document.getText());
+                if (result.length < MAX_DOCUMENT_LINES) {
+                    result.push(...cellArray);
+                }
+            }
+        } catch (ex) {
+            // Can fail on CI, if the notebook has been closed or the like
+            if (!isCI) {
+                throw ex;
+            }
+        }
+
+        this.lookForImports(result);
     }
 
     @captureTelemetry(EventName.HASHED_PACKAGE_PERF)

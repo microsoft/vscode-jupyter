@@ -20,7 +20,8 @@ import {
     NotebookSerializer,
     NotebookDocumentContentOptions,
     Uri,
-    NotebookDocumentShowOptions
+    NotebookDocumentShowOptions,
+    NotebookCellExecutionStateChangeEvent
 } from 'vscode';
 import { IDisposableRegistry } from '../types';
 import { isUri } from '../utils/misc';
@@ -35,6 +36,9 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public readonly onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
     public readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     public readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
+    public get onDidChangeNotebookCellExecutionState(): Event<NotebookCellExecutionStateChangeEvent> {
+        return notebooks.onDidChangeNotebookCellExecutionState;
+    }
     public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
         return this.canUseNotebookApi ? workspace.notebookDocuments : [];
     }
