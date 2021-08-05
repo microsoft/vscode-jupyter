@@ -40,24 +40,22 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         return notebooks.onDidChangeNotebookCellExecutionState;
     }
     public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
-        return this.canUseNotebookApi ? workspace.notebookDocuments : [];
+        return workspace.notebookDocuments;
     }
     public get notebookEditors() {
-        return this.canUseNotebookApi ? window.visibleNotebookEditors : [];
+        return window.visibleNotebookEditors;
     }
     public get activeNotebookEditor(): NotebookEditor | undefined {
         return window.activeNotebookEditor;
     }
     private readonly _onDidChangeNotebookDocument = new EventEmitter<NotebookCellChangedEvent>();
     private addedEventHandlers?: boolean;
-    private readonly canUseNotebookApi?: boolean;
     private readonly handledCellChanges = new WeakSet<VSCNotebookCellsChangeEvent>();
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IApplicationEnvironment) readonly env: IApplicationEnvironment
     ) {
         this.addEventHandlers();
-        this.canUseNotebookApi = true;
         this.onDidChangeNotebookEditorSelection = window.onDidChangeNotebookEditorSelection;
         this.onDidChangeActiveNotebookEditor = window.onDidChangeActiveNotebookEditor;
         this.onDidOpenNotebookDocument = workspace.onDidOpenNotebookDocument;
