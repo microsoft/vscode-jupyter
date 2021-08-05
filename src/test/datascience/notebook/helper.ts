@@ -40,10 +40,9 @@ import {
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/cellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
-import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { CellOutputMimeTypes, INotebookControllerManager } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
-import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
+import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
@@ -640,17 +639,8 @@ export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
     return true;
 }
 
-export async function saveActiveNotebook(disposables: IDisposable[]) {
-    const api = await initialize();
-    const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-    if (editorProvider.activeEditor instanceof NotebookEditor) {
-        await commands.executeCommand('workbench.action.files.saveAll');
-    } else {
-        const savedEvent = createEventHandler(editorProvider.activeEditor!.model!, 'changed', disposables);
-        await commands.executeCommand('workbench.action.files.saveAll');
-
-        await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
-    }
+export async function saveActiveNotebook() {
+    await commands.executeCommand('workbench.action.files.saveAll');
 }
 export async function runCell(cell: NotebookCell) {
     const api = await initialize();

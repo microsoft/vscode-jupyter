@@ -55,6 +55,7 @@ enum DSSurveyLabelIndex {
     No
 }
 
+
 @injectable()
 export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -235,9 +235,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
     public get isDirty(): boolean {
         return false;
     }
-    public get changed(): Event<NotebookModelChange> {
-        return this._changedEmitter.event;
-    }
     public get file(): Uri {
         return this._file;
     }

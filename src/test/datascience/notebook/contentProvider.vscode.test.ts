@@ -209,7 +209,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
             'Cell output not cleared'
         );
         await sleep(1_000);
-        await saveActiveNotebook(disposables);
+        await saveActiveNotebook();
 
         // Open nb json and validate execution_count = null.
         const json = JSON.parse(

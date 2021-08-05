@@ -36,10 +36,9 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
-import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
-import { KernelConnectionMetadata, NotebookCellRunState } from './jupyter/kernels/types';
+import { KernelConnectionMetadata } from './jupyter/kernels/types';
 import { KernelStateEventArgs } from './notebookExtensibility';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -586,16 +585,10 @@ export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends Disposable, IInteractiveBase {
     readonly closed: Event<INotebookEditor>;
     readonly executed?: Event<INotebookEditor>;
-    readonly modified: Event<INotebookEditor>;
-    readonly saved: Event<INotebookEditor>;
     /**
      * Is this notebook representing an untitled file which has never been saved yet.
      */
     readonly isUntitled: boolean;
-    /**
-     * `true` if there are unpersisted changes.
-     */
-    readonly isDirty: boolean;
     readonly file: Uri;
     readonly model?: INotebookModel;
     readonly notebookMetadata: nbformat.INotebookMetadata | undefined;
@@ -617,17 +610,6 @@ export const INotebookExtensibility = Symbol('INotebookExtensibility');
 
 export interface INotebookExtensibility {
     readonly onKernelStateChange: Event<KernelStateEventArgs>;
-}
-
-export const IWebviewExtensibility = Symbol('IWebviewExtensibility');
-
-export interface IWebviewExtensibility {
-    registerCellToolbarButton(
-        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
-        codicon: string,
-        statusToEnable: NotebookCellRunState[],
-        tooltip: string
-    ): IDisposable;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
@@ -1105,22 +1087,13 @@ export interface INbConvertExportToPythonService {
 
 export interface INotebookModel {
     readonly indentAmount: string;
-    readonly onDidDispose: Event<void>;
     readonly file: Uri;
     readonly isDirty: boolean;
-    readonly isUntitled: boolean;
-    readonly changed: Event<NotebookModelChange>;
-    readonly onDidEdit: Event<NotebookModelChange>;
-    readonly isDisposed: boolean;
-    readonly metadata: nbformat.INotebookMetadata | undefined;
-    readonly isTrusted: boolean;
-    readonly cellCount: number;
     /**
      * @deprecated
      * Use only with old notebooks, when using with new Notebooks, use VSC API instead.
      */
     getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
-    getContent(): string;
     /**
      * Dispose of the Notebook model.
      *
