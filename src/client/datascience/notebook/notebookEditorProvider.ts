@@ -23,7 +23,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
-import { Commands, Telemetry } from '../constants';
+import { Commands, defaultNotebookFormat, Telemetry } from '../constants';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
@@ -144,8 +144,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const cell = new NotebookCellData(NotebookCellKind.Code, '', language);
         const data = new NotebookData([cell]);
         data.metadata = {
-            language_info: {
-                name: language
+            custom: {
+                cells: [],
+                metadata: {
+                    orig_nbformat: defaultNotebookFormat.major
+                },
+                nbformat: defaultNotebookFormat.major,
+                nbformat_minor: defaultNotebookFormat.minor
             }
         };
         const doc = await this.vscodeNotebook.openNotebookDocument(JupyterNotebookView, data);
