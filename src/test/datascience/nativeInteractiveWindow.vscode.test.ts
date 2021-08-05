@@ -4,12 +4,9 @@
 'use strict';
 
 import { assert } from 'chai';
-import { anything, when } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../client/api/types';
-import { IApplicationShell } from '../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { IExportDialog } from '../../client/datascience/export/types';
 import { NativeInteractiveWindow } from '../../client/datascience/interactive-window/nativeInteractiveWindow';
 import { NativeInteractiveWindowProvider } from '../../client/datascience/interactive-window/nativeInteractiveWindowProvider';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
