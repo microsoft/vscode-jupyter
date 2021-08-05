@@ -86,7 +86,7 @@
         -   [ ] `package-lock.json`
     -   [ ] Turn insiders daily builds back on
 -   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+label%3A%22info+needed%22+-label%3A%22data+science%22+sort%3Aupdated-asc) and close any that have no activity for over a month (🤖)
--   [ ] GDPR bookkeeping (🤖)
+-   [ ] GDPR bookkeeping (🤖) ((@greazer does regular classification every Monday evening))
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
 
 ## Prep for the _next_ release
