@@ -706,7 +706,6 @@ module.exports = {
         'src/client/datascience/ipywidgets/constants.ts',
         'src/client/datascience/ipywidgets/ipywidgetHandler.ts',
         'src/client/datascience/multiplexingDebugService.ts',
-        'src/client/datascience/interactive-window/identity.ts',
         'src/client/datascience/raw-kernel/rawKernel.ts',
         'src/client/datascience/crossProcessLock.ts',
         'src/client/datascience/debugLocationTrackerFactory.ts',
