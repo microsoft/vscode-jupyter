@@ -63,7 +63,7 @@ export class NativeInteractiveWindowCommandListener {
         @inject(IExportManager) private exportManager: IExportManager,
         @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard
-    ) {}
+    ) { }
 
     public register(commandManager: ICommandManager): void {
         let disposable = commandManager.registerCommand(Commands.CreateNewInteractive, () =>
@@ -153,14 +153,14 @@ export class NativeInteractiveWindowCommandListener {
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.ExpandAllCells,
-                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                async (context?: { notebookEditor: { notebookUri: Uri } }) =>
                     this.expandAllCells(context?.notebookEditor.notebookUri)
             )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.CollapseAllCells,
-                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                async (context?: { notebookEditor: { notebookUri: Uri } }) =>
                     this.collapseAllCells(context?.notebookEditor.notebookUri)
             )
         );
@@ -430,21 +430,21 @@ export class NativeInteractiveWindowCommandListener {
         }
     }
 
-    private expandAllCells(uri?: Uri) {
+    private async expandAllCells(uri?: Uri) {
         const interactiveWindow = uri
             ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
-            interactiveWindow.expandAllCells();
+            await interactiveWindow.expandAllCells();
         }
     }
 
-    private collapseAllCells(uri?: Uri) {
+    private async collapseAllCells(uri?: Uri) {
         const interactiveWindow = uri
             ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
-            interactiveWindow.collapseAllCells();
+            await interactiveWindow.collapseAllCells();
         }
     }
 
