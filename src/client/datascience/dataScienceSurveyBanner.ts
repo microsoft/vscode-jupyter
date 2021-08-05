@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, UIKind } from 'vscode';
+import { UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
 import '../common/extensions';
@@ -15,16 +15,14 @@ import {
     IJupyterExtensionBanner,
     IPersistentState,
     IPersistentStateFactory,
-    IsCodeSpace,
-    ISurveyBanner
+    IsCodeSpace
 } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { MillisecondsInADay } from '../constants';
-import { InteractiveWindowMessages, IReExecuteCells } from './interactive-common/interactiveWindowTypes';
 import { JupyterNotebookView } from './notebook/constants';
 import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
-import { IInteractiveWindowListener, INotebookEditorProvider, INotebookExtensibility } from './types';
+import { INotebookEditorProvider, INotebookExtensibility } from './types';
 
 export enum DSSurveyStateKeys {
     ShowBanner = 'ShowDSSurveyBanner',
@@ -53,44 +51,6 @@ export enum BannerType {
 enum DSSurveyLabelIndex {
     Yes,
     No
-}
-
-
-@injectable()
-export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private postEmitter = new EventEmitter<{ message: string; payload: any }>();
-    constructor(
-        @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-        @inject(ISurveyBanner)
-        private readonly dataScienceSurveyBanner: ISurveyBanner
-    ) {}
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public get postMessage(): Event<{ message: string; payload: any }> {
-        return this.postEmitter.event;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public onMessage(message: string, payload?: any): void {
-        if (message === InteractiveWindowMessages.ReExecuteCells) {
-            const args = payload as IReExecuteCells;
-            if (args && args.cellIds.length) {
-                const state = this.persistentState.createGlobalPersistentState<number>(
-                    DSSurveyStateKeys.ExecutionCount,
-                    0
-                );
-                state
-                    .updateValue(state.value + args.cellIds.length)
-                    .then(() => {
-                        // On every update try to show the banner.
-                        return this.dataScienceSurveyBanner.showBanner(BannerType.DSSurvey);
-                    })
-                    .ignoreErrors();
-            }
-        }
-    }
-    public dispose(): void | undefined {
-        noop();
-    }
 }
 
 export type ShowBannerWithExpiryTime = {

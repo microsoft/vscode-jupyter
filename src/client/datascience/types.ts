@@ -612,45 +612,6 @@ export interface INotebookExtensibility {
     readonly onKernelStateChange: Event<KernelStateEventArgs>;
 }
 
-export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
-
-/**
- * Listens to history messages to provide extra functionality
- */
-export interface IInteractiveWindowListener extends IDisposable {
-    /**
-     * Fires this event when posting a response message
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    postMessage: Event<{ message: string; payload: any }>;
-    /**
-     * Fires this event when posting a message to the interactive base.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    postInternalMessage?: Event<{ message: string; payload: any }>;
-    /**
-     * Handles messages that the interactive window receives
-     * @param message message type
-     * @param payload message payload
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onMessage(message: string, payload?: any): void;
-    /**
-     * Fired when the view state of the interactive window changes
-     * @param args
-     */
-    onViewStateChanged?(args: WebViewViewChangeEventArgs): void;
-}
-
-// Wraps the vscode API in order to send messages back and forth from a webview
-export const IPostOffice = Symbol('IPostOffice');
-export interface IPostOffice {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    post(message: string, params: any[] | undefined): void;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    listen(message: string, listener: (args: any[] | undefined) => void): void;
-}
-
 // Wraps the vscode CodeLensProvider base class
 export const IDataScienceCodeLensProvider = Symbol('IDataScienceCodeLensProvider');
 export interface IDataScienceCodeLensProvider extends CodeLensProvider {

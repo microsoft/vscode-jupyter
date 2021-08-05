@@ -28,7 +28,6 @@ import { JupyterVariableDataProvider } from './data-viewing/jupyterVariableDataP
 import { JupyterVariableDataProviderFactory } from './data-viewing/jupyterVariableDataProviderFactory';
 import { IDataViewer, IDataViewerFactory } from './data-viewing/types';
 import { DataScience } from './datascience';
-import { DataScienceSurveyBannerLogger } from './dataScienceSurveyBanner';
 import { DebugLocationTrackerFactory } from './debugLocationTrackerFactory';
 import { CellHashProvider } from './editor-integration/cellhashprovider';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
@@ -47,17 +46,11 @@ import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
 import { ExportUtil } from './export/exportUtil';
 import { ExportFormat, IExport, IExportDialog, IExportManager } from './export/types';
-import { DebugListener } from './interactive-common/debugListener';
-import { LinkProvider } from './interactive-common/linkProvider';
 import { NotebookProvider } from './interactive-common/notebookProvider';
 import { NotebookServerProvider } from './interactive-common/notebookServerProvider';
 import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker';
-import { ShowPlotListener } from './interactive-common/showPlotListener';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
-import { NativeEditorRunByLineListener } from './interactive-ipynb/nativeEditorRunByLineListener';
-import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
 import { IPyWidgetMessageDispatcherFactory } from './ipywidgets/ipyWidgetMessageDispatcherFactory';
-import { WebviewIPyWidgetCoordinator } from './ipywidgets/webviewIPyWidgetCoordinator';
 import { JupyterCommandLineSelector } from './jupyter/commandLineSelector';
 import { DebuggerVariableRegistration } from './jupyter/debuggerVariableRegistration';
 import { DebuggerVariables } from './jupyter/debuggerVariables';
@@ -129,7 +122,6 @@ import {
     IDebuggingCellMap,
     IDebugLocationTracker,
     IHoverProvider,
-    IInteractiveWindowListener,
     IInteractiveWindowProvider,
     IJupyterCommandFactory,
     IJupyterDebugger,
@@ -213,7 +205,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
 
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
-    serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProviderWrapper);
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
     serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
@@ -223,11 +214,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DebugListener);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, LinkProvider);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, WebviewIPyWidgetCoordinator);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, NativeEditorRunByLineListener);
     serviceManager.addSingleton<NotebookIPyWidgetCoordinator>(NotebookIPyWidgetCoordinator, NotebookIPyWidgetCoordinator);
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
@@ -248,7 +234,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
     serviceManager.addSingleton<DataViewerDependencyService>(DataViewerDependencyService, DataViewerDependencyService);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
-    serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [IInteractiveWindowListener]);
+    serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
@@ -264,7 +250,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookUsageTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, MigrateJupyterInterpreterStateService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, VariableViewActivationService);
-    serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, NativeInteractiveWindowProvider);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeInteractiveWindowCommandListener);
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
