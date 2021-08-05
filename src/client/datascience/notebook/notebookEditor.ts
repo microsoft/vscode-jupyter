@@ -14,11 +14,12 @@ import {
     Uri,
     WebviewPanel,
     NotebookCellData,
-    NotebookCell
+    NotebookCell,
+    NotebookData
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensions } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -40,7 +41,6 @@ import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 import { getNotebookMetadata } from './helpers/helpers';
 import type { nbformat } from '@jupyterlab/coreutils';
-import { generateCellsFromNotebookDocument } from '../cellFactory';
 
 export class NotebookEditor implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
@@ -90,7 +90,8 @@ export class NotebookEditor implements INotebookEditor {
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
         private readonly cellLanguageService: NotebookCellLanguageService,
-        private loggers: INotebookExecutionLogger[]
+        private loggers: INotebookExecutionLogger[],
+        private extensions: IExtensions
     ) {
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
     }
@@ -100,13 +101,23 @@ export class NotebookEditor implements INotebookEditor {
     }
     onExecutedCode?: Event<string> | undefined;
     public getContent(): string {
-        const cells = generateCellsFromNotebookDocument(this.document, false);
-        return JSON.stringify({
-            cells: cells.map((cell) => cell.data),
-            nbformat: this.document.metadata.custom.nbformat,
-            nbformat_minor: this.document.metadata.custom.nbformat_minor,
-            metadata: this.document.metadata
+        const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
+            'vscode.ipynb'
+        );
+        if (!serializerApi) {
+            throw new Error('Unable to export notebook as the built-in vscode.ipynb extension is currently unavailable.');
+        }
+        const cells = this.document.getCells();
+        const cellData = cells.map((c) => {
+            const data = new NotebookCellData(c.kind, c.document.getText(), c.document.languageId);
+            data.metadata = c.metadata;
+            data.mime = c.mime;
+            data.outputs = [...c.outputs];
+            return data;
         });
+        const notebookData = new NotebookData(cellData);
+        notebookData.metadata = this.document.metadata;
+        return serializerApi.exports.exportNotebook(notebookData);
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {

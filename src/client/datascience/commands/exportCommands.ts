@@ -69,7 +69,7 @@ export class ExportCommands implements IDisposable {
             : this.notebookProvider.activeEditor;
 
         if (editor) {
-            const contents = await editor.getContent();
+            const contents = editor.getContent();
             const interpreter = editor.notebook?.getMatchingInterpreter();
             return this.export(contents, editor.file, undefined, undefined, interpreter);
         } else {
@@ -91,7 +91,7 @@ export class ExportCommands implements IDisposable {
             if (!activeEditor) {
                 return;
             }
-            contents = contents ? contents : await activeEditor.getContent();
+            contents = contents ? contents : activeEditor.getContent();
             source = source ? source : activeEditor.file;
 
             // At this point also see if the active editor has a candidate interpreter to use

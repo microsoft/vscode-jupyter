@@ -18,7 +18,7 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../commo
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensions } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
@@ -86,7 +86,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService
+        @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         disposables.push(this);
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
@@ -198,7 +199,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 this.configurationService,
                 this.disposables,
                 this.cellLanguageService,
-                loggers
+                loggers,
+                this.extensions
             );
             this.onEditorOpened(editor);
         }
