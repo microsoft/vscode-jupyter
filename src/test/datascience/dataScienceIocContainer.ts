@@ -138,7 +138,6 @@ import { NotebookServerProvider } from '../../client/datascience/interactive-com
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorRunByLineListener } from '../../client/datascience/interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
-import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { JupyterCommandLineSelector } from '../../client/datascience/jupyter/commandLineSelector';
 import { DebuggerVariableRegistration } from '../../client/datascience/jupyter/debuggerVariableRegistration';
@@ -518,10 +517,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.add<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
-        this.serviceManager.add<IDataScienceCommandListener>(
-            IDataScienceCommandListener,
-            InteractiveWindowCommandListener
-        );
         this.serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
         this.serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,

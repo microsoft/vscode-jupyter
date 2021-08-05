@@ -6,12 +6,10 @@
 import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { CssMessages, SharedMessages } from '../messages';
 import { InteractiveWindowMessages } from './interactiveWindowTypes';
-import { MessageType } from './synchronization';
 
 // Stuff common to React and Extensions.
 
 type BaseData = {
-    messageType?: MessageType;
     /**
      * Tells us whether this message is incoming for reducer use or
      * whether this is a message that needs to be sent out to extension (from reducer).
@@ -20,7 +18,6 @@ type BaseData = {
 };
 
 type BaseDataWithPayload<T> = {
-    messageType?: MessageType;
     /**
      * Tells us whether this message is incoming for reducer use or
      * whether this is a message that needs to be sent out to extension (from reducer).

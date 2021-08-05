@@ -8,12 +8,7 @@ import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import {
-    checkToPostBasedOnOriginalMessageType,
-    MessageType,
-    shouldRebroadcast
-} from '../../../client/datascience/interactive-common/synchronization';
-import { BaseReduxActionPayload, SyncPayload } from '../../../client/datascience/interactive-common/types';
+import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
 import { QueueAnotherFunc } from '../../react-common/reduxUtils';
 import { CommonActionType, CommonActionTypeMapping } from './reducers/types';
@@ -43,10 +38,6 @@ export function queueIncomingActionWithPayload<
     M extends IInteractiveWindowMapping & CommonActionTypeMapping,
     K extends keyof M
 >(originalReducerArg: ReducerArg, type: K, data: M[K]): void {
-    if (!checkToPostBasedOnOriginalMessageType(originalReducerArg.payload?.messageType)) {
-        return;
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const action = { type, payload: { data, messageDirection: 'incoming' } as any } as any;
     originalReducerArg.queueAction(action);
@@ -79,15 +70,10 @@ export function postActionToExtension<K, M extends IInteractiveWindowMapping, T 
 ): void;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function postActionToExtension(originalReducerArg: ReducerArg, message: any, payload?: any) {
-    if (!checkToPostBasedOnOriginalMessageType(originalReducerArg.payload?.messageType)) {
-        return;
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const newPayload: BaseReduxActionPayload<any> = ({
         data: payload,
-        messageDirection: 'outgoing',
-        messageType: MessageType.other
+        messageDirection: 'outgoing'
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any) as BaseReduxActionPayload<any>;
     const action = { type: CommonActionType.PostOutgoingMessage, payload: { payload: newPayload, type: message } };
@@ -100,49 +86,4 @@ export function unwrapPostableAction(
     const type = action.type;
     const payload: BaseReduxActionPayload<{}> | undefined = action.payload;
     return { type, payload };
-}
-
-/**
- * Whether this is a message type that indicates it is part of a scynchronization message.
- */
-export function isSyncingMessage(messageType?: MessageType) {
-    if (!messageType) {
-        return false;
-    }
-
-    return (
-        (messageType && MessageType.syncAcrossSameNotebooks) === MessageType.syncAcrossSameNotebooks ||
-        (messageType && MessageType.syncWithLiveShare) === MessageType.syncWithLiveShare
-    );
-}
-export function reBroadcastMessageIfRequired(
-    dispatcher: Function,
-    message: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages,
-    payload?: BaseReduxActionPayload<{}>
-) {
-    const messageType = payload?.messageType || 0;
-    if (
-        message === InteractiveWindowMessages.Sync ||
-        (messageType && MessageType.syncAcrossSameNotebooks) === MessageType.syncAcrossSameNotebooks ||
-        (messageType && MessageType.syncWithLiveShare) === MessageType.syncWithLiveShare ||
-        payload?.messageDirection === 'outgoing'
-    ) {
-        return;
-    }
-    // Check if we need to re-broadcast this message to other editors/sessions.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = shouldRebroadcast(message as any, payload);
-    if (result[0]) {
-        // Mark message as incoming, to indicate this will be sent into the other webviews.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const syncPayloadData: BaseReduxActionPayload<any> = {
-            data: payload?.data,
-            messageType: result[1],
-            messageDirection: 'incoming'
-        };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const syncPayload: SyncPayload = { type: message, payload: syncPayloadData };
-        // First focus on UX perf, hence the setTimeout (i.e. ensure other code in event loop executes).
-        setTimeout(() => dispatcher(InteractiveWindowMessages.Sync, syncPayload), 1);
-    }
 }

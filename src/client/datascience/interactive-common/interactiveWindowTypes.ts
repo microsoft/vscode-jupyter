@@ -15,7 +15,6 @@ import {
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
-import { Resource } from '../../common/types';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
 import { WidgetScriptSource } from '../ipywidgets/types';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
@@ -24,7 +23,6 @@ import {
     ICell,
     IExternalCommandFromWebview,
     IExternalWebviewCellButton,
-    IInteractiveWindowInfo,
     IJupyterVariable,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
@@ -35,32 +33,10 @@ import { ILanguageConfigurationDto } from './serialization';
 import { BaseReduxActionPayload } from './types';
 
 export enum InteractiveWindowMessages {
-    StartCell = 'start_cell',
     FinishCell = 'finish_cell',
-    UpdateCellWithExecutionResults = 'UpdateCellWithExecutionResults',
-    GotoCodeCell = 'gotocell_code',
-    CopyCodeCell = 'copycell_code',
-    NotebookExecutionActivated = 'notebook_execution_activated',
     RestartKernel = 'restart_kernel',
-    Export = 'export_to_ipynb',
-    ExportNotebookAs = 'export_as_menu',
-    GetAllCells = 'get_all_cells',
-    ReturnAllCells = 'return_all_cells',
-    DeleteAllCells = 'delete_all_cells',
-    Undo = 'undo',
-    Redo = 'redo',
-    UndoCommand = 'undo.command', // Only used by the interactive window
-    RedoCommand = 'redo.command',
-    ExpandAll = 'expand_all',
-    CollapseAll = 'collapse_all',
-    StartProgress = 'start_progress',
-    StopProgress = 'stop_progress',
     Interrupt = 'interrupt',
-    SubmitNewCell = 'submit_new_cell',
     SettingsUpdated = 'settings_updated',
-    // Message sent to React component from extension asking it to save the notebook.
-    DoSave = 'DoSave',
-    SendInfo = 'send_info',
     Started = 'started',
     ConvertUriForUseInWebViewRequest = 'ConvertUriForUseInWebViewRequest',
     ConvertUriForUseInWebViewResponse = 'ConvertUriForUseInWebViewResponse',
@@ -504,39 +480,19 @@ export class IInteractiveWindowMapping {
         result: boolean;
     };
     public [IPyWidgetMessages.IPyWidgets_mirror_execute]: { id: string; msg: KernelMessage.IExecuteRequestMsg };
-    public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.ForceVariableRefresh]: never | undefined;
     public [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: { executionCount: number };
     public [InteractiveWindowMessages.FinishCell]: IFinishCell;
-    public [InteractiveWindowMessages.UpdateCellWithExecutionResults]: ICell;
-    public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;
-    public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
-    public [InteractiveWindowMessages.NotebookExecutionActivated]: INotebookIdentity & { owningResource: Resource };
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
     public [InteractiveWindowMessages.SelectKernel]: IServerState | undefined;
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.OpenSettings]: string | undefined;
-    public [InteractiveWindowMessages.Export]: ICell[];
-    public [InteractiveWindowMessages.ExportNotebookAs]: ICell[];
-    public [InteractiveWindowMessages.GetAllCells]: never | undefined;
-    public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
     public [InteractiveWindowMessages.GetCellCode]: IGetCodeRequest;
     public [InteractiveWindowMessages.ReturnCellCode]: IReturnCodeResponse;
     public [InteractiveWindowMessages.GetAllCellCode]: IResponse;
     public [InteractiveWindowMessages.ReturnAllCellCode]: IReturnAllCodeResponse;
-    public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;
-    public [InteractiveWindowMessages.Undo]: ICell[];
-    public [InteractiveWindowMessages.Redo]: ICell[];
-    public [InteractiveWindowMessages.UndoCommand]: never | undefined;
-    public [InteractiveWindowMessages.RedoCommand]: never | undefined;
-    public [InteractiveWindowMessages.ExpandAll]: never | undefined;
-    public [InteractiveWindowMessages.CollapseAll]: never | undefined;
-    public [InteractiveWindowMessages.StartProgress]: never | undefined;
-    public [InteractiveWindowMessages.StopProgress]: never | undefined;
     public [InteractiveWindowMessages.Interrupt]: never | undefined;
     public [InteractiveWindowMessages.SettingsUpdated]: string;
-    public [InteractiveWindowMessages.SubmitNewCell]: ISubmitNewCell;
-    public [InteractiveWindowMessages.SendInfo]: IInteractiveWindowInfo;
     public [InteractiveWindowMessages.Started]: never | undefined;
     public [InteractiveWindowMessages.AddedSysInfo]: IAddedSysInfo;
     public [InteractiveWindowMessages.RemoteAddCode]: IRemoteAddCode;
@@ -577,7 +533,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookRunAllCells]: never | undefined;
     public [InteractiveWindowMessages.NotebookRunSelectedCell]: never | undefined;
     public [InteractiveWindowMessages.NotebookAddCellBelow]: IAddCellAction;
-    public [InteractiveWindowMessages.DoSave]: never | undefined;
     public [InteractiveWindowMessages.ExecutionRendered]: never | undefined;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
     public [InteractiveWindowMessages.SelectedCell]: IFocusedCellEditor;

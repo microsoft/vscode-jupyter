@@ -536,20 +536,10 @@ export interface IInteractiveBase extends Disposable {
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
     hasCell(id: string): Promise<boolean>;
-    createWebviewCellButton(
-        buttonId: string,
-        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
-        codicon: string,
-        statusToEnable: CellState[],
-        tooltip: string
-    ): IDisposable;
 }
 
-export const IInteractiveWindow = Symbol('IInteractiveWindow');
 export interface IInteractiveWindow extends IInteractiveBase {
     readonly onDidChangeViewState: Event<void>;
-    readonly visible: boolean;
-    readonly active: boolean;
     readonly owner: Resource;
     readonly submitters: Uri[];
     readonly identity: Uri;
