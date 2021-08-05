@@ -338,17 +338,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
             (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
                 // Check if we're stopped at the last line
-                let currentCell: NotebookCell | undefined;
-                this.notebookDocument.getCells().forEach((cell) => {
-                    const index = sf.source?.path!.indexOf('#ch');
-                    if (index) {
-                        const fragment = sf.source?.path!.substring(index + 1);
-                        if (cell.document.uri.fragment === fragment) {
-                            currentCell = cell;
-                        }
-                    }
-                });
-                if (currentCell && sf.line === currentCell.document.lineCount) {
+                let currentCell = this.findCurrentCellFromStackFrame(sf);
+                if (currentCell && currentCell.document.lineCount === sf.line) {
                     this.runbyLineLastLine = true;
                 }
             });
@@ -487,5 +478,22 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
         // Run cell
         await this.commandManager.executeCommand('notebook.cell.execute');
+    }
+
+    private findCurrentCellFromStackFrame(stackFrame: DebugProtocol.StackFrame): NotebookCell | undefined {
+        // path.basename()
+        let currentCell: NotebookCell | undefined;
+        const index = stackFrame.source?.path!.indexOf('#ch');
+        if (index) {
+            const fragment = stackFrame.source?.path!.substring(index + 1);
+            this.notebookDocument.getCells().forEach((cell) => {
+                if (cell.document.uri.fragment === fragment) {
+                    currentCell = cell;
+                    return;
+                }
+            });
+        }
+
+        return currentCell;
     }
 }
