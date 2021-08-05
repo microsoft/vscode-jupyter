@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
-import { UseVSCodeNotebookEditorApi } from '../common/constants';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import {
@@ -112,19 +111,16 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     public isEnabled(type: BannerType): boolean {
         switch (type) {
             case BannerType.InsidersNotebookSurvey:
-                if (this.applicationEnvironment.channel === 'insiders' && this.useVSCodeNotebookEditorApi) {
+                if (this.applicationEnvironment.channel === 'insiders') {
                     return this.isEnabledInternal(type);
                 }
                 break;
             case BannerType.ExperimentNotebookSurvey:
-                if (this.applicationEnvironment.channel === 'stable' && this.useVSCodeNotebookEditorApi) {
+                if (this.applicationEnvironment.channel === 'stable') {
                     return this.isEnabledInternal(type);
                 }
                 break;
             case BannerType.DSSurvey:
-                if (this.applicationEnvironment.channel === 'stable' && !this.useVSCodeNotebookEditorApi) {
-                    return this.isEnabledInternal(type);
-                }
                 break;
             default:
                 traceError('Invalid Banner Type');
@@ -160,8 +156,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(UseVSCodeNotebookEditorApi) private useVSCodeNotebookEditorApi: boolean
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
         this.setPersistentState(BannerType.DSSurvey, DSSurveyStateKeys.ShowBanner);
         this.setPersistentState(BannerType.InsidersNotebookSurvey, InsidersNotebookSurveyStateKeys.ShowBanner);

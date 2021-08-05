@@ -526,7 +526,6 @@ export interface ILocalResourceUriConverter {
 }
 
 export interface IInteractiveBase extends Disposable {
-    onExecutedCode?: Event<string>;
     notebook?: INotebook;
     startProgress(): void;
     stopProgress(): void;
@@ -595,12 +594,6 @@ export interface INotebookEditorProvider {
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends Disposable, IInteractiveBase {
-    /**
-     * Type of editor, whether it is the old, custom or native notebook editor.
-     * Once VSC Notebook is stable, this property can be removed.
-     */
-    readonly type: 'old' | 'custom' | 'native';
-    readonly onDidChangeViewState: Event<void>;
     readonly closed: Event<INotebookEditor>;
     readonly executed?: Event<INotebookEditor>;
     readonly modified: Event<INotebookEditor>;
@@ -614,14 +607,10 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
      */
     readonly isDirty: boolean;
     readonly file: Uri;
-    readonly visible: boolean;
-    readonly active: boolean;
     readonly model?: INotebookModel;
     readonly notebookMetadata: nbformat.INotebookMetadata | undefined;
     notebook?: INotebook;
-    show(): Promise<void>;
     runAllCells(): void;
-    runSelectedCell(): void;
     addCellBelow(): void;
     undoCells(): void;
     redoCells(): void;
@@ -860,7 +849,6 @@ export interface IJupyterExtraSettings extends IJupyterSettings {
             fontFamily: string;
         };
         theme: string;
-        useCustomEditorApi: boolean;
         hasPythonExtension: boolean;
     };
     intellisenseOptions: {
@@ -1161,18 +1149,6 @@ export interface IModelLoadOptions {
     skipLoadingDirtyContents?: boolean;
 }
 
-export const INotebookStorage = Symbol('INotebookStorage');
-
-export interface INotebookStorage {
-    generateBackupId(model: INotebookModel): string;
-    save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
-    saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
-    backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void>;
-    get(file: Uri): INotebookModel | undefined;
-    getOrCreateModel(options: IModelLoadOptions): Promise<INotebookModel>;
-    revert(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
-    deleteBackup(model: INotebookModel, backupId?: string): Promise<void>;
-}
 type WebViewViewState = {
     readonly visible: boolean;
     readonly active: boolean;

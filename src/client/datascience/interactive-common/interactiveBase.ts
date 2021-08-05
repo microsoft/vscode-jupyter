@@ -167,7 +167,6 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
         title: string,
         viewColumn: ViewColumn,
         private readonly notebookProvider: INotebookProvider,
-        useCustomEditorApi: boolean,
         private selector: KernelSelector,
         private serverStorage: IJupyterServerUriStorage
     ) {
@@ -181,8 +180,7 @@ export abstract class InteractiveBase extends WebviewPanelHost<IInteractiveWindo
             rootPath,
             scripts,
             title,
-            viewColumn,
-            useCustomEditorApi
+            viewColumn
         );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows

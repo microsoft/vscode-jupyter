@@ -124,7 +124,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         globalStorage: Memento,
         workspaceStorage: Memento,
         notebookProvider: INotebookProvider,
-        useCustomEditorApi: boolean,
         owner: Resource,
         mode: InteractiveWindowMode,
         title: string | undefined,
@@ -165,7 +164,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             localize.DataScience.interactiveWindowTitle(),
             ViewColumn.Two,
             notebookProvider,
-            useCustomEditorApi,
             selector,
             serverStorage
         );

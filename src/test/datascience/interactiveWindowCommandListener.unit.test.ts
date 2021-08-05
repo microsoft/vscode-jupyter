@@ -25,7 +25,6 @@ import { InteractiveWindowCommandListener } from '../../client/datascience/inter
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
-import { NativeEditorProvider } from '../../client/datascience/notebookStorage/nativeEditorProvider';
 import {
     IInteractiveWindow,
     IJupyterExecution,
@@ -99,7 +98,6 @@ suite('Interactive window command listener', async () => {
     }
 
     function createCommandListener(): InteractiveWindowCommandListener {
-        notebookEditorProvider = mock(NativeEditorProvider);
         jupyterExecution = mock(HostJupyterExecution);
         applicationShell = mock(ApplicationShell);
         exportDialog = mock(ExportDialog);

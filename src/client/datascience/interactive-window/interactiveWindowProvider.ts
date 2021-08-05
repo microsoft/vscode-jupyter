@@ -12,7 +12,6 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
-import { UseCustomEditorApi } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -147,7 +146,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO),
             this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO),
             this.serviceContainer.get<INotebookProvider>(INotebookProvider),
-            this.serviceContainer.get<boolean>(UseCustomEditorApi),
             resource,
             mode,
             title,
