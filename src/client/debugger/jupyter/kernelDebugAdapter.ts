@@ -96,6 +96,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private isRunByLine = false;
+    private runbyLineLastLine = false;
     private runByLineThreadId: number = 1;
     private runByLineSeq: number = 0;
 
@@ -116,8 +117,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const content = msg.content as any;
             if (content.event === 'stopped') {
-                this.runByLineThreadId = content.body.threadId;
-                this.runByLineSeq = content.seq;
+                if (this.isRunByLine) {
+                    this.runByLineThreadId = content.body.threadId;
+                    this.runByLineSeq = content.seq;
+                    this.runByLineStackTrace();
+                }
                 this.sendMessage.fire(msg.content);
             }
         };
@@ -166,16 +170,21 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
     public runByLineContinue() {
         if (this.isRunByLine) {
-            const message: DebugProtocol.StepInRequest = {
-                seq: this.runByLineSeq,
-                type: 'request',
-                command: 'stepIn',
-                arguments: {
-                    threadId: this.runByLineThreadId
-                }
-            };
+            if (this.runbyLineLastLine) {
+                this.runbyLineLastLine = false;
+                this.runByLineStop();
+            } else {
+                const message: DebugProtocol.StepInRequest = {
+                    seq: this.runByLineSeq,
+                    type: 'request',
+                    command: 'stepIn',
+                    arguments: {
+                        threadId: this.runByLineThreadId
+                    }
+                };
 
-            this.sendRequestToJupyterSession(message);
+                this.sendRequestToJupyterSession(message);
+            }
         }
     }
 
@@ -192,6 +201,19 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
             this.sendRequestToJupyterSession(message);
         }
+    }
+
+    private runByLineStackTrace() {
+        const message: DebugProtocol.StackTraceRequest = {
+            seq: this.runByLineSeq,
+            type: 'request',
+            command: 'stackTrace',
+            arguments: {
+                threadId: this.runByLineThreadId
+            }
+        };
+
+        this.sendRequestToJupyterSession(message);
     }
 
     dispose() {
@@ -312,6 +334,25 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
                 }
             }
         });
+
+        if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
+            (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
+                // Check if we're stopped at the last line
+                let currentCell: NotebookCell | undefined;
+                this.notebookDocument.getCells().forEach((cell) => {
+                    const index = sf.source?.path!.indexOf('#ch');
+                    if (index) {
+                        const fragment = sf.source?.path!.substring(index + 1);
+                        if (cell.document.uri.fragment === fragment) {
+                            currentCell = cell;
+                        }
+                    }
+                });
+                if (currentCell && sf.line === currentCell.document.lineCount) {
+                    this.runbyLineLastLine = true;
+                }
+            });
+        }
 
         this.sendMessage.fire(message);
     }
