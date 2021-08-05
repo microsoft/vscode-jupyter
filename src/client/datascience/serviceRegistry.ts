@@ -98,10 +98,7 @@ import { registerTypes as registerNotebookTypes } from './notebook/serviceRegist
 import { registerTypes as registerContextTypes } from './telemetry/serviceRegistry';
 import { NotebookCreationTracker } from './notebookAndInteractiveTracker';
 import { NotebookExtensibility } from './notebookExtensibility';
-import { NotebookModelFactory } from './notebookStorage/factory';
-import { NotebookModelSynchronization } from './notebookStorage/notebookModelSynchronization';
 import { PreferredRemoteKernelIdProvider } from './notebookStorage/preferredRemoteKernelIdProvider';
-import { INotebookModelFactory } from './notebookStorage/types';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
@@ -148,7 +145,6 @@ import {
     INotebookExporter,
     INotebookExtensibility,
     INotebookImporter,
-    INotebookModelSynchronization,
     INotebookProvider,
     INotebookServer,
     IPlotViewer,
@@ -207,8 +203,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProviderWrapper);
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
-    serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
-    serviceManager.addSingleton<INotebookModelSynchronization>(INotebookModelSynchronization, NotebookModelSynchronization);
     serviceManager.addSingleton<IHoverProvider>(IHoverProvider, HoverProvider);
     serviceManager.addBinding(IHoverProvider, INotebookExecutionLogger);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);

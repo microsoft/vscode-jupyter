@@ -178,8 +178,6 @@ import {
 } from '../../client/datascience/kernel-launcher/types';
 import { NotebookCellLanguageService } from '../../client/datascience/notebook/cellLanguageService';
 import { NotebookCreationTracker } from '../../client/datascience/notebookAndInteractiveTracker';
-import { NotebookModelFactory } from '../../client/datascience/notebookStorage/factory';
-import { INotebookModelFactory } from '../../client/datascience/notebookStorage/types';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { ProgressReporter } from '../../client/datascience/progress/progressReporter';
@@ -434,7 +432,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             InterpreterPackages,
             instance(mock(InterpreterPackages))
         );
-        this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
         this.serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, new MockFileSystem());
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);

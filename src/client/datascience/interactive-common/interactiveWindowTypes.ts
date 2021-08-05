@@ -5,7 +5,6 @@ import { DebugProtocolVariable, DebugProtocolVariableContainer, Uri } from 'vsco
 import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { DebugProtocol } from 'vscode-debugprotocol';
 import {
     CommonActionType,
     ILoadIPyWidgetClassFailureAction,
@@ -27,7 +26,6 @@ import {
     INotebookModel,
     KernelSocketOptions
 } from '../types';
-import { ILanguageConfigurationDto } from './serialization';
 import { BaseReduxActionPayload } from './types';
 
 export enum InteractiveWindowMessages {
@@ -38,7 +36,6 @@ export enum InteractiveWindowMessages {
     Started = 'started',
     ConvertUriForUseInWebViewRequest = 'ConvertUriForUseInWebViewRequest',
     ConvertUriForUseInWebViewResponse = 'ConvertUriForUseInWebViewResponse',
-    AddedSysInfo = 'added_sys_info',
     Activate = 'activate',
     ShowDataViewer = 'show_data_explorer',
     GetVariablesRequest = 'get_variables_request',
@@ -49,14 +46,8 @@ export enum InteractiveWindowMessages {
     ForceVariableRefresh = 'force_variable_refresh',
     UpdateVariableViewExecutionCount = 'update_variable_view_execution_count',
     Sync = 'sync_message_used_to_broadcast_and_sync_editors',
-    LoadTmLanguageResponse = 'load_tmlanguage_response',
     OpenLink = 'open_link',
-    ShowPlot = 'show_plot',
     SavePng = 'save_png',
-    StartDebugging = 'start_debugging',
-    StopDebugging = 'stop_debugging',
-    ReExecuteCells = 'reexecute_cells',
-    NotebookIdentity = 'identity',
     NotebookClose = 'close',
     NativeCommand = 'native_command',
     VariablesComplete = 'variables_complete',
@@ -71,11 +62,6 @@ export enum InteractiveWindowMessages {
     IPyWidgetRenderFailure = 'ipywidget_render_failure',
     IPyWidgetUnhandledKernelMessage = 'ipywidget_unhandled_kernel_message',
     IPyWidgetWidgetVersionNotSupported = 'ipywidget_widget_version_not_supported',
-    RunByLine = 'run_by_line',
-    Step = 'step',
-    Continue = 'continue',
-    ShowContinue = 'show_continue',
-    ShowBreak = 'show_break',
     KernelIdle = 'kernel_idle',
     UpdateExternalCellButtons = 'update_external_cell_buttons',
     ExecuteExternalCommand = 'execute_external_command',
@@ -122,13 +108,6 @@ export enum SysInfoReason {
     Connect
 }
 
-export interface IAddedSysInfo {
-    type: SysInfoReason;
-    id: string;
-    sysInfoCell: ICell;
-    notebookIdentity: Uri;
-}
-
 export interface IFinishCell {
     cell: ICell;
     notebookIdentity: Uri;
@@ -137,11 +116,6 @@ export interface IFinishCell {
 export interface ISubmitNewCell {
     code: string;
     id: string;
-}
-
-export interface IReExecuteCells {
-    cellIds: string[];
-    code: string[];
 }
 
 export interface IShowDataViewer {
@@ -158,11 +132,6 @@ export interface INotebookIdentity {
     resource: Uri;
     type: 'interactive' | 'native';
 }
-
-export interface ISaveAll {
-    cells: ICell[];
-}
-
 export interface INativeCommand {
     command: NativeKeyboardCommandTelemetry | NativeMouseCommandTelemetry;
 }
@@ -315,34 +284,6 @@ export type NotebookModelChange =
     | INotebookModelChangeTypeChange
     | INotebookModelCellExecutionCountChange;
 
-export interface IRunByLine {
-    cell: ICell;
-    expectedExecutionCount: number;
-}
-
-export interface ILoadTmLanguageResponse {
-    languageId: string;
-    scopeName: string; // Name in the tmlanguage scope file (scope.python instead of python)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    languageConfiguration: ILanguageConfigurationDto;
-    languageJSON: string; // Contents of the tmLanguage.json file
-    extensions: string[]; // Array of file extensions that map to this language
-}
-
-export interface IResponse {
-    responseId: string;
-}
-
-export interface IGetCodeRequest extends IResponse {
-    cellId: string;
-}
-export interface IReturnCodeResponse extends IResponse {
-    code: string;
-}
-export interface IReturnAllCodeResponse extends IResponse {
-    code: string[];
-}
-
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;
@@ -382,7 +323,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.Interrupt]: never | undefined;
     public [InteractiveWindowMessages.SettingsUpdated]: string;
     public [InteractiveWindowMessages.Started]: never | undefined;
-    public [InteractiveWindowMessages.AddedSysInfo]: IAddedSysInfo;
     public [InteractiveWindowMessages.Activate]: never | undefined;
     public [InteractiveWindowMessages.ShowDataViewer]: IShowDataViewer;
     public [InteractiveWindowMessages.GetVariablesRequest]: IJupyterVariablesRequest;
@@ -392,14 +332,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.VariableExplorerHeightResponse]: IVariableExplorerHeight;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
-    public [InteractiveWindowMessages.LoadTmLanguageResponse]: ILoadTmLanguageResponse;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
-    public [InteractiveWindowMessages.ShowPlot]: string | undefined;
     public [InteractiveWindowMessages.SavePng]: string | undefined;
-    public [InteractiveWindowMessages.StartDebugging]: never | undefined;
-    public [InteractiveWindowMessages.StopDebugging]: never | undefined;
-    public [InteractiveWindowMessages.ReExecuteCells]: IReExecuteCells;
-    public [InteractiveWindowMessages.NotebookIdentity]: INotebookIdentity;
     public [InteractiveWindowMessages.NotebookClose]: INotebookIdentity;
     public [InteractiveWindowMessages.Sync]: {
         type: InteractiveWindowMessages | SharedMessages | CommonActionType;
@@ -420,11 +354,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: { request: Uri; response: Uri };
     public [InteractiveWindowMessages.IPyWidgetRenderFailure]: Error;
     public [InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage]: KernelMessage.IMessage;
-    public [InteractiveWindowMessages.RunByLine]: IRunByLine;
-    public [InteractiveWindowMessages.Continue]: never | undefined;
-    public [InteractiveWindowMessages.ShowBreak]: { frames: DebugProtocol.StackFrame[]; cell: ICell };
-    public [InteractiveWindowMessages.ShowContinue]: ICell;
-    public [InteractiveWindowMessages.Step]: never | undefined;
     public [InteractiveWindowMessages.KernelIdle]: never | undefined;
     public [InteractiveWindowMessages.UpdateExternalCellButtons]: IExternalWebviewCellButton[];
     public [InteractiveWindowMessages.ExecuteExternalCommand]: IExternalCommandFromWebview;

@@ -5,14 +5,10 @@ import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
 import { cloneDeep } from 'lodash';
-import { Event, EventEmitter, Memento, Uri } from 'vscode';
+import { EventEmitter, Memento, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { ICryptoUtils } from '../../common/types';
-import { isUntitledFile, noop } from '../../common/utils/misc';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
-import { pruneCell } from '../common';
 import { defaultNotebookFormat } from '../constants';
-import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import {
     getInterpreterFromKernelConnectionMetadata,
     isKernelRegisteredByUs,
@@ -20,21 +16,7 @@ import {
     kernelConnectionMetadataHasKernelModel
 } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { CellState, INotebookModel } from '../types';
-import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';
-
-export function getInterpreterInfoStoredInMetadata(
-    metadata?: nbformat.INotebookMetadata
-): { displayName: string; hash: string } | undefined {
-    if (!metadata || !metadata.kernelspec || !metadata.kernelspec.name) {
-        return;
-    }
-    // See `updateNotebookMetadata` to determine how & where exactly interpreter hash is stored.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const kernelSpecMetadata: undefined | any = metadata.kernelspec.metadata as any;
-    const interpreterHash = kernelSpecMetadata?.interpreter?.hash;
-    return interpreterHash ? { displayName: metadata.kernelspec.name, hash: interpreterHash } : undefined;
-}
+import { INotebookModel } from '../types';
 
 // eslint-disable-next-line complexity
 export function updateNotebookMetadata(
@@ -191,82 +173,17 @@ export function getDefaultNotebookContent(pythonNumber: number = 3): Partial<nbf
         nbformat_minor: defaultNotebookFormat.minor
     };
 }
-/**
- * Generates the metadata stored in ipynb for new notebooks.
- * If a preferred language is provided we use that.
- * We do not default to Python, as selecting a kernel will update the language_info in the ipynb file (after a kernel is successfully started).
- */
-export function getDefaultNotebookContentForNativeNotebooks(language: string = ''): Partial<nbformat.INotebookContent> {
-    let metadata: undefined | nbformat.INotebookMetadata;
-    switch (language.toLowerCase()) {
-        case '':
-            break;
-        case PYTHON_LANGUAGE.toLowerCase():
-            metadata = {
-                language_info: {
-                    name: language,
-                    nbconvert_exporter: 'python'
-                },
-                orig_nbformat: defaultNotebookFormat.major
-            };
-            break;
-        default:
-            metadata = {
-                language_info: {
-                    name: language
-                },
-                orig_nbformat: defaultNotebookFormat.major
-            };
-    }
 
-    return {
-        metadata,
-        nbformat: defaultNotebookFormat.major,
-        nbformat_minor: defaultNotebookFormat.minor
-    };
-}
 export abstract class BaseNotebookModel implements INotebookModel {
-    public get onDidDispose() {
-        return this._disposed.event;
-    }
-    public get isDisposed() {
-        return this._isDisposed === true;
-    }
-    public get isDirty(): boolean {
-        return false;
-    }
     public get file(): Uri {
         return this._file;
     }
-
-    public get isUntitled(): boolean {
-        return isUntitledFile(this.file);
-    }
-    public get onDidEdit(): Event<NotebookModelChange> {
-        return this._editEventEmitter.event;
-    }
-    public get metadata(): Readonly<nbformat.INotebookMetadata> | undefined {
-        // Fix nyc compiler problem
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return this.notebookJson.metadata as any;
-    }
-    public get cellCount(): number {
-        return this.getCellCount();
-    }
     protected _disposed = new EventEmitter<void>();
     protected _isDisposed?: boolean;
-    protected _changedEmitter = new EventEmitter<NotebookModelChange>();
-    protected _editEventEmitter = new EventEmitter<NotebookModelChange>();
     protected _kernelConnection?: KernelConnectionMetadata;
-    private readonly preferredRemoteKernelIdStorage: PreferredRemoteKernelIdProvider;
-    public get isTrusted() {
-        return this._isTrusted();
-    }
     constructor(
-        private _isTrusted: () => boolean,
         protected _file: Uri,
         protected globalMemento: Memento,
-        crypto: ICryptoUtils,
         protected notebookJson: Partial<nbformat.INotebookContent> = {},
         public readonly indentAmount: string = ' ',
         private readonly pythonNumber: number = 3,
@@ -279,42 +196,11 @@ export abstract class BaseNotebookModel implements INotebookModel {
         if (initializeJsonIfRequired) {
             this.ensureNotebookJson();
         }
-        this.preferredRemoteKernelIdStorage = new PreferredRemoteKernelIdProvider(globalMemento, crypto);
     }
     public dispose() {
         this._isDisposed = true;
         this._disposed.fire();
     }
-    public abstract getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
-    public getContent(): string {
-        return this.generateNotebookContent();
-    }
-    protected abstract getCellCount(): number;
-    protected handleUndo(_change: NotebookModelChange): boolean {
-        return false;
-    }
-    protected handleRedo(change: NotebookModelChange): boolean {
-        let changed = false;
-        switch (change.kind) {
-            case 'version':
-                changed = this.updateVersionInfo(change.kernelConnection);
-                break;
-            default:
-                break;
-        }
-
-        return changed;
-    }
-    protected generateNotebookJson() {
-        // Make sure we have some
-        this.ensureNotebookJson();
-
-        // Reuse our original json except for the cells.
-        const json = { ...this.notebookJson };
-        json.cells = this.getJupyterCells().map(pruneCell);
-        return json;
-    }
-    protected abstract getJupyterCells(): nbformat.IBaseCell[];
     protected getDefaultNotebookContent() {
         return getDefaultNotebookContent(this.pythonNumber);
     }
@@ -323,23 +209,5 @@ export abstract class BaseNotebookModel implements INotebookModel {
         if (!this.notebookJson || !this.notebookJson.metadata) {
             this.notebookJson = this.getDefaultNotebookContent();
         }
-    }
-
-    // eslint-disable-next-line complexity
-    private updateVersionInfo(kernelConnection: KernelConnectionMetadata | undefined): boolean {
-        this._kernelConnection = kernelConnection;
-        const { changed, kernelId } = updateNotebookMetadata(this.notebookJson.metadata, kernelConnection);
-        // Update our kernel id in our global storage too
-        this.setStoredKernelId(kernelId);
-
-        return changed;
-    }
-
-    private generateNotebookContent(): string {
-        const json = this.generateNotebookJson();
-        return JSON.stringify(json, null, this.indentAmount);
-    }
-    private setStoredKernelId(id: string | undefined) {
-        this.preferredRemoteKernelIdStorage.storePreferredRemoteKernelId(this._file, id).catch(noop);
     }
 }

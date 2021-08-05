@@ -95,11 +95,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         }
     }
 
-    protected shareMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        // Send our remote message.
-        this.messageListener.onMessage(type.toString(), payload);
-    }
-
     protected onViewStateChanged(_args: WebViewViewChangeEventArgs) {
         noop();
     }

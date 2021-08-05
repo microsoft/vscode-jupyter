@@ -50,11 +50,6 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
         this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.dispose.bind(this));
     }
 
-    protected shareMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        // Send our remote message.
-        this.messageListener.onMessage(type.toString(), payload);
-    }
-
     protected async provideWebview(
         cwd: string,
         settings: IJupyterExtraSettings,

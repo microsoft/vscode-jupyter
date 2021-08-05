@@ -1047,14 +1047,7 @@ export interface INbConvertExportToPythonService {
 }
 
 export interface INotebookModel {
-    readonly indentAmount: string;
     readonly file: Uri;
-    readonly isDirty: boolean;
-    /**
-     * @deprecated
-     * Use only with old notebooks, when using with new Notebooks, use VSC API instead.
-     */
-    getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
     /**
      * Dispose of the Notebook model.
      *
@@ -1369,24 +1362,9 @@ export interface IExternalWebviewCellButton {
     running: boolean;
 }
 
-export interface IExternalWebviewCellButtonWithCallback extends IExternalWebviewCellButton {
-    // Callback is only used on the extension side. Don't pass to the UI
-    callback(cell: NotebookCell, isInteractive: boolean, resource: Uri): Promise<void>;
-}
-
 export interface IExternalCommandFromWebview {
     buttonId: string;
     cell: ICell;
-}
-
-export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchronization');
-/**
- * Service used to make sure a notebook model matches the code displayed in the UI (whichever UI is hosting the model)
- * See this bug here:
- * https://github.com/microsoft/vscode-jupyter/issues/1701
- */
-export interface INotebookModelSynchronization {
-    syncAllCells(model: INotebookModel): Promise<void>;
 }
 
 export const IDebuggingCellMap = Symbol('IDebuggingCellMap');
