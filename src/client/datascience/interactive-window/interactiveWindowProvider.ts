@@ -103,11 +103,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             // No match. Create a new item.
             result = this.create(resource, mode);
 
-            // Wait for monaco ready (it's not really useable until it has a language)
             const readyPromise = createDeferred();
             const disposable = result.ready(() => readyPromise.resolve());
 
-            // Wait for monaco ready
             await readyPromise.promise;
             disposable.dispose();
         }

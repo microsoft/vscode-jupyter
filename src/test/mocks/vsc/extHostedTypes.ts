@@ -951,6 +951,34 @@ export namespace vscMockExtHostedTypes {
         }
     }
 
+    export class CallHierarchyItem {
+        _sessionId?: string;
+        _itemId?: string;
+
+        kind: SymbolKind;
+        name: string;
+        detail?: string;
+        uri: vscUri.URI;
+        range: Range;
+        selectionRange: Range;
+
+        constructor(
+            kind: SymbolKind,
+            name: string,
+            detail: string,
+            uri: vscUri.URI,
+            range: Range,
+            selectionRange: Range
+        ) {
+            this.kind = kind;
+            this.name = name;
+            this.detail = detail;
+            this.uri = uri;
+            this.range = range;
+            this.selectionRange = selectionRange;
+        }
+    }
+
     export class Hover {
         public contents: vscode.MarkdownString[] | vscode.MarkedString[];
         public range: Range;

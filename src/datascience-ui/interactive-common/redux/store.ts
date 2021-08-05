@@ -13,24 +13,14 @@ import { InteractiveWindowMessages } from '../../../client/datascience/interacti
 import { MessageType } from '../../../client/datascience/interactive-common/synchronization';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages } from '../../../client/datascience/messages';
-import { CellState } from '../../../client/datascience/types';
-import {
-    activeDebugState,
-    DebugState,
-    getSelectedAndFocusedInfo,
-    ICellViewModel,
-    IMainState,
-    ServerStatus
-} from '../../interactive-common/mainState';
+import { IMainState, ServerStatus } from '../../interactive-common/mainState';
 import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
-import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
-import { createEditableCellVM, generateTestState } from '../mainState';
+import { getDefaultSettings } from '../../react-common/settingsReactSide';
+import { generateTestState } from '../mainState';
 import { isAllowedAction, isAllowedMessage, postActionToExtension } from './helpers';
 import { generatePostOfficeSendReducer } from './postOffice';
-import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
-import { CommonActionType } from './reducers/types';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
 // Externally defined function to see if we need to force on test middleware
@@ -50,16 +40,12 @@ function generateDefaultState(
             skipDefault,
             testMode,
             baseTheme: baseTheme,
-            cellVMs: [],
             busy: true,
-            undoStack: [],
-            redoStack: [],
             submittedText: false,
             currentExecutionCount: 0,
             debugging: false,
             knownDark: false,
             dirty: false,
-            editCellVM: editable ? undefined : createEditableCellVM(0),
             isAtBottom: true,
             font: {
                 size: 14,
@@ -67,7 +53,6 @@ function generateDefaultState(
             },
             codeTheme: Identifiers.GeneratedThemeName,
             focusPending: 0,
-            monacoReady: testMode, // When testing, monaco starts out ready
             loaded: false,
             kernel: {
                 kernelName: getLocString('DataScience.noKernel', 'No Kernel'),
@@ -76,8 +61,6 @@ function generateDefaultState(
                 language: PYTHON_LANGUAGE
             },
             settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
-            editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined,
-            isNotebookTrusted: true,
             externalButtons: []
         };
     }
@@ -98,10 +81,8 @@ function generateMainReducer<M>(
 }
 
 function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
-    return (store) => (next) => (action) => {
-        const prevState = store.getState();
+    return (_store) => (next) => (action) => {
         const res = next(action);
-        const afterState = store.getState();
 
         // If the action is part of a sync message, then do not send it to the extension.
         const messageType = (action?.payload as BaseReduxActionPayload).messageType ?? MessageType.other;
@@ -112,23 +93,6 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
             return res;
         }
 
-        // If cell vm count changed or selected cell changed, send the message
-        if (!action.type || action.type !== CommonActionType.UNMOUNT) {
-            const currentSelection = getSelectedAndFocusedInfo(afterState.main);
-            if (
-                prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
-                getSelectedAndFocusedInfo(prevState.main).selectedCellId !== currentSelection.selectedCellId ||
-                prevState.main.undoStack.length !== afterState.main.undoStack.length ||
-                prevState.main.redoStack.length !== afterState.main.redoStack.length
-            ) {
-                postActionToExtension({ queueAction: store.dispatch }, InteractiveWindowMessages.SendInfo, {
-                    cellCount: afterState.main.cellVMs.length,
-                    undoCount: afterState.main.undoStack.length,
-                    redoCount: afterState.main.redoStack.length,
-                    selectedCell: currentSelection.selectedCellId
-                });
-            }
-        }
         return res;
     };
 }
@@ -165,42 +129,10 @@ function createTestMiddleware(transformLoad: () => Promise<void>): Redux.Middlew
             });
         };
 
-        if (!action.type || action.type !== CommonActionType.UNMOUNT) {
-            // Special case for focusing a cell
-            const previousSelection = getSelectedAndFocusedInfo(prevState.main);
-            const currentSelection = getSelectedAndFocusedInfo(afterState.main);
-            if (previousSelection.focusedCellId !== currentSelection.focusedCellId && currentSelection.focusedCellId) {
-                // Send async so happens after render state changes (so our enzyme wrapper is up to date)
-                sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId });
-            }
-            if (
-                previousSelection.selectedCellId !== currentSelection.selectedCellId &&
-                currentSelection.selectedCellId
-            ) {
-                // Send async so happens after render state changes (so our enzyme wrapper is up to date)
-                sendMessage(InteractiveWindowMessages.SelectedCell, { cellId: action.payload.cellId });
-            }
-            // Special case for unfocusing a cell
-            if (previousSelection.focusedCellId !== currentSelection.focusedCellId && !currentSelection.focusedCellId) {
-                // Send async so happens after render state changes (so our enzyme wrapper is up to date)
-                sendMessage(InteractiveWindowMessages.UnfocusedCellEditor);
-            }
-        }
-
         // Indicate settings updates
         if (!fastDeepEqual(prevState.main.settings, afterState.main.settings)) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
             sendMessage(InteractiveWindowMessages.SettingsUpdated);
-        }
-
-        // Indicate clean changes
-        if (prevState.main.dirty && !afterState.main.dirty) {
-            sendMessage(InteractiveWindowMessages.NotebookClean);
-        }
-
-        // Indicate dirty changes
-        if (!prevState.main.dirty && afterState.main.dirty) {
-            sendMessage(InteractiveWindowMessages.NotebookDirty);
         }
 
         // Indicate variables complete
@@ -218,53 +150,6 @@ function createTestMiddleware(transformLoad: () => Promise<void>): Redux.Middlew
             sendMessage(InteractiveWindowMessages.ReceivedUpdateModel);
         }
 
-        // Special case for rendering complete
-        if (
-            action.type &&
-            action.type === InteractiveWindowMessages.FinishCell &&
-            action.payload.data &&
-            action.payload.data.cell.data?.cell_type === 'code'
-        ) {
-            // Send async so happens after the render is actually finished.
-            sendMessage(InteractiveWindowMessages.ExecutionRendered);
-        }
-
-        if (
-            !action.type ||
-            (action.type !== InteractiveWindowMessages.FinishCell && action.type !== CommonActionType.UNMOUNT)
-        ) {
-            // Might be a non finish but still update cells (like an undo or a delete)
-            const prevFinished = prevState.main.cellVMs
-                .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-                .map((c) => c.cell.id);
-            const afterFinished = afterState.main.cellVMs
-                .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-                .map((c) => c.cell.id);
-            if (
-                afterFinished.length > prevFinished.length ||
-                (afterFinished.length !== prevFinished.length &&
-                    afterState.main.cellVMs.length !== prevState.main.cellVMs.length)
-            ) {
-                // Send async so happens after the render is actually finished.
-                sendMessage(InteractiveWindowMessages.ExecutionRendered);
-            }
-        }
-
-        // Hiding/displaying output
-        const prevHidingOutput = prevState.main.cellVMs.filter((c) => c.hideOutput).map((c) => c.cell.id);
-        const afterHidingOutput = afterState.main.cellVMs.filter((c) => c.hideOutput).map((c) => c.cell.id);
-        if (!fastDeepEqual(prevHidingOutput, afterHidingOutput)) {
-            // Send async so happens after the render is actually finished.
-            sendMessage(InteractiveWindowMessages.OutputToggled);
-        }
-
-        // Entering break state in a native cell
-        const prevBreak = prevState.main.cellVMs.find((cvm) => cvm.currentStack);
-        const newBreak = afterState.main.cellVMs.find((cvm) => cvm.currentStack);
-        if (prevBreak !== newBreak || !fastDeepEqual(prevBreak?.currentStack, newBreak?.currentStack)) {
-            sendMessage(InteractiveWindowMessages.ShowingIp);
-        }
-
         // Kernel state changing
         const afterKernel = afterState.main.kernel;
         const prevKernel = prevState.main.kernel;
@@ -275,25 +160,11 @@ function createTestMiddleware(transformLoad: () => Promise<void>): Redux.Middlew
             sendMessage(InteractiveWindowMessages.KernelIdle);
         }
 
-        // Debug state changing
-        const oldState = getDebugState(prevState.main.cellVMs);
-        const newState = getDebugState(afterState.main.cellVMs);
-        if (oldState !== newState) {
-            sendMessage(InteractiveWindowMessages.DebugStateChange, { oldState, newState });
-        }
-
         if (action.type !== 'action.postOutgoingMessage') {
             sendMessage(`DISPATCHED_ACTION_${action.type}`, {});
         }
         return res;
     };
-}
-
-// Find the debug state for cell view models
-function getDebugState(vms: ICellViewModel[]): DebugState {
-    const firstNonDesign = vms.find((cvm) => activeDebugState(cvm.runningByLine));
-
-    return firstNonDesign ? firstNonDesign.runningByLine : DebugState.Design;
 }
 
 function createMiddleWare(
@@ -321,11 +192,7 @@ function createMiddleWare(
 
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
-    const actionsWithLargePayload = [
-        InteractiveWindowMessages.LoadOnigasmAssemblyResponse,
-        CssMessages.GetCssResponse,
-        InteractiveWindowMessages.LoadTmLanguageResponse
-    ];
+    const actionsWithLargePayload = [CssMessages.GetCssResponse, InteractiveWindowMessages.LoadTmLanguageResponse];
     const logger = createLogger({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         stateTransformer: (state: any) => {
@@ -340,11 +207,8 @@ function createMiddleWare(
                 main.rootCss = reduceLogMessage;
                 main.rootStyle = reduceLogMessage;
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                main.editorOptions = reduceLogMessage as any;
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 main.settings = reduceLogMessage as any;
             }
-            rootState.monaco = reduceLogMessage;
 
             return rootState;
         },
@@ -385,7 +249,6 @@ function createMiddleWare(
 export interface IStore {
     main: IMainState;
     variables: IVariableState;
-    monaco: IMonacoState;
     post: {};
 }
 
@@ -425,9 +288,6 @@ export function createStore<M>(
     // Create reducer to pass window messages to the other side
     const postOfficeReducer = generatePostOfficeSendReducer(postOffice);
 
-    // Create another reducer for handling monaco state
-    const monacoReducer = generateMonacoReducer(testMode, postOffice);
-
     // Create another reducer for handling variable state
     const variableReducer = generateVariableReducer(showVariablesOnDebug, variablesStartOpen);
 
@@ -435,7 +295,6 @@ export function createStore<M>(
     const rootReducer = Redux.combineReducers<IStore>({
         main: mainReducer,
         variables: variableReducer,
-        monaco: monacoReducer,
         post: postOfficeReducer
     });
 

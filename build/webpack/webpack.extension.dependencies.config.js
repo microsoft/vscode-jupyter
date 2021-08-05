@@ -37,18 +37,7 @@ const config = {
         ]
     },
     externals: ['vscode', 'commonjs'],
-    plugins: [
-        ...common.getDefaultPlugins('dependencies'),
-        // vsls requires our package.json to be next to node_modules. It's how they
-        // 'find' the calling extension.
-        new copyWebpackPlugin({ patterns: [{ from: './package.json', to: '.' }] }),
-        // onigasm requires our onigasm.wasm to be in node_modules
-        new copyWebpackPlugin({
-            patterns: [
-                { from: './node_modules/onigasm/lib/onigasm.wasm', to: './node_modules/onigasm/lib/onigasm.wasm' }
-            ]
-        })
-    ],
+    plugins: [...common.getDefaultPlugins('dependencies')],
     resolve: {
         alias: {
             // Pointing pdfkit to a dummy js file so webpack doesn't fall over.
