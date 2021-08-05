@@ -75,6 +75,7 @@ suite('Import Tracker', () => {
         disposables.push(onDidOpenCloseNbEvent);
         when(vscNb.onDidOpenNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
         when(vscNb.onDidCloseNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
+        when(vscNb.notebookDocuments).thenReturn([]);
 
         importTracker = new ImportTracker(documentManager.object, instance(vscNb), disposables);
     });
