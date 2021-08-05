@@ -390,6 +390,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
         // extension contexts
+        // @ts-ignore (this code has been added becuase of the tests, in tests executeCommand can be null)
         if (this.commandManager && this.commandManager.executeCommand) {
             const interactiveContext = new ContextKey(EditorContexts.HaveInteractive, this.commandManager);
             interactiveContext.set(!this.isDisposed).catch(noop);

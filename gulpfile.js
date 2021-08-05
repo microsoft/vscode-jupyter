@@ -63,6 +63,9 @@ gulp.task('checkNpmDependencies', (done) => {
         { name: 'node_modules/trim', version: '0.0.3' }
     ];
     function checkPackageVersions(packages, parent) {
+        if (!packages) {
+            return;
+        }
         expectedVersions.forEach((expectedVersion) => {
             if (!packages[expectedVersion.name]) {
                 return;
@@ -81,6 +84,9 @@ gulp.task('checkNpmDependencies', (done) => {
         });
     }
     function checkPackageDependencies(packages) {
+        if (!packages) {
+            return;
+        }
         Object.keys(packages).forEach((packageName) => {
             const dependencies = packages[packageName]['dependencies'];
             if (dependencies) {
@@ -101,7 +107,6 @@ gulp.task('checkNpmDependencies', (done) => {
 });
 
 gulp.task('compile-ipywidgets', () => buildIPyWidgets());
-
 
 async function buildIPyWidgets() {
     // if the output ipywidgest file exists, then no need to re-build.
@@ -234,7 +239,6 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
                 'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
                 'WARNING in webpack performance recommendations:',
-                'WARNING in ./node_modules/vsls/vscode.js',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
                 'WARNING in ./node_modules/keyv/src/index.js',
                 'ERROR in ./node_modules/got/index.js',

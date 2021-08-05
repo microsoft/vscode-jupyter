@@ -80,7 +80,7 @@ async function end(exitCode: number) {
 }
 
 async function startSocketServer() {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
         console.log(`Creating test server`);
         server = createServer((socket) => {
             socket.on('data', (buffer) => {

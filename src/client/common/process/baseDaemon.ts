@@ -239,7 +239,7 @@ export abstract class BasePythonDaemon {
             }
         };
         let stdErr = '';
-        this.proc.stderr.on('data', (output: string | Buffer) => (stdErr += output.toString()));
+        this.proc.stderr?.on('data', (output: string | Buffer) => (stdErr += output.toString()));
         // Wire up stdout/stderr.
         const subscription = this.outputObservable.subscribe((out) => {
             if (out.source === 'stderr' && options.throwOnStdErr) {

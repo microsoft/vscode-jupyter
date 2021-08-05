@@ -103,8 +103,8 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 }
             };
 
-            on(proc.stdout, 'data', (data: Buffer) => sendOutput('stdout', data));
-            on(proc.stderr, 'data', (data: Buffer) => sendOutput('stderr', data));
+            on(proc.stdout!, 'data', (data: Buffer) => sendOutput('stdout', data));
+            on(proc.stderr!, 'data', (data: Buffer) => sendOutput('stderr', data));
 
             proc.once('close', () => {
                 procExited = true;
@@ -156,9 +156,9 @@ export class ProcessService extends EventEmitter implements IProcessService {
         }
 
         const stdoutBuffers: Buffer[] = [];
-        on(proc.stdout, 'data', (data: Buffer) => stdoutBuffers.push(data));
+        on(proc.stdout!, 'data', (data: Buffer) => stdoutBuffers.push(data));
         const stderrBuffers: Buffer[] = [];
-        on(proc.stderr, 'data', (data: Buffer) => {
+        on(proc.stderr!, 'data', (data: Buffer) => {
             if (options.mergeStdOutErr) {
                 stdoutBuffers.push(data);
                 stderrBuffers.push(data);

@@ -223,7 +223,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     protected async loadNotebookEditor(resource: Uri, panel?: WebviewPanel) {
         const result = await super.loadNotebookEditor(resource, panel);
 
-        // Wait for monaco ready (it's not really useable until it has a language)
         const readyPromise = createDeferred();
         const disposable = result.ready(() => readyPromise.resolve());
         await result.show();
