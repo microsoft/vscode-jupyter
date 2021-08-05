@@ -481,13 +481,12 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
     }
 
     private findCurrentCellFromStackFrame(stackFrame: DebugProtocol.StackFrame): NotebookCell | undefined {
-        // path.basename()
         let currentCell: NotebookCell | undefined;
-        const index = stackFrame.source?.path!.indexOf('#ch');
-        if (index) {
-            const fragment = stackFrame.source?.path!.substring(index + 1);
+
+        if (stackFrame.source?.path) {
+            const sfPath = path.basename(stackFrame.source?.path);
             this.notebookDocument.getCells().forEach((cell) => {
-                if (cell.document.uri.fragment === fragment) {
+                if (path.basename(cell.document.uri.toString()) === sfPath) {
                     currentCell = cell;
                     return;
                 }
