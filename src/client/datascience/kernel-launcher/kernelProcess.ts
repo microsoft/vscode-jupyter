@@ -110,11 +110,11 @@ export class KernelProcess implements IKernelProcess {
             deferred.reject(new KernelProcessExited(exitCode || -1));
         });
 
-        exeObs.proc!.stdout.on('data', (data: Buffer | string) => {
+        exeObs.proc!.stdout?.on('data', (data: Buffer | string) => {
             traceInfo(`KernelProcess output: ${(data || '').toString()}`);
         });
 
-        exeObs.proc!.stderr.on('data', (data: Buffer | string) => {
+        exeObs.proc!.stderr?.on('data', (data: Buffer | string) => {
             stderrProc += data.toString();
             traceInfo(`KernelProcess error: ${(data || '').toString()}`);
         });
@@ -194,7 +194,8 @@ export class KernelProcess implements IKernelProcess {
                     localize.DataScience.kernelDied().format(Commands.ViewJupyterOutput, errorMessage),
                     // Include what ever we have as the stderr.
                     stderrProc + '\n' + stderr + '\n',
-                    e
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    e as any
                 );
             } else {
                 traceError('Timed out waiting to get a heartbeat from kernel process.');

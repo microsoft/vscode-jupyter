@@ -17,6 +17,7 @@ import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import { IProcessLogger, IPythonExecutionService, Output } from '../../../client/common/process/types';
+import { ReadWrite } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { InterpreterInformation } from '../../../client/pythonEnvironments/info';
 import { noop } from '../../core';
@@ -70,10 +71,10 @@ suite('Daemon - Python Daemon Pool', () => {
             onNotification: noop,
             onUnhandledNotification: noop
         } as any) as MessageConnection;
-        const daemonProc = (new EventEmitter() as any) as ChildProcess;
+        const daemonProc = (new EventEmitter() as any) as ReadWrite<ChildProcess>;
         daemonProc.killed = false;
         daemonProc.pid = process.pid;
-        daemonProc.kill = noop;
+        daemonProc.kill = noop as any;
         daemonProc.stdout = new EventEmitter() as any;
         daemonProc.stderr = new EventEmitter() as any;
 

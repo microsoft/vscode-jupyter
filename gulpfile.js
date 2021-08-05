@@ -63,6 +63,9 @@ gulp.task('checkNpmDependencies', (done) => {
         { name: 'node_modules/trim', version: '0.0.3' }
     ];
     function checkPackageVersions(packages, parent) {
+        if (!packages) {
+            return;
+        }
         expectedVersions.forEach((expectedVersion) => {
             if (!packages[expectedVersion.name]) {
                 return;
@@ -81,6 +84,9 @@ gulp.task('checkNpmDependencies', (done) => {
         });
     }
     function checkPackageDependencies(packages) {
+        if (!packages) {
+            return;
+        }
         Object.keys(packages).forEach((packageName) => {
             const dependencies = packages[packageName]['dependencies'];
             if (dependencies) {
@@ -101,7 +107,6 @@ gulp.task('checkNpmDependencies', (done) => {
 });
 
 gulp.task('compile-ipywidgets', () => buildIPyWidgets());
-
 
 async function buildIPyWidgets() {
     // if the output ipywidgest file exists, then no need to re-build.
