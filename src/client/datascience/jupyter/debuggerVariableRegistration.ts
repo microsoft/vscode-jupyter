@@ -9,7 +9,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
 import { Identifiers } from '../constants';
 import { IJupyterDebugService, IJupyterVariables } from '../types';
-import { DataScience } from '../../common/utils/localize';
+// import { DataScience } from '../../common/utils/localize';
 
 @injectable()
 export class DebuggerVariableRegistration implements IExtensionSingleActivationService, DebugAdapterTrackerFactory {
@@ -20,7 +20,7 @@ export class DebuggerVariableRegistration implements IExtensionSingleActivationS
     ) { }
     public activate(): Promise<void> {
         this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(PYTHON_LANGUAGE, this));
-        this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(DataScience.pythonKernelDebugAdapter(), this));
+        // this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(DataScience.pythonKernelDebugAdapter(), this));
         return Promise.resolve();
     }
 
