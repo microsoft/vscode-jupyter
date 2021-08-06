@@ -25,7 +25,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(NotebookCompletionProvider) private readonly completionProvider: NotebookCompletionProvider
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.

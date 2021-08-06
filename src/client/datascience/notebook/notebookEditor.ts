@@ -105,7 +105,9 @@ export class NotebookEditor implements INotebookEditor {
             'vscode.ipynb'
         );
         if (!serializerApi) {
-            throw new Error('Unable to export notebook as the built-in vscode.ipynb extension is currently unavailable.');
+            throw new Error(
+                'Unable to export notebook as the built-in vscode.ipynb extension is currently unavailable.'
+            );
         }
         const cells = this.document.getCells();
         const cellData = cells.map((c) => {
