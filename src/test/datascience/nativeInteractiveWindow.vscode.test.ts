@@ -4,8 +4,10 @@
 'use strict';
 
 import { assert } from 'chai';
+import { when, anything } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../client/api/types';
+import { IApplicationShell } from '../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { NativeInteractiveWindow } from '../../client/datascience/interactive-window/nativeInteractiveWindow';
 import { NativeInteractiveWindowProvider } from '../../client/datascience/interactive-window/nativeInteractiveWindowProvider';
@@ -139,9 +141,25 @@ for i in range(10):
     });
     // test('Restart with session failure', async () => { });
     // test('LiveLossPlot', async () => { });
-    // test('Type in input', async () => { });
+    test('Type in input', async () => {
+        const applicationShell = api.serviceManager.get<IApplicationShell>(IApplicationShell);
+        when(applicationShell.showInputBox(anything())).thenReturn(Promise.resolve('typed input'));
+        const code = `b = input('Test')\nb`;
+        const interactiveWindow = await addCode(code);
+        const notebookDocument = vscode.workspace.notebookDocuments.find((doc) => doc.uri.toString() === interactiveWindow?.notebookUri?.toString());
+        const cells = notebookDocument?.getCells();
+        const codeCell = cells?.find((c) => c.kind === vscode.NotebookCellKind.Code);
+        await waitForExecutionCompletedSuccessfully(codeCell!);
+        assertHasTextOutputInVSCode(codeCell!, 'typed input');
+    });
     // test('Update display data', async () => { });
-    // test('Multiple interactive windows', async () => { });
+    test('Multiple interactive windows', async () => {
+        const settings = vscode.workspace.getConfiguration('jupyter', null);
+        await settings.update('interactiveWindowMode', 'multiple');
+        const window1 = await interactiveWindowProvider.getOrCreate(undefined);
+        const window2 = await interactiveWindowProvider.getOrCreate(undefined);
+        assert.notEqual(window1.notebookUri?.toString(), window2.notebookUri?.toString(), 'Two windows were not created in multiple mode');
+    });
     // test('Multiple executes go to last active window', async () => { });
     // test('Per file', async () => { });
     // test('Per file asks and changes titles', async () => { });
