@@ -10,7 +10,7 @@ import { registerTypes as activationRegisterTypes } from './activation/serviceRe
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry';
 import { IApplicationEnvironment, ICommandManager } from './common/application/types';
-import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
@@ -34,6 +34,7 @@ import { registerTypes as dataScienceRegisterTypes } from './datascience/service
 import { IDataScience } from './datascience/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { addOutputChannelLogging, setLoggingLevel } from './logging';
+import { LogLevel } from './logging/levels';
 import { registerLoggerTypes } from './logging/serviceRegistry';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
@@ -112,7 +113,7 @@ async function activateLegacy(
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
     // XXX Move this *after* abExperiments is activated?
-    setLoggingLevel(configuration.getSettings().logging.level);
+    setLoggingLevel(isCI ? LogLevel.Debug : configuration.getSettings().logging.level);
 
     // Register datascience types after experiments have loaded.
     // To ensure we can register types based on experiments.
