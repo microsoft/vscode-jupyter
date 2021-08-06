@@ -1005,11 +1005,11 @@ jobs:
         shell: bash
 
       - name: Run smoke tests
-        env:
-          DISPLAY: 10
-        uses: GabrielBB/xvfb-action@v1.4
-        with:
-          run: npm run testSmokeLogged
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run testSmokeLogged
+      - name: Run smoke tests
+        if: runner.os == 'Linux'
+        run: npm run testSmokeLogged
 
       - name: Upload smoke-test log
         uses: actions/upload-artifact@v2
