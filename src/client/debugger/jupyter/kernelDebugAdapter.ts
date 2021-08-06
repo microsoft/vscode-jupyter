@@ -96,7 +96,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private isRunByLine = false;
-    private runbyLineLastLine = false;
+    private stopOnNextContinue = false;
     private runByLineThreadId: number = 1;
     private runByLineSeq: number = 0;
 
@@ -118,9 +118,9 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             const content = msg.content as any;
             if (content.event === 'stopped') {
                 if (this.isRunByLine) {
+                    this.stopOnNextContinue = false;
                     this.runByLineThreadId = content.body.threadId;
                     this.runByLineSeq = content.seq;
-                    this.runByLineStackTrace();
                 }
                 this.sendMessage.fire(msg.content);
             }
@@ -170,21 +170,21 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
     public runByLineContinue() {
         if (this.isRunByLine) {
-            if (this.runbyLineLastLine) {
-                this.runbyLineLastLine = false;
+            if (this.stopOnNextContinue) {
                 this.runByLineStop();
-            } else {
-                const message: DebugProtocol.StepInRequest = {
-                    seq: this.runByLineSeq,
-                    type: 'request',
-                    command: 'stepIn',
-                    arguments: {
-                        threadId: this.runByLineThreadId
-                    }
-                };
-
-                this.sendRequestToJupyterSession(message);
             }
+            const message: DebugProtocol.StepInRequest = {
+                seq: this.runByLineSeq,
+                type: 'request',
+                command: 'stepIn',
+                arguments: {
+                    threadId: this.runByLineThreadId
+                }
+            };
+
+            this.sendRequestToJupyterSession(message);
+
+            this.stopOnNextContinue = true;
         }
     }
 
@@ -201,19 +201,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
             this.sendRequestToJupyterSession(message);
         }
-    }
-
-    private runByLineStackTrace() {
-        const message: DebugProtocol.StackTraceRequest = {
-            seq: this.runByLineSeq,
-            type: 'request',
-            command: 'stackTrace',
-            arguments: {
-                threadId: this.runByLineThreadId
-            }
-        };
-
-        this.sendRequestToJupyterSession(message);
     }
 
     dispose() {
@@ -334,16 +321,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
                 }
             }
         });
-
-        if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
-            (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
-                // Check if we're stopped at the last line
-                let currentCell = this.findCurrentCellFromStackFrame(sf);
-                if (currentCell && currentCell.document.lineCount === sf.line) {
-                    this.runbyLineLastLine = true;
-                }
-            });
-        }
 
         this.sendMessage.fire(message);
     }
@@ -478,21 +455,5 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
         // Run cell
         await this.commandManager.executeCommand('notebook.cell.execute');
-    }
-
-    private findCurrentCellFromStackFrame(stackFrame: DebugProtocol.StackFrame): NotebookCell | undefined {
-        let currentCell: NotebookCell | undefined;
-
-        if (stackFrame.source?.path) {
-            const sfPath = path.basename(stackFrame.source?.path);
-            this.notebookDocument.getCells().forEach((cell) => {
-                if (path.basename(cell.document.uri.toString()) === sfPath) {
-                    currentCell = cell;
-                    return;
-                }
-            });
-        }
-
-        return currentCell;
     }
 }
