@@ -415,6 +415,7 @@ export class VSCodeNotebookController implements Disposable {
         // Only when running tests should we force the selection of the kernel.
         // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
         if (this.context.extensionMode !== ExtensionMode.Test) {
+            traceInfoIf(isCI, 'Not setting controller on CI');
             return;
         }
         traceInfoIf(isCI, `Command notebook.selectKernel executing for ${notebook.uri.toString()} ${this.id}`);
