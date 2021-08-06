@@ -144,9 +144,6 @@ export namespace Commands {
     export const ExportToPDF = 'jupyter.exportToPDF';
     export const Export = 'jupyter.export';
     export const NativeNotebookExport = 'jupyter.notebookeditor.export';
-    export const SaveNotebookNonCustomEditor = 'jupyter.notebookeditor.save';
-    export const SaveAsNotebookNonCustomEditor = 'jupyter.notebookeditor.saveAs';
-    export const OpenNotebookNonCustomEditor = 'jupyter.notebookeditor.open';
     export const LatestExtension = 'jupyter.latestExtension';
     export const EnableLoadingWidgetsFrom3rdPartySource = 'jupyter.enableLoadingWidgetScriptsFromThirdPartySource';
     export const NotebookEditorExpandAllCells = 'jupyter.notebookeditor.expandallcells';
@@ -197,7 +194,6 @@ export namespace EditorContexts {
     export const HaveNativeRedoableCells = 'jupyter.havenativeredoablecells';
     export const HaveNative = 'jupyter.havenative';
     export const IsNativeActive = 'jupyter.isnativeactive';
-    export const UsingWebviewNotebook = 'jupyter.usingwebviewnotebook';
     export const IsInteractiveOrNativeActive = 'jupyter.isinteractiveornativeactive';
     export const IsPythonOrNativeActive = 'jupyter.ispythonornativeactive';
     export const IsPythonOrInteractiveActive = 'jupyter.ispythonorinteractiveeactive';
@@ -209,7 +205,6 @@ export namespace EditorContexts {
     export const DebuggingInProgress = 'jupyter.notebookeditor.debuggingInProgress';
     export const RunByLineInProgress = 'jupyter.notebookeditor.runByLineInProgress';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
-    export const IsVSCodeNotebookActive = 'jupyter.isvscodenotebookactive';
     export const IsDataViewerActive = 'jupyter.dataViewerActive';
     export const HasNativeNotebookOpen = 'jupyter.hasNativeNotebookOpen';
 }
@@ -517,8 +512,7 @@ export enum Telemetry {
      * to a sliceable Python variable in the data viewer.
      */
     DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
-    RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION',
-    UpdateCustomEditorAssociation = 'DS_INTERNAL.UPDATE_CUSTOM_EDITOR_ASSOCIATION'
+    RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -681,7 +675,6 @@ export enum JupyterCommands {
 }
 
 export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
-export const OurNotebookProvider = 'OurNotebookProvider';
 export const DataScienceStartupTime = Symbol('DataScienceStartupTime');
 
 // Default for notebook version (major & minor) used when creating notebooks.

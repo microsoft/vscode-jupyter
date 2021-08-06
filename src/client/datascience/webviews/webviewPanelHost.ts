@@ -48,10 +48,9 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         @unmanaged() rootPath: string,
         @unmanaged() scripts: string[],
         @unmanaged() private _title: string,
-        @unmanaged() private viewColumn: ViewColumn,
-        @unmanaged() protected readonly useCustomEditorApi: boolean
+        @unmanaged() private viewColumn: ViewColumn
     ) {
-        super(configService, cssGenerator, themeFinder, workspaceService, rootPath, scripts, useCustomEditorApi);
+        super(configService, cssGenerator, themeFinder, workspaceService, rootPath, scripts);
 
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(
@@ -94,11 +93,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         if (!this.isDisposed && this.webPanel) {
             this.webPanel.setTitle(newTitle);
         }
-    }
-
-    protected shareMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        // Send our remote message.
-        this.messageListener.onMessage(type.toString(), payload);
     }
 
     protected onViewStateChanged(_args: WebViewViewChangeEventArgs) {

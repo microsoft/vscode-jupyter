@@ -36,10 +36,9 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
-import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
-import { KernelConnectionMetadata, NotebookCellRunState } from './jupyter/kernels/types';
+import { KernelConnectionMetadata } from './jupyter/kernels/types';
 import { KernelStateEventArgs } from './notebookExtensibility';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -526,7 +525,6 @@ export interface ILocalResourceUriConverter {
 }
 
 export interface IInteractiveBase extends Disposable {
-    onExecutedCode?: Event<string>;
     notebook?: INotebook;
     startProgress(): void;
     stopProgress(): void;
@@ -537,20 +535,10 @@ export interface IInteractiveBase extends Disposable {
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
     hasCell(id: string): Promise<boolean>;
-    createWebviewCellButton(
-        buttonId: string,
-        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
-        codicon: string,
-        statusToEnable: CellState[],
-        tooltip: string
-    ): IDisposable;
 }
 
-export const IInteractiveWindow = Symbol('IInteractiveWindow');
 export interface IInteractiveWindow extends IInteractiveBase {
     readonly onDidChangeViewState: Event<void>;
-    readonly visible: boolean;
-    readonly active: boolean;
     readonly owner: Resource;
     readonly submitters: Uri[];
     readonly identity: Uri;
@@ -595,33 +583,17 @@ export interface INotebookEditorProvider {
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends Disposable, IInteractiveBase {
-    /**
-     * Type of editor, whether it is the old, custom or native notebook editor.
-     * Once VSC Notebook is stable, this property can be removed.
-     */
-    readonly type: 'old' | 'custom' | 'native';
-    readonly onDidChangeViewState: Event<void>;
     readonly closed: Event<INotebookEditor>;
     readonly executed?: Event<INotebookEditor>;
-    readonly modified: Event<INotebookEditor>;
-    readonly saved: Event<INotebookEditor>;
     /**
      * Is this notebook representing an untitled file which has never been saved yet.
      */
     readonly isUntitled: boolean;
-    /**
-     * `true` if there are unpersisted changes.
-     */
-    readonly isDirty: boolean;
     readonly file: Uri;
-    readonly visible: boolean;
-    readonly active: boolean;
     readonly model?: INotebookModel;
     readonly notebookMetadata: nbformat.INotebookMetadata | undefined;
     notebook?: INotebook;
-    show(): Promise<void>;
     runAllCells(): void;
-    runSelectedCell(): void;
     addCellBelow(): void;
     undoCells(): void;
     redoCells(): void;
@@ -638,56 +610,6 @@ export const INotebookExtensibility = Symbol('INotebookExtensibility');
 
 export interface INotebookExtensibility {
     readonly onKernelStateChange: Event<KernelStateEventArgs>;
-}
-
-export const IWebviewExtensibility = Symbol('IWebviewExtensibility');
-
-export interface IWebviewExtensibility {
-    registerCellToolbarButton(
-        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
-        codicon: string,
-        statusToEnable: NotebookCellRunState[],
-        tooltip: string
-    ): IDisposable;
-}
-
-export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
-
-/**
- * Listens to history messages to provide extra functionality
- */
-export interface IInteractiveWindowListener extends IDisposable {
-    /**
-     * Fires this event when posting a response message
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    postMessage: Event<{ message: string; payload: any }>;
-    /**
-     * Fires this event when posting a message to the interactive base.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    postInternalMessage?: Event<{ message: string; payload: any }>;
-    /**
-     * Handles messages that the interactive window receives
-     * @param message message type
-     * @param payload message payload
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onMessage(message: string, payload?: any): void;
-    /**
-     * Fired when the view state of the interactive window changes
-     * @param args
-     */
-    onViewStateChanged?(args: WebViewViewChangeEventArgs): void;
-}
-
-// Wraps the vscode API in order to send messages back and forth from a webview
-export const IPostOffice = Symbol('IPostOffice');
-export interface IPostOffice {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    post(message: string, params: any[] | undefined): void;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    listen(message: string, listener: (args: any[] | undefined) => void): void;
 }
 
 // Wraps the vscode CodeLensProvider base class
@@ -860,7 +782,6 @@ export interface IJupyterExtraSettings extends IJupyterSettings {
             fontFamily: string;
         };
         theme: string;
-        useCustomEditorApi: boolean;
         hasPythonExtension: boolean;
     };
     intellisenseOptions: {
@@ -1126,23 +1047,7 @@ export interface INbConvertExportToPythonService {
 }
 
 export interface INotebookModel {
-    readonly indentAmount: string;
-    readonly onDidDispose: Event<void>;
     readonly file: Uri;
-    readonly isDirty: boolean;
-    readonly isUntitled: boolean;
-    readonly changed: Event<NotebookModelChange>;
-    readonly onDidEdit: Event<NotebookModelChange>;
-    readonly isDisposed: boolean;
-    readonly metadata: nbformat.INotebookMetadata | undefined;
-    readonly isTrusted: boolean;
-    readonly cellCount: number;
-    /**
-     * @deprecated
-     * Use only with old notebooks, when using with new Notebooks, use VSC API instead.
-     */
-    getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
-    getContent(): string;
     /**
      * Dispose of the Notebook model.
      *
@@ -1161,18 +1066,6 @@ export interface IModelLoadOptions {
     skipLoadingDirtyContents?: boolean;
 }
 
-export const INotebookStorage = Symbol('INotebookStorage');
-
-export interface INotebookStorage {
-    generateBackupId(model: INotebookModel): string;
-    save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
-    saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
-    backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void>;
-    get(file: Uri): INotebookModel | undefined;
-    getOrCreateModel(options: IModelLoadOptions): Promise<INotebookModel>;
-    revert(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
-    deleteBackup(model: INotebookModel, backupId?: string): Promise<void>;
-}
 type WebViewViewState = {
     readonly visible: boolean;
     readonly active: boolean;
@@ -1469,24 +1362,9 @@ export interface IExternalWebviewCellButton {
     running: boolean;
 }
 
-export interface IExternalWebviewCellButtonWithCallback extends IExternalWebviewCellButton {
-    // Callback is only used on the extension side. Don't pass to the UI
-    callback(cell: NotebookCell, isInteractive: boolean, resource: Uri): Promise<void>;
-}
-
 export interface IExternalCommandFromWebview {
     buttonId: string;
     cell: ICell;
-}
-
-export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchronization');
-/**
- * Service used to make sure a notebook model matches the code displayed in the UI (whichever UI is hosting the model)
- * See this bug here:
- * https://github.com/microsoft/vscode-jupyter/issues/1701
- */
-export interface INotebookModelSynchronization {
-    syncAllCells(model: INotebookModel): Promise<void>;
 }
 
 export const IDebuggingCellMap = Symbol('IDebuggingCellMap');

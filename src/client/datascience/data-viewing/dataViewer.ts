@@ -8,7 +8,7 @@ import * as path from 'path';
 import { EventEmitter, Memento, ViewColumn } from 'vscode';
 
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { GLOBAL_MEMENTO, IConfigurationService, IDisposable, IMemento, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -65,7 +65,6 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento
     ) {
         super(
@@ -78,8 +77,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             dataExplorerDir,
             [path.join(dataExplorerDir, 'commons.initial.bundle.js'), path.join(dataExplorerDir, 'dataExplorer.js')],
             localize.DataScience.dataExplorerTitle(),
-            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One,
-            useCustomEditorApi
+            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One
         );
         this.onDidDispose(this.dataViewerDisposed, this);
     }

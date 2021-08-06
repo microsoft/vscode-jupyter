@@ -7,13 +7,12 @@ import { inject, injectable } from 'inversify';
 import { NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
-import { isCI } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry } from '../constants';
-import { CellState, ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../types';
+import { CellState, ICell, INotebookExecutionLogger } from '../types';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
@@ -25,14 +24,16 @@ export class CellOutputMimeTypeTracker
     private readonly disposables: IDisposable[] = [];
 
     constructor(
-        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this);
-        this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t), this.disposables);
         this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
         this.vscNotebook.onDidCloseNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
+        this.vscNotebook.onDidSaveNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
+    }
+    public async activate(): Promise<void> {
+        //
     }
 
     public dispose() {
@@ -53,16 +54,6 @@ export class CellOutputMimeTypeTracker
     public async postExecute(cell: ICell, silent: boolean): Promise<void> {
         if (!silent && cell.data.cell_type === 'code') {
             this.scheduleCheck(this.createCellKey(cell), this.checkCell.bind(this, cell));
-        }
-    }
-    public async activate(): Promise<void> {
-        // Act like all of our open documents just opened; our timeout will make sure this is delayed.
-        this.notebookEditorProvider.editors.forEach((e) => this.onOpenedOrClosedNotebook(e));
-    }
-
-    private onOpenedOrClosedNotebook(e: INotebookEditor) {
-        if (e.file) {
-            this.scheduleCheck(e.file.fsPath, this.checkNotebook.bind(this, e));
         }
     }
     private onDidOpenCloseDocument(doc: NotebookDocument) {
@@ -136,22 +127,6 @@ export class CellOutputMimeTypeTracker
     private checkCell(cell: { data: nbformat.IBaseCell; id: string; state: CellState }) {
         this.pendingChecks.delete(this.createCellKey(cell));
         this.getCellOutputMimeTypes(cell).forEach(this.sendTelemetry.bind(this));
-    }
-
-    @captureTelemetry(Telemetry.HashedNotebookCellOutputMimeTypePerf)
-    private checkNotebook(e: INotebookEditor) {
-        this.pendingChecks.delete(e.file.fsPath);
-        if (!e.model) {
-            return;
-        }
-        try {
-            e.model?.getCellsWithId().forEach(this.checkCell.bind(this));
-        } catch (ex) {
-            // Can fail on CI, if the notebook has been closed or the like
-            if (!isCI) {
-                throw ex;
-            }
-        }
     }
 
     private sendTelemetry(mimeType: string) {
