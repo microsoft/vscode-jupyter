@@ -517,7 +517,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                     const message = localize.DataScience.restartKernelAfterInterruptMessage();
                     const yes = localize.DataScience.restartKernelMessageYes();
                     const no = localize.DataScience.restartKernelMessageNo();
-                    const v = await this.applicationShell.showInformationMessage(message, yes, no);
+                    const v = await this.applicationShell.showInformationMessage(message, { modal: true }, yes, no);
                     if (v === yes) {
                         await this.restartKernelInternal();
                     }
