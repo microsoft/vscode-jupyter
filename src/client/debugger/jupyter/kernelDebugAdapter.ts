@@ -183,7 +183,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             };
 
             this.sendRequestToJupyterSession(message);
-
             this.stopOnNextContinue = true;
         }
     }
