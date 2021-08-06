@@ -1015,8 +1015,14 @@ jobs:
 
       - name: Run smoke tests
         uses: GabrielBB/xvfb-action@v1.4
+        if: matrix.os == 'ubuntu-latest'
         with:
           run: ${{ env.xvfbCommand }} npm run testSmokeLogged
+
+      - name: Run smoke tests
+        uses: GabrielBB/xvfb-action@v1.4
+        if: matrix.os !== 'ubuntu-latest'
+        run: npm run testSmokeLogged
 
       - name: Upload smoke-test log
         uses: actions/upload-artifact@v2
