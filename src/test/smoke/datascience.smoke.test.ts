@@ -67,6 +67,7 @@ suite('Smoke Tests', () => {
     // }).timeout(timeoutForCellToRun);
 
     test('Run Cell in native editor', async () => {
+        console.log('Step1');
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
@@ -75,23 +76,32 @@ suite('Smoke Tests', () => {
             'datascience',
             'simple_nb.ipynb'
         );
+        console.log('Step2');
         const fileContents = await fs.readFile(file, { encoding: 'utf-8' });
+        console.log('Step3');
         const outputFile = path.join(path.dirname(file), 'ds_n.log');
         await fs.writeFile(file, fileContents.replace("'ds_n.log'", `'${outputFile.replace(/\\/g, '/')}'`), {
             encoding: 'utf-8'
         });
+        console.log('Step4');
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }
+        console.log('Step5');
         await vscode.commands.executeCommand('jupyter.opennotebook', vscode.Uri.file(file));
+        console.log('Step6');
 
         // Wait for 15 seconds for notebook to launch.
         // Unfortunately there's no way to know for sure it has completely loaded.
         await sleep(15_000);
 
+        console.log('Step7');
         await vscode.commands.executeCommand<void>('jupyter.notebookeditor.runallcells');
+        console.log('Step8');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
+        console.log('Step9');
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
+        console.log('Step10');
 
         // Give time for the file to be saved before we shutdown
         await sleep(300);
