@@ -1,0 +1,28 @@
+name: 'Set Python for Conda'
+description: "Sets python to a specific version when using Conda Environments"
+# For some reason we cannot use `if` conditions in the steps of an action. Github Action throws errors.
+# Hence created a separate action and used the action conditionally.
+# When using non-conda environments using `bash -l {0}` on Mac, the right Python environment is not used.
+
+inputs:
+  PYTHON_VERSION:
+     description: 'Version of python'
+     required: true
+     default: python
+outputs:
+  CI_PYTHON_PATH:
+    description: 'Path to the python'
+    value: ${{ steps.python_run.outputs.python_path }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Output python path
+      id: python_run
+      # Use `bash -l {0}` when using the conda actions.
+      shell: bash -l {0}
+      run: python -c "import sys;print('::set-output name=python_path::' + sys.executable)"
+
+    - name: Push to environment
+      # Use `bash -l {0}` when using the conda actions.
+      shell: bash -l {0}
+      run: echo "CI_PYTHON_PATH=${{ steps.python_run.outputs.python_path }}" >> $GITHUB_ENV

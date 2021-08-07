@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "importHelpers": true,
+        "target": "es5",
+        "outDir": "out",
+        "lib": ["es6", "dom"],
+        "jsx": "react",
+        "sourceMap": true,
+        "rootDirs": ["src", "types"],
+        "paths": {
+            "*": ["types/*"]
+        },
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "noImplicitThis": false,
+        "noUnusedLocals": true,
+        "noUnusedParameters": false,
+        "strict": true
+    },
+    "exclude": [".vscode-test", ".vscode test", "src/test", "src/server", "src/client", "build"]
+}
