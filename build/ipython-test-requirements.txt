@@ -1,5 +1,0 @@
-# List of requirements for ipython tests
-numpy
-pandas
-# Install jupyter itself so we end up with a kernel
-jupyter
