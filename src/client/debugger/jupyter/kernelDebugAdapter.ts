@@ -121,6 +121,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
                     this.stopOnNextContinue = false;
                     this.runByLineThreadId = content.body.threadId;
                     this.runByLineSeq = content.seq;
+                    this.runByLineStackTrace();
                 }
                 this.sendMessage.fire(msg.content);
             }
@@ -200,6 +201,19 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
             this.sendRequestToJupyterSession(message);
         }
+    }
+
+    private runByLineStackTrace(): void {
+        const message: DebugProtocol.StackTraceRequest = {
+            seq: this.runByLineSeq,
+            type: 'request',
+            command: 'stackTrace',
+            arguments: {
+                threadId: this.runByLineThreadId
+            }
+        };
+
+        this.sendRequestToJupyterSession(message);
     }
 
     dispose() {
@@ -320,6 +334,14 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
                 }
             }
         });
+
+        if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
+            (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
+                console.log(sf);
+                // this.runByLineScope(sf.id);
+                // check if sf.source?.path is on the cell, if its not, stepInto again
+            });
+        }
 
         this.sendMessage.fire(message);
     }
