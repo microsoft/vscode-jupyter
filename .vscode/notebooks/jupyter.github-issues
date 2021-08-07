@@ -132,7 +132,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue $AREAS_EXCLUSION in:title interactive"
+    "value": "$JUPYTER_ALL_REPOS is:open is:issue $AREAS_EXCLUSION $CATEGORY_EXCLUSION in:title interactive"
   },
   {
     "kind": 1,
