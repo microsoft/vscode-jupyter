@@ -28,6 +28,7 @@ import { traceError } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IFileSystem } from '../../common/platform/types';
+import { IDebuggingManager } from '../types';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -84,7 +85,7 @@ class Debugger {
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
 @injectable()
-export class DebuggingManager implements IExtensionSingleActivationService, IDisposable {
+export class DebuggingManager implements IExtensionSingleActivationService, IDebuggingManager, IDisposable {
     private debuggingInProgress: ContextKey;
     private runByLineInProgress: ContextKey;
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
@@ -213,6 +214,13 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDis
 
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
+    }
+
+    public getDebugSession(notebook: NotebookDocument): DebugSession | undefined {
+        const adapter = this.notebookToDebugAdapter.get(notebook);
+        if (adapter) {
+            return adapter.debugSession;
+        }
     }
 
     private updateToolbar(debugging: boolean) {

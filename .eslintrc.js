@@ -732,7 +732,6 @@ module.exports = {
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterSelector.ts',
         'src/client/datascience/jupyter/interpreter/jupyterInterpreterService.ts',
         'src/client/datascience/jupyter/commandLineSelector.ts',
-        'src/client/datascience/jupyter/debuggerVariableRegistration.ts',
         'src/client/datascience/jupyter/jupyterConnection.ts',
         'src/client/datascience/jupyter/jupyterPasswordConnect.ts',
         'src/client/datascience/jupyter/jupyterWebSocket.ts',

@@ -164,6 +164,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         this.sendRequestToJupyterSession(message);
     }
 
+    public get debugSession(): DebugSession {
+        return this.session;
+    }
+
     public runByLineContinue() {
         if (this.isRunByLine) {
             const message: DebugProtocol.StepInRequest = {

@@ -31,10 +31,14 @@ export class JupyterVariables implements IJupyterVariables {
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private kernelVariables: IJupyterVariables,
         @inject(IJupyterVariables)
         @named(Identifiers.DEBUGGER_VARIABLES)
-        private debuggerVariables: IConditionalJupyterVariables
+        private debuggerVariables: IConditionalJupyterVariables,
+        @inject(IJupyterVariables)
+        @named(Identifiers.IPYKERNEL_DEBUGGER_VARIABLES)
+        private ipykernelDebuggerVariables: IConditionalJupyterVariables
     ) {
         disposableRegistry.push(debuggerVariables.refreshRequired(this.fireRefresh.bind(this)));
         disposableRegistry.push(kernelVariables.refreshRequired(this.fireRefresh.bind(this)));
+        disposableRegistry.push(ipykernelDebuggerVariables.refreshRequired(this.fireRefresh.bind(this)));
     }
 
     public get refreshRequired(): Event<void> {
@@ -93,6 +97,10 @@ export class JupyterVariables implements IJupyterVariables {
     }
 
     private async getVariableHandler(notebook?: INotebook): Promise<IJupyterVariables> {
+        if (this.ipykernelDebuggerVariables.active && (!notebook || notebook.status === ServerStatus.Busy)) {
+            return this.ipykernelDebuggerVariables;
+        }
+        
         if (this.debuggerVariables.active && (!notebook || notebook.status === ServerStatus.Busy)) {
             return this.debuggerVariables;
         }
