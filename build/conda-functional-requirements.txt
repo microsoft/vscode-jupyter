@@ -1,0 +1,12 @@
+# List of requirements for conda environments that cannot be installed using conda
+livelossplot
+versioneer
+pythreejs
+ipysheet
+ipyvolume
+beakerx
+beakerx_kernel_java
+py4j
+bqplot
+K3D
+ipyleaflet
