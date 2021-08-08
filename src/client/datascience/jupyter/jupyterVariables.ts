@@ -100,7 +100,7 @@ export class JupyterVariables implements IJupyterVariables {
         if (this.ipykernelDebuggerVariables.active && (!notebook || notebook.status === ServerStatus.Busy)) {
             return this.ipykernelDebuggerVariables;
         }
-        
+
         if (this.debuggerVariables.active && (!notebook || notebook.status === ServerStatus.Busy)) {
             return this.debuggerVariables;
         }

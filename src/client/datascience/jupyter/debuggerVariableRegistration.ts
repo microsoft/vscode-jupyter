@@ -20,7 +20,9 @@ export class DebuggerVariableRegistration implements IExtensionSingleActivationS
     ) {}
     public activate(): Promise<void> {
         this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(PYTHON_LANGUAGE, this));
-        this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(DataScience.pythonKernelDebugAdapter(), this));
+        this.disposables.push(
+            this.debugService.registerDebugAdapterTrackerFactory(DataScience.pythonKernelDebugAdapter(), this)
+        );
         return Promise.resolve();
     }
 
