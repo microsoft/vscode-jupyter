@@ -57,7 +57,6 @@ suite('DataScience - DataViewer', () => {
             instance(themeFinder),
             instance(workspaceService),
             instance(applicationShell),
-            false,
             new MockMemento()
         );
     });

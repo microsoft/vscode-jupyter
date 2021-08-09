@@ -86,12 +86,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
-    public get visible(): boolean {
-        return true; // TODO VS Code needs to provide an API for this
-    }
-    public get active(): boolean {
-        return true; // TODO VS Code needs to provide an API for this
-    }
     // Promise that resolves when the interactive window is ready to handle code execution.
     public get readyPromise(): Promise<NotebookEditor> {
         return this._editorReadyPromise;
@@ -112,7 +106,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get notebookUri(): Uri | undefined {
         return this.notebookDocument?.uri;
     }
-    public isInteractive = true;
     public notebookController: VSCodeNotebookController | undefined;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();

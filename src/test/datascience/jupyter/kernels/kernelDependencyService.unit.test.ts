@@ -39,8 +39,7 @@ suite('DataScience - Kernel Dependency Service', () => {
             instance(serviceContainer),
             instance(memento),
             false,
-            instance(cmdManager),
-            true
+            instance(cmdManager)
         );
     });
     [undefined, Uri.file('test.py'), Uri.file('test.ipynb')].forEach((resource) => {

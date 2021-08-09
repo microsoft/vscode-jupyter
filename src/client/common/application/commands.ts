@@ -7,7 +7,7 @@ import { CancellationToken, NotebookCell, NotebookDocument, Position, TextDocume
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
-import { INotebookModel, ISwitchKernelOptions } from '../../datascience/types';
+import { ISwitchKernelOptions } from '../../datascience/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CommandSource } from '../../testing/common/constants';
 import { Channel } from './types';
@@ -155,9 +155,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.SetJupyterKernel]: [KernelConnectionMetadata, Uri, undefined | Uri];
     [DSCommands.SwitchJupyterKernel]: [ISwitchKernelOptions | undefined] | [];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
-    [DSCommands.SaveNotebookNonCustomEditor]: [INotebookModel];
-    [DSCommands.SaveAsNotebookNonCustomEditor]: [INotebookModel, Uri];
-    [DSCommands.OpenNotebookNonCustomEditor]: [Uri];
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
     [DSCommands.NotebookEditorExpandAllCells]: [];
