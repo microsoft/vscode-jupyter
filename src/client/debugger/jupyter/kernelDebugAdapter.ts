@@ -10,7 +10,10 @@ import {
     NotebookCell,
     Event,
     EventEmitter,
-    DebugProtocolMessage
+    DebugProtocolMessage,
+    notebooks,
+    NotebookCellExecutionStateChangeEvent,
+    NotebookCellExecutionState
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { randomBytes } from 'crypto';
@@ -96,7 +99,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private isRunByLine = false;
-    private stopOnNextContinue = false;
     private runByLineThreadId: number = 1;
     private runByLineSeq: number = 0;
 
@@ -118,7 +120,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             const content = msg.content as any;
             if (content.event === 'stopped') {
                 if (this.isRunByLine) {
-                    this.stopOnNextContinue = false;
                     this.runByLineThreadId = content.body.threadId;
                     this.runByLineSeq = content.seq;
                 }
@@ -128,6 +129,12 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         this.jupyterSession.onIOPubMessage(iopubHandler);
 
         void this.dumpCellsThatRanBeforeDebuggingBegan();
+        notebooks.onDidChangeNotebookCellExecutionState((cellStateChange: NotebookCellExecutionStateChangeEvent) => {
+            // If a cell has moved to idle, stop the run by line session
+            if (cellStateChange.state === NotebookCellExecutionState.Idle) {
+                this.runByLineStop();
+            }
+        }, this);
     }
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
@@ -170,9 +177,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
     public runByLineContinue() {
         if (this.isRunByLine) {
-            if (this.stopOnNextContinue) {
-                this.runByLineStop();
-            }
             const message: DebugProtocol.StepInRequest = {
                 seq: this.runByLineSeq,
                 type: 'request',
@@ -183,7 +187,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             };
 
             this.sendRequestToJupyterSession(message);
-            this.stopOnNextContinue = true;
         }
     }
 
