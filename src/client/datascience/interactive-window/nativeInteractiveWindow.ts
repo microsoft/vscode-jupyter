@@ -812,7 +812,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             : cellMatcher.stripFirstMarker(code).trim();
         const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
-        // Insert code cell into NotebookDocument
+        // Insert cell into NotebookDocument
         const language =
             workspace.textDocuments.find((document) => document.uri.toString() === this.owner?.toString())
                 ?.languageId ?? PYTHON_LANGUAGE;
@@ -822,7 +822,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
         notebookCellData.metadata = {
-            inputCollapsed: !isMarkdown,
+            inputCollapsed: !isMarkdown && settings.collapseCellInputCodeByDefault,
             interactiveWindowCellMarker,
             interactive: {
                 file: file.fsPath,
