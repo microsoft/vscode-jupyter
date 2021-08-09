@@ -8,7 +8,6 @@ import detectIndent = require('detect-indent');
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookSerializer as VSCNotebookSerializer, NotebookData, NotebookDocument } from 'vscode';
-import { sendLanguageTelemetry } from '../notebookStorage/nativeEditorStorage';
 import { createJupyterCellFromVSCNotebookCell, notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { pruneCell } from '../common';
@@ -33,12 +32,6 @@ export class NotebookSerializer implements VSCNotebookSerializer {
 
         // Then compute indent. It's computed from the contents
         const indentAmount = contents ? detectIndent(contents).indent : ' ';
-
-        // Then save the contents. We'll stick our cells back into this format when we save
-        if (json) {
-            // Log language or kernel telemetry
-            sendLanguageTelemetry(json);
-        }
         const preferredCellLanguage = this.cellLanguageService.getPreferredLanguage(json?.metadata);
         traceInfoIf(isCI, `Preferred language in deserializer ${preferredCellLanguage}`);
         // Ensure we always have a blank cell.

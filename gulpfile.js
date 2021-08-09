@@ -173,12 +173,25 @@ async function updateBuildNumber(args) {
         const packageJson = JSON.parse(packageJsonContents);
 
         // Change version number
+        // 3rd part of version is limited to Max Int32 numbers (in VSC Marketplace).
+        // Hence build numbers can only be YYYY.MMM.2147483647
+        // NOTE: For each of the following strip the first 3 characters from the build number.
+        //  E.g. if we have build number of `build number = 3264527301, then take 4527301
+
+        // To ensure we can have point releases & insider builds, we're going with the following format:
+        // Insider & Release builds will be YYYY.MMM.100<build number>
+        // When we have a hot fix, we update the version to YYYY.MMM.110<build number>
+        // If we have more hot fixes, they'll be YYYY.MMM.120<build number>, YYYY.MMM.130<build number>, & so on.
+
         const versionParts = packageJson.version.split('.');
         const buildNumberPortion =
             versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
         const newVersion =
             versionParts.length > 1
-                ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}`
+                ? `${versionParts[0]}.${versionParts[1]}.${versionParts[0].substring(
+                      0,
+                      3
+                  )}${buildNumberPortion.substring(3)}`
                 : packageJson.version;
         packageJson.version = newVersion;
 

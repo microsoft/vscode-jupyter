@@ -8,7 +8,7 @@
 -   [ ] Update [Component Governance](https://dev.azure.com/vscode-python-datascience/vscode-python-datascience/_componentGovernance) (Click on "microsoft/vscode-jupyter" on that page). Notes are in the OneNote under Python VS Code -> Dev Process -> Component Governance.
     -   [ ] Provide details for any automatically detected npm dependencies
     -   [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
--   [ ] Create new release branch with format `release-YYYY.MM`
+-   [ ] Create new release branch with format `release-YYYY.MM.10`
     -   [ ] Create a pull request against `release-YYYY.MM` for changes
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-jupyter/blob/main/package.json) is up-to-date
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md)
@@ -76,17 +76,21 @@
 -   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 -   [ ] Publish the [blog](http://aka.ms/pythonblog) post
 -   [ ] Determine if a hotfix is needed
+    -   [ ] Ensure the version in package.json is updated as follows:
+        * If released version is `YYYY.MM.100`, then hot fix will be `YYYY.MM.110`
+        * If released version is `YYYY.MM.110`, then hot fix will be `YYYY.MM.120`
 
 # Day of VS Code publishing (Wednesday, XXX XX)
 
 -   [ ] Update `main` after the release is published.
     -   [ ] Bump the engines.vscode version on the `main` branch. For example, from `1.58.0-insider` to `1.59.0-insider`
-    -   [ ] Bump the version number to the next monthly ("YYYY.MM.0") release in the `main` branch
+    -   [ ] Bump the version number to the next monthly ("YYYY.MM.100") release in the `main` branch
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
+        -   [ ] Confirm the 3rd part of the version ends with `100`.
     -   [ ] Turn insiders daily builds back on
 -   [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-jupyter/issues?q=is%3Aopen+label%3A%22info+needed%22+-label%3A%22data+science%22+sort%3Aupdated-asc) and close any that have no activity for over a month (🤖)
--   [ ] GDPR bookkeeping (🤖)
+-   [ ] GDPR bookkeeping (🤖) ((@greazer does regular classification every Monday evening))
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
 
 ## Prep for the _next_ release
