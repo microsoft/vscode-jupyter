@@ -10,18 +10,20 @@ import { IDisposableRegistry } from '../../common/types';
 import { Identifiers } from '../constants';
 import { IJupyterDebugService, IJupyterVariables } from '../types';
 import { DataScience } from '../../common/utils/localize';
+import { IDebuggingManager } from '../../debugger/types';
 
 @injectable()
 export class DebuggerVariableRegistration implements IExtensionSingleActivationService, DebugAdapterTrackerFactory {
     constructor(
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
+        @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private debugVariables: DebugAdapterTracker
     ) {}
     public activate(): Promise<void> {
         this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(PYTHON_LANGUAGE, this));
         this.disposables.push(
-            this.debugService.registerDebugAdapterTrackerFactory(DataScience.pythonKernelDebugAdapter(), this)
+            this.debuggingManager.registerDebugAdapterTrackerFactory(DataScience.pythonKernelDebugAdapter(), this)
         );
         return Promise.resolve();
     }

@@ -5,7 +5,6 @@ import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable, named } from 'inversify';
 
 import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
@@ -92,8 +91,8 @@ export class JupyterVariables implements IJupyterVariables {
         );
     }
 
-    private async getVariableHandler(notebook?: INotebook): Promise<IJupyterVariables> {
-        if (this.debuggerVariables.active && (!notebook || notebook.status === ServerStatus.Busy)) {
+    private async getVariableHandler(_notebook?: INotebook): Promise<IJupyterVariables> {
+        if (this.debuggerVariables.active) {
             return this.debuggerVariables;
         }
 

@@ -98,7 +98,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
     private isRunByLine = false;
     private runByLineThreadId: number = 1;
     private runByLineSeq: number = 0;
-
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
 
     constructor(
@@ -157,6 +156,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         }
 
         this.sendRequestToJupyterSession(message);
+    }
+
+    public get debugSession(): DebugSession {
+        return this.session;
     }
 
     public runByLineContinue() {
@@ -307,6 +310,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         });
 
         if (message.type === 'request') {
+            this.sendMessage.fire(message);
             const request = debugRequest(message as DebugProtocol.Request, this.jupyterSession.sessionId);
             const control = this.jupyterSession.requestDebug({
                 seq: request.content.seq,

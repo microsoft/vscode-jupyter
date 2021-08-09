@@ -4,11 +4,12 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 
-import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
+import { DebugAdapterTracker, DebugSession, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IDebugService } from '../../common/application/types';
+import { IDebugService, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
+import { IDebuggingManager } from '../../debugger/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DataFrameLoading, GetVariableInfo, Identifiers, Telemetry } from '../constants';
 import { DebugLocationTracker } from '../debugLocationTracker';
@@ -48,7 +49,9 @@ export class DebuggerVariables extends DebugLocationTracker
 
     constructor(
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
-        @inject(IConfigurationService) private configService: IConfigurationService
+        @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
     ) {
         super(undefined);
     }
@@ -58,7 +61,10 @@ export class DebuggerVariables extends DebugLocationTracker
     }
 
     public get active(): boolean {
-        return this.debugService.activeDebugSession !== undefined && this.debuggingStarted;
+        return (
+            (this.debugService.activeDebugSession !== undefined || this.getDebuggingManagerSession() !== undefined) &&
+            this.debuggingStarted
+        );
     }
 
     // IJupyterVariables implementation
@@ -400,6 +406,13 @@ export class DebuggerVariables extends DebugLocationTracker
         });
 
         this.refreshEventEmitter.fire();
+    }
+
+    private getDebuggingManagerSession(): DebugSession | undefined {
+        const activeNotebook = this.vscNotebook.activeNotebookEditor;
+        if (activeNotebook) {
+            return this.debuggingManager.getDebugSession(activeNotebook.document);
+        }
     }
 }
 
