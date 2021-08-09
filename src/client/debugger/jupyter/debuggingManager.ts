@@ -55,7 +55,6 @@ class Debugger {
                         name: name,
                         request: 'attach',
                         internalConsoleOptions: 'neverOpen',
-                        // justMyCode: false,
                         __document: document.uri.toString()
                     },
                     options
