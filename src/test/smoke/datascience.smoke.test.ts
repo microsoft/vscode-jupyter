@@ -18,8 +18,9 @@ import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
-suite('Smoke Tests', () => {
+suite('Smoke Tests', function () {
     let api: IExtensionTestApi;
+    this.retries(2);
     suiteSetup(async function () {
         if (!IS_SMOKE_TEST) {
             return this.skip();
