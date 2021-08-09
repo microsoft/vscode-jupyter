@@ -120,7 +120,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
                 this.runByLineSeq = content.seq;
 
                 if (this.isRunByLine) {
-                    this.RunByLineStackTrace();
+                    this.runByLineStackTrace();
                 }
                 this.sendMessage.fire(msg.content);
             }
@@ -203,7 +203,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         });
     }
 
-    private RunByLineStackTrace(): void {
+    private runByLineStackTrace(): void {
         const message: DebugProtocol.StackTraceRequest = {
             seq: this.runByLineSeq,
             type: 'request',
@@ -229,7 +229,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         this.sendRequestToJupyterSession(message);
     }
 
-    private RunByLineVariables(variablesReference: number): void {
+    private runByLineVariables(variablesReference: number): void {
         const message: DebugProtocol.VariablesRequest = {
             seq: this.runByLineSeq,
             type: 'request',
@@ -356,7 +356,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
         if ((message as DebugProtocol.ScopesResponse).command === 'scopes') {
             (message as DebugProtocol.ScopesResponse).body.scopes.forEach((s) => {
-                this.RunByLineVariables(s.variablesReference);
+                this.runByLineVariables(s.variablesReference);
             });
         }
 
