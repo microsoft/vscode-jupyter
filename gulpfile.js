@@ -35,13 +35,14 @@ gulp.task('compile', async (done) => {
     }
 });
 
-gulp.task('createNycFolder', () => {
+gulp.task('createNycFolder', async (done) => {
     try {
         const fs = require('fs');
         fs.mkdirSync(path.join(__dirname, '.nyc_output'));
     } catch (e) {
         //
     }
+    done();
 });
 
 gulp.task('output:clean', () => del(['coverage']));
