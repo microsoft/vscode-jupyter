@@ -44,7 +44,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             workspaceService,
             (c, v, d) => new PlotViewerMessageListener(c, v, d),
             plotDir,
-            [path.join(plotDir, 'commons.initial.bundle.js'), path.join(plotDir, 'plotViewer.js')],
+            [path.join(plotDir, 'plotViewer.js')],
             localize.DataScience.plotViewerTitle(),
             ViewColumn.One
         );

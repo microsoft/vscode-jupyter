@@ -75,7 +75,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             workspaceService,
             (c, v, d) => new DataViewerMessageListener(c, v, d),
             dataExplorerDir,
-            [path.join(dataExplorerDir, 'commons.initial.bundle.js'), path.join(dataExplorerDir, 'dataExplorer.js')],
+            [path.join(dataExplorerDir, 'dataExplorer.js')],
             localize.DataScience.dataExplorerTitle(),
             globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One
         );

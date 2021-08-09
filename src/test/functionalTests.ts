@@ -90,8 +90,13 @@ exports.mochaHooks = {
 
         // Output the nyc coverage if we have any
         if (nyc) {
-            nyc.writeCoverageFile();
-            nycPromise = nyc.report();
+            try {
+                nyc.writeCoverageFile();
+                nycPromise = nyc.report();
+            } catch (ex) {
+                console.error(`Failed to generate NYC reports`, ex);
+                nycPromise = Promise.resolve();
+            }
         }
 
         const kernelLauncherMod = require('../client/datascience/kernel-launcher/kernelLauncher');
