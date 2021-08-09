@@ -27,8 +27,6 @@ suite('DataScience - Export Python', function () {
             // eslint-disable-next-line no-invalid-this
             this.skip();
         }
-        // eslint-disable-next-line no-invalid-this
-        this.skip();
     });
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
@@ -47,6 +45,7 @@ suite('DataScience - Export Python', function () {
         );
 
         const documentManager = api.serviceContainer.get<IDocumentManager>(IDocumentManager);
-        assert.include(documentManager.activeTextEditor!.document.getText(), 'tim = 1');
+        const document = await documentManager.openTextDocument(target);
+        assert.include(document.getText(), 'tim = 1');
     });
 });

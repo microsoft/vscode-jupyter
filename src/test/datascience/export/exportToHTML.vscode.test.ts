@@ -14,7 +14,7 @@ import { closeActiveWindows, initialize } from '../../initialize';
 
 suite('DataScience - Export HTML', function () {
     let api: IExtensionTestApi;
-    this.timeout(10_000);
+    this.timeout(20_000);
     suiteSetup(async function () {
         api = await initialize();
         // Export to HTML tests require jupyter to run. Othewrise can't
@@ -26,8 +26,6 @@ suite('DataScience - Export HTML', function () {
             // eslint-disable-next-line no-invalid-this
             this.skip();
         }
-        // eslint-disable-next-line no-invalid-this
-        this.skip();
     });
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
