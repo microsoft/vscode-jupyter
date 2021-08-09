@@ -21,7 +21,7 @@ import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
-import { IDebuggingCellMap, IJupyterVariablesResponse, INotebookProvider } from '../../datascience/types';
+import { IDebuggingCellMap, INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { INotebookControllerManager } from '../../datascience/notebook/types';
@@ -34,7 +34,6 @@ import { Commands as DSCommands } from '../../datascience/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IDebuggingManager } from '../types';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { convertDebugProtocolVariableToIJupyterVariable } from '../../datascience/jupyter/debuggerVariables';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -82,7 +81,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
     private notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapter>();
     private readonly disposables: IDisposable[] = [];
-    private readonly _onDidFireVariablesEvent = new EventEmitter<IJupyterVariablesResponse>();
+    private readonly _onDidFireVariablesEvent = new EventEmitter<void>();
 
     public constructor(
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
@@ -92,18 +91,16 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystem) private fs: IFileSystem,
-        // @inject(IJupyterDebugService)
-        // @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
-        // private debugService: IJupyterDebugService
-    ) {
+        @inject(IFileSystem) private fs: IFileSystem // @inject(IJupyterDebugService) // @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
+    ) // private debugService: IJupyterDebugService
+    {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
         this.updateToolbar(false);
         this.updateCellToolbar(false);
     }
 
-    public get onDidFireVariablesEvent(): Event<IJupyterVariablesResponse> {
+    public get onDidFireVariablesEvent(): Event<void> {
         return this._onDidFireVariablesEvent.event;
     }
 
@@ -160,20 +157,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                                 );
                                 this.disposables.push(
                                     adapter.onDidSendMessage((msg: DebugProtocolMessage) => {
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                         if ((msg as DebugProtocol.VariablesResponse).command === 'variables') {
-                                            // this.debugService.requestVariables().ignoreErrors();
-                                            const qwe = (msg as DebugProtocol.VariablesResponse).body.variables.map((v) => {
-                                                return convertDebugProtocolVariableToIJupyterVariable(v);
-                                            });
-                                            const asd: IJupyterVariablesResponse = {
-                                                executionCount: 0,
-                                                totalCount: (msg as DebugProtocol.VariablesResponse).body.variables.length,
-                                                pageStartIndex: 0,
-                                                pageResponse: qwe,
-                                                refreshCount: 0
-                                            }
-                                            this._onDidFireVariablesEvent.fire(asd);
+                                            this._onDidFireVariablesEvent.fire();
                                         }
                                     })
                                 );

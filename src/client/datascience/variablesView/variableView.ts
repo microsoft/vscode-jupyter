@@ -30,7 +30,6 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse,
     INotebook,
     IThemeFinder
 } from '../types';
@@ -220,38 +219,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
     }
 
-    private async sendRefreshMessage(vars: IJupyterVariablesResponse) {
-        if (this.notebookWatcher.activeNotebookExecutionCount !== undefined) {
-            this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
-                executionCount: this.notebookWatcher.activeNotebookExecutionCount
-            }).ignoreErrors();
-
-            // const args: IJupyterVariablesRequest = {
-            //     executionCount: this.notebookWatcher.activeNotebookExecutionCount,
-            //     sortColumn: 'name',
-            //     startIndex: 0,
-            //     sortAscending: true,
-            //     pageSize: 5,
-            //     refreshCount: 1
-            // };
-            // await this.requestVariables(args);
-
-            // export interface IJupyterVariablesResponse {
-            //     executionCount: number;
-            //     totalCount: number;
-            //     pageStartIndex: number;
-            //     pageResponse: IJupyterVariable[];
-            //     refreshCount: number;
-            // }
-            // const response = await this.variables.getVariables(args, this.notebookWatcher.activeNotebook);
-            vars.executionCount = this.notebookWatcher.activeNotebookExecutionCount;
-
-            this.postMessage(InteractiveWindowMessages.GetVariablesResponse, vars).ignoreErrors();
-            sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, {
-                variableCount: vars.totalCount
-            });
-
-            this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
-        }
+    private async sendRefreshMessage() {
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 }
