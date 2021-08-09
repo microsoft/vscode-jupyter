@@ -340,223 +340,223 @@ jobs:
           path: .nyc_output
           retention-days: 1
 
-  tests:
-    needs: pick_environment
-    name: Functional Jupyter Tests
-    runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyter'
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
-        python: [3.8]
-        test-suite: [group1, group2]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+#   tests:
+#     needs: pick_environment
+#     name: Functional Jupyter Tests
+#     runs-on: ${{ matrix.os }}
+#     if: github.repository == 'microsoft/vscode-jupyter'
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
+#         python: [3.8]
+#         test-suite: [group1, group2]
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v2
 
-      - name: Use conda for group1 and group3
-        if: matrix.test-suite == 'group1' || matrix.test-suite == 'group3'
-        run: |
-          echo "conda_python=true" >> $GITHUB_ENV
+#       - name: Use conda for group1 and group3
+#         if: matrix.test-suite == 'group1' || matrix.test-suite == 'group3'
+#         run: |
+#           echo "conda_python=true" >> $GITHUB_ENV
 
-      - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.python}}
+#       - name: Use Python ${{matrix.python}}
+#         uses: actions/setup-python@v2
+#         with:
+#           python-version: ${{matrix.python}}
 
-      - name: Use Conda Python ${{matrix.python}}
-        uses: conda-incubator/setup-miniconda@v2
-        if: env.conda_python
-        with:
-          auto-update-conda: true
-          activate-environment: functional_test_env
-          python-version: ${{matrix.python}}
+#       - name: Use Conda Python ${{matrix.python}}
+#         uses: conda-incubator/setup-miniconda@v2
+#         if: env.conda_python
+#         with:
+#           auto-update-conda: true
+#           activate-environment: functional_test_env
+#           python-version: ${{matrix.python}}
 
-      - name: Set CI Path
-        uses: ./.github/actions/set-python
-        id: set-python
-        if: env.conda_python == ''
-        with:
-          PYTHON_VERSION: ${{matrix.python}}
+#       - name: Set CI Path
+#         uses: ./.github/actions/set-python
+#         id: set-python
+#         if: env.conda_python == ''
+#         with:
+#           PYTHON_VERSION: ${{matrix.python}}
 
-      - name: Set CI Path for Conda
-        uses: ./.github/actions/set-python-conda
-        id: set-python-conda
-        if: env.conda_python
-        with:
-          PYTHON_VERSION: ${{matrix.python}}
+#       - name: Set CI Path for Conda
+#         uses: ./.github/actions/set-python-conda
+#         id: set-python-conda
+#         if: env.conda_python
+#         with:
+#           PYTHON_VERSION: ${{matrix.python}}
 
-      - name: Upgrade pip
-        run: python -m pip install -U pip
+#       - name: Upgrade pip
+#         run: python -m pip install -U pip
 
-      - name: Show python version
-        run: python --version
+#       - name: Show python version
+#         run: python --version
 
-      - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.1.5
-        with:
-          node-version: ${{env.NODE_VERSION}}
+#       - name: Use Node ${{env.NODE_VERSION}}
+#         uses: actions/setup-node@v2.1.5
+#         with:
+#           node-version: ${{env.NODE_VERSION}}
 
-      # Start caching
+#       # Start caching
 
-      # Cache Python Dependencies.
-      # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
-      - name: Cache pip on linux
-        uses: actions/cache@v2.1.4
-        if: matrix.os == 'ubuntu-latest'
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+#       # Cache Python Dependencies.
+#       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
+#       - name: Cache pip on linux
+#         uses: actions/cache@v2.1.4
+#         if: matrix.os == 'ubuntu-latest'
+#         with:
+#           path: ~/.cache/pip
+#           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
+#           restore-keys: |
+#             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
 
-      - name: Cache pip on mac
-        uses: actions/cache@v2.1.4
-        if: matrix.os == 'macos-latest'
-        with:
-          path: ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+#       - name: Cache pip on mac
+#         uses: actions/cache@v2.1.4
+#         if: matrix.os == 'macos-latest'
+#         with:
+#           path: ~/Library/Caches/pip
+#           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
+#           restore-keys: |
+#             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
 
-      - name: Cache pip on windows
-        uses: actions/cache@v2.1.4
-        if: matrix.os == 'windows-latest'
-        with:
-          path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+#       - name: Cache pip on windows
+#         uses: actions/cache@v2.1.4
+#         if: matrix.os == 'windows-latest'
+#         with:
+#           path: ~\AppData\Local\pip\Cache
+#           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('test-requirements.txt')}}-${{hashFiles('ipython-test-requirements.txt')}}-${{hashFiles('functional-test-requirements.txt')}}-${{hashFiles('conda-functional-requirements.txt')}}
+#           restore-keys: |
+#             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
 
-      # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
-      - name: Cache npm on linux/mac
-        uses: actions/cache@v2.1.4
-        if: matrix.os != 'windows-latest'
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+#       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
+#       - name: Cache npm on linux/mac
+#         uses: actions/cache@v2.1.4
+#         if: matrix.os != 'windows-latest'
+#         with:
+#           path: ~/.npm
+#           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+#           restore-keys: |
+#             ${{ runner.os }}-node-
 
-      - name: Get npm cache directory
-        if: matrix.os == 'windows-latest'
-        id: npm-cache
-        run: |
-          echo "::set-output name=dir::$(npm config get cache)"
-      - name: Cache npm on windows
-        uses: actions/cache@v2.1.4
-        if: matrix.os == 'windows-latest'
-        with:
-          path: ${{ steps.npm-cache.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+#       - name: Get npm cache directory
+#         if: matrix.os == 'windows-latest'
+#         id: npm-cache
+#         run: |
+#           echo "::set-output name=dir::$(npm config get cache)"
+#       - name: Cache npm on windows
+#         uses: actions/cache@v2.1.4
+#         if: matrix.os == 'windows-latest'
+#         with:
+#           path: ${{ steps.npm-cache.outputs.dir }}
+#           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+#           restore-keys: |
+#             ${{ runner.os }}-node-
 
-      - name: Cache compiled TS files
-        id: out-cache
-        uses: actions/cache@v2.1.4
-        with:
-          path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+#       - name: Cache compiled TS files
+#         id: out-cache
+#         uses: actions/cache@v2.1.4
+#         with:
+#           path: ./out
+#           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
-      # For faster/better builds of sdists.
-      - run: python -m pip install wheel
-        shell: bash
+#       # For faster/better builds of sdists.
+#       - run: python -m pip install wheel
+#         shell: bash
 
-      # debugpy is not shipped, only installed for local tests.
-      # In production, we get debugpy from python extension.
-      # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
-      - name: Install Python Libs
-        if: env.conda_python == ''
-        run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
-          python -m pip install numpy
-          python -m pip install --upgrade jupyter
-          python -m pip install --upgrade -r build/test-requirements.txt
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          python -m ipykernel install --user
-          python -m pip install tensorflow
-          python -m pip uninstall jedi --yes
-          python -m pip install jedi==0.17.2
+#       # debugpy is not shipped, only installed for local tests.
+#       # In production, we get debugpy from python extension.
+#       # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
+#       - name: Install Python Libs
+#         if: env.conda_python == ''
+#         run: |
+#           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+#           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+#           python ./pythonFiles/install_debugpy.py
+#           python -m pip install numpy
+#           python -m pip install --upgrade jupyter
+#           python -m pip install --upgrade -r build/test-requirements.txt
+#           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+#           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+#           python -m ipykernel install --user
+#           python -m pip install tensorflow
+#           python -m pip uninstall jedi --yes
+#           python -m pip install jedi==0.17.2
 
-      # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
-      - name: Install Python Libs for conda
-        shell: bash -l {0}
-        if: env.conda_python
-        run: |
-          conda activate functional_test_env
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
-          conda env update --file ./build/conda-functional-requirements.yml
-          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          python -m pip uninstall jedi --yes
-          python -m pip install jedi==0.17.2
-          conda install pytorch cpuonly -c pytorch
+#       # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
+#       - name: Install Python Libs for conda
+#         shell: bash -l {0}
+#         if: env.conda_python
+#         run: |
+#           conda activate functional_test_env
+#           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+#           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+#           python ./pythonFiles/install_debugpy.py
+#           conda env update --file ./build/conda-functional-requirements.yml
+#           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+#           python -m pip uninstall jedi --yes
+#           python -m pip install jedi==0.17.2
+#           conda install pytorch cpuonly -c pytorch
 
-      # Install PyTorch with pip
-      - name: Install PyTorch on Windows and Linux
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
-        run: pip install torch==1.7.1+cpu torchvision==0.8.2+cpu torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
+#       # Install PyTorch with pip
+#       - name: Install PyTorch on Windows and Linux
+#         if: matrix.python != 'conda' && matrix.python != 'noPython' && (matrix.os == 'windows-latest' || matrix.os == 'ubuntu-latest')
+#         run: pip install torch==1.7.1+cpu torchvision==0.8.2+cpu torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html
 
-      - name: Install PyTorch on Mac
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os == 'macos-latest'
-        run: pip install torch torchvision torchaudio
+#       - name: Install PyTorch on Mac
+#         if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os == 'macos-latest'
+#         run: pip install torch torchvision torchaudio
 
 
-      - name: Use Conda Python ${{matrix.python}}
-        uses: conda-incubator/setup-miniconda@v2
-        if: env.conda_python
-        with:
-          auto-update-conda: true
-          activate-environment: functional_test_env_2
-          python-version: ${{matrix.python}}
+#       - name: Use Conda Python ${{matrix.python}}
+#         uses: conda-incubator/setup-miniconda@v2
+#         if: env.conda_python
+#         with:
+#           auto-update-conda: true
+#           activate-environment: functional_test_env_2
+#           python-version: ${{matrix.python}}
 
-      - name: Install secondary conda environment
-        shell: bash -l {0}
-        if: env.conda_python
-        run: |
-          conda activate functional_test_env_2
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
-          conda env update --file ./build/conda-functional-requirements.yml
-          python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
-          conda install pytorch cpuonly -c pytorch
+#       - name: Install secondary conda environment
+#         shell: bash -l {0}
+#         if: env.conda_python
+#         run: |
+#           conda activate functional_test_env_2
+#           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+#           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+#           python ./pythonFiles/install_debugpy.py
+#           conda env update --file ./build/conda-functional-requirements.yml
+#           python -m pip install --upgrade -r ./build/conda-functional-requirements.txt
+#           conda install pytorch cpuonly -c pytorch
 
-        # This step is slow.
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+#         # This step is slow.
+#       - name: Install dependencies (npm ci)
+#         run: npm ci --prefer-offline
 
-        # This step is slow.
-      - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
+#         # This step is slow.
+#       - name: Compile if not cached
+#         run: npx gulp prePublishNonBundle
 
-      - name: Run functional tests
-        shell: bash -l {0}
-        run: npm run test:functional:parallel -- --${{matrix.test-suite}}
-        env:
-          VSC_FORCE_REAL_JUPYTER: 1
-          VSC_JUPYTER_FORCE_LOGGING: 1
-        id: test_functional_group
+#       - name: Run functional tests
+#         shell: bash -l {0}
+#         run: npm run test:functional:parallel -- --${{matrix.test-suite}}
+#         env:
+#           VSC_FORCE_REAL_JUPYTER: 1
+#           VSC_JUPYTER_FORCE_LOGGING: 1
+#         id: test_functional_group
 
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v2
-        if: steps.test_functional_group.outcome == 'failure' && failure()
-        with:
-          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
+#       - name: Upload screenshots
+#         uses: actions/upload-artifact@v2
+#         if: steps.test_functional_group.outcome == 'failure' && failure()
+#         with:
+#           path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
 
-      - name: Publish Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Functional Test Report ${{matrix.test-suite}} ${{matrix.os}}
-        if: steps.test_functional_group.outcome == 'failure' && failure()
+#       - name: Publish Test Report
+#         uses: scacap/action-surefire-report@v1
+#         with:
+#           github_token: ${{ secrets.GITHUB_TOKEN }}
+#           report_paths: ${{ env.TEST_RESULTS_GLOB }}
+#           check_name: Functional Test Report ${{matrix.test-suite}} ${{matrix.os}}
+#         if: steps.test_functional_group.outcome == 'failure' && failure()
 
     # Mosts tests are commented, hence nothing runs, thus no coverage (if not commented, CI falls over as this code expects coverage files)
     #   # Upload unit test coverage reports for later use in the "reports" job.
