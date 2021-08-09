@@ -137,11 +137,11 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await waitForKernelToGetAutoSelected();
         await insertMarkdownCell('# Hello');
-        await saveActiveNotebook([]);
+        await saveActiveNotebook();
 
         // Add another cell, to ensure changes are detected by our code.
         await insertMarkdownCell('# Hello');
-        await saveActiveNotebook([]);
+        await saveActiveNotebook();
         await closeNotebooks();
 
         // Wait for the default cell language to change.

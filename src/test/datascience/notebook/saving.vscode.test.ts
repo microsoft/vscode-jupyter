@@ -119,7 +119,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         verifyCelMetadata();
 
         // Save and close this nb.
-        await saveActiveNotebook(disposables);
+        await saveActiveNotebook();
         await closeActiveWindows();
 
         // Reopen the notebook & validate the metadata.

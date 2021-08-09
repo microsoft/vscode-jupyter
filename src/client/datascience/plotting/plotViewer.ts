@@ -10,7 +10,7 @@ import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
 import { traceInfo } from '../../../client/common/logger';
 import { createDeferred } from '../../../client/common/utils/async';
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 
 import { IFileSystem } from '../../common/platform/types';
@@ -34,8 +34,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IFileSystem) private fs: IFileSystem,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
+        @inject(IFileSystem) private fs: IFileSystem
     ) {
         super(
             configuration,
@@ -47,8 +46,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             plotDir,
             [path.join(plotDir, 'commons.initial.bundle.js'), path.join(plotDir, 'plotViewer.js')],
             localize.DataScience.plotViewerTitle(),
-            ViewColumn.One,
-            useCustomEditorApi
+            ViewColumn.One
         );
         // Load the web panel using our current directory as we don't expect to load any other files
         super.loadWebview(process.cwd()).catch(traceError);

@@ -4,10 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, UIKind } from 'vscode';
+import { UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
-import { UseVSCodeNotebookEditorApi } from '../common/constants';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import {
@@ -16,16 +15,14 @@ import {
     IJupyterExtensionBanner,
     IPersistentState,
     IPersistentStateFactory,
-    IsCodeSpace,
-    ISurveyBanner
+    IsCodeSpace
 } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { MillisecondsInADay } from '../constants';
-import { InteractiveWindowMessages, IReExecuteCells } from './interactive-common/interactiveWindowTypes';
 import { JupyterNotebookView } from './notebook/constants';
 import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
-import { IInteractiveWindowListener, INotebookEditorProvider, INotebookExtensibility } from './types';
+import { INotebookEditorProvider, INotebookExtensibility } from './types';
 
 export enum DSSurveyStateKeys {
     ShowBanner = 'ShowDSSurveyBanner',
@@ -56,43 +53,6 @@ enum DSSurveyLabelIndex {
     No
 }
 
-@injectable()
-export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private postEmitter = new EventEmitter<{ message: string; payload: any }>();
-    constructor(
-        @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-        @inject(ISurveyBanner)
-        private readonly dataScienceSurveyBanner: ISurveyBanner
-    ) {}
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public get postMessage(): Event<{ message: string; payload: any }> {
-        return this.postEmitter.event;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public onMessage(message: string, payload?: any): void {
-        if (message === InteractiveWindowMessages.ReExecuteCells) {
-            const args = payload as IReExecuteCells;
-            if (args && args.cellIds.length) {
-                const state = this.persistentState.createGlobalPersistentState<number>(
-                    DSSurveyStateKeys.ExecutionCount,
-                    0
-                );
-                state
-                    .updateValue(state.value + args.cellIds.length)
-                    .then(() => {
-                        // On every update try to show the banner.
-                        return this.dataScienceSurveyBanner.showBanner(BannerType.DSSurvey);
-                    })
-                    .ignoreErrors();
-            }
-        }
-    }
-    public dispose(): void | undefined {
-        noop();
-    }
-}
-
 export type ShowBannerWithExpiryTime = {
     /**
      * This value is not used.
@@ -112,19 +72,16 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     public isEnabled(type: BannerType): boolean {
         switch (type) {
             case BannerType.InsidersNotebookSurvey:
-                if (this.applicationEnvironment.channel === 'insiders' && this.useVSCodeNotebookEditorApi) {
+                if (this.applicationEnvironment.channel === 'insiders') {
                     return this.isEnabledInternal(type);
                 }
                 break;
             case BannerType.ExperimentNotebookSurvey:
-                if (this.applicationEnvironment.channel === 'stable' && this.useVSCodeNotebookEditorApi) {
+                if (this.applicationEnvironment.channel === 'stable') {
                     return this.isEnabledInternal(type);
                 }
                 break;
             case BannerType.DSSurvey:
-                if (this.applicationEnvironment.channel === 'stable' && !this.useVSCodeNotebookEditorApi) {
-                    return this.isEnabledInternal(type);
-                }
                 break;
             default:
                 traceError('Invalid Banner Type');
@@ -160,8 +117,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(UseVSCodeNotebookEditorApi) private useVSCodeNotebookEditorApi: boolean
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
         this.setPersistentState(BannerType.DSSurvey, DSSurveyStateKeys.ShowBanner);
         this.setPersistentState(BannerType.InsidersNotebookSurvey, InsidersNotebookSurveyStateKeys.ShowBanner);

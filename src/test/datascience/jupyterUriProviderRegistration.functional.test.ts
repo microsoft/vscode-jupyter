@@ -1,7 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
-export const _ = '';
+suite('Dummy', () => {
+    test('dummy', () => {
+        //
+    });
+});
 // import * as assert from 'assert';
 
 // import { Event, EventEmitter, Extension, ExtensionKind, QuickPickItem, Uri } from 'vscode';
