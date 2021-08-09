@@ -26,6 +26,10 @@ export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivat
 
     private messageDisplayed?: boolean;
     public async activate(): Promise<void> {
+        if (this.memento.get<boolean>(IntroduceNativeNotebookDisplayed, false)) {
+            return;
+        }
+
         this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         if (this.vscodeNotebook.notebookDocuments.length) {
             void this.notify();
