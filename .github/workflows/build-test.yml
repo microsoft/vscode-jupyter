@@ -328,6 +328,10 @@ jobs:
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Ts-Unit Test Report
 
+      - name: Create coverage folder (if not created)
+        id: test_unittests
+        run: mkdir -p .nyc_output
+
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
@@ -926,6 +930,10 @@ jobs:
           check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
         if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
 
+      - name: Create coverage folder (if not created)
+        id: test_unittests
+        run: mkdir -p .nyc_output
+
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
@@ -1017,6 +1025,10 @@ jobs:
         with:
           name: smoke-test-${{matrix.os}}.log
           path: './smoke-test.log'
+
+      - name: Create coverage folder (if not created)
+        id: test_unittests
+        run: mkdir -p .nyc_output
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
