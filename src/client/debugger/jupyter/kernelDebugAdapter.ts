@@ -24,6 +24,7 @@ import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IKernelDebugAdapter } from '../types';
+import { IDisposable } from '../../common/types';
 
 const debugRequest = (message: DebugProtocol.Request, jupyterSessionId: string): KernelMessage.IDebugRequestMsg => {
     return {
@@ -94,13 +95,14 @@ interface debugInfoResponseBreakpoint {
 // For info on the custom requests implemented by jupyter see:
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#additions-to-the-dap
-export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
+export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, IDisposable {
     private readonly fileToCell = new Map<string, NotebookCell>();
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private isRunByLine = false;
     private runByLineThreadId: number = 1;
     private runByLineSeq: number = 0;
+    private readonly disposables: IDisposable[] = [];
 
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
 
@@ -129,12 +131,16 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         this.jupyterSession.onIOPubMessage(iopubHandler);
 
         void this.dumpCellsThatRanBeforeDebuggingBegan();
-        notebooks.onDidChangeNotebookCellExecutionState((cellStateChange: NotebookCellExecutionStateChangeEvent) => {
-            // If a cell has moved to idle, stop the run by line session
-            if (cellStateChange.state === NotebookCellExecutionState.Idle) {
-                this.runByLineStop();
-            }
-        }, this);
+        notebooks.onDidChangeNotebookCellExecutionState(
+            (cellStateChange: NotebookCellExecutionStateChangeEvent) => {
+                // If a cell has moved to idle, stop the run by line session
+                if (cellStateChange.state === NotebookCellExecutionState.Idle) {
+                    this.runByLineStop();
+                }
+            },
+            this,
+            this.disposables
+        );
     }
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
@@ -206,6 +212,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
     }
 
     dispose() {
+        this.disposables.forEach((d) => d.dispose());
         // clean temp files
         this.cellToFile.forEach((tempPath) => {
             const norm = path.normalize(tempPath);
