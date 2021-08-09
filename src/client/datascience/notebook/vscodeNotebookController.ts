@@ -240,7 +240,7 @@ export class VSCodeNotebookController implements Disposable {
             join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
             join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
             join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
-            join(this.context.extensionPath, 'out', 'datascience-ui', 'fontAwesome', 'fontAwesomeLoader.js')
+            join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
         ].map((uri) => new NotebookRendererScript(Uri.file(uri)));
     }
 

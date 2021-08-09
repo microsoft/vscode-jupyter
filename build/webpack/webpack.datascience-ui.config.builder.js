@@ -145,7 +145,8 @@ function buildConfiguration(bundle) {
             ...[
                 {
                     from: 'node_modules/font-awesome/**/*',
-                    context: './'
+                    context: './',
+                    to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
                 },
                 {
                     from: path.join(
@@ -156,7 +157,7 @@ function buildConfiguration(bundle) {
                         'notebook',
                         'fontAwesomeLoader.js'
                     ),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'fontAwesome')
+                    to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
                 }
             ]
         );
