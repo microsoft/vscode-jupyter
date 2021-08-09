@@ -329,7 +329,7 @@ jobs:
           check_name: Ts-Unit Test Report
 
       - name: Create coverage folder (if not created)
-        run: mkdir -p .nyc_output
+        run: npx gulp createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
@@ -930,7 +930,7 @@ jobs:
         if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
 
       - name: Create coverage folder (if not created)
-        run: mkdir -p .nyc_output
+        run: npx gulp createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
@@ -1025,7 +1025,7 @@ jobs:
           path: './smoke-test.log'
 
       - name: Create coverage folder (if not created)
-        run: mkdir -p .nyc_output
+        run: npx gulp createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
