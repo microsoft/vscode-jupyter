@@ -48,7 +48,6 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { handleTensorBoardDisplayDataOutput } from '../notebook/helpers/executionHelpers';
 import {
     getInterpreterFromKernelConnectionMetadata,
-    getKernelConnectionLanguage,
     isPythonKernelConnection,
     sendTelemetryForPythonKernelExecutable
 } from './kernels/helpers';
@@ -225,8 +224,6 @@ export class JupyterNotebookBase implements INotebook {
 
         // Make a copy of the launch info so we can update it in this class
         this._executionInfo = cloneDeep(executionInfo);
-
-        this.logKernelStarted().ignoreErrors();
     }
 
     public get connection() {
@@ -530,8 +527,6 @@ export class JupyterNotebookBase implements INotebook {
             await this.initialize();
             traceInfo('restartKernel - initialSetup completed');
 
-            // Tell our loggers
-            this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
             traceInfo(`Time to restart kernel is ${(Date.now() - this.sessionStartTime) / 1000}s`);
             this.kernelRestarted.fire();
             return;
@@ -793,10 +788,6 @@ export class JupyterNotebookBase implements INotebook {
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
         }
-    }
-
-    private async logKernelStarted() {
-        this.loggers.forEach((l) => l.onKernelStarted(this.getNotebookId()));
     }
 
     private async initializeMatplotlib(cancelToken?: CancellationToken): Promise<void> {
@@ -1225,38 +1216,17 @@ export class JupyterNotebookBase implements INotebook {
             // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
             // run before our cells.
             subscriber.next(cell);
-            const isSilent = silent !== undefined ? silent : false;
-
             // Wrap the subscriber and save it. It is now pending and waiting completion. Have to do this
             // synchronously so it happens before interruptions.
             const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
                 // Subscriber completed, remove from subscriptions.
                 this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter((p) => p !== self);
-
-                // Indicate success or failure
-                this.logPostCode(cell, isSilent).ignoreErrors();
             });
             this.pendingCellSubscriptions.push(cellSubscriber);
 
-            // Log the pre execution.
-            this.logPreCode(cell, isSilent)
-                .then(() => {
-                    // Now send our real request. This should call back on the cellsubscriber when it's done.
-                    this.handleCodeRequest(cellSubscriber, silent);
-                })
-                .ignoreErrors();
+            // Now send our real request. This should call back on the cellsubscriber when it's done.
+            this.handleCodeRequest(cellSubscriber, silent);
         });
-    }
-
-    private async logPreCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this.loggers.map((l) => l.preExecute(cell, silent)));
-    }
-
-    private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
-        const language = getKernelConnectionLanguage(this.getKernelConnection()) || PYTHON_LANGUAGE;
-        await Promise.all(
-            this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent, language, this.getNotebookId()))
-        );
     }
 
     private addToCellData = (
@@ -1483,9 +1453,5 @@ export class JupyterNotebookBase implements INotebook {
         }
 
         return outputString.substr(outputString.length - outputLimit);
-    }
-
-    private getNotebookId(): Uri {
-        return this.identity;
     }
 }

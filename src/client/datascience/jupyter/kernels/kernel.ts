@@ -351,7 +351,7 @@ export class Kernel implements IKernel {
     }
 
     private async disableJedi() {
-        await this.executeSilently(CodeSnippets.disableJedi);
+        // await this.executeSilently(CodeSnippets.disableJedi);
     }
 
     /**

@@ -27,14 +27,7 @@ import { Telemetry } from '../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
-import {
-    INotebook,
-    INotebookEditor,
-    INotebookExecutionLogger,
-    INotebookProvider,
-    InterruptResult,
-    IStatusProvider
-} from '../types';
+import { INotebook, INotebookEditor, INotebookProvider, InterruptResult, IStatusProvider } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 import { getNotebookMetadata } from './helpers/helpers';
@@ -77,7 +70,6 @@ export class NotebookEditor implements INotebookEditor {
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
         private readonly cellLanguageService: NotebookCellLanguageService,
-        private loggers: INotebookExecutionLogger[],
         private extensions: IExtensions
     ) {
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
@@ -338,7 +330,6 @@ export class NotebookEditor implements INotebookEditor {
         } finally {
             status.dispose();
             this.restartingKernel = false;
-            this.loggers.forEach((l) => l.onKernelRestarted(this.file));
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {

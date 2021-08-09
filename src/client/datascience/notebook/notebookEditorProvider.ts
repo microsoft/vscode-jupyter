@@ -25,13 +25,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, defaultNotebookFormat, Telemetry } from '../constants';
 import { IKernelProvider } from '../jupyter/kernels/types';
-import {
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookExecutionLogger,
-    INotebookProvider,
-    IStatusProvider
-} from '../types';
+import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { JupyterNotebookView } from './constants';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';
@@ -190,7 +184,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!editor) {
             const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
             const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
-            const loggers = this.serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger);
             editor = new NotebookEditor(
                 doc,
                 this.vscodeNotebook,
@@ -202,8 +195,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 this.configurationService,
                 this.disposables,
                 this.cellLanguageService,
-                loggers,
-                this.extensions
+                this.extensions,
+                serializer
             );
             this.onEditorOpened(editor);
         }
