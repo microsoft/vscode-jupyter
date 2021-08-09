@@ -1020,7 +1020,7 @@ jobs:
           run: ${{ env.xvfbCommand }} npm run testSmokeLogged
 
       - name: Run smoke tests
-        if: matrix.os !== 'ubuntu-latest'
+        if: matrix.os != 'ubuntu-latest'
         run: npm run testSmokeLogged
 
       - name: Upload smoke-test log
