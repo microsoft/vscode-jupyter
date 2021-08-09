@@ -179,7 +179,7 @@
             },
             {
                 "key": "ctrl+enter",
-                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && config.jupyter.enableKeyboardShortcuts",
+                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.quitEdit"
             },
             {
@@ -189,7 +189,7 @@
             },
             {
                 "key": "shift+enter",
-                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && config.jupyter.enableKeyboardShortcuts",
+                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow"
             },
             {
