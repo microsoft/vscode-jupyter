@@ -104,11 +104,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         return noop();
     }
 
-    public async synchronize(_window: IInteractiveWindow): Promise<void> {
-        // TODO delete this method entirely
-        noop();
-    }
-
     // Note to future devs: this function must be synchronous. Do not await on anything before calling
     // the interactive window ctor and adding the interactive window to the provider's list of known windows.
     // Otherwise we risk a race condition where e.g. multiple run cell requests come in quick and we end up

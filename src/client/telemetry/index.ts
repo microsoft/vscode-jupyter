@@ -720,8 +720,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.OpenedInteractiveWindow]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
-    [Telemetry.RemoteAddCode]: never | undefined;
-    [Telemetry.RemoteReexecuteCode]: never | undefined;
     [Telemetry.RestartJupyterTime]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
     [Telemetry.RestartKernelCommand]: never | undefined;
@@ -864,7 +862,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.VariableExplorerToggled]: { open: boolean; runByLine: boolean };
     [Telemetry.VariableExplorerVariableCount]: { variableCount: number };
     [Telemetry.WaitForIdleJupyter]: never | undefined;
-    [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
     [Telemetry.WebviewStartup]: { type: string };
     [Telemetry.WebviewStyleUpdate]: never | undefined;
     [Telemetry.RegisterInterpreterAsKernel]: never | undefined;
@@ -1381,16 +1378,6 @@ export interface IEventNamePropertyMapping {
          */
         source: SliceOperationSource;
     };
-    /*
-     * Telemetry sent when we update custom editor associations.
-     */
-    [Telemetry.UpdateCustomEditorAssociation]: {
-        /**
-         * 'added' means we enabled custom editor for user and ensured ipynb opens with custom editor.
-         * 'removed' means we custom editor is not enabled for the user and ensured ipynb doesn't open with custom editor.
-         */
-        type: 'added' | 'removed';
-    } & Partial<TelemetryErrorProperties>;
     /*
      * Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
      */

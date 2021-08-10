@@ -6,15 +6,9 @@ import '../../../common/extensions';
 import { nbformat } from '@jupyterlab/coreutils';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import * as vsls from 'vsls/vscode';
 
 import { IPythonExtensionChecker } from '../../../api/types';
-import {
-    IApplicationShell,
-    ILiveShareApi,
-    IVSCodeNotebook,
-    IWorkspaceService
-} from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -29,7 +23,7 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Identifiers, LiveShare, LiveShareCommands, Settings, Telemetry } from '../../constants';
+import { Identifiers, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
 import {
     getDisplayNameOrNameOfKernelConnection,
@@ -38,8 +32,6 @@ import {
 } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
-import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
-import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher, ILocalKernelFinder } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
@@ -57,33 +49,32 @@ import { KernelSpecNotFoundError } from './kernelSpecNotFoundError';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { getResourceType } from '../../common';
 import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
+import { inject, injectable, named } from 'inversify';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class HostRawNotebookProvider
-    extends LiveShareParticipantHost(RawNotebookProviderBase, LiveShare.RawNotebookProviderService)
-    implements IRoleBasedObject, IRawNotebookProvider {
+@injectable()
+export class HostRawNotebookProvider extends RawNotebookProviderBase implements IRawNotebookProvider {
     private disposed = false;
     constructor(
-        private liveShare: ILiveShareApi,
-        _t: number,
-        private disposableRegistry: IDisposableRegistry,
-        asyncRegistry: IAsyncDisposableRegistry,
-        private configService: IConfigurationService,
-        private workspaceService: IWorkspaceService,
-        private appShell: IApplicationShell,
-        private fs: IFileSystem,
-        private serviceContainer: IServiceContainer,
-        private kernelLauncher: IKernelLauncher,
-        private localKernelFinder: ILocalKernelFinder,
-        private progressReporter: ProgressReporter,
-        private outputChannel: IOutputChannel,
-        rawNotebookSupported: IRawNotebookSupportedService,
-        private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly vscodeNotebook: IVSCodeNotebook
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
+        @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
+        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
+        @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook
     ) {
-        super(liveShare, asyncRegistry, rawNotebookSupported);
+        super(asyncRegistry, rawNotebookSupported);
     }
 
     public async dispose(): Promise<void> {
@@ -92,62 +83,6 @@ export class HostRawNotebookProvider
             await super.dispose();
         }
     }
-
-    public async onAttach(api: vsls.LiveShare | null): Promise<void> {
-        await super.onAttach(api);
-        if (api && !this.disposed) {
-            const service = await this.waitForService();
-            // Attach event handlers to different requests
-            if (service) {
-                service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) =>
-                    this.onSync()
-                );
-                service.onRequest(
-                    LiveShareCommands.rawKernelSupported,
-                    (_args: any[], _cancellation: CancellationToken) => this.supported()
-                );
-                service.onRequest(
-                    LiveShareCommands.createRawNotebook,
-                    async (args: any[], _cancellation: CancellationToken) => {
-                        const resource = this.parseUri(args[0]);
-                        const identity = this.parseUri(args[1]);
-                        const notebookMetadata = JSON.parse(args[2]) as nbformat.INotebookMetadata;
-                        const kernelConnection = JSON.parse(args[3]) as KernelConnectionMetadata;
-                        // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
-                        const notebook = (await this.createNotebook(
-                            identity!,
-                            resource,
-                            true, // Disable UI for this creation
-                            notebookMetadata,
-                            kernelConnection,
-                            undefined
-                        )) as HostJupyterNotebook;
-                        await notebook.onAttach(api);
-                    }
-                );
-            }
-        }
-    }
-
-    public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
-        await super.onSessionChange(api);
-
-        this.getNotebooks().forEach(async (notebook) => {
-            const hostNotebook = (await notebook) as HostJupyterNotebook;
-            if (hostNotebook) {
-                await hostNotebook.onSessionChange(api);
-            }
-        });
-    }
-
-    public async onDetach(api: vsls.LiveShare | null): Promise<void> {
-        await super.onDetach(api);
-    }
-
-    public async waitForServiceName(): Promise<string> {
-        return LiveShare.RawNotebookProviderService;
-    }
-
     protected async createNotebookInstance(
         resource: Resource,
         identity: vscode.Uri,
@@ -233,7 +168,6 @@ export class HostRawNotebookProvider
                 if (rawSession.isConnected) {
                     // Create our notebook
                     const notebook = new HostJupyterNotebook(
-                        this.liveShare,
                         rawSession,
                         this.configService,
                         this.disposableRegistry,
@@ -285,19 +219,5 @@ export class HostRawNotebookProvider
             workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
             purpose: Identifiers.RawPurpose
         };
-    }
-
-    private parseUri(uri: string | undefined): Resource {
-        const parsed = uri ? vscode.Uri.parse(uri) : undefined;
-        return parsed &&
-            parsed.scheme &&
-            parsed.scheme !== Identifiers.InteractiveWindowIdentityScheme &&
-            parsed.scheme === 'vsls'
-            ? this.finishedApi!.convertSharedUriToLocal(parsed)
-            : parsed;
-    }
-
-    private onSync(): Promise<any> {
-        return Promise.resolve(true);
     }
 }

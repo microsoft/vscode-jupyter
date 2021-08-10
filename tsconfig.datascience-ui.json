@@ -9,7 +9,7 @@
         "lib": ["es6", "dom"],
         "jsx": "react",
         "sourceMap": true,
-        "rootDirs": ["node_modules/vsls", "src", "types"],
+        "rootDirs": ["src", "types"],
         "paths": {
             "*": ["types/*"]
         },

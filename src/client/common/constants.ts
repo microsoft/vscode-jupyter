@@ -48,8 +48,4 @@ export function isUnitTestExecution(): boolean {
     return process.env.VSC_JUPYTER_UNIT_TEST === '1';
 }
 
-// Temporary constant, used to indicate whether we're using custom editor api or not.
-export const UseCustomEditorApi = Symbol('USE_CUSTOM_EDITOR');
-export const UseVSCodeNotebookEditorApi = Symbol('USE_NATIVEEDITOR');
-
 export * from '../constants';

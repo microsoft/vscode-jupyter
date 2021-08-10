@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
@@ -42,6 +43,7 @@ import { NotebookStarter } from './notebookStarter';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
+@injectable()
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonEnvironment | undefined;
     private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
@@ -51,7 +53,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
     private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
     constructor(
-        _liveShare: ILiveShareApi,
         private readonly interpreterService: IInterpreterService,
         private readonly disposableRegistry: IDisposableRegistry,
         private readonly workspace: IWorkspaceService,

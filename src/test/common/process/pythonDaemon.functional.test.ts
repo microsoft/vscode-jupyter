@@ -55,7 +55,7 @@ suite('Daemon', () => {
         }
     });
     setup(async function () {
-        if (isPythonVersion('2.7')) {
+        if (await isPythonVersion('2.7')) {
             // eslint-disable-next-line no-invalid-this
             return this.skip();
         }
@@ -63,8 +63,8 @@ suite('Daemon', () => {
         // pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'vscode_datascience_helpers.daemon', '-v', `--log-file=${path.join(EXTENSION_ROOT_DIR, 'test.log')}`], { env });
         pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'vscode_datascience_helpers.daemon'], { env });
         connection = createMessageConnection(
-            new StreamMessageReader(pythonProc.stdout),
-            new StreamMessageWriter(pythonProc.stdin)
+            new StreamMessageReader(pythonProc.stdout!),
+            new StreamMessageWriter(pythonProc.stdin!)
         );
         connection.listen();
         pythonExecutionService = mock<IPythonExecutionService>();

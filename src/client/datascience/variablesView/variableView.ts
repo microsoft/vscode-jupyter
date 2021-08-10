@@ -73,7 +73,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             (c, d) => new VariableViewMessageListener(c, d),
             provider,
             variableViewDir,
-            [path.join(variableViewDir, 'commons.initial.bundle.js'), path.join(variableViewDir, 'variableView.js')]
+            [path.join(variableViewDir, 'variableView.js')]
         );
 
         // Sign up if the active variable view notebook is changed, restarted or updated

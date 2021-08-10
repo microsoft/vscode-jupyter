@@ -1,8 +1,6 @@
-import { Octokit } from '@octokit/rest';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import {
-    authentication,
     Diagnostic,
     DiagnosticCollection,
     env,
@@ -143,26 +141,26 @@ ${'```'}
         return diagnostics;
     }
 
-    private async submitForUser(body: string) {
-        const title = await window.showInputBox({
-            ignoreFocusOut: true,
-            prompt: GitHubIssue.askForIssueTitle(),
-            placeHolder: GitHubIssue.titlePlaceholder()
-        });
-        const authSession = await authentication.getSession('github', ['repo'], { createIfNone: true });
-        if (authSession) {
-            const octokit = new Octokit({ auth: authSession.accessToken });
-            const response = await octokit.issues.create({
-                owner: 'microsoft',
-                repo: 'vscode-jupyter',
-                title: title ? title : 'Bug report',
-                body
-            });
-            if (response?.data?.html_url) {
-                await env.openExternal(Uri.parse(response.data.html_url));
-                this.closeIssueEditorOnSuccess();
-            }
-        }
+    private async submitForUser(_body: string) {
+        // const title = await window.showInputBox({
+        //     ignoreFocusOut: true,
+        //     prompt: GitHubIssue.askForIssueTitle(),
+        //     placeHolder: GitHubIssue.titlePlaceholder()
+        // });
+        // const authSession = await authentication.getSession('github', ['repo'], { createIfNone: true });
+        // if (authSession) {
+        //     const octokit = new Octokit({ auth: authSession.accessToken });
+        //     const response = await octokit.issues.create({
+        //         owner: 'microsoft',
+        //         repo: 'vscode-jupyter',
+        //         title: title ? title : 'Bug report',
+        //         body
+        //     });
+        //     if (response?.data?.html_url) {
+        //         await env.openExternal(Uri.parse(response.data.html_url));
+        //         this.closeIssueEditorOnSuccess();
+        //     }
+        // }
     }
 
     private closeIssueEditorOnSuccess() {

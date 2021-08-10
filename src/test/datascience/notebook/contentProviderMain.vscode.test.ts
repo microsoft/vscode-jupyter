@@ -4,7 +4,6 @@
 'use strict';
 
 import { assert } from 'chai';
-import { IDisposable } from 'monaco-editor';
 import { anything, instance, mock, when } from 'ts-mockito';
 import {
     EventEmitter,
@@ -20,6 +19,7 @@ import { disposeAllDisposables } from '../../../client/common/helpers';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/cellLanguageService';
 import { nbformat } from '@jupyterlab/coreutils';
 import { NotebookSerializer } from '../../../client/datascience/notebook/notebookSerializer';
+import { IDisposable } from '../../../client/common/types';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook ContentProvider', () => {
     let contentProvider: NotebookSerializer;

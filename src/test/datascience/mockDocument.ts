@@ -12,13 +12,6 @@ import {
     Uri
 } from 'vscode';
 
-import {
-    DefaultWordPattern,
-    ensureValidWordDefinition,
-    getWordAtText,
-    regExpLeadsToEndlessLoop
-} from '../../client/datascience/interactive-common/intellisense/wordHelper';
-
 class MockLine implements TextLine {
     private _range: Range;
     private _rangeWithLineBreak: Range;
@@ -153,28 +146,26 @@ export class MockDocument implements TextDocument {
             return this._contents.substr(startOffset, endOffset - startOffset);
         }
     }
-    public getWordRangeAtPosition(position: Position, regexp?: RegExp | undefined): Range | undefined {
-        if (!regexp) {
-            // use default when custom-regexp isn't provided
-            regexp = DefaultWordPattern;
-        } else if (regExpLeadsToEndlessLoop(regexp)) {
-            // use default when custom-regexp is bad
-            console.warn(
-                `[getWordRangeAtPosition]: ignoring custom regexp '${regexp.source}' because it matches the empty string.`
-            );
-            regexp = DefaultWordPattern;
-        }
-
-        const wordAtText = getWordAtText(
-            position.character + 1,
-            ensureValidWordDefinition(regexp),
-            this._lines[position.line].text,
-            0
-        );
-
-        if (wordAtText) {
-            return new Range(position.line, wordAtText.startColumn - 1, position.line, wordAtText.endColumn - 1);
-        }
+    public getWordRangeAtPosition(_position: Position, _regexp?: RegExp | undefined): Range | undefined {
+        // if (!regexp) {
+        //     // use default when custom-regexp isn't provided
+        //     regexp = DefaultWordPattern;
+        // } else if (regExpLeadsToEndlessLoop(regexp)) {
+        //     // use default when custom-regexp is bad
+        //     console.warn(
+        //         `[getWordRangeAtPosition]: ignoring custom regexp '${regexp.source}' because it matches the empty string.`
+        //     );
+        //     regexp = DefaultWordPattern;
+        // }
+        // const wordAtText = getWordAtText(
+        //     position.character + 1,
+        //     ensureValidWordDefinition(regexp),
+        //     this._lines[position.line].text,
+        //     0
+        // );
+        // if (wordAtText) {
+        //     return new Range(position.line, wordAtText.startColumn - 1, position.line, wordAtText.endColumn - 1);
+        // }
         return undefined;
     }
     public validateRange(range: Range): Range {
