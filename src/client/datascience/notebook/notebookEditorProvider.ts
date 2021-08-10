@@ -25,7 +25,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, defaultNotebookFormat, Telemetry } from '../constants';
 import { IKernelProvider } from '../jupyter/kernels/types';
-import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import {
     INotebookEditor,
     INotebookEditorProvider,
@@ -78,7 +77,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
-        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
@@ -245,10 +243,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             if (editor.model) {
                 editor.model.dispose();
             }
-        }
-        const model = this.storage.get(uri);
-        if (model) {
-            model.dispose();
         }
         this.notebookEditorsByUri.delete(uri.toString());
         this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());

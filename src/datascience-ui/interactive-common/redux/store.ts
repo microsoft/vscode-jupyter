@@ -10,7 +10,6 @@ import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { MessageType } from '../../../client/datascience/interactive-common/synchronization';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages } from '../../../client/datascience/messages';
 import { IMainState, ServerStatus } from '../../interactive-common/mainState';
@@ -82,18 +81,7 @@ function generateMainReducer<M>(
 
 function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
     return (_store) => (next) => (action) => {
-        const res = next(action);
-
-        // If the action is part of a sync message, then do not send it to the extension.
-        const messageType = (action?.payload as BaseReduxActionPayload).messageType ?? MessageType.other;
-        const isSyncMessage =
-            (messageType & MessageType.syncAcrossSameNotebooks) === MessageType.syncAcrossSameNotebooks &&
-            (messageType & MessageType.syncAcrossSameNotebooks) === MessageType.syncWithLiveShare;
-        if (isSyncMessage) {
-            return res;
-        }
-
-        return res;
+        return next(action);
     };
 }
 
@@ -192,7 +180,7 @@ function createMiddleWare(
 
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
-    const actionsWithLargePayload = [CssMessages.GetCssResponse, InteractiveWindowMessages.LoadTmLanguageResponse];
+    const actionsWithLargePayload = [CssMessages.GetCssResponse];
     const logger = createLogger({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         stateTransformer: (state: any) => {
@@ -318,11 +306,7 @@ export function createStore<M>(
                     message = payload.type;
                     // This is a message that came in as a result of an outgoing message from another view.
                     basePayload.messageDirection = 'outgoing';
-                    basePayload.messageType = payload.payload.messageType ?? MessageType.syncAcrossSameNotebooks;
                     basePayload.data = payload.payload.data;
-                } else {
-                    // Messages result of some user action.
-                    basePayload.messageType = basePayload.messageType ?? MessageType.other;
                 }
                 store.dispatch({ type: message, payload: basePayload });
             }

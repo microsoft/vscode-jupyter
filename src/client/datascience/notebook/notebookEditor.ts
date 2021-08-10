@@ -12,7 +12,6 @@ import {
     NotebookDocument,
     ProgressLocation,
     Uri,
-    WebviewPanel,
     NotebookCellData,
     NotebookCell,
     NotebookData
@@ -32,7 +31,6 @@ import {
     INotebook,
     INotebookEditor,
     INotebookExecutionLogger,
-    INotebookModel,
     INotebookProvider,
     InterruptResult,
     IStatusProvider
@@ -43,9 +41,6 @@ import { getNotebookMetadata } from './helpers/helpers';
 import type { nbformat } from '@jupyterlab/coreutils';
 
 export class NotebookEditor implements INotebookEditor {
-    public get onDidChangeViewState(): Event<void> {
-        return this.changedViewState.event;
-    }
     public get closed(): Event<INotebookEditor> {
         return this._closed.event;
     }
@@ -64,16 +59,8 @@ export class NotebookEditor implements INotebookEditor {
     public get file(): Uri {
         return this.document.uri;
     }
-    public get visible(): boolean {
-        return !this.document.isClosed;
-    }
-    public get active(): boolean {
-        return this.vscodeNotebook.activeNotebookEditor?.document.uri.toString() === this.document.uri.toString();
-    }
-    public readonly type = 'native';
     public notebook?: INotebook | undefined;
 
-    private changedViewState = new EventEmitter<void>();
     private _closed = new EventEmitter<INotebookEditor>();
     private _saved = new EventEmitter<INotebookEditor>();
     private _modified = new EventEmitter<INotebookEditor>();
@@ -126,20 +113,11 @@ export class NotebookEditor implements INotebookEditor {
         // This shouldn't be necessary for native notebooks. if it is, it's because the document
         // is not up to date (VS code issue)
     }
-    public async load(_storage: INotebookModel, _webViewPanel?: WebviewPanel): Promise<void> {
-        // Not used.
-    }
     public runAllCells(): void {
         this.commandManager.executeCommand('notebook.execute').then(noop, noop);
     }
-    public runSelectedCell(): void {
-        this.commandManager.executeCommand('notebook.cell.execute').then(noop, noop);
-    }
     public addCellBelow(): void {
         this.commandManager.executeCommand('notebook.cell.insertCodeCellBelow').then(noop, noop);
-    }
-    public show(): Promise<void> {
-        throw new Error('Method not implemented.');
     }
     public startProgress(): void {
         throw new Error('Method not implemented.');

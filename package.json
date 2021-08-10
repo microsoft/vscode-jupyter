@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.8.0",
+    "version": "2021.8.200",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
@@ -24,7 +24,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.59.0-insider"
+        "vscode": "1.60.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -65,8 +65,7 @@
         "onCommand:jupyter.openVariableView",
         "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
         "onNotebook:jupyter-notebook",
-        "onNotebook:interactive",
-        "onCustomEditor:jupyter.notebook.ipynb"
+        "onNotebook:interactive"
     ],
     "main": "./out/client/extension",
     "capabilities": {
@@ -180,7 +179,7 @@
             },
             {
                 "key": "ctrl+enter",
-                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && config.jupyter.enableKeyboardShortcuts",
+                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "notebook.cell.quitEdit"
             },
             {
@@ -190,7 +189,7 @@
             },
             {
                 "key": "shift+enter",
-                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && config.jupyter.enableKeyboardShortcuts",
+                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
                 "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow"
             },
             {
@@ -740,12 +739,6 @@
                 "command": "jupyter.scrolltocell",
                 "title": "%jupyter.command.jupyter.scrolltocell.title%",
                 "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.switchKernel",
-                "title": "%DataScience.selectKernel%",
-                "category": "Jupyter",
-                "enablement": "jupyter.isinteractiveactive || jupyter.isnativeactive && jupyter.usingwebviewnotebook && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.latestExtension",
@@ -1454,12 +1447,6 @@
                     "when": "editorLangId == python && !notebookEditorFocused && isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.switchKernel",
-                    "title": "%DataScience.selectKernel%",
-                    "category": "Jupyter",
-                    "when": "jupyter.isinteractiveactive || jupyter.isnativeactive && jupyter.usingwebviewnotebook && isWorkspaceTrusted"
-                },
-                {
                     "command": "jupyter.latestExtension",
                     "title": "%DataScience.latestExtension%",
                     "category": "Jupyter",
@@ -2013,18 +2000,6 @@
                     "text/latex",
                     "text/vnd.plotly.v1+html"
                 ]
-            }
-        ],
-        "customEditors": [
-            {
-                "viewType": "jupyter.notebook.ipynb",
-                "displayName": "Jupyter Notebook (custom)",
-                "selector": [
-                    {
-                        "filenamePattern": "*.ipynb"
-                    }
-                ],
-                "priority": "option"
             }
         ],
         "viewsContainers": {

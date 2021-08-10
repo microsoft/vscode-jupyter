@@ -123,7 +123,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             'Remote Kernel id not saved'
         );
 
-        await saveActiveNotebook(disposables);
+        await saveActiveNotebook();
         await closeActiveWindows();
 
         // Re-open and execute the second cell.

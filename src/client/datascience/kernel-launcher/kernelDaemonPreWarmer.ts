@@ -13,7 +13,6 @@ import { swallowExceptions } from '../../common/utils/decorators';
 import {
     IInteractiveWindowProvider,
     INotebookCreationTracker,
-    INotebookEditor,
     INotebookEditorProvider,
     IRawNotebookSupportedService
 } from '../types';
@@ -45,7 +44,6 @@ export class KernelDaemonPreWarmer {
             return;
         }
 
-        this.disposables.push(this.notebookEditorProvider.onDidOpenNotebookEditor(this.openNotebookEditor, this));
         this.disposables.push(
             this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.preWarmKernelDaemonPool, this)
         );
@@ -72,13 +70,6 @@ export class KernelDaemonPreWarmer {
     @swallowExceptions('PreWarmKernelDaemon')
     private async preWarmKernelDaemonPool() {
         await this.kernelDaemonPool.preWarmKernelDaemons();
-    }
-
-    // Only handle non-native editors via this code path
-    private async openNotebookEditor(editor: INotebookEditor) {
-        if (editor.type !== 'native') {
-            await this.preWarmKernelDaemonPool();
-        }
     }
 
     // Handle opening of native documents

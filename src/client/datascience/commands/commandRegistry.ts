@@ -14,7 +14,6 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../common/application/types';
-import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
@@ -36,8 +35,7 @@ import {
     IDataScienceCommandListener,
     IJupyterServerUriStorage,
     IJupyterVariableDataProviderFactory,
-    IJupyterVariables,
-    INotebookEditorProvider
+    IJupyterVariables
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { ExportCommands } from './exportCommands';
@@ -59,7 +57,6 @@ export class CommandRegistry implements IDisposable {
         @inject(NotebookCommands) private readonly notebookCommands: NotebookCommands,
         @inject(JupyterCommandLineSelectorCommand)
         private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
-        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
@@ -71,7 +68,6 @@ export class CommandRegistry implements IDisposable {
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
-        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNotebook: boolean,
         @inject(NotebookCreator) private readonly nativeNotebookCreator: NotebookCreator,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
@@ -478,11 +474,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async createNewNotebook(): Promise<void> {
-        if (this.useNativeNotebook) {
-            await this.nativeNotebookCreator.createNewNotebook();
-        } else {
-            await this.notebookEditorProvider.createNew();
-        }
+        await this.nativeNotebookCreator.createNewNotebook();
     }
 
     private viewJupyterOutput() {

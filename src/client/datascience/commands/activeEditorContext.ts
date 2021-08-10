@@ -8,7 +8,7 @@ import { NotebookDocument, TextEditor } from 'vscode';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
-import { PYTHON_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
@@ -43,8 +43,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private hasNativeNotebookCells: ContextKey;
     private isPythonFileActive: boolean = false;
     private isPythonNotebook: ContextKey;
-    private isVSCodeNotebookActive: ContextKey;
-    private usingWebViewNotebook: ContextKey;
     private hasNativeNotebookOpen: ContextKey;
     private kernelCanDebugCache = new Map<PythonEnvironment, boolean>();
     constructor(
@@ -53,7 +51,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(UseVSCodeNotebookEditorApi) private readonly inNativeNotebookExperiment: boolean,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IKernelDependencyService) private dependencyService: IKernelDependencyService,
@@ -86,8 +83,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         );
         this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
         this.isPythonNotebook = new ContextKey(EditorContexts.IsPythonNotebook, this.commandManager);
-        this.isVSCodeNotebookActive = new ContextKey(EditorContexts.IsVSCodeNotebookActive, this.commandManager);
-        this.usingWebViewNotebook = new ContextKey(EditorContexts.UsingWebviewNotebook, this.commandManager);
         this.hasNativeNotebookOpen = new ContextKey(EditorContexts.HasNativeNotebookOpen, this.commandManager);
     }
     public dispose() {
@@ -114,15 +109,9 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
         this.vscNotebook.onDidChangeNotebookEditorSelection(this.updateNativeNotebookContext, this, this.disposables);
         this.vscNotebook.onDidCloseNotebookDocument(this.updateNativeNotebookContext, this, this.disposables);
-
-        this.usingWebViewNotebook.set(!this.inNativeNotebookExperiment).ignoreErrors();
     }
 
     private updateNativeNotebookCellContext() {
-        if (!this.inNativeNotebookExperiment) {
-            return;
-        }
-
         // Separate for debugging.
         const hasNativeCells = (this.vscNotebook.activeNotebookEditor?.document.cellCount || 0) > 0;
         this.hasNativeNotebookCells.set(hasNativeCells).ignoreErrors();
@@ -134,13 +123,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private onDidChangeActiveNotebookEditor(e?: INotebookEditor) {
         this.nativeContext.set(!!e).ignoreErrors();
 
-        // jupyter.isnativeactive is set above, but also set jupyter.isvscodenotebookactive
-        // if the active document is also a vscode document
-        if (e && e.type === 'native') {
-            this.isVSCodeNotebookActive.set(true).ignoreErrors();
-        } else {
-            this.isVSCodeNotebookActive.set(false).ignoreErrors();
-        }
         this.isPythonNotebook.set(isPythonNotebook(e?.notebookMetadata)).ignoreErrors();
         this.updateContextOfActiveNotebookKernel(e);
         this.updateNativeNotebookContext();

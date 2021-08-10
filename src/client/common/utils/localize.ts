@@ -926,18 +926,6 @@ export namespace DataScience {
         'Connecting to kernel.'
     );
 
-    export const reloadCustomEditor = localize(
-        'DataScience.reloadCustomEditor',
-        'Please reload VS Code to use the custom editor API'
-    );
-    export const reloadVSCodeNotebookEditor = localize(
-        'DataScience.reloadVSCodeNotebookEditor',
-        'Please reload VS Code to use the Notebook Editor'
-    );
-    export const usingPreviewNotebookWithOtherNotebookWarning = localize(
-        'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
-        'Opening the same file in the Preview Notebook Editor and stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
-    );
     export const insecureSessionMessage = localize(
         'DataScience.insecureSessionMessage',
         'Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?'
@@ -951,10 +939,6 @@ export namespace DataScience {
     export const ipykernelNotInstalled = localize(
         'DataScience.ipykernelNotInstalled',
         'IPyKernel not installed into interpreter {0}'
-    );
-    export const illegalEditorConfig = localize(
-        'DataScience.illegalEditorConfig',
-        'CustomEditor and NativeNotebook experiments cannot be turned on together'
     );
     export const showDataViewerFail = localize(
         'DataScience.showDataViewerFail',
