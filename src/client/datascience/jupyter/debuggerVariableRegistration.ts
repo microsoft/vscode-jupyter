@@ -9,8 +9,8 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
 import { Identifiers } from '../constants';
 import { IJupyterDebugService, IJupyterVariables } from '../types';
-import { DataScience } from '../../common/utils/localize';
 import { IDebuggingManager } from '../../debugger/types';
+import { pythonKernelDebugAdapter } from '../../debugger/constants';
 
 @injectable()
 export class DebuggerVariableRegistration implements IExtensionSingleActivationService, DebugAdapterTrackerFactory {
@@ -22,9 +22,7 @@ export class DebuggerVariableRegistration implements IExtensionSingleActivationS
     ) {}
     public activate(): Promise<void> {
         this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(PYTHON_LANGUAGE, this));
-        this.disposables.push(
-            this.debuggingManager.registerDebugAdapterTrackerFactory(DataScience.pythonKernelDebugAdapter(), this)
-        );
+        this.disposables.push(this.debuggingManager.registerDebugAdapterTrackerFactory(pythonKernelDebugAdapter, this));
         return Promise.resolve();
     }
 

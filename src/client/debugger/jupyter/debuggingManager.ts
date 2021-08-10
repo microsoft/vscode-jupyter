@@ -38,6 +38,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IDebuggingManager } from '../types';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { noop } from '../../common/utils/misc';
+import { pythonKernelDebugAdapter } from '../constants';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -147,7 +148,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             }),
 
             // factory for kernel debug adapters
-            debug.registerDebugAdapterDescriptorFactory(DataScience.pythonKernelDebugAdapter(), {
+            debug.registerDebugAdapterDescriptorFactory(pythonKernelDebugAdapter, {
                 createDebugAdapterDescriptor: async (session) => {
                     if (this.vscNotebook.activeNotebookEditor) {
                         const activeDoc = this.vscNotebook.activeNotebookEditor.document;
@@ -272,7 +273,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         let dbg = this.notebookToDebugger.get(doc);
         if (!dbg) {
             const config: DebugConfiguration = {
-                type: DataScience.pythonKernelDebugAdapter(),
+                type: pythonKernelDebugAdapter,
                 name: path.basename(doc.uri.toString()),
                 request: 'attach',
                 internalConsoleOptions: 'neverOpen',

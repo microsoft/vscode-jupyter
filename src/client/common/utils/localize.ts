@@ -961,10 +961,6 @@ export namespace DataScience {
     );
     export const noNotebookToDebug = localize('DataScience.noNotebookToDebug', 'No active notebook document to debug.');
     export const cantStartDebugging = localize('DataScience.cantStartDebugging', "Can't start debugging.");
-    export const pythonKernelDebugAdapter = localize(
-        'DataScience.pythonKernelDebugAdapter',
-        'Python Kernel Debug Adapter'
-    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
