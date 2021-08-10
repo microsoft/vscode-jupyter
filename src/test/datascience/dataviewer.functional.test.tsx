@@ -1,7 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
-export const _ = '';
+suite('Dummy', () => {
+    test('dummy', () => {
+        //
+    });
+});
 // /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 // import '../../client/common/extensions';
 
