@@ -108,7 +108,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         private commandManager: ICommandManager,
         private fs: IFileSystem
     ) {
-        if (this.session.name.includes('RBL=')) {
+        if (this.session.configuration.__runByLine) {
             this.isRunByLine = true;
         }
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
@@ -119,6 +119,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
                 this.runByLineSeq = content.seq;
 
                 if (this.isRunByLine) {
+                    // We want to get the variables for the variable view every time we stop
+                    // This call starts that
                     this.runByLineStackTrace();
                 }
                 this.sendMessage.fire(msg.content);
@@ -351,6 +353,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             }
         });
 
+        // To get the variables for the Variables view:
+        // We have to send the variables message. For that, we need a variablesReference from scopes,
+        // and for that, we need an id from the stackTrace message.
+        // Here we catch the stackTrace response and we use its id to send a scope message
         if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
             (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
                 this.runByLineScope(sf.id);
@@ -358,6 +364,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             });
         }
 
+        // Catch the scopes response and use its variablesReference to send a variables message
         if ((message as DebugProtocol.ScopesResponse).command === 'scopes') {
             (message as DebugProtocol.ScopesResponse).body.scopes.forEach((s) => {
                 this.runByLineVariables(s.variablesReference);
@@ -464,8 +471,9 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         });
 
         // put breakpoint at the beginning of the cell
-        const index = this.session.name.indexOf('RBL=');
-        const cellIndex = Number(this.session.name.substring(index + 4));
+        const keyword = 'Cell=';
+        const index = this.session.name.indexOf(keyword);
+        const cellIndex = Number(this.session.name.substring(index + keyword.length));
         const cell = this.notebookDocument.cellAt(cellIndex);
 
         const initialBreakpoint: DebugProtocol.SourceBreakpoint = {

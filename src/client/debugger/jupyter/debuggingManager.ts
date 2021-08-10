@@ -272,28 +272,25 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         let dbg = this.notebookToDebugger.get(doc);
         if (!dbg) {
             const name = cell
-                ? `${path.basename(doc.uri.toString())}?RBL=${cell.index}`
+                ? `${path.basename(doc.uri.toString())}?Cell=${cell.index}`
                 : path.basename(doc.uri.toString());
-            const justMyCode = cell ? true : false;
+            const runByLine = cell ? true : false;
             const config: DebugConfiguration = {
                 type: DataScience.pythonKernelDebugAdapter(),
                 name: name,
                 request: 'attach',
                 internalConsoleOptions: 'neverOpen',
-                justMyCode: justMyCode,
-                __document: doc.uri.toString()
+                justMyCode: runByLine,
+                // add the doc uri to the config
+                __document: doc.uri.toString(),
+                // add a property to the config to know if the session is runByLine
+                __runByLine: runByLine
             };
             dbg = new Debugger(doc, config, options);
             this.notebookToDebugger.set(doc, dbg);
 
             try {
                 await dbg.session;
-
-                // if (cell) {
-                //     void this.debugService.startRunByLine(config);
-                // } else {
-                //     void this.debugService.startDebugging(undefined, config);
-                // }
             } catch (err) {
                 traceError(`Can't start debugging (${err})`);
                 void this.appShell.showErrorMessage(DataScience.cantStartDebugging());
