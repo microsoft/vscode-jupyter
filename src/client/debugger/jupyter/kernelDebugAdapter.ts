@@ -115,13 +115,13 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const content = msg.content as any;
             if (content.event === 'stopped') {
-                this.runByLineThreadId = content.body.threadId;
-                this.runByLineSeq = content.seq;
-
                 if (this.isRunByLine) {
                     // We want to get the variables for the variable view every time we stop
                     // This call starts that
                     this.runByLineStackTrace();
+
+                    this.runByLineThreadId = content.body.threadId;
+                    this.runByLineSeq = content.seq;
                 }
                 this.sendMessage.fire(msg.content);
             }
