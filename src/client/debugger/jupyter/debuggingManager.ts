@@ -271,20 +271,18 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private async startDebugging(doc: NotebookDocument, cell?: NotebookCell, options?: DebugSessionOptions) {
         let dbg = this.notebookToDebugger.get(doc);
         if (!dbg) {
-            const name = cell
-                ? `${path.basename(doc.uri.toString())}?Cell=${cell.index}`
-                : path.basename(doc.uri.toString());
-            const runByLine = cell ? true : false;
             const config: DebugConfiguration = {
                 type: DataScience.pythonKernelDebugAdapter(),
-                name: name,
+                name: path.basename(doc.uri.toString()),
                 request: 'attach',
                 internalConsoleOptions: 'neverOpen',
-                justMyCode: runByLine,
+                justMyCode: cell ? true : false,
                 // add the doc uri to the config
                 __document: doc.uri.toString(),
                 // add a property to the config to know if the session is runByLine
-                __runByLine: runByLine
+                __runByLine: cell ? true : false,
+                // if the debugger was called from a cell, add it
+                __cellIndex: cell ? cell.index : undefined
             };
             dbg = new Debugger(doc, config, options);
             this.notebookToDebugger.set(doc, dbg);

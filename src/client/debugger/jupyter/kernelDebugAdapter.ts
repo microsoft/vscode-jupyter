@@ -488,9 +488,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         });
 
         // put breakpoint at the beginning of the cell
-        const keyword = 'Cell=';
-        const index = this.session.name.indexOf(keyword);
-        const cellIndex = Number(this.session.name.substring(index + keyword.length));
+        const cellIndex = Number(this.session.configuration.__cellIndex);
         const cell = this.notebookDocument.cellAt(cellIndex);
 
         const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
