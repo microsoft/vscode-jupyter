@@ -97,7 +97,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystem) private fs: IFileSystem // @inject(IJupyterDebugService) // @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) // private debugService: IJupyterDebugService
+        @inject(IFileSystem) private fs: IFileSystem
     ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
