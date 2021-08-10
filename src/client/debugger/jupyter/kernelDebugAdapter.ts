@@ -25,6 +25,7 @@ import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IKernelDebugAdapter } from '../types';
 import { IDisposable } from '../../common/types';
+import { Commands } from '../../datascience/constants';
 
 const debugRequest = (message: DebugProtocol.Request, jupyterSessionId: string): KernelMessage.IDebugRequestMsg => {
     return {
@@ -517,6 +518,9 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         }
 
         this.sendRequestToJupyterSession(message);
+
+        // Open variable view
+        await this.commandManager.executeCommand(Commands.OpenVariableView);
 
         // Run cell
         await this.commandManager.executeCommand('notebook.cell.execute');
