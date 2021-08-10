@@ -14,6 +14,7 @@ import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { IDataScienceErrorHandler, IJupyterSession, INotebook, InterruptResult } from '../../types';
+import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
@@ -36,9 +37,17 @@ export class KernelExecution implements IDisposable {
         context: IExtensionContext,
         private readonly interruptTimeout: number,
         disposables: IDisposableRegistry,
-        private readonly controller: NotebookController
+        private readonly controller: NotebookController,
+        outputTracker: CellOutputDisplayIdTracker
     ) {
-        this.executionFactory = new CellExecutionFactory(errorHandler, appShell, context, disposables, controller);
+        this.executionFactory = new CellExecutionFactory(
+            errorHandler,
+            appShell,
+            context,
+            disposables,
+            controller,
+            outputTracker
+        );
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
