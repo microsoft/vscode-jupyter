@@ -30,7 +30,10 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         const disposable = languages.registerCompletionItemProvider(
             { language: PYTHON_LANGUAGE, scheme: NotebookCellScheme },
             this.completionProvider,
-            '.'
+            '.',
+            '"',
+            "'",
+            ','
         );
         this.disposables.push(disposable);
     }

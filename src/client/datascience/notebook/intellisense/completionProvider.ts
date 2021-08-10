@@ -84,18 +84,20 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
                     typeof item.start === 'number' && typeof item.end === 'number' && typeof item.text === 'string'
             )
         ) {
-            return experimentMatches.map((item) => {
+            return experimentMatches.map((item, index) => {
                 const completion: CompletionItem = {
                     label: item.text,
                     range: new Range(document.positionAt(item.start), document.positionAt(item.end)),
-                    kind: item.type ? mapJupyterKind.get(item.type) : CompletionItemKind.Field
+                    kind: item.type ? mapJupyterKind.get(item.type) : CompletionItemKind.Field,
+                    sortText: generateSortString(index)
                 };
                 return completion;
             });
         }
-        return result.matches.map((item) => {
+        return result.matches.map((item, index) => {
             const completion: CompletionItem = {
-                label: item
+                label: item,
+                sortText: generateSortString(index)
                 // Ideall we need to provide a range here, as we don't, VS Code will
                 // assume the current word needs to be replaced.
                 // E.g. if you type in `os.env` and get complications from jupyter as `os.environ`, then
@@ -106,4 +108,19 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
             return completion;
         });
     }
+}
+
+function generateSortString(index: number) {
+    // If its 0, then use AA, if 25, then use ZZ
+    // This will give us the ability to sort first 700 items (thats more than enough).
+    // To keep things fast we'll only sort the first 300.
+    if (index >= 300) {
+        return 'ZZZZZZZ';
+    }
+    if (index <= 25) {
+        return `A${String.fromCharCode(65 + index)}`;
+    }
+    const firstChar = String.fromCharCode(65 + Math.ceil(index / 25));
+    const secondChar = String.fromCharCode(65 + (index % 25));
+    return `${firstChar}${secondChar}`;
 }
