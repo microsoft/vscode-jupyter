@@ -15,10 +15,7 @@ import {
     DebugSessionOptions,
     DebugConfiguration,
     EventEmitter,
-    DebugProtocolMessage,
-    DebugAdapterTracker,
-    DebugAdapterTrackerFactory,
-    Disposable
+    DebugProtocolMessage
 } from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
@@ -37,7 +34,6 @@ import { Commands as DSCommands } from '../../datascience/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IDebuggingManager } from '../types';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { noop } from '../../common/utils/misc';
 import { pythonKernelDebugAdapter } from '../constants';
 
 class Debugger {
@@ -87,8 +83,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapter>();
     private readonly disposables: IDisposable[] = [];
     private readonly _onDidFireVariablesEvent = new EventEmitter<void>();
-    private debugAdapterTrackerFactories: DebugAdapterTrackerFactory[] = [];
-    private debugAdapterTrackers: DebugAdapterTracker[] = [];
 
     public constructor(
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
@@ -110,23 +104,12 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         return this._onDidFireVariablesEvent.event;
     }
 
-    public registerDebugAdapterTrackerFactory(_debugType: string, provider: DebugAdapterTrackerFactory): Disposable {
-        this.debugAdapterTrackerFactories.push(provider);
-        return {
-            dispose: () => {
-                this.debugAdapterTrackerFactories = this.debugAdapterTrackerFactories.filter((f) => f !== provider);
-            }
-        };
-    }
-
     public async activate() {
         this.disposables.push(
             // track termination of debug sessions
             debug.onDidTerminateDebugSession(async (session) => {
                 this.updateToolbar(false);
                 this.updateCellToolbar(false);
-                this.debugAdapterTrackers.forEach((d) => (d.onExit ? d.onExit(0, undefined) : noop()));
-                this.debugAdapterTrackers = [];
                 for (const [doc, dbg] of this.notebookToDebugger.entries()) {
                     if (dbg && session === (await dbg.session)) {
                         this.debuggingCellMap.getCellsAnClearQueue(doc);
@@ -177,27 +160,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                                         if ((msg as DebugProtocol.VariablesResponse).command === 'variables') {
                                             this._onDidFireVariablesEvent.fire();
                                         }
-                                        switch ((msg as DebugProtocol.ProtocolMessage).type) {
-                                            case 'request':
-                                                this.debugAdapterTrackers.forEach((d) => {
-                                                    if (d.onWillReceiveMessage) {
-                                                        d.onWillReceiveMessage(msg);
-                                                    }
-                                                });
-                                                break;
-                                            case 'response':
-                                                this.debugAdapterTrackers.forEach((d) => d.onDidSendMessage!(msg));
-                                                break;
-                                            default:
-                                                break;
-                                        }
                                     })
                                 );
                                 this.notebookToDebugAdapter.set(debug.document, adapter);
-                                // Create our debug adapter trackers at session start
-                                this.debugAdapterTrackers = this.debugAdapterTrackerFactories.map(
-                                    (f) => f.createDebugAdapterTracker(session) as DebugAdapterTracker
-                                );
                                 return new DebugAdapterInlineImplementation(adapter);
                             } else {
                                 void this.appShell.showInformationMessage(DataScience.kernelWasNotStarted());

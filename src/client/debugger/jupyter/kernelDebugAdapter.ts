@@ -102,9 +102,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private isRunByLine = false;
     private runByLineThreadId: number = 1;
-    private runByLineSeq: number = 0;
     private readonly disposables: IDisposable[] = [];
-
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
 
     constructor(
@@ -128,7 +126,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                     this.runByLineStackTrace();
 
                     this.runByLineThreadId = content.body.threadId;
-                    this.runByLineSeq = content.seq;
                 }
                 this.sendMessage.fire(msg.content);
             }
@@ -183,31 +180,13 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
     public runByLineContinue() {
         if (this.isRunByLine) {
-            const message: DebugProtocol.StepInRequest = {
-                seq: this.runByLineSeq,
-                type: 'request',
-                command: 'stepIn',
-                arguments: {
-                    threadId: this.runByLineThreadId
-                }
-            };
-
-            this.sendRequestToJupyterSession(message);
+            this.session.customRequest('stepIn', { threadId: this.runByLineThreadId });
         }
     }
 
     public runByLineStop() {
         if (this.isRunByLine) {
-            const message: DebugProtocol.DisconnectRequest = {
-                seq: this.runByLineSeq,
-                type: 'request',
-                command: 'disconnect',
-                arguments: {
-                    restart: false
-                }
-            };
-
-            this.sendRequestToJupyterSession(message);
+            this.session.customRequest('disconnect', { restart: false });
         }
     }
 
@@ -227,42 +206,15 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     private runByLineStackTrace(): void {
-        const message: DebugProtocol.StackTraceRequest = {
-            seq: this.runByLineSeq,
-            type: 'request',
-            command: 'stackTrace',
-            arguments: {
-                threadId: this.runByLineThreadId
-            }
-        };
-
-        this.sendRequestToJupyterSession(message);
+        this.session.customRequest('stackTrace', { threadId: this.runByLineThreadId });
     }
 
     private runByLineScope(frameId: number): void {
-        const message: DebugProtocol.ScopesRequest = {
-            seq: this.runByLineSeq,
-            type: 'request',
-            command: 'scopes',
-            arguments: {
-                frameId: frameId
-            }
-        };
-
-        this.sendRequestToJupyterSession(message);
+        this.session.customRequest('scopes', { frameId });
     }
 
     private runByLineVariables(variablesReference: number): void {
-        const message: DebugProtocol.VariablesRequest = {
-            seq: this.runByLineSeq,
-            type: 'request',
-            command: 'variables',
-            arguments: {
-                variablesReference: variablesReference
-            }
-        };
-
-        this.sendRequestToJupyterSession(message);
+        this.session.customRequest('variables', { variablesReference });
     }
 
     private async dumpCellsThatRanBeforeDebuggingBegan() {
