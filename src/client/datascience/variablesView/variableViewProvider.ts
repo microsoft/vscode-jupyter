@@ -13,6 +13,7 @@ import {
 import { isTestExecution } from '../../common/constants';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import { IDebuggingManager } from '../../debugger/types';
 import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
 import { ICodeCssGenerator, IJupyterVariableDataProviderFactory, IJupyterVariables, IThemeFinder } from '../types';
@@ -56,7 +57,8 @@ export class VariableViewProvider implements IVariableViewProvider {
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager
     ) {}
 
     public async resolveWebviewView(
@@ -79,7 +81,8 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.jupyterVariableDataProviderFactory,
             this.dataViewerFactory,
             this.notebookWatcher,
-            this.commandManager
+            this.commandManager,
+            this.debuggingManager
         );
 
         // If someone is waiting for the variable view resolve that here

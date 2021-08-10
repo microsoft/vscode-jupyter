@@ -25,6 +25,7 @@ import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IKernelDebugAdapter } from '../types';
 import { IDisposable } from '../../common/types';
+import { Commands } from '../../datascience/constants';
 
 const debugRequest = (message: DebugProtocol.Request, jupyterSessionId: string): KernelMessage.IDebugRequestMsg => {
     return {
@@ -101,9 +102,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private isRunByLine = false;
     private runByLineThreadId: number = 1;
-    private runByLineSeq: number = 0;
     private readonly disposables: IDisposable[] = [];
-
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
 
     constructor(
@@ -114,7 +113,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         private commandManager: ICommandManager,
         private fs: IFileSystem
     ) {
-        if (this.session.name.includes('RBL=')) {
+        if (this.session.configuration.__runByLine) {
             this.isRunByLine = true;
         }
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
@@ -122,8 +121,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             const content = msg.content as any;
             if (content.event === 'stopped') {
                 if (this.isRunByLine) {
+                    // We want to get the variables for the variable view every time we stop
+                    // This call starts that
+                    this.runByLineStackTrace();
+
                     this.runByLineThreadId = content.body.threadId;
-                    this.runByLineSeq = content.seq;
                 }
                 this.sendMessage.fire(msg.content);
             }
@@ -160,15 +162,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             await this.debugInfo();
         }
 
-        // after disconnecting, hide the breakpoint margin
-        if (
-            !this.isRunByLine &&
-            message.type === 'request' &&
-            (message as DebugProtocol.Request).command === 'disconnect'
-        ) {
-            void this.commandManager.executeCommand('notebook.toggleBreakpointMargin', this.notebookDocument);
-        }
-
         // initialize Run By Line
         if (
             this.isRunByLine &&
@@ -181,33 +174,19 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         this.sendRequestToJupyterSession(message);
     }
 
+    public get debugSession(): DebugSession {
+        return this.session;
+    }
+
     public runByLineContinue() {
         if (this.isRunByLine) {
-            const message: DebugProtocol.StepInRequest = {
-                seq: this.runByLineSeq,
-                type: 'request',
-                command: 'stepIn',
-                arguments: {
-                    threadId: this.runByLineThreadId
-                }
-            };
-
-            this.sendRequestToJupyterSession(message);
+            this.session.customRequest('stepIn', { threadId: this.runByLineThreadId });
         }
     }
 
     public runByLineStop() {
         if (this.isRunByLine) {
-            const message: DebugProtocol.DisconnectRequest = {
-                seq: this.runByLineSeq,
-                type: 'request',
-                command: 'disconnect',
-                arguments: {
-                    restart: false
-                }
-            };
-
-            this.sendRequestToJupyterSession(message);
+            this.session.customRequest('disconnect', { restart: false });
         }
     }
 
@@ -224,6 +203,18 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 traceError('Error deleting temporary debug files');
             }
         });
+    }
+
+    private runByLineStackTrace(): void {
+        this.session.customRequest('stackTrace', { threadId: this.runByLineThreadId });
+    }
+
+    private runByLineScope(frameId: number): void {
+        this.session.customRequest('scopes', { frameId });
+    }
+
+    private runByLineVariables(variablesReference: number): void {
+        this.session.customRequest('variables', { variablesReference });
     }
 
     private async dumpCellsThatRanBeforeDebuggingBegan() {
@@ -291,6 +282,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         });
 
         if (message.type === 'request') {
+            this.sendMessage.fire(message);
             const request = debugRequest(message as DebugProtocol.Request, this.jupyterSession.sessionId);
             const control = this.jupyterSession.requestDebug({
                 seq: request.content.seq,
@@ -330,6 +322,24 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 }
             }
         });
+
+        // To get the variables for the Variables view:
+        // We have to send the variables message. For that, we need a variablesReference from scopes,
+        // and for that, we need an id from the stackTrace message.
+        // Here we catch the stackTrace response and we use its id to send a scope message
+        if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
+            (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
+                this.runByLineScope(sf.id);
+                // check if sf.source?.path is on the cell, if its not, stepInto again
+            });
+        }
+
+        // Catch the scopes response and use its variablesReference to send a variables message
+        if ((message as DebugProtocol.ScopesResponse).command === 'scopes') {
+            (message as DebugProtocol.ScopesResponse).body.scopes.forEach((s) => {
+                this.runByLineVariables(s.variablesReference);
+            });
+        }
 
         this.sendMessage.fire(message);
     }
@@ -431,8 +441,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         });
 
         // put breakpoint at the beginning of the cell
-        const index = this.session.name.indexOf('RBL=');
-        const cellIndex = Number(this.session.name.substring(index + 4));
+        const cellIndex = Number(this.session.configuration.__cellIndex);
         const cell = this.notebookDocument.cellAt(cellIndex);
 
         const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
@@ -461,6 +470,9 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         }
 
         this.sendRequestToJupyterSession(message);
+
+        // Open variable view
+        await this.commandManager.executeCommand(Commands.OpenVariableView);
 
         // Run cell
         await this.commandManager.executeCommand('notebook.cell.execute');
