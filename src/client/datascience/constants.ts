@@ -170,6 +170,7 @@ export namespace Commands {
     export const InteractiveExportAs = 'jupyter.interactive.exportas';
     export const DebugNotebook = 'jupyter.debugNotebook';
     export const RunByLine = 'jupyter.runByLine';
+    export const RunAndDebugCell = 'jupyter.runAndDebugCell';
     export const RunByLineContinue = 'jupyter.runByLineContinue';
     export const RunByLineStop = 'jupyter.runByLineStop';
 }

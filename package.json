@@ -272,6 +272,11 @@
                 "key": "ctrl+r",
                 "mac": "cmd+r",
                 "when": "jupyter.dataViewerActive"
+            },
+            {
+                "command": "jupyter.runAndDebugCell",
+                "key": "ctrl+alt+shift+enter",
+                "mac": "ctrl+shift+enter"
             }
         ],
         "commands": [
@@ -288,6 +293,12 @@
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
                 "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+            },
+            {
+                "command": "jupyter.runAndDebugCell",
+                "title": "Debug Cell",
+                "icon": "$(debug-alt-small)",
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.runByLineContinue",
@@ -937,11 +948,6 @@
                     "command": "jupyter.notebookeditor.export",
                     "group": "Jupyter",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.debugNotebook",
-                    "group": "navigation@3",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.jupyter.experimental.debugging"
                 }
             ],
             "notebook/cell/title": [
@@ -959,6 +965,12 @@
                     "command": "jupyter.runByLineStop",
                     "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
                     "group": "inline/cell@0"
+                }
+            ],
+            "notebook/cell/execute": [
+                {
+                    "command": "jupyter.runAndDebugCell",
+                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
                 }
             ],
             "interactive/toolbar": [

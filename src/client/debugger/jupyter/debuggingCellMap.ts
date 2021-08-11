@@ -32,7 +32,7 @@ export class DebuggingCellMap implements IDebuggingCellMap, INotebookExecutionLo
     public dispose() {
         noop();
     }
-    public getCellsAnClearQueue(doc: NotebookDocument): NotebookCell[] {
+    public getCellsAndClearQueue(doc: NotebookDocument): NotebookCell[] {
         const cells = DebuggingCellMap.cellsToDump.get(doc);
         if (cells) {
             DebuggingCellMap.cellsToDump.set(doc, []);

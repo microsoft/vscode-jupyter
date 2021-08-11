@@ -1368,5 +1368,5 @@ export interface IExternalCommandFromWebview {
 
 export const IDebuggingCellMap = Symbol('IDebuggingCellMap');
 export interface IDebuggingCellMap {
-    getCellsAnClearQueue(doc: NotebookDocument): NotebookCell[];
+    getCellsAndClearQueue(doc: NotebookDocument): NotebookCell[];
 }

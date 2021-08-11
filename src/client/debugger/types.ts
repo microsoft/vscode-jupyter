@@ -7,7 +7,7 @@ export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTe
 export interface IKernelDebugAdapter {
     debugSession: DebugSession;
     runByLineContinue(): void;
-    runByLineStop(): void;
+    disconnect(): void;
 }
 
 export const IDebuggingManager = Symbol('IDebuggingManager');
