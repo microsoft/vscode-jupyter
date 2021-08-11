@@ -390,7 +390,7 @@ export class CellExecution {
     }
 
     private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
-        const code = this.cell.metadata.interactive.modifiedSource ?? this.cell.document.getText();
+        const code = this.cell.metadata?.interactive?.modifiedSource ?? this.cell.document.getText();
         traceCellMessage(this.cell, 'Send code for execution');
         await this.executeCodeCell(code, session, loggers);
         loggers.forEach((l) => {
