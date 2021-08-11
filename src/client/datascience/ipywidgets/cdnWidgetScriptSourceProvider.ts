@@ -99,7 +99,9 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
         // Might be on disk, try there first.
         if (diskPath && (await this.fs.localFileExists(diskPath))) {
-            traceInfo(`${ConsoleForegroundColors.Green}Widget Script ${moduleName}#${moduleVersion} found`);
+            traceInfo(
+                `${ConsoleForegroundColors.Green}Widget Script ${moduleName}#${moduleVersion} found at path: ${diskPath}`
+            );
             const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
             return { moduleName, scriptUri, source: 'cdn' };
         }
