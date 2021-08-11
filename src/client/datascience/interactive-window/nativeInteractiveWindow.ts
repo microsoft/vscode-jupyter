@@ -509,7 +509,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             );
 
             try {
-                const result = await this.kernel.interrupt(notebookEditor.document);
+                const result = await this.kernel.interruptInteractiveKernel(notebookEditor.document);
                 status.dispose();
 
                 // We timed out, ask the user if they want to restart instead.

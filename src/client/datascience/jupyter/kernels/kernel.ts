@@ -155,6 +155,23 @@ export class Kernel implements IKernel {
         await interruptResultPromise;
         return interruptResultPromise;
     }
+    /**
+     * This is a temporary method to support interrupting kernels when code cells are executed
+     * outside of the kernelExecution/cellExecution codepath. Do not use!
+     * Should be identical to interrupt method, except for calling into interruptInteractiveKernel.
+     */
+    public async interruptInteractiveKernel(document: NotebookDocument): Promise<InterruptResult> {
+        if (this.restarting) {
+            traceInfo(`Interrupt requested & currently restarting ${document.uri}`);
+            trackKernelResourceInformation(document.uri, { interruptKernel: true });
+            await this.restarting.promise;
+        }
+        traceInfo(`Interrupt requested ${document.uri}`);
+        this.startCancellation.cancel();
+        const interruptResultPromise = this.kernelExecution.interruptInteractiveKernel(document, this._notebookPromise);
+        await interruptResultPromise;
+        return interruptResultPromise;
+    }
     public async dispose(): Promise<void> {
         traceInfo(`Dispose kernel ${this.notebookUri.toString()}`);
         this.restarting = undefined;
