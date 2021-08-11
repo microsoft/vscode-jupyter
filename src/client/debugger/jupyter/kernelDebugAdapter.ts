@@ -140,13 +140,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const content = msg.content as any;
             if (content.event === 'stopped') {
-                if (this.configuration.__mode) {
-                    // We want to get the variables for the variable view every time we stop
-                    // This call starts that
-                    this.runByLineStackTrace();
+                // We want to get the variables for the variable view every time we stop
+                // This call starts that
+                this.stackTrace();
 
-                    this.runByLineThreadId = content.body.threadId;
-                }
+                this.runByLineThreadId = content.body.threadId;
                 this.sendMessage.fire(msg.content);
             }
         };
@@ -223,15 +221,15 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         });
     }
 
-    private runByLineStackTrace(): void {
+    private stackTrace(): void {
         void this.session.customRequest('stackTrace', { threadId: this.runByLineThreadId });
     }
 
-    private runByLineScope(frameId: number): void {
+    private scopes(frameId: number): void {
         void this.session.customRequest('scopes', { frameId });
     }
 
-    private runByLineVariables(variablesReference: number): void {
+    private variables(variablesReference: number): void {
         void this.session.customRequest('variables', { variablesReference });
     }
 
@@ -347,7 +345,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         // Here we catch the stackTrace response and we use its id to send a scope message
         if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
             (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
-                this.runByLineScope(sf.id);
+                this.scopes(sf.id);
                 // check if sf.source?.path is on the cell, if its not, stepInto again
             });
         }
@@ -355,7 +353,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         // Catch the scopes response and use its variablesReference to send a variables message
         if ((message as DebugProtocol.ScopesResponse).command === 'scopes') {
             (message as DebugProtocol.ScopesResponse).body.scopes.forEach((s) => {
-                this.runByLineVariables(s.variablesReference);
+                this.variables(s.variablesReference);
             });
         }
 
