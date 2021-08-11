@@ -121,7 +121,6 @@ export class CellExecution {
     private _completed?: boolean;
     private startTime?: number;
     private endTime?: number;
-    private readonly initPromise?: Promise<void>;
     private execution?: NotebookCellExecution;
     private temporaryExecution?: NotebookCellExecution;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
@@ -136,7 +135,7 @@ export class CellExecution {
         disposables: IDisposableRegistry,
         extensionContext: IExtensionContext,
         private readonly controller: NotebookController,
-        private readonly outuptDisplayIdTracker: CellOutputDisplayIdTracker
+        private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker
     ) {
         // These are only used in the tests.
         // See where this is used to understand its purpose.
@@ -170,7 +169,6 @@ export class CellExecution {
         );
         if (this.canExecuteCell()) {
             this.execution = controller.createNotebookCellExecution(this.cell);
-            this.initPromise = this.enqueue();
         }
     }
 
@@ -223,7 +221,7 @@ export class CellExecution {
         this.startTime = new Date().getTime();
         CellExecution.activeNotebookCellExecution.set(this.cell.notebook, this.execution);
         this.execution?.start(this.startTime);
-        await Promise.all([this.initPromise, this.execution?.clearOutput()]);
+        await this.execution?.clearOutput();
         this.stopWatch.reset();
 
         // Begin the request that will modify our cell.
@@ -256,7 +254,6 @@ export class CellExecution {
         }
         traceCellMessage(this.cell, 'Execution cancelled');
         this.cancelHandled = true;
-        await this.initPromise;
 
         await this.completedDueToCancellation();
         this.dispose();
@@ -380,16 +377,6 @@ export class CellExecution {
         this._completed = true;
         traceCellMessage(this.cell, 'Cell cancelled & resolving');
         this._result.resolve(NotebookCellRunState.Idle);
-    }
-
-    /**
-     * Place in queue for execution with kernel.
-     * (mark it as busy).
-     */
-    private async enqueue() {
-        if (this.cell.document.isClosed) {
-            return;
-        }
     }
 
     private sendPerceivedCellExecute() {
@@ -523,7 +510,7 @@ export class CellExecution {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = ExecuteResult');
                 await this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                await this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
+                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = StatusMessage');
                 // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
@@ -596,7 +583,7 @@ export class CellExecution {
             }
             // Keep track of the displa_id against the output item, we might need this to update this later.
             const displayOutputAdded = displayId
-                ? this.outuptDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId)
+                ? this.outputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId)
                 : undefined;
 
             // Append to the data (we would push here but VS code requires a recreation of the array)
@@ -718,7 +705,7 @@ export class CellExecution {
         void workspace.applyEdit(edit);
     }
 
-    private async handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
+    private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
         if (msg.content.execution_count && this.execution) {
             this.execution.executionOrder = msg.content.execution_count;
         }
@@ -870,7 +857,7 @@ export class CellExecution {
         if (!displayId) {
             return;
         }
-        const result = this.outuptDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
+        const result = this.outputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
         if (!result) {
             return;
         }
