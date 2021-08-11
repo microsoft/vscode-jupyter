@@ -232,7 +232,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 } else {
                     void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
                 }
-            }),
+            })
         );
     }
 
@@ -255,7 +255,11 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         this.runByLineInProgress.set(runningByLine).ignoreErrors();
     }
 
-    private async startDebuggingCell(doc: NotebookDocument, mode: KernelDebugMode.Cell | KernelDebugMode.RunByLine, cell: NotebookCell) {
+    private async startDebuggingCell(
+        doc: NotebookDocument,
+        mode: KernelDebugMode.Cell | KernelDebugMode.RunByLine,
+        cell: NotebookCell
+    ) {
         const config: IKernelDebugAdapterConfig = {
             type: pythonKernelDebugAdapter,
             name: path.basename(doc.uri.toString()),
@@ -286,7 +290,11 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         return this.startDebuggingConfig(doc, config);
     }
 
-    private async startDebuggingConfig(doc: NotebookDocument, config: IKernelDebugAdapterConfig, options?: DebugSessionOptions) {
+    private async startDebuggingConfig(
+        doc: NotebookDocument,
+        config: IKernelDebugAdapterConfig,
+        options?: DebugSessionOptions
+    ) {
         let dbg = this.notebookToDebugger.get(doc);
         if (!dbg) {
             dbg = new Debugger(doc, config, options);

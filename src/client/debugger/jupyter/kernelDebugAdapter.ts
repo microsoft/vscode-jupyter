@@ -182,7 +182,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
         // initialize Run By Line
         if (
-            (this.configuration.__mode === KernelDebugMode.RunByLine || this.configuration.__mode === KernelDebugMode.Cell) &&
+            (this.configuration.__mode === KernelDebugMode.RunByLine ||
+                this.configuration.__mode === KernelDebugMode.Cell) &&
             message.type === 'request' &&
             (message as DebugProtocol.Request).command === 'configurationDone'
         ) {
@@ -489,12 +490,9 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         }
 
         // Run cell
-        await this.commandManager.executeCommand(
-            'notebook.cell.execute',
-            {
-                ranges: [{ start: cell.index, end: cell.index + 1 }],
-                document: cell.document.uri
-            }
-        );
+        await this.commandManager.executeCommand('notebook.cell.execute', {
+            ranges: [{ start: cell.index, end: cell.index + 1 }],
+            document: cell.document.uri
+        });
     }
 }
