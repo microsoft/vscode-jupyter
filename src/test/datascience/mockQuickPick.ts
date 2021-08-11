@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { Event, EventEmitter, QuickInputButton, QuickPick, QuickPickItem } from 'vscode';
+import { Event, EventEmitter, QuickInputButton, QuickPick, QuickPickItem, QuickPickItemButtonEvent } from 'vscode';
 
 export class MockQuickPick implements QuickPick<QuickPickItem> {
     public value: string = '';
@@ -21,6 +21,9 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
     private didChangeValueEmitter: EventEmitter<string> = new EventEmitter<string>();
     private didAcceptEmitter: EventEmitter<void> = new EventEmitter<void>();
     private didTriggerButtonEmitter: EventEmitter<QuickInputButton> = new EventEmitter<QuickInputButton>();
+    private didTriggerItemButtonEmitter: EventEmitter<QuickPickItemButtonEvent<QuickPickItem>> = new EventEmitter<
+        QuickPickItemButtonEvent<QuickPickItem>
+    >();
     private didChangeActiveEmitter: EventEmitter<QuickPickItem[]> = new EventEmitter<QuickPickItem[]>();
     private didChangeSelectedEmitter: EventEmitter<QuickPickItem[]> = new EventEmitter<QuickPickItem[]>();
     private didHideEmitter: EventEmitter<void> = new EventEmitter<void>();
@@ -38,6 +41,9 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
     }
     public get onDidTriggerButton(): Event<QuickInputButton> {
         return this.didTriggerButtonEmitter.event;
+    }
+    public get onDidTriggerItemButton(): Event<QuickPickItemButtonEvent<QuickPickItem>> {
+        return this.didTriggerItemButtonEmitter.event;
     }
     public get activeItems(): QuickPickItem[] {
         return this._activeItems;
