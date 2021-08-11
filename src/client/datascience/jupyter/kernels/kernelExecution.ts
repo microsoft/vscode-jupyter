@@ -87,6 +87,41 @@ export class KernelExecution implements IDisposable {
             traceInfo('Restore notebook state to idle after completion');
         }
     }
+
+    /**
+     * This is a temporary method to support interrupting kernels when code cells are executed
+     * outside of the kernelExecution/cellExecution codepath. Do not use!
+     */
+    public async interruptInteractiveKernel(
+        document: NotebookDocument,
+        notebookPromise?: Promise<INotebook>
+    ): Promise<InterruptResult> {
+        const notebook = notebookPromise ? await notebookPromise.catch(() => undefined) : undefined;
+        if (!notebook) {
+            traceInfo('No notebook to interrupt');
+            this._interruptPromise = undefined;
+            return InterruptResult.Success;
+        }
+        const executionQueue = this.documentExecutions.get(document);
+        // First cancel all the cells & then wait for them to complete.
+        // Both must happen together, we cannot just wait for cells to complete, as its possible
+        // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
+        // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
+        const pendingCells =
+            executionQueue === undefined
+                ? createDeferred().promise
+                : executionQueue.cancel().then(() => executionQueue.waitForCompletion());
+        // Interrupt the active execution
+        const result = this._interruptPromise
+            ? await this._interruptPromise
+            : await (this._interruptPromise = this.interruptExecution(document, notebook.session, pendingCells));
+
+        // Done interrupting, clear interrupt promise
+        this._interruptPromise = undefined;
+
+        return result;
+    }
+
     /**
      * Interrupts the execution of cells.
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.

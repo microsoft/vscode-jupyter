@@ -143,6 +143,7 @@ export interface IKernel extends IAsyncDisposable {
     readonly notebook?: INotebook;
     start(options?: { disableUI?: boolean; document: NotebookDocument }): Promise<void>;
     interrupt(document: NotebookDocument): Promise<InterruptResult>;
+    interruptInteractiveKernel(document: NotebookDocument): Promise<InterruptResult>;
     restart(document: NotebookDocument): Promise<void>;
     executeCell(cell: NotebookCell): Promise<void>;
     executeAllCells(document: NotebookDocument): Promise<void>;
