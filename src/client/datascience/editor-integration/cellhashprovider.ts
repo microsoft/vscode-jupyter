@@ -5,27 +5,26 @@ import type { KernelMessage } from '@jupyterlab/services';
 import * as hashjs from 'hash.js';
 import { inject, injectable, multiInject, optional } from 'inversify';
 import stripAnsi from 'strip-ansi';
-import { Event, EventEmitter, Position, Range, TextDocumentChangeEvent, TextDocumentContentChangeEvent } from 'vscode';
+import {
+    Event,
+    EventEmitter,
+    NotebookCell,
+    Position,
+    Range,
+    TextDocumentChangeEvent,
+    TextDocumentContentChangeEvent
+} from 'vscode';
 
-import { splitMultilineString } from '../../../datascience-ui/common';
+import { concatMultilineString, splitMultilineString } from '../../../datascience-ui/common';
 import { IDebugService, IDocumentManager } from '../../common/application/types';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { getCellResource } from '../cellFactory';
-import { CellMatcher } from '../cellMatcher';
 import { Identifiers } from '../constants';
-import {
-    ICell,
-    ICellHash,
-    ICellHashListener,
-    ICellHashProvider,
-    IFileHashes,
-    INotebook,
-    INotebookExecutionLogger
-} from '../types';
+import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes, INotebook } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
@@ -46,7 +45,7 @@ interface IRangedCellHash extends ICellHash {
 // This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
 // hashes for cells.
 @injectable()
-export class CellHashProvider implements ICellHashProvider, INotebookExecutionLogger {
+export class CellHashProvider implements ICellHashProvider {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
@@ -106,29 +105,18 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         this.updateEventEmitter.fire();
     }
 
-    public async preExecute(cell: ICell, silent: boolean): Promise<void> {
-        try {
-            if (!silent) {
-                // Don't log empty cells
-                const stripped = this.extractExecutableLines(cell);
-                if (stripped.length > 0 && stripped.find((s) => s.trim().length > 0)) {
-                    // When the user adds new code, we know the execution count is increasing
-                    this.executionCount += 1;
+    public async onBeforeCellExecute(cell: NotebookCell) {
+        // Don't log empty cells
+        const executableLines = this.extractExecutableLines(cell);
+        if (executableLines.length > 0 && executableLines.find((s) => s.trim().length > 0)) {
+            // When the user adds new code, we know the execution count is increasing
+            this.executionCount += 1;
 
-                    // Skip hash on unknown file though
-                    if (cell.file !== Identifiers.EmptyFileName) {
-                        await this.addCellHash(cell, this.executionCount);
-                    }
-                }
+            // Skip hash on unknown file though
+            if (cell.metadata.interactive?.file !== Identifiers.EmptyFileName) {
+                await this.addCellHash(cell, this.executionCount);
             }
-        } catch (exc) {
-            // Don't let exceptions in a preExecute mess up normal operation
-            traceError(exc);
         }
-    }
-
-    public async postExecute(_cell: ICell, _silent: boolean): Promise<void> {
-        noop();
     }
 
     public preHandleIOPub(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage {
@@ -146,36 +134,22 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         return msg;
     }
 
-    public extractExecutableLines(cell: ICell): string[] {
-        const cellMatcher = new CellMatcher(this.configService.getSettings(getCellResource(cell)));
-        const lines = splitMultilineString(cell.data.source);
-        // Only strip this off the first line. Otherwise we want the markers in the code.
-        if (lines.length > 0 && (cellMatcher.isCode(lines[0]) || cellMatcher.isMarkdown(lines[0]))) {
-            return lines.slice(1);
-        }
+    public extractExecutableLines(cell: NotebookCell): string[] {
+        const lines = splitMultilineString(cell.document.getText());
         return lines;
     }
 
-    public generateHashFileName(cell: ICell, expectedCount: number): string {
-        // First get the true lines from the cell
-        const { stripped } = this.extractStrippedLines(cell);
-
-        // Then use that to make a hash value
-        const hashedCode = stripped.join('');
-        const hash = hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12);
-        return `<ipython-input-${expectedCount}-${hash}>`;
-    }
-
-    // eslint-disable-next-line complexity
-    public async addCellHash(cell: ICell, expectedCount: number): Promise<void> {
+    public async addCellHash(cell: NotebookCell, expectedCount: number): Promise<void> {
         // Find the text document that matches. We need more information than
         // the add code gives us
-        const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, cell.file));
+        const { line: cellLine, file } = cell.metadata.interactive;
+        const executionId = cell.metadata.executionId;
+        const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, file));
         if (doc) {
             // Compute the code that will really be sent to jupyter
             const { stripped, trueStartLine } = this.extractStrippedLines(cell);
 
-            const line = doc.lineAt(trueStartLine);
+            const line = doc.lineAt(trueStartLine + 1);
             const endLine = doc.lineAt(Math.min(trueStartLine + stripped.length - 1, doc.lineCount - 1));
 
             // Find the first non blank line
@@ -186,13 +160,13 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
 
             // Use the original values however to track edits. This is what we need
             // to move around
-            const startOffset = doc.offsetAt(new Position(cell.line, 0));
+            const startOffset = doc.offsetAt(new Position(cellLine, 0));
             const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
 
             // Compute the runtime line and adjust our cell/stripped source for debugging
-            const runtimeLine = this.adjustRuntimeForDebugging(cell, stripped, startOffset, endOffset);
+            const runtimeLine = this.adjustRuntimeForDebugging(cell, stripped);
             const hashedCode = stripped.join('');
-            const realCode = doc.getText(new Range(new Position(cell.line, 0), endLine.rangeIncludingLineBreak.end));
+            const realCode = doc.getText(new Range(new Position(cellLine, 0), endLine.rangeIncludingLineBreak.end));
 
             const hash: IRangedCellHash = {
                 hash: hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12),
@@ -207,13 +181,13 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
                 trimmedRightCode: stripped.map((s) => s.replace(/[ \t\r]+\n$/g, '\n')).join(''),
                 realCode,
                 runtimeLine,
-                id: cell.id,
+                id: executionId,
                 timestamp: Date.now()
             };
 
             traceInfo(`Adding hash for ${expectedCount} = ${hash.hash} with ${stripped.length} lines`);
 
-            let list = this.hashes.get(cell.file);
+            let list = this.hashes.get(file);
             if (!list) {
                 list = [];
             }
@@ -236,15 +210,15 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
             if (!inserted) {
                 list.push(hash);
             }
-            this.hashes.set(cell.file, list);
+            this.hashes.set(file, list);
 
             // Save a regex to find this file later when looking for
             // exceptions in output
-            if (!this.traceBackRegexes.has(cell.file)) {
-                const fileDisplayName = this.fs.getDisplayName(cell.file);
+            if (!this.traceBackRegexes.has(file)) {
+                const fileDisplayName = this.fs.getDisplayName(file);
                 const escaped = _escapeRegExp(fileDisplayName);
                 const fileMatchRegex = new RegExp(`\\[.*?;32m${escaped}`);
-                this.traceBackRegexes.set(cell.file, fileMatchRegex);
+                this.traceBackRegexes.set(file, fileMatchRegex);
             }
 
             // Tell listeners we have new hashes.
@@ -278,14 +252,14 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         }
     }
 
-    private extractStrippedLines(cell: ICell): { stripped: string[]; trueStartLine: number } {
+    private extractStrippedLines(cell: NotebookCell): { stripped: string[]; trueStartLine: number } {
         // Compute the code that will really be sent to jupyter
-        const lines = splitMultilineString(cell.data.source);
+        const lines = splitMultilineString(cell.document.getText());
         const stripped = this.extractExecutableLines(cell);
 
         // Figure out our true 'start' line. This is what we need to tell the debugger is
         // actually the start of the code as that's what Jupyter will be getting.
-        let trueStartLine = cell.line;
+        let trueStartLine = cell.metadata.interactive.line;
         for (let i = 0; i < stripped.length; i += 1) {
             if (stripped[i] !== lines[i]) {
                 trueStartLine += i + 1;
@@ -361,20 +335,17 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         });
     }
 
-    private adjustRuntimeForDebugging(
-        cell: ICell,
-        source: string[],
-        _cellStartOffset: number,
-        _cellEndOffset: number
-    ): number {
+    private adjustRuntimeForDebugging(cell: NotebookCell, source: string[]): number {
         if (
             this.debugService.activeDebugSession &&
             this.configService.getSettings(getCellResource(cell)).stopOnFirstLineWhileDebugging
         ) {
             // Inject the breakpoint line
             source.splice(0, 0, 'breakpoint()\n');
-            cell.data.source = source;
-            cell.extraLines = [0];
+            // Store the modified source code in the metadata for retrieval in the kernelExecution.ts class.
+            // Longer term we should modify the kernelExecution codepath to understand InteractiveCells as a
+            // first class concept.
+            cell.metadata.interactive.modifiedSource = concatMultilineString(source);
 
             // Start on the second line
             return 2;

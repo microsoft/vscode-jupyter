@@ -680,7 +680,6 @@ export interface ICell {
     line: number;
     state: CellState;
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
-    extraLines?: number[];
 }
 
 // CellRange is used as the basis for creating new ICells.
@@ -937,7 +936,7 @@ export interface ICellHashProvider {
     getHashes(): IFileHashes[];
     getExecutionCount(): number;
     incExecutionCount(): void;
-    generateHashFileName(cell: ICell, executionCount: number): string;
+    onBeforeCellExecute(notebookCell: NotebookCell): Promise<void>;
 }
 
 export interface IDebugLocation {

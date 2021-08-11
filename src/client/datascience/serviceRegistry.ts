@@ -202,7 +202,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProviderWrapper);
-    serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
+    serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
     serviceManager.addSingleton<IHoverProvider>(IHoverProvider, HoverProvider);
     serviceManager.addBinding(IHoverProvider, INotebookExecutionLogger);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
