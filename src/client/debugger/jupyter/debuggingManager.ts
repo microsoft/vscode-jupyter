@@ -218,7 +218,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 if (!cell) {
                     const range = editor?.selections[0];
                     if (range) {
-                        cell = editor.document.cellAt(range.start);
+                        cell = editor?.document.cellAt(range.start);
                     }
                 }
 
