@@ -184,7 +184,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         this.updateToolbar(true);
                         void this.startDebugging(editor.document);
                     } else {
-                        this.installIpykernel6(editor.document);
+                        void this.installIpykernel6(editor.document);
                     }
                 } else {
                     void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
@@ -199,7 +199,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         this.updateCellToolbar(true);
                         void this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
                     } else {
-                        this.installIpykernel6(editor.document);
+                        void this.installIpykernel6(editor.document);
                     }
                 } else {
                     void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
@@ -242,7 +242,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         this.updateToolbar(true);
                         void this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
                     } else {
-                        this.installIpykernel6(editor.document);
+                        void this.installIpykernel6(editor.document);
                     }
                 } else {
                     void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
@@ -369,7 +369,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
         if (response === DataScience.jupyterInstall()) {
             const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
-            this.installer.install(Product.ipykernel, controller?.connection.interpreter, undefined, true);
+            void this.installer.install(Product.ipykernel, controller?.connection.interpreter, undefined, true);
         }
     }
 }
