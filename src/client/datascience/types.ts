@@ -936,7 +936,7 @@ export interface ICellHashProvider {
     getHashes(): IFileHashes[];
     getExecutionCount(): number;
     incExecutionCount(): void;
-    onBeforeCellExecute(notebookCell: NotebookCell): Promise<void>;
+    addCellHash(notebookCell: NotebookCell): Promise<void>;
 }
 
 export interface IDebugLocation {

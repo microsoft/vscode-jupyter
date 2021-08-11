@@ -105,7 +105,7 @@ export class CellHashProvider implements ICellHashProvider {
         this.updateEventEmitter.fire();
     }
 
-    public async onBeforeCellExecute(cell: NotebookCell) {
+    public async addCellHash(cell: NotebookCell) {
         // Don't log empty cells
         const executableLines = this.extractExecutableLines(cell);
         if (executableLines.length > 0 && executableLines.find((s) => s.trim().length > 0)) {
@@ -114,7 +114,7 @@ export class CellHashProvider implements ICellHashProvider {
 
             // Skip hash on unknown file though
             if (cell.metadata.interactive?.file !== Identifiers.EmptyFileName) {
-                await this.addCellHash(cell, this.executionCount);
+                await this.generateHash(cell, this.executionCount);
             }
         }
     }
@@ -139,7 +139,7 @@ export class CellHashProvider implements ICellHashProvider {
         return lines;
     }
 
-    public async addCellHash(cell: NotebookCell, expectedCount: number): Promise<void> {
+    private async generateHash(cell: NotebookCell, expectedCount: number): Promise<void> {
         // Find the text document that matches. We need more information than
         // the add code gives us
         const { line: cellLine, file } = cell.metadata.interactive;

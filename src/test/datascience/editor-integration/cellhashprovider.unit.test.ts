@@ -90,7 +90,7 @@ suite('CellHashProvider Unit Tests', () => {
             outputs: [],
             mime: undefined
         };
-        return hashProvider.onBeforeCellExecute(cell);
+        return hashProvider.addCellHash(cell);
     }
 
     test('Add a cell and edit it', async () => {

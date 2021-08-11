@@ -438,7 +438,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
             await this.setFileInKernel(file, notebookEditor.document);
 
-            await this.cellHashProvider.onBeforeCellExecute(notebookCell);
+            await this.cellHashProvider.addCellHash(notebookCell);
             await this.kernel!.executeCell(notebookCell);
 
             traceInfo(`Finished execution for ${id}`);
