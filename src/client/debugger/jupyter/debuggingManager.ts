@@ -281,8 +281,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             request: 'attach',
             internalConsoleOptions: 'neverOpen',
             justMyCode: true,
-            // add the doc uri to the config
-            __document: doc.uri.toString(),
             // add a property to the config to know if the session is runByLine
             __mode: mode,
             __cellIndex: cell.index
@@ -298,8 +296,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             request: 'attach',
             internalConsoleOptions: 'neverOpen',
             justMyCode: false,
-            // add the doc uri to the config
-            __document: doc.uri.toString(),
             __mode: KernelDebugMode.Everything
         };
         return this.startDebuggingConfig(doc, config);
