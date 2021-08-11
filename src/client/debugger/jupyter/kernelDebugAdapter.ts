@@ -120,7 +120,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private readonly configuration: IKernelDebugAdapterConfig;
-    private runByLineThreadId: number = 1;
+    private threadId: number = 1;
     private readonly disposables: IDisposable[] = [];
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
 
@@ -144,7 +144,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 // This call starts that
                 this.stackTrace();
 
-                this.runByLineThreadId = content.body.threadId;
+                this.threadId = content.body.threadId;
                 this.sendMessage.fire(msg.content);
             }
         };
@@ -199,7 +199,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
     public runByLineContinue() {
         if (this.configuration.__mode === KernelDebugMode.RunByLine) {
-            void this.session.customRequest('stepIn', { threadId: this.runByLineThreadId });
+            void this.session.customRequest('stepIn', { threadId: this.threadId });
         }
     }
 
@@ -223,7 +223,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     private stackTrace(): void {
-        void this.session.customRequest('stackTrace', { threadId: this.runByLineThreadId });
+        void this.session.customRequest('stackTrace', { threadId: this.threadId });
     }
 
     private scopes(frameId: number): void {
