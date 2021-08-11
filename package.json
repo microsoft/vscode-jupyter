@@ -948,11 +948,6 @@
                     "command": "jupyter.notebookeditor.export",
                     "group": "Jupyter",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.debugNotebook",
-                    "group": "navigation@3",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.jupyter.experimental.debugging"
                 }
             ],
             "notebook/cell/title": [
