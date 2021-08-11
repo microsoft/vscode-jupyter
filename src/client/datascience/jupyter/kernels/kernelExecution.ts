@@ -192,7 +192,10 @@ export class KernelExecution implements IDisposable {
         // Done restarting, clear restart promise
         this._restartPromise = undefined;
     }
-    public async restartInteractiveKernel(document: NotebookDocument, notebookPromise?: Promise<INotebook>): Promise<void> {
+    public async restartInteractiveKernel(
+        document: NotebookDocument,
+        notebookPromise?: Promise<INotebook>
+    ): Promise<void> {
         trackKernelResourceInformation(document.uri, { restartKernel: true });
         const executionQueue = this.documentExecutions.get(document);
         // Possible we don't have a notebook.
