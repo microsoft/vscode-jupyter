@@ -180,13 +180,13 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
     public runByLineContinue() {
         if (this.isRunByLine) {
-            this.session.customRequest('stepIn', { threadId: this.runByLineThreadId });
+            void this.session.customRequest('stepIn', { threadId: this.runByLineThreadId });
         }
     }
 
     public runByLineStop() {
         if (this.isRunByLine) {
-            this.session.customRequest('disconnect', { restart: false });
+            void this.session.customRequest('disconnect', { restart: false });
         }
     }
 
@@ -206,19 +206,19 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     private runByLineStackTrace(): void {
-        this.session.customRequest('stackTrace', { threadId: this.runByLineThreadId });
+        void this.session.customRequest('stackTrace', { threadId: this.runByLineThreadId });
     }
 
     private runByLineScope(frameId: number): void {
-        this.session.customRequest('scopes', { frameId });
+        void this.session.customRequest('scopes', { frameId });
     }
 
     private runByLineVariables(variablesReference: number): void {
-        this.session.customRequest('variables', { variablesReference });
+        void this.session.customRequest('variables', { variablesReference });
     }
 
     private async dumpCellsThatRanBeforeDebuggingBegan() {
-        this.cellMap.getCellsAnClearQueue(this.notebookDocument).forEach(async (cell) => {
+        this.cellMap.getCellsAndClearQueue(this.notebookDocument).forEach(async (cell) => {
             await this.dumpCell(cell.document.uri.toString());
         });
     }

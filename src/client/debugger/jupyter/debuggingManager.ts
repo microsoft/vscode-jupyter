@@ -112,7 +112,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 this.updateCellToolbar(false);
                 for (const [doc, dbg] of this.notebookToDebugger.entries()) {
                     if (dbg && session === (await dbg.session)) {
-                        this.debuggingCellMap.getCellsAnClearQueue(doc);
+                        this.debuggingCellMap.getCellsAndClearQueue(doc);
                         this.notebookToDebugger.delete(doc);
                         break;
                     }
@@ -121,7 +121,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             // track closing of notebooks documents
             workspace.onDidCloseNotebookDocument(async (document) => {
-                this.debuggingCellMap.getCellsAnClearQueue(document);
+                this.debuggingCellMap.getCellsAndClearQueue(document);
                 const dbg = this.notebookToDebugger.get(document);
                 if (dbg) {
                     this.updateToolbar(false);
