@@ -14,7 +14,7 @@ import {
     IPyWidgetMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { KernelSocketOptions } from '../../../client/datascience/types';
-import { logMessage } from '../../react-common/logger';
+import { logMessageOnlyOnCI } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -315,7 +315,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.messageHooks.set(msgId, hook);
 
         // Wrap the hook and send it to the real kernel
-        logMessage(`Registering hook for ${msgId}`);
+        logMessageOnlyOnCI(`Registering hook for ${msgId}`);
         this.realKernel.registerMessageHook(msgId, this.messageHook);
     }
 
@@ -341,7 +341,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.lastHookedMessageId = undefined;
 
         // Remove from the real kernel
-        logMessage(`Removing hook for ${msgId}`);
+        logMessageOnlyOnCI(`Removing hook for ${msgId}`);
         this.realKernel.removeMessageHook(msgId, this.messageHook);
     }
 
@@ -384,7 +384,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     }
     private messageHookInterceptor(msg: KernelMessage.IIOPubMessage): boolean | PromiseLike<boolean> {
         try {
-            logMessage(
+            logMessageOnlyOnCI(
                 `Message hook callback for ${(msg as any).header.msg_type} and ${(msg.parent_header as any).msg_id}`
             );
             // Save the active message that is currently being hooked. The Extension
