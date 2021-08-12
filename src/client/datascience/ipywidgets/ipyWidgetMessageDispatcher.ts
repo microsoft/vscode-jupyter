@@ -310,9 +310,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 this.fullHandleMessage = { id: message!.header.msg_id, promise: createDeferred<void>() };
             }
         }
-        // If we're not using ipywidgets, then no need to broadcast output messages from streams.
-        // Remember, stream messages can be very large (e.g. when running a training).
-        // To date, there are no widgets we're aware of that deal with outputs expcet for Jupyters own output widget.
 
         if (typeof data === 'string') {
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, { id: msgUuid, data });
