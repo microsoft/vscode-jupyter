@@ -215,6 +215,10 @@ export class GuestJupyterNotebook
         }
     }
 
+    public async runInitialSetup(): Promise<void> {
+        noop();
+    }
+
     public async getCompletion(
         _cellCode: string,
         _offsetInCode: number,
