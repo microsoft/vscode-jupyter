@@ -593,7 +593,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
         try {
             if (this.kernel && notebookEditor) {
-                await this.kernel.restart(notebookEditor.document);
+                await this.kernel.restartInteractiveKernel(notebookEditor.document);
 
                 // Reset our file in the kernel.
                 const fileInKernel = this.fileInKernel;
@@ -613,7 +613,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server
             if (exc instanceof JupyterKernelPromiseFailedError && this.kernel) {
                 await this.kernel.dispose();
-                await this.kernel.restart(notebookEditor.document);
+                await this.kernel.restartInteractiveKernel(notebookEditor.document);
             } else {
                 // Show the error message
                 this.applicationShell.showErrorMessage(exc).then(noop, noop);

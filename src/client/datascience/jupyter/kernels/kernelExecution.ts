@@ -192,6 +192,39 @@ export class KernelExecution implements IDisposable {
         // Done restarting, clear restart promise
         this._restartPromise = undefined;
     }
+    public async restartInteractiveKernel(
+        document: NotebookDocument,
+        notebookPromise?: Promise<INotebook>
+    ): Promise<void> {
+        trackKernelResourceInformation(document.uri, { restartKernel: true });
+        const executionQueue = this.documentExecutions.get(document);
+        // Possible we don't have a notebook.
+        const notebook = notebookPromise ? await notebookPromise.catch(() => undefined) : undefined;
+        traceInfo('Restart kernel execution');
+        // First cancel all the cells & then wait for them to complete.
+        // Both must happen together, we cannot just wait for cells to complete, as its possible
+        // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
+        // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
+        const pendingCells =
+            executionQueue === undefined
+                ? createDeferred().promise
+                : executionQueue.cancel().then(() => executionQueue.waitForCompletion());
+
+        if (!notebook) {
+            traceInfo('No notebook to interrupt');
+            this._restartPromise = undefined;
+            await pendingCells;
+            return;
+        }
+
+        // Restart the active execution
+        await (this._restartPromise
+            ? this._restartPromise
+            : (this._restartPromise = this.restartExecution(document, notebook.session)));
+
+        // Done restarting, clear restart promise
+        this._restartPromise = undefined;
+    }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
