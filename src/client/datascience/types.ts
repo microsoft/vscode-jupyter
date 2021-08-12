@@ -203,6 +203,7 @@ export interface INotebook extends IAsyncDisposable {
         cancelToken?: CancellationToken
     ): Promise<INotebookCompletion>;
     restartKernel(timeoutInMs: number): Promise<void>;
+    runInitialSetup(): Promise<void>;
     waitForIdle(timeoutInMs: number): Promise<void>;
     interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
     setLaunchingFile(file: string): Promise<void>;
