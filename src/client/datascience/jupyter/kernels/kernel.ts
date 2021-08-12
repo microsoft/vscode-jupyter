@@ -51,6 +51,7 @@ import { isCI, MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import { DataScience } from '../../../common/utils/localize';
+import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -105,7 +106,8 @@ export class Kernel implements IKernel {
         context: IExtensionContext,
         private readonly serverStorage: IJupyterServerUriStorage,
         controller: NotebookController,
-        private readonly configService: IConfigurationService
+        private readonly configService: IConfigurationService,
+        outputTracker: CellOutputDisplayIdTracker
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -115,7 +117,8 @@ export class Kernel implements IKernel {
             context,
             interruptTimeout,
             disposables,
-            controller
+            controller,
+            outputTracker
         );
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;

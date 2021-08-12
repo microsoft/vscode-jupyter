@@ -20,9 +20,9 @@ import {
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
 import { IDocumentManager, IVSCodeNotebook } from '../../../common/application/types';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
+import { isCI, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { traceError, traceInfoIf, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
@@ -314,7 +314,8 @@ export class NotebookCellStateTracker implements IDisposable {
 }
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
-    traceInfo(
+    traceInfoIf(
+        isCI,
         `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
             cell.executionSummary?.executionOrder
         }. ${message}`
@@ -569,7 +570,7 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
     try {
         const stringValue = Buffer.from(value as Uint8Array).toString('utf8');
         if (mime === CellOutputMimeTypes.error) {
-            traceInfo(`Concerting ${mime} from ${stringValue}`);
+            traceInfoIf(isCI, `Converting ${mime} from ${stringValue}`);
             return JSON.parse(stringValue);
         } else if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
             return splitMultilineString(stringValue);

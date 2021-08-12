@@ -23,6 +23,7 @@ import {
     INotebookEditorProvider,
     INotebookProvider
 } from '../../types';
+import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { Kernel } from './kernel';
 import { IKernel, IKernelProvider, KernelOptions } from './types';
 
@@ -40,7 +41,8 @@ export class KernelProvider implements IKernelProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
+        @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker
     ) {
         this.asyncDisposables.push(this);
     }
@@ -79,7 +81,8 @@ export class KernelProvider implements IKernelProvider {
             this.context,
             this.serverStorage,
             options.controller,
-            this.configService
+            this.configService,
+            this.outputTracker
         );
         this.asyncDisposables.push(kernel);
         this.kernelsByNotebook.set(notebook, { options, kernel });
