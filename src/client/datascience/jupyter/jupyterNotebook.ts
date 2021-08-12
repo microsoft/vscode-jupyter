@@ -526,10 +526,7 @@ export class JupyterNotebookBase implements INotebook {
             await this.session.restart(timeoutMs);
 
             // Rerun our initial setup for the notebook
-            this.ranInitialSetup = false;
-            traceInfo('restartKernel - initialSetup');
-            await this.initialize();
-            traceInfo('restartKernel - initialSetup completed');
+            await this.runInitialSetup();
 
             // Tell our loggers
             this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
@@ -539,6 +536,13 @@ export class JupyterNotebookBase implements INotebook {
         }
 
         throw this.getDisposedError();
+    }
+
+    public async runInitialSetup() {
+        this.ranInitialSetup = false;
+        traceInfo('restartKernel - initialSetup');
+        await this.initialize();
+        traceInfo('restartKernel - initialSetup completed');
     }
 
     @captureTelemetry(Telemetry.InterruptJupyterTime)
