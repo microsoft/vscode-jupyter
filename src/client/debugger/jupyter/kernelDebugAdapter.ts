@@ -15,7 +15,8 @@ import {
     NotebookCellExecutionStateChangeEvent,
     NotebookCellExecutionState,
     DebugConfiguration,
-    Uri
+    Uri,
+    NotebookCellKind
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { randomBytes } from 'crypto';
@@ -158,7 +159,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         };
         this.jupyterSession.onIOPubMessage(iopubHandler);
 
-        void this.dumpCellsThatRanBeforeDebuggingBegan();
+        void this.dumpAllCells();
         notebooks.onDidChangeNotebookCellExecutionState(
             (cellStateChange: NotebookCellExecutionStateChangeEvent) => {
                 // If a cell has moved to idle, stop the debug session
@@ -242,11 +243,12 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         void this.session.customRequest('variables', { variablesReference });
     }
 
-    private async dumpCellsThatRanBeforeDebuggingBegan() {
-        // Dump all the cells
-        // this.cellMap.getCellsAndClearQueue(this.notebookDocument).forEach(async (cell) => {
-        //     await this.dumpCell(cell.document.uri.toString());
-        // });
+    private dumpAllCells() {
+        this.notebookDocument.getCells().forEach((cell) => {
+            if (cell.kind === NotebookCellKind.Code) {
+                void this.dumpCell(cell.document.uri.toString());
+            }
+        });
     }
 
     // Dump content of given cell into a tmp file and return path to file.
