@@ -47,6 +47,16 @@
   {
     "kind": 1,
     "language": "markdown",
+    "value": "-----\r\n## Notebook Sync Discussion Topics"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_ALL_REPOS is:open is:issue label:discuss-at-standup "
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
     "value": "---\r\n## Triage\r\n\r\n\r\nIssues that should be looked at *by the team* should remain tagged with the \"*needs-triage*\" label by the engineer on issue-duty."
   },
   {
