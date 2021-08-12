@@ -272,7 +272,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.fullHandleMessage = undefined;
         }
     }
-    // private isUsingOutputWidgets?: boolean;
     private async onKernelSocketMessage(data: WebSocketData): Promise<void> {
         // Hooks expect serialized data as this normally comes from a WebSocket
         let message: undefined | KernelMessage.ICommOpenMsg; // = this.deserialize(data as any) as any;
