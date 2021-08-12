@@ -52,7 +52,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:open is:issue in:title \"<YOUR SEARCH TERM HERE>\""
+    "value": "$ALL_REPOS is:open is:issue in:title \"YourSearchTerm\""
   },
   {
     "kind": 1,
