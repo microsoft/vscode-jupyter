@@ -14,7 +14,8 @@ import {
     notebooks,
     NotebookCellExecutionStateChangeEvent,
     NotebookCellExecutionState,
-    DebugConfiguration
+    DebugConfiguration,
+    Uri
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { randomBytes } from 'crypto';
@@ -107,7 +108,11 @@ export interface IKernelDebugAdapterConfig extends DebugConfiguration {
 
 function assertIsDebugConfig(thing: unknown): asserts thing is IKernelDebugAdapterConfig {
     const config = thing as IKernelDebugAdapterConfig;
-    if (typeof config.__mode === 'undefined') {
+    if (
+        typeof config.__mode === 'undefined' ||
+        ((config.__mode === KernelDebugMode.Cell || config.__mode === KernelDebugMode.RunByLine) &&
+            typeof config.__cellIndex === 'undefined')
+    ) {
         throw new Error('Invalid launch configuration');
     }
 }
@@ -123,6 +128,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     private threadId: number = 1;
     private readonly disposables: IDisposable[] = [];
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
+    public readonly debugCellUri: Uri | undefined;
 
     constructor(
         private session: DebugSession,
@@ -135,6 +141,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         const configuration = this.session.configuration;
         assertIsDebugConfig(configuration);
         this.configuration = configuration;
+
+        if (configuration.__mode === KernelDebugMode.Cell || configuration.__mode === KernelDebugMode.RunByLine) {
+            this.debugCellUri = notebookDocument.cellAt(configuration.__cellIndex!)?.document.uri;
+        }
 
         const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -467,7 +477,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         });
 
         // put breakpoint at the beginning of the cell
-        const cellIndex = Number(this.session.configuration.__cellIndex);
+        const cellIndex = Number(this.configuration.__cellIndex);
         const cell = this.notebookDocument.cellAt(cellIndex);
 
         await this.dumpCell(cell.document.uri.toString());
