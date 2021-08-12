@@ -47,6 +47,16 @@
   {
     "kind": 1,
     "language": "markdown",
+    "value": "----\r\n## Quick Bug Query"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$ALL_REPOS is:open is:issue in:title \"<YOUR SEARCH TERM HERE>\""
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
     "value": "-----\r\n## Notebook Sync Discussion Topics"
   },
   {
