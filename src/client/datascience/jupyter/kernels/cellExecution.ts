@@ -7,7 +7,6 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services/lib/kernel/messages';
 import {
-    ExtensionMode,
     NotebookCell,
     NotebookCellExecution,
     NotebookCellKind,
@@ -25,9 +24,9 @@ import {
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { IApplicationShell } from '../../../common/application/types';
-import { traceError, traceErrorIf, traceInfoIf, traceWarning } from '../../../common/logger';
+import { traceError, traceInfoIf, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
-import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../../common/types';
+import { IDisposable, IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
@@ -67,7 +66,6 @@ export class CellExecutionFactory {
     constructor(
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly appShell: IApplicationShell,
-        private readonly context: IExtensionContext,
         private readonly disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
         private readonly outputTracker: CellOutputDisplayIdTracker
@@ -80,7 +78,6 @@ export class CellExecutionFactory {
             this.errorHandler,
             this.appShell,
             metadata,
-            this.context,
             this.disposables,
             this.controller,
             this.outputTracker
@@ -141,25 +138,10 @@ export class CellExecution implements IDisposable {
         private readonly applicationService: IApplicationShell,
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
         disposables: IDisposableRegistry,
-        extensionContext: IExtensionContext,
         private readonly controller: NotebookController,
         private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker
     ) {
         disposables.push(this);
-        // These are only used in the tests.
-        // See where this is used to understand its purpose.
-        if (
-            !CellExecution.cellsCompletedForTesting.has(cell) ||
-            CellExecution.cellsCompletedForTesting.get(cell)!.completed
-        ) {
-            CellExecution.cellsCompletedForTesting.set(cell, createDeferred<void>());
-        } else {
-            traceErrorIf(
-                extensionContext.extensionMode !== ExtensionMode.Production,
-                `Add new Cell Completion Deferred for ${cell.index}`
-            );
-        }
-
         workspace.onDidCloseTextDocument(
             (e) => {
                 // If the cell is deleted, then dispose the request object.
@@ -194,21 +176,11 @@ export class CellExecution implements IDisposable {
         errorHandler: IDataScienceErrorHandler,
         appService: IApplicationShell,
         metadata: Readonly<KernelConnectionMetadata>,
-        context: IExtensionContext,
         disposables: IDisposableRegistry,
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker
     ) {
-        return new CellExecution(
-            cell,
-            errorHandler,
-            appService,
-            metadata,
-            disposables,
-            context,
-            controller,
-            outputTracker
-        );
+        return new CellExecution(cell, errorHandler, appService, metadata, disposables, controller, outputTracker);
     }
     public async start(notebook: INotebook) {
         if (this.cancelHandled) {
@@ -285,11 +257,6 @@ export class CellExecution implements IDisposable {
      */
     public dispose() {
         traceCellMessage(this.cell, 'Execution disposed');
-        const deferred = CellExecution.cellsCompletedForTesting.get(this.cell);
-        if (deferred) {
-            CellExecution.cellsCompletedForTesting.delete(this.cell);
-            deferred.resolve();
-        }
         disposeAllDisposables(this.disposables);
     }
     private clearLastUsedStreamOutput() {
@@ -776,7 +743,6 @@ export class CellExecution implements IDisposable {
             this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
             void task?.appendOutput([output]);
         }
-
         this.endTemporaryTask();
     }
 

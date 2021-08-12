@@ -30,7 +30,6 @@ import { traceInfo } from '../../../client/common/logger';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
-import { CellExecution } from '../../../client/datascience/jupyter/kernels/cellExecution';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 import {
@@ -446,9 +445,10 @@ export async function prewarmNotebooks() {
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
+        const promise = waitForExecutionCompletedSuccessfully(cell, 60_000);
         await runAllCellsInActiveNotebook();
+        await promise;
         // Wait for Jupyter to start.
-        await waitForExecutionCompletedSuccessfully(cell, 60_000);
         await closeActiveWindows();
     } finally {
         disposables.forEach((d) => d.dispose());
@@ -473,25 +473,45 @@ function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
  * In tests we can end up deleting cells. However if extension is still dealing with the cells, we need to give it some time to finish.
  */
 export async function waitForCellExecutionToComplete(cell: NotebookCell) {
-    if (!CellExecution.cellsCompletedForTesting.has(cell)) {
-        CellExecution.cellsCompletedForTesting.set(cell, createDeferred<void>());
-    }
-    // Yes hacky approach, however its difficult to synchronize everything as we update cells in a few places while executing.
-    // 100ms should be plenty sufficient for other code to get executed when dealing with cells.
-    // Again, we need to wait for rest of execution code to access the cells.
-    // Else in tests we'd delete the cells & the extension code could fall over trying to access non-existent cells.
-    // In fact code doesn't fall over, but VS Code just hangs in tests.
-    // If this doesn't work on CI, we'll need to clean up and write more code to ensure we remove these race conditions as done with `CellExecution.cellsCompleted`.
-    await CellExecution.cellsCompletedForTesting.get(cell)!.promise;
+    // if (!CellExecution.cellsCompletedForTesting.has(cell)) {
+    //     CellExecution.cellsCompletedForTesting.set(cell, createDeferred<void>());
+    // }
+    // // Yes hacky approach, however its difficult to synchronize everything as we update cells in a few places while executing.
+    // // 100ms should be plenty sufficient for other code to get executed when dealing with cells.
+    // // Again, we need to wait for rest of execution code to access the cells.
+    // // Else in tests we'd delete the cells & the extension code could fall over trying to access non-existent cells.
+    // // In fact code doesn't fall over, but VS Code just hangs in tests.
+    // // If this doesn't work on CI, we'll need to clean up and write more code to ensure we remove these race conditions as done with `CellExecution.cellsCompleted`.
+    // await CellExecution.cellsCompletedForTesting.get(cell)!.promise;
+    await waitForCondition(
+        async () => (cell.executionSummary?.executionOrder || 0) > 0,
+        defaultTimeout,
+        'Execution did not complete'
+    );
     await sleep(100);
 }
-export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForOutputs(
+    cell: NotebookCell,
+    expectedNumberOfOutputs: number,
+    timeout: number = defaultTimeout
+) {
     await waitForCondition(
-        async () => assertHasExecutionCompletedSuccessfully(cell),
+        async () => cell.outputs.length === expectedNumberOfOutputs,
         timeout,
         `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
-    await waitForCellExecutionToComplete(cell);
+}
+export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, timeout: number = defaultTimeout) {
+    await Promise.all([
+        waitForCondition(
+            async () => assertHasExecutionCompletedSuccessfully(cell),
+            timeout,
+            `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(
+                cell
+            )}`
+        ),
+        waitForCellExecutionToComplete(cell)
+    ]);
 }
 /**
  * When a cell is running (in progress), the start time will be > 0.
@@ -598,7 +618,7 @@ export async function waitForTextOutputInVSCode(
     text: string,
     index: number,
     isExactMatch = true,
-    timeout = 1_000
+    timeout = defaultTimeout
 ) {
     await waitForCondition(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),

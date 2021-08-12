@@ -25,7 +25,7 @@ import { ServerStatus } from '../../../../datascience-ui/interactive-common/main
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext, Resource } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -103,7 +103,6 @@ export class Kernel implements IKernel {
         kernelProvider: IKernelProvider,
         private readonly appShell: IApplicationShell,
         private readonly fs: IFileSystem,
-        context: IExtensionContext,
         private readonly serverStorage: IJupyterServerUriStorage,
         controller: NotebookController,
         private readonly configService: IConfigurationService,
@@ -114,7 +113,6 @@ export class Kernel implements IKernel {
             errorHandler,
             appShell,
             kernelConnectionMetadata,
-            context,
             interruptTimeout,
             disposables,
             controller,
