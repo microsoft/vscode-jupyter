@@ -218,7 +218,7 @@ export class KernelExecution implements IDisposable {
         // Restart the active execution
         await (this._restartPromise
             ? this._restartPromise
-            : (this._restartPromise = this.restartExecution(document, notebook.session)));
+            : (this._restartPromise = this.restartExecution(notebook)));
 
         // Done restarting, clear restart promise
         this._restartPromise = undefined;
