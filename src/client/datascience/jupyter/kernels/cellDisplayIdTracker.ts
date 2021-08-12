@@ -18,7 +18,7 @@ export class CellOutputDisplayIdTracker {
             // We are only interested in cells that were cleared
             if (e.type === 'changeCellOutputs') {
                 e.cells
-                    .filter((cell) => cell.outputs.length)
+                    .filter((cell) => cell.outputs.length === 0)
                     .map((cell) => {
                         // If a cell was cleared, then remove the mapping, the output cannot exist anymore.
                         const displayIdToDelete = this.cellToDisplayIdMapping.get(cell);
