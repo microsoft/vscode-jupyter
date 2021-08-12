@@ -953,24 +953,24 @@
             "notebook/cell/title": [
                 {
                     "command": "jupyter.runByLine",
-                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
                     "group": "inline/cell@0"
                 },
                 {
                     "command": "jupyter.runByLineContinue",
-                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
                     "group": "inline/cell@0"
                 },
                 {
                     "command": "jupyter.runByLineStop",
-                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
                     "group": "inline/cell@0"
                 }
             ],
             "notebook/cell/execute": [
                 {
                     "command": "jupyter.runAndDebugCell",
-                    "when": "notebookType == jupyter-notebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
                 }
             ],
             "interactive/toolbar": [

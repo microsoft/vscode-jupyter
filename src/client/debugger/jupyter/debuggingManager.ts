@@ -19,7 +19,7 @@ import {
 } from 'vscode';
 import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
-import { IDisposable } from '../../common/types';
+import { IDisposable, IInstaller, Product, ProductInstallStatus } from '../../common/types';
 import { IKernelDebugAdapterConfig, KernelDebugAdapter, KernelDebugMode } from './kernelDebugAdapter';
 import { IDebuggingCellMap, INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
@@ -35,6 +35,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IDebuggingManager } from '../types';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { pythonKernelDebugAdapter } from '../constants';
+import { IPythonInstaller } from '../../api/types';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -92,7 +93,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystem) private fs: IFileSystem
+        @inject(IFileSystem) private fs: IFileSystem,
+        @inject(IPythonInstaller) private pythonInstaller: IPythonInstaller,
+        @inject(IInstaller) private readonly installer: IInstaller
     ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
@@ -174,22 +177,30 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 }
             }),
 
-            this.commandManager.registerCommand(DSCommands.DebugNotebook, () => {
+            this.commandManager.registerCommand(DSCommands.DebugNotebook, async () => {
                 const editor = this.vscNotebook.activeNotebookEditor;
                 if (editor) {
-                    this.updateToolbar(true);
-                    void this.startDebugging(editor.document);
+                    if (await this.checkForIpykernel6(editor.document)) {
+                        this.updateToolbar(true);
+                        void this.startDebugging(editor.document);
+                    } else {
+                        void this.installIpykernel6(editor.document);
+                    }
                 } else {
                     void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
                 }
             }),
 
-            this.commandManager.registerCommand(DSCommands.RunByLine, (cell: NotebookCell) => {
+            this.commandManager.registerCommand(DSCommands.RunByLine, async (cell: NotebookCell) => {
                 const editor = this.vscNotebook.activeNotebookEditor;
                 if (editor) {
-                    this.updateToolbar(true);
-                    this.updateCellToolbar(true);
-                    void this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
+                    if (await this.checkForIpykernel6(editor.document)) {
+                        this.updateToolbar(true);
+                        this.updateCellToolbar(true);
+                        void this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
+                    } else {
+                        void this.installIpykernel6(editor.document);
+                    }
                 } else {
                     void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
                 }
@@ -213,7 +224,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 }
             }),
 
-            this.commandManager.registerCommand(DSCommands.RunAndDebugCell, (cell: NotebookCell | undefined) => {
+            this.commandManager.registerCommand(DSCommands.RunAndDebugCell, async (cell: NotebookCell | undefined) => {
                 const editor = this.vscNotebook.activeNotebookEditor;
                 if (!cell) {
                     const range = editor?.selections[0];
@@ -227,8 +238,12 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 }
 
                 if (editor) {
-                    this.updateToolbar(true);
-                    void this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
+                    if (await this.checkForIpykernel6(editor.document)) {
+                        this.updateToolbar(true);
+                        void this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
+                    } else {
+                        void this.installIpykernel6(editor.document);
+                    }
                 } else {
                     void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
                 }
@@ -266,8 +281,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             request: 'attach',
             internalConsoleOptions: 'neverOpen',
             justMyCode: true,
-            // add the doc uri to the config
-            __document: doc.uri.toString(),
             // add a property to the config to know if the session is runByLine
             __mode: mode,
             __cellIndex: cell.index
@@ -283,8 +296,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             request: 'attach',
             internalConsoleOptions: 'neverOpen',
             justMyCode: false,
-            // add the doc uri to the config
-            __document: doc.uri.toString(),
             __mode: KernelDebugMode.Everything
         };
         return this.startDebuggingConfig(doc, config);
@@ -331,6 +342,34 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         }
         if (kernel && kernel.status === ServerStatus.NotStarted) {
             await kernel.start({ document: doc });
+        }
+    }
+
+    private async checkForIpykernel6(doc: NotebookDocument): Promise<boolean> {
+        try {
+            const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
+            const result = await this.pythonInstaller.isProductVersionCompatible(
+                Product.ipykernel,
+                '>=6.0.0',
+                controller?.connection.interpreter
+            );
+
+            return result === ProductInstallStatus.Installed;
+        } catch {
+            return false;
+        }
+    }
+
+    private async installIpykernel6(doc: NotebookDocument) {
+        const response = await this.appShell.showInformationMessage(
+            DataScience.needIpykernel6(),
+            { modal: true },
+            DataScience.jupyterInstall()
+        );
+
+        if (response === DataScience.jupyterInstall()) {
+            const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
+            void this.installer.install(Product.ipykernel, controller?.connection.interpreter, undefined, true);
         }
     }
 }
