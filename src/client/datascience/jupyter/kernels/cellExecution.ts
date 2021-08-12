@@ -18,12 +18,13 @@ import {
     WorkspaceEdit,
     NotebookCellData,
     NotebookRange,
-    Range
+    Range,
+    notebooks
 } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { IApplicationShell } from '../../../common/application/types';
-import { traceError, traceErrorIf, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
+import { traceError, traceErrorIf, traceInfoIf, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
 import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
@@ -36,12 +37,10 @@ import { handleTensorBoardDisplayDataOutput } from '../../notebook/helpers/execu
 import {
     cellOutputToVSCCellOutput,
     hasErrorOutput,
-    isStreamOutput,
     traceCellMessage,
     translateCellDisplayOutput,
     translateErrorOutput
 } from '../../notebook/helpers/helpers';
-import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import { IDataScienceErrorHandler, IJupyterSession, INotebook, INotebookExecutionLogger } from '../../types';
 import { isPythonKernelConnection } from './helpers';
 import { KernelConnectionMetadata, NotebookCellRunState } from './types';
@@ -125,7 +124,7 @@ export class CellExecution {
     private temporaryExecution?: NotebookCellExecution;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
     private cancelHandled = false;
-    private requestHandlerChain = Promise.resolve();
+    // private requestHandlerChain = Promise.resolve();
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private constructor(
         public readonly cell: NotebookCell,
@@ -158,10 +157,18 @@ export class CellExecution {
                 if (e === this.cell.document) {
                     this.request?.dispose(); // NOSONAR
                     if (this.started && !this._completed) {
-                        this.completedDueToCancellation().catch((ex) =>
-                            traceInfo('Failures when cancelling due to cell removal', ex)
-                        );
+                        this.completedDueToCancellation();
                     }
+                }
+            },
+            this,
+            disposables
+        );
+        notebooks.onDidChangeCellOutputs(
+            (e) => {
+                if (e.cells.length === 0) {
+                    // keep track of the fact that user has
+                    this.onOutputCleared();
                 }
             },
             this,
@@ -221,6 +228,7 @@ export class CellExecution {
         this.startTime = new Date().getTime();
         CellExecution.activeNotebookCellExecution.set(this.cell.notebook, this.execution);
         this.execution?.start(this.startTime);
+        this.lastOutput = undefined;
         await this.execution?.clearOutput();
         this.stopWatch.reset();
 
@@ -255,29 +263,29 @@ export class CellExecution {
         traceCellMessage(this.cell, 'Execution cancelled');
         this.cancelHandled = true;
 
-        await this.completedDueToCancellation();
+        this.completedDueToCancellation();
         this.dispose();
     }
     /**
      * This method is called when all execution has been completed (successfully or failed).
      * Or when execution has been cancelled.
      */
-    private dispose() {
+    public dispose() {
         traceCellMessage(this.cell, 'Execution disposed');
         const deferred = CellExecution.cellsCompletedForTesting.get(this.cell);
         if (deferred) {
             deferred.resolve();
         }
     }
-
-    private async completedWithErrors(error: Partial<Error>) {
+    private onOutputCleared() {
+        this.lastOutput = undefined;
+    }
+    private completedWithErrors(error: Partial<Error>) {
         traceCellMessage(this.cell, 'Completed with errors');
         this.sendPerceivedCellExecute();
 
-        await chainWithPendingUpdates(this.cell.notebook, async () => {
-            traceCellMessage(this.cell, 'Update with error state & output');
-            await this.execution?.appendOutput([translateErrorOutput(createErrorOutput(error))]);
-        });
+        traceCellMessage(this.cell, 'Update with error state & output');
+        void this.execution?.appendOutput([translateErrorOutput(createErrorOutput(error))]);
 
         this.endCellTask('failed');
         this._completed = true;
@@ -288,7 +296,7 @@ export class CellExecution {
     private get isEmptyCodeCell(): boolean {
         return this.cell.document.getText().trim().length === 0;
     }
-    private async completedSuccessfully() {
+    private completedSuccessfully() {
         traceCellMessage(this.cell, 'Completed successfully');
         this.sendPerceivedCellExecute();
         // If we requested a cancellation, then assume it did not even run.
@@ -371,7 +379,7 @@ export class CellExecution {
         this.temporaryExecution = undefined;
     }
 
-    private async completedDueToCancellation() {
+    private completedDueToCancellation() {
         traceCellMessage(this.cell, 'Completed due to cancellation');
         this.endCellTask('cancelled');
         this._completed = true;
@@ -444,28 +452,27 @@ export class CellExecution {
         // Listen to the response messages and update state as we go
         if (!request) {
             traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`);
-            return this.completedWithErrors(new Error('Session cannot generate requests')).then(noop, noop);
+            return this.completedWithErrors(new Error('Session cannot generate requests'));
         }
 
         // Listen to messages & chain each (to process them in the order we get them).
-        request.onIOPub = (msg) =>
-            (this.requestHandlerChain = this.requestHandlerChain.then(() => {
-                // Cell has been deleted or the like.
-                if (this.cell.document.isClosed) {
-                    request.dispose();
-                    return Promise.resolve();
-                }
-                return this.handleIOPub(clearState, loggers, msg).catch(noop);
-            }));
-        request.onReply = (msg) =>
-            (this.requestHandlerChain = this.requestHandlerChain.then(() => {
-                // Cell has been deleted or the like.
-                if (this.cell.document.isClosed) {
-                    request.dispose();
-                    return Promise.resolve();
-                }
-                return this.handleReply(clearState, msg).catch(noop);
-            }));
+        request.onIOPub = (msg) => {
+            // Cell has been deleted or the like.
+            if (this.cell.document.isClosed) {
+                request.dispose();
+            }
+            // if (!this.cell.document.isClosed) {
+            //     request.dispose();
+            // }
+            this.handleIOPub(clearState, loggers, msg);
+        };
+        request.onReply = (msg) => {
+            // Cell has been deleted or the like.
+            if (this.cell.document.isClosed) {
+                request.dispose();
+            }
+            this.handleReply(clearState, msg);
+        };
         request.onStdin = this.handleInputRequest.bind(this, session);
 
         // WARNING: Do not dispose `request`.
@@ -477,28 +484,24 @@ export class CellExecution {
             // request.done resolves even before all iopub messages have been sent through.
             // Solution is to wait for all messages to get processed.
             traceCellMessage(this.cell, 'Wait for jupyter execution');
-            await Promise.all([request.done, this.requestHandlerChain]);
+            await Promise.all([request.done]);
             traceCellMessage(this.cell, 'Jupyter execution completed');
-            await this.completedSuccessfully();
+            this.completedSuccessfully();
             traceCellMessage(this.cell, 'Executed successfully in executeCell');
         } catch (ex) {
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Such an error must be ignored.
             if (ex && ex instanceof Error && ex.message === 'Canceled') {
-                await this.completedSuccessfully();
+                this.completedSuccessfully();
                 traceCellMessage(this.cell, 'Cancellation execution error');
             } else {
                 traceCellMessage(this.cell, 'Some other execution error');
-                await this.completedWithErrors(ex);
+                this.completedWithErrors(ex);
             }
         }
     }
     @swallowExceptions()
-    private async handleIOPub(
-        clearState: RefBool,
-        loggers: INotebookExecutionLogger[],
-        msg: KernelMessage.IIOPubMessage
-    ) {
+    private handleIOPub(clearState: RefBool, loggers: INotebookExecutionLogger[], msg: KernelMessage.IIOPubMessage) {
         // Let our loggers get a first crack at the message. They may change it
         loggers.forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
 
@@ -508,7 +511,7 @@ export class CellExecution {
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = ExecuteResult');
-                await this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
+                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                 this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
@@ -524,19 +527,19 @@ export class CellExecution {
                     `Cell Index ${this.cell.index}, Stream '${msg.content.name}`,
                     msg.content.text
                 );
-                await this.handleStreamMessage(msg as KernelMessage.IStreamMsg, clearState);
+                this.handleStreamMessage(msg as KernelMessage.IStreamMsg, clearState);
             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = DisplayMessage');
-                await this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
+                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState);
             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = UpdateDisplayMessage');
                 this.handleUpdateDisplayDataMessage(msg);
             } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = CleanOutput');
-                await this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
+                this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState);
             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
                 traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'KernelMessage = ErrorMessage');
-                await this.handleError(msg as KernelMessage.IErrorMsg, clearState);
+                this.handleError(msg as KernelMessage.IErrorMsg, clearState);
             } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
                 // Noop.
             } else if (jupyterLab.KernelMessage.isCommMsgMsg(msg)) {
@@ -555,11 +558,11 @@ export class CellExecution {
         } catch (err) {
             traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, err);
             // If not a restart error, then tell the subscriber
-            await this.completedWithErrors(err).then(noop, noop);
+            this.completedWithErrors(err);
         }
     }
 
-    private async addToCellData(
+    private addToCellData(
         output: ExecuteResult | DisplayData | nbformat.IStream | nbformat.IError,
         clearState: RefBool
     ) {
@@ -571,46 +574,39 @@ export class CellExecution {
             typeof output.transient?.display_id === 'string'
                 ? output.transient?.display_id
                 : undefined;
-        await chainWithPendingUpdates(this.cell.notebook, async () => {
-            if (this.cell.document.isClosed) {
-                return;
-            }
-            traceCellMessage(this.cell, 'Update output');
-            // Clear if necessary
-            if (clearState.value) {
-                await this.execution?.clearOutput();
-                clearState.update(false);
-            }
-            // Keep track of the displa_id against the output item, we might need this to update this later.
-            const displayOutputAdded = displayId
-                ? this.outputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId)
-                : undefined;
+        if (this.cell.document.isClosed) {
+            return;
+        }
+        traceCellMessage(this.cell, 'Update output');
+        // Clear if necessary
+        if (clearState.value) {
+            this.onOutputCleared();
+            void this.execution?.clearOutput();
+            clearState.update(false);
+        }
+        // Keep track of the displa_id against the output item, we might need this to update this later.
+        const displayOutputAdded = displayId
+            ? this.outputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId)
+            : undefined;
 
-            // Append to the data (we would push here but VS code requires a recreation of the array)
-            // Possible execution of cell has completed (the task would have been disposed).
-            // This message could have come from a background thread.
-            // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-            const task = this.execution || this.createTemporaryTask();
-            const promise = task?.appendOutput([cellOutput]);
-            this.endTemporaryTask();
-            // await on the promise at the end, we want to minimize UI flickers.
-            // The way we update output of other cells is to use an existing task or a temporary task.
-            // When using temporary tasks, we end up updating the UI with no execution order and spinning icons.
-            // Doing this causes UI updates, removing the awaits will enure there's no time for ui updates.
-            if (promise) {
-                try {
-                    // When user clears cells, we could end up using an output that no longer exists.
-                    // Ignore such exceptions, next time we get an output its possible the outputs are now in sync.
-                    await promise;
-                    // Nodify the fact that the output has been added to the DOM.
-                    displayOutputAdded?.resolve(cellOutput);
-                } catch (ex) {
-                    // Don't crash the updates, just ignore & hope & pray things work.
-                    // This way (at a minimum) we have the errors logged and we try to get things working by ignoring errors that are beyond our control.
-                    traceError(`Failed to update cell ${this.cell.index}, ${this.cell.document.uri.toString()}`, ex);
-                }
-            }
-        });
+        // Append to the data (we would push here but VS code requires a recreation of the array)
+        // Possible execution of cell has completed (the task would have been disposed).
+        // This message could have come from a background thread.
+        // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
+        const task = this.execution || this.createTemporaryTask();
+        this.lastOutput = undefined;
+        const promise = task?.appendOutput([cellOutput]);
+        this.endTemporaryTask();
+        // await on the promise at the end, we want to minimize UI flickers.
+        // The way we update output of other cells is to use an existing task or a temporary task.
+        // When using temporary tasks, we end up updating the UI with no execution order and spinning icons.
+        // Doing this causes UI updates, removing the awaits will enure there's no time for ui updates.
+        if (promise) {
+            // When user clears cells, we could end up using an output that no longer exists.
+            // Ignore such exceptions, next time we get an output its possible the outputs are now in sync.
+            // Nodify the fact that the output has been added to the DOM.
+            promise.then(() => displayOutputAdded?.resolve(cellOutput), noop);
+        }
     }
 
     private handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
@@ -631,8 +627,8 @@ export class CellExecution {
 
     // See this for docs on the messages:
     // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
-    private async handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool) {
-        await this.addToCellData(
+    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool) {
+        this.addToCellData(
             {
                 output_type: 'execute_result',
                 data: msg.content.data,
@@ -645,35 +641,33 @@ export class CellExecution {
         );
     }
 
-    private async handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: RefBool) {
+    private handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: RefBool) {
         const reply = msg.content as KernelMessage.IExecuteReply;
         if (reply.payload) {
-            await Promise.all(
-                reply.payload.map(async (payload) => {
-                    if (
-                        payload.source &&
-                        payload.source === 'set_next_input' &&
-                        'text' in payload &&
-                        'replace' in payload
-                    ) {
-                        this.handleSetNextInput((payload as unknown) as ISetNextInputPayload);
-                    }
-                    if (payload.data && payload.data.hasOwnProperty('text/plain')) {
-                        await this.addToCellData(
-                            {
-                                // Mark as stream output so the text is formatted because it likely has ansi codes in it.
-                                output_type: 'stream',
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                text: (payload.data as any)['text/plain'].toString(),
-                                name: 'stdout',
-                                metadata: {},
-                                execution_count: reply.execution_count
-                            },
-                            clearState
-                        );
-                    }
-                })
-            );
+            reply.payload.forEach((payload) => {
+                if (
+                    payload.source &&
+                    payload.source === 'set_next_input' &&
+                    'text' in payload &&
+                    'replace' in payload
+                ) {
+                    this.handleSetNextInput((payload as unknown) as ISetNextInputPayload);
+                }
+                if (payload.data && payload.data.hasOwnProperty('text/plain')) {
+                    this.addToCellData(
+                        {
+                            // Mark as stream output so the text is formatted because it likely has ansi codes in it.
+                            output_type: 'stream',
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            text: (payload.data as any)['text/plain'].toString(),
+                            name: 'stdout',
+                            metadata: {},
+                            execution_count: reply.execution_count
+                        },
+                        clearState
+                    );
+                }
+            });
         }
     }
 
@@ -714,90 +708,75 @@ export class CellExecution {
     private handleStatusMessage(msg: KernelMessage.IStatusMsg, _clearState: RefBool) {
         traceCellMessage(this.cell, `Kernel switching to ${msg.content.execution_state}`);
     }
-    private async handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
+    private lastOutput?: { stream: 'stdout' | 'stderr'; text: string };
+    private handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
         // eslint-disable-next-line complexity
-        await chainWithPendingUpdates(this.cell.notebook, async () => {
-            traceCellMessage(this.cell, 'Update streamed output');
-            let exitingCellOutputs = this.cell.outputs;
-            // Possible execution of cell has completed (the task would have been disposed).
-            // This message could have come from a background thread.
-            // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-            const task = this.execution || this.createTemporaryTask();
+        traceCellMessage(this.cell, 'Update streamed output');
+        // Possible execution of cell has completed (the task would have been disposed).
+        // This message could have come from a background thread.
+        // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
+        const task = this.execution || this.createTemporaryTask();
 
-            // Clear output if waiting for a clear
-            const clearOutput = clearState.value;
-            if (clearOutput) {
-                exitingCellOutputs = [];
-                await task?.clearOutput();
-                clearState.update(false);
-            }
-            let promise: Thenable<void> | undefined;
-            // Ensure we append to previous output, only if the streams as the same &
-            // If the last output is the desired stream type.
-            const lastOutput =
-                exitingCellOutputs.length > 0 ? exitingCellOutputs[exitingCellOutputs.length - 1] : undefined;
-            const existingOutputToAppendTo =
-                lastOutput && isStreamOutput(lastOutput, msg.content.name) ? lastOutput : undefined;
-            if (existingOutputToAppendTo) {
-                // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
-                const outputs = existingOutputToAppendTo ? [translateCellDisplayOutput(existingOutputToAppendTo)] : [];
-                let existingOutputText: string = outputs.length
-                    ? concatMultilineString((outputs[0] as nbformat.IStream).text)
-                    : '';
-                let newContent = msg.content.text;
-                // Look for the ansi code `<char27>[A`. (this means move up)
-                // Not going to support `[2A` (not for now).
-                const moveUpCode = `${String.fromCharCode(27)}[A`;
-                if (msg.content.text.startsWith(moveUpCode)) {
-                    // Split message by lines & strip out the last n lines (where n = number of lines to move cursor up).
-                    const existingOutputLines = existingOutputText.splitLines({
-                        trim: false,
-                        removeEmptyEntries: false
-                    });
-                    if (existingOutputLines.length) {
-                        existingOutputLines.pop();
-                    }
-                    existingOutputText = existingOutputLines.join('\n');
-                    newContent = newContent.substring(moveUpCode.length);
+        // Clear output if waiting for a clear
+        const clearOutput = clearState.value;
+        if (clearOutput) {
+            this.onOutputCleared();
+            void task?.clearOutput();
+            this.lastOutput = undefined;
+            clearState.update(false);
+        }
+        // Ensure we append to previous output, only if the streams as the same &
+        // If the last output is the desired stream type.
+        const existingOutputToAppendTo = this.lastOutput?.stream === msg.content.name ? this.lastOutput : undefined;
+        if (existingOutputToAppendTo) {
+            // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
+            let existingOutputText = existingOutputToAppendTo.text;
+            let newContent = msg.content.text;
+            // Look for the ansi code `<char27>[A`. (this means move up)
+            // Not going to support `[2A` (not for now).
+            const moveUpCode = `${String.fromCharCode(27)}[A`;
+            if (msg.content.text.startsWith(moveUpCode)) {
+                // Split message by lines & strip out the last n lines (where n = number of lines to move cursor up).
+                const existingOutputLines = existingOutputText.splitLines({
+                    trim: false,
+                    removeEmptyEntries: false
+                });
+                if (existingOutputLines.length) {
+                    existingOutputLines.pop();
                 }
-                // Create a new output item with the concatenated string.
-                const output = cellOutputToVSCCellOutput({
-                    output_type: 'stream',
-                    name: msg.content.name,
-                    text: formatStreamText(concatMultilineString(`${existingOutputText}${newContent}`))
-                });
-                promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo);
-            } else if (clearOutput) {
-                // Replace the current outputs with a single new output.
-                const output = cellOutputToVSCCellOutput({
-                    output_type: 'stream',
-                    name: msg.content.name,
-                    text: formatStreamText(concatMultilineString(msg.content.text))
-                });
-                promise = task?.replaceOutput([output]);
-            } else {
-                // Create a new output
-                const output = cellOutputToVSCCellOutput({
-                    output_type: 'stream',
-                    name: msg.content.name,
-                    text: formatStreamText(concatMultilineString(msg.content.text))
-                });
-                promise = task?.appendOutput([output]);
+                existingOutputText = existingOutputLines.join('\n');
+                newContent = newContent.substring(moveUpCode.length);
             }
+            // Create a new output item with the concatenated string.
+            const output = cellOutputToVSCCellOutput({
+                output_type: 'stream',
+                name: msg.content.name,
+                text: formatStreamText(concatMultilineString(`${existingOutputText}${newContent}`))
+            });
+            // promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo);
+            void task?.replaceOutput(output);
+        } else if (clearOutput) {
+            // Replace the current outputs with a single new output.
+            const output = cellOutputToVSCCellOutput({
+                output_type: 'stream',
+                name: msg.content.name,
+                text: formatStreamText(concatMultilineString(msg.content.text))
+            });
+            void task?.replaceOutput([output]);
+        } else {
+            // Create a new output
+            const output = cellOutputToVSCCellOutput({
+                output_type: 'stream',
+                name: msg.content.name,
+                text: formatStreamText(concatMultilineString(msg.content.text))
+            });
+            void task?.appendOutput([output]);
+        }
 
-            this.endTemporaryTask();
-            // await on the promise at the end, we want to minimize UI flickers.
-            // The way we update output of other cells is to use an existing task or a temporary task.
-            // When using temporary tasks, we end up updating the UI with no execution order and spinning icons.
-            // Doing this causes UI updates, removing the awaits will enure there's no time for ui updates.
-            // I.e. create cell task, perform update, and end cell task (no awaits in between).
-            if (promise) {
-                await promise;
-            }
-        });
+        this.endTemporaryTask();
     }
 
-    private async handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
+    private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool) {
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: handleTensorBoardDisplayDataOutput(msg.content.data),
@@ -805,10 +784,10 @@ export class CellExecution {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             transient: msg.content.transient as any // NOSONAR
         };
-        await this.addToCellData(output, clearState);
+        this.addToCellData(output, clearState);
     }
 
-    private async handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: RefBool) {
+    private handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: RefBool) {
         // If the message says wait, add every message type to our clear state. This will
         // make us wait for this type of output before we clear it.
         if (msg && msg.content.wait) {
@@ -817,31 +796,31 @@ export class CellExecution {
             // Possible execution of cell has completed (the task would have been disposed).
             // This message could have come from a background thread.
             // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-
             // Clear all outputs and start over again.
             const task = this.execution || this.createTemporaryTask();
-            await task?.clearOutput();
+            this.onOutputCleared();
+            void task?.clearOutput();
             this.endTemporaryTask();
         }
     }
 
-    private async handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool) {
+    private handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool) {
         const output: nbformat.IError = {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
             traceback: msg.content.traceback
         };
-        await this.addToCellData(output, clearState);
+        this.addToCellData(output, clearState);
     }
 
     @swallowExceptions()
-    private async handleReply(clearState: RefBool, msg: KernelMessage.IShellControlMessage) {
+    private handleReply(clearState: RefBool, msg: KernelMessage.IShellControlMessage) {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         if (jupyterLab.KernelMessage.isExecuteReplyMsg(msg)) {
-            await this.handleExecuteReply(msg, clearState);
+            this.handleExecuteReply(msg, clearState);
 
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number' && this.execution) {

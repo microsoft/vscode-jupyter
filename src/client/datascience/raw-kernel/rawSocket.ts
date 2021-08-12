@@ -51,6 +51,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
+        console.log(this.serialize.length);
     }
 
     public dispose() {
@@ -158,11 +159,54 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         const routingId = uuid();
 
         // Wire up all of the different channels.
+        // const maxNumber = Number.MAX_SAFE_INTEGER;
         const result: IChannels = {
-            iopub: this.generateChannel(connection, 'iopub', () => new zmq.Subscriber()),
-            shell: this.generateChannel(connection, 'shell', () => new zmq.Dealer({ routingId })),
-            control: this.generateChannel(connection, 'control', () => new zmq.Dealer({ routingId })),
-            stdin: this.generateChannel(connection, 'stdin', () => new zmq.Dealer({ routingId }))
+            iopub: this.generateChannel(
+                connection,
+                'iopub',
+                () =>
+                    new zmq.Subscriber({
+                        maxMessageSize: -1,
+                        receiveBufferSize: -1,
+                        receiveHighWaterMark: 0
+                    })
+            ),
+            shell: this.generateChannel(
+                connection,
+                'shell',
+                () =>
+                    new zmq.Dealer({
+                        routingId
+                        // sendHighWaterMark: 0,
+                        // receiveHighWaterMark: 0,
+                        // maxMessageSize: -1,
+                        // receiveBufferSize: -1
+                    })
+            ),
+            control: this.generateChannel(
+                connection,
+                'control',
+                () =>
+                    new zmq.Dealer({
+                        routingId
+                        // sendHighWaterMark: 0,
+                        // receiveHighWaterMark: 0,
+                        // maxMessageSize: -1,
+                        // receiveBufferSize: -1
+                    })
+            ),
+            stdin: this.generateChannel(
+                connection,
+                'stdin',
+                () =>
+                    new zmq.Dealer({
+                        routingId
+                        // sendHighWaterMark: 0,
+                        // receiveHighWaterMark: 0,
+                        // maxMessageSize: -1,
+                        // receiveBufferSize: maxNumber
+                    })
+            )
         };
         // What about hb port? Enchannel didn't use this one.
 
