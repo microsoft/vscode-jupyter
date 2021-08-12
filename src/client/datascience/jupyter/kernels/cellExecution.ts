@@ -470,15 +470,11 @@ export class CellExecution implements IDisposable {
             return this.completedWithErrors(new Error('Session cannot generate requests'));
         }
 
-        // Listen to messages & chain each (to process them in the order we get them).
         request.onIOPub = (msg) => {
             // Cell has been deleted or the like.
             if (this.cell.document.isClosed) {
                 request.dispose();
             }
-            // if (!this.cell.document.isClosed) {
-            //     request.dispose();
-            // }
             this.handleIOPub(clearState, loggers, msg);
         };
         request.onReply = (msg) => {
@@ -499,7 +495,7 @@ export class CellExecution implements IDisposable {
             // request.done resolves even before all iopub messages have been sent through.
             // Solution is to wait for all messages to get processed.
             traceCellMessage(this.cell, 'Wait for jupyter execution');
-            await Promise.all([request.done]);
+            await request.done;
             traceCellMessage(this.cell, 'Jupyter execution completed');
             this.completedSuccessfully();
             traceCellMessage(this.cell, 'Executed successfully in executeCell');
@@ -600,9 +596,9 @@ export class CellExecution implements IDisposable {
             clearState.update(false);
         }
         // Keep track of the displa_id against the output item, we might need this to update this later.
-        const displayOutputAdded = displayId
-            ? this.outputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId)
-            : undefined;
+        if (displayId) {
+            this.outputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput);
+        }
 
         // Append to the data (we would push here but VS code requires a recreation of the array)
         // Possible execution of cell has completed (the task would have been disposed).
@@ -610,18 +606,8 @@ export class CellExecution implements IDisposable {
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         const task = this.execution || this.createTemporaryTask();
         this.clearLastUsedStreamOutput();
-        const promise = task?.appendOutput([cellOutput]);
+        void task?.appendOutput([cellOutput]);
         this.endTemporaryTask();
-        // await on the promise at the end, we want to minimize UI flickers.
-        // The way we update output of other cells is to use an existing task or a temporary task.
-        // When using temporary tasks, we end up updating the UI with no execution order and spinning icons.
-        // Doing this causes UI updates, removing the awaits will enure there's no time for ui updates.
-        if (promise) {
-            // When user clears cells, we could end up using an output that no longer exists.
-            // Ignore such exceptions, next time we get an output its possible the outputs are now in sync.
-            // Nodify the fact that the output has been added to the DOM.
-            promise.then(() => displayOutputAdded?.resolve(cellOutput), noop);
-        }
     }
 
     private handleInputRequest(session: IJupyterSession, msg: KernelMessage.IStdinMessage) {
@@ -854,44 +840,40 @@ export class CellExecution implements IDisposable {
         if (!displayId) {
             return;
         }
-        const result = this.outputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
-        if (!result) {
+        const outputToBeUpdated = this.outputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
+        if (!outputToBeUpdated) {
             return;
         }
-        result
-            .then((outputToBeUpdated) => {
-                const output = translateCellDisplayOutput(outputToBeUpdated);
-                const newOutput = cellOutputToVSCCellOutput({
-                    ...output,
-                    data: msg.content.data,
-                    metadata: msg.content.metadata
-                });
-                // If there was no output and still no output, then nothing to do.
-                if (outputToBeUpdated.items.length === 0 && newOutput.items.length === 0) {
-                    return;
+        const output = translateCellDisplayOutput(outputToBeUpdated);
+        const newOutput = cellOutputToVSCCellOutput({
+            ...output,
+            data: msg.content.data,
+            metadata: msg.content.metadata
+        });
+        // If there was no output and still no output, then nothing to do.
+        if (outputToBeUpdated.items.length === 0 && newOutput.items.length === 0) {
+            return;
+        }
+        // Compare each output item (at the end of the day everything is serializable).
+        // Hence this is a safe comparison.
+        if (outputToBeUpdated.items.length === newOutput.items.length) {
+            let allAllOutputItemsSame = true;
+            for (let index = 0; index < outputToBeUpdated.items.length; index++) {
+                if (!fastDeepEqual(outputToBeUpdated.items[index], newOutput.items[index])) {
+                    allAllOutputItemsSame = false;
+                    break;
                 }
-                // Compare each output item (at the end of the day everything is serializable).
-                // Hence this is a safe comparison.
-                if (outputToBeUpdated.items.length === newOutput.items.length) {
-                    let allAllOutputItemsSame = true;
-                    for (let index = 0; index < outputToBeUpdated.items.length; index++) {
-                        if (!fastDeepEqual(outputToBeUpdated.items[index], newOutput.items[index])) {
-                            allAllOutputItemsSame = false;
-                            break;
-                        }
-                    }
-                    if (allAllOutputItemsSame) {
-                        // If everything is still the same, then there's nothing to update.
-                        return;
-                    }
-                }
-                // Possible execution of cell has completed (the task would have been disposed).
-                // This message could have come from a background thread.
-                // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-                const task = this.execution || this.createTemporaryTask();
-                void task?.replaceOutputItems(newOutput.items, outputToBeUpdated);
-                this.endTemporaryTask();
-            })
-            .catch((ex) => traceError(`Failed to update display output for ${displayId}`, ex));
+            }
+            if (allAllOutputItemsSame) {
+                // If everything is still the same, then there's nothing to update.
+                return;
+            }
+        }
+        // Possible execution of cell has completed (the task would have been disposed).
+        // This message could have come from a background thread.
+        // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
+        const task = this.execution || this.createTemporaryTask();
+        void task?.replaceOutputItems(newOutput.items, outputToBeUpdated);
+        this.endTemporaryTask();
     }
 }

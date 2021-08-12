@@ -302,10 +302,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.waitingMessageIds.set(msgUuid, { startTime: Date.now(), resultPromise: promise });
 
         // Check if we need to fully handle this message on UI and Extension side before we move to the next
-        if (!message) {
-            message = this.deserialize(data as any) as any;
-        }
         if (this.isUsingIPyWidgets) {
+            if (!message) {
+                message = this.deserialize(data as any) as any;
+            }
             if (this.messageNeedsFullHandle(message)) {
                 this.fullHandleMessage = { id: message!.header.msg_id, promise: createDeferred<void>() };
             }
