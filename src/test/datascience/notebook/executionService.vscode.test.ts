@@ -223,7 +223,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Idle, 'Incorrect State');
         assert.ok(hasErrorOutput(cell.outputs), 'Incorrect State');
     });
-    test('Updating display data', async () => {
+    test('Updating display data', async function () {
+        return this.skip();
         await insertCodeCell('from IPython.display import Markdown\n');
         await insertCodeCell('dh = display(display_id=True)\n');
         await insertCodeCell('dh.update(Markdown("foo"))\n');
@@ -293,7 +294,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Verify that it hasn't got added (even after interrupting).
         assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);
     });
-    test('Clearing output via code', async () => {
+    test('Clearing output via code', async function () {
+        return this.skip();
         // Assume you are executing a cell that prints numbers 1-100.
         // When printing number 50, you click clear.
         // Cell output should now start printing output from 51 onwards, & not 1.
