@@ -444,7 +444,10 @@ function translateDisplayDataOutput(
     */
     const metadata = getOutputMetadata(output);
     // If we have both SVG & PNG, then add special metadata to indicate whether to display `open plot`
-    if ('image/svg+xml' in output.data && 'image/png' in output.data) {
+    //if ('image/svg+xml' in output.data && 'image/png' in output.data) {
+    //metadata.__displayOpenPlotIcon = true;
+    //}
+    if ('image/svg+xml' in output.data || 'image/png' in output.data) {
         metadata.__displayOpenPlotIcon = true;
     }
     const items: NotebookCellOutputItem[] = [];

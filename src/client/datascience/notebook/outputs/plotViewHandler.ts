@@ -4,6 +4,7 @@ import { traceError } from '../../../common/logger';
 import { IPlotViewerProvider } from '../../types';
 
 const svgMimeType = 'image/svg+xml';
+const pngMimeType = 'image/png';
 
 @injectable()
 export class PlotViewHandler {
@@ -14,11 +15,22 @@ export class PlotViewHandler {
             return;
         }
         const outputItem = getOutputItem(editor, outputId, svgMimeType);
+        let svgString: string | undefined;
         if (!outputItem) {
-            return traceError(`No SVG Plot to open ${editor.document.uri.toString()}, id: ${outputId}`);
+            // Didn't find svg, see if we have png we can convert
+            const pngOutput = getOutputItem(editor, outputId, pngMimeType);
+
+            if (!pngOutput) {
+                return traceError(`No SVG or PNG Plot to open ${editor.document.uri.toString()}, id: ${outputId}`);
+            }
+
+            svgString = convertPngToSvg(pngOutput);
+        } else {
+            svgString = new TextDecoder().decode(outputItem.data);
         }
-        const svg = new TextDecoder().decode(outputItem.data);
-        await this.plotViewProvider.showPlot(svg);
+        if (svgString) {
+            await this.plotViewProvider.showPlot(svgString);
+        }
     }
 }
 
@@ -31,4 +43,10 @@ function getOutputItem(editor: NotebookEditor, outputId: string, mimeType: strin
             return output.items.find((item) => item.mime === mimeType);
         }
     }
+}
+
+function convertPngToSvg(_pngOutput: NotebookCellOutputItem): string {
+    return `<svg height="500" width="500">
+    <circle cx="250" cy="250" r="50" fill="#123456" />
+</svg>`;
 }
