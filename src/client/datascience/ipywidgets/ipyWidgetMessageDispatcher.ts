@@ -217,9 +217,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
     }
     private async mirrorSend(data: any, _cb?: (err?: Error) => void): Promise<void> {
-        if (!this.isUsingIPyWidgets) {
-            return;
-        }
         // If this is shell control message, mirror to the other side. This is how
         // we get the kernel in the UI to have the same set of futures we have on this side
         if (typeof data === 'string' && data.includes('shell') && data.includes('execute_request')) {
