@@ -1544,12 +1544,6 @@
                     "description": "Enables the preview debugging experience. Set to true to enable the debugging mode button on native notebooks. Your selected kernel should also have ipykernel 6 installed in order to support debugging. Clicking the button will start a debugging session and will allow you to set and hit breakpoints.",
                     "scope": "application"
                 },
-                "jupyter.enableNativeInteractiveWindow": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables the preview native interactive window experience. Set to false to opt back into the webview interactive window experience.",
-                    "scope": "machine"
-                },
                 "jupyter.logging.level": {
                     "type": "string",
                     "default": "debug",
