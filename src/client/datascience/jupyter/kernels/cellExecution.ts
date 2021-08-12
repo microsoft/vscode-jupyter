@@ -19,14 +19,15 @@ import {
     NotebookCellData,
     NotebookRange,
     Range,
-    notebooks
+    notebooks,
+    NotebookCellOutput
 } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceErrorIf, traceInfoIf, traceWarning } from '../../../common/logger';
 import { RefBool } from '../../../common/refBool';
-import { IDisposableRegistry, IExtensionContext } from '../../../common/types';
+import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { noop } from '../../../common/utils/misc';
@@ -46,6 +47,7 @@ import { isPythonKernelConnection } from './helpers';
 import { KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
+import { disposeAllDisposables } from '../../../common/helpers';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -95,7 +97,7 @@ export class CellExecutionFactory {
  * Further details here https://github.com/microsoft/vscode-jupyter/issues/232 & https://github.com/jupyter/jupyter_client/issues/297
  *
  */
-export class CellExecution {
+export class CellExecution implements IDisposable {
     public get result(): Promise<NotebookCellRunState | undefined> {
         return this._result.promise;
     }
@@ -124,8 +126,15 @@ export class CellExecution {
     private temporaryExecution?: NotebookCellExecution;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
     private cancelHandled = false;
-    // private requestHandlerChain = Promise.resolve();
+    /**
+     * We keep track of the last output that was used to store stream text.
+     * We need this so that we can update it later on (when we get new data for the same stream).
+     * If users clear outputs or if we have a new output other than stream, then clear this item.
+     * Because if after the stream we have an image, then the stream is not the last output item, hence its cleared.
+     */
+    private lastUsedStreamOutput?: { stream: 'stdout' | 'stderr'; text: string; output: NotebookCellOutput };
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+    private readonly disposables: IDisposable[] = [];
     private constructor(
         public readonly cell: NotebookCell,
         private readonly errorHandler: IDataScienceErrorHandler,
@@ -136,6 +145,7 @@ export class CellExecution {
         private readonly controller: NotebookController,
         private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker
     ) {
+        disposables.push(this);
         // These are only used in the tests.
         // See where this is used to understand its purpose.
         if (
@@ -162,17 +172,17 @@ export class CellExecution {
                 }
             },
             this,
-            disposables
+            this.disposables
         );
         notebooks.onDidChangeCellOutputs(
             (e) => {
                 if (e.cells.length === 0) {
-                    // keep track of the fact that user has
-                    this.onOutputCleared();
+                    // keep track of the fact that user has cleared the output.
+                    this.clearLastUsedStreamOutput();
                 }
             },
             this,
-            disposables
+            this.disposables
         );
         if (this.canExecuteCell()) {
             this.execution = controller.createNotebookCellExecution(this.cell);
@@ -228,7 +238,10 @@ export class CellExecution {
         this.startTime = new Date().getTime();
         CellExecution.activeNotebookCellExecution.set(this.cell.notebook, this.execution);
         this.execution?.start(this.startTime);
-        this.lastOutput = undefined;
+        this.clearLastUsedStreamOutput();
+        // Await here, so that the UI updates on the progress & we clear the output.
+        // Else when running cells with existing outputs, the outputs don't get cleared & it doesn't look like its running.
+        // Ideally we shouldn't have any awaits, but here we want the UI to get updated.
         await this.execution?.clearOutput();
         this.stopWatch.reset();
 
@@ -274,11 +287,13 @@ export class CellExecution {
         traceCellMessage(this.cell, 'Execution disposed');
         const deferred = CellExecution.cellsCompletedForTesting.get(this.cell);
         if (deferred) {
+            CellExecution.cellsCompletedForTesting.delete(this.cell);
             deferred.resolve();
         }
+        disposeAllDisposables(this.disposables);
     }
-    private onOutputCleared() {
-        this.lastOutput = undefined;
+    private clearLastUsedStreamOutput() {
+        this.lastUsedStreamOutput = undefined;
     }
     private completedWithErrors(error: Partial<Error>) {
         traceCellMessage(this.cell, 'Completed with errors');
@@ -580,7 +595,7 @@ export class CellExecution {
         traceCellMessage(this.cell, 'Update output');
         // Clear if necessary
         if (clearState.value) {
-            this.onOutputCleared();
+            this.clearLastUsedStreamOutput();
             void this.execution?.clearOutput();
             clearState.update(false);
         }
@@ -594,7 +609,7 @@ export class CellExecution {
         // This message could have come from a background thread.
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         const task = this.execution || this.createTemporaryTask();
-        this.lastOutput = undefined;
+        this.clearLastUsedStreamOutput();
         const promise = task?.appendOutput([cellOutput]);
         this.endTemporaryTask();
         // await on the promise at the end, we want to minimize UI flickers.
@@ -708,7 +723,6 @@ export class CellExecution {
     private handleStatusMessage(msg: KernelMessage.IStatusMsg, _clearState: RefBool) {
         traceCellMessage(this.cell, `Kernel switching to ${msg.content.execution_state}`);
     }
-    private lastOutput?: { stream: 'stdout' | 'stderr'; text: string };
     private handleStreamMessage(msg: KernelMessage.IStreamMsg, clearState: RefBool) {
         // eslint-disable-next-line complexity
         traceCellMessage(this.cell, 'Update streamed output');
@@ -720,17 +734,15 @@ export class CellExecution {
         // Clear output if waiting for a clear
         const clearOutput = clearState.value;
         if (clearOutput) {
-            this.onOutputCleared();
+            this.clearLastUsedStreamOutput();
             void task?.clearOutput();
-            this.lastOutput = undefined;
             clearState.update(false);
         }
         // Ensure we append to previous output, only if the streams as the same &
         // If the last output is the desired stream type.
-        const existingOutputToAppendTo = this.lastOutput?.stream === msg.content.name ? this.lastOutput : undefined;
-        if (existingOutputToAppendTo) {
+        if (this.lastUsedStreamOutput?.stream === msg.content.name) {
             // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
-            let existingOutputText = existingOutputToAppendTo.text;
+            let existingOutputText = this.lastUsedStreamOutput.text;
             let newContent = msg.content.text;
             // Look for the ansi code `<char27>[A`. (this means move up)
             // Not going to support `[2A` (not for now).
@@ -748,28 +760,34 @@ export class CellExecution {
                 newContent = newContent.substring(moveUpCode.length);
             }
             // Create a new output item with the concatenated string.
+            this.lastUsedStreamOutput.text = formatStreamText(
+                concatMultilineString(`${existingOutputText}${newContent}`)
+            );
             const output = cellOutputToVSCCellOutput({
                 output_type: 'stream',
                 name: msg.content.name,
-                text: formatStreamText(concatMultilineString(`${existingOutputText}${newContent}`))
+                text: this.lastUsedStreamOutput.text
             });
-            // promise = task?.replaceOutputItems(output.items, existingOutputToAppendTo);
-            void task?.replaceOutput(output);
+            void task?.replaceOutputItems(output.items, this.lastUsedStreamOutput.output);
         } else if (clearOutput) {
             // Replace the current outputs with a single new output.
+            const text = formatStreamText(concatMultilineString(msg.content.text));
             const output = cellOutputToVSCCellOutput({
                 output_type: 'stream',
                 name: msg.content.name,
-                text: formatStreamText(concatMultilineString(msg.content.text))
+                text
             });
+            this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
             void task?.replaceOutput([output]);
         } else {
             // Create a new output
+            const text = formatStreamText(concatMultilineString(msg.content.text));
             const output = cellOutputToVSCCellOutput({
                 output_type: 'stream',
                 name: msg.content.name,
-                text: formatStreamText(concatMultilineString(msg.content.text))
+                text
             });
+            this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
             void task?.appendOutput([output]);
         }
 
@@ -798,7 +816,7 @@ export class CellExecution {
             // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
             // Clear all outputs and start over again.
             const task = this.execution || this.createTemporaryTask();
-            this.onOutputCleared();
+            this.clearLastUsedStreamOutput();
             void task?.clearOutput();
             this.endTemporaryTask();
         }

@@ -159,7 +159,6 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         const routingId = uuid();
 
         // Wire up all of the different channels.
-        // const maxNumber = Number.MAX_SAFE_INTEGER;
         const result: IChannels = {
             iopub: this.generateChannel(
                 connection,
@@ -167,7 +166,6 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 () =>
                     new zmq.Subscriber({
                         maxMessageSize: -1,
-                        receiveBufferSize: -1,
                         receiveHighWaterMark: 0
                     })
             ),
@@ -176,11 +174,10 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 'shell',
                 () =>
                     new zmq.Dealer({
-                        routingId
-                        // sendHighWaterMark: 0,
-                        // receiveHighWaterMark: 0,
-                        // maxMessageSize: -1,
-                        // receiveBufferSize: -1
+                        routingId,
+                        sendHighWaterMark: 0,
+                        receiveHighWaterMark: 0,
+                        maxMessageSize: -1
                     })
             ),
             control: this.generateChannel(
@@ -188,11 +185,10 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 'control',
                 () =>
                     new zmq.Dealer({
-                        routingId
-                        // sendHighWaterMark: 0,
-                        // receiveHighWaterMark: 0,
-                        // maxMessageSize: -1,
-                        // receiveBufferSize: -1
+                        routingId,
+                        sendHighWaterMark: 0,
+                        receiveHighWaterMark: 0,
+                        maxMessageSize: -1
                     })
             ),
             stdin: this.generateChannel(
@@ -200,11 +196,10 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 'stdin',
                 () =>
                     new zmq.Dealer({
-                        routingId
-                        // sendHighWaterMark: 0,
-                        // receiveHighWaterMark: 0,
-                        // maxMessageSize: -1,
-                        // receiveBufferSize: maxNumber
+                        routingId,
+                        sendHighWaterMark: 0,
+                        receiveHighWaterMark: 0,
+                        maxMessageSize: -1
                     })
             )
         };

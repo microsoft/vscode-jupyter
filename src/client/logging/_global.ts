@@ -90,7 +90,7 @@ export function logError(...args: any[]) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function logInfo(...args: any[]) {
-    // log(LogLevel.Info, ...args);
+    log(LogLevel.Info, ...args);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
