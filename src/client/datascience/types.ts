@@ -17,7 +17,6 @@ import {
     Event,
     HoverProvider,
     NotebookCell,
-    NotebookDocument,
     NotebookEditor,
     QuickPickItem,
     Range,
@@ -1364,9 +1363,4 @@ export interface IExternalWebviewCellButton {
 export interface IExternalCommandFromWebview {
     buttonId: string;
     cell: ICell;
-}
-
-export const IDebuggingCellMap = Symbol('IDebuggingCellMap');
-export interface IDebuggingCellMap {
-    getCellsAndClearQueue(doc: NotebookDocument): NotebookCell[];
 }

@@ -21,7 +21,7 @@ import * as path from 'path';
 import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable, IInstaller, Product, ProductInstallStatus } from '../../common/types';
 import { IKernelDebugAdapterConfig, KernelDebugAdapter, KernelDebugMode } from './kernelDebugAdapter';
-import { IDebuggingCellMap, INotebookProvider } from '../../datascience/types';
+import { INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { INotebookControllerManager } from '../../datascience/notebook/types';
@@ -88,7 +88,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     public constructor(
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
-        @inject(IDebuggingCellMap) private debuggingCellMap: IDebuggingCellMap,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
@@ -115,7 +114,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 this.updateCellToolbar(false);
                 for (const [doc, dbg] of this.notebookToDebugger.entries()) {
                     if (dbg && session.id === (await dbg.session).id) {
-                        this.debuggingCellMap.getCellsAndClearQueue(doc);
                         this.notebookToDebugger.delete(doc);
                         break;
                     }
@@ -124,7 +122,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             // track closing of notebooks documents
             workspace.onDidCloseNotebookDocument(async (document) => {
-                this.debuggingCellMap.getCellsAndClearQueue(document);
                 const dbg = this.notebookToDebugger.get(document);
                 if (dbg) {
                     this.updateToolbar(false);
@@ -154,7 +151,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                                     session,
                                     debug.document,
                                     notebook.session,
-                                    this.debuggingCellMap,
                                     this.commandManager,
                                     this.fs
                                 );
