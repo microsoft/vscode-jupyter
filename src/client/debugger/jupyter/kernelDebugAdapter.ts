@@ -140,11 +140,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const content = msg.content as any;
             if (content.event === 'stopped') {
+                this.threadId = content.body.threadId;
                 // We want to get the variables for the variable view every time we stop
                 // This call starts that
                 this.stackTrace();
-
-                this.threadId = content.body.threadId;
                 this.sendMessage.fire(msg.content);
             }
         };
@@ -347,7 +346,17 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
             (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
                 this.scopes(sf.id);
-                // check if sf.source?.path is on the cell, if its not, stepInto again
+
+                // If we're in run by line and are stopped at another path, continue
+                if (
+                    this.configuration.__mode === KernelDebugMode.RunByLine &&
+                    this.configuration.__cellIndex !== undefined
+                ) {
+                    const cell = this.notebookDocument.cellAt(this.configuration.__cellIndex);
+                    if (sf.source && sf.source.path !== cell.document.uri.toString()) {
+                        this.runByLineContinue();
+                    }
+                }
             });
         }
 
