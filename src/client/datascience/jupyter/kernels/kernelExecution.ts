@@ -185,9 +185,7 @@ export class KernelExecution implements IDisposable {
         }
 
         // Restart the active execution
-        await (this._restartPromise
-            ? this._restartPromise
-            : (this._restartPromise = this.restartExecution(document, notebook.session)));
+        await (this._restartPromise ? this._restartPromise : (this._restartPromise = this.restartExecution(notebook)));
 
         // Done restarting, clear restart promise
         this._restartPromise = undefined;
@@ -336,11 +334,14 @@ export class KernelExecution implements IDisposable {
 
     @captureTelemetry(Telemetry.RestartKernel)
     @captureTelemetry(Telemetry.RestartJupyterTime)
-    private async restartExecution(_document: NotebookDocument, session: IJupyterSession): Promise<void> {
+    private async restartExecution(notebook: INotebook): Promise<void> {
         // Just use the internal session. Pending cells should have been canceled by the caller
-        return session.restart(this.interruptTimeout).catch((exc) => {
+        await notebook.session.restart(this.interruptTimeout).catch((exc) => {
             traceWarning(`Error during restart: ${exc}`);
         });
+
+        // Reinitialize the kernel after a session restart
+        await notebook.runInitialSetup();
     }
 
     private async getKernel(document: NotebookDocument): Promise<IKernel> {
