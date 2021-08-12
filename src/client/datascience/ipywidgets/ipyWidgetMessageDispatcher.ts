@@ -216,8 +216,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
         this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
     }
-    private readonly requestsToIgnore = new Set<string>();
-    // private lastRequestToIgnore = '';
     private async mirrorSend(data: any, _cb?: (err?: Error) => void): Promise<void> {
         if (!this.isUsingIPyWidgets) {
             return;
@@ -229,13 +227,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
             const msg = this.deserialize(data) as KernelMessage.IExecuteRequestMsg;
             if (msg.channel === 'shell' && msg.header.msg_type === 'execute_request') {
-                const data = msg as KernelMessage.IExecuteRequestMsg;
-                if (!data.content.silent && !data.content.store_history) {
-                    this.requestsToIgnore.add(data.header.msg_id);
-                    // this.lastRequestToIgnore = msg.header.msg_id;
-                    return;
-                }
-                const promise = this.mirrorExecuteRequest(data); // NOSONAR
+                const promise = this.mirrorExecuteRequest(msg as KernelMessage.IExecuteRequestMsg); // NOSONAR
                 // If there are no ipywidgets thusfar in the notebook, then no need to synchronize messages.
                 if (this.isUsingIPyWidgets) {
                     await promise;
@@ -284,9 +276,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private async onKernelSocketMessage(data: WebSocketData): Promise<void> {
         // Hooks expect serialized data as this normally comes from a WebSocket
         let message: undefined | KernelMessage.ICommOpenMsg; // = this.deserialize(data as any) as any;
-        // if (!this.isUsingIPyWidgets) {
-        //     return;
-        // }
         if (!this.isUsingIPyWidgets) {
             // Lets deserialize only if we know we have a potential case
             // where this message contains some data we're interested in.
@@ -325,43 +314,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 this.fullHandleMessage = { id: message!.header.msg_id, promise: createDeferred<void>() };
             }
         }
-        // Check if we need to ignore this message
-        // if (
-        //     message &&
-        //     (this.requestsToIgnore.has(message.header.msg_id) ||
-        //         this.requestsToIgnore.has((message.parent_header as KernelMessage.IHeader).msg_id))
-        // ) {
-        //     console.log(123);
-        //     return;
-        // }
-
-        // type WidgetModelInfo = {
-        //     state?: {
-        //         _model_module: '@jupyter-widgets/output' | '<something else>';
-        //         _view_module: '@jupyter-widgets/output' | '<something else>';
-        //         _view_name: 'OutputView' | '<something else>';
-        //     };
-        // };
-        // const contentData = message?.content?.data as WidgetModelInfo;
-        // if (
-        //     contentData?.state &&
-        //     (contentData.state._model_module === '@jupyter-widgets/output' ||
-        //         contentData.state._view_module === '@jupyter-widgets/output' ||
-        //         contentData.state._view_name === 'OutputView')
-        // ) {
-        //     this.isUsingOutputWidgets = true;
-        //     // console.log(this.isUsingOutputWidgets);
-        // }
-        // if (!this.isUsingOutputWidgets) {
-        //     const streamMessage = (message as unknown) as KernelMessage.IStreamMsg | KernelMessage.IClearOutputMsg;
-        //     // We don't care about stream messages.
-        //     if (streamMessage.header.msg_type === 'stream') {
-        //         return;
-        //     }
-        //     if (streamMessage.header.msg_type === 'clear_output') {
-        //         return;
-        //     }
-        // }
         // If we're not using ipywidgets, then no need to broadcast output messages from streams.
         // Remember, stream messages can be very large (e.g. when running a training).
         // To date, there are no widgets we're aware of that deal with outputs expcet for Jupyters own output widget.
