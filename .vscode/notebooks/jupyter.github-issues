@@ -32,7 +32,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$CURRENT_MILESTONE=milestone:\"July 2021\"\r\n$NEXT_MILESTONE=milestone:\"August 2021\""
+    "value": "$CURRENT_MILESTONE=milestone:\"August 2021\"\r\n$NEXT_MILESTONE=milestone:\"September 2021\""
   },
   {
     "kind": 1,
@@ -82,12 +82,27 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "-----\r\n## Endgame for current milestone"
+    "value": "-----\r\n## Current milestone"
   },
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### *testplan-items* created by us in all repos"
+    "value": "### All Open Issues"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_ALL_REPOS is:open is:issue $CURRENT_MILESTONE sort:comments-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### EndGame for Current Milestone"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "#### *testplan-items* created by us in all repos"
   },
   {
     "kind": 2,
@@ -97,7 +112,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### *testplan-items* assigned to us from all repos\r\nAssignment of \"testplan-items\" occurs by Tuesday morning of of Endgame week. So on Monday, this won't be accurate. Assignment happens by the Endgame owner via this tool: https://vscode-tools.azurewebsites.net/test-plan-items."
+    "value": "#### *testplan-items* assigned to us from all repos\r\nAssignment of \"testplan-items\" occurs by Tuesday morning of of Endgame week. So on Monday, this won't be accurate. Assignment happens by the Endgame owner via this tool: https://vscode-tools.azurewebsites.net/test-plan-items."
   },
   {
     "kind": 2,
@@ -107,7 +122,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### *verification-needed* issues in our repo"
+    "value": "#### *verification-needed* issues in our repo"
   },
   {
     "kind": 2,
@@ -117,7 +132,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### Bugs closed but not marked as verified or verification-needed\r\nTechnically, all bugs fixed during the milestone should be verified. This query shows any stragglers we may have missed."
+    "value": "#### Bugs closed but not marked as verified or verification-needed\r\nTechnically, all bugs fixed during the milestone should be verified. This query shows any stragglers we may have missed."
   },
   {
     "kind": 2,
