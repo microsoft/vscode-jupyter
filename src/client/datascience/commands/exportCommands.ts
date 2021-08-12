@@ -69,8 +69,9 @@ export class ExportCommands implements IDisposable {
             : this.notebookProvider.activeEditor;
 
         if (editor) {
+            const contents = editor.getContent();
             const interpreter = editor.notebook?.getMatchingInterpreter();
-            return this.export(editor.getContent(), editor.file, undefined, undefined, interpreter);
+            return this.export(contents, editor.file, undefined, undefined, interpreter);
         } else {
             return this.export(undefined, undefined, undefined, undefined);
         }

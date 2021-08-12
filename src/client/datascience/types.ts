@@ -203,6 +203,7 @@ export interface INotebook extends IAsyncDisposable {
         cancelToken?: CancellationToken
     ): Promise<INotebookCompletion>;
     restartKernel(timeoutInMs: number): Promise<void>;
+    runInitialSetup(): Promise<void>;
     waitForIdle(timeoutInMs: number): Promise<void>;
     interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
     setLaunchingFile(file: string): Promise<void>;
@@ -1239,7 +1240,6 @@ export interface IKernelDependencyService {
         disableUI?: boolean
     ): Promise<void>;
     areDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
-    areDebuggingDependenciesInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean>;
 }
 
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
@@ -1369,5 +1369,5 @@ export interface IExternalCommandFromWebview {
 
 export const IDebuggingCellMap = Symbol('IDebuggingCellMap');
 export interface IDebuggingCellMap {
-    getCellsAnClearQueue(doc: NotebookDocument): NotebookCell[];
+    getCellsAndClearQueue(doc: NotebookDocument): NotebookCell[];
 }

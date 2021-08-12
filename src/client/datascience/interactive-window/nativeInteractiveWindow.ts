@@ -510,7 +510,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                     const message = localize.DataScience.restartKernelAfterInterruptMessage();
                     const yes = localize.DataScience.restartKernelMessageYes();
                     const no = localize.DataScience.restartKernelMessageNo();
-                    const v = await this.applicationShell.showInformationMessage(message, yes, no);
+                    const v = await this.applicationShell.showInformationMessage(message, { modal: true }, yes, no);
                     if (v === yes) {
                         await this.restartKernelInternal();
                     }
@@ -805,7 +805,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             : cellMatcher.stripFirstMarker(code).trim();
         const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
-        // Insert code cell into NotebookDocument
+        // Insert cell into NotebookDocument
         const language =
             workspace.textDocuments.find((document) => document.uri.toString() === this.owner?.toString())
                 ?.languageId ?? PYTHON_LANGUAGE;
@@ -815,7 +815,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
         notebookCellData.metadata = {
-            inputCollapsed: !isMarkdown,
+            inputCollapsed: !isMarkdown && settings.collapseCellInputCodeByDefault,
             interactiveWindowCellMarker,
             interactive: {
                 file: file.fsPath,

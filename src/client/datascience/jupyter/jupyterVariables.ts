@@ -5,7 +5,6 @@ import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable, named } from 'inversify';
 
 import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
@@ -47,11 +46,11 @@ export class JupyterVariables implements IJupyterVariables {
         request: IJupyterVariablesRequest,
         notebook?: INotebook
     ): Promise<IJupyterVariablesResponse> {
-        return (await this.getVariableHandler(notebook)).getVariables(request, notebook);
+        return (await this.getVariableHandler()).getVariables(request, notebook);
     }
 
     public async getFullVariable(variable: IJupyterVariable, notebook?: INotebook): Promise<IJupyterVariable> {
-        return (await this.getVariableHandler(notebook)).getFullVariable(variable, notebook);
+        return (await this.getVariableHandler()).getFullVariable(variable, notebook);
     }
 
     public async getMatchingVariable(
@@ -59,7 +58,7 @@ export class JupyterVariables implements IJupyterVariables {
         notebook?: INotebook,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined> {
-        return (await this.getVariableHandler(notebook)).getMatchingVariable(name, notebook, cancelToken);
+        return (await this.getVariableHandler()).getMatchingVariable(name, notebook, cancelToken);
     }
 
     public async getDataFrameInfo(
@@ -68,12 +67,7 @@ export class JupyterVariables implements IJupyterVariables {
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
-        return (await this.getVariableHandler(notebook)).getDataFrameInfo(
-            targetVariable,
-            notebook,
-            sliceExpression,
-            isRefresh
-        );
+        return (await this.getVariableHandler()).getDataFrameInfo(targetVariable, notebook, sliceExpression, isRefresh);
     }
 
     public async getDataFrameRows(
@@ -83,7 +77,7 @@ export class JupyterVariables implements IJupyterVariables {
         notebook?: INotebook,
         sliceExpression?: string
     ): Promise<JSONObject> {
-        return (await this.getVariableHandler(notebook)).getDataFrameRows(
+        return (await this.getVariableHandler()).getDataFrameRows(
             targetVariable,
             start,
             end,
@@ -92,8 +86,8 @@ export class JupyterVariables implements IJupyterVariables {
         );
     }
 
-    private async getVariableHandler(notebook?: INotebook): Promise<IJupyterVariables> {
-        if (this.debuggerVariables.active && (!notebook || notebook.status === ServerStatus.Busy)) {
+    private async getVariableHandler(): Promise<IJupyterVariables> {
+        if (this.debuggerVariables.active) {
             return this.debuggerVariables;
         }
 

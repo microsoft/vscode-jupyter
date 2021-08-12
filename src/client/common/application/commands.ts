@@ -170,6 +170,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.NotebookEditorKeybindUndo]: [];
     [DSCommands.DebugNotebook]: [];
     [DSCommands.RunByLine]: [NotebookCell];
+    [DSCommands.RunAndDebugCell]: [NotebookCell];
     [DSCommands.RunByLineContinue]: [NotebookCell];
     [DSCommands.RunByLineStop]: [NotebookCell];
 }

@@ -170,6 +170,7 @@ export namespace Commands {
     export const InteractiveExportAs = 'jupyter.interactive.exportas';
     export const DebugNotebook = 'jupyter.debugNotebook';
     export const RunByLine = 'jupyter.runByLine';
+    export const RunAndDebugCell = 'jupyter.runAndDebugCell';
     export const RunByLineContinue = 'jupyter.runByLineContinue';
     export const RunByLineStop = 'jupyter.runByLineStop';
 }
@@ -201,7 +202,6 @@ export namespace EditorContexts {
     export const HaveCellSelected = 'jupyter.havecellselected';
     export const CanRestartNotebookKernel = 'jupyter.notebookeditor.canrestartNotebookkernel';
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
-    export const CanDebug = 'jupyter.notebookeditor.canDebug';
     export const DebuggingInProgress = 'jupyter.notebookeditor.debuggingInProgress';
     export const RunByLineInProgress = 'jupyter.notebookeditor.runByLineInProgress';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';

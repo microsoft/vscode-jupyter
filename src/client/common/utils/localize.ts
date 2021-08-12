@@ -940,6 +940,10 @@ export namespace DataScience {
         'DataScience.ipykernelNotInstalled',
         'IPyKernel not installed into interpreter {0}'
     );
+    export const needIpykernel6 = localize(
+        'DataScience.needIpykernel6',
+        "Ipykernel 6 is needed for debugging, click Install to continue. Or you can run 'pip install ipykernel==6.0.3/conda install ipykernel=6'"
+    );
     export const showDataViewerFail = localize(
         'DataScience.showDataViewerFail',
         'Failed to create the Data Viewer. Check the Jupyter tab of the Output window for more info.'
@@ -961,10 +965,6 @@ export namespace DataScience {
     );
     export const noNotebookToDebug = localize('DataScience.noNotebookToDebug', 'No active notebook document to debug.');
     export const cantStartDebugging = localize('DataScience.cantStartDebugging', "Can't start debugging.");
-    export const pythonKernelDebugAdapter = localize(
-        'DataScience.pythonKernelDebugAdapter',
-        'Python Kernel Debug Adapter'
-    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

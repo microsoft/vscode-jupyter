@@ -37,6 +37,7 @@ import { WebviewViewHost } from '../webviews/webviewViewHost';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
 import { ContextKey } from '../../common/contextKey';
+import { IDebuggingManager } from '../../debugger/types';
 
 const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
@@ -61,7 +62,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         @unmanaged() private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @unmanaged() private readonly dataViewerFactory: IDataViewerFactory,
         @unmanaged() private readonly notebookWatcher: INotebookWatcher,
-        @unmanaged() private readonly commandManager: ICommandManager
+        @unmanaged() private readonly commandManager: ICommandManager,
+        @unmanaged() private readonly debuggingManager: IDebuggingManager
     ) {
         super(
             configuration,
@@ -78,6 +80,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.notebookWatcher.onDidExecuteActiveNotebook(this.activeNotebookExecuted, this, this.disposables);
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
+        this.debuggingManager.onDidFireVariablesEvent(this.sendRefreshMessage, this, this.disposables);
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
@@ -214,5 +217,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     private async activeNotebookRestarted() {
         this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+    }
+
+    private async sendRefreshMessage() {
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 }

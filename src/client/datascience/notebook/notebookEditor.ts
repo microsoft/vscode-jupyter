@@ -13,11 +13,12 @@ import {
     ProgressLocation,
     Uri,
     NotebookCellData,
-    NotebookCell
+    NotebookCell,
+    NotebookData
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensions } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -37,7 +38,6 @@ import {
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 import { getNotebookMetadata } from './helpers/helpers';
-import { NotebookSerializer } from './notebookSerializer';
 import type { nbformat } from '@jupyterlab/coreutils';
 
 export class NotebookEditor implements INotebookEditor {
@@ -77,8 +77,8 @@ export class NotebookEditor implements INotebookEditor {
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
         private readonly cellLanguageService: NotebookCellLanguageService,
-        private readonly serializer: NotebookSerializer,
-        private loggers: INotebookExecutionLogger[]
+        private loggers: INotebookExecutionLogger[],
+        private extensions: IExtensions
     ) {
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
     }
@@ -87,8 +87,26 @@ export class NotebookEditor implements INotebookEditor {
         return getNotebookMetadata(this.document);
     }
     onExecutedCode?: Event<string> | undefined;
-    public getContent() {
-        return this.serializer.serializeNotebookDocument(this.document);
+    public getContent(): string {
+        const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
+            'vscode.ipynb'
+        );
+        if (!serializerApi) {
+            throw new Error(
+                'Unable to export notebook as the built-in vscode.ipynb extension is currently unavailable.'
+            );
+        }
+        const cells = this.document.getCells();
+        const cellData = cells.map((c) => {
+            const data = new NotebookCellData(c.kind, c.document.getText(), c.document.languageId);
+            data.metadata = c.metadata;
+            data.mime = c.mime;
+            data.outputs = [...c.outputs];
+            return data;
+        });
+        const notebookData = new NotebookData(cellData);
+        notebookData.metadata = this.document.metadata;
+        return serializerApi.exports.exportNotebook(notebookData);
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
@@ -212,7 +230,7 @@ export class NotebookEditor implements INotebookEditor {
                 const message = DataScience.restartKernelAfterInterruptMessage();
                 const yes = DataScience.restartKernelMessageYes();
                 const no = DataScience.restartKernelMessageNo();
-                const v = await this.applicationShell.showInformationMessage(message, yes, no);
+                const v = await this.applicationShell.showInformationMessage(message, { modal: true }, yes, no);
                 if (v === yes) {
                     this.restartingKernel = false;
                     this.kernelInterruptedDontAskToRestart = true;
