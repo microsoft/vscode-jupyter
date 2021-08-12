@@ -1728,13 +1728,6 @@
                     "description": "When pressing shift+enter, send selected code in a Python file to the Jupyter interactive window as opposed to the Python terminal.",
                     "scope": "resource"
                 },
-                "jupyter.showJupyterVariableExplorer": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Show the variable explorer in the Interactive window.",
-                    "deprecationMessage": "This setting no longer applies. It is ignored.",
-                    "scope": "resource"
-                },
                 "jupyter.variableExplorerExclude": {
                     "type": "string",
                     "default": "module;function;builtin_function_or_method;ABCMeta;type",
