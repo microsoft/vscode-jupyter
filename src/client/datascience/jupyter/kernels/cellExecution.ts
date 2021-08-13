@@ -36,7 +36,6 @@ import { Telemetry } from '../../constants';
 import { handleTensorBoardDisplayDataOutput } from '../../notebook/helpers/executionHelpers';
 import {
     cellOutputToVSCCellOutput,
-    hasErrorOutput,
     traceCellMessage,
     translateCellDisplayOutput,
     translateErrorOutput
@@ -123,6 +122,7 @@ export class CellExecution implements IDisposable {
     private temporaryExecution?: NotebookCellExecution;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
     private cancelHandled = false;
+    private cellHasErrorsInOutput?: boolean;
     /**
      * We keep track of the last output that was used to store stream text.
      * We need this so that we can update it later on (when we get new data for the same stream).
@@ -287,7 +287,7 @@ export class CellExecution implements IDisposable {
 
         let success: 'success' | 'failed' = 'success';
         // If there are any errors in the cell, then change status to error.
-        if (hasErrorOutput(this.cell.outputs)) {
+        if (this.cellHasErrorsInOutput) {
             success = 'failed';
             runState = NotebookCellRunState.Error;
         }
@@ -785,6 +785,7 @@ export class CellExecution implements IDisposable {
             traceback: msg.content.traceback
         };
         this.addToCellData(output, clearState);
+        this.cellHasErrorsInOutput = true;
     }
 
     @swallowExceptions()
