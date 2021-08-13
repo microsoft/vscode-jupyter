@@ -168,6 +168,7 @@ export class CellExecution implements IDisposable {
             this,
             this.disposables
         );
+        NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Idle);
         if (this.canExecuteCell()) {
             // This has been queued for execution, hence clear all the output.
             // (possible solution for ) https://github.com/microsoft/vscode-jupyter/issues/7123
