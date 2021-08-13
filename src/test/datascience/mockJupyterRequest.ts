@@ -453,9 +453,9 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
                     .then((r) => {
                         // If there's a message, send it.
                         if (r.message && r.message.channel === 'iopub' && this.onIOPub) {
-                            this.onIOPub(r.message as KernelMessage.IIOPubMessage);
+                            void this.onIOPub(r.message as KernelMessage.IIOPubMessage);
                         } else if (r.message && r.message.channel === 'stdin' && this.onStdin) {
-                            this.onStdin(r.message as KernelMessage.IStdinMessage);
+                            void this.onStdin(r.message as KernelMessage.IStdinMessage);
                         }
 
                         // Move onto the next producer if allowed
@@ -480,7 +480,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
             replyProducer
                 .produceNextMessage()
                 .then((r) => {
-                    this.onReply((<any>r.message) as KernelMessage.IShellMessage);
+                    void this.onReply((<any>r.message) as KernelMessage.IShellMessage);
                 })
                 .ignoreErrors();
 
