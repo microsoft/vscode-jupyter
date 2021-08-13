@@ -5,7 +5,14 @@ import '../../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
 import * as path from 'path';
-import { WebviewView as vscodeWebviewView } from 'vscode';
+import {
+    NotebookCellExecutionState,
+    NotebookCellExecutionStateChangeEvent,
+    notebooks,
+    WebviewView as vscodeWebviewView,
+    window,
+    workspace
+} from 'vscode';
 
 import {
     IApplicationShell,
@@ -27,6 +34,7 @@ import { IDataViewerFactory } from '../data-viewing/types';
 import { DataViewerChecker } from '../interactive-common/dataViewerChecker';
 import {
     ICodeCssGenerator,
+    IInteractiveWindowProvider,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IJupyterVariablesRequest,
@@ -38,6 +46,7 @@ import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
 import { ContextKey } from '../../common/contextKey';
 import { IDebuggingManager } from '../../debugger/types';
+import { IKernelProvider } from '../jupyter/kernels/types';
 
 const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
@@ -63,7 +72,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         @unmanaged() private readonly dataViewerFactory: IDataViewerFactory,
         @unmanaged() private readonly notebookWatcher: INotebookWatcher,
         @unmanaged() private readonly commandManager: ICommandManager,
-        @unmanaged() private readonly debuggingManager: IDebuggingManager
+        @unmanaged() private readonly debuggingManager: IDebuggingManager,
+        @unmanaged() private readonly interactiveWindowProvider: IInteractiveWindowProvider,
+        @unmanaged() private readonly kernelProvider: IKernelProvider
     ) {
         super(
             configuration,
@@ -81,6 +92,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
         this.debuggingManager.onDidFireVariablesEvent(this.sendRefreshMessage, this, this.disposables);
+        notebooks.onDidChangeNotebookCellExecutionState(this.updateContext, this, this.disposables);
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
@@ -158,6 +170,12 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         }
     }
 
+    private async updateContext(e: NotebookCellExecutionStateChangeEvent) {
+        if (e.state === NotebookCellExecutionState.Idle) {
+            this.activeNotebookChanged({});
+        }
+    }
+
     // Handle a request from the react UI to show our data viewer
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
@@ -183,8 +201,10 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     // Variables for the current active editor are being requested, check that we have a valid active notebook
     // and use the variables interface to fetch them and pass them to the variable view UI
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
-        if (this.notebookWatcher.activeNotebook) {
-            const response = await this.variables.getVariables(args, this.notebookWatcher.activeNotebook);
+        const activeInteractiveWindowNotebook = await this.getActiveInteractiveWindowNotebook();
+        const activeNotebook = this.notebookWatcher.activeNotebook || activeInteractiveWindowNotebook;
+        if (activeNotebook) {
+            const response = await this.variables.getVariables(args, activeNotebook);
 
             this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
             sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, {
@@ -221,5 +241,20 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     private async sendRefreshMessage() {
         this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+    }
+
+    private async getActiveInteractiveWindowNotebook(): Promise<INotebook | undefined> {
+        if (window.activeTextEditor === undefined) {
+            return;
+        }
+        const textDocumentUri = window.activeTextEditor.document.uri;
+        const interactiveWindow = await this.interactiveWindowProvider.get(textDocumentUri);
+        const notebookDocument = workspace.notebookDocuments.find(
+            (notebookDocument) => notebookDocument.uri.toString() === interactiveWindow?.notebookUri?.toString()
+        );
+        if (notebookDocument === undefined) {
+            return;
+        }
+        return this.kernelProvider.get(notebookDocument)?.notebook;
     }
 }
