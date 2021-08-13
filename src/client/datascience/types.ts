@@ -17,7 +17,6 @@ import {
     Event,
     HoverProvider,
     NotebookCell,
-    NotebookDocument,
     NotebookEditor,
     QuickPickItem,
     Range,
@@ -686,7 +685,6 @@ export interface ICell {
     line: number;
     state: CellState;
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
-    extraLines?: number[];
 }
 
 // CellRange is used as the basis for creating new ICells.
@@ -943,7 +941,7 @@ export interface ICellHashProvider {
     getHashes(): IFileHashes[];
     getExecutionCount(): number;
     incExecutionCount(): void;
-    generateHashFileName(cell: ICell, executionCount: number): string;
+    addCellHash(notebookCell: NotebookCell): Promise<void>;
 }
 
 export interface IDebugLocation {
@@ -1370,9 +1368,4 @@ export interface IExternalWebviewCellButton {
 export interface IExternalCommandFromWebview {
     buttonId: string;
     cell: ICell;
-}
-
-export const IDebuggingCellMap = Symbol('IDebuggingCellMap');
-export interface IDebuggingCellMap {
-    getCellsAndClearQueue(doc: NotebookDocument): NotebookCell[];
 }

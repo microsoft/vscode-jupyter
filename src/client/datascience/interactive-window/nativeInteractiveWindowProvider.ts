@@ -31,6 +31,7 @@ import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import {
+    ICellHashProvider,
     IInteractiveWindow,
     IInteractiveWindowProvider,
     IJupyterDebugger,
@@ -136,7 +137,8 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
             this.notebookControllerManager,
             this.kernelProvider,
             this.disposables,
-            this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger)
+            this.serviceContainer.get<IJupyterDebugger>(IJupyterDebugger),
+            this.serviceContainer.get<ICellHashProvider>(ICellHashProvider)
         );
         this._windows.push(result);
 
