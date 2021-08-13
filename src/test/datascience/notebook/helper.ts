@@ -51,7 +51,7 @@ import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 
 // Running in Conda environments, things can be a little slower.
-const defaultTimeout = IS_CONDA_TEST ? 30_000 : 15_000;
+export const defaultNotebookTestTimeout = IS_CONDA_TEST ? 30_000 : 15_000;
 
 async function getServices() {
     const api = await initialize();
@@ -283,7 +283,7 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     };
     await waitForCondition(
         async () => isRightKernel(),
-        defaultTimeout,
+        defaultNotebookTestTimeout,
         `Kernel with criteria ${JSON.stringify(criteria)} not selected`
     );
 
@@ -352,7 +352,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     };
     // Wait for the active kernel to be a julia kernel.
     const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
-    await waitForCondition(async () => isRightKernel(), defaultTimeout, errorMessage);
+    await waitForCondition(async () => isRightKernel(), defaultNotebookTestTimeout, errorMessage);
     // If it works, make sure kernel has enough time to actually switch the active notebook to this
     // kernel (kernel changes are async)
     await waitForCondition(
@@ -483,7 +483,7 @@ export async function waitForCellExecutionToComplete(cell: NotebookCell) {
     // await CellExecution.cellsCompletedForTesting.get(cell)!.promise;
     await waitForCondition(
         async () => (cell.executionSummary?.executionOrder || 0) > 0,
-        defaultTimeout,
+        defaultNotebookTestTimeout,
         'Execution did not complete'
     );
     await sleep(100);
@@ -491,7 +491,7 @@ export async function waitForCellExecutionToComplete(cell: NotebookCell) {
 export async function waitForOutputs(
     cell: NotebookCell,
     expectedNumberOfOutputs: number,
-    timeout: number = defaultTimeout
+    timeout: number = defaultNotebookTestTimeout
 ) {
     await waitForCondition(
         async () => cell.outputs.length === expectedNumberOfOutputs,
@@ -499,7 +499,10 @@ export async function waitForOutputs(
         `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
 }
-export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForExecutionCompletedSuccessfully(
+    cell: NotebookCell,
+    timeout: number = defaultNotebookTestTimeout
+) {
     await Promise.all([
         waitForCondition(
             async () => assertHasExecutionCompletedSuccessfully(cell),
@@ -514,7 +517,7 @@ export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, 
 /**
  * When a cell is running (in progress), the start time will be > 0.
  */
-export async function waitForExecutionInProgress(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForExecutionInProgress(cell: NotebookCell, timeout: number = defaultNotebookTestTimeout) {
     await waitForCondition(
         async () => {
             return (
@@ -529,7 +532,7 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
 /**
  * When a cell is queued for execution (in progress), the start time, last duration & status message will be `empty`.
  */
-export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = defaultNotebookTestTimeout) {
     await waitForCondition(
         async () => {
             return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending;
@@ -540,7 +543,10 @@ export async function waitForQueuedForExecution(cell: NotebookCell, timeout: num
         )}`
     );
 }
-export async function waitForQueuedForExecutionOrExecuting(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForQueuedForExecutionOrExecuting(
+    cell: NotebookCell,
+    timeout: number = defaultNotebookTestTimeout
+) {
     await waitForCondition(
         async () => {
             return (
@@ -556,7 +562,10 @@ export async function waitForQueuedForExecutionOrExecuting(cell: NotebookCell, t
         )}`
     );
 }
-export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForEmptyCellExecutionCompleted(
+    cell: NotebookCell,
+    timeout: number = defaultNotebookTestTimeout
+) {
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
@@ -566,7 +575,10 @@ export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, tim
     );
     await waitForCellExecutionToComplete(cell);
 }
-export async function waitForExecutionCompletedWithErrors(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForExecutionCompletedWithErrors(
+    cell: NotebookCell,
+    timeout: number = defaultNotebookTestTimeout
+) {
     await waitForCondition(
         async () => assertHasExecutionCompletedWithErrors(cell),
         timeout,
@@ -581,6 +593,20 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
         hasErrorOutput(cell.outputs)
     );
 }
+function getCellOutputs(cell: NotebookCell) {
+    return cell.outputs.map((output) => output.items.map(getOutputText).join('\n')).join('\n');
+}
+function getOutputText(output: NotebookCellOutputItem) {
+    if (
+        output.mime !== CellOutputMimeTypes.stdout &&
+        output.mime !== CellOutputMimeTypes.stderr &&
+        output.mime !== 'text/plain' &&
+        output.mime !== 'text/markdown'
+    ) {
+        return false;
+    }
+    return Buffer.from(output.data as Uint8Array).toString('utf8');
+}
 function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExactMatch = true) {
     if (
         output.mime !== CellOutputMimeTypes.stdout &&
@@ -591,10 +617,8 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
         return false;
     }
     try {
-        const haystack = Buffer.from(output.data as Uint8Array)
-            .toString('utf8')
-            .trim();
-        return isExactMatch ? haystack === value : haystack.includes(value);
+        const haystack = Buffer.from(output.data as Uint8Array).toString('utf8');
+        return isExactMatch ? haystack === value || haystack.trim() === value : haystack.includes(value);
     } catch {
         return false;
     }
@@ -614,14 +638,15 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
 export async function waitForTextOutputInVSCode(
     cell: NotebookCell,
     text: string,
-    index: number,
+    index: number = 0,
     isExactMatch = true,
-    timeout = defaultTimeout
+    timeout = defaultNotebookTestTimeout
 ) {
     await waitForCondition(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
         timeout,
-        `Output does not contain provided text '${text}' for Cell ${cell.index + 1}`
+        () =>
+            `Output does not contain provided text '${text}' for Cell ${cell.index + 1}, it is ${getCellOutputs(cell)}`
     );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {

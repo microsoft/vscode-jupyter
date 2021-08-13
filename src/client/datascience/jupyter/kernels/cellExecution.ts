@@ -158,7 +158,7 @@ export class CellExecution implements IDisposable {
         );
         notebooks.onDidChangeCellOutputs(
             (e) => {
-                if (e.cells.length === 0) {
+                if (e.cells.includes(this.cell) && this.cell.outputs.length === 0) {
                     // keep track of the fact that user has cleared the output.
                     this.clearLastUsedStreamOutput();
                 }
@@ -267,7 +267,7 @@ export class CellExecution implements IDisposable {
         this.sendPerceivedCellExecute();
 
         traceCellMessage(this.cell, 'Update with error state & output');
-        void this.execution?.appendOutput([translateErrorOutput(createErrorOutput(error))]);
+        this.execution?.appendOutput([translateErrorOutput(createErrorOutput(error))]).then(noop, noop);
 
         this.endCellTask('failed');
         this._completed = true;
@@ -300,6 +300,9 @@ export class CellExecution implements IDisposable {
     private endCellTask(success: 'success' | 'failed' | 'cancelled') {
         if (this.isEmptyCodeCell) {
             // Undefined for not success or failures
+            if (this.execution) {
+                this.execution.executionOrder = undefined;
+            }
             this.execution?.end(undefined);
         } else if (success === 'success' || success === 'failed') {
             this.endTime = new Date().getTime();
@@ -393,7 +396,7 @@ export class CellExecution implements IDisposable {
         await this.executeCodeCell(code, session, loggers);
         loggers.forEach((l) => {
             if (l.nativePostExecute) {
-                void l.nativePostExecute(this.cell);
+                l.nativePostExecute(this.cell).then(noop, noop);
             }
         });
     }
@@ -559,7 +562,7 @@ export class CellExecution implements IDisposable {
         // Clear if necessary
         if (clearState.value) {
             this.clearLastUsedStreamOutput();
-            void this.execution?.clearOutput();
+            this.execution?.clearOutput().then(noop, noop);
             clearState.update(false);
         }
         // Keep track of the displa_id against the output item, we might need this to update this later.
@@ -573,7 +576,7 @@ export class CellExecution implements IDisposable {
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         const task = this.execution || this.createTemporaryTask();
         this.clearLastUsedStreamOutput();
-        void task?.appendOutput([cellOutput]);
+        task?.appendOutput([cellOutput]).then(noop, noop);
         this.endTemporaryTask();
     }
 
@@ -581,7 +584,7 @@ export class CellExecution implements IDisposable {
         // Ask the user for input
         if (msg.content && 'prompt' in msg.content) {
             const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
-            void this.applicationService
+            this.applicationService
                 .showInputBox({
                     prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
                     ignoreFocusOut: true,
@@ -589,7 +592,7 @@ export class CellExecution implements IDisposable {
                 })
                 .then((v) => {
                     session.sendInputReply(v || '');
-                });
+                }, noop);
         }
     }
 
@@ -664,7 +667,7 @@ export class CellExecution implements IDisposable {
                 [cellData]
             );
         }
-        void workspace.applyEdit(edit);
+        workspace.applyEdit(edit).then(noop, noop);
     }
 
     private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool) {
@@ -688,7 +691,7 @@ export class CellExecution implements IDisposable {
         const clearOutput = clearState.value;
         if (clearOutput) {
             this.clearLastUsedStreamOutput();
-            void task?.clearOutput();
+            task?.clearOutput().then(noop, noop);
             clearState.update(false);
         }
         // Ensure we append to previous output, only if the streams as the same &
@@ -721,7 +724,7 @@ export class CellExecution implements IDisposable {
                 name: msg.content.name,
                 text: this.lastUsedStreamOutput.text
             });
-            void task?.replaceOutputItems(output.items, this.lastUsedStreamOutput.output);
+            task?.replaceOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
         } else if (clearOutput) {
             // Replace the current outputs with a single new output.
             const text = formatStreamText(concatMultilineString(msg.content.text));
@@ -731,7 +734,7 @@ export class CellExecution implements IDisposable {
                 text
             });
             this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
-            void task?.replaceOutput([output]);
+            task?.replaceOutput([output]).then(noop, noop);
         } else {
             // Create a new output
             const text = formatStreamText(concatMultilineString(msg.content.text));
@@ -741,7 +744,7 @@ export class CellExecution implements IDisposable {
                 text
             });
             this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
-            void task?.appendOutput([output]);
+            task?.appendOutput([output]).then(noop, noop);
         }
         this.endTemporaryTask();
     }
@@ -769,7 +772,7 @@ export class CellExecution implements IDisposable {
             // Clear all outputs and start over again.
             const task = this.execution || this.createTemporaryTask();
             this.clearLastUsedStreamOutput();
-            void task?.clearOutput();
+            task?.clearOutput().then(noop, noop);
             this.endTemporaryTask();
         }
     }
@@ -839,7 +842,7 @@ export class CellExecution implements IDisposable {
         // This message could have come from a background thread.
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         const task = this.execution || this.createTemporaryTask();
-        void task?.replaceOutputItems(newOutput.items, outputToBeUpdated);
+        task?.replaceOutputItems(newOutput.items, outputToBeUpdated).then(noop, noop);
         this.endTemporaryTask();
     }
 }
