@@ -38,7 +38,9 @@ import {
     createEmptyPythonNotebook,
     assertNotHasTextOutputInVSCode,
     waitForQueuedForExecutionOrExecuting,
-    workAroundVSCodeNotebookStartPages
+    workAroundVSCodeNotebookStartPages,
+    waitForTextOutputInVSCode,
+    waitForEmptyCellExecutionCompleted
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
@@ -118,9 +120,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertCodeCell('print("\tho")\nprint("\tho")\nprint("\tho")\n', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
-        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
-        const output = getTextOutputValue(cell.outputs[0]);
-        assert.equal(output, '\tho\n\tho\n\tho\n', 'Cell with leading whitespace has incorrect output');
+        await Promise.all([
+            runCell(cell),
+            waitForExecutionCompletedSuccessfully(cell),
+            waitForTextOutputInVSCode(cell, '\tho\n\tho\n\tho\n', 0)
+        ]);
     });
     test('Empty cells will not have an execution order nor have a status of success', async () => {
         await insertCodeCell('');
@@ -142,7 +146,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cells[0].executionSummary?.executionOrder, 1);
         assertHasTextOutputInVSCode(cells[0], 'Hello World');
 
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[0])]);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForEmptyCellExecutionCompleted(cells[0])]);
 
         // Clear the cell and run the empty cell again & the status should change the idle & output cleared.
         assert.equal(NotebookCellStateTracker.getCellState(cells[0]), NotebookCellExecutionState.Idle);
@@ -153,9 +157,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertCodeCell('print("Hello World")');
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
-        // Verify output.
-        assertHasTextOutputInVSCode(cell, 'Hello World', 0);
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell),
+            waitForTextOutputInVSCode(cell, 'Hello World', 0)
+        ]);
 
         // Verify execution count.
         assert.ok(cell.executionSummary?.executionOrder, 'Execution count should be > 0');
@@ -168,12 +174,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cells[0]),
-            waitForExecutionCompletedSuccessfully(cells[1])
+            waitForExecutionCompletedSuccessfully(cells[1]),
+            // Verify output.
+            waitForTextOutputInVSCode(cells[0], 'Foo Bar', 0),
+            waitForTextOutputInVSCode(cells[1], 'Hello World', 0)
         ]);
-
-        // Verify output.
-        assertHasTextOutputInVSCode(cells[0], 'Foo Bar');
-        assertHasTextOutputInVSCode(cells[1], 'Hello World');
 
         // Verify execution count.
         assert.ok(cells[0].executionSummary?.executionOrder, 'Execution count should be > 0');
@@ -183,27 +188,32 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertCodeCell('print("Foo Bar")');
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell),
+            waitForCondition(async () => hasErrorOutput(cell.outputs), 30_000, 'No errors')
+        ]);
 
         expect(cell.executionSummary?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Idle, 'Incorrect State');
-        assert.isFalse(hasErrorOutput(cell.outputs), 'Incorrect State');
     });
     test('Verify output & metadata for executed cell with errors', async () => {
         await insertCodeCell('print(abcd)');
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell),
+            waitForCondition(async () => cell.outputs.length === 1, 30_000, 'Incorrect Output'),
+            waitForCondition(async () => hasErrorOutput(cell.outputs), 30_000, 'No errors')
+        ]);
 
-        assert.lengthOf(cell.outputs, 1, 'Incorrect output');
-        assert.isTrue(hasErrorOutput(cell.outputs), 'No Error output');
         const errorOutput = translateCellErrorOutput(cell.outputs[0]);
         assert.equal(errorOutput.ename, 'NameError', 'Incorrect ename'); // As status contains ename, we don't want this displayed again.
         assert.equal(errorOutput.evalue, "name 'abcd' is not defined", 'Incorrect evalue'); // As status contains ename, we don't want this displayed again.
         assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
         expect(cell.executionSummary?.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         assert.equal(NotebookCellStateTracker.getCellState(cell), NotebookCellExecutionState.Idle, 'Incorrect State');
-        assert.ok(hasErrorOutput(cell.outputs), 'Incorrect State');
     });
     test('Updating display data', async function () {
         return this.skip();
@@ -362,15 +372,25 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertCodeCell('raise Exception("<whatever>")');
         const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
 
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedWithErrors(cells[3])]);
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedWithErrors(cells[3]),
+            waitForCondition(
+                async () => {
+                    for (const cell of cells) {
+                        assert.lengthOf(cell.outputs, 1, 'Incorrect output');
+                    }
+                    return true;
+                },
+                60_000,
+                'Incorrect output'
+            ),
+            waitForTextOutputInVSCode(cells[0], '1', 0, false, 60_000),
+            waitForTextOutputInVSCode(cells[1], '<a href=f>', 0, false, 60_000),
+            waitForTextOutputInVSCode(cells[2], '<a href=f>', 0, false, 60_000),
+            waitForCondition(async () => hasErrorOutput(cells[3].outputs), 60_000, 'No error output')
+        ]);
 
-        for (const cell of cells) {
-            assert.lengthOf(cell.outputs, 1, 'Incorrect output');
-        }
-        assertHasTextOutputInVSCode(cells[0], '1');
-        assertHasTextOutputInVSCode(cells[1], '<a href=f>', 0, false);
-        assertHasTextOutputInVSCode(cells[2], '<a href=f>', 0, false);
-        assert.isTrue(hasErrorOutput(cells[3].outputs));
         const errorOutput = translateCellErrorOutput(cells[3].outputs[0]);
         assert.equal(errorOutput.ename, 'Exception', 'Incorrect ename'); // As status contains ename, we don't want this displayed again.
         assert.equal(errorOutput.evalue, '<whatever>', 'Incorrect evalue'); // As status contains ename, we don't want this displayed again.
@@ -397,15 +417,16 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                     print('hello')`,
             { index: 2 }
         );
-        await runAllCellsInActiveNotebook();
         cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
-        await waitForExecutionCompletedSuccessfully(cells[2]);
-
-        assert.equal(cells[0].outputs.length, 0, 'Incorrect number of output');
-        assert.equal(cells[1].outputs.length, 1, 'Incorrect number of output');
-        assert.equal(cells[2].outputs.length, 1, 'Incorrect number of output');
-        assertHasTextOutputInVSCode(cells[1], 'bar', 0, true);
-        assertHasTextOutputInVSCode(cells[2], 'hello', 0, false);
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cells[2]),
+            waitForCondition(async () => cells[0].outputs.length === 0, 60_000, 'Incorrect number of output'),
+            waitForCondition(async () => cells[1].outputs.length === 1, 60000, 'Incorrect number of output'),
+            waitForCondition(async () => cells[2].outputs.length === 1, 60000, 'Incorrect number of output'),
+            waitForTextOutputInVSCode(cells[1], 'bar', 0, false),
+            waitForTextOutputInVSCode(cells[2], 'hello', 0, false)
+        ]);
     });
     test('More messages from background threads', async () => {
         // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
@@ -432,30 +453,47 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         );
         const cells = vscodeNotebook.activeNotebookEditor?.document.getCells()!;
 
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedWithErrors(cells[0])]);
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedWithErrors(cells[0]),
+            // Wait for last line to be `iteration 9`
+            waitForCondition(async () => cells[0].outputs.length === 1, 60000, 'Incorrect number of output'),
 
-        // Wait for last line to be `iteration 9`
-        assert.equal(cells[0].outputs.length, 1, 'Incorrect number of output');
-        // assert.equal(cells[0].outputs[0].outputKind, CellOutputKind.Rich, 'Incorrect output type');
-        await waitForCondition(
-            async () => {
-                const output = cells[0].outputs[0];
-                const text = getTextOutputValue(output);
-                return text.trim().endsWith('iteration 9');
-            },
-            10_000,
-            'Incorrect output, expected all iterations'
-        );
-
-        const textOutput = getTextOutputValue(cells[0].outputs[0]);
-        expect(textOutput.indexOf('main thread done')).lessThan(
-            textOutput.indexOf('iteration 9'),
-            'Main thread should have completed before background thread'
-        );
-        expect(textOutput.indexOf('main thread done')).greaterThan(
-            textOutput.indexOf('iteration 0'),
-            'Main thread should have completed after background starts'
-        );
+            // assert.equal(cells[0].outputs[0].outputKind, CellOutputKind.Rich, 'Incorrect output type');
+            waitForCondition(
+                async () => {
+                    const output = cells[0].outputs[0];
+                    const text = getTextOutputValue(output);
+                    return text.trim().endsWith('iteration 9');
+                },
+                10_000,
+                'Incorrect output, expected all iterations'
+            ),
+            waitForCondition(
+                async () => {
+                    const textOutput = getTextOutputValue(cells[0].outputs[0]);
+                    expect(textOutput.indexOf('main thread done')).lessThan(
+                        textOutput.indexOf('iteration 9'),
+                        'Main thread should have completed before background thread'
+                    );
+                    return true;
+                },
+                60_000,
+                'Main thread should have completed before background thread'
+            ),
+            waitForCondition(
+                async () => {
+                    const textOutput = getTextOutputValue(cells[0].outputs[0]);
+                    expect(textOutput.indexOf('main thread done')).greaterThan(
+                        textOutput.indexOf('iteration 0'),
+                        'Main thread should have completed after background starts'
+                    );
+                    return true;
+                },
+                60_000,
+                'Main thread should have completed before background thread'
+            )
+        ]);
     });
     test('Messages from background threads can come in other cell output', async () => {
         // Details can be found in notebookUpdater.ts & https://github.com/jupyter/jupyter_client/issues/297
