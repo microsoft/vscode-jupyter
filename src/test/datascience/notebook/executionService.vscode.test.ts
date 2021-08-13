@@ -29,7 +29,6 @@ import {
     waitForKernelToGetAutoSelected,
     prewarmNotebooks,
     hijackPrompt,
-    waitForEmptyCellExecutionCompleted,
     createTemporaryNotebook,
     closeNotebooks,
     waitForExecutionInProgress,
