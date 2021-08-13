@@ -308,6 +308,9 @@ export class NotebookCellStateTracker implements IDisposable {
     public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
         return NotebookCellStateTracker.cellStates.get(cell);
     }
+    public static setCellState(cell: NotebookCell, state: NotebookCellExecutionState) {
+        NotebookCellStateTracker.cellStates.set(cell, state);
+    }
     private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
         NotebookCellStateTracker.cellStates.set(e.cell, e.state);
     }

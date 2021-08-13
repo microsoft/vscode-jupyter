@@ -19,7 +19,8 @@ import {
     NotebookRange,
     Range,
     notebooks,
-    NotebookCellOutput
+    NotebookCellOutput,
+    NotebookCellExecutionState
 } from 'vscode';
 import { concatMultilineString, formatStreamText } from '../../../../datascience-ui/common';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
@@ -36,6 +37,7 @@ import { Telemetry } from '../../constants';
 import { handleTensorBoardDisplayDataOutput } from '../../notebook/helpers/executionHelpers';
 import {
     cellOutputToVSCCellOutput,
+    NotebookCellStateTracker,
     traceCellMessage,
     translateCellDisplayOutput,
     translateErrorOutput
@@ -177,6 +179,7 @@ export class CellExecution implements IDisposable {
             // void tempTask.clearOutput();
             // void tempTask.end(undefined);
             this.execution = controller.createNotebookCellExecution(this.cell);
+            NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Pending);
         }
     }
 
@@ -219,6 +222,7 @@ export class CellExecution implements IDisposable {
         this.startTime = new Date().getTime();
         CellExecution.activeNotebookCellExecution.set(this.cell.notebook, this.execution);
         this.execution?.start(this.startTime);
+        NotebookCellStateTracker.setCellState(this.cell, NotebookCellExecutionState.Executing);
         this.clearLastUsedStreamOutput();
         // Await here, so that the UI updates on the progress & we clear the output.
         // Else when running cells with existing outputs, the outputs don't get cleared & it doesn't look like its running.
@@ -324,6 +328,7 @@ export class CellExecution implements IDisposable {
         if (CellExecution.activeNotebookCellExecution.get(this.cell.notebook) === this.execution) {
             CellExecution.activeNotebookCellExecution.set(this.cell.notebook, undefined);
         }
+        NotebookCellStateTracker.setCellState(this.cell, NotebookCellExecutionState.Idle);
         this.execution = undefined;
     }
     /**
