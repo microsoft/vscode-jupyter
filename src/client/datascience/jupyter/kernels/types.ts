@@ -162,6 +162,7 @@ export type KernelOptions = {
 };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
+    onDidRestartKernel: Event<IKernel>;
     /**
      * Get hold of the active kernel for a given Notebook.
      */
