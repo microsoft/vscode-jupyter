@@ -39,7 +39,7 @@ import {
     assertNotHasTextOutputInVSCode,
     waitForQueuedForExecutionOrExecuting,
     workAroundVSCodeNotebookStartPages,
-    waitForTextOutputInVSCode as waitForTextOutput,
+    waitForTextOutput,
     waitForEmptyCellExecutionCompleted,
     defaultNotebookTestTimeout
 } from './helper';

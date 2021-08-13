@@ -21,7 +21,7 @@ import {
     hijackPrompt,
     createEmptyPythonNotebook,
     workAroundVSCodeNotebookStartPages,
-    waitForTextOutputInVSCode as waitForTextOutput
+    waitForTextOutput as waitForTextOutput
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { INotebookControllerManager } from '../../../client/datascience/notebook/types';

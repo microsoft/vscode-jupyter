@@ -31,7 +31,8 @@ import {
     saveActiveNotebook,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
-    workAroundVSCodeNotebookStartPages
+    workAroundVSCodeNotebookStartPages,
+    waitForTextOutput
 } from './helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -179,8 +180,11 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await insertCodeCell('123456', { language: 'julia', index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         // Wait till execution count changes and status is success.
-        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell, 60_000)]);
-        assertHasTextOutputInVSCode(cell, '123456', 0, false);
+        await Promise.all([
+            runCell(cell),
+            waitForExecutionCompletedSuccessfully(cell, 60_000),
+            waitForTextOutput(cell, '123456', 0, false)
+        ]);
     });
     test('Can run a CSharp notebook', async function () {
         return this.skip(); // Flakey disabled and tracked by 4738

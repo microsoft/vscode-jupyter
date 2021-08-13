@@ -25,7 +25,8 @@ import {
     saveActiveNotebook,
     runCell,
     deleteAllCellsAndWait,
-    insertCodeCell
+    insertCodeCell,
+    waitForTextOutput
 } from './helper';
 import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -106,8 +107,11 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`
         let cell2 = nbEditor.document.getCells()![1]!;
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell2)]);
-        assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell2, 'Hello World', 0, false)
+        ]);
 
         // Confirm kernel id gets saved for this notebook.
         // This is not necessary, but this guarantees a faster & non-flaky test to ensure we don't close the notebook too early.
@@ -142,7 +146,10 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         // Execute second cell
         cell2 = nbEditor.document.getCells()![1]!;
-        await Promise.all([runCell(cell2), waitForExecutionCompletedSuccessfully(cell2)]);
-        assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
+        await Promise.all([
+            runCell(cell2),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell2, 'Hello World', 0, false)
+        ]);
     });
 });

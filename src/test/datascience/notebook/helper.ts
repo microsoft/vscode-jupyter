@@ -635,7 +635,7 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     );
     return result;
 }
-export async function waitForTextOutputInVSCode(
+export async function waitForTextOutput(
     cell: NotebookCell,
     text: string,
     index: number = 0,
