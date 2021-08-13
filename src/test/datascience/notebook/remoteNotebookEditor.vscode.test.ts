@@ -14,7 +14,6 @@ import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/ty
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
-    assertHasTextOutputInVSCode,
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,

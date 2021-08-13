@@ -51,7 +51,6 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
-        console.log(this.serialize.length);
     }
 
     public dispose() {
@@ -166,6 +165,14 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 () =>
                     new zmq.Subscriber({
                         maxMessageSize: -1,
+                        // If we get messages too fast and we're too slow in reading/handling the messages,
+                        // then Node will stop reading messages from the stream & we'll stop getting the messages.
+                        // See below comments on this config item:
+                        // The high water mark is a hard limit on the maximum number of incoming messages ØMQ
+                        // shall queue in memory for any single peer that the specified socket is communicating with.
+                        // A value of zero means no limit.
+                        // If this limit has been reached the socket shall enter an exceptional state and
+                        // depending on the socket type, ØMQ shall take appropriate action such as blocking or dropping sent messages.
                         receiveHighWaterMark: 0
                     })
             ),
