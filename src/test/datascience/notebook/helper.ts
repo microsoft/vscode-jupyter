@@ -594,7 +594,9 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     );
 }
 function getCellOutputs(cell: NotebookCell) {
-    return cell.outputs.map((output) => output.items.map(getOutputText).join('\n')).join('\n');
+    return cell.outputs.length
+        ? cell.outputs.map((output) => output.items.map(getOutputText).join('\n')).join('\n')
+        : '<No cell outputs>';
 }
 function getOutputText(output: NotebookCellOutputItem) {
     if (
