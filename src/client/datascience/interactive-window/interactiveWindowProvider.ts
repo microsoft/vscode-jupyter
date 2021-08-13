@@ -119,6 +119,11 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.id = uuid();
     }
 
+    public get(owner: Uri): IInteractiveWindow | undefined {
+        const mode = this.configService.getSettings(owner).interactiveWindowMode;
+        return this.getExisting(owner, mode);
+    }
+
     public async getOrCreate(resource: Resource): Promise<IInteractiveWindow> {
         if (!this.workspace.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
@@ -129,7 +134,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         const mode = await this.getInteractiveMode(resource);
 
         // See if we already have a match
-        let result = this.get(resource, mode) as InteractiveWindow;
+        let result = this.getExisting(resource, mode) as InteractiveWindow;
         if (!result) {
             // No match. Create a new item.
             result = this.create(resource, mode);
@@ -268,7 +273,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         return result;
     }
 
-    private get(owner: Resource, interactiveMode: InteractiveWindowMode): IInteractiveWindow | undefined {
+    private getExisting(owner: Resource, interactiveMode: InteractiveWindowMode): IInteractiveWindow | undefined {
         // Single mode means there's only ever one.
         if (interactiveMode === 'single') {
             return this._windows.length > 0 ? this._windows[0] : undefined;
@@ -316,7 +321,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             // it as the running of new code should do that.
             const owner = args[2] ? Uri.parse(args[2].toString()) : undefined;
             const mode = await this.getInteractiveMode(owner);
-            if (!this.get(owner, mode)) {
+            if (!this.getExisting(owner, mode)) {
                 this.create(owner, mode);
             }
 
