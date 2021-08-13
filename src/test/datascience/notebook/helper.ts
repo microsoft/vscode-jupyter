@@ -605,7 +605,7 @@ function getOutputText(output: NotebookCellOutputItem) {
         output.mime !== 'text/plain' &&
         output.mime !== 'text/markdown'
     ) {
-        return false;
+        return '';
     }
     return Buffer.from(output.data as Uint8Array).toString('utf8');
 }
