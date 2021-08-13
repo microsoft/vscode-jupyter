@@ -14,6 +14,7 @@ import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { IDataScienceErrorHandler, IJupyterSession, INotebook, InterruptResult } from '../../types';
+import { JupyterNotebookBase } from '../jupyterNotebook';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
@@ -187,6 +188,7 @@ export class KernelExecution implements IDisposable {
         // Restart the active execution
         await (this._restartPromise ? this._restartPromise : (this._restartPromise = this.restartExecution(notebook)));
 
+        (notebook as JupyterNotebookBase).fireRestart();
         // Done restarting, clear restart promise
         this._restartPromise = undefined;
     }
