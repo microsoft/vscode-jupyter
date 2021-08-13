@@ -167,6 +167,15 @@ export class CellExecution implements IDisposable {
             this.disposables
         );
         if (this.canExecuteCell()) {
+            // This has been queued for execution, hence clear all the output.
+            // (possible solution for ) https://github.com/microsoft/vscode-jupyter/issues/7123
+            // But this breaks all tests, as we get events for state changes in cells when they aren't really executions.
+            // Could also effect other parts of the code where we monitor state changes in cells (if it moves to executing, that's wrong).
+            // const tempTask = controller.createNotebookCellExecution(this.cell);
+            // void tempTask.start();
+            // tempTask.executionOrder = undefined;
+            // void tempTask.clearOutput();
+            // void tempTask.end(undefined);
             this.execution = controller.createNotebookCellExecution(this.cell);
         }
     }

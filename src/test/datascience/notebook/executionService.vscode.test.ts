@@ -918,6 +918,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cell2.executionSummary?.executionOrder, 6);
         // We check if the execution order is undefined or the same as previous.
         // For some reason execution orders don't cleared, we have a bug for this.
+        // https://github.com/microsoft/vscode/issues/130791
         assert.isTrue(
             cell3.executionSummary?.executionOrder === undefined ||
                 cell3.executionSummary?.executionOrder == lastExecutionOrderOfCell3,
