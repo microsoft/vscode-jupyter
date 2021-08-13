@@ -510,9 +510,8 @@ export class JupyterNotebookBase implements INotebook {
         };
     }
     public fireRestart() {
-        // Tell our loggers
+        // Tell our loggers & anyone listening to the events.
         this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
-        traceInfo(`Time to restart kernel is ${(Date.now() - this.sessionStartTime) / 1000}s`);
         this.kernelRestarted.fire();
     }
     @captureTelemetry(Telemetry.RestartJupyterTime)
