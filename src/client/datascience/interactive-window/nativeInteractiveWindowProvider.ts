@@ -105,7 +105,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
      * Given a text document, return the associated interactive window if one exists.
      * @param owner The URI of a text document which may be associated with an interactive window.
      */
-    public async get(owner: Uri): Promise<IInteractiveWindow | undefined> {
+    public get(owner: Uri): IInteractiveWindow | undefined {
         const mode = this.configService.getSettings(owner).interactiveWindowMode;
         return this.getExisting(owner, mode);
     }

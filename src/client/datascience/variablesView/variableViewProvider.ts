@@ -16,14 +16,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { IDebuggingManager } from '../../debugger/types';
 import { Identifiers } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
-import { IKernelProvider } from '../jupyter/kernels/types';
-import {
-    ICodeCssGenerator,
-    IInteractiveWindowProvider,
-    IJupyterVariableDataProviderFactory,
-    IJupyterVariables,
-    IThemeFinder
-} from '../types';
+import { ICodeCssGenerator, IJupyterVariableDataProviderFactory, IJupyterVariables, IThemeFinder } from '../types';
 import { INotebookWatcher, IVariableViewProvider } from './types';
 import { VariableView } from './variableView';
 
@@ -65,9 +58,7 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
         @inject(INotebookWatcher) private readonly notebookWatcher: INotebookWatcher,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
+        @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager
     ) {}
 
     public async resolveWebviewView(
@@ -91,9 +82,7 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.dataViewerFactory,
             this.notebookWatcher,
             this.commandManager,
-            this.debuggingManager,
-            this.interactiveWindowProvider,
-            this.kernelProvider
+            this.debuggingManager
         );
 
         // If someone is waiting for the variable view resolve that here
