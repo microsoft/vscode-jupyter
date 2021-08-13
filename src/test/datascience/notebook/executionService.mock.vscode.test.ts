@@ -21,7 +21,7 @@ import {
     hijackPrompt,
     createEmptyPythonNotebook,
     workAroundVSCodeNotebookStartPages,
-    waitForTextOutput as waitForTextOutput
+    waitForTextOutput
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { INotebookControllerManager } from '../../../client/datascience/notebook/types';
@@ -61,6 +61,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let inotebook: INotebook;
     let notebookProvider: INotebookProvider;
     suiteSetup(async function () {
+        return this.skip();
         traceInfo('Suite Setup');
         this.timeout(120_000);
         api = await initialize();

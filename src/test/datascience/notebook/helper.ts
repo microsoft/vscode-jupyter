@@ -42,7 +42,7 @@ import { chainWithPendingUpdates } from '../../../client/datascience/notebook/he
 import { CellOutputMimeTypes, INotebookControllerManager } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
@@ -51,7 +51,7 @@ import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 
 // Running in Conda environments, things can be a little slower.
-export const defaultNotebookTestTimeout = IS_CONDA_TEST ? 30_000 : 15_000;
+export const defaultNotebookTestTimeout = 60_000;
 
 async function getServices() {
     const api = await initialize();
