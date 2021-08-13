@@ -495,6 +495,11 @@ export interface IInteractiveWindowProvider {
      * @param owner file that started this interactive window
      */
     getOrCreate(owner: Resource): Promise<IInteractiveWindow>;
+    /**
+     * Given a text document, return the associated interactive window if one exists.
+     * @param owner The URI of a text document which may be associated with an interactive window.
+     */
+    get(owner: Uri): IInteractiveWindow | undefined;
 }
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
