@@ -445,9 +445,7 @@ export async function prewarmNotebooks() {
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
-        const promise = waitForExecutionCompletedSuccessfully(cell, 60_000);
-        await runAllCellsInActiveNotebook();
-        await promise;
+        await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
         // Wait for Jupyter to start.
         await closeActiveWindows();
     } finally {

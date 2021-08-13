@@ -90,10 +90,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
         await insertCodeCell('print("123412341234")', { index: 0 });
-        await runAllCellsInActiveNotebook();
-
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Wait for MRU to get updated & encrypted storage to get updated.
         await waitForCondition(async () => encryptedStorageSpiedStore.called, 5_000, 'Encrypted storage not updated');
@@ -107,10 +105,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`
-        await runAllCellsInActiveNotebook();
-
         let cell2 = nbEditor.document.getCells()![1]!;
-        await waitForExecutionCompletedSuccessfully(cell2);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell2)]);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
 
         // Confirm kernel id gets saved for this notebook.
@@ -146,8 +142,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         // Execute second cell
         cell2 = nbEditor.document.getCells()![1]!;
-        await runCell(cell2);
-        await waitForExecutionCompletedSuccessfully(cell2);
+        await Promise.all([runCell(cell2), waitForExecutionCompletedSuccessfully(cell2)]);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
     });
 });

@@ -178,9 +178,8 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await insertCodeCell('123456', { language: 'julia', index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await runCell(cell);
         // Wait till execution count changes and status is success.
-        await waitForExecutionCompletedSuccessfully(cell, 60_000);
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell, 60_000)]);
         assertHasTextOutputInVSCode(cell, '123456', 0, false);
     });
     test('Can run a CSharp notebook', async function () {

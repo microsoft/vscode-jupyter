@@ -144,9 +144,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        await runAllCellsInActiveNotebook();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         assertHasTextOutputInVSCode(cell, activeInterpreterPath, 0, false);
@@ -159,9 +158,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForKernelToGetAutoSelected(undefined);
 
         // Run all cells
-        await runAllCellsInActiveNotebook();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
@@ -175,13 +173,16 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Run all cells
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
         await insertCodeCell('print("Hello World")', { index: 1 });
-        await runAllCellsInActiveNotebook();
 
         const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
 
         // If it was successfully selected, then we know a Python kernel was correctly selected & managed to run the code.
-        await Promise.all([waitForExecutionCompletedSuccessfully(cell1), waitForExecutionCompletedSuccessfully(cell2)]);
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell1),
+            waitForExecutionCompletedSuccessfully(cell2)
+        ]);
         assertHasTextOutputInVSCode(cell2, 'Hello World', 0, false);
     });
     test('User kernelspec in notebook metadata', async function () {
@@ -192,9 +193,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForKernelToGetAutoSelected(undefined);
 
         // Run all cells
-        await runAllCellsInActiveNotebook();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
@@ -205,8 +205,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Clear the cells & execute again
         await commands.executeCommand('notebook.clearAllCellsOutputs');
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
-        await runAllCellsInActiveNotebook();
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         assertHasTextOutputInVSCode(cell, venvKernelPythonPath, 0, false);
@@ -219,9 +218,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        await runAllCellsInActiveNotebook();
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed is not venvkernel
         assert.ok(cell.outputs.length);
@@ -234,8 +232,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Clear the cells & execute again
         await commands.executeCommand('notebook.clearAllCellsOutputs');
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
-        await runAllCellsInActiveNotebook();
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         assertHasTextOutputInVSCode(cell, venvKernelPythonPath, 0, false);
@@ -248,10 +245,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        await runAllCellsInActiveNotebook();
-
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed is not venvNoReg
         assert.ok(cell.outputs.length);
@@ -264,8 +259,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // Clear the cells & execute again
         await commands.executeCommand('notebook.clearAllCellsOutputs');
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
-        await runAllCellsInActiveNotebook();
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
         assertHasTextOutputInVSCode(cell, venvNoRegPythonPath, 0, false);
