@@ -15,12 +15,13 @@ import {
     NotebookCellExecutionStateChangeEvent,
     NotebookCellExecutionState,
     DebugConfiguration,
-    Uri
+    Uri,
+    NotebookCellKind
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { randomBytes } from 'crypto';
 import * as path from 'path';
-import { IDebuggingCellMap, IJupyterSession } from '../../datascience/types';
+import { IJupyterSession } from '../../datascience/types';
 import { KernelMessage } from '@jupyterlab/services';
 import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -134,7 +135,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         private session: DebugSession,
         private notebookDocument: NotebookDocument,
         private readonly jupyterSession: IJupyterSession,
-        private cellMap: IDebuggingCellMap,
         private commandManager: ICommandManager,
         private fs: IFileSystem
     ) {
@@ -159,7 +159,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         };
         this.jupyterSession.onIOPubMessage(iopubHandler);
 
-        void this.dumpCellsThatRanBeforeDebuggingBegan();
+        void this.dumpAllCells();
         notebooks.onDidChangeNotebookCellExecutionState(
             (cellStateChange: NotebookCellExecutionStateChangeEvent) => {
                 // If a cell has moved to idle, stop the debug session
@@ -243,9 +243,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         void this.session.customRequest('variables', { variablesReference });
     }
 
-    private async dumpCellsThatRanBeforeDebuggingBegan() {
-        this.cellMap.getCellsAndClearQueue(this.notebookDocument).forEach(async (cell) => {
-            await this.dumpCell(cell.document.uri.toString());
+    private dumpAllCells() {
+        this.notebookDocument.getCells().forEach((cell) => {
+            if (cell.kind === NotebookCellKind.Code) {
+                void this.dumpCell(cell.document.uri.toString());
+            }
         });
     }
 
