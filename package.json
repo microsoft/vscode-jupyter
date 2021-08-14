@@ -1809,8 +1809,8 @@
                 },
                 "jupyter.enablePlotViewer": {
                     "type": "boolean",
-                    "default": true,
-                    "description": "Modify plot output so that it can be expanded into a plot viewer window.",
+                    "default": false,
+                    "description": "Modify plot output to include SVG output, for better display in the plot viewer",
                     "scope": "resource"
                 },
                 "jupyter.codeLenses": {

@@ -7,7 +7,7 @@ import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { ColorThemeKind, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
@@ -329,11 +329,13 @@ export class JupyterNotebookBase implements INotebook {
                 }
             } else {
                 this.initializedMatplotlib = false;
+                //const configInit =
+                //(!settings || settings.enablePlotViewer) &&
+                //!isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
+                //? CodeSnippets.ConfigSvg
+                //: CodeSnippets.ConfigPng;
                 const configInit =
-                    (!settings || settings.enablePlotViewer) &&
-                    !isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
-                        ? CodeSnippets.ConfigSvg
-                        : CodeSnippets.ConfigPng;
+                    settings && settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
                 traceInfoIf(isCI, `Initialize config for plots for ${this.identity.toString()}`);
                 if (!isDefinitelyNotAPythonKernel) {
                     await this.executeSilently(configInit, cancelToken);
@@ -820,6 +822,16 @@ export class JupyterNotebookBase implements INotebook {
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             await this.executeSilently(matplobInit, cancelToken);
+
+            const useDark = this.applicationService.activeColorTheme.kind === ColorThemeKind.Dark;
+            if (!settings.ignoreVscodeTheme) {
+                // Reset the matplotlib style based on if dark or not.
+                await this.executeSilently(
+                    useDark
+                        ? "matplotlib.style.use('dark_background')"
+                        : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`
+                );
+            }
 
             // Use this flag to detemine if we need to rerun this or not.
             this.initializedMatplotlib = true;

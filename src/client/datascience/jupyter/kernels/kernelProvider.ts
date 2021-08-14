@@ -86,7 +86,6 @@ export class KernelProvider implements IKernelProvider {
             this.context,
             this.serverStorage,
             options.controller,
-            this.configService,
             this.outputTracker
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel));

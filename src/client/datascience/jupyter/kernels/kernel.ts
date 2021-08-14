@@ -9,7 +9,6 @@ import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
 import {
     CancellationTokenSource,
-    ColorThemeKind,
     Event,
     EventEmitter,
     NotebookCell,
@@ -23,14 +22,14 @@ import {
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../../common/application/types';
-import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExtensionContext, Resource } from '../../../common/types';
+import { IDisposableRegistry, IExtensionContext, Resource } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { CodeSnippets, Identifiers, Telemetry } from '../../constants';
+import { CodeSnippets, Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
@@ -47,7 +46,7 @@ import { getSysInfoReasonHeader, isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
 import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
-import { isCI, MARKDOWN_LANGUAGE } from '../../../common/constants';
+import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import { DataScience } from '../../../common/utils/localize';
@@ -109,12 +108,11 @@ export class Kernel implements IKernel {
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
         kernelProvider: IKernelProvider,
-        private readonly appShell: IApplicationShell,
+        appShell: IApplicationShell,
         private readonly fs: IFileSystem,
         context: IExtensionContext,
         private readonly serverStorage: IJupyterServerUriStorage,
         controller: NotebookController,
-        private readonly configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker
     ) {
         this.kernelExecution = new KernelExecution(
@@ -351,7 +349,6 @@ export class Kernel implements IKernel {
             if (this.resourceUri) {
                 await this.notebook.setLaunchingFile(this.resourceUri.fsPath);
             }
-            await this.initializeMatplotlib();
         }
         await this.notebook
             .requestKernelInfo()
@@ -434,33 +431,6 @@ export class Kernel implements IKernel {
                     [markdownCell]
                 );
             });
-        }
-    }
-    private async initializeMatplotlib(): Promise<void> {
-        if (!this.notebook) {
-            return;
-        }
-        const settings = this.configService.getSettings(this.resourceUri);
-        if (settings && settings.themeMatplotlibPlots) {
-            const matplobInit = settings.enablePlotViewer
-                ? CodeSnippets.MatplotLibInitSvg
-                : CodeSnippets.MatplotLibInitPng;
-
-            traceInfo(`Initialize matplotlib for ${(this.resourceUri || this.notebookUri).toString()}`);
-            await this.executeSilently(matplobInit);
-            const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
-            if (!settings.ignoreVscodeTheme) {
-                // Reset the matplotlib style based on if dark or not.
-                await this.executeSilently(
-                    useDark
-                        ? "matplotlib.style.use('dark_background')"
-                        : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`
-                );
-            }
-        } else {
-            const configInit = !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
-            traceInfoIf(isCI, `Initialize config for plots for ${(this.resourceUri || this.notebookUri).toString()}`);
-            await this.executeSilently(configInit);
         }
     }
     private async executeSilently(code: string) {
