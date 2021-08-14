@@ -329,11 +329,6 @@ export class JupyterNotebookBase implements INotebook {
                 }
             } else {
                 this.initializedMatplotlib = false;
-                //const configInit =
-                //(!settings || settings.enablePlotViewer) &&
-                //!isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
-                //? CodeSnippets.ConfigSvg
-                //: CodeSnippets.ConfigPng;
                 const configInit =
                     settings && settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
                 traceInfoIf(isCI, `Initialize config for plots for ${this.identity.toString()}`);
