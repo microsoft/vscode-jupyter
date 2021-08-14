@@ -140,7 +140,7 @@ export class KernelExecution implements IDisposable {
         // Both must happen together, we cannot just wait for cells to complete, as its possible
         // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.
         // What we want is, if Cell1 completes then Cell2 should not start (it must be cancelled before hand).
-        const pendingCells = executionQueue.cancel().then(() => executionQueue.waitForCompletion());
+        const pendingCells = executionQueue.cancel(true).then(() => executionQueue.waitForCompletion());
 
         if (!notebook) {
             traceInfo('No notebook to interrupt');
