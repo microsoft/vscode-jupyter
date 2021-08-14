@@ -29,6 +29,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IKernelDebugAdapter } from '../types';
 import { IDisposable } from '../../common/types';
 import { Commands } from '../../datascience/constants';
+import { IKernel } from '../../datascience/jupyter/kernels/types';
 
 const debugRequest = (message: DebugProtocol.Request, jupyterSessionId: string): KernelMessage.IDebugRequestMsg => {
     return {
@@ -125,10 +126,12 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     private readonly fileToCell = new Map<string, NotebookCell>();
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
+    private readonly endSession = new EventEmitter<DebugSession>();
     private readonly configuration: IKernelDebugAdapterConfig;
     private threadId: number = 1;
     private readonly disposables: IDisposable[] = [];
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
+    onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCellUri: Uri | undefined;
 
     constructor(
@@ -136,8 +139,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         private notebookDocument: NotebookDocument,
         private readonly jupyterSession: IJupyterSession,
         private commandManager: ICommandManager,
-        private fs: IFileSystem
+        private fs: IFileSystem,
+        private readonly kernel: IKernel | undefined
     ) {
+        void this.dumpAllCells();
+
         const configuration = this.session.configuration;
         assertIsDebugConfig(configuration);
         this.configuration = configuration;
@@ -146,7 +152,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             this.debugCellUri = notebookDocument.cellAt(configuration.__cellIndex!)?.document.uri;
         }
 
-        const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
+        this.jupyterSession.onIOPubMessage((msg: KernelMessage.IIOPubMessage) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const content = msg.content as any;
             if (content.event === 'stopped') {
@@ -156,10 +162,17 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 this.stackTrace();
                 this.sendMessage.fire(msg.content);
             }
-        };
-        this.jupyterSession.onIOPubMessage(iopubHandler);
+        });
 
-        void this.dumpAllCells();
+        if (this.kernel) {
+            this.kernel.onWillRestart(() => {
+                this.disconnect();
+            });
+            this.kernel.onWillInterrupt(() => {
+                this.disconnect();
+            });
+        }
+
         notebooks.onDidChangeNotebookCellExecutionState(
             (cellStateChange: NotebookCellExecutionStateChangeEvent) => {
                 // If a cell has moved to idle, stop the debug session
@@ -214,6 +227,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
     public disconnect() {
         void this.session.customRequest('disconnect', { restart: false });
+        this.endSession.fire(this.session);
     }
 
     dispose() {
