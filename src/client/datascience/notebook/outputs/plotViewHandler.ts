@@ -49,7 +49,7 @@ function getOutputItem(editor: NotebookEditor, outputId: string, mimeType: strin
 
 // Wrap our PNG data into an SVG element so what we can display it in the current plot viewer
 function convertPngToSvg(pngOutput: NotebookCellOutputItem): string {
-    const imageBuffer = Buffer.from(pngOutput.data);
+    const imageBuffer = Buffer.from(pngOutput.data.buffer); // .buffer to not make a copy
     const imageData = imageBuffer.toString('base64');
     const dims = sizeOf(imageBuffer);
 
