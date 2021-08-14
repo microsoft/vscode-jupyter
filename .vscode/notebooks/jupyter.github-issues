@@ -1,5 +1,10 @@
 [
   {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$TODAYS_DATE=2021-08-13"
+  },
+  {
     "kind": 1,
     "language": "markdown",
     "value": "---\r\n## Setup"
@@ -52,7 +57,27 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:open is:issue in:title \"YourSearchTerm\""
+    "value": "$ALL_REPOS is:open is:issue in:title 'YourSearchTerm'"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Commented on by Me"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_ALL_REPOS is:issue updated:>=$TODAYS_DATE commenter:@me "
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Closed Today"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_ALL_REPOS is:issue closed:>=$TODAYS_DATE "
   },
   {
     "kind": 1,
