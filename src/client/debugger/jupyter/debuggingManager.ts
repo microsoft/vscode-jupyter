@@ -202,13 +202,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 }
             }),
 
-            this.commandManager.registerCommand(DSCommands.RunByLineStop, (cell: NotebookCell) => {
-                const adapter = this.notebookToDebugAdapter.get(cell.notebook);
-                if (adapter && adapter.debugCellUri?.toString() === cell.document.uri.toString()) {
-                    adapter.disconnect();
-                }
-            }),
-
             this.commandManager.registerCommand(DSCommands.RunAndDebugCell, async (cell: NotebookCell | undefined) => {
                 const editor = this.vscNotebook.activeNotebookEditor;
                 if (!cell) {
