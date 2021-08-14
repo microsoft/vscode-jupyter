@@ -2,8 +2,6 @@ import sizeOf from 'image-size';
 import { inject, injectable } from 'inversify';
 import { NotebookCellOutputItem, NotebookEditor } from 'vscode';
 import { traceError } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
-import { IDisposableRegistry } from '../../../common/types';
 import { IPlotViewerProvider } from '../../types';
 
 const svgMimeType = 'image/svg+xml';
@@ -27,6 +25,7 @@ export class PlotViewHandler {
                 return traceError(`No SVG or PNG Plot to open ${editor.document.uri.toString()}, id: ${outputId}`);
             }
 
+            // If we did find a PNG wrap it in an SVG element so that we can display it
             svgString = convertPngToSvg(pngOutput);
         } else {
             svgString = new TextDecoder().decode(outputItem.data);
@@ -48,28 +47,18 @@ function getOutputItem(editor: NotebookEditor, outputId: string, mimeType: strin
     }
 }
 
+// Wrap our PNG data into an SVG element so what we can display it in the current plot viewer
 function convertPngToSvg(pngOutput: NotebookCellOutputItem): string {
     const imageBuffer = Buffer.from(pngOutput.data);
     const imageData = imageBuffer.toString('base64');
     const dims = sizeOf(imageBuffer);
+
+    // Of note here, we want the dims on the SVG element, and the image at 100% this is due to how the SVG control
+    // in the plot viewer works. The injected svg is sized down to 100px x 100px on the plot selection list so if
+    // dims are set on the image then it scales out of bounds
     return `<svg height="${dims.height}" width="${dims.width}">
     <g>
         <image xmlns="http://www.w3.org/2000/svg" x="0" y="0" height="100%" width="100%" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="data:image/png;base64,${imageData}"/>
     </g>
 </svg>`;
-    return `<svg height="${dims.height}" width="${dims.width}">
-    <g>
-        <image xmlns="http://www.w3.org/2000/svg" x="0" y="0" height="${dims.height}" width="${dims.width}" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="data:image/png;base64,${imageData}"/>
-    </g>
-</svg>`;
-    return `<svg height="500" width="500">
-    <g>
-        <image xmlns="http://www.w3.org/2000/svg" x="0" y="0" height="500" width="500" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="data:image/png;base64,${imageData}"/>
-    </g>
-</svg>`;
 }
-
-//function getImageData(pngOutput: NotebookCellOutputItem): string {
-//const testBuffer = Buffer.from(pngOutput.data);
-//return testBuffer.toString('base64');
-//}
