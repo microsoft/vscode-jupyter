@@ -5,7 +5,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, NotebookEditor as VSCNotebookEditor } from 'vscode';
+import { commands, NotebookCellExecutionState, NotebookEditor as VSCNotebookEditor } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
@@ -13,7 +13,7 @@ import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { Commands } from '../../../client/datascience/constants';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
-import { hasErrorOutput } from '../../../client/datascience/notebook/helpers/helpers';
+import { hasErrorOutput, NotebookCellStateTracker } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
@@ -138,19 +138,27 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             throw new Error('Kernel not available');
         }
         const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
-        await commands.executeCommand('jupyter.notebookeditor.restartkernel').then(noop, noop);
-
-        // Wait for kernel to restart before we execute cells again.
         traceInfo('Step 9 Wait for restart');
-        await waitForKernelToRestart.assertFired(30_000);
+        await Promise.all([
+            commands.executeCommand('jupyter.notebookeditor.restartkernel').then(noop, noop),
+            // Wait for kernel to restart before we execute cells again.
+            waitForKernelToRestart.assertFired(30_000)
+        ]);
         traceInfo('Step 10 Restarted');
+        // Wait for cell completed
+        await waitForCondition(
+            async () => NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle,
+            60_000,
+            'Cell did not stop running'
+        );
+        traceInfo('Step 11 Restarted');
 
         // Clear the cells
         await commands.executeCommand('notebook.clearAllCellsOutputs');
         await waitForOutputs(cell, 0);
 
         // Confirm we can execute a cell (using the new kernel session).
-        traceInfo('Step 11 Executed');
+        traceInfo('Step 12 Executed');
         await Promise.all([runAllCellsInActiveNotebook(), waitForTextOutput(cell, '1', 0, false)]);
         traceInfo(`Step 13. Cell output`);
 
