@@ -18,7 +18,7 @@ import {
     DebugProtocolMessage
 } from 'vscode';
 import * as path from 'path';
-import { IKernelProvider } from '../../datascience/jupyter/kernels/types';
+import { IKernel, IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IDisposable, IInstaller, Product, ProductInstallStatus } from '../../common/types';
 import { IKernelDebugAdapterConfig, KernelDebugAdapter, KernelDebugMode } from './kernelDebugAdapter';
 import { INotebookProvider } from '../../datascience/types';
@@ -109,16 +109,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     public async activate() {
         this.disposables.push(
             // track termination of debug sessions
-            debug.onDidTerminateDebugSession(async (session) => {
-                this.updateToolbar(false);
-                this.updateCellToolbar(false);
-                for (const [doc, dbg] of this.notebookToDebugger.entries()) {
-                    if (dbg && session.id === (await dbg.session).id) {
-                        this.notebookToDebugger.delete(doc);
-                        break;
-                    }
-                }
-            }),
+            debug.onDidTerminateDebugSession(this.endSession.bind(this)),
 
             // track closing of notebooks documents
             workspace.onDidCloseNotebookDocument(async (document) => {
@@ -136,7 +127,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     if (this.vscNotebook.activeNotebookEditor) {
                         const activeDoc = this.vscNotebook.activeNotebookEditor.document;
 
-                        await this.ensureKernelIsRunning(activeDoc);
+                        const kernel = await this.ensureKernelIsRunning(activeDoc);
                         const debug = this.getDebuggerByUri(activeDoc);
 
                         if (debug) {
@@ -152,14 +143,16 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                                     debug.document,
                                     notebook.session,
                                     this.commandManager,
-                                    this.fs
+                                    this.fs,
+                                    kernel
                                 );
                                 this.disposables.push(
                                     adapter.onDidSendMessage((msg: DebugProtocolMessage) => {
                                         if ((msg as DebugProtocol.VariablesResponse).command === 'variables') {
                                             this._onDidFireVariablesEvent.fire();
                                         }
-                                    })
+                                    }),
+                                    adapter.onDidEndSession(this.endSession.bind(this))
                                 );
                                 this.notebookToDebugAdapter.set(debug.document, adapter);
                                 return new DebugAdapterInlineImplementation(adapter);
@@ -312,6 +305,17 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         }
     }
 
+    private async endSession(session: DebugSession) {
+        void this.updateToolbar(false);
+        void this.updateCellToolbar(false);
+        for (const [doc, dbg] of this.notebookToDebugger.entries()) {
+            if (dbg && session.id === (await dbg.session).id) {
+                this.notebookToDebugger.delete(doc);
+                break;
+            }
+        }
+    }
+
     private getDebuggerByUri(document: NotebookDocument): Debugger | undefined {
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (document === doc) {
@@ -320,7 +324,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         }
     }
 
-    private async ensureKernelIsRunning(doc: NotebookDocument): Promise<void> {
+    private async ensureKernelIsRunning(doc: NotebookDocument): Promise<IKernel | undefined> {
         await this.notebookControllerManager.loadNotebookControllers();
         const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
 
@@ -335,6 +339,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         if (kernel && kernel.status === ServerStatus.NotStarted) {
             await kernel.start({ document: doc });
         }
+
+        return kernel;
     }
 
     private async checkForIpykernel6(doc: NotebookDocument): Promise<boolean> {

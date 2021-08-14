@@ -63,6 +63,12 @@ export class Kernel implements IKernel {
     get onRestarted(): Event<void> {
         return this._onRestarted.event;
     }
+    get onWillRestart(): Event<void> {
+        return this._onWillRestart.event;
+    }
+    get onWillInterrupt(): Event<void> {
+        return this._onWillInterrupt.event;
+    }
     get onDisposed(): Event<void> {
         return this._onDisposed.event;
     }
@@ -84,6 +90,8 @@ export class Kernel implements IKernel {
     private readonly _kernelSocket = new Subject<KernelSocketInformation | undefined>();
     private readonly _onStatusChanged = new EventEmitter<ServerStatus>();
     private readonly _onRestarted = new EventEmitter<void>();
+    private readonly _onWillRestart = new EventEmitter<void>();
+    private readonly _onWillInterrupt = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
     private _notebookPromise?: Promise<INotebook>;
     private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
@@ -147,6 +155,7 @@ export class Kernel implements IKernel {
         await this.startNotebook(options);
     }
     public async interrupt(document: NotebookDocument): Promise<InterruptResult> {
+        this._onWillInterrupt.fire();
         if (this.restarting) {
             traceInfo(`Interrupt requested & currently restarting ${document.uri}`);
             trackKernelResourceInformation(document.uri, { interruptKernel: true });
@@ -172,6 +181,7 @@ export class Kernel implements IKernel {
         this.kernelExecution.dispose();
     }
     public async restart(notebookDocument: NotebookDocument): Promise<void> {
+        this._onWillRestart.fire();
         if (this.restarting) {
             return this.restarting.promise;
         }

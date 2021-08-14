@@ -132,6 +132,8 @@ export interface IKernel extends IAsyncDisposable {
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
     readonly onRestarted: Event<void>;
+    readonly onWillRestart: Event<void>;
+    readonly onWillInterrupt: Event<void>;
     readonly status: ServerStatus;
     readonly disposed: boolean;
     /**
