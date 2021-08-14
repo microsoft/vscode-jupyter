@@ -1,3 +1,4 @@
+import sizeOf from 'image-size';
 import { inject, injectable } from 'inversify';
 import { NotebookCellOutputItem, NotebookEditor } from 'vscode';
 import { traceError } from '../../../common/logger';
@@ -48,12 +49,17 @@ function getOutputItem(editor: NotebookEditor, outputId: string, mimeType: strin
 }
 
 function convertPngToSvg(pngOutput: NotebookCellOutputItem): string {
-    const imageData = getImageData(pngOutput);
-    const loadImage = new Image();
-    loadImage.src = `data:image/png;base64,${imageData}`;
-    return `<svg height="500" width="500">
+    const imageBuffer = Buffer.from(pngOutput.data);
+    const imageData = imageBuffer.toString('base64');
+    const dims = sizeOf(imageBuffer);
+    return `<svg height="${dims.height}" width="${dims.width}">
     <g>
-        <image xmlns="http://www.w3.org/2000/svg" x="0" y="0" height="auto" width="auto" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="data:image/png;base64,${imageData}"/>
+        <image xmlns="http://www.w3.org/2000/svg" x="0" y="0" height="100%" width="100%" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="data:image/png;base64,${imageData}"/>
+    </g>
+</svg>`;
+    return `<svg height="${dims.height}" width="${dims.width}">
+    <g>
+        <image xmlns="http://www.w3.org/2000/svg" x="0" y="0" height="${dims.height}" width="${dims.width}" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="data:image/png;base64,${imageData}"/>
     </g>
 </svg>`;
     return `<svg height="500" width="500">
@@ -63,7 +69,7 @@ function convertPngToSvg(pngOutput: NotebookCellOutputItem): string {
 </svg>`;
 }
 
-function getImageData(pngOutput: NotebookCellOutputItem): string {
-    const testBuffer = Buffer.from(pngOutput.data);
-    return testBuffer.toString('base64');
-}
+//function getImageData(pngOutput: NotebookCellOutputItem): string {
+//const testBuffer = Buffer.from(pngOutput.data);
+//return testBuffer.toString('base64');
+//}

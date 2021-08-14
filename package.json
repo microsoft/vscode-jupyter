@@ -2095,6 +2095,7 @@
         "glob": "^7.1.2",
         "hash.js": "^1.1.7",
         "iconv-lite": "^0.4.21",
+        "image-size": "^1.0.0",
         "inversify": "^5.0.1",
         "is-online": "^9.0.0",
         "jsonc-parser": "^2.0.3",
