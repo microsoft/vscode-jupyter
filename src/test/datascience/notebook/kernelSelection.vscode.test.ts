@@ -161,10 +161,12 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Run all cells
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
-
-        // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
-        assertHasTextOutputInVSCode(cell, venvNoKernelPythonPath, 0, false);
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell),
+            // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
+            waitForTextOutput(cell, venvNoKernelPythonPath, 0, false)
+        ]);
     });
     test('Ensure we select a Python kernel for a nb with python language information', async function () {
         if (IS_REMOTE_NATIVE_TEST) {

@@ -289,9 +289,8 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
 /**
  * This class is used to track state of cells, used in logging & tests.
  */
-export class NotebookCellStateTracker implements IDisposable {
+export class NotebookCellStateTracker {
     private static cellStates = new WeakMap<NotebookCell, NotebookCellExecutionState>();
-    dispose() {}
     public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
         return NotebookCellStateTracker.cellStates.get(cell);
     }
