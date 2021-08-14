@@ -509,7 +509,11 @@ export class JupyterNotebookBase implements INotebook {
             state: CellState.finished
         };
     }
-
+    public fireRestart() {
+        // Tell our loggers & anyone listening to the events.
+        this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
+        this.kernelRestarted.fire();
+    }
     @captureTelemetry(Telemetry.RestartJupyterTime)
     public async restartKernel(timeoutMs: number): Promise<void> {
         if (this.session) {
@@ -525,10 +529,7 @@ export class JupyterNotebookBase implements INotebook {
             await this.session.restart(timeoutMs);
 
             // Rerun our initial setup for the notebook
-            this.ranInitialSetup = false;
-            traceInfo('restartKernel - initialSetup');
-            await this.initialize();
-            traceInfo('restartKernel - initialSetup completed');
+            await this.runInitialSetup();
 
             // Tell our loggers
             this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
@@ -538,6 +539,13 @@ export class JupyterNotebookBase implements INotebook {
         }
 
         throw this.getDisposedError();
+    }
+
+    public async runInitialSetup() {
+        this.ranInitialSetup = false;
+        traceInfo('restartKernel - initialSetup');
+        await this.initialize();
+        traceInfo('restartKernel - initialSetup completed');
     }
 
     @captureTelemetry(Telemetry.InterruptJupyterTime)

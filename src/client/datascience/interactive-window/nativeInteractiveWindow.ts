@@ -3,7 +3,6 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
 import {
-    CancellationError,
     ConfigurationTarget,
     Event,
     EventEmitter,
@@ -65,7 +64,7 @@ import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import {
     CellState,
-    ICell,
+    ICellHashProvider,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowLoadable,
@@ -76,7 +75,6 @@ import {
     WebViewViewChangeEventArgs
 } from '../types';
 import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
-import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
@@ -141,7 +139,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly kernelProvider: IKernelProvider,
         private readonly disposables: IDisposableRegistry,
-        private readonly jupyterDebugger: IJupyterDebugger
+        private readonly jupyterDebugger: IJupyterDebugger,
+        private readonly cellHashProvider: ICellHashProvider
     ) {
         // Set our owner and first submitter
         this._owner = owner;
@@ -421,8 +420,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const file = fileUri.fsPath;
         let result = true;
         try {
-            const finishedAddingCode = createDeferred<void>();
-
             // Before we try to execute code make sure that we have an initial directory set
             // Normally set via the workspace, but we might not have one here if loading a single loose file
             if (file !== Identifiers.EmptyFileName) {
@@ -441,44 +438,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
             await this.setFileInKernel(file, notebookEditor.document);
 
-            const owningResource = this.owningResource;
-            const observable = this.kernel!.notebook!.executeObservable(code, file, line, id, false);
-            const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(notebookCell);
-            temporaryExecution?.start();
+            await this.cellHashProvider.addCellHash(notebookCell);
+            await this.kernel!.executeCell(notebookCell);
 
-            // Sign up for cell changes
-            observable.subscribe(
-                (cells: ICell[]) => {
-                    const cell = cells[0].data;
-                    if (cell.cell_type === 'code') {
-                        // Then send the combined output to the UI
-                        const converted = cell.outputs.map(cellOutputToVSCCellOutput);
-                        void temporaryExecution.replaceOutput(converted);
-                        const executionCount = cell.execution_count;
-                        if (executionCount) {
-                            temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10);
-                        }
-
-                        // Any errors will move our result to false (if allowed)
-                        if (this.configuration.getSettings(owningResource).stopOnError) {
-                            result = result && cells.find((c) => c.state === CellState.error) === undefined;
-                        }
-                    }
-                },
-                (error) => {
-                    traceError(`Error executing a cell: `, error);
-                    if (!(error instanceof CancellationError)) {
-                        this.applicationShell.showErrorMessage(error.toString()).then(noop, noop);
-                    }
-                },
-                () => {
-                    temporaryExecution.end(result);
-                    finishedAddingCode.resolve();
-                }
-            );
-
-            // Wait for the cell to finish
-            await finishedAddingCode.promise;
             traceInfo(`Finished execution for ${id}`);
         } finally {
             if (isDebug) {

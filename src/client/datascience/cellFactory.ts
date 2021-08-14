@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import * as uuid from 'uuid/v4';
-import { NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
+import { NotebookCell, NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
 
 import { appendLineFeed, parseForComments } from '../../datascience-ui/common';
 import { createCodeCell, createMarkdownCell, uncommentMagicCommands } from '../../datascience-ui/common/cellFactory';
@@ -42,9 +42,9 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
     };
 }
 
-export function getCellResource(cell: ICell): Resource {
-    if (cell.file !== Identifiers.EmptyFileName) {
-        return Uri.file(cell.file);
+export function getCellResource(cell: NotebookCell): Resource {
+    if (cell.metadata.interactive.file !== Identifiers.EmptyFileName) {
+        return Uri.file(cell.metadata.interactive.file);
     }
     return undefined;
 }

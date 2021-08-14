@@ -3,13 +3,15 @@
 'use strict';
 import { assert } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Position, Range, Uri } from 'vscode';
+import { NotebookCell, NotebookCellKind, Position, Range, Uri } from 'vscode';
 
 import { IDebugService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
-import { CellState, ICell, ICellHashListener, IFileHashes } from '../../../client/datascience/types';
+import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
+import { ICellHashListener, IFileHashes } from '../../../client/datascience/types';
+import { MockDocument } from '../mockDocument';
 import { MockDocumentManager } from '../mockDocumentManager';
 
 class HashListener implements ICellHashListener {
@@ -54,20 +56,41 @@ suite('CellHashProvider Unit Tests', () => {
     }
 
     function sendCode(code: string, line: number, file?: string): Promise<void> {
-        const cell: ICell = {
-            file: Uri.file(file ? file : 'foo.py').fsPath,
-            line,
-            data: {
-                source: code,
-                cell_type: 'code',
+        const fileName = file ? file : 'foo.py';
+        const cell: NotebookCell = {
+            index: 0,
+            notebook: {
+                uri: Uri.file(fileName),
+                notebookType: JupyterNotebookView,
+                version: 1,
+                isDirty: false,
+                isClosed: false,
+                isUntitled: false,
                 metadata: {},
-                outputs: [],
-                execution_count: 1
+                cellCount: 1,
+                save: () => {
+                    throw new Error('Method not implemented');
+                },
+                getCells: () => {
+                    throw new Error('Method not implemented');
+                },
+                cellAt: () => {
+                    throw new Error('Method not implemented');
+                }
             },
-            id: '1',
-            state: CellState.init
+            kind: NotebookCellKind.Code,
+            document: new MockDocument(code, fileName, async () => true),
+            metadata: {
+                interactive: {
+                    file: Uri.file(fileName).fsPath,
+                    line
+                },
+                executionId: 1
+            },
+            outputs: [],
+            mime: undefined
         };
-        return hashProvider.preExecute(cell, false);
+        return hashProvider.addCellHash(cell);
     }
 
     test('Add a cell and edit it', async () => {

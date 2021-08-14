@@ -132,6 +132,8 @@ export interface IKernel extends IAsyncDisposable {
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
     readonly onRestarted: Event<void>;
+    readonly onWillRestart: Event<void>;
+    readonly onWillInterrupt: Event<void>;
     readonly status: ServerStatus;
     readonly disposed: boolean;
     /**
@@ -160,6 +162,7 @@ export type KernelOptions = {
 };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
+    onDidRestartKernel: Event<IKernel>;
     /**
      * Get hold of the active kernel for a given Notebook.
      */

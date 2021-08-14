@@ -116,7 +116,6 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
-    IDebuggingCellMap,
     IDebugLocationTracker,
     IHoverProvider,
     IInteractiveWindowProvider,
@@ -163,7 +162,6 @@ import { IApplicationEnvironment } from '../common/application/types';
 import { NotebookIPyWidgetCoordinator } from './ipywidgets/notebookIPyWidgetCoordinator';
 import { ExtensionRecommendationService } from './extensionRecommendation';
 import { PythonVariablesRequester } from './jupyter/pythonVariableRequester';
-import { DebuggingCellMap } from '../debugger/jupyter/debuggingCellMap';
 import { NativeInteractiveWindowCommandListener } from './interactive-window/nativeInteractiveWindowCommandListener';
 import { NativeInteractiveWindowProvider } from './interactive-window/nativeInteractiveWindowProvider';
 import { JupyterPaths } from './kernel-launcher/jupyterPaths';
@@ -203,7 +201,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProviderWrapper);
-    serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
+    serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
     serviceManager.addSingleton<IHoverProvider>(IHoverProvider, HoverProvider);
     serviceManager.addBinding(IHoverProvider, INotebookExecutionLogger);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
@@ -309,8 +307,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ExtensionRecommendationService);
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [IExtensionSingleActivationService]);
-    serviceManager.addSingleton<IDebuggingCellMap>(IDebuggingCellMap, DebuggingCellMap);
-    serviceManager.addBinding(IDebuggingCellMap, INotebookExecutionLogger);
 
     registerNotebookTypes(serviceManager);
     registerContextTypes(serviceManager);
