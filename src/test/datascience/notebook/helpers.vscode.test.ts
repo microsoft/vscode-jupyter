@@ -247,6 +247,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                                     new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/jpeg')
                                 ],
                                 {
+                                    __displayOpenPlotIcon: true,
                                     executionCount: 1,
                                     outputType: output_type,
                                     metadata: {} // display_data & execute_result always have metadata.
@@ -274,6 +275,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             new NotebookCellOutput(
                                 [new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
                                 {
+                                    __displayOpenPlotIcon: true,
                                     executionCount: 1,
                                     metadata: {
                                         needs_background: 'light'
@@ -303,6 +305,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             new NotebookCellOutput(
                                 [new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
                                 {
+                                    __displayOpenPlotIcon: true,
                                     executionCount: 1,
                                     metadata: {
                                         needs_background: 'dark'
@@ -332,6 +335,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             new NotebookCellOutput(
                                 [new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
                                 {
+                                    __displayOpenPlotIcon: true,
                                     executionCount: 1,
                                     metadata: {
                                         'image/png': { height: '111px', width: '999px' }
@@ -362,6 +366,7 @@ suite('DataScience - VSCode Notebook - helpers', () => {
                             new NotebookCellOutput(
                                 [new NotebookCellOutputItem(Buffer.from(base64EncodedImage, 'base64'), 'image/png')],
                                 {
+                                    __displayOpenPlotIcon: true,
                                     executionCount: 1,
                                     metadata: {
                                         unconfined: true,
