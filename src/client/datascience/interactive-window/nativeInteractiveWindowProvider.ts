@@ -196,7 +196,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         return result;
     }
 
-    public getExisting(owner: Resource, interactiveMode: InteractiveWindowMode): IInteractiveWindow | undefined {
+    private getExisting(owner: Resource, interactiveMode: InteractiveWindowMode): IInteractiveWindow | undefined {
         // Single mode means there's only ever one.
         if (interactiveMode === 'single') {
             return this._windows.length > 0 ? this._windows[0] : undefined;
