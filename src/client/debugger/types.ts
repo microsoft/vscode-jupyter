@@ -8,6 +8,7 @@ export interface IKernelDebugAdapter {
     debugSession: DebugSession;
     runByLineContinue(): void;
     disconnect(): void;
+    onDidEndSession: Event<DebugSession>;
 }
 
 export const IDebuggingManager = Symbol('IDebuggingManager');

@@ -308,13 +308,6 @@
                 "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
             },
             {
-                "command": "jupyter.runByLineStop",
-                "title": "Stop",
-                "icon": "$(notebook-stop)",
-                "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
-            },
-            {
                 "command": "jupyter.viewOutput",
                 "title": "%jupyter.command.jupyter.viewOutput.title%",
                 "category": "Jupyter"
@@ -682,7 +675,7 @@
                     "light": "resources/light/interrupt.svg",
                     "dark": "resources/dark/interrupt.svg"
                 },
-                "enablement": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel && !jupyter.notebookeditor.debuggingInProgress"
+                "enablement": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel"
             },
             {
                 "command": "jupyter.notebookeditor.restartkernel",
@@ -693,7 +686,7 @@
                     "light": "resources/light/restart-kernel.svg",
                     "dark": "resources/dark/restart-kernel.svg"
                 },
-                "enablement": "jupyter.notebookeditor.canrestartNotebookkernel && isWorkspaceTrusted && !jupyter.notebookeditor.debuggingInProgress"
+                "enablement": "jupyter.notebookeditor.canrestartNotebookkernel && isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
@@ -960,11 +953,6 @@
                     "command": "jupyter.runByLineContinue",
                     "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
                     "group": "inline/cell@0"
-                },
-                {
-                    "command": "jupyter.runByLineStop",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
-                    "group": "inline/cell@0"
                 }
             ],
             "notebook/cell/execute": [
@@ -1068,11 +1056,6 @@
                 {
                     "command": "jupyter.runByLineContinue",
                     "title": "Continue",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.runByLineStop",
-                    "title": "Stop",
                     "when": "false"
                 },
                 {

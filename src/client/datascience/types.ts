@@ -17,7 +17,6 @@ import {
     Event,
     HoverProvider,
     NotebookCell,
-    NotebookDocument,
     NotebookEditor,
     QuickPickItem,
     Range,
@@ -496,6 +495,11 @@ export interface IInteractiveWindowProvider {
      * @param owner file that started this interactive window
      */
     getOrCreate(owner: Resource): Promise<IInteractiveWindow>;
+    /**
+     * Given a text document, return the associated interactive window if one exists.
+     * @param owner The URI of a text document which may be associated with an interactive window.
+     */
+    get(owner: Uri): IInteractiveWindow | undefined;
 }
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
@@ -681,7 +685,6 @@ export interface ICell {
     line: number;
     state: CellState;
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
-    extraLines?: number[];
 }
 
 // CellRange is used as the basis for creating new ICells.
@@ -938,7 +941,7 @@ export interface ICellHashProvider {
     getHashes(): IFileHashes[];
     getExecutionCount(): number;
     incExecutionCount(): void;
-    generateHashFileName(cell: ICell, executionCount: number): string;
+    addCellHash(notebookCell: NotebookCell): Promise<void>;
 }
 
 export interface IDebugLocation {
@@ -1365,9 +1368,4 @@ export interface IExternalWebviewCellButton {
 export interface IExternalCommandFromWebview {
     buttonId: string;
     cell: ICell;
-}
-
-export const IDebuggingCellMap = Symbol('IDebuggingCellMap');
-export interface IDebuggingCellMap {
-    getCellsAndClearQueue(doc: NotebookDocument): NotebookCell[];
 }
