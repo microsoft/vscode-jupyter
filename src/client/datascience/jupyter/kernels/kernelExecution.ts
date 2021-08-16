@@ -188,7 +188,6 @@ export class KernelExecution implements IDisposable {
         // Restart the active execution
         await (this._restartPromise ? this._restartPromise : (this._restartPromise = this.restartExecution(notebook)));
 
-        (notebook as JupyterNotebookBase).fireRestart();
         // Done restarting, clear restart promise
         this._restartPromise = undefined;
     }
@@ -342,6 +341,8 @@ export class KernelExecution implements IDisposable {
 
         // Reinitialize the kernel after a session restart
         await notebook.runInitialSetup();
+
+        (notebook as JupyterNotebookBase).fireRestart();
     }
 
     private async getKernel(document: NotebookDocument): Promise<IKernel> {
