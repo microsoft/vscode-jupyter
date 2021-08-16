@@ -1,5 +1,23 @@
 # Changelog
 
+## 2021.8.12 (17 August 2021)
+
+### Fixes
+
+1. Fix interrupt kernel in native interactive window when executing a #%% cell.
+   ([#6983](https://github.com/Microsoft/vscode-jupyter/issues/6983))
+1. Populate the interactive window variable explorer when focus is in the #%% Python file.
+   ([#6993](https://github.com/Microsoft/vscode-jupyter/issues/6993))
+1. Reinitialize kernels after a restart, including resetting current working directory and rerunning startup commands.
+   ([#7016](https://github.com/Microsoft/vscode-jupyter/issues/7016))
+1. Restore support for `jupyter.collapseCellInputCodeByDefault` in native interactive window.
+   ([#7031](https://github.com/Microsoft/vscode-jupyter/issues/7031))
+1. Fix restart kernel in native interactive window when executing a #%% cell.
+   ([#7081](https://github.com/Microsoft/vscode-jupyter/issues/7081))
+1. Ensure variable explorer handles kernel restarts.
+   ([#7126](https://github.com/Microsoft/vscode-jupyter/issues/7126))
+
+
 ## 2021.8.11 (3 August 2021)
 
 ### Enhancements
