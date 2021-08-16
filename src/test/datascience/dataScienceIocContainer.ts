@@ -317,6 +317,8 @@ import { PythonVariablesRequester } from '../../client/datascience/jupyter/pytho
 import { LocalKnownPathKernelSpecFinder } from '../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
 import { JupyterPaths } from '../../client/datascience/kernel-launcher/jupyterPaths';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
+import { IKernelProvider } from '../../client/datascience/jupyter/kernels/types';
+import { KernelProvider } from '../../client/datascience/jupyter/kernels/kernelProvider';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -929,6 +931,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServerProvider>(ILanguageServerProvider, MockLanguageServerProvider);
         this.serviceManager.addSingleton<IEncryptedStorage>(IEncryptedStorage, MockEncryptedStorage);
         this.serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
+        this.serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
         this.serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
 
         when(this.applicationShell.showErrorMessage(anyString())).thenReturn(Promise.resolve(''));

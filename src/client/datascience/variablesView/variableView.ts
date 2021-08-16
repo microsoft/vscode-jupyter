@@ -180,8 +180,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     // Variables for the current active editor are being requested, check that we have a valid active notebook
     // and use the variables interface to fetch them and pass them to the variable view UI
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
-        if (this.notebookWatcher.activeNotebook) {
-            const response = await this.variables.getVariables(args, this.notebookWatcher.activeNotebook);
+        const activeNotebook = this.notebookWatcher.activeNotebook;
+        if (activeNotebook) {
+            const response = await this.variables.getVariables(args, activeNotebook);
 
             this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
             sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, {
