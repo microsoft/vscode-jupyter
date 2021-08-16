@@ -189,7 +189,6 @@ module.exports = {
         'src/test/datascience/mockLanguageServer.ts',
         'src/test/datascience/remoteTestHelpers.ts',
         'src/test/datascience/mockWorkspaceFolder.ts',
-        'src/test/datascience/mockJupyterRequest.ts',
         'src/test/datascience/jupyterHelpers.ts',
         'src/test/datascience/mockJupyterManagerFactory.ts',
         'src/test/datascience/datascience.unit.test.ts',
