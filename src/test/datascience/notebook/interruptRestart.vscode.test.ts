@@ -13,7 +13,11 @@ import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { Commands } from '../../../client/datascience/constants';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
-import { hasErrorOutput, NotebookCellStateTracker } from '../../../client/datascience/notebook/helpers/helpers';
+import {
+    getTextOutputValue,
+    hasErrorOutput,
+    NotebookCellStateTracker
+} from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
@@ -28,7 +32,6 @@ import {
     startJupyterServer,
     waitForExecutionCompletedWithErrors,
     waitForTextOutput,
-    waitForExecutionInProgress,
     waitForExecutionCompletedSuccessfully,
     waitForQueuedForExecution,
     runCell,
@@ -247,7 +250,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell1),
-            waitForExecutionInProgress(cell2),
+            waitForTextOutput(cell2, '1', 0, false),
             waitForQueuedForExecution(cell3)
         ]);
 
@@ -256,46 +259,77 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
 
         await Promise.all([
             waitForExecutionCompletedWithErrors(cell2),
+            waitForCondition(async () => hasErrorOutput(cell2.outputs), 30_000, 'Cell 2 does not have any errors'),
             waitForCondition(async () => assertVSCCellIsNotRunning(cell3), 15_000, 'Cell 3 did not get dequeued')
         ]);
+        assert.equal(cell1.executionSummary?.executionOrder, 1, 'Execution order of cell 1 is incorrect');
+        assert.equal(cell2.executionSummary?.executionOrder, 2, 'Execution order of cell 2 is incorrect');
+        const cell2Output = getTextOutputValue(cell2.outputs[0]).trim();
 
-        const cell1ExecutionCount = cell1.executionSummary?.executionOrder!;
+        // Run cell 2 again (errors should be cleared and we should start seeing 1,2,3 again)
         await Promise.all([
             runCell(cell2),
-            // Confirm 2 is in progress & 3 is queued.
-            waitForExecutionInProgress(cell2)
+            waitForCondition(
+                async () => (cell2.executionSummary?.executionOrder || 0) === 3,
+                30_000,
+                'Execution order of cell 1 should be greater than previous execution count'
+            ),
+            waitForTextOutput(cell2, '1', 0, false),
+            waitForCondition(
+                async () => getTextOutputValue(cell2.outputs[0]).trim() != cell2Output,
+                30_000,
+                'Output of cell 2 has not changed after re-running it'
+            )
         ]);
         assertVSCCellIsNotRunning(cell1);
         assertVSCCellIsNotRunning(cell3);
-        assert.equal(cell1.executionSummary?.executionOrder, cell1ExecutionCount, 'Execution order of cell 1 changed');
+        assert.equal(cell1.executionSummary?.executionOrder, 1, 'Execution order of cell 1 changed');
+        assert.equal(cell2.executionSummary?.executionOrder, 3, 'Execution order of cell 2 should be 3');
 
         // Interrupt the kernel & wait for 2.
         commandManager.executeCommand(Commands.NotebookEditorInterruptKernel, vscEditor.document.uri).then(noop, noop);
-        await waitForExecutionCompletedWithErrors(cell2);
+        await Promise.all([
+            waitForExecutionCompletedWithErrors(cell2),
+            waitForCondition(async () => hasErrorOutput(cell2.outputs), 30_000, 'Cell 2 does not have any errors'),
+            waitForCondition(
+                async () => NotebookCellStateTracker.getCellState(cell3) === NotebookCellExecutionState.Idle,
+                30_000,
+                'Cell 3 is not idle'
+            )
+        ]);
 
         // Run entire document again & confirm 1 completes again & 2 runs & 3 gets queued.
         // Confirm 1 completes, 2 is in progress & 3 is queued.
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell1),
-            waitForExecutionInProgress(cell2),
+            waitForCondition(
+                async () => (cell1.executionSummary?.executionOrder || 0) === 4,
+                30_000,
+                'Execution order of cell 1 should be 4'
+            ),
+            waitForCondition(
+                async () => (cell2.executionSummary?.executionOrder || 0) === 5,
+                30_000,
+                'Execution order of cell 2 should be 4'
+            ),
             waitForQueuedForExecution(cell3)
         ]);
-        assert.isAbove(
-            cell1.executionSummary?.executionOrder || 0,
-            cell1ExecutionCount,
-            'Execution order of cell 1 should be greater than previous execution count'
-        );
 
         // Interrupt the kernel & wait for 2 to cancel & 3 to get de-queued.
         commandManager.executeCommand(Commands.NotebookEditorInterruptKernel, vscEditor.document.uri).then(noop, noop);
 
         await Promise.all([
             waitForExecutionCompletedWithErrors(cell2),
+            waitForCondition(async () => hasErrorOutput(cell2.outputs), 30_000, 'Cell 2 does not have any errors'),
             waitForCondition(async () => assertVSCCellIsNotRunning(cell3), 15_000, 'Cell 3 did not get dequeued')
         ]);
 
         // Run cell 3 now, & confirm we can run it to completion.
-        await Promise.all([runCell(cell3), waitForExecutionCompletedSuccessfully(cell3)]);
+        await Promise.all([
+            runCell(cell3),
+            waitForExecutionCompletedSuccessfully(cell3),
+            waitForTextOutput(cell3, '3', 0, false)
+        ]);
     });
 });
