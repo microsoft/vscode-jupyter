@@ -68,10 +68,16 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
         const result = await Promise.race([
             notebook.getCompletion(document.getText(), document.offsetAt(position), token),
             sleep(timeout).then(() => {
+                if (token.isCancellationRequested) {
+                    return;
+                }
                 traceInfoIf(isCI, `Notebook completions request timed out for Cell ${document.uri.toString()}`);
                 return emptyResult;
             })
         ]);
+        if (!result) {
+            return [];
+        }
         const experimentMatches = result.metadata ? result.metadata._jupyter_types_experimental : [];
         // Check if we have more information about the complication items & whether its valid.
         // This will ensure that we don't regress (as long as all items are valid & we have the same number of completions items

@@ -13,8 +13,6 @@ import {
     NotebookDocument,
     NotebookCellKind,
     NotebookCellExecutionState,
-    notebooks,
-    NotebookCellExecutionStateChangeEvent,
     NotebookCellExecutionSummary,
     WorkspaceEdit
 } from 'vscode';
@@ -34,10 +32,9 @@ import { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
-import { IDisposable, Resource } from '../../../common/types';
+import { Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { CellOutputMimeTypes } from '../types';
-import { disposeAllDisposables } from '../../../common/helpers';
 
 /**
  * Whether this is a Notebook we created/manage/use.
@@ -292,24 +289,13 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
 /**
  * This class is used to track state of cells, used in logging & tests.
  */
-export class NotebookCellStateTracker implements IDisposable {
-    private readonly disposables: IDisposable[] = [];
+export class NotebookCellStateTracker {
     private static cellStates = new WeakMap<NotebookCell, NotebookCellExecutionState>();
-    constructor() {
-        notebooks.onDidChangeNotebookCellExecutionState(
-            this.onDidChangeNotebookCellExecutionState,
-            this,
-            this.disposables
-        );
-    }
-    dispose() {
-        disposeAllDisposables(this.disposables);
-    }
     public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
         return NotebookCellStateTracker.cellStates.get(cell);
     }
-    private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
-        NotebookCellStateTracker.cellStates.set(e.cell, e.state);
+    public static setCellState(cell: NotebookCell, state: NotebookCellExecutionState) {
+        NotebookCellStateTracker.cellStates.set(cell, state);
     }
 }
 
