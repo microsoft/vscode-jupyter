@@ -31,7 +31,6 @@ import {
     isPythonKernelConnection
 } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
-import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { IKernelLauncher, ILocalKernelFinder } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
@@ -50,6 +49,7 @@ import { getResourceType } from '../../common';
 import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { inject, injectable, named } from 'inversify';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
+import { JupyterNotebookBase } from '../../jupyter/jupyterNotebook';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -166,7 +166,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
 
                 if (rawSession.isConnected) {
                     // Create our notebook
-                    const notebook = new HostJupyterNotebook(
+                    const notebook = new JupyterNotebookBase(
                         rawSession,
                         this.configService,
                         this.disposableRegistry,

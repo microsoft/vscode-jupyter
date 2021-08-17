@@ -530,8 +530,6 @@ export interface ILocalResourceUriConverter {
 
 export interface IInteractiveBase extends Disposable {
     notebook?: INotebook;
-    startProgress(): void;
-    stopProgress(): void;
     undoCells(): void;
     redoCells(): void;
     toggleOutput?(): void;
@@ -576,11 +574,9 @@ export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
     readonly activeEditor: INotebookEditor | undefined;
     readonly editors: INotebookEditor[];
-    readonly onDidOpenNotebookEditor: Event<INotebookEditor>;
     readonly onDidChangeActiveNotebookEditor: Event<INotebookEditor | undefined>;
     readonly onDidCloseNotebookEditor: Event<INotebookEditor>;
     open(file: Uri): Promise<INotebookEditor>;
-    show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<INotebookEditor>;
 }
 
@@ -588,11 +584,6 @@ export interface INotebookEditorProvider {
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends Disposable, IInteractiveBase {
     readonly closed: Event<INotebookEditor>;
-    readonly executed?: Event<INotebookEditor>;
-    /**
-     * Is this notebook representing an untitled file which has never been saved yet.
-     */
-    readonly isUntitled: boolean;
     readonly file: Uri;
     readonly model?: INotebookModel;
     readonly notebookMetadata: nbformat.INotebookMetadata | undefined;
@@ -606,7 +597,6 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     collapseAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
-    syncAllCells(): Promise<void>;
     getContent(): string;
 }
 
@@ -725,23 +715,10 @@ export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
     // interactive window. Dispose of the returned object when done.
-    set(
-        message: string,
-        showInWebView: boolean,
-        timeout?: number,
-        canceled?: () => void,
-        interactivePanel?: IInteractiveBase
-    ): Disposable;
+    set(message: string, timeout?: number, canceled?: () => void): Disposable;
 
     // call this function to wait for a promise while displaying status
-    waitWithStatus<T>(
-        promise: () => Promise<T>,
-        message: string,
-        showInWebView: boolean,
-        timeout?: number,
-        canceled?: () => void,
-        interactivePanel?: IInteractiveBase
-    ): Promise<T>;
+    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void): Promise<T>;
 }
 
 export interface IJupyterCommand {

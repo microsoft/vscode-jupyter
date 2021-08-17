@@ -25,9 +25,6 @@ export class NotebookEditorProviderWrapper implements INotebookEditorProvider {
     public get onDidCloseNotebookEditor(): Event<INotebookEditor> {
         return this.vscodeNotebookEditorProvider.onDidCloseNotebookEditor;
     }
-    public get onDidOpenNotebookEditor(): Event<INotebookEditor> {
-        return this._onDidOpenNotebookEditor.event;
-    }
     public get activeEditor(): INotebookEditor | undefined {
         return this.vscodeNotebookEditorProvider?.activeEditor;
     }
@@ -59,19 +56,10 @@ export class NotebookEditorProviderWrapper implements INotebookEditorProvider {
             this._onDidCloseNotebookEditor,
             this.disposables
         );
-        // This can be done blindly, as th VSCodeNotebook API would trigger these events only if it was explicitly used.
-        this.vscodeNotebookEditorProvider.onDidOpenNotebookEditor(
-            this._onDidOpenNotebookEditor.fire,
-            this._onDidOpenNotebookEditor,
-            this.disposables
-        );
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {
         return this.vscodeNotebookEditorProvider.open(file);
-    }
-    public async show(file: Uri): Promise<INotebookEditor | undefined> {
-        return this.vscodeNotebookEditorProvider.show(file);
     }
     public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<INotebookEditor> {
         return this.vscodeNotebookEditorProvider.createNew(options);

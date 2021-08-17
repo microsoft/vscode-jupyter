@@ -16,6 +16,7 @@ import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
+import { isJupyterNotebook } from '../notebook/helpers/helpers';
 import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
 import {
     IInteractiveWindow,
@@ -96,11 +97,17 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Handle when a cell finishes execution
-    private onDidChangeNotebookCellExecutionState(cellStateChange: NotebookCellExecutionStateChangeEvent): void {
+    private async onDidChangeNotebookCellExecutionState(
+        cellStateChange: NotebookCellExecutionStateChangeEvent
+    ): Promise<void> {
+        if (!isJupyterNotebook(cellStateChange.cell.notebook)) {
+            return;
+        }
+
         // If a cell has moved to idle, update our state
         if (cellStateChange.state === NotebookCellExecutionState.Idle) {
             // Convert to the old KernelStateEventArgs format
-            this.handleExecute({
+            await this.handleExecute({
                 resource: cellStateChange.cell.notebook.uri,
                 state: KernelState.executed,
                 cell: cellStateChange.cell,
@@ -110,10 +117,10 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Handle kernel state changes
-    private kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
+    private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
         switch (kernelStateEvent.state) {
             case KernelState.restarted:
-                this.handleRestart(kernelStateEvent);
+                await this.handleRestart(kernelStateEvent);
                 break;
             default:
                 break;
@@ -121,7 +128,7 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Handle a kernel execution event
-    private handleExecute(kernelStateEvent: KernelStateEventArgs) {
+    private async handleExecute(kernelStateEvent: KernelStateEventArgs) {
         // We are not interested in silent executions
         if (this.isNonSilentExecution(kernelStateEvent)) {
             // First, update our execution counts, regardless of if this is the active document
@@ -134,7 +141,7 @@ export class NotebookWatcher implements INotebookWatcher {
 
             // Next, if this is the active document, send out our notifications
             if (
-                this.isActiveNotebookEvent(kernelStateEvent) &&
+                (await this.isActiveNotebookEvent(kernelStateEvent)) &&
                 kernelStateEvent.cell?.executionSummary?.executionOrder !== undefined
             ) {
                 this._onDidExecuteActiveNotebook.fire({
@@ -145,12 +152,12 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Handle a kernel restart event
-    private handleRestart(kernelStateEvent: KernelStateEventArgs) {
+    private async handleRestart(kernelStateEvent: KernelStateEventArgs) {
         // First delete any execution counts that we are holding for this
         this.deleteExecutionCount(kernelStateEvent.resource);
 
         // If this is the active notebook, send our restart message
-        if (this.isActiveNotebookEvent(kernelStateEvent)) {
+        if (await this.isActiveNotebookEvent(kernelStateEvent)) {
             this._onDidRestartActiveNotebook.fire();
         }
     }

@@ -15,13 +15,16 @@ import { JupyterDaemonModule, Telemetry } from './constants';
 import { ActiveEditorContextService } from './commands/activeEditorContext';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
 import { KernelDaemonPreWarmer } from './kernel-launcher/kernelDaemonPreWarmer';
-import { INotebookCreationTracker, INotebookEditorProvider, IRawNotebookSupportedService } from './types';
+import { INotebookCreationTracker, IRawNotebookSupportedService } from './types';
+import { IVSCodeNotebook } from '../common/application/types';
+import { NotebookDocument } from 'vscode';
+import { isJupyterNotebook } from './notebook/helpers/helpers';
 
 @injectable()
 export class Activation implements IExtensionSingleActivationService {
     private notebookOpened = false;
     constructor(
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService,
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -33,14 +36,17 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
     public async activate(): Promise<void> {
-        this.disposables.push(this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
+        this.disposables.push(this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
         this.contextService.activate().ignoreErrors();
         this.daemonPoolPrewarmer.activate(undefined).ignoreErrors();
         this.tracker.startTracking();
     }
 
-    private onDidOpenNotebookEditor() {
+    private onDidOpenNotebookEditor(e: NotebookDocument) {
+        if (!isJupyterNotebook(e)) {
+            return;
+        }
         this.notebookOpened = true;
         this.PreWarmDaemonPool().ignoreErrors();
         sendTelemetryEvent(Telemetry.OpenNotebookAll);

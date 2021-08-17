@@ -77,7 +77,6 @@ import { KernelDependencyService } from './jupyter/kernels/kernelDependencyServi
 import { KernelSelectionProvider } from './jupyter/kernels/kernelSelections';
 import { KernelSelector } from './jupyter/kernels/kernelSelector';
 import { JupyterKernelService } from './jupyter/kernels/jupyterKernelService';
-import { KernelSwitcher } from './jupyter/kernels/kernelSwitcher';
 import { KernelVariables } from './jupyter/kernelVariables';
 import { NotebookStarter } from './jupyter/notebookStarter';
 import { ServerPreload } from './jupyter/serverPreload';
@@ -271,7 +270,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
     serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
     serviceManager.addSingleton<JupyterKernelService>(JupyterKernelService, JupyterKernelService);
-    serviceManager.addSingleton<KernelSwitcher>(KernelSwitcher, KernelSwitcher);
     serviceManager.addSingleton<NotebookCommands>(NotebookCommands, NotebookCommands);
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);

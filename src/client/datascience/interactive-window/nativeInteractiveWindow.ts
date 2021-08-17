@@ -455,13 +455,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // trackKernelResourceInformation(this._notebook?.resource, { interruptKernel: true });
         const notebookEditor = await this._editorReadyPromise;
         if (this.kernel && !this.restartingKernel) {
-            const status = this.statusProvider.set(
-                localize.DataScience.interruptKernelStatus(),
-                true,
-                undefined,
-                undefined,
-                this
-            );
+            const status = this.statusProvider.set(localize.DataScience.interruptKernelStatus(), undefined);
 
             try {
                 const result = await this.kernel.interrupt(notebookEditor.document);
@@ -492,7 +486,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public async restartKernel(): Promise<void> {
         if (this.kernel && !this.restartingKernel) {
             this.restartingKernel = true;
-            this.startProgress();
 
             try {
                 if (await this.shouldAskForRestart()) {
@@ -514,7 +507,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 }
             } finally {
                 this.restartingKernel = false;
-                this.stopProgress();
             }
         }
     }
@@ -538,13 +530,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const notebookEditor = await this._editorReadyPromise;
 
         // Set our status
-        const status = this.statusProvider.set(
-            localize.DataScience.restartingKernelStatus(),
-            true,
-            undefined,
-            undefined,
-            this
-        );
+        const status = this.statusProvider.set(localize.DataScience.restartingKernelStatus(), undefined);
 
         try {
             if (this.kernel && notebookEditor) {
@@ -861,14 +847,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     public get title() {
         return '';
-    }
-
-    public startProgress() {
-        noop();
-    }
-
-    public stopProgress() {
-        noop();
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
