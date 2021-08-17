@@ -6,7 +6,6 @@ import { languages } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { NotebookCellScheme, PYTHON_LANGUAGE } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
-import { NotebookCellStateTracker } from './helpers/helpers';
 import { NotebookCompletionProvider } from './intellisense/completionProvider';
 
 export const HAS_EXTENSION_CONFIGURED_CELL_TOOLBAR_SETTING = 'CELL_TOOLBAR_SETTING_MEMENTO_KEY';
@@ -23,7 +22,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
     ) {}
     public async activate(): Promise<void> {
         this.registerCompletionItemProvider();
-        this.disposables.push(new NotebookCellStateTracker());
     }
 
     private registerCompletionItemProvider() {

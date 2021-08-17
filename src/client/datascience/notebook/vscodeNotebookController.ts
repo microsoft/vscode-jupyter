@@ -133,7 +133,7 @@ export class VSCodeNotebookController implements Disposable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public postMessage(message: any, editor?: NotebookEditor): Thenable<boolean> {
         const messageType = message && 'message' in message ? message.message : '';
-        traceInfo(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
+        traceInfoIf(isCI, `${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
         return this.controller.postMessage(message, editor);
     }
 
@@ -159,7 +159,7 @@ export class VSCodeNotebookController implements Disposable {
     // Handle the execution of notebook cell
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
-            traceInfo('No cells passed to handleExecution');
+            traceInfoIf(isCI, 'No cells passed to handleExecution');
             return;
         }
         // When we receive a cell execute request, first ensure that the notebook is trusted.

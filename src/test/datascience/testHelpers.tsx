@@ -6,8 +6,6 @@ import { ReactWrapper } from 'enzyme';
 import * as path from 'path';
 import * as React from 'react';
 import { Provider } from 'react-redux';
-import { CancellationToken } from 'vscode';
-
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
@@ -52,35 +50,35 @@ export function addMockData(
     }
 }
 
-export function addInputMockData(
-    ioc: DataScienceIocContainer,
-    code: string,
-    result: string | number | undefined,
-    mimeType?: string,
-    cellType?: string
-) {
-    if (ioc.mockJupyter) {
-        if (cellType && cellType === 'error') {
-            ioc.mockJupyter.addError(code, result ? result.toString() : '');
-        } else {
-            if (result) {
-                ioc.mockJupyter.addInputCell(code, result, mimeType);
-            } else {
-                ioc.mockJupyter.addInputCell(code);
-            }
-        }
-    }
-}
+// export function addInputMockData(
+//     ioc: DataScienceIocContainer,
+//     code: string,
+//     result: string | number | undefined,
+//     mimeType?: string,
+//     cellType?: string
+// ) {
+//     if (ioc.mockJupyter) {
+//         if (cellType && cellType === 'error') {
+//             ioc.mockJupyter.addError(code, result ? result.toString() : '');
+//         } else {
+//             if (result) {
+//                 ioc.mockJupyter.addInputCell(code, result, mimeType);
+//             } else {
+//                 ioc.mockJupyter.addInputCell(code);
+//             }
+//         }
+//     }
+// }
 
-export function addContinuousMockData(
-    ioc: DataScienceIocContainer,
-    code: string,
-    resultGenerator: (c: CancellationToken) => Promise<{ result: string; haveMore: boolean }>
-) {
-    if (ioc.mockJupyter) {
-        ioc.mockJupyter.addContinuousOutputCell(code, resultGenerator);
-    }
-}
+// export function addContinuousMockData(
+//     ioc: DataScienceIocContainer,
+//     code: string,
+//     resultGenerator: (c: CancellationToken) => Promise<{ result: string; haveMore: boolean }>
+// ) {
+//     if (ioc.mockJupyter) {
+//         ioc.mockJupyter.addContinuousOutputCell(code, resultGenerator);
+//     }
+// }
 
 export function verifyServerStatus(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, statusText: string) {
     wrapper.update();
