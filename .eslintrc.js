@@ -180,7 +180,6 @@ module.exports = {
         'src/test/datascience/mockFileSystem.ts',
         'src/test/datascience/interactive-common/',
         'src/test/datascience/interactive-common/trustCommandHandler.unit.test.ts',
-        'src/test/datascience/mockStatusProvider.ts',
         'src/test/datascience/extensionapi/exampleextension/ms-toolsai-test/webpack.config.js',
         'src/test/datascience/extensionapi/exampleextension/ms-toolsai-test/.eslintrc.js',
         'src/test/datascience/extensionapi/exampleextension/ms-toolsai-test/src/typings/python.d.ts',
