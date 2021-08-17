@@ -10,27 +10,33 @@ import {
     Uri,
     NotebookDocument,
     NotebookEditor as VSCodeNotebookEditor,
-    CancellationTokenSource
+    NotebookData,
+    NotebookCellData,
+    NotebookCellKind
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensions } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, defaultNotebookFormat, Telemetry } from '../constants';
 import { IKernelProvider } from '../jupyter/kernels/types';
-import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
-import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
+import {
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookExecutionLogger,
+    INotebookProvider,
+    IStatusProvider
+} from '../types';
 import { JupyterNotebookView } from './constants';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
-import type { nbformat } from '@jupyterlab/coreutils';
-import { NotebookSerializer } from './notebookSerializer';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 
 /**
  * Notebook Editor provider used by other parts of DS code.
@@ -71,7 +77,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
-        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
@@ -79,7 +84,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService
+        @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         disposables.push(this);
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
@@ -131,28 +137,20 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<INotebookEditor> {
-        const nbJson: nbformat.INotebookContent = {
-            cells: [],
-            metadata: { orig_nbformat: defaultNotebookFormat.major },
-            nbformat: defaultNotebookFormat.major,
-            nbformat_minor: defaultNotebookFormat.minor
+        // contents will be ignored
+        const language = options?.defaultCellLanguage ?? PYTHON_LANGUAGE;
+        const cell = new NotebookCellData(NotebookCellKind.Code, '', language);
+        const data = new NotebookData([cell]);
+        data.metadata = {
+            custom: {
+                cells: [],
+                metadata: {
+                    orig_nbformat: defaultNotebookFormat.major
+                },
+                nbformat: defaultNotebookFormat.major,
+                nbformat_minor: defaultNotebookFormat.minor
+            }
         };
-        if (options?.contents) {
-            Object.assign(nbJson, JSON.parse(options.contents));
-        }
-        if (options?.defaultCellLanguage) {
-            if (!nbJson.metadata) {
-                nbJson.metadata = nbJson.metadata || { orig_nbformat: 4 };
-            }
-            if (nbJson.metadata.language_info) {
-                nbJson.metadata.language_info.name = options.defaultCellLanguage;
-            } else {
-                nbJson.metadata.language_info = { name: options.defaultCellLanguage };
-            }
-        }
-        const json = JSON.stringify(nbJson, undefined, 4);
-        const serializer = this.serviceContainer.get<NotebookSerializer>(NotebookSerializer);
-        const data = serializer.deserializeNotebook(Buffer.from(json, 'utf8'), new CancellationTokenSource().token);
         const doc = await this.vscodeNotebook.openNotebookDocument(JupyterNotebookView, data);
         await this.vscodeNotebook.showNotebookDocument(doc);
         return this.open(doc.uri);
@@ -191,8 +189,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         let editor = this.notebookEditorsByUri.get(uri.toString());
         if (!editor) {
             const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
-            const serializer = this.serviceContainer.get<NotebookSerializer>(NotebookSerializer);
             const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
+            const loggers = this.serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger);
             editor = new NotebookEditor(
                 doc,
                 this.vscodeNotebook,
@@ -204,7 +202,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 this.configurationService,
                 this.disposables,
                 this.cellLanguageService,
-                serializer
+                loggers,
+                this.extensions
             );
             this.onEditorOpened(editor);
         }
@@ -244,10 +243,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             if (editor.model) {
                 editor.model.dispose();
             }
-        }
-        const model = this.storage.get(uri);
-        if (model) {
-            model.dispose();
         }
         this.notebookEditorsByUri.delete(uri.toString());
         this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());

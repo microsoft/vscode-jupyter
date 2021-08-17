@@ -12,13 +12,13 @@ import {
     NotebookDocument,
     ProgressLocation,
     Uri,
-    WebviewPanel,
     NotebookCellData,
-    NotebookCell
+    NotebookCell,
+    NotebookData
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensions } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -30,7 +30,7 @@ import { IKernel, IKernelProvider } from '../jupyter/kernels/types';
 import {
     INotebook,
     INotebookEditor,
-    INotebookModel,
+    INotebookExecutionLogger,
     INotebookProvider,
     InterruptResult,
     IStatusProvider
@@ -38,13 +38,9 @@ import {
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 import { getNotebookMetadata } from './helpers/helpers';
-import { NotebookSerializer } from './notebookSerializer';
 import type { nbformat } from '@jupyterlab/coreutils';
 
 export class NotebookEditor implements INotebookEditor {
-    public get onDidChangeViewState(): Event<void> {
-        return this.changedViewState.event;
-    }
     public get closed(): Event<INotebookEditor> {
         return this._closed.event;
     }
@@ -63,16 +59,8 @@ export class NotebookEditor implements INotebookEditor {
     public get file(): Uri {
         return this.document.uri;
     }
-    public get visible(): boolean {
-        return !this.document.isClosed;
-    }
-    public get active(): boolean {
-        return this.vscodeNotebook.activeNotebookEditor?.document.uri.toString() === this.document.uri.toString();
-    }
-    public readonly type = 'native';
     public notebook?: INotebook | undefined;
 
-    private changedViewState = new EventEmitter<void>();
     private _closed = new EventEmitter<INotebookEditor>();
     private _saved = new EventEmitter<INotebookEditor>();
     private _modified = new EventEmitter<INotebookEditor>();
@@ -89,7 +77,8 @@ export class NotebookEditor implements INotebookEditor {
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry,
         private readonly cellLanguageService: NotebookCellLanguageService,
-        private readonly serializer: NotebookSerializer
+        private loggers: INotebookExecutionLogger[],
+        private extensions: IExtensions
     ) {
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
     }
@@ -98,28 +87,37 @@ export class NotebookEditor implements INotebookEditor {
         return getNotebookMetadata(this.document);
     }
     onExecutedCode?: Event<string> | undefined;
-    public getContent() {
-        return this.serializer.serializeNotebookDocument(this.document);
+    public getContent(): string {
+        const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
+            'vscode.ipynb'
+        );
+        if (!serializerApi) {
+            throw new Error(
+                'Unable to export notebook as the built-in vscode.ipynb extension is currently unavailable.'
+            );
+        }
+        const cells = this.document.getCells();
+        const cellData = cells.map((c) => {
+            const data = new NotebookCellData(c.kind, c.document.getText(), c.document.languageId);
+            data.metadata = c.metadata;
+            data.mime = c.mime;
+            data.outputs = [...c.outputs];
+            return data;
+        });
+        const notebookData = new NotebookData(cellData);
+        notebookData.metadata = this.document.metadata;
+        return serializerApi.exports.exportNotebook(notebookData);
     }
     @captureTelemetry(Telemetry.SyncAllCells)
     public async syncAllCells(): Promise<void> {
         // This shouldn't be necessary for native notebooks. if it is, it's because the document
         // is not up to date (VS code issue)
     }
-    public async load(_storage: INotebookModel, _webViewPanel?: WebviewPanel): Promise<void> {
-        // Not used.
-    }
     public runAllCells(): void {
         this.commandManager.executeCommand('notebook.execute').then(noop, noop);
     }
-    public runSelectedCell(): void {
-        this.commandManager.executeCommand('notebook.cell.execute').then(noop, noop);
-    }
     public addCellBelow(): void {
         this.commandManager.executeCommand('notebook.cell.insertCodeCellBelow').then(noop, noop);
-    }
-    public show(): Promise<void> {
-        throw new Error('Method not implemented.');
     }
     public startProgress(): void {
         throw new Error('Method not implemented.');
@@ -215,7 +213,7 @@ export class NotebookEditor implements INotebookEditor {
             trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
-        const kernel = this.kernelProvider.get(this.file);
+        const kernel = this.kernelProvider.get(this.document);
         if (!kernel || this.restartingKernel) {
             traceInfo(
                 `Interrupt requested & no kernel or currently restarting ${this.document.uri} in notebookEditor.`
@@ -232,7 +230,7 @@ export class NotebookEditor implements INotebookEditor {
                 const message = DataScience.restartKernelAfterInterruptMessage();
                 const yes = DataScience.restartKernelMessageYes();
                 const no = DataScience.restartKernelMessageNo();
-                const v = await this.applicationShell.showInformationMessage(message, yes, no);
+                const v = await this.applicationShell.showInformationMessage(message, { modal: true }, yes, no);
                 if (v === yes) {
                     this.restartingKernel = false;
                     this.kernelInterruptedDontAskToRestart = true;
@@ -255,7 +253,7 @@ export class NotebookEditor implements INotebookEditor {
             trackKernelResourceInformation(this.document.uri, { restartKernel: true });
             return;
         }
-        const kernel = this.kernelProvider.get(this.file);
+        const kernel = this.kernelProvider.get(this.document);
 
         if (kernel && !this.restartingKernel) {
             if (await this.shouldAskForRestart()) {
@@ -340,6 +338,7 @@ export class NotebookEditor implements INotebookEditor {
         } finally {
             status.dispose();
             this.restartingKernel = false;
+            this.loggers.forEach((l) => l.onKernelRestarted(this.file));
         }
     }
     private async shouldAskForRestart(): Promise<boolean> {

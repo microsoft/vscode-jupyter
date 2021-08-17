@@ -16,7 +16,7 @@ import {
     NotebookRendererScript,
     Uri
 } from 'vscode';
-import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import { ICommandManager, IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { isCI, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
 import { traceInfo, traceInfoIf } from '../../common/logger';
@@ -100,7 +100,8 @@ export class VSCodeNotebookController implements Disposable {
         private readonly localOrRemoteKernel: 'local' | 'remote',
         private readonly interpreterPackages: InterpreterPackages,
         private readonly configuration: IConfigurationService,
-        private readonly widgetCoordinator: NotebookIPyWidgetCoordinator
+        private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
+        private readonly documentManager: IDocumentManager
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -132,7 +133,7 @@ export class VSCodeNotebookController implements Disposable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public postMessage(message: any, editor?: NotebookEditor): Thenable<boolean> {
         const messageType = message && 'message' in message ? message.message : '';
-        traceInfo(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
+        traceInfoIf(isCI, `${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
         return this.controller.postMessage(message, editor);
     }
 
@@ -158,7 +159,7 @@ export class VSCodeNotebookController implements Disposable {
     // Handle the execution of notebook cell
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
-            traceInfo('No cells passed to handleExecution');
+            traceInfoIf(isCI, 'No cells passed to handleExecution');
             return;
         }
         // When we receive a cell execute request, first ensure that the notebook is trusted.
@@ -239,7 +240,7 @@ export class VSCodeNotebookController implements Disposable {
             join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
             join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
             join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
-            join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')
+            join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
         ].map((uri) => new NotebookRendererScript(Uri.file(uri)));
     }
 
@@ -252,9 +253,10 @@ export class VSCodeNotebookController implements Disposable {
 
     private executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${cell.notebook.uri.toString()}`);
-        const kernel = this.kernelProvider.getOrCreate(cell.notebook.uri, {
+        const kernel = this.kernelProvider.getOrCreate(cell.notebook, {
             metadata: this.kernelConnection,
-            controller: this.controller
+            controller: this.controller,
+            resourceUri: doc.uri
         });
         if (kernel) {
             this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
@@ -302,7 +304,12 @@ export class VSCodeNotebookController implements Disposable {
             if (!this.associatedDocuments.has(doc)) {
                 return;
             }
-            await updateNotebookDocumentMetadata(doc, kernel.kernelConnectionMetadata, kernel.info);
+            await updateNotebookDocumentMetadata(
+                doc,
+                this.documentManager,
+                kernel.kernelConnectionMetadata,
+                kernel.info
+            );
             if (this.kernelConnection.kind === 'startUsingKernelSpec') {
                 if (kernel.info.status === 'ok') {
                     saveKernelInfo();
@@ -320,7 +327,7 @@ export class VSCodeNotebookController implements Disposable {
     }
     private async onDidSelectController(document: NotebookDocument) {
         const selectedKernelConnectionMetadata = this.connection;
-        const existingKernel = this.kernelProvider.get(document.uri);
+        const existingKernel = this.kernelProvider.get(document);
         if (
             existingKernel &&
             areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
@@ -371,16 +378,21 @@ export class VSCodeNotebookController implements Disposable {
         }
 
         // Before we start the notebook, make sure the metadata is set to this new kernel.
-        await updateNotebookDocumentMetadata(document, selectedKernelConnectionMetadata);
+        await updateNotebookDocumentMetadata(document, this.documentManager, selectedKernelConnectionMetadata);
 
+        if (document.notebookType === InteractiveWindowView) {
+            // Possible its an interactive window, in that case we'll create the kernel manually.
+            return;
+        }
         // Make this the new kernel (calling this method will associate the new kernel with this Uri).
         // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
         // This will dispose any existing (older kernels) associated with this notebook.
         // This way other parts of extension have access to this kernel immediately after event is handled.
         // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
-        const newKernel = this.kernelProvider.getOrCreate(document.uri, {
+        const newKernel = this.kernelProvider.getOrCreate(document, {
             metadata: selectedKernelConnectionMetadata,
-            controller: this.controller
+            controller: this.controller,
+            resourceUri: document.uri // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
         });
         traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}`);
 

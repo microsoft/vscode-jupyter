@@ -4,17 +4,10 @@
 import '../../../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import * as os from 'os';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import * as vsls from 'vsls/vscode';
 import { IPythonExtensionChecker } from '../../../api/types';
-import {
-    IApplicationShell,
-    ILiveShareApi,
-    IVSCodeNotebook,
-    IWorkspaceService
-} from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceInfoIf } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -28,7 +21,6 @@ import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import { isResourceNativeNotebook } from '../../notebook/helpers/helpers';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
@@ -45,46 +37,33 @@ import { computeWorkingDirectory } from '../jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
-import { LiveShareParticipantHost } from './liveShareParticipantMixin';
-import { IRoleBasedObject } from './roleBasedFactory';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
-import { IS_CI_SERVER } from '../../../../test/ciConstants';
+import { isCI, STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
+import { inject, injectable, named } from 'inversify';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
-    implements IRoleBasedObject, INotebookServer {
+@injectable()
+export class HostJupyterServer extends JupyterServerBase implements INotebookServer {
     private disposed = false;
-    private portToForward = 0;
-    private sharedPort: vscode.Disposable | undefined;
     constructor(
-        private liveShare: ILiveShareApi,
-        _startupTime: number,
-        asyncRegistry: IAsyncDisposableRegistry,
-        disposableRegistry: IDisposableRegistry,
-        configService: IConfigurationService,
-        sessionManager: IJupyterSessionManagerFactory,
-        private workspaceService: IWorkspaceService,
-        serviceContainer: IServiceContainer,
-        private appService: IApplicationShell,
-        private fs: IFileSystem,
-        private readonly localKernelFinder: ILocalKernelFinder,
-        private readonly remoteKernelFinder: IRemoteKernelFinder,
-        private readonly interpreterService: IInterpreterService,
-        outputChannel: IOutputChannel,
-        private readonly progressReporter: ProgressReporter,
-        private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly vscodeNotebook: IVSCodeNotebook
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IConfigurationService) configService: IConfigurationService,
+        @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IApplicationShell) private readonly appService: IApplicationShell,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
+        @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook
     ) {
-        super(
-            liveShare,
-            asyncRegistry,
-            disposableRegistry,
-            configService,
-            sessionManager,
-            serviceContainer,
-            outputChannel
-        );
+        super(asyncRegistry, disposableRegistry, configService, sessionManager, serviceContainer, outputChannel);
     }
 
     public async dispose(): Promise<void> {
@@ -92,93 +71,12 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             this.disposed = true;
             traceInfo(`Disposing HostJupyterServer`);
             await super.dispose();
-            const api = await this.api;
-            await this.onDetach(api);
             traceInfo(`Finished disposing HostJupyterServer`);
         }
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
-        if (launchInfo.connectionInfo && launchInfo.connectionInfo.localLaunch) {
-            const portMatch = RegExpValues.ExtractPortRegex.exec(launchInfo.connectionInfo.baseUrl);
-            if (portMatch && portMatch.length > 1) {
-                const port = parseInt(portMatch[1], 10);
-                await this.attemptToForwardPort(this.finishedApi, port);
-            }
-        }
         return super.connect(launchInfo, cancelToken);
-    }
-
-    public async onAttach(api: vsls.LiveShare | null): Promise<void> {
-        await super.onAttach(api);
-
-        if (api && !this.disposed) {
-            const service = await this.waitForService();
-
-            // Attach event handlers to different requests
-            if (service) {
-                // Requests return arrays
-                service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) =>
-                    this.onSync()
-                );
-                service.onRequest(LiveShareCommands.disposeServer, (_args: any[], _cancellation: CancellationToken) =>
-                    this.dispose()
-                );
-                service.onRequest(
-                    LiveShareCommands.createNotebook,
-                    async (args: any[], cancellation: CancellationToken) => {
-                        const resource = this.parseUri(args[0]);
-                        const identity = this.parseUri(args[1]);
-                        // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
-                        const notebook = (await this.createNotebook(
-                            resource,
-                            identity!,
-                            undefined,
-                            undefined,
-                            cancellation
-                        )) as HostJupyterNotebook;
-                        await notebook.onAttach(api);
-                    }
-                );
-
-                // See if we need to forward the port
-                await this.attemptToForwardPort(api, this.portToForward);
-            }
-        }
-    }
-
-    public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
-        await super.onSessionChange(api);
-
-        this.getNotebooks().forEach(async (notebook) => {
-            const hostNotebook = (await notebook) as HostJupyterNotebook;
-            if (hostNotebook) {
-                await hostNotebook.onSessionChange(api);
-            }
-        });
-    }
-
-    public async onDetach(api: vsls.LiveShare | null): Promise<void> {
-        await super.onDetach(api);
-
-        // Make sure to unshare our port
-        if (api && this.sharedPort) {
-            this.sharedPort.dispose();
-            this.sharedPort = undefined;
-        }
-    }
-
-    public async waitForServiceName(): Promise<string> {
-        // First wait for connect to occur
-        const launchInfo = await this.waitForConnect();
-
-        // Use our base name plus our purpose. This means one unique server per purpose
-        if (!launchInfo) {
-            return LiveShare.JupyterServerSharedService;
-        }
-        // eslint-disable-next-line
-        // TODO: Should there be some separator in the name?
-        return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }
 
     protected get isDisposed() {
@@ -269,7 +167,6 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             if (session) {
                 // Create our notebook
                 const notebook = new HostJupyterNotebook(
-                    this.liveShare,
                     session,
                     configService,
                     disposableRegistry,
@@ -348,13 +245,13 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         ) {
             let kernelInfo: KernelConnectionMetadata | undefined;
             if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'connectToLiveKernel') {
-                traceInfoIf(IS_CI_SERVER, `kernelConnection?.kind === 'connectToLiveKernel'`);
+                traceInfoIf(isCI, `kernelConnection?.kind === 'connectToLiveKernel'`);
                 kernelInfo = kernelConnection;
             } else if (!launchInfo.connectionInfo.localLaunch && kernelConnection?.kind === 'startUsingKernelSpec') {
-                traceInfoIf(IS_CI_SERVER, `kernelConnection?.kind === 'startUsingKernelSpec'`);
+                traceInfoIf(isCI, `kernelConnection?.kind === 'startUsingKernelSpec'`);
                 kernelInfo = kernelConnection;
             } else if (launchInfo.connectionInfo.localLaunch && kernelConnection) {
-                traceInfoIf(IS_CI_SERVER, `launchInfo.connectionInfo.localLaunch && kernelConnection'`);
+                traceInfoIf(isCI, `launchInfo.connectionInfo.localLaunch && kernelConnection'`);
                 kernelInfo = kernelConnection;
             } else {
                 kernelInfo = await (launchInfo.connectionInfo.localLaunch
@@ -365,7 +262,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                           notebookMetadata,
                           cancelToken
                       ));
-                traceInfoIf(IS_CI_SERVER, `kernelInfo found ${kernelInfo?.id}`);
+                traceInfoIf(isCI, `kernelInfo found ${kernelInfo?.id}`);
             }
             if (kernelInfo && kernelInfo.id !== launchInfo.kernelConnectionMetadata?.id) {
                 // Update kernel info if we found a new one.
@@ -378,7 +275,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         }
         if (!changedKernel && kernelConnection && kernelConnection.id !== launchInfo.kernelConnectionMetadata?.id) {
             // Update kernel info if its different from what was originally provided.
-            traceInfoIf(IS_CI_SERVER, `kernelConnection provided is different from launch info ${kernelConnection.id}`);
+            traceInfoIf(isCI, `kernelConnection provided is different from launch info ${kernelConnection.id}`);
             launchInfo.kernelConnectionMetadata = kernelConnection;
             changedKernel = true;
         }
@@ -387,31 +284,5 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             `Computed Launch Info uri = ${resource?.fsPath}, changed ${changedKernel}, ${launchInfo.kernelConnectionMetadata?.id}`
         );
         return { info: launchInfo, changedKernel };
-    }
-
-    private parseUri(uri: string | undefined): Resource {
-        const parsed = uri ? vscode.Uri.parse(uri) : undefined;
-        return parsed &&
-            parsed.scheme &&
-            parsed.scheme !== Identifiers.InteractiveWindowIdentityScheme &&
-            parsed.scheme === 'vsls'
-            ? this.finishedApi!.convertSharedUriToLocal(parsed)
-            : parsed;
-    }
-
-    private async attemptToForwardPort(api: vsls.LiveShare | null | undefined, port: number): Promise<void> {
-        if (port !== 0 && api && api.session && api.session.role === vsls.Role.Host) {
-            this.portToForward = 0;
-            this.sharedPort = await api.shareServer({
-                port,
-                displayName: localize.DataScience.liveShareHostFormat().format(os.hostname())
-            });
-        } else {
-            this.portToForward = port;
-        }
-    }
-
-    private onSync(): Promise<any> {
-        return Promise.resolve(true);
     }
 }

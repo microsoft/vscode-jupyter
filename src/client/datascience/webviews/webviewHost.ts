@@ -26,9 +26,10 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from '../messages';
+import { CssMessages, IGetCssRequest, SharedMessages } from '../messages';
 import { ICodeCssGenerator, IJupyterExtraSettings, IThemeFinder } from '../types';
 import { testOnlyMethod } from '../../common/utils/decorators';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebviewHost<IMapping> implements IDisposable {
@@ -65,8 +66,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
         @unmanaged() protected rootPath: string,
-        @unmanaged() protected scripts: string[],
-        @unmanaged() protected readonly useCustomEditorApi: boolean
+        @unmanaged() protected scripts: string[]
     ) {
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
@@ -168,10 +168,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                 this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
                 break;
 
-            case CssMessages.GetMonacoThemeRequest:
-                this.handleMonacoThemeRequest(payload as IGetMonacoThemeRequest).ignoreErrors();
-                break;
-
             case InteractiveWindowMessages.GetHTMLByIdResponse:
                 // Webview has returned HTML, resolve the request and clear it
                 if (this.activeHTMLRequest) {
@@ -215,7 +211,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
             this.webview = await this.provideWebview(cwd, settings, workspaceFolder, webView);
 
-            // Track to seee if our webview fails to load
+            // Track to see if our webview fails to load
             this._disposables.push(this.webview.loadFailed(this.onWebViewLoadFailed, this));
 
             traceInfo('Webview panel created.');
@@ -255,7 +251,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                     fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
                 theme,
-                useCustomEditorApi: this.useCustomEditorApi,
                 hasPythonExtension: pythonExt !== undefined
             },
             intellisenseOptions: {
@@ -334,16 +329,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             theme: settings.extraSettings.theme,
             knownDark: isDark
         });
-    }
-
-    @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
-    private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
-        const settings = await this.generateDataScienceExtraSettings();
-        const isDark = settings.ignoreVscodeTheme ? false : request?.isDark;
-        this.setTheme(isDark);
-        const resource = this.owningResource;
-        const monacoTheme = await this.cssGenerator.generateMonacoTheme(resource, isDark, settings.extraSettings.theme);
-        return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
     }
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {

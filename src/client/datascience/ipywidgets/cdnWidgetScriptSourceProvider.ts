@@ -97,9 +97,17 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         const diskPath = path.join(this.localResourceUriConverter.rootScriptFolder.fsPath, key, 'index.js');
         let tempFile: TemporaryFile | undefined;
 
+        // Log the location that we are going to search on disk (don't remove, can allow third parties to drop
+        // files locally and test new versions of their extensions.
+        traceInfo(
+            `${ConsoleForegroundColors.Green}Searching for Widget Script ${moduleName}#${moduleVersion} at path: ${diskPath}`
+        );
+
         // Might be on disk, try there first.
         if (diskPath && (await this.fs.localFileExists(diskPath))) {
-            traceInfo(`${ConsoleForegroundColors.Green}Widget Script ${moduleName}#${moduleVersion} found`);
+            traceInfo(
+                `${ConsoleForegroundColors.Green}Widget Script ${moduleName}#${moduleVersion} found at path: ${diskPath}`
+            );
             const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
             return { moduleName, scriptUri, source: 'cdn' };
         }

@@ -7,7 +7,6 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import { UseVSCodeNotebookEditorApi } from '../../../common/constants';
 import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceInfo } from '../../../common/logger';
@@ -42,8 +41,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNb: boolean
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
@@ -81,23 +79,6 @@ export class KernelDependencyService implements IKernelDependencyService {
         return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
     }
 
-    // The requirement for debugging is ipykernel v6 or newer
-    public async areDebuggingDependenciesInstalled(
-        interpreter: PythonEnvironment,
-        _token?: CancellationToken
-    ): Promise<boolean> {
-        try {
-            const version = await this.installer.getVersion(Product.ipykernel, interpreter);
-            if (version) {
-                const versionSplit = version.split('.');
-                const mainVersionNumber = Number(versionSplit[0]);
-                return mainVersionNumber >= 6;
-            }
-            return false;
-        } catch {
-            return false;
-        }
-    }
     private handleKernelDependencyResponse(
         resource: Resource,
         response: KernelInterpreterDependencyResponse,
@@ -107,7 +88,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             return;
         }
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
-            if (getResourceType(resource) === 'notebook' && this.useNativeNb) {
+            if (getResourceType(resource) === 'notebook') {
                 this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
             } else {
                 this.commandManager

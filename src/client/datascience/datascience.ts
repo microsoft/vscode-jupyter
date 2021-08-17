@@ -5,11 +5,12 @@ import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
+import { PYTHON_FILE, PYTHON_LANGUAGE, PYTHON_UNTITLED } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import '../common/extensions';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
+import { noop } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { CommandRegistry } from './commands/commandRegistry';
@@ -42,7 +43,7 @@ export class DataScience implements IDataScience {
         this.commandRegistry.register();
 
         this.extensionContext.subscriptions.push(
-            vscode.languages.registerCodeLensProvider(PYTHON_ALLFILES, this.dataScienceCodeLensProvider)
+            vscode.languages.registerCodeLensProvider([PYTHON_FILE, PYTHON_UNTITLED], this.dataScienceCodeLensProvider)
         );
 
         // Set our initial settings and sign up for changes
@@ -71,7 +72,7 @@ export class DataScience implements IDataScience {
         const settings = this.configuration.getSettings(undefined);
         const ownsSelection = settings.sendSelectionToInteractiveWindow;
         const editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);
-        editorContext.set(ownsSelection).catch();
+        void editorContext.set(ownsSelection).catch(noop);
     };
 
     private onChangedActiveTextEditor() {
@@ -82,9 +83,9 @@ export class DataScience implements IDataScience {
         if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
             // Inform the editor context that we have cells, fire and forget is ok on the promise here
             // as we don't care to wait for this context to be set and we can't do anything if it fails
-            editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings())).catch();
+            void editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings())).catch(noop);
         } else {
-            editorContext.set(false).catch();
+            void editorContext.set(false).catch(noop);
         }
     }
 

@@ -13,16 +13,14 @@ import {
     NotebookDocument,
     NotebookCellKind,
     NotebookCellExecutionState,
-    notebooks,
-    NotebookCellExecutionStateChangeEvent,
     NotebookCellExecutionSummary,
     WorkspaceEdit
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
-import { IVSCodeNotebook } from '../../../common/application/types';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
+import { IDocumentManager, IVSCodeNotebook } from '../../../common/application/types';
+import { isCI, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { traceError, traceInfoIf, traceWarning } from '../../../common/logger';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
@@ -34,10 +32,9 @@ import { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
-import { IDisposable, Resource } from '../../../common/types';
+import { Resource } from '../../../common/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { CellOutputMimeTypes } from '../types';
-import { disposeAllDisposables } from '../../../common/helpers';
 
 /**
  * Whether this is a Notebook we created/manage/use.
@@ -69,6 +66,7 @@ export function getNotebookMetadata(document: NotebookDocument | NotebookData): 
 
 export async function updateNotebookDocumentMetadata(
     document: NotebookDocument,
+    editManager: IDocumentManager,
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
@@ -87,7 +85,8 @@ export async function updateNotebookDocumentMetadata(
 
         docMetadata.custom = docMetadata.custom || {};
         docMetadata.custom.metadata = metadata;
-        await edit.replaceNotebookMetadata(document.uri, { ...(document.metadata || {}), custom: docMetadata.custom });
+        edit.replaceNotebookMetadata(document.uri, { ...(document.metadata || {}), custom: docMetadata.custom });
+        await editManager.applyEdit(edit);
     }
 }
 
@@ -248,8 +247,8 @@ const orderOfMimeTypes = [
     'image/gif',
     'text/latex',
     'text/markdown',
-    'image/svg+xml',
     'image/png',
+    'image/svg+xml',
     'image/jpeg',
     'application/json',
     'text/plain'
@@ -290,29 +289,19 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
 /**
  * This class is used to track state of cells, used in logging & tests.
  */
-export class NotebookCellStateTracker implements IDisposable {
-    private readonly disposables: IDisposable[] = [];
+export class NotebookCellStateTracker {
     private static cellStates = new WeakMap<NotebookCell, NotebookCellExecutionState>();
-    constructor() {
-        notebooks.onDidChangeNotebookCellExecutionState(
-            this.onDidChangeNotebookCellExecutionState,
-            this,
-            this.disposables
-        );
-    }
-    dispose() {
-        disposeAllDisposables(this.disposables);
-    }
     public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
         return NotebookCellStateTracker.cellStates.get(cell);
     }
-    private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
-        NotebookCellStateTracker.cellStates.set(e.cell, e.state);
+    public static setCellState(cell: NotebookCell, state: NotebookCellExecutionState) {
+        NotebookCellStateTracker.cellStates.set(cell, state);
     }
 }
 
 export function traceCellMessage(cell: NotebookCell, message: string) {
-    traceInfo(
+    traceInfoIf(
+        isCI,
         `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
             cell.executionSummary?.executionOrder
         }. ${message}`
@@ -440,6 +429,10 @@ function translateDisplayDataOutput(
     }
     */
     const metadata = getOutputMetadata(output);
+    // If we have both SVG & PNG, then add special metadata to indicate whether to display `open plot`
+    if ('image/svg+xml' in output.data && 'image/png' in output.data) {
+        metadata.__displayOpenPlotIcon = true;
+    }
     const items: NotebookCellOutputItem[] = [];
     // eslint-disable-next-line
     const data: Record<string, any> = output.data || {};
@@ -523,6 +516,10 @@ export type CellOutputMetadata = {
      * (this is something we have added)
      */
     __isJson?: boolean;
+    /**
+     * Whether to display the open plot icon.
+     */
+    __displayOpenPlotIcon?: boolean;
 };
 
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {
@@ -559,7 +556,7 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
     try {
         const stringValue = Buffer.from(value as Uint8Array).toString('utf8');
         if (mime === CellOutputMimeTypes.error) {
-            traceInfo(`Concerting ${mime} from ${stringValue}`);
+            traceInfoIf(isCI, `Converting ${mime} from ${stringValue}`);
             return JSON.parse(stringValue);
         } else if (mime.startsWith('text/') || textMimeTypes.includes(mime)) {
             return splitMultilineString(stringValue);

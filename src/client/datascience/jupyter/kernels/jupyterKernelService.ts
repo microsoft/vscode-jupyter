@@ -7,8 +7,8 @@ import type { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { IS_CI_SERVER } from '../../../../test/ciConstants';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
+import { isCI } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceDecorators, traceInfo, traceInfoIf } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -92,7 +92,7 @@ export class JupyterKernelService {
         // Update the kernel environment to use the interpreter's latest
         if (kernel.kind !== 'connectToLiveKernel' && kernel.kernelSpec && kernel.interpreter) {
             traceInfoIf(
-                IS_CI_SERVER,
+                isCI,
                 `updateKernelEnvironment ${kernel.interpreter.displayName}, ${kernel.interpreter.path} for ${kernel.id}`
             );
             await this.updateKernelEnvironment(kernel.interpreter, kernel.kernelSpec, token);

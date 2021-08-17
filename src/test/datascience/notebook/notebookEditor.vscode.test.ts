@@ -69,10 +69,12 @@ suite('Notebook Editor tests', function () {
         await selectCell(vscodeNotebook.activeNotebookEditor?.document!, 1, 3);
 
         // run and wait
-        await runAllCellsInActiveNotebook();
-        await waitForExecutionCompletedSuccessfully(firstCell);
-        await waitForExecutionCompletedSuccessfully(secondCell);
-        await waitForExecutionCompletedSuccessfully(thirdCell);
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(firstCell),
+            waitForExecutionCompletedSuccessfully(secondCell),
+            waitForExecutionCompletedSuccessfully(thirdCell)
+        ]);
 
         // execute command
         await commandManager.executeCommand(Commands.NotebookEditorToggleOutput);

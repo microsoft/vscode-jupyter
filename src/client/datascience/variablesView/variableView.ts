@@ -37,6 +37,7 @@ import { WebviewViewHost } from '../webviews/webviewViewHost';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
 import { ContextKey } from '../../common/contextKey';
+import { IDebuggingManager } from '../../debugger/types';
 
 const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
@@ -61,7 +62,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         @unmanaged() private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @unmanaged() private readonly dataViewerFactory: IDataViewerFactory,
         @unmanaged() private readonly notebookWatcher: INotebookWatcher,
-        @unmanaged() private readonly commandManager: ICommandManager
+        @unmanaged() private readonly commandManager: ICommandManager,
+        @unmanaged() private readonly debuggingManager: IDebuggingManager
     ) {
         super(
             configuration,
@@ -71,13 +73,14 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             (c, d) => new VariableViewMessageListener(c, d),
             provider,
             variableViewDir,
-            [path.join(variableViewDir, 'commons.initial.bundle.js'), path.join(variableViewDir, 'variableView.js')]
+            [path.join(variableViewDir, 'variableView.js')]
         );
 
         // Sign up if the active variable view notebook is changed, restarted or updated
         this.notebookWatcher.onDidExecuteActiveNotebook(this.activeNotebookExecuted, this, this.disposables);
         this.notebookWatcher.onDidChangeActiveNotebook(this.activeNotebookChanged, this, this.disposables);
         this.notebookWatcher.onDidRestartActiveNotebook(this.activeNotebookRestarted, this, this.disposables);
+        this.debuggingManager.onDidFireVariablesEvent(this.sendRefreshMessage, this, this.disposables);
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
@@ -180,8 +183,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     // Variables for the current active editor are being requested, check that we have a valid active notebook
     // and use the variables interface to fetch them and pass them to the variable view UI
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
-        if (this.notebookWatcher.activeNotebook) {
-            const response = await this.variables.getVariables(args, this.notebookWatcher.activeNotebook);
+        const activeNotebook = this.notebookWatcher.activeNotebook;
+        if (activeNotebook) {
+            const response = await this.variables.getVariables(args, activeNotebook);
 
             this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
             sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, {
@@ -214,5 +218,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     private async activeNotebookRestarted() {
         this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+    }
+
+    private async sendRefreshMessage() {
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 }

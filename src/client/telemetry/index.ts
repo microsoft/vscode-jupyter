@@ -272,7 +272,7 @@ type TypedMethodDescriptor<T> = (
     propertyKey: string | symbol,
     descriptor: TypedPropertyDescriptor<T>
 ) => TypedPropertyDescriptor<T> | void;
-
+const timesSeenThisEventWithSameProperties = new Set<string>();
 /**
  * Decorates a method, sending a telemetry event with the given properties.
  * @param eventName The event name to send.
@@ -314,7 +314,11 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
                 return properties;
             };
 
+            // Determine if this is the first time we're sending this telemetry event for this same (class/method).
             const stopWatch = captureDuration ? new StopWatch() : undefined;
+            const key = `${eventName.toString()}${JSON.stringify(props() || {})}`;
+            const firstTime = !timesSeenThisEventWithSameProperties.has(key);
+            timesSeenThisEventWithSameProperties.add(key);
 
             // eslint-disable-next-line no-invalid-this, @typescript-eslint/no-use-before-define,
             const result = originalMethod.apply(this, args);
@@ -325,13 +329,17 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
                 // eslint-disable-next-line
                 (result as Promise<void>)
                     .then((data) => {
-                        sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
+                        const propsToSend = { ...(props() || {}) };
+                        if (firstTime) {
+                            (propsToSend as any)['firstTime'] = firstTime;
+                        }
+                        sendTelemetryEvent(eventName, stopWatch?.elapsedTime, propsToSend as typeof properties);
                         return data;
                     })
                     // eslint-disable-next-line @typescript-eslint/promise-function-async
                     .catch((ex) => {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const failedProps: P[E] = props() || ({} as any);
+                        const failedProps: P[E] = { ...(props() || ({} as any)) };
                         (failedProps as any).failed = true;
                         sendTelemetryEvent(
                             failureEventName ? failureEventName : eventName,
@@ -483,7 +491,38 @@ export interface IEventNamePropertyMapping {
      * Sent when a jupyter session fails to start and we ask the user for a new kernel
      */
     [Telemetry.AskUserForNewJupyterKernel]: never | undefined;
-    [Telemetry.KernelListingPerf]: never | undefined;
+    /**
+     * Time taken to list the Python interpreters.
+     */
+    [Telemetry.InterpreterListingPerf]: {
+        /**
+         * Whether this is the first time in the session.
+         * (fetching kernels first time in the session is slower, later its cached).
+         * This is a generic property supported for all telemetry (sent by decorators).
+         */
+        firstTime?: boolean;
+    };
+    [Telemetry.ActiveInterpreterListingPerf]: {
+        /**
+         * Whether this is the first time in the session.
+         * (fetching kernels first time in the session is slower, later its cached).
+         * This is a generic property supported for all telemetry (sent by decorators).
+         */
+        firstTime?: boolean;
+    };
+    [Telemetry.KernelListingPerf]: {
+        /**
+         * Whether this is the first time in the session.
+         * (fetching kernels first time in the session is slower, later its cached).
+         * This is a generic property supported for all telemetry (sent by decorators).
+         */
+        firstTime?: boolean;
+        /**
+         * Whether this telemetry is for listing of all kernels or just python or just non-python.
+         * (fetching kernels first time in the session is slower, later its cached).
+         */
+        kind: 'remote' | 'local' | 'localKernelSpec' | 'localPython';
+    };
     [Telemetry.NumberOfLocalKernelSpecs]: {
         /**
          * Number of kernel specs.
@@ -681,8 +720,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.OpenedInteractiveWindow]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
-    [Telemetry.RemoteAddCode]: never | undefined;
-    [Telemetry.RemoteReexecuteCode]: never | undefined;
     [Telemetry.RestartJupyterTime]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
     [Telemetry.RestartKernelCommand]: never | undefined;
@@ -825,7 +862,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.VariableExplorerToggled]: { open: boolean; runByLine: boolean };
     [Telemetry.VariableExplorerVariableCount]: { variableCount: number };
     [Telemetry.WaitForIdleJupyter]: never | undefined;
-    [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
     [Telemetry.WebviewStartup]: { type: string };
     [Telemetry.WebviewStyleUpdate]: never | undefined;
     [Telemetry.RegisterInterpreterAsKernel]: never | undefined;
@@ -1342,16 +1378,6 @@ export interface IEventNamePropertyMapping {
          */
         source: SliceOperationSource;
     };
-    /*
-     * Telemetry sent when we update custom editor associations.
-     */
-    [Telemetry.UpdateCustomEditorAssociation]: {
-        /**
-         * 'added' means we enabled custom editor for user and ensured ipynb opens with custom editor.
-         * 'removed' means we custom editor is not enabled for the user and ensured ipynb doesn't open with custom editor.
-         */
-        type: 'added' | 'removed';
-    } & Partial<TelemetryErrorProperties>;
     /*
      * Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
      */

@@ -7,7 +7,7 @@ import { CancellationToken, NotebookCell, NotebookDocument, Position, TextDocume
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { KernelConnectionMetadata } from '../../datascience/jupyter/kernels/types';
-import { INotebookModel, ISwitchKernelOptions } from '../../datascience/types';
+import { ISwitchKernelOptions } from '../../datascience/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CommandSource } from '../../testing/common/constants';
 import { Channel } from './types';
@@ -100,7 +100,12 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.files.save']: [Uri];
     ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
     ['undo']: [];
-    ['interactive.open']: [ViewColumn | undefined, Uri | undefined, string | undefined];
+    ['interactive.open']: [
+        { preserveFocus?: boolean; viewColumn?: ViewColumn },
+        Uri | undefined,
+        string | undefined,
+        string | undefined
+    ];
     ['interactive.execute']: [string];
     [DSCommands.NotebookEditorInterruptKernel]: [Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
@@ -146,13 +151,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ExportToHTML]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.ExportToPDF]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.Export]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
-    [DSCommands.NativeNotebookExport]: [Uri];
+    [DSCommands.NativeNotebookExport]: [Uri | undefined];
     [DSCommands.SetJupyterKernel]: [KernelConnectionMetadata, Uri, undefined | Uri];
     [DSCommands.SwitchJupyterKernel]: [ISwitchKernelOptions | undefined] | [];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
-    [DSCommands.SaveNotebookNonCustomEditor]: [INotebookModel];
-    [DSCommands.SaveAsNotebookNonCustomEditor]: [INotebookModel, Uri];
-    [DSCommands.OpenNotebookNonCustomEditor]: [Uri];
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
     [DSCommands.NotebookEditorExpandAllCells]: [];
@@ -167,4 +169,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.NotebookEditorKeybindSave]: [];
     [DSCommands.NotebookEditorKeybindUndo]: [];
     [DSCommands.DebugNotebook]: [];
+    [DSCommands.RunByLine]: [NotebookCell];
+    [DSCommands.RunAndDebugCell]: [NotebookCell];
+    [DSCommands.RunByLineContinue]: [NotebookCell];
 }

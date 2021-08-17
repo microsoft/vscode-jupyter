@@ -17,12 +17,6 @@ export function getDefaultInteractiveIdentity(): Uri {
     return Uri.parse(`history://${identities[0]}`);
 }
 
-// Between test runs reset our identity
-export function resetIdentity() {
-    createCount = 0;
-    identities = [];
-}
-
 export function createInteractiveIdentity(): Uri {
     if (createCount > 0 || identities.length <= 0) {
         identities.push(uuid());

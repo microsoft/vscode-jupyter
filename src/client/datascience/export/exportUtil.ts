@@ -6,14 +6,10 @@ import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { sleep } from '../../common/utils/async';
-import { INotebookStorage } from '../types';
 
 @injectable()
 export class ExportUtil {
-    constructor(
-        @inject(IFileSystem) private fs: IFileSystem,
-        @inject(INotebookStorage) private notebookStorage: INotebookStorage
-    ) {}
+    constructor(@inject(IFileSystem) private fs: IFileSystem) {}
 
     public async generateTempDir(): Promise<TemporaryDirectory> {
         const resultDir = path.join(os.tmpdir(), uuid());
@@ -48,16 +44,15 @@ export class ExportUtil {
     }
 
     public async removeSvgs(source: Uri) {
-        const model = await this.notebookStorage.getOrCreateModel({ file: source });
-        const content = JSON.parse(model.getContent()) as nbformat.INotebookContent;
+        const model = await this.fs.readLocalFile(source.fsPath);
+        const content = JSON.parse(model) as nbformat.INotebookContent;
         for (const cell of content.cells) {
             const outputs = cell.outputs as nbformat.IOutput[];
             if (Array.isArray(outputs)) {
                 this.removeSvgFromOutputs(outputs);
             }
         }
-        await this.fs.writeFile(source, JSON.stringify(content, undefined, model.indentAmount));
-        model.dispose(); // We're modifying the JSON in file manually, hence blow away cached model.
+        await this.fs.writeFile(source, JSON.stringify(content, undefined, 4));
     }
 
     private removeSvgFromOutputs(outputs: nbformat.IOutput[]) {

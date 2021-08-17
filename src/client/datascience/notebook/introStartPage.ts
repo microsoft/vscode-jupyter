@@ -1,18 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
 import { inject, injectable, named } from 'inversify';
-import { Memento, Uri } from 'vscode';
+import { commands, Memento, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IApplicationEnvironment, ICommandManager } from '../../common/application/types';
-import { UseVSCodeNotebookEditorApi } from '../../common/constants';
-import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../common/types';
+import { IApplicationShell, IVSCodeNotebook } from '../../common/application/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../common/types';
+import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { CommandSource } from '../../testing/common/constants';
-import { Commands } from '../constants';
-import { swallowExceptions } from '../../common/utils/decorators';
-import { InsidersNotebookSurveyStateKeys } from '../dataScienceSurveyBanner';
+import { isJupyterNotebook } from './helpers/helpers';
 
 export const IntroduceNativeNotebookDisplayed = 'JVSC_INTRO_NATIVE_NB_DISPLAYED';
 
@@ -21,44 +17,43 @@ export const IntroduceNativeNotebookDisplayed = 'JVSC_INTRO_NATIVE_NB_DISPLAYED'
  */
 @injectable()
 export class IntroduceNativeNotebookStartPage implements IExtensionSingleActivationService {
-    private readonly introNotebook: Uri;
     constructor(
-        @inject(UseVSCodeNotebookEditorApi) private readonly useVSCNotebook: boolean,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
-    ) {
-        this.introNotebook = Uri.file(path.join(this.context.extensionPath, 'resources/startNativeNotebooks.ipynb'));
-    }
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
+        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+    ) {}
+
+    private messageDisplayed?: boolean;
     public async activate(): Promise<void> {
-        if (
-            this.appEnv.channel !== 'stable' ||
-            this.memento.get<boolean>(IntroduceNativeNotebookDisplayed, false) ||
-            !this.useVSCNotebook
-        ) {
+        if (this.memento.get<boolean>(IntroduceNativeNotebookDisplayed, false)) {
             return;
         }
 
-        // Only display to users who have run a notebook at least once before.
-        if (this.memento.get<number>(InsidersNotebookSurveyStateKeys.ExecutionCount, 0) === 0) {
-            this.doNotShowStartPageAgain().then(noop, noop);
+        this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
+        if (this.vscodeNotebook.notebookDocuments.length) {
+            void this.notify();
+        }
+    }
+    private onDidOpenNotebookDocument(doc: NotebookDocument) {
+        if (isJupyterNotebook(doc)) {
+            void this.notify();
+        }
+    }
+    private async notify() {
+        if (this.messageDisplayed) {
             return;
         }
-        this.openIntroNotebook().catch(noop);
-    }
-    private async doNotShowStartPageAgain() {
-        await this.memento.update(IntroduceNativeNotebookDisplayed, true);
-    }
-    @swallowExceptions('Open Intro Native Notebook')
-    private async openIntroNotebook() {
-        // Ensure we display once.
-        await this.doNotShowStartPageAgain();
-        await this.commandManager.executeCommand(
-            Commands.OpenNotebook,
-            this.introNotebook,
-            undefined,
-            CommandSource.auto
-        );
+        this.messageDisplayed = true;
+        this.memento.update(IntroduceNativeNotebookDisplayed, true).then(noop, noop);
+        const customizeLayout = DataScience.customizeLayout();
+        const selection = await this.appShell.showInformationMessage(DataScience.newNotebookUI(), customizeLayout);
+        switch (selection) {
+            case customizeLayout:
+                void commands.executeCommand('workbench.action.openSettings', '@tag:notebookLayout').then(noop, noop);
+                break;
+            default:
+                break;
+        }
     }
 }

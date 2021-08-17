@@ -93,6 +93,9 @@ export class MockJupyterNotebook implements INotebook {
     public clear(_id: string): void {
         noop();
     }
+    public async runInitialSetup(): Promise<void> {
+        noop();
+    }
     public executeObservable(_code: string, _f: string, _line: number): Observable<ICell[]> {
         throw new Error('Method not implemented');
     }

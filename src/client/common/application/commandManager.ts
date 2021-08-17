@@ -36,7 +36,7 @@ export class CommandManager implements ICommandManager {
             (...args: U) => {
                 sendTelemetryEvent(Telemetry.CommandExecuted, undefined, { command: command as string });
                 if (thisArg) {
-                    return callback.call(thisArg, ...args);
+                    return callback.call(thisArg, ...(args as any));
                 } else {
                     return callback(...args);
                 }

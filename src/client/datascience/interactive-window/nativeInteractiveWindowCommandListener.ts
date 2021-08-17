@@ -33,6 +33,7 @@ import { Commands, Telemetry } from '../constants';
 import { ExportFormat, IExportDialog, IExportManager } from '../export/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
+    IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IInteractiveBase,
     IInteractiveWindowProvider,
@@ -46,7 +47,7 @@ import {
 import { createExportInteractiveIdentity } from './identity';
 
 @injectable()
-export class NativeInteractiveWindowCommandListener {
+export class NativeInteractiveWindowCommandListener implements IDataScienceCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
@@ -414,7 +415,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private interruptKernel(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.interruptKernel().ignoreErrors();
@@ -423,7 +424,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private restartKernel(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.restartKernel().ignoreErrors();
@@ -432,7 +433,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private expandAllCells(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.expandAllCells();
@@ -441,7 +442,7 @@ export class NativeInteractiveWindowCommandListener {
 
     private collapseAllCells(uri?: Uri) {
         const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri!.toString() === uri.toString())
+            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
             : this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.collapseAllCells();
