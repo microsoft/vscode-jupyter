@@ -282,9 +282,6 @@ export class KernelExecution implements IDisposable {
         await notebook.session.restart(this.interruptTimeout).catch((exc) => {
             traceWarning(`Error during restart: ${exc}`);
         });
-
-        // Reinitialize the kernel after a session restart
-        await notebook.runInitialSetup();
     }
 
     private async getKernel(document: NotebookDocument): Promise<IKernel> {

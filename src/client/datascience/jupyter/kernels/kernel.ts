@@ -351,6 +351,10 @@ export class Kernel implements IKernel {
                 this.disposables
             );
         }
+
+        // Change our initial directory and path
+        await this.updateWorkingDirectoryAndPath();
+
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             await this.disableJedi();
             if (this.resourceUri) {
@@ -499,7 +503,7 @@ export class Kernel implements IKernel {
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
         const suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
         traceInfo('UpdateWorkingDirectoryAndPath');
-        if (this.connection && this.connection.localLaunch && !this._workingDirectory) {
+        if (this.connection && this.connection.localLaunch) {
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggestedDir;

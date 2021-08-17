@@ -46,7 +46,6 @@ import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { KernelSpecNotFoundError } from './kernelSpecNotFoundError';
-import { IPythonExecutionFactory } from '../../../common/process/types';
 import { getResourceType } from '../../common';
 import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { inject, injectable, named } from 'inversify';
@@ -179,12 +178,8 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                         this.workspaceService,
                         this.appShell,
                         this.fs,
-                        this.vscodeNotebook,
-                        this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
+                        this.vscodeNotebook
                     );
-
-                    // Run initial setup
-                    await notebook.initialize(cancelToken);
 
                     traceInfo(`Finished connecting ${this.id}`);
 

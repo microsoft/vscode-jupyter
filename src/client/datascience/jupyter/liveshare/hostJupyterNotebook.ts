@@ -17,7 +17,6 @@ import {
 } from '../../types';
 import { JupyterNotebookBase } from '../jupyterNotebook';
 import { IFileSystem } from '../../../common/platform/types';
-import { IPythonExecutionFactory } from '../../../common/process/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -36,8 +35,7 @@ export class HostJupyterNotebook extends JupyterNotebookBase implements INoteboo
         workspace: IWorkspaceService,
         appService: IApplicationShell,
         fs: IFileSystem,
-        vscNotebook: IVSCodeNotebook,
-        executionFactory: IPythonExecutionFactory
+        vscNotebook: IVSCodeNotebook
     ) {
         super(
             session,
@@ -51,8 +49,7 @@ export class HostJupyterNotebook extends JupyterNotebookBase implements INoteboo
             workspace,
             appService,
             fs,
-            vscNotebook,
-            executionFactory
+            vscNotebook
         );
     }
 
