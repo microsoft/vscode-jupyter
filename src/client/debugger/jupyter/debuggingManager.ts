@@ -35,8 +35,9 @@ import { Commands as DSCommands } from '../../datascience/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IDebuggingManager } from '../types';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { pythonKernelDebugAdapter } from '../constants';
+import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
 import { IPythonInstaller } from '../../api/types';
+import { sendTelemetryEvent } from '../../telemetry';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -181,6 +182,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             }),
 
             this.commandManager.registerCommand(DSCommands.RunByLine, async (cell: NotebookCell | undefined) => {
+                sendTelemetryEvent(DebuggingTelemetry.clickedRunByLine);
                 this.appShell.withProgress(
                     { location: ProgressLocation.Notification, title: DataScience.startingRunByLine() },
                     async () => {
@@ -244,11 +246,13 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
                 const adapter = this.notebookToDebugAdapter.get(cell.notebook);
                 if (adapter && adapter.debugCellUri?.toString() === cell.document.uri.toString()) {
+                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'withKeybinding' });
                     adapter.disconnect();
                 }
             }),
 
             this.commandManager.registerCommand(DSCommands.RunAndDebugCell, async (cell: NotebookCell | undefined) => {
+                sendTelemetryEvent(DebuggingTelemetry.clickedRunAndDebugCell);
                 const editor = this.vscNotebook.activeNotebookEditor;
                 if (!cell) {
                     const range = editor?.selections[0];
@@ -391,6 +395,11 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 controller?.connection.interpreter
             );
 
+            if (result === ProductInstallStatus.Installed) {
+                sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, { status: 'installed' });
+            } else {
+                sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, { status: 'notInstalled' });
+            }
             return result === ProductInstallStatus.Installed;
         } catch {
             return false;
@@ -405,10 +414,12 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         );
 
         if (response === DataScience.setup()) {
+            sendTelemetryEvent(DebuggingTelemetry.clickedOnSetup);
             this.appShell.openUrl(
                 'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Debugging-for-Notebooks'
             );
         } else {
+            sendTelemetryEvent(DebuggingTelemetry.closedModal);
             // telemetry
         }
     }
