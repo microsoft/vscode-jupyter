@@ -408,7 +408,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         if (response === DataScience.setup()) {
             sendTelemetryEvent(DebuggingTelemetry.clickedOnSetup);
             this.appShell.openUrl(
-                'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Debugging-for-Notebooks'
+                'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'
             );
         } else {
             sendTelemetryEvent(DebuggingTelemetry.closedModal);
