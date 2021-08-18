@@ -171,6 +171,9 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             this.kernel.onWillInterrupt(() => {
                 this.disconnect();
             });
+            this.kernel.onDisposed(() => {
+                this.disconnect();
+            });
         }
 
         notebooks.onDidChangeNotebookCellExecutionState(
