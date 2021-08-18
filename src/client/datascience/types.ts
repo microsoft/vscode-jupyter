@@ -183,9 +183,7 @@ export interface INotebook extends IAsyncDisposable {
     onDisposed: Event<void>;
     onKernelChanged: Event<KernelConnectionMetadata>;
     onKernelRestarted: Event<void>;
-    onKernelInterrupted: Event<void>;
     onDidFinishExecuting?: Event<ICell>;
-    clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(
         code: string,
@@ -201,41 +199,19 @@ export interface INotebook extends IAsyncDisposable {
         offsetInCode: number,
         cancelToken?: CancellationToken
     ): Promise<INotebookCompletion>;
-    restartKernel(timeoutInMs: number): Promise<void>;
     waitForIdle(timeoutInMs: number): Promise<void>;
-    interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
     setLaunchingFile(file: string): Promise<void>;
-    getSysInfo(): Promise<ICell | undefined>;
     requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
-    setMatplotLibStyle(useDark: boolean): Promise<void>;
     getMatchingInterpreter(): PythonEnvironment | undefined;
     /**
      * Gets the metadata that's used to start/connect to a Kernel.
      */
     getKernelConnection(): KernelConnectionMetadata | undefined;
-    /**
-     * Sets the metadata that's used to start/connect to a Kernel.
-     * Doing so results in a new kernel being started (i.e. a change in the kernel).
-     */
-    setKernelConnection(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     getLoggers(): INotebookExecutionLogger[];
-    registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void;
-    sendCommMessage(
-        buffers: (ArrayBuffer | ArrayBufferView)[],
-        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        msgId: any
-    ): Kernel.IShellFuture<
-        KernelMessage.IShellMessage<'comm_msg'>,
-        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
-    >;
-    requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
     registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>

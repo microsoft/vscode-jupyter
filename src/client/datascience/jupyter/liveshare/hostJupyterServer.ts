@@ -176,8 +176,7 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
                     this.getDisposedError.bind(this),
                     this.workspaceService,
                     this.appService,
-                    this.fs,
-                    this.vscodeNotebook
+                    this.fs
                 );
 
                 // Wait for it to be ready

@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IPythonExtensionChecker } from '../../../api/types';
-import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -70,8 +70,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
         @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {
         super(asyncRegistry, rawNotebookSupported);
     }
@@ -177,8 +176,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                         this.getDisposedError.bind(this),
                         this.workspaceService,
                         this.appShell,
-                        this.fs,
-                        this.vscodeNotebook
+                        this.fs
                     );
 
                     traceInfo(`Finished connecting ${this.id}`);
