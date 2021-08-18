@@ -212,8 +212,6 @@ export class JupyterNotebookBase implements INotebook {
 
         // Make a copy of the launch info so we can update it in this class
         this._executionInfo = cloneDeep(executionInfo);
-
-        this.logKernelStarted();
     }
 
     public get connection() {
@@ -469,11 +467,6 @@ export class JupyterNotebookBase implements INotebook {
             throw new Error(localize.DataScience.sessionDisposed());
         }
     }
-
-    private logKernelStarted() {
-        this.loggers.forEach((l) => l.onKernelStarted(this.getNotebookId()));
-    }
-
     @captureTelemetry(Telemetry.HiddenCellTime)
     private executeSilently(code: string, cancelToken?: CancellationToken): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
