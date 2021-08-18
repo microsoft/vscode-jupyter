@@ -172,6 +172,7 @@ export namespace Commands {
     export const RunByLine = 'jupyter.runByLine';
     export const RunAndDebugCell = 'jupyter.runAndDebugCell';
     export const RunByLineContinue = 'jupyter.runByLineContinue';
+    export const RunByLineStop = 'jupyter.runByLineStop';
 }
 
 export namespace CodeLensCommands {
