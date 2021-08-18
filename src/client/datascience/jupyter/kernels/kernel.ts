@@ -7,9 +7,9 @@ import { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
+import * as path from 'path';
 import {
     CancellationTokenSource,
-    ColorThemeKind,
     Event,
     EventEmitter,
     NotebookCell,
@@ -19,10 +19,11 @@ import {
     NotebookDocument,
     NotebookRange,
     Uri,
-    Range
+    Range,
+    ColorThemeKind
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell } from '../../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
@@ -52,6 +53,8 @@ import { InteractiveWindowView } from '../../notebook/constants';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import { DataScience } from '../../../common/utils/localize';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
+import { calculateWorkingDirectory } from '../../utils';
+import { expandWorkingDir } from '../jupyterUtils';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -98,6 +101,7 @@ export class Kernel implements IKernel {
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
     private startCancellation = new CancellationTokenSource();
+    private _workingDirectory?: string;
     constructor(
         public readonly notebookUri: Uri,
         public readonly resourceUri: Resource,
@@ -114,7 +118,8 @@ export class Kernel implements IKernel {
         private readonly serverStorage: IJupyterServerUriStorage,
         controller: NotebookController,
         private readonly configService: IConfigurationService,
-        outputTracker: CellOutputDisplayIdTracker
+        outputTracker: CellOutputDisplayIdTracker,
+        private readonly workspaceService: IWorkspaceService
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -344,13 +349,23 @@ export class Kernel implements IKernel {
                 this.disposables
             );
         }
+
+        // Change our initial directory and path
+        await this.updateWorkingDirectoryAndPath();
+
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             await this.disableJedi();
             if (this.resourceUri) {
                 await this.notebook.setLaunchingFile(this.resourceUri.fsPath);
             }
-            await this.initializeMatplotlib();
+
+            // For Python notebook initialize matplotlib
+            await this.initializeMatplotLib();
         }
+
+        // Run any startup commands that we have specified
+        await this.runStartupCommands();
+
         await this.notebook
             .requestKernelInfo()
             .then(async (item) => {
@@ -434,18 +449,21 @@ export class Kernel implements IKernel {
             });
         }
     }
-    private async initializeMatplotlib(): Promise<void> {
-        if (!this.notebook) {
-            return;
-        }
+    private async initializeMatplotLib(): Promise<void> {
         const settings = this.configService.getSettings(this.resourceUri);
         if (settings && settings.themeMatplotlibPlots) {
-            const matplobInit = settings.enablePlotViewer
-                ? CodeSnippets.MatplotLibInitSvg
-                : CodeSnippets.MatplotLibInitPng;
+            // We're theming matplotlibs, so we have to setup our default state.
+            traceInfoIf(isCI, `Initialize config for plots for ${(this.resourceUri || this.notebookUri).toString()}`);
+            const matplobInit =
+                !settings || settings.enablePlotViewer
+                    ? CodeSnippets.MatplotLibInitSvg
+                    : CodeSnippets.MatplotLibInitPng;
 
             traceInfo(`Initialize matplotlib for ${(this.resourceUri || this.notebookUri).toString()}`);
+            // Force matplotlib to inline and save the default style. We'll use this later if we
+            // get a request to update style
             await this.executeSilently(matplobInit);
+
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
             if (!settings.ignoreVscodeTheme) {
                 // Reset the matplotlib style based on if dark or not.
@@ -456,11 +474,65 @@ export class Kernel implements IKernel {
                 );
             }
         } else {
-            const configInit = !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
+            const configInit = settings && settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
             traceInfoIf(isCI, `Initialize config for plots for ${(this.resourceUri || this.notebookUri).toString()}`);
             await this.executeSilently(configInit);
         }
     }
+    private async runStartupCommands() {
+        const settings = this.configService.getSettings(this.resourceUri);
+        // Run any startup commands that we specified. Support the old form too
+        let setting = settings.runStartupCommands || settings.runMagicCommands;
+
+        // Convert to string in case we get an array of startup commands.
+        if (Array.isArray(setting)) {
+            setting = setting.join(`\n`);
+        }
+
+        if (setting) {
+            // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
+            traceInfoIf(isCI, 'Begin Run startup code for notebook');
+            const cleanedUp = setting.replace(/\\n/g, '\n');
+            await this.executeSilently(cleanedUp);
+            traceInfoIf(isCI, `Run startup code for notebook: ${cleanedUp}`);
+        }
+    }
+
+    private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
+        const suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
+        traceInfo('UpdateWorkingDirectoryAndPath');
+        if (this.connection && this.connection.localLaunch) {
+            if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
+                // We should use the launch info directory. It trumps the possible dir
+                this._workingDirectory = suggestedDir;
+                return this.changeDirectoryIfPossible(this._workingDirectory);
+            } else if (
+                launchingFile &&
+                (await this.fs.localFileExists(launchingFile)) &&
+                (await this.fs.localDirectoryExists(path.dirname(launchingFile)))
+            ) {
+                // Combine the working directory with this file if possible.
+                this._workingDirectory = expandWorkingDir(suggestedDir, launchingFile, this.workspaceService);
+                if (this._workingDirectory) {
+                    return this.changeDirectoryIfPossible(this._workingDirectory);
+                }
+            }
+        }
+    }
+
+    // Update both current working directory and sys.path with the desired directory
+    private changeDirectoryIfPossible = async (directory: string): Promise<void> => {
+        if (
+            this.connection &&
+            this.connection.localLaunch &&
+            isPythonKernelConnection(this.kernelConnectionMetadata) &&
+            (await this.fs.localDirectoryExists(directory))
+        ) {
+            traceInfo('changeDirectoryIfPossible');
+            await this.executeSilently(CodeSnippets.UpdateCWDAndPath.format(directory));
+        }
+    };
+
     private async executeSilently(code: string) {
         if (!this.notebook) {
             return;

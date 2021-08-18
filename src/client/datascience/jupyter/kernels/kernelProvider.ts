@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { IApplicationShell } from '../../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -41,7 +41,8 @@ export class KernelProvider implements IKernelProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
-        @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker
+        @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {
         this.asyncDisposables.push(this);
     }
@@ -84,7 +85,8 @@ export class KernelProvider implements IKernelProvider {
             this.serverStorage,
             options.controller,
             this.configService,
-            this.outputTracker
+            this.outputTracker,
+            this.workspaceService
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel));
         this.asyncDisposables.push(kernel);

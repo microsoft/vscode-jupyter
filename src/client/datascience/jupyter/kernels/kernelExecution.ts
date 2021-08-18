@@ -280,9 +280,6 @@ export class KernelExecution implements IDisposable {
             traceWarning(`Error during restart: ${exc}`);
         });
 
-        // Reinitialize the kernel after a session restart
-        await notebook.runInitialSetup();
-
         (notebook as JupyterNotebookBase).fireRestart();
     }
 

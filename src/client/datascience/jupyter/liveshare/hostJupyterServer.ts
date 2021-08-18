@@ -38,7 +38,6 @@ import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
-import { IPythonExecutionFactory } from '../../../common/process/types';
 import { isCI, STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { inject, injectable, named } from 'inversify';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -178,17 +177,13 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
                     this.workspaceService,
                     this.appService,
                     this.fs,
-                    this.vscodeNotebook,
-                    serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)
+                    this.vscodeNotebook
                 );
 
                 // Wait for it to be ready
                 traceInfo(`Waiting for idle (session) ${this.id}`);
                 const idleTimeout = configService.getSettings().jupyterLaunchTimeout;
                 await notebook.waitForIdle(idleTimeout);
-
-                // Run initial setup
-                await notebook.initialize(cancelToken);
 
                 traceInfo(`Finished connecting ${this.id}`);
 

@@ -7,13 +7,13 @@ import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { ColorThemeKind, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import '../../common/extensions';
-import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
@@ -41,7 +41,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
-import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -49,12 +49,10 @@ import { handleTensorBoardDisplayDataOutput } from '../notebook/helpers/executio
 import {
     getInterpreterFromKernelConnectionMetadata,
     getKernelConnectionLanguage,
-    isPythonKernelConnection,
-    sendTelemetryForPythonKernelExecutable
+    isPythonKernelConnection
 } from './kernels/helpers';
 import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
-import { IPythonExecutionFactory } from '../../common/process/types';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -157,7 +155,6 @@ class CellSubscriber {
 export class JupyterNotebookBase implements INotebook {
     private sessionStartTime: number;
     private pendingCellSubscriptions: CellSubscriber[] = [];
-    private ranInitialSetup = false;
     private _resource: Resource;
     private _identity: Uri;
     private _disposed: boolean = false;
@@ -209,8 +206,7 @@ export class JupyterNotebookBase implements INotebook {
         private workspace: IWorkspaceService,
         private applicationService: IApplicationShell,
         private fs: IFileSystem,
-        private readonly vscNotebook: IVSCodeNotebook,
-        private readonly executionFactory: IPythonExecutionFactory
+        private readonly vscNotebook: IVSCodeNotebook
     ) {
         this.sessionStartTime = Date.now();
 
@@ -285,93 +281,6 @@ export class JupyterNotebookBase implements INotebook {
 
     public waitForIdle(timeoutMs: number): Promise<void> {
         return this.session ? this.session.waitForIdle(timeoutMs) : Promise.resolve();
-    }
-
-    // Set up our initial plotting and imports
-    // eslint-disable-next-line complexity
-    public async initialize(cancelToken?: CancellationToken): Promise<void> {
-        if (this.ranInitialSetup) {
-            return;
-        }
-        this.ranInitialSetup = true;
-        this._workingDirectory = undefined;
-
-        traceInfo(`Initial setup for ${this.identity.toString()} starting ...`);
-
-        try {
-            // When we start our notebook initial, change to our workspace or user specified root directory
-            await this.updateWorkingDirectoryAndPath();
-            traceInfoIf(isCI, `Initial setup after for updateWorkingDirectoryAndPath ...`);
-            let isDefinitelyNotAPythonKernel = false;
-            if (
-                this._executionInfo.kernelConnectionMetadata?.kind === 'startUsingKernelSpec' &&
-                this._executionInfo.kernelConnectionMetadata.kernelSpec.language &&
-                this._executionInfo.kernelConnectionMetadata.kernelSpec.language.toLowerCase() !==
-                    PYTHON_LANGUAGE.toLocaleLowerCase()
-            ) {
-                isDefinitelyNotAPythonKernel = true;
-            }
-            if (
-                this._executionInfo.kernelConnectionMetadata?.kind === 'connectToLiveKernel' &&
-                this._executionInfo.kernelConnectionMetadata.kernelModel.language &&
-                this._executionInfo.kernelConnectionMetadata.kernelModel.language.toLowerCase() !==
-                    PYTHON_LANGUAGE.toLocaleLowerCase()
-            ) {
-                isDefinitelyNotAPythonKernel = true;
-            }
-
-            const settings = this.configService.getSettings(this.resource);
-            if (settings && settings.themeMatplotlibPlots) {
-                // We're theming matplotlibs, so we have to setup our default state.
-                traceInfoIf(isCI, `Initialize config for plots for ${this.identity.toString()}`);
-                if (!isDefinitelyNotAPythonKernel) {
-                    await this.initializeMatplotlib(cancelToken);
-                }
-            } else {
-                this.initializedMatplotlib = false;
-                const configInit =
-                    (!settings || settings.enablePlotViewer) &&
-                    !isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
-                        ? CodeSnippets.ConfigSvg
-                        : CodeSnippets.ConfigPng;
-                traceInfoIf(isCI, `Initialize config for plots for ${this.identity.toString()}`);
-                if (!isDefinitelyNotAPythonKernel) {
-                    await this.executeSilently(configInit, cancelToken);
-                }
-            }
-            traceInfoIf(isCI, `Initial setup for ${this.identity.toString()} half way ...`);
-            if (
-                !isDefinitelyNotAPythonKernel &&
-                this._executionInfo.connectionInfo.localLaunch &&
-                this._executionInfo.kernelConnectionMetadata
-            ) {
-                await sendTelemetryForPythonKernelExecutable(
-                    this,
-                    this._resource?.fsPath || this._identity.fsPath,
-                    this._executionInfo.kernelConnectionMetadata,
-                    this.executionFactory
-                );
-            }
-            // Run any startup commands that we specified. Support the old form too
-            let setting = settings.runStartupCommands || settings.runMagicCommands;
-
-            // Convert to string in case we get an array of startup commands.
-            if (Array.isArray(setting)) {
-                setting = setting.join(`\n`);
-            }
-
-            if (setting) {
-                // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
-                traceInfoIf(isCI, 'Begin Run startup code for notebook');
-                const cleanedUp = setting.replace(/\\n/g, '\n');
-                const cells = await this.executeSilently(cleanedUp, cancelToken);
-                traceInfoIf(isCI, `Run startup code for notebook: ${cleanedUp} - results: ${cells.length}`);
-            }
-
-            traceInfo(`Initial setup complete for ${this.identity.toString()}`);
-        } catch (e) {
-            traceWarning('Failed initialize', e);
-        }
     }
 
     public clear(_id: string): void {
@@ -528,9 +437,6 @@ export class JupyterNotebookBase implements INotebook {
             // Restart our kernel
             await this.session.restart(timeoutMs);
 
-            // Rerun our initial setup for the notebook
-            await this.runInitialSetup();
-
             // Tell our loggers
             this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
             traceInfo(`Time to restart kernel is ${(Date.now() - this.sessionStartTime) / 1000}s`);
@@ -539,13 +445,6 @@ export class JupyterNotebookBase implements INotebook {
         }
 
         throw this.getDisposedError();
-    }
-
-    public async runInitialSetup() {
-        this.ranInitialSetup = false;
-        traceInfo('restartKernel - initialSetup');
-        await this.initialize();
-        traceInfo('restartKernel - initialSetup completed');
     }
 
     @captureTelemetry(Telemetry.InterruptJupyterTime)
@@ -572,10 +471,6 @@ export class JupyterNotebookBase implements INotebook {
                     // We restarted the kernel.
                     this.sessionStartTime = Date.now();
                     traceWarning('Kernel restarting during interrupt');
-
-                    // Indicate we have to redo initial setup. We can't wait for starting though
-                    // because sometimes it doesn't happen
-                    this.ranInitialSetup = false;
 
                     // Indicate we restarted the race below
                     restarted.resolve([]);
@@ -716,18 +611,12 @@ export class JupyterNotebookBase implements INotebook {
     public async setKernelConnection(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void> {
         // We need to start a new session with the new kernel spec
         if (this.session) {
-            // Turn off setup
-            this.ranInitialSetup = false;
-
             // Change the kernel on the session
             await this.session.changeKernel(this.resource, connectionMetadata, timeoutMS);
 
             // Change our own kernel spec
             // Only after session was successfully created.
             this._executionInfo.kernelConnectionMetadata = connectionMetadata;
-
-            // Rerun our initial setup
-            await this.initialize();
         } else {
             // Change our own kernel spec
             this._executionInfo.kernelConnectionMetadata = connectionMetadata;
@@ -820,6 +709,16 @@ export class JupyterNotebookBase implements INotebook {
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             await this.executeSilently(matplobInit, cancelToken);
+
+            const useDark = this.applicationService.activeColorTheme.kind === ColorThemeKind.Dark;
+            if (!settings.ignoreVscodeTheme) {
+                // Reset the matplotlib style based on if dark or not.
+                await this.executeSilently(
+                    useDark
+                        ? "matplotlib.style.use('dark_background')"
+                        : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`
+                );
+            }
 
             // Use this flag to detemine if we need to rerun this or not.
             this.initializedMatplotlib = true;

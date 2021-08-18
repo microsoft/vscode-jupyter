@@ -658,10 +658,10 @@ export namespace CodeSnippets {
     ];
     export const ChangeDirectoryCommentIdentifier = '# ms-toolsai.jupyter added'; // Not translated so can compare.
     export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
-    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = {'svg', 'png'}`;
-    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = {'png'}`;
-    export const ConfigSvg = `%config InlineBackend.figure_formats = {'svg', 'png'}`;
-    export const ConfigPng = `%config InlineBackend.figure_formats = {'png'}`;
+    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = ['svg', 'png']`;
+    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = ['png']`;
+    export const ConfigSvg = `%config InlineBackend.figure_formats = ['svg', 'png']`;
+    export const ConfigPng = `%config InlineBackend.figure_formats = ['png']`;
     export const UpdateCWDAndPath =
         'import os\nimport sys\n%cd "{0}"\nif os.getcwd() not in sys.path:\n    sys.path.insert(0, os.getcwd())';
     export const disableJedi = '%config Completer.use_jedi = False';
