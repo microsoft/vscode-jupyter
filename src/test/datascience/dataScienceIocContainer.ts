@@ -258,7 +258,6 @@ import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
 import { IMountedWebView } from './mountedWebView';
 import { IMountedWebViewFactory, MountedWebViewFactory } from './mountedWebViewFactory';
-import { TestExecutionLogger } from './testexecutionLogger';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { JupyterServerUriStorage } from '../../client/datascience/jupyter/serverUriStorage';
 import { MockEncryptedStorage } from './mockEncryptedStorage';
@@ -611,7 +610,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             INotebookExecutionLogger
         ]);
         this.serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
-        this.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, TestExecutionLogger);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
         this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);

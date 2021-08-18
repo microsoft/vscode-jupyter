@@ -27,7 +27,7 @@ import { IApplicationShell, IWorkspaceService } from '../../../common/applicatio
 import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
+import { Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -537,22 +537,17 @@ export class Kernel implements IKernel {
         if (!this.notebook) {
             return;
         }
-        const deferred = createDeferred<void>();
-        const observable = this.notebook.executeObservable(
-            code,
-            (this.resourceUri || this.notebookUri).fsPath,
-            0,
-            uuid(),
+        const request = this.notebook.session.requestExecute(
+            {
+                code,
+                silent: true,
+                stop_on_error: false,
+                allow_stdin: true,
+                store_history: false
+            },
             true
         );
-        const subscription = observable.subscribe(
-            noop,
-            (ex) => deferred.reject(ex),
-            () => deferred.resolve()
-        );
-        this.disposables.push({
-            dispose: () => subscription.unsubscribe()
-        });
-        await deferred.promise;
+
+        await request?.done;
     }
 }

@@ -222,7 +222,7 @@ export class JupyterNotebookBase implements INotebook {
         // Make a copy of the launch info so we can update it in this class
         this._executionInfo = cloneDeep(executionInfo);
 
-        this.logKernelStarted().ignoreErrors();
+        this.logKernelStarted();
     }
 
     public get connection() {
@@ -692,7 +692,7 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
-    private async logKernelStarted() {
+    private logKernelStarted() {
         this.loggers.forEach((l) => l.onKernelStarted(this.getNotebookId()));
     }
 
