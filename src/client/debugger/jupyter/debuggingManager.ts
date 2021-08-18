@@ -420,7 +420,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             );
         } else {
             sendTelemetryEvent(DebuggingTelemetry.closedModal);
-            // telemetry
         }
     }
 }
