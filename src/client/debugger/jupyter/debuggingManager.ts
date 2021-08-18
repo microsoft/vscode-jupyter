@@ -234,20 +234,12 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             this.commandManager.registerCommand(DSCommands.RunByLineStop, () => {
                 const editor = this.vscNotebook.activeNotebookEditor;
-                const range = editor?.selections[0];
-                let cell: NotebookCell | undefined;
-                if (range) {
-                    cell = editor?.document.cellAt(range.start);
-                }
-
-                if (!cell) {
-                    return;
-                }
-
-                const adapter = this.notebookToDebugAdapter.get(cell.notebook);
-                if (adapter && adapter.debugCellUri?.toString() === cell.document.uri.toString()) {
-                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'withKeybinding' });
-                    adapter.disconnect();
+                if (editor) {
+                    const adapter = this.notebookToDebugAdapter.get(editor.document);
+                    if (adapter) {
+                        sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'withKeybinding' });
+                        adapter.disconnect();
+                    }
                 }
             }),
 
