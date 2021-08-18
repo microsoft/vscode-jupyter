@@ -16,7 +16,8 @@ import {
     NotebookCellExecutionState,
     DebugConfiguration,
     Uri,
-    NotebookCellKind
+    NotebookCellKind,
+    debug
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { randomBytes } from 'crypto';
@@ -184,8 +185,9 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 this.disconnect();
             });
             this.kernel.onDisposed(() => {
+                debug.stopDebugging(this.session);
+                this.endSession.fire(this.session);
                 sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
-                this.disconnect();
             });
         }
 
