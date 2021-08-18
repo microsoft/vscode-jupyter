@@ -183,7 +183,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             this.commandManager.registerCommand(DSCommands.RunByLine, async (cell: NotebookCell | undefined) => {
                 sendTelemetryEvent(DebuggingTelemetry.clickedRunByLine);
-                this.appShell.withProgress(
+                void this.appShell.withProgress(
                     { location: ProgressLocation.Notification, title: DataScience.startingRunByLine() },
                     async () => {
                         const editor = this.vscNotebook.activeNotebookEditor;
