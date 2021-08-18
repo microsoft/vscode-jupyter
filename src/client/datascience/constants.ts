@@ -668,7 +668,6 @@ export enum JupyterCommands {
     KernelSpecCommand = 'kernelspec'
 }
 
-export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
 export const DataScienceStartupTime = Symbol('DataScienceStartupTime');
 
 // Default for notebook version (major & minor) used when creating notebooks.

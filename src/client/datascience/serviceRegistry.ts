@@ -20,7 +20,7 @@ import { CommandRegistry } from './commands/commandRegistry';
 import { ExportCommands } from './commands/exportCommands';
 import { NotebookCommands } from './commands/notebookCommands';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
-import { DataScienceStartupTime, Identifiers, VSCodeNotebookProvider } from './constants';
+import { DataScienceStartupTime, Identifiers } from './constants';
 import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerDependencyService } from './data-viewing/dataViewerDependencyService';
 import { DataViewerFactory } from './data-viewing/dataViewerFactory';
@@ -92,7 +92,6 @@ import { KernelLauncher } from './kernel-launcher/kernelLauncher';
 import { ILocalKernelFinder, IKernelLauncher, IRemoteKernelFinder } from './kernel-launcher/types';
 import { MultiplexingDebugService } from './multiplexingDebugService';
 import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
-import { NotebookEditorProviderWrapper } from './notebook/notebookEditorProviderWrapper';
 import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
 import { registerTypes as registerContextTypes } from './telemetry/serviceRegistry';
 import { NotebookCreationTracker } from './notebookAndInteractiveTracker';
@@ -198,8 +197,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     }
 
     // This condition is temporary.
-    serviceManager.addSingleton<INotebookEditorProvider>(VSCodeNotebookProvider, NotebookEditorProvider);
-    serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProviderWrapper);
+    serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
     serviceManager.addSingleton<IHoverProvider>(IHoverProvider, HoverProvider);
     serviceManager.addBinding(IHoverProvider, INotebookExecutionLogger);
