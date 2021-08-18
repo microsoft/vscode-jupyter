@@ -185,7 +185,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 this.disconnect();
             });
             this.kernel.onDisposed(() => {
-                debug.stopDebugging(this.session);
+                void debug.stopDebugging(this.session);
                 this.endSession.fire(this.session);
                 sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
             });
