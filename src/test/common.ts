@@ -508,13 +508,14 @@ export function clearPendingTimers() {
 export async function waitForCondition(
     condition: () => Promise<boolean>,
     timeoutMs: number,
-    errorMessage: string
+    errorMessage: string | (() => string)
 ): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
         const timeout = setTimeout(() => {
             clearTimeout(timeout);
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             clearInterval(timer);
+            errorMessage = typeof errorMessage === 'string' ? errorMessage : errorMessage();
             console.log(`Test failing --- ${errorMessage}`);
             reject(new Error(errorMessage));
         }, timeoutMs);

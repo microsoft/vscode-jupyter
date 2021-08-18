@@ -7,7 +7,7 @@ import { NotebookCell, NotebookCellKind, NotebookController, NotebookDocument, w
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
-import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../../common/types';
+import { IDisposable, IDisposableRegistry } from '../../../common/types';
 import { createDeferred, waitForPromise } from '../../../common/utils/async';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { captureTelemetry } from '../../../telemetry';
@@ -35,7 +35,6 @@ export class KernelExecution implements IDisposable {
         errorHandler: IDataScienceErrorHandler,
         appShell: IApplicationShell,
         readonly metadata: Readonly<KernelConnectionMetadata>,
-        context: IExtensionContext,
         private readonly interruptTimeout: number,
         disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
@@ -44,7 +43,6 @@ export class KernelExecution implements IDisposable {
         this.executionFactory = new CellExecutionFactory(
             errorHandler,
             appShell,
-            context,
             disposables,
             controller,
             outputTracker
@@ -162,7 +160,6 @@ export class KernelExecution implements IDisposable {
         // Restart the active execution
         await (this._restartPromise ? this._restartPromise : (this._restartPromise = this.restartExecution(notebook)));
 
-        (notebook as JupyterNotebookBase).fireRestart();
         // Done restarting, clear restart promise
         this._restartPromise = undefined;
     }
@@ -282,6 +279,8 @@ export class KernelExecution implements IDisposable {
         await notebook.session.restart(this.interruptTimeout).catch((exc) => {
             traceWarning(`Error during restart: ${exc}`);
         });
+
+        (notebook as JupyterNotebookBase).fireRestart();
     }
 
     private async getKernel(document: NotebookDocument): Promise<IKernel> {

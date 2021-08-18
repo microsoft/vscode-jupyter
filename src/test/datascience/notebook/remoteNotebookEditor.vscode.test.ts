@@ -14,7 +14,6 @@ import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/ty
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
 import {
-    assertHasTextOutputInVSCode,
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
@@ -25,7 +24,8 @@ import {
     saveActiveNotebook,
     runCell,
     deleteAllCellsAndWait,
-    insertCodeCell
+    insertCodeCell,
+    waitForTextOutput
 } from './helper';
 import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -90,10 +90,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
         await insertCodeCell('print("123412341234")', { index: 0 });
-        await runAllCellsInActiveNotebook();
-
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Wait for MRU to get updated & encrypted storage to get updated.
         await waitForCondition(async () => encryptedStorageSpiedStore.called, 5_000, 'Encrypted storage not updated');
@@ -107,11 +105,12 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`
-        await runAllCellsInActiveNotebook();
-
         let cell2 = nbEditor.document.getCells()![1]!;
-        await waitForExecutionCompletedSuccessfully(cell2);
-        assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell2, 'Hello World', 0, false)
+        ]);
 
         // Confirm kernel id gets saved for this notebook.
         // This is not necessary, but this guarantees a faster & non-flaky test to ensure we don't close the notebook too early.
@@ -146,8 +145,10 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         // Execute second cell
         cell2 = nbEditor.document.getCells()![1]!;
-        await runCell(cell2);
-        await waitForExecutionCompletedSuccessfully(cell2);
-        assertHasTextOutputInVSCode(cell2, 'Hello World', 0);
+        await Promise.all([
+            runCell(cell2),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell2, 'Hello World', 0, false)
+        ]);
     });
 });

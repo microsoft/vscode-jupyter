@@ -12,8 +12,7 @@ import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
     IConfigurationService,
-    IDisposableRegistry,
-    IExtensionContext
+    IDisposableRegistry
 } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { InteractiveWindowView } from '../../notebook/constants';
@@ -41,7 +40,6 @@ export class KernelProvider implements IKernelProvider {
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
         @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
@@ -84,7 +82,6 @@ export class KernelProvider implements IKernelProvider {
             this,
             this.appShell,
             this.fs,
-            this.context,
             this.serverStorage,
             options.controller,
             this.configService,

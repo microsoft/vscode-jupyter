@@ -8,7 +8,8 @@ import * as util from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { traceError, traceInfo } from '../../common/logger';
+import { isCI } from '../../common/constants';
+import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -94,7 +95,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     public receiveMessage(message: IPyWidgetMessage): void {
         if (process.env.VSC_JUPYTER_LOG_IPYWIDGETS && message.message.includes('IPyWidgets_')) {
-            traceInfo(`IPyWidgetMessage: ${util.inspect(message)}`);
+            traceInfoIf(isCI, `IPyWidgetMessage: ${util.inspect(message)}`);
         }
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_Ready:
@@ -222,7 +223,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         if (typeof data === 'string' && data.includes('shell') && data.includes('execute_request')) {
             const startTime = Date.now();
             // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const msg = this.deserialize(data);
+            const msg = this.deserialize(data) as KernelMessage.IExecuteRequestMsg;
             if (msg.channel === 'shell' && msg.header.msg_type === 'execute_request') {
                 const promise = this.mirrorExecuteRequest(msg as KernelMessage.IExecuteRequestMsg); // NOSONAR
                 // If there are no ipywidgets thusfar in the notebook, then no need to synchronize messages.
@@ -269,11 +270,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.fullHandleMessage = undefined;
         }
     }
-
     private async onKernelSocketMessage(data: WebSocketData): Promise<void> {
         // Hooks expect serialized data as this normally comes from a WebSocket
-        let message;
-
+        let message: undefined | KernelMessage.ICommOpenMsg; // = this.deserialize(data as any) as any;
         if (!this.isUsingIPyWidgets) {
             // Lets deserialize only if we know we have a potential case
             // where this message contains some data we're interested in.
@@ -309,7 +308,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 message = this.deserialize(data as any) as any;
             }
             if (this.messageNeedsFullHandle(message)) {
-                this.fullHandleMessage = { id: message.header.msg_id, promise: createDeferred<void>() };
+                this.fullHandleMessage = { id: message!.header.msg_id, promise: createDeferred<void>() };
             }
         }
 

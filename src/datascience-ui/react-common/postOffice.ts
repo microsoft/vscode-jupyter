@@ -7,7 +7,7 @@ import { Subject } from 'rxjs/Subject';
 import { VSCodeEvent } from 'vscode-notebook-renderer/events';
 import { WebviewMessage } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
-import { logMessage } from './logger';
+import { logMessage, logMessageOnlyOnCI } from './logger';
 
 export interface IVsCodeApi {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,7 +74,7 @@ class VsCodeMessageApi implements IMessageApi {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public sendMessage(type: string, payload?: any) {
         if (this.vscodeApi) {
-            logMessage(`UI PostOffice Sent ${type}`);
+            logMessageOnlyOnCI(`UI PostOffice Sent ${type}`);
             this.vscodeApi.postMessage({ type: type, payload });
         } else {
             logMessage(`No vscode API to post message ${type}`);
@@ -202,7 +202,7 @@ export class PostOffice implements IDisposable {
         if (this.handlers) {
             if (msg) {
                 if ('type' in msg && typeof msg.type === 'string') {
-                    logMessage(`UI PostOffice Received ${msg.type}`);
+                    logMessageOnlyOnCI(`UI PostOffice Received ${msg.type}`);
                 }
                 this.subject.next({ type: msg.type, payload: msg.payload });
                 this.handlers.forEach((h: IMessageHandler | null) => {
