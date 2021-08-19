@@ -183,9 +183,7 @@ export interface INotebook extends IAsyncDisposable {
     onDisposed: Event<void>;
     onKernelChanged: Event<KernelConnectionMetadata>;
     onKernelRestarted: Event<void>;
-    onKernelInterrupted: Event<void>;
     onDidFinishExecuting?: Event<ICell>;
-    clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(
         code: string,
@@ -201,42 +199,19 @@ export interface INotebook extends IAsyncDisposable {
         offsetInCode: number,
         cancelToken?: CancellationToken
     ): Promise<INotebookCompletion>;
-    restartKernel(timeoutInMs: number): Promise<void>;
-    runInitialSetup(): Promise<void>;
     waitForIdle(timeoutInMs: number): Promise<void>;
-    interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
     setLaunchingFile(file: string): Promise<void>;
-    getSysInfo(): Promise<ICell | undefined>;
     requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
-    setMatplotLibStyle(useDark: boolean): Promise<void>;
     getMatchingInterpreter(): PythonEnvironment | undefined;
     /**
      * Gets the metadata that's used to start/connect to a Kernel.
      */
     getKernelConnection(): KernelConnectionMetadata | undefined;
-    /**
-     * Sets the metadata that's used to start/connect to a Kernel.
-     * Doing so results in a new kernel being started (i.e. a change in the kernel).
-     */
-    setKernelConnection(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     getLoggers(): INotebookExecutionLogger[];
-    registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void;
-    sendCommMessage(
-        buffers: (ArrayBuffer | ArrayBufferView)[],
-        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        msgId: any
-    ): Kernel.IShellFuture<
-        KernelMessage.IShellMessage<'comm_msg'>,
-        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
-    >;
-    requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
     registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
@@ -276,7 +251,6 @@ export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean, language: string, resource: Uri): Promise<void>;
     nativePostExecute?(cell: NotebookCell): Promise<void>;
-    onKernelStarted(resource: Uri): void;
     onKernelRestarted(resource: Uri): void;
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
 }
@@ -531,8 +505,6 @@ export interface ILocalResourceUriConverter {
 
 export interface IInteractiveBase extends Disposable {
     notebook?: INotebook;
-    startProgress(): void;
-    stopProgress(): void;
     undoCells(): void;
     redoCells(): void;
     toggleOutput?(): void;
@@ -577,11 +549,9 @@ export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
     readonly activeEditor: INotebookEditor | undefined;
     readonly editors: INotebookEditor[];
-    readonly onDidOpenNotebookEditor: Event<INotebookEditor>;
     readonly onDidChangeActiveNotebookEditor: Event<INotebookEditor | undefined>;
     readonly onDidCloseNotebookEditor: Event<INotebookEditor>;
     open(file: Uri): Promise<INotebookEditor>;
-    show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<INotebookEditor>;
 }
 
@@ -589,11 +559,6 @@ export interface INotebookEditorProvider {
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends Disposable, IInteractiveBase {
     readonly closed: Event<INotebookEditor>;
-    readonly executed?: Event<INotebookEditor>;
-    /**
-     * Is this notebook representing an untitled file which has never been saved yet.
-     */
-    readonly isUntitled: boolean;
     readonly file: Uri;
     readonly model?: INotebookModel;
     readonly notebookMetadata: nbformat.INotebookMetadata | undefined;
@@ -607,7 +572,6 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     collapseAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
-    syncAllCells(): Promise<void>;
     getContent(): string;
 }
 
@@ -726,23 +690,10 @@ export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
     // interactive window. Dispose of the returned object when done.
-    set(
-        message: string,
-        showInWebView: boolean,
-        timeout?: number,
-        canceled?: () => void,
-        interactivePanel?: IInteractiveBase
-    ): Disposable;
+    set(message: string, timeout?: number, canceled?: () => void): Disposable;
 
     // call this function to wait for a promise while displaying status
-    waitWithStatus<T>(
-        promise: () => Promise<T>,
-        message: string,
-        showInWebView: boolean,
-        timeout?: number,
-        canceled?: () => void,
-        interactivePanel?: IInteractiveBase
-    ): Promise<T>;
+    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void): Promise<T>;
 }
 
 export interface IJupyterCommand {

@@ -17,11 +17,11 @@ import {
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensions } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensions } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { isUntitledFile, noop } from '../../common/utils/misc';
+import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -43,26 +43,12 @@ export class NotebookEditor implements INotebookEditor {
     public get closed(): Event<INotebookEditor> {
         return this._closed.event;
     }
-    public get modified(): Event<INotebookEditor> {
-        return this._modified.event;
-    }
-    public get saved(): Event<INotebookEditor> {
-        return this._saved.event;
-    }
-    public get isUntitled(): boolean {
-        return isUntitledFile(this.document.uri);
-    }
-    public get isDirty(): boolean {
-        return this.document.isDirty;
-    }
     public get file(): Uri {
         return this.document.uri;
     }
     public notebook?: INotebook | undefined;
 
     private _closed = new EventEmitter<INotebookEditor>();
-    private _saved = new EventEmitter<INotebookEditor>();
-    private _modified = new EventEmitter<INotebookEditor>();
     private restartingKernel?: boolean;
     private kernelInterruptedDontAskToRestart: boolean = false;
     constructor(
@@ -81,11 +67,9 @@ export class NotebookEditor implements INotebookEditor {
     ) {
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
     }
-    executed?: Event<INotebookEditor> | undefined;
     public get notebookMetadata(): nbformat.INotebookMetadata | undefined {
         return getNotebookMetadata(this.document);
     }
-    onExecutedCode?: Event<string> | undefined;
     public getContent(): string {
         const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
             'vscode.ipynb'
@@ -107,27 +91,11 @@ export class NotebookEditor implements INotebookEditor {
         notebookData.metadata = this.document.metadata;
         return serializerApi.exports.exportNotebook(notebookData);
     }
-    @captureTelemetry(Telemetry.SyncAllCells)
-    public async syncAllCells(): Promise<void> {
-        // This shouldn't be necessary for native notebooks. if it is, it's because the document
-        // is not up to date (VS code issue)
-    }
     public runAllCells(): void {
         this.commandManager.executeCommand('notebook.execute').then(noop, noop);
     }
     public addCellBelow(): void {
         this.commandManager.executeCommand('notebook.cell.insertCodeCellBelow').then(noop, noop);
-    }
-    public startProgress(): void {
-        throw new Error('Method not implemented.');
-    }
-    public stopProgress(): void {
-        throw new Error('Method not implemented.');
-    }
-    public createWebviewCellButton(): IDisposable {
-        return {
-            dispose: () => noop()
-        };
     }
     public hasCell(): Promise<boolean> {
         return Promise.resolve(this.document.cellCount > 0);
@@ -196,7 +164,7 @@ export class NotebookEditor implements INotebookEditor {
             trackKernelResourceInformation(this.document.uri, { interruptKernel: true });
             return;
         }
-        const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
+        const status = this.statusProvider.set(DataScience.interruptKernelStatus(), undefined);
 
         try {
             traceInfo(`Interrupt requested & sent for ${this.document.uri} in notebookEditor.`);
@@ -273,7 +241,7 @@ export class NotebookEditor implements INotebookEditor {
         this.restartingKernel = true;
 
         // Set our status
-        const status = this.statusProvider.set(DataScience.restartingKernelStatus(), true, undefined, undefined);
+        const status = this.statusProvider.set(DataScience.restartingKernelStatus(), undefined);
 
         const stopWatch = new StopWatch();
         try {

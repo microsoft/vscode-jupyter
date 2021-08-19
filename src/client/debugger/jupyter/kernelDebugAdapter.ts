@@ -16,7 +16,8 @@ import {
     NotebookCellExecutionState,
     DebugConfiguration,
     Uri,
-    NotebookCellKind
+    NotebookCellKind,
+    debug
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { randomBytes } from 'crypto';
@@ -30,6 +31,8 @@ import { IKernelDebugAdapter } from '../types';
 import { IDisposable } from '../../common/types';
 import { Commands } from '../../datascience/constants';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { DebuggingTelemetry } from '../constants';
 
 const debugRequest = (message: DebugProtocol.Request, jupyterSessionId: string): KernelMessage.IDebugRequestMsg => {
     return {
@@ -152,6 +155,14 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             this.debugCellUri = notebookDocument.cellAt(configuration.__cellIndex!)?.document.uri;
         }
 
+        if (configuration.__mode === KernelDebugMode.Cell) {
+            sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
+        }
+
+        if (configuration.__mode === KernelDebugMode.RunByLine) {
+            sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunByLine);
+        }
+
         this.jupyterSession.onIOPubMessage((msg: KernelMessage.IIOPubMessage) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const content = msg.content as any;
@@ -166,10 +177,17 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
         if (this.kernel) {
             this.kernel.onWillRestart(() => {
+                sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onARestart' });
                 this.disconnect();
             });
             this.kernel.onWillInterrupt(() => {
+                sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onAnInterrupt' });
                 this.disconnect();
+            });
+            this.kernel.onDisposed(() => {
+                void debug.stopDebugging(this.session);
+                this.endSession.fire(this.session);
+                sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
             });
         }
 
@@ -177,6 +195,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             (cellStateChange: NotebookCellExecutionStateChangeEvent) => {
                 // If a cell has moved to idle, stop the debug session
                 if (cellStateChange.state === NotebookCellExecutionState.Idle) {
+                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
                     this.disconnect();
                 }
             },

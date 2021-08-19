@@ -21,7 +21,6 @@ import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService } from '../../common/types';
-import { noop } from '../../common/utils/misc';
 import { getCellResource } from '../cellFactory';
 import { Identifiers } from '../constants';
 import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes, INotebook } from '../types';
@@ -92,10 +91,6 @@ export class CellHashProvider implements ICellHashProvider {
                 };
             })
             .filter((e) => e.hashes.length > 0);
-    }
-
-    public onKernelStarted() {
-        noop();
     }
 
     public onKernelRestarted() {

@@ -47,7 +47,6 @@ import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
-import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 
 // Running in Conda environments, things can be a little slower.
@@ -188,7 +187,7 @@ export async function shutdownAllNotebooks() {
         ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
         kernelProvider.dispose()
     ]);
-    const notebookEditorProvider = api.serviceContainer.get<NotebookEditorProvider>(VSCodeNotebookProvider);
+    const notebookEditorProvider = api.serviceContainer.get<NotebookEditorProvider>(INotebookEditorProvider);
     notebookEditorProvider.dispose();
 }
 

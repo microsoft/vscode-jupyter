@@ -7,9 +7,9 @@ import { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import * as uuid from 'uuid/v4';
+import * as path from 'path';
 import {
     CancellationTokenSource,
-    ColorThemeKind,
     Event,
     EventEmitter,
     NotebookCell,
@@ -19,14 +19,15 @@ import {
     NotebookDocument,
     NotebookRange,
     Uri,
-    Range
+    Range,
+    ColorThemeKind
 } from 'vscode';
 import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell } from '../../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
+import { Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -52,6 +53,8 @@ import { InteractiveWindowView } from '../../notebook/constants';
 import { chainWithPendingUpdates } from '../../notebook/helpers/notebookUpdater';
 import { DataScience } from '../../../common/utils/localize';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
+import { calculateWorkingDirectory } from '../../utils';
+import { expandWorkingDir } from '../jupyterUtils';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -98,6 +101,7 @@ export class Kernel implements IKernel {
     private restarting?: Deferred<void>;
     private readonly kernelExecution: KernelExecution;
     private startCancellation = new CancellationTokenSource();
+    private _workingDirectory?: string;
     constructor(
         public readonly notebookUri: Uri,
         public readonly resourceUri: Resource,
@@ -114,7 +118,8 @@ export class Kernel implements IKernel {
         private readonly serverStorage: IJupyterServerUriStorage,
         controller: NotebookController,
         private readonly configService: IConfigurationService,
-        outputTracker: CellOutputDisplayIdTracker
+        outputTracker: CellOutputDisplayIdTracker,
+        private readonly workspaceService: IWorkspaceService
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -187,12 +192,15 @@ export class Kernel implements IKernel {
         this.startCancellation.cancel();
         const restartPromise = this.kernelExecution.restart(notebookDocument, this._notebookPromise);
         await restartPromise;
+        traceInfoIf(isCI, `Restarted ${notebookDocument.uri}`);
 
         // Interactive window needs a restart sys info
         await this.initializeAfterStart(SysInfoReason.Restart, notebookDocument);
+        traceInfoIf(isCI, `Initialized after restart ${notebookDocument.uri}`);
 
         // Indicate a restart occurred if it succeeds
         this._onRestarted.fire();
+        traceInfoIf(isCI, `Event fired after restart ${notebookDocument.uri}`);
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
@@ -317,6 +325,7 @@ export class Kernel implements IKernel {
     }
 
     private async initializeAfterStart(reason: SysInfoReason, notebookDocument: NotebookDocument) {
+        traceInfoIf(isCI, 'Step A');
         if (!this.notebook) {
             return;
         }
@@ -326,7 +335,7 @@ export class Kernel implements IKernel {
         if (editor) {
             editor.notebook = this.notebook;
         }
-
+        traceInfoIf(isCI, 'Step B');
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
@@ -343,22 +352,45 @@ export class Kernel implements IKernel {
                 this,
                 this.disposables
             );
+            traceInfoIf(isCI, 'Step C');
         }
+
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
+            // Change our initial directory and path
+            traceInfoIf(isCI, 'Step D');
+            await this.updateWorkingDirectoryAndPath();
+            traceInfoIf(isCI, 'Step H');
+
+            traceInfoIf(isCI, 'Step I');
             await this.disableJedi();
+            traceInfoIf(isCI, 'Step J');
             if (this.resourceUri) {
                 await this.notebook.setLaunchingFile(this.resourceUri.fsPath);
+                traceInfoIf(isCI, 'Step K');
             }
-            await this.initializeMatplotlib();
+
+            // For Python notebook initialize matplotlib
+            await this.initializeMatplotLib();
+            traceInfoIf(isCI, 'Step L');
         }
+
+        // Run any startup commands that we have specified
+        traceInfoIf(isCI, 'Step M');
+        await this.runStartupCommands();
+        traceInfoIf(isCI, 'Step N');
+
         await this.notebook
             .requestKernelInfo()
             .then(async (item) => {
                 this._info = item.content;
+                traceInfoIf(isCI, 'Step N1');
                 await this.addSysInfoForInteractive(reason, notebookDocument, item);
+                traceInfoIf(isCI, 'Step N2');
             })
             .catch(traceWarning.bind('Failed to request KernelInfo'));
+        traceInfoIf(isCI, 'Step O');
         await this.notebook.waitForIdle(this.launchTimeout);
+        traceInfoIf(isCI, 'Step P');
     }
 
     private async disableJedi() {
@@ -434,18 +466,21 @@ export class Kernel implements IKernel {
             });
         }
     }
-    private async initializeMatplotlib(): Promise<void> {
-        if (!this.notebook) {
-            return;
-        }
+    private async initializeMatplotLib(): Promise<void> {
         const settings = this.configService.getSettings(this.resourceUri);
         if (settings && settings.themeMatplotlibPlots) {
-            const matplobInit = settings.enablePlotViewer
-                ? CodeSnippets.MatplotLibInitSvg
-                : CodeSnippets.MatplotLibInitPng;
+            // We're theming matplotlibs, so we have to setup our default state.
+            traceInfoIf(isCI, `Initialize config for plots for ${(this.resourceUri || this.notebookUri).toString()}`);
+            const matplobInit =
+                !settings || settings.enablePlotViewer
+                    ? CodeSnippets.MatplotLibInitSvg
+                    : CodeSnippets.MatplotLibInitPng;
 
             traceInfo(`Initialize matplotlib for ${(this.resourceUri || this.notebookUri).toString()}`);
+            // Force matplotlib to inline and save the default style. We'll use this later if we
+            // get a request to update style
             await this.executeSilently(matplobInit);
+
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
             if (!settings.ignoreVscodeTheme) {
                 // Reset the matplotlib style based on if dark or not.
@@ -456,31 +491,83 @@ export class Kernel implements IKernel {
                 );
             }
         } else {
-            const configInit = !settings || settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
+            const configInit = settings && settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
             traceInfoIf(isCI, `Initialize config for plots for ${(this.resourceUri || this.notebookUri).toString()}`);
             await this.executeSilently(configInit);
         }
     }
+    private async runStartupCommands() {
+        const settings = this.configService.getSettings(this.resourceUri);
+        // Run any startup commands that we specified. Support the old form too
+        let setting = settings.runStartupCommands || settings.runMagicCommands;
+
+        // Convert to string in case we get an array of startup commands.
+        if (Array.isArray(setting)) {
+            setting = setting.join(`\n`);
+        }
+
+        if (setting) {
+            // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
+            traceInfoIf(isCI, 'Begin Run startup code for notebook');
+            const cleanedUp = setting.replace(/\\n/g, '\n');
+            await this.executeSilently(cleanedUp);
+            traceInfoIf(isCI, `Run startup code for notebook: ${cleanedUp}`);
+        }
+    }
+
+    private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
+        traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
+        if (this.connection && this.connection.localLaunch) {
+            traceInfoIf(isCI, 'Step E');
+            const suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
+            traceInfoIf(isCI, 'Step F');
+            if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
+                // We should use the launch info directory. It trumps the possible dir
+                this._workingDirectory = suggestedDir;
+                return this.changeDirectoryIfPossible(this._workingDirectory);
+            } else if (
+                launchingFile &&
+                (await this.fs.localFileExists(launchingFile)) &&
+                (await this.fs.localDirectoryExists(path.dirname(launchingFile)))
+            ) {
+                // Combine the working directory with this file if possible.
+                this._workingDirectory = expandWorkingDir(suggestedDir, launchingFile, this.workspaceService);
+                if (this._workingDirectory) {
+                    return this.changeDirectoryIfPossible(this._workingDirectory);
+                }
+            }
+        }
+        traceInfoIf(isCI, 'Step G');
+    }
+
+    // Update both current working directory and sys.path with the desired directory
+    private changeDirectoryIfPossible = async (directory: string): Promise<void> => {
+        if (
+            this.connection &&
+            this.connection.localLaunch &&
+            isPythonKernelConnection(this.kernelConnectionMetadata) &&
+            (await this.fs.localDirectoryExists(directory))
+        ) {
+            traceInfo('changeDirectoryIfPossible');
+            await this.executeSilently(CodeSnippets.UpdateCWDAndPath.format(directory));
+        }
+    };
+
     private async executeSilently(code: string) {
         if (!this.notebook) {
             return;
         }
-        const deferred = createDeferred<void>();
-        const observable = this.notebook.executeObservable(
-            code,
-            (this.resourceUri || this.notebookUri).fsPath,
-            0,
-            uuid(),
+        const request = this.notebook.session.requestExecute(
+            {
+                code,
+                silent: true,
+                stop_on_error: false,
+                allow_stdin: true,
+                store_history: false
+            },
             true
         );
-        const subscription = observable.subscribe(
-            noop,
-            (ex) => deferred.reject(ex),
-            () => deferred.resolve()
-        );
-        this.disposables.push({
-            dispose: () => subscription.unsubscribe()
-        });
-        await deferred.promise;
+
+        await request?.done;
     }
 }

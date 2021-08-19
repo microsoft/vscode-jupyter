@@ -185,6 +185,24 @@
                 "command": "jupyter.runAndDebugCell",
                 "key": "ctrl+alt+shift+enter",
                 "mac": "ctrl+shift+enter"
+            },
+            {
+                "command": "jupyter.runByLine",
+                "key": "f10",
+                "mac": "f10",
+                "when": "!jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
+            },
+            {
+                "command": "jupyter.runByLineContinue",
+                "key": "f10",
+                "mac": "f10",
+                "when": "jupyter.notebookeditor.runByLineInProgress"
+            },
+            {
+                "command": "jupyter.runByLineStop",
+                "key": "ctrl+enter",
+                "mac": "ctrl+enter",
+                "when": "jupyter.notebookeditor.runByLineInProgress"
             }
         ],
         "commands": [
@@ -516,16 +534,6 @@
                 "enablement": "isWorkspaceTrusted"
             },
             {
-                "command": "jupyter.undocells",
-                "title": "%jupyter.command.jupyter.undocells.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.redocells",
-                "title": "%jupyter.command.jupyter.redocells.title%",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.notebookeditor.undocells",
                 "title": "%jupyter.command.jupyter.undocells.title%",
                 "category": "Notebook"
@@ -534,11 +542,6 @@
                 "command": "jupyter.notebookeditor.redocells",
                 "title": "%jupyter.command.jupyter.redocells.title%",
                 "category": "Notebook"
-            },
-            {
-                "command": "jupyter.removeallcells",
-                "title": "%jupyter.command.jupyter.removeallcells.title%",
-                "category": "Jupyter"
             },
             {
                 "command": "jupyter.interruptkernel",
@@ -1172,24 +1175,6 @@
                     "when": "jupyter.hascodecells && jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.undocells",
-                    "title": "%jupyter.command.jupyter.undocells.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.haveinteractivecells && jupyter.ispythonorinteractiveeactive && !notebookEditorFocused"
-                },
-                {
-                    "command": "jupyter.redocells",
-                    "title": "%jupyter.command.jupyter.redocells.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.haveredoablecells && jupyter.ispythonorinteractiveornativeeactive && !notebookEditorFocused"
-                },
-                {
-                    "command": "jupyter.removeallcells",
-                    "title": "%jupyter.command.jupyter.removeallcells.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.haveinteractivecells && jupyter.ispythonorinteractiveeactive"
-                },
-                {
                     "command": "jupyter.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
                     "category": "Jupyter",
@@ -1677,8 +1662,8 @@
                 },
                 "jupyter.enablePlotViewer": {
                     "type": "boolean",
-                    "default": true,
-                    "description": "Modify plot output so that it can be expanded into a plot viewer window.",
+                    "default": false,
+                    "description": "Modify plot output to include SVG output, for better display in the plot viewer",
                     "scope": "resource"
                 },
                 "jupyter.codeLenses": {
@@ -1963,6 +1948,7 @@
         "glob": "^7.1.2",
         "hash.js": "^1.1.7",
         "iconv-lite": "^0.4.21",
+        "image-size": "^1.0.0",
         "inversify": "^5.0.1",
         "is-online": "^9.0.0",
         "jsonc-parser": "^2.0.3",

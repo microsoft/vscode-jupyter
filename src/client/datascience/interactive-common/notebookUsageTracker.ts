@@ -2,14 +2,21 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, notebooks, NotebookCellExecutionStateChangeEvent } from 'vscode';
+import {
+    EventEmitter,
+    notebooks,
+    NotebookCellExecutionStateChangeEvent,
+    NotebookDocument,
+    NotebookCellExecutionState
+} from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IWorkspaceService } from '../../common/application/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { INotebookEditor, INotebookEditorProvider } from '../types';
+import { isJupyterNotebook } from '../notebook/helpers/helpers';
+import { INotebookEditor } from '../types';
 
 /**
  * This class tracks opened notebooks, # of notebooks in workspace & # of executed notebooks.
@@ -22,7 +29,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
     constructor(
-        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
@@ -34,7 +41,16 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
         if (findFilesPromise && findFilesPromise.then) {
             findFilesPromise.then((r) => (this.notebookCount += r.length), noop);
         }
-        this.editorProvider.onDidOpenNotebookEditor(this.onEditorOpened, this, this.disposables);
+        this.vscNotebook.onDidOpenNotebookDocument(this.onEditorOpened, this, this.disposables);
+        this.vscNotebook.onDidChangeNotebookCellExecutionState(
+            (e) => {
+                if (isJupyterNotebook(e.cell.notebook) && e.state !== NotebookCellExecutionState.Idle) {
+                    this.executedNotebooksIndexedByUri.add(e.cell.notebook.uri.fsPath);
+                }
+            },
+            this,
+            this.disposables
+        );
         notebooks.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
@@ -55,13 +71,13 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
             sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, undefined, { count: this.notebookCount });
         }
     }
-    private onEditorOpened(editor: INotebookEditor): void {
-        this.openedNotebookCount += 1;
-        if (editor.isUntitled) {
-            this.notebookCount += 1;
+    private onEditorOpened(doc: NotebookDocument): void {
+        if (!isJupyterNotebook(doc)) {
+            return;
         }
-        if (!this.executedNotebooksIndexedByUri.has(editor.file.fsPath) && editor.executed) {
-            editor.executed((e) => this.executedNotebooksIndexedByUri.add(e.file.fsPath), this, this.disposables);
+        this.openedNotebookCount += 1;
+        if (doc.isUntitled) {
+            this.notebookCount += 1;
         }
     }
     private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): void {
