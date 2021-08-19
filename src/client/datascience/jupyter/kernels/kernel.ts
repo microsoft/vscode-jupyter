@@ -516,12 +516,11 @@ export class Kernel implements IKernel {
     }
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
-        traceInfoIf(isCI, 'Step E');
-        const suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
-        traceInfoIf(isCI, 'Step F');
         traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
         if (this.connection && this.connection.localLaunch) {
-            traceInfoIf(isCI, 'Step G');
+            traceInfoIf(isCI, 'Step E');
+            const suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
+            traceInfoIf(isCI, 'Step F');
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggestedDir;
@@ -538,6 +537,7 @@ export class Kernel implements IKernel {
                 }
             }
         }
+        traceInfoIf(isCI, 'Step G');
     }
 
     // Update both current working directory and sys.path with the desired directory
