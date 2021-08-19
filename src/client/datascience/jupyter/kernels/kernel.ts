@@ -358,7 +358,7 @@ export class Kernel implements IKernel {
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // Change our initial directory and path
             traceInfoIf(isCI, 'Step D');
-            await this.updateWorkingDirectoryAndPath();
+            await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
             traceInfoIf(isCI, 'Step H');
 
             traceInfoIf(isCI, 'Step I');
