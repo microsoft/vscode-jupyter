@@ -23,9 +23,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, defaultNotebookFormat, Telemetry } from '../constants';
-import {
-    INotebookEditor,
-    INotebookEditorProvider} from '../types';
+import { INotebookEditor, INotebookEditorProvider } from '../types';
 import { JupyterNotebookView } from './constants';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';

@@ -19,9 +19,7 @@ import { IDisposable, IDisposableRegistry, IExtensions } from '../../common/type
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import {
-    INotebook,
-    INotebookEditor} from '../types';
+import { INotebook, INotebookEditor } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 import { getNotebookMetadata } from './helpers/helpers';

@@ -9,7 +9,13 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { Commands, Telemetry } from '../../constants';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry';
-import { IDataScienceCommandListener, IInteractiveWindowProvider, INotebookProvider, InterruptResult, IStatusProvider } from '../../types';
+import {
+    IDataScienceCommandListener,
+    IInteractiveWindowProvider,
+    INotebookProvider,
+    InterruptResult,
+    IStatusProvider
+} from '../../types';
 import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { IKernel, IKernelProvider } from './types';
 
@@ -25,7 +31,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private configurationService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider
-    ) { }
+    ) {}
 
     public register(commandManager: ICommandManager): void {
         this.disposableRegistry.push(
@@ -55,7 +61,10 @@ export class KernelCommandListener implements IDataScienceCommandListener {
     }
 
     public async interruptKernel(notebookUri: Uri | undefined): Promise<void> {
-        const uri = notebookUri ?? window.activeNotebookEditor?.document.uri ?? this.interactiveWindowProvider.activeWindow?.notebookUri;
+        const uri =
+            notebookUri ??
+            window.activeNotebookEditor?.document.uri ??
+            this.interactiveWindowProvider.activeWindow?.notebookUri;
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
         if (document === undefined) {
@@ -64,9 +73,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
 
         const kernel = this.kernelProvider.get(document);
         if (!kernel) {
-            traceInfo(
-                `Interrupt requested & no kernel.`
-            );
+            traceInfo(`Interrupt requested & no kernel.`);
             trackKernelResourceInformation(document.uri, { interruptKernel: true });
             return;
         }
@@ -95,7 +102,10 @@ export class KernelCommandListener implements IDataScienceCommandListener {
     }
 
     private async restartKernel(notebookUri: Uri | undefined) {
-        const uri = notebookUri ?? window.activeNotebookEditor?.document.uri ?? this.interactiveWindowProvider.activeWindow?.notebookUri;
+        const uri =
+            notebookUri ??
+            window.activeNotebookEditor?.document.uri ??
+            this.interactiveWindowProvider.activeWindow?.notebookUri;
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
         if (document === undefined) {
