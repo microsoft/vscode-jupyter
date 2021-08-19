@@ -325,6 +325,7 @@ export class Kernel implements IKernel {
     }
 
     private async initializeAfterStart(reason: SysInfoReason, notebookDocument: NotebookDocument) {
+        traceInfoIf(isCI, 'Step A');
         if (!this.notebook) {
             return;
         }
@@ -334,7 +335,7 @@ export class Kernel implements IKernel {
         if (editor) {
             editor.notebook = this.notebook;
         }
-
+        traceInfoIf(isCI, 'Step B');
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
@@ -351,32 +352,45 @@ export class Kernel implements IKernel {
                 this,
                 this.disposables
             );
+            traceInfoIf(isCI, 'Step C');
         }
 
         // Change our initial directory and path
+        traceInfoIf(isCI, 'Step D');
         await this.updateWorkingDirectoryAndPath();
+        traceInfoIf(isCI, 'Step H');
 
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
+            traceInfoIf(isCI, 'Step I');
             await this.disableJedi();
+            traceInfoIf(isCI, 'Step J');
             if (this.resourceUri) {
                 await this.notebook.setLaunchingFile(this.resourceUri.fsPath);
+                traceInfoIf(isCI, 'Step K');
             }
 
             // For Python notebook initialize matplotlib
             await this.initializeMatplotLib();
+            traceInfoIf(isCI, 'Step L');
         }
 
         // Run any startup commands that we have specified
+        traceInfoIf(isCI, 'Step M');
         await this.runStartupCommands();
+        traceInfoIf(isCI, 'Step N');
 
         await this.notebook
             .requestKernelInfo()
             .then(async (item) => {
                 this._info = item.content;
+                traceInfoIf(isCI, 'Step N1');
                 await this.addSysInfoForInteractive(reason, notebookDocument, item);
+                traceInfoIf(isCI, 'Step N2');
             })
             .catch(traceWarning.bind('Failed to request KernelInfo'));
+        traceInfoIf(isCI, 'Step O');
         await this.notebook.waitForIdle(this.launchTimeout);
+        traceInfoIf(isCI, 'Step P');
     }
 
     private async disableJedi() {
@@ -502,9 +516,12 @@ export class Kernel implements IKernel {
     }
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
+        traceInfoIf(isCI, 'Step E');
         const suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
+        traceInfoIf(isCI, 'Step F');
         traceInfo('UpdateWorkingDirectoryAndPath');
         if (this.connection && this.connection.localLaunch) {
+            traceInfoIf(isCI, 'Step G');
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggestedDir;
