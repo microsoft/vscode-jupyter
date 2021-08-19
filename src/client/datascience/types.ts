@@ -536,8 +536,6 @@ export interface IInteractiveBase extends Disposable {
     redoCells(): void;
     toggleOutput?(): void;
     removeAllCells(): void;
-    interruptKernel(): Promise<void>;
-    restartKernel(): Promise<void>;
     hasCell(id: string): Promise<boolean>;
 }
 
@@ -604,8 +602,6 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     removeAllCells(): void;
     expandAllCells(): void;
     collapseAllCells(): void;
-    interruptKernel(): Promise<void>;
-    restartKernel(): Promise<void>;
     syncAllCells(): Promise<void>;
     getContent(): string;
 }

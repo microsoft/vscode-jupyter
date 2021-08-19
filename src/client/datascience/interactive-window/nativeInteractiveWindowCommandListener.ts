@@ -139,20 +139,6 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
-                Commands.InterruptKernel,
-                (context?: { notebookEditor: { notebookUri: Uri } }) =>
-                    this.interruptKernel(context?.notebookEditor.notebookUri)
-            )
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(
-                Commands.RestartKernel,
-                (context?: { notebookEditor: { notebookUri: Uri } }) =>
-                    this.restartKernel(context?.notebookEditor.notebookUri)
-            )
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(
                 Commands.ExpandAllCells,
                 (context?: { notebookEditor: { notebookUri: Uri } }) =>
                     this.expandAllCells(context?.notebookEditor.notebookUri)
@@ -410,24 +396,6 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         const interactiveWindow = this.interactiveWindowProvider.activeWindow;
         if (interactiveWindow) {
             interactiveWindow.removeAllCells();
-        }
-    }
-
-    private interruptKernel(uri?: Uri) {
-        const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
-            : this.interactiveWindowProvider.activeWindow;
-        if (interactiveWindow) {
-            interactiveWindow.interruptKernel().ignoreErrors();
-        }
-    }
-
-    private restartKernel(uri?: Uri) {
-        const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
-            : this.interactiveWindowProvider.activeWindow;
-        if (interactiveWindow) {
-            interactiveWindow.restartKernel().ignoreErrors();
         }
     }
 
