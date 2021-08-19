@@ -198,6 +198,11 @@
                 "command": "interactive.execute"
             },
             {
+                "key": "escape",
+                "when": "resourceScheme == 'vscode-interactive' && !suggestWidgetVisible",
+                "command": "interactive.input.clear"
+            },
+            {
                 "command": "jupyter.insertCellBelowPosition",
                 "key": "ctrl+; s",
                 "when": "editorTextFocus && jupyter.hascodecells && !notebookEditorFocused"
