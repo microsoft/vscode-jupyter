@@ -364,10 +364,6 @@ export class Kernel implements IKernel {
             traceInfoIf(isCI, 'Step I');
             await this.disableJedi();
             traceInfoIf(isCI, 'Step J');
-            if (this.resourceUri) {
-                await this.notebook.setLaunchingFile(this.resourceUri.fsPath);
-                traceInfoIf(isCI, 'Step K');
-            }
 
             // For Python notebook initialize matplotlib
             await this.initializeMatplotLib();
