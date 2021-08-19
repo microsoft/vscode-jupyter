@@ -35,13 +35,27 @@ export class KernelCommandListener implements IDataScienceCommandListener {
 
     public register(commandManager: ICommandManager): void {
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, (notebookUri: Uri | undefined) =>
-                this.interruptKernel(notebookUri)
+            commandManager.registerCommand(
+                Commands.NotebookEditorInterruptKernel,
+                (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
+                    if (context && 'notebookEditor' in context) {
+                        this.interruptKernel(context?.notebookEditor.notebookUri);
+                    } else {
+                        this.interruptKernel(context);
+                    }
+                }
             )
         );
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorRestartKernel, (notebookUri: Uri | undefined) =>
-                this.restartKernel(notebookUri)
+            commandManager.registerCommand(
+                Commands.NotebookEditorRestartKernel,
+                (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
+                    if (context && 'notebookEditor' in context) {
+                        this.restartKernel(context?.notebookEditor.notebookUri);
+                    } else {
+                        this.restartKernel(context);
+                    }
+                }
             )
         );
         this.disposableRegistry.push(

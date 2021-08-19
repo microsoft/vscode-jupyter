@@ -41,7 +41,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.NotebookEditorUndoCells]: [];
     [DSCommands.NotebookEditorRedoCells]: [];
     [DSCommands.NotebookEditorRemoveAllCells]: [];
-    [DSCommands.NotebookEditorRestartKernel]: [Uri];
+    [DSCommands.NotebookEditorRestartKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined | Uri];
     [DSCommands.NotebookEditorRunAllCells]: [];
     [DSCommands.NotebookEditorAddCellBelow]: [];
     [DSCommands.ExpandAllCells]: [];
@@ -107,7 +107,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
         string | undefined
     ];
     ['interactive.execute']: [string];
-    [DSCommands.NotebookEditorInterruptKernel]: [Uri];
+    [DSCommands.NotebookEditorInterruptKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined | Uri];
     [DSCommands.ExportFileAndOutputAsNotebook]: [Uri];
     [DSCommands.RunAllCells]: [Uri];
     [DSCommands.RunCell]: [Uri, number, number, number, number];
