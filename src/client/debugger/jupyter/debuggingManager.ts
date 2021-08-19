@@ -38,6 +38,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
 import { IPythonInstaller } from '../../api/types';
 import { sendTelemetryEvent } from '../../telemetry';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -84,6 +85,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private runByLineInProgress: ContextKey;
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
     private notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapter>();
+    private cache = new Map<PythonEnvironment, boolean>();
     private readonly disposables: IDisposable[] = [];
     private readonly _onDidFireVariablesEvent = new EventEmitter<void>();
 
@@ -381,21 +383,30 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private async checkForIpykernel6(doc: NotebookDocument): Promise<boolean> {
         try {
             const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
-            const result = await this.pythonInstaller.isProductVersionCompatible(
-                Product.ipykernel,
-                '>=6.0.0',
-                controller?.connection.interpreter
-            );
+            const interpreter = controller?.connection.interpreter;
+            if (interpreter) {
+                const cacheResult = this.cache.get(interpreter);
+                if (cacheResult === true) {
+                    return true;
+                }
 
-            if (result === ProductInstallStatus.Installed) {
-                sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, { status: 'installed' });
-            } else {
-                sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, { status: 'notInstalled' });
+                const status = await this.pythonInstaller.isProductVersionCompatible(
+                    Product.ipykernel,
+                    '>=6.0.0',
+                    interpreter
+                );
+                const result = status === ProductInstallStatus.Installed;
+
+                sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
+                    status: result ? 'installed' : 'notInstalled'
+                });
+                this.cache.set(interpreter, result);
+                return result;
             }
-            return result === ProductInstallStatus.Installed;
         } catch {
-            return false;
+            traceError('Debugging: Could not check for ipykernel 6');
         }
+        return false;
     }
 
     private async installIpykernel6() {
