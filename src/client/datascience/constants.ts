@@ -77,8 +77,6 @@ export namespace Commands {
     export const RunAllCells = 'jupyter.runallcells';
     export const RunAllCellsAbove = 'jupyter.runallcellsabove';
     export const RunCellAndAllBelow = 'jupyter.runcellandallbelow';
-    export const SetJupyterKernel = 'jupyter.setKernel';
-    export const SwitchJupyterKernel = 'jupyter.switchKernel';
     export const RunAllCellsAbovePalette = 'jupyter.runallcellsabove.palette';
     export const RunCellAndAllBelowPalette = 'jupyter.runcurrentcellandallbelow.palette';
     export const RunToLine = 'jupyter.runtoline';
@@ -96,9 +94,6 @@ export namespace Commands {
     export const SelectJupyterCommandLine = 'jupyter.selectjupytercommandline';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'jupyter.exportfileandoutputasnotebook';
-    export const UndoCells = 'jupyter.undocells';
-    export const RedoCells = 'jupyter.redocells';
-    export const RemoveAllCells = 'jupyter.removeallcells';
     export const InterruptKernel = 'jupyter.interruptkernel';
     export const RestartKernel = 'jupyter.restartkernel';
     export const NotebookEditorUndoCells = 'jupyter.notebookeditor.undocells';
@@ -172,6 +167,7 @@ export namespace Commands {
     export const RunByLine = 'jupyter.runByLine';
     export const RunAndDebugCell = 'jupyter.runAndDebugCell';
     export const RunByLineContinue = 'jupyter.runByLineContinue';
+    export const RunByLineStop = 'jupyter.runByLineStop';
 }
 
 export namespace CodeLensCommands {
@@ -673,7 +669,6 @@ export enum JupyterCommands {
     KernelSpecCommand = 'kernelspec'
 }
 
-export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
 export const DataScienceStartupTime = Symbol('DataScienceStartupTime');
 
 // Default for notebook version (major & minor) used when creating notebooks.

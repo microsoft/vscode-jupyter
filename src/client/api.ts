@@ -8,7 +8,6 @@ import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IExtensionContext } from './common/types';
-import { VSCodeNotebookProvider } from './datascience/constants';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
 import { KernelStateEventArgs } from './datascience/notebookExtensibility';
 import {
@@ -86,7 +85,7 @@ export function buildApi(
         },
         onKernelStateChange: notebookExtensibility.onKernelStateChange.bind(notebookExtensibility),
         createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
-            const service = serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
+            const service = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
             await service.createNew(options);
         }
     };

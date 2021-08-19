@@ -16,7 +16,6 @@ import { disposeAllDisposables } from '../common/helpers';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { isJupyterNotebook } from '../datascience/notebook/helpers/helpers';
-import { ICell, INotebookExecutionLogger } from '../datascience/types';
 import { EventName } from './constants';
 import { getTelemetrySafeHashedString } from './helpers';
 
@@ -49,7 +48,7 @@ const MAX_DOCUMENT_LINES = 1000;
 const testExecution = isTestExecution();
 
 @injectable()
-export class ImportTracker implements IExtensionSingleActivationService, INotebookExecutionLogger, IDisposable {
+export class ImportTracker implements IExtensionSingleActivationService, IDisposable {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
     private disposables: IDisposable[] = [];
     private sentMatches: Set<string> = new Set<string>();
@@ -70,23 +69,6 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
     public dispose() {
         disposeAllDisposables(this.disposables);
         this.pendingChecks.clear();
-    }
-
-    public onKernelStarted() {
-        // Do nothing on started
-    }
-
-    public onKernelRestarted() {
-        // Do nothing on restarted
-    }
-    public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
-        // Do nothing on pre execute
-    }
-    public async postExecute(cell: ICell, silent: boolean): Promise<void> {
-        // Check for imports in the cell itself.
-        if (!silent && cell.data.cell_type === 'code') {
-            this.scheduleCheck(this.createCellKey(cell), this.checkCell.bind(this, cell));
-        }
     }
 
     public async activate(): Promise<void> {
@@ -129,11 +111,6 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         return result;
     }
 
-    private getCellLines(cell: nbformat.ICodeCell): (string | undefined)[] {
-        // Split into multiple lines removing line feeds on the end.
-        return this.getCellLinesFromSource(cell.source);
-    }
-
     private getCellLinesFromSource(source: nbformat.MultilineString): (string | undefined)[] {
         // Split into multiple lines removing line feeds on the end.
         return splitMultilineString(source).map((s) => s.replace(/\n/g, ''));
@@ -152,6 +129,9 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         }
     }
     private onOpenedOrClosedNotebookDocument(e: NotebookDocument) {
+        if (!isJupyterNotebook(e)) {
+            return;
+        }
         this.scheduleCheck(e.uri.fsPath, this.checkNotebookDocument.bind(this, e));
     }
 
@@ -178,20 +158,6 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         }
     }
 
-    private createCellKey(cell: ICell): string {
-        return `${cell.file}${cell.id}`;
-    }
-
-    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
-    private checkCell(cell: ICell) {
-        if (cell.data.cell_type !== 'code') {
-            return;
-        }
-        this.pendingChecks.delete(this.createCellKey(cell));
-        const lines = this.getCellLines(cell.data as nbformat.ICodeCell);
-        this.lookForImports(lines);
-    }
-
     @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
     private checkNotebookDocument(e: NotebookDocument) {
         this.pendingChecks.delete(e.uri.fsPath);
@@ -199,7 +165,11 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         this.lookForImports(lines);
     }
 
+    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
     private checkNotebookCell(e: NotebookCellExecutionStateChangeEvent) {
+        if (!isJupyterNotebook(e.cell.notebook)) {
+            return;
+        }
         this.pendingChecks.delete(e.cell.document.uri.toString());
         const result: (string | undefined)[] = [];
         try {

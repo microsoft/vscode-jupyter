@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
 import { inject, injectable } from 'inversify';
 import { ProgressLocation, ConfigurationTarget, Uri, window, workspace, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
@@ -91,7 +94,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             trackKernelResourceInformation(document.uri, { interruptKernel: true });
             return;
         }
-        const status = this.statusProvider.set(DataScience.interruptKernelStatus(), true, undefined, undefined);
+        const status = this.statusProvider.set(DataScience.interruptKernelStatus());
 
         try {
             traceInfo(`Interrupt requested & sent for ${document.uri} in notebookEditor.`);
@@ -162,7 +165,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
 
     private async restartKernelInternal(kernel: IKernel, notebookDocument: NotebookDocument): Promise<void> {
         // Set our status
-        const status = this.statusProvider.set(DataScience.restartingKernelStatus(), true, undefined, undefined);
+        const status = this.statusProvider.set(DataScience.restartingKernelStatus());
 
         const stopWatch = new StopWatch();
         try {

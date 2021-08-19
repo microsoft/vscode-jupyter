@@ -35,7 +35,6 @@ import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
-    IInteractiveBase,
     IInteractiveWindowProvider,
     IJupyterExecution,
     INotebook,
@@ -132,11 +131,6 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
             }
         );
         this.disposableRegistry.push(disposable);
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.UndoCells, () => this.undoCells()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.RedoCells, () => this.redoCells()));
-        this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.RemoveAllCells, () => this.removeAllCells())
-        );
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.ExpandAllCells,
@@ -378,27 +372,6 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         return this.exportDialog.showDialog(ExportFormat.ipynb, file);
     }
 
-    private undoCells() {
-        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-        if (interactiveWindow) {
-            interactiveWindow.undoCells();
-        }
-    }
-
-    private redoCells() {
-        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-        if (interactiveWindow) {
-            interactiveWindow.redoCells();
-        }
-    }
-
-    private removeAllCells() {
-        const interactiveWindow = this.interactiveWindowProvider.activeWindow;
-        if (interactiveWindow) {
-            interactiveWindow.removeAllCells();
-        }
-    }
-
     private expandAllCells(uri?: Uri) {
         const interactiveWindow = uri
             ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
@@ -451,11 +424,10 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         promise: () => Promise<T>,
         format: string,
         file?: string,
-        canceled?: () => void,
-        interactiveWindow?: IInteractiveBase
+        canceled?: () => void
     ): Promise<T> {
         const message = file ? format.format(file) : format;
-        return this.statusProvider.waitWithStatus(promise, message, true, undefined, canceled, interactiveWindow);
+        return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)

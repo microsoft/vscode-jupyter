@@ -277,6 +277,24 @@
                 "command": "jupyter.runAndDebugCell",
                 "key": "ctrl+alt+shift+enter",
                 "mac": "ctrl+shift+enter"
+            },
+            {
+                "command": "jupyter.runByLine",
+                "key": "f10",
+                "mac": "f10",
+                "when": "!jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
+            },
+            {
+                "command": "jupyter.runByLineContinue",
+                "key": "f10",
+                "mac": "f10",
+                "when": "jupyter.notebookeditor.runByLineInProgress"
+            },
+            {
+                "command": "jupyter.runByLineStop",
+                "key": "ctrl+enter",
+                "mac": "ctrl+enter",
+                "when": "jupyter.notebookeditor.runByLineInProgress"
             }
         ],
         "commands": [
@@ -608,16 +626,6 @@
                 "enablement": "isWorkspaceTrusted"
             },
             {
-                "command": "jupyter.undocells",
-                "title": "%jupyter.command.jupyter.undocells.title%",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.redocells",
-                "title": "%jupyter.command.jupyter.redocells.title%",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.notebookeditor.undocells",
                 "title": "%jupyter.command.jupyter.undocells.title%",
                 "category": "Notebook"
@@ -638,11 +646,6 @@
                 "title": "%jupyter.command.jupyter.notebookeditor.keybind.save.title%",
                 "category": "Notebook",
                 "enablement": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts"
-            },
-            {
-                "command": "jupyter.removeallcells",
-                "title": "%jupyter.command.jupyter.removeallcells.title%",
-                "category": "Jupyter"
             },
             {
                 "command": "jupyter.interruptkernel",
@@ -1274,24 +1277,6 @@
                     "title": "%jupyter.command.jupyter.exportfileandoutputasnotebook.title%",
                     "category": "Jupyter",
                     "when": "jupyter.hascodecells && jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.undocells",
-                    "title": "%jupyter.command.jupyter.undocells.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.haveinteractivecells && jupyter.ispythonorinteractiveeactive && !notebookEditorFocused"
-                },
-                {
-                    "command": "jupyter.redocells",
-                    "title": "%jupyter.command.jupyter.redocells.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.haveredoablecells && jupyter.ispythonorinteractiveornativeeactive && !notebookEditorFocused"
-                },
-                {
-                    "command": "jupyter.removeallcells",
-                    "title": "%jupyter.command.jupyter.removeallcells.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.haveinteractivecells && jupyter.ispythonorinteractiveeactive"
                 },
                 {
                     "command": "jupyter.interruptkernel",

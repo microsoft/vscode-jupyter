@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IPythonExtensionChecker } from '../../../api/types';
-import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -31,7 +31,6 @@ import {
     isPythonKernelConnection
 } from '../../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
-import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { IKernelLauncher, ILocalKernelFinder } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
@@ -50,6 +49,7 @@ import { getResourceType } from '../../common';
 import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { inject, injectable, named } from 'inversify';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
+import { JupyterNotebookBase } from '../../jupyter/jupyterNotebook';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -70,8 +70,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
         @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {
         super(asyncRegistry, rawNotebookSupported);
     }
@@ -166,7 +165,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
 
                 if (rawSession.isConnected) {
                     // Create our notebook
-                    const notebook = new HostJupyterNotebook(
+                    const notebook = new JupyterNotebookBase(
                         rawSession,
                         this.configService,
                         this.disposableRegistry,
@@ -177,8 +176,7 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                         this.getDisposedError.bind(this),
                         this.workspaceService,
                         this.appShell,
-                        this.fs,
-                        this.vscodeNotebook
+                        this.fs
                     );
 
                     traceInfo(`Finished connecting ${this.id}`);

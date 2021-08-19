@@ -940,10 +940,9 @@ export namespace DataScience {
         'DataScience.ipykernelNotInstalled',
         'IPyKernel not installed into interpreter {0}'
     );
-    export const needIpykernel6 = localize(
-        'DataScience.needIpykernel6',
-        "Ipykernel 6 is needed for debugging, click Install to continue. Or you can run 'pip install ipykernel==6.0.3/conda install ipykernel=6'"
-    );
+    export const needIpykernel6 = localize('DataScience.needIpykernel6', 'Ipykernel setup required for this feature');
+    export const setup = localize('DataScience.setup', 'Setup');
+    export const startingRunByLine = localize('DataScience.startingRunByLine', 'Starting Run by Line');
     export const showDataViewerFail = localize(
         'DataScience.showDataViewerFail',
         'Failed to create the Data Viewer. Check the Jupyter tab of the Output window for more info.'

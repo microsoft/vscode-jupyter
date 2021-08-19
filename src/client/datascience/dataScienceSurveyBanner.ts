@@ -22,7 +22,7 @@ import { noop } from '../common/utils/misc';
 import { MillisecondsInADay } from '../constants';
 import { JupyterNotebookView } from './notebook/constants';
 import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
-import { INotebookEditorProvider, INotebookExtensibility } from './types';
+import { INotebookExtensibility } from './types';
 
 export enum DSSurveyStateKeys {
     ShowBanner = 'ShowDSSurveyBanner',
@@ -43,7 +43,6 @@ export enum ExperimentNotebookSurveyStateKeys {
 }
 
 export enum BannerType {
-    DSSurvey,
     InsidersNotebookSurvey,
     ExperimentNotebookSurvey
 }
@@ -81,8 +80,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
                     return this.isEnabledInternal(type);
                 }
                 break;
-            case BannerType.DSSurvey:
-                break;
             default:
                 traceError('Invalid Banner Type');
                 return false;
@@ -107,22 +104,21 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     ];
     private readonly showBannerState = new Map<BannerType, IPersistentState<ShowBannerWithExpiryTime>>();
     private static surveyDelay = false;
+    private readonly NotebookOpenThreshold = 15; // Document opens before showing survey
+    private readonly NotebookExecutionThreshold = 250; // Cell executions before showing survey
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
-        @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
-        this.setPersistentState(BannerType.DSSurvey, DSSurveyStateKeys.ShowBanner);
         this.setPersistentState(BannerType.InsidersNotebookSurvey, InsidersNotebookSurveyStateKeys.ShowBanner);
         this.setPersistentState(BannerType.ExperimentNotebookSurvey, ExperimentNotebookSurveyStateKeys.ShowBanner);
-        editorProvider.onDidOpenNotebookEditor(this.openedNotebook.bind(this));
 
         // Change the surveyDelay flag after 10 minutes
         setTimeout(() => {
@@ -179,12 +175,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         const executionCount: number = this.getExecutionCount(type);
         const notebookCount: number = this.getOpenNotebookCount(type);
 
-        // The threshold for opening notebooks should be 5 for native and 15 for webviews
-        // And for executing cells, it should be 100 for native and 250 for webviews
-        const NotebookOpenThreshold = type === BannerType.DSSurvey ? 15 : 5;
-        const NotebookExecutionThreshold = type === BannerType.DSSurvey ? 250 : 100;
-
-        return executionCount >= NotebookExecutionThreshold || notebookCount > NotebookOpenThreshold;
+        return executionCount >= this.NotebookExecutionThreshold || notebookCount > this.NotebookOpenThreshold;
     }
 
     private setPersistentState(type: BannerType, val: string): void {
@@ -200,22 +191,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         this.browserService.launch(this.getSurveyLink(type));
     }
     private async disable(answer: DSSurveyLabelIndex, type: BannerType) {
-        let monthsTillNextPrompt: number | undefined;
-
-        // The months disabled should be:
-        // For webviews, if yes, disable for 12 months, if no, disable for 6 months
-        // For native, if yes, disable for 6 months, if no, disable for 3 months
-        switch (type) {
-            case BannerType.DSSurvey:
-                monthsTillNextPrompt = answer === DSSurveyLabelIndex.Yes ? 12 : 6;
-                break;
-            case BannerType.ExperimentNotebookSurvey:
-            case BannerType.InsidersNotebookSurvey:
-                monthsTillNextPrompt = answer === DSSurveyLabelIndex.Yes ? 6 : 3;
-                break;
-            default:
-                break;
-        }
+        let monthsTillNextPrompt = answer === DSSurveyLabelIndex.Yes ? 6 : 4;
 
         if (monthsTillNextPrompt) {
             await this.showBannerState.get(type)!.updateValue({
@@ -231,8 +207,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
                 return this.getPersistentState(InsidersNotebookSurveyStateKeys.OpenNotebookCount);
             case BannerType.ExperimentNotebookSurvey:
                 return this.getPersistentState(ExperimentNotebookSurveyStateKeys.OpenNotebookCount);
-            case BannerType.DSSurvey:
-                return this.getPersistentState(DSSurveyStateKeys.OpenNotebookCount);
             default:
                 traceError('Invalid Banner type');
                 return -1;
@@ -245,8 +219,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
                 return this.getPersistentState(InsidersNotebookSurveyStateKeys.ExecutionCount);
             case BannerType.ExperimentNotebookSurvey:
                 return this.getPersistentState(ExperimentNotebookSurveyStateKeys.ExecutionCount);
-            case BannerType.DSSurvey:
-                return this.getPersistentState(DSSurveyStateKeys.ExecutionCount);
             default:
                 traceError('Invalid Banner type');
                 return -1;
@@ -259,7 +231,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     private async openedNotebook() {
-        void this.updateStateAndShowBanner(DSSurveyStateKeys.OpenNotebookCount, BannerType.DSSurvey);
         void this.updateStateAndShowBanner(
             InsidersNotebookSurveyStateKeys.OpenNotebookCount,
             BannerType.InsidersNotebookSurvey
@@ -294,8 +265,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             case BannerType.InsidersNotebookSurvey:
             case BannerType.ExperimentNotebookSurvey:
                 return localize.InsidersNativeNotebooksSurveyBanner.bannerMessage();
-            case BannerType.DSSurvey:
-                return localize.DataScienceSurveyBanner.bannerMessage();
             default:
                 traceError('Invalid Banner type');
                 return '';
@@ -308,8 +277,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
                 return 'https://aka.ms/vscjupyternb';
             case BannerType.ExperimentNotebookSurvey:
                 return 'https://aka.ms/vscnbexp';
-            case BannerType.DSSurvey:
-                return 'https://aka.ms/pyaisurvey';
             default:
                 traceError('Invalid Banner type');
                 return '';

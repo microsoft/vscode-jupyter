@@ -15,10 +15,8 @@ import {
     NotebookData
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { IDisposable, IDisposableRegistry, IExtensions } from '../../common/types';
-import { isUntitledFile, noop } from '../../common/utils/misc';
-import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { IDisposableRegistry, IExtensions } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { INotebook, INotebookEditor } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
@@ -29,26 +27,12 @@ export class NotebookEditor implements INotebookEditor {
     public get closed(): Event<INotebookEditor> {
         return this._closed.event;
     }
-    public get modified(): Event<INotebookEditor> {
-        return this._modified.event;
-    }
-    public get saved(): Event<INotebookEditor> {
-        return this._saved.event;
-    }
-    public get isUntitled(): boolean {
-        return isUntitledFile(this.document.uri);
-    }
-    public get isDirty(): boolean {
-        return this.document.isDirty;
-    }
     public get file(): Uri {
         return this.document.uri;
     }
     public notebook?: INotebook | undefined;
 
     private _closed = new EventEmitter<INotebookEditor>();
-    private _saved = new EventEmitter<INotebookEditor>();
-    private _modified = new EventEmitter<INotebookEditor>();
     constructor(
         public readonly document: NotebookDocument,
         private readonly vscodeNotebook: IVSCodeNotebook,
@@ -59,11 +43,9 @@ export class NotebookEditor implements INotebookEditor {
     ) {
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
     }
-    executed?: Event<INotebookEditor> | undefined;
     public get notebookMetadata(): nbformat.INotebookMetadata | undefined {
         return getNotebookMetadata(this.document);
     }
-    onExecutedCode?: Event<string> | undefined;
     public getContent(): string {
         const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
             'vscode.ipynb'
@@ -85,27 +67,11 @@ export class NotebookEditor implements INotebookEditor {
         notebookData.metadata = this.document.metadata;
         return serializerApi.exports.exportNotebook(notebookData);
     }
-    @captureTelemetry(Telemetry.SyncAllCells)
-    public async syncAllCells(): Promise<void> {
-        // This shouldn't be necessary for native notebooks. if it is, it's because the document
-        // is not up to date (VS code issue)
-    }
     public runAllCells(): void {
         this.commandManager.executeCommand('notebook.execute').then(noop, noop);
     }
     public addCellBelow(): void {
         this.commandManager.executeCommand('notebook.cell.insertCodeCellBelow').then(noop, noop);
-    }
-    public startProgress(): void {
-        throw new Error('Method not implemented.');
-    }
-    public stopProgress(): void {
-        throw new Error('Method not implemented.');
-    }
-    public createWebviewCellButton(): IDisposable {
-        return {
-            dispose: () => noop()
-        };
     }
     public hasCell(): Promise<boolean> {
         return Promise.resolve(this.document.cellCount > 0);

@@ -726,14 +726,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         return '';
     }
 
-    public startProgress() {
-        noop();
-    }
-
-    public stopProgress() {
-        noop();
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(_message: string, _payload: any) {
         noop();

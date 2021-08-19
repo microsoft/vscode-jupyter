@@ -3,7 +3,6 @@
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient } from '../common/types';
 import { AmlComputeContext } from './amlContext';
-import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
@@ -86,8 +85,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
-    serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);
-    serviceManager.addBinding(IImportTracker, INotebookExecutionLogger);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ImportTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         LanguageInitializer
