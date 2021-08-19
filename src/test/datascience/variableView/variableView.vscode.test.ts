@@ -121,8 +121,7 @@ suite('DataScience - VariableView', function () {
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
-        await runCell(cell);
-        await waitForExecutionCompletedSuccessfully(cell);
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
@@ -150,8 +149,7 @@ suite('DataScience - VariableView', function () {
         // Execute a cell on the second document
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 0 });
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
-        await runCell(cell2);
-        await waitForExecutionCompletedSuccessfully(cell2);
+        await Promise.all([runCell(cell2), waitForExecutionCompletedSuccessfully(cell2)]);
 
         // Because this document was not open, we need to open the variable view again
         await commandManager.executeCommand(Commands.OpenVariableView);
@@ -159,8 +157,7 @@ suite('DataScience - VariableView', function () {
         // Execute a second cell on the second document
         await insertCodeCell('test3 = "MYTESTVALUE3"', { index: 1 });
         const cell3 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
-        await runCell(cell3);
-        await waitForExecutionCompletedSuccessfully(cell3);
+        await Promise.all([runCell(cell3), waitForExecutionCompletedSuccessfully(cell3)]);
 
         // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
         await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
