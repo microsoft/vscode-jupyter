@@ -22,7 +22,7 @@ import { noop } from '../common/utils/misc';
 import { MillisecondsInADay } from '../constants';
 import { JupyterNotebookView } from './notebook/constants';
 import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
-import { INotebookEditorProvider, INotebookExtensibility } from './types';
+import { INotebookExtensibility } from './types';
 
 export enum DSSurveyStateKeys {
     ShowBanner = 'ShowDSSurveyBanner',
@@ -111,7 +111,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
-        @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
@@ -120,7 +119,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     ) {
         this.setPersistentState(BannerType.InsidersNotebookSurvey, InsidersNotebookSurveyStateKeys.ShowBanner);
         this.setPersistentState(BannerType.ExperimentNotebookSurvey, ExperimentNotebookSurveyStateKeys.ShowBanner);
-        editorProvider.onDidOpenNotebookEditor(this.openedNotebook.bind(this));
 
         // Change the surveyDelay flag after 10 minutes
         setTimeout(() => {

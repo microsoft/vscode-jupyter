@@ -36,10 +36,10 @@ import { JupyterServerBase } from '../jupyterServer';
 import { computeWorkingDirectory } from '../jupyterUtils';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { KernelConnectionMetadata } from '../kernels/types';
-import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernel-launcher/types';
 import { isCI, STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { inject, injectable, named } from 'inversify';
+import { JupyterNotebookBase } from '../jupyterNotebook';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()
@@ -165,7 +165,7 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
 
             if (session) {
                 // Create our notebook
-                const notebook = new HostJupyterNotebook(
+                const notebook = new JupyterNotebookBase(
                     session,
                     configService,
                     disposableRegistry,
@@ -176,8 +176,7 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
                     this.getDisposedError.bind(this),
                     this.workspaceService,
                     this.appService,
-                    this.fs,
-                    this.vscodeNotebook
+                    this.fs
                 );
 
                 // Wait for it to be ready

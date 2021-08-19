@@ -27,7 +27,7 @@ import { IApplicationShell, IWorkspaceService } from '../../../common/applicatio
 import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
+import { Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -192,12 +192,15 @@ export class Kernel implements IKernel {
         this.startCancellation.cancel();
         const restartPromise = this.kernelExecution.restart(notebookDocument, this._notebookPromise);
         await restartPromise;
+        traceInfoIf(isCI, `Restarted ${notebookDocument.uri}`);
 
         // Interactive window needs a restart sys info
         await this.initializeAfterStart(SysInfoReason.Restart, notebookDocument);
+        traceInfoIf(isCI, `Initialized after restart ${notebookDocument.uri}`);
 
         // Indicate a restart occurred if it succeeds
         this._onRestarted.fire();
+        traceInfoIf(isCI, `Event fired after restart ${notebookDocument.uri}`);
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
@@ -322,6 +325,7 @@ export class Kernel implements IKernel {
     }
 
     private async initializeAfterStart(reason: SysInfoReason, notebookDocument: NotebookDocument) {
+        traceInfoIf(isCI, 'Step A');
         if (!this.notebook) {
             return;
         }
@@ -331,7 +335,7 @@ export class Kernel implements IKernel {
         if (editor) {
             editor.notebook = this.notebook;
         }
-
+        traceInfoIf(isCI, 'Step B');
         if (!this.hookedNotebookForEvents.has(this.notebook)) {
             this.hookedNotebookForEvents.add(this.notebook);
             this.notebook.kernelSocket.subscribe(this._kernelSocket);
@@ -348,32 +352,45 @@ export class Kernel implements IKernel {
                 this,
                 this.disposables
             );
+            traceInfoIf(isCI, 'Step C');
         }
 
-        // Change our initial directory and path
-        await this.updateWorkingDirectoryAndPath();
-
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
+            // Change our initial directory and path
+            traceInfoIf(isCI, 'Step D');
+            await this.updateWorkingDirectoryAndPath();
+            traceInfoIf(isCI, 'Step H');
+
+            traceInfoIf(isCI, 'Step I');
             await this.disableJedi();
+            traceInfoIf(isCI, 'Step J');
             if (this.resourceUri) {
                 await this.notebook.setLaunchingFile(this.resourceUri.fsPath);
+                traceInfoIf(isCI, 'Step K');
             }
 
             // For Python notebook initialize matplotlib
             await this.initializeMatplotLib();
+            traceInfoIf(isCI, 'Step L');
         }
 
         // Run any startup commands that we have specified
+        traceInfoIf(isCI, 'Step M');
         await this.runStartupCommands();
+        traceInfoIf(isCI, 'Step N');
 
         await this.notebook
             .requestKernelInfo()
             .then(async (item) => {
                 this._info = item.content;
+                traceInfoIf(isCI, 'Step N1');
                 await this.addSysInfoForInteractive(reason, notebookDocument, item);
+                traceInfoIf(isCI, 'Step N2');
             })
             .catch(traceWarning.bind('Failed to request KernelInfo'));
+        traceInfoIf(isCI, 'Step O');
         await this.notebook.waitForIdle(this.launchTimeout);
+        traceInfoIf(isCI, 'Step P');
     }
 
     private async disableJedi() {
@@ -499,9 +516,11 @@ export class Kernel implements IKernel {
     }
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
-        const suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
-        traceInfo('UpdateWorkingDirectoryAndPath');
+        traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
         if (this.connection && this.connection.localLaunch) {
+            traceInfoIf(isCI, 'Step E');
+            const suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
+            traceInfoIf(isCI, 'Step F');
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggestedDir;
@@ -518,6 +537,7 @@ export class Kernel implements IKernel {
                 }
             }
         }
+        traceInfoIf(isCI, 'Step G');
     }
 
     // Update both current working directory and sys.path with the desired directory
@@ -537,22 +557,17 @@ export class Kernel implements IKernel {
         if (!this.notebook) {
             return;
         }
-        const deferred = createDeferred<void>();
-        const observable = this.notebook.executeObservable(
-            code,
-            (this.resourceUri || this.notebookUri).fsPath,
-            0,
-            uuid(),
+        const request = this.notebook.session.requestExecute(
+            {
+                code,
+                silent: true,
+                stop_on_error: false,
+                allow_stdin: true,
+                store_history: false
+            },
             true
         );
-        const subscription = observable.subscribe(
-            noop,
-            (ex) => deferred.reject(ex),
-            () => deferred.resolve()
-        );
-        this.disposables.push({
-            dispose: () => subscription.unsubscribe()
-        });
-        await deferred.promise;
+
+        await request?.done;
     }
 }

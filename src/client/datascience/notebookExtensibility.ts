@@ -12,7 +12,6 @@ export type KernelStateEventArgs = {
 };
 
 export enum KernelState {
-    started,
     executed,
     restarted
 }
@@ -40,12 +39,6 @@ export class NotebookExtensibility implements INotebookExecutionLogger, INoteboo
                 });
             }
         }
-    }
-    public onKernelStarted(resource: Uri): void {
-        this.kernelStateChange.fire({
-            resource,
-            state: KernelState.started
-        });
     }
     public onKernelRestarted(resource: Uri): void {
         this.kernelStateChange.fire({

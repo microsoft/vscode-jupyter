@@ -57,6 +57,8 @@ export class InterpreterStatusBarVisibility
                 // Python API may not have the register function yet.
                 if (a.registerInterpreterStatusFilter) {
                     a.registerInterpreterStatusFilter(this);
+                    // Get Python extension to check whether to show/hide after it activates.
+                    this._changed.fire();
                 }
             })
             .ignoreErrors();
