@@ -35,7 +35,7 @@ export class NotebookCommands implements IDisposable {
             this.commandManager.registerCommand(Commands.SwitchJupyterKernel, this.switchKernel, this),
             this.commandManager.registerCommand(Commands.SetJupyterKernel, this.setKernel, this),
             this.commandManager.registerCommand(Commands.NotebookEditorCollapseAllCells, this.collapseAll, this),
-            this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this),
+            this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this)
         );
     }
     public dispose() {
