@@ -42,9 +42,9 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 Commands.NotebookEditorInterruptKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
-                        this.interruptKernel(context?.notebookEditor.notebookUri);
+                        void this.interruptKernel(context?.notebookEditor.notebookUri);
                     } else {
-                        this.interruptKernel(context);
+                        void this.interruptKernel(context);
                     }
                 }
             )
@@ -54,9 +54,9 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 Commands.NotebookEditorRestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
-                        this.restartKernel(context?.notebookEditor.notebookUri);
+                        void this.restartKernel(context?.notebookEditor.notebookUri);
                     } else {
-                        this.restartKernel(context);
+                        void this.restartKernel(context);
                     }
                 }
             )
