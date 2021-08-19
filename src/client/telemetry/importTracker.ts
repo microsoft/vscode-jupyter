@@ -205,7 +205,7 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
         const hash = getTelemetrySafeHashedString(packageName);
-        sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedName: hash });
+        sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedNamev2: hash });
     }
 
     private lookForImports(lines: (string | undefined)[]) {

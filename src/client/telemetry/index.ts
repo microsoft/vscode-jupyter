@@ -471,7 +471,7 @@ export interface IEventNamePropertyMapping {
          *
          * @type {string}
          */
-        hashedName: string;
+        hashedNamev2: string;
     };
     [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
 
