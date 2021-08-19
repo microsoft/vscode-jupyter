@@ -480,6 +480,9 @@
     "DataScience.interactiveWindowModeBannerSwitchAlways": "总是",
     "DataScience.interactiveWindowModeBannerSwitchNo": "否",
     "DataScience.ipykernelNotInstalled": "IPyKernel 没有安装到解释器 {0}",
+    "DataScience.needIpykernel6": "此功能需安装 IPyKernel",
+    "DataScience.setup": "安装",
+    "DataScience.startingRunByLine": "开始按行运行",
     "DataScience.illegalEditorConfig": "CustomEditor 和 NativeNotebook 实验不能同时开启",
     "DataScience.pythonExtensionRequired": "执行该任务需要 Python 扩展。点击 \"是\" 打开 Python 扩展的安装页面。",
     "DataScience.pythonExtensionRequiredToRunNotebook": "需要安装 Python 扩展来运行 Python 笔记本。",
@@ -506,8 +509,5 @@
     "DataScience.kernelWasNotStarted": "内核未启动，调试需要一个会话。",
     "DataScience.noNotebookToDebug": "没有激活的笔记本可供调试。",
     "DataScience.cantStartDebugging": "无法开始调试。",
-    "DataScience.customEditorBanner": "此编辑器已废弃并将在 VS Code 1.59 中移除。 [了解更多新笔记本编辑器的内容](https://aka.ms/vscodeNotebookEditorBanner).",
-    "jupyter.command.jupyter.notebookeditor.runallcells.title": "运行所有笔记本单元",
-    "DataScience.runAbove": "运行上方单元",
-    "DataScience.runBelow": "运行该单元及以下单元"
+    "DataScience.customEditorBanner": "此编辑器已废弃并将在 VS Code 1.59 中移除。 [了解更多新笔记本编辑器的内容](https://aka.ms/vscodeNotebookEditorBanner)."
 }
