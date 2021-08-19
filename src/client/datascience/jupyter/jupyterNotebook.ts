@@ -607,7 +607,7 @@ export class JupyterNotebookBase implements INotebook {
     };
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
-        traceInfo('UpdateWorkingDirectoryAndPath');
+        traceInfo('UpdateWorkingDirectoryAndPath in Jupyter Notebook');
         if (this._executionInfo && this._executionInfo.connectionInfo.localLaunch && !this._workingDirectory) {
             // See what our working dir is supposed to be
             const suggested = this._executionInfo.workingDir;

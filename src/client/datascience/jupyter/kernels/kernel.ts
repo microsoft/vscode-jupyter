@@ -355,12 +355,12 @@ export class Kernel implements IKernel {
             traceInfoIf(isCI, 'Step C');
         }
 
-        // Change our initial directory and path
-        traceInfoIf(isCI, 'Step D');
-        await this.updateWorkingDirectoryAndPath();
-        traceInfoIf(isCI, 'Step H');
-
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
+            // Change our initial directory and path
+            traceInfoIf(isCI, 'Step D');
+            await this.updateWorkingDirectoryAndPath();
+            traceInfoIf(isCI, 'Step H');
+
             traceInfoIf(isCI, 'Step I');
             await this.disableJedi();
             traceInfoIf(isCI, 'Step J');
@@ -519,7 +519,7 @@ export class Kernel implements IKernel {
         traceInfoIf(isCI, 'Step E');
         const suggestedDir = await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs);
         traceInfoIf(isCI, 'Step F');
-        traceInfo('UpdateWorkingDirectoryAndPath');
+        traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
         if (this.connection && this.connection.localLaunch) {
             traceInfoIf(isCI, 'Step G');
             if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
