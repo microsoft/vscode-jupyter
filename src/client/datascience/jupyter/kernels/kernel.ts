@@ -192,12 +192,15 @@ export class Kernel implements IKernel {
         this.startCancellation.cancel();
         const restartPromise = this.kernelExecution.restart(notebookDocument, this._notebookPromise);
         await restartPromise;
+        traceInfoIf(isCI, `Restarted ${notebookDocument.uri}`);
 
         // Interactive window needs a restart sys info
         await this.initializeAfterStart(SysInfoReason.Restart, notebookDocument);
+        traceInfoIf(isCI, `Initialized after restart ${notebookDocument.uri}`);
 
         // Indicate a restart occurred if it succeeds
         this._onRestarted.fire();
+        traceInfoIf(isCI, `Event fired after restart ${notebookDocument.uri}`);
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
