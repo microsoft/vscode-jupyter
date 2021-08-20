@@ -468,7 +468,7 @@ export class Kernel implements IKernel {
             // We're theming matplotlibs, so we have to setup our default state.
             traceInfoIf(isCI, `Initialize config for plots for ${(this.resourceUri || this.notebookUri).toString()}`);
             const matplobInit =
-                !settings || settings.enablePlotViewer
+                !settings || settings.generateSVGPlots
                     ? CodeSnippets.MatplotLibInitSvg
                     : CodeSnippets.MatplotLibInitPng;
 
@@ -487,7 +487,7 @@ export class Kernel implements IKernel {
                 );
             }
         } else {
-            const configInit = settings && settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
+            const configInit = settings && settings.generateSVGPlots ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
             traceInfoIf(isCI, `Initialize config for plots for ${(this.resourceUri || this.notebookUri).toString()}`);
             await this.executeSilently(configInit);
         }

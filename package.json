@@ -1780,10 +1780,10 @@
                     "description": "Allow for connecting the Interactive window to a https Jupyter server that does not have valid certificates. This can be a security risk, so only use for known and trusted servers.",
                     "scope": "resource"
                 },
-                "jupyter.enablePlotViewer": {
+                "jupyter.generateSVGPlots": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Modify plot output to include SVG output, for better display in the plot viewer",
+                    "description": "Generate SVG output for notebook plots. This allows for better display in the plot viewer at the cost of generation speed and file size.",
                     "scope": "resource"
                 },
                 "jupyter.codeLenses": {

@@ -67,7 +67,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public askForLargeDataFrames: boolean = false;
     public enableAutoMoveToNextCell: boolean = false;
     public askForKernelRestart: boolean = false;
-    public enablePlotViewer: boolean = false;
+    public generateSVGPlots: boolean = false;
     public codeLenses: string = '';
     public debugCodeLenses: string = '';
     public debugpyDistPath: string = '';
