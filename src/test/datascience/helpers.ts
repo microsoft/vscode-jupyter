@@ -45,7 +45,7 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         variableExplorerExclude: 'module;function;builtin_function_or_method',
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-        enablePlotViewer: true,
+        generateSVGPlots: false,
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],

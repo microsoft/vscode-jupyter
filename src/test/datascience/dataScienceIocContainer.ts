@@ -1105,7 +1105,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             liveShareConnectionTimeout: 100,
-            enablePlotViewer: true,
+            generateSVGPlots: false,
             stopOnFirstLineWhileDebugging: true,
             stopOnError: true,
             addGotoCodeLenses: true,
