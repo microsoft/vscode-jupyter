@@ -9,7 +9,7 @@
         "name": "Microsoft Corporation"
     },
     "extensionPack": [
-        "ms-toolsai.vscode-jupyter-keymap"
+        "ms-toolsai.jupyter-keymap"
     ],
     "license": "MIT",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
