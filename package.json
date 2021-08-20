@@ -199,7 +199,7 @@
             },
             {
                 "key": "escape",
-                "when": "resourceScheme == 'vscode-interactive' && !suggestWidgetVisible",
+                "when": "resourceScheme == 'vscode-interactive' && !editorHoverVisible && !suggestWidgetVisible && !isComposing && !inSnippetMode && !exceptionWidgetVisible && !selectionAnchorSet && !LinkedEditingInputVisible && !renameInputVisible && !editorHasSelection && !accessibilityHelpWidgetVisible && !breakpointWidgetVisible && !findWidgetVisible && !markersNavigationVisible && !parameterHintsVisible && !editorHasMultipleSelections && !notificationToastsVisible",
                 "command": "interactive.input.clear"
             },
             {
