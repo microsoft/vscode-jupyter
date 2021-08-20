@@ -8,6 +8,9 @@
     "author": {
         "name": "Microsoft Corporation"
     },
+    "extensionPack": [
+        "ms-toolsai.jupyter-keymap"
+    ],
     "license": "MIT",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
     "repository": {
@@ -96,101 +99,6 @@
                 "command": "jupyter.runcurrentcellandaddbelow",
                 "key": "alt+enter",
                 "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused"
-            },
-            {
-                "key": "F",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.find"
-            },
-            {
-                "key": "K",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "list.focusUp"
-            },
-            {
-                "key": "J",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "list.focusDown"
-            },
-            {
-                "key": "A",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.insertCodeCellAbove"
-            },
-            {
-                "key": "B",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.insertCodeCellBelow"
-            },
-            {
-                "key": "D D",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.delete"
-            },
-            {
-                "key": "Z",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "jupyter.notebookeditor.keybind.undo"
-            },
-            {
-                "key": "S",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "jupyter.notebookeditor.keybind.save"
-            },
-            {
-                "key": "C",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.copy"
-            },
-            {
-                "key": "X",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.cut"
-            },
-            {
-                "key": "V",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.paste"
-            },
-            {
-                "key": "O",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "jupyter.notebookeditor.keybind.toggleOutput"
-            },
-            {
-                "key": "shift+L",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.toggleLineNumbers"
-            },
-            {
-                "key": "L",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.toggleLineNumbers"
-            },
-            {
-                "key": "ctrl+shift+-",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.split"
-            },
-            {
-                "key": "ctrl+enter",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts || notebookCellListFocused && notebookCellType == 'code' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "jupyter.notebookeditor.keybind.executeCell"
-            },
-            {
-                "key": "ctrl+enter",
-                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.quitEdit"
-            },
-            {
-                "key": "shift+enter",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts || notebookCellListFocused && notebookCellType == 'code' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.executeAndSelectBelow"
-            },
-            {
-                "key": "shift+enter",
-                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow"
             },
             {
                 "key": "shift+enter",
@@ -639,18 +547,6 @@
                 "command": "jupyter.notebookeditor.redocells",
                 "title": "%jupyter.command.jupyter.redocells.title%",
                 "category": "Notebook"
-            },
-            {
-                "command": "jupyter.notebookeditor.keybind.undo",
-                "title": "%jupyter.command.jupyter.notebookeditor.keybind.undo.title%",
-                "category": "Notebook",
-                "enablement": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts"
-            },
-            {
-                "command": "jupyter.notebookeditor.keybind.save",
-                "title": "%jupyter.command.jupyter.notebookeditor.keybind.save.title%",
-                "category": "Notebook",
-                "enablement": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts"
             },
             {
                 "command": "jupyter.interruptkernel",
@@ -1344,18 +1240,6 @@
                     "when": "notebookEditorFocused && notebookType == 'jupyter-notebook'"
                 },
                 {
-                    "command": "jupyter.notebookeditor.keybind.undo",
-                    "title": "%jupyter.command.jupyter.notebookeditor.keybind.undo.title%",
-                    "category": "Notebook",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.notebookeditor.keybind.save",
-                    "title": "%jupyter.command.jupyter.notebookeditor.keybind.save.title%",
-                    "category": "Notebook",
-                    "when": "false"
-                },
-                {
                     "command": "jupyter.expandallcells",
                     "title": "%jupyter.command.jupyter.expandallcells.title%",
                     "shortTitle": "%jupyter.command.jupyter.expandallcells.shorttitle%",
@@ -1551,6 +1435,7 @@
                 "jupyter.enableKeyboardShortcuts": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting has been deprecated as Jupyter keyboard shortcuts have been moved into the ms-toolsai.jupyter-keymap extension. If you would like to disable Jupyter keyboard shortcuts, please uninstall or disable that extension instead.",
                     "description": "Enables Jupyter style keyboard shortcuts for Notebooks.",
                     "scope": "application"
                 },
