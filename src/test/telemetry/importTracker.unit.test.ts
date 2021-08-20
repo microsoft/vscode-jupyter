@@ -45,7 +45,7 @@ suite('Import Tracker', () => {
             }
 
             Reporter.properties.pop(); // HASHED_PACKAGE_PERF
-            expect(Reporter.properties).to.deep.equal(hashes.map((hash) => ({ hashedName: hash })));
+            expect(Reporter.properties).to.deep.equal(hashes.map((hash) => ({ hashedNamev2: hash })));
         }
 
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {

@@ -358,16 +358,12 @@ export class Kernel implements IKernel {
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // Change our initial directory and path
             traceInfoIf(isCI, 'Step D');
-            await this.updateWorkingDirectoryAndPath();
+            await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
             traceInfoIf(isCI, 'Step H');
 
             traceInfoIf(isCI, 'Step I');
             await this.disableJedi();
             traceInfoIf(isCI, 'Step J');
-            if (this.resourceUri) {
-                await this.notebook.setLaunchingFile(this.resourceUri.fsPath);
-                traceInfoIf(isCI, 'Step K');
-            }
 
             // For Python notebook initialize matplotlib
             await this.initializeMatplotLib();
