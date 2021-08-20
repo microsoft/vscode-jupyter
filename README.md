@@ -23,10 +23,14 @@ Please follow the [Python Extension ReadMe](https://github.com/microsoft/vscode-
 
 ### Run by Line
 
-In Python notebooks, press `F10` while selecting a cell or click the first button on the cell toolbar to start a lightweight debugging session and run code cells line by line.
-<img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/runbyline.gif?>
+To start a lightweight debugging session and run code cells line by line in Python notebooks, press `F10` while selecting a cell or click the Run by Line button on the cell toolbar.
+
+Once you start a Run by Line session the Variable Explorer will appear and variable values will update as you iterate through your code.
+
+To run through the rest of the cell during a Run by Line session hit `Ctrl+Enter`. To stop, you can click the interrupt button on the left side of the cell.
 
 To set it up, follow the steps [here](https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks).
+<img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/runbyline.gif?>
 
 ## Working with other Languages
 
