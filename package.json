@@ -1520,7 +1520,8 @@
                         "error",
                         "warn",
                         "info",
-                        "debug"
+                        "debug",
+                        "verbose"
                     ],
                     "description": "The logging level the extension logs at.",
                     "scope": "machine"

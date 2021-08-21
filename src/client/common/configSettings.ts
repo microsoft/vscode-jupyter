@@ -273,6 +273,9 @@ function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefin
         case 'debug': {
             return LogLevel.Debug;
         }
+        case 'verbose': {
+            return LogLevel.Trace;
+        }
         default: {
             return LogLevel.Error;
         }
