@@ -23,8 +23,8 @@ import {
     IExtensions,
     IMemento,
     InstallerResponse,
-    IPersistentStateFactory,
     Product,
+    ProductInstallStatus,
     Resource
 } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -37,7 +37,7 @@ import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/
 import { IInterpreterService } from '../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../interpreter/locators/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import {
     ILanguageServer,
     ILanguageServerProvider,
@@ -131,7 +131,6 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     private waitingOnInstallPrompt?: Promise<void>;
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
@@ -169,43 +168,6 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
         }
     }
-
-    public async showPythonExtensionInstallRecommendedPrompt() {
-        // If workspace is not trusted, then don't show prompt
-        if (!this.workspace.isTrusted) {
-            return;
-        }
-        const key = 'ShouldShowPythonExtensionInstallRecommendedPrompt';
-        const surveyPrompt = this.persistentStateFactory.createGlobalPersistentState(key, true);
-        if (surveyPrompt.value) {
-            const yes = localize.Common.bannerLabelYes();
-            const no = localize.Common.bannerLabelNo();
-            const doNotShowAgain = localize.Common.doNotShowAgain();
-
-            const promise = (this.waitingOnInstallPrompt = new Promise<void>(async (resolve) => {
-                const answer = await this.appShell.showWarningMessage(
-                    localize.DataScience.pythonExtensionRecommended(),
-                    yes,
-                    no,
-                    doNotShowAgain
-                );
-                switch (answer) {
-                    case yes:
-                        await this.installPythonExtension();
-                        break;
-                    case doNotShowAgain:
-                        await surveyPrompt.updateValue(false);
-                        break;
-                    default:
-                        break;
-                }
-                resolve();
-            }));
-            await promise;
-            this.waitingOnInstallPrompt = undefined;
-        }
-    }
-
     private async installPythonExtension() {
         // Have the user install python
         void this.commandManager.executeCommand('extension.open', PythonExtension);
@@ -270,7 +232,7 @@ export class PythonInstaller implements IPythonInstaller {
     }
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(InterpreterPackages) private readonly interpreterPacakges: InterpreterPackages,
+        @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
     ) {}
 
@@ -281,7 +243,7 @@ export class PythonInstaller implements IPythonInstaller {
         reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse> {
         if (resource && !isResource(resource)) {
-            this.interpreterPacakges.trackPackages(resource);
+            this.interpreterPackages.trackPackages(resource);
         }
         let action: 'installed' | 'failed' | 'disabled' | 'ignored' = 'installed';
         try {
@@ -315,6 +277,15 @@ export class PythonInstaller implements IPythonInstaller {
                 moduleName: ProductNames.get(product)!
             });
         }
+    }
+
+    public async isProductVersionCompatible(
+        product: Product,
+        semVerRequirement: string,
+        resource?: PythonEnvironment
+    ): Promise<ProductInstallStatus> {
+        const api = await this.apiProvider.getApi();
+        return api.isProductVersionCompatible(product, semVerRequirement, resource);
     }
 }
 
@@ -352,14 +323,11 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
-
-    public get onDidChangeInterpreter(): Event<void> {
+    ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
-            if (this.extensionChecker.isPythonExtensionActive && !this.eventHandlerAdded) {
-                this.hookupOnDidChangeInterpreterEvent();
-            }
             if (!this.extensionChecker.isPythonExtensionActive) {
+                // This event may not fire. It only fires if we're the reason for python extension
+                // activation. VS code does not fire such an event itself if something else activates
                 this.apiProvider.onDidActivatePythonExtension(
                     this.hookupOnDidChangeInterpreterEvent,
                     this,
@@ -367,14 +335,22 @@ export class InterpreterService implements IInterpreterService {
                 );
             }
         }
+    }
+
+    public get onDidChangeInterpreter(): Event<void> {
+        this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreter.event;
     }
 
+    @captureTelemetry(Telemetry.InterpreterListingPerf)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
+        this.hookupOnDidChangeInterpreterEvent();
         return this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
+    @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
+        this.hookupOnDidChangeInterpreterEvent();
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
         let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
         if (!promise) {
@@ -394,6 +370,7 @@ export class InterpreterService implements IInterpreterService {
     }
 
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
+        this.hookupOnDidChangeInterpreterEvent();
         try {
             return await this.apiProvider.getApi().then((api) => api.getInterpreterDetails(pythonPath, resource));
         } catch {
@@ -402,7 +379,15 @@ export class InterpreterService implements IInterpreterService {
         }
     }
     private hookupOnDidChangeInterpreterEvent() {
+        // Only do this once.
         if (this.eventHandlerAdded) {
+            return;
+        }
+        // Python may not be installed or active
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            return;
+        }
+        if (!this.extensionChecker.isPythonExtensionActive) {
             return;
         }
         this.apiProvider

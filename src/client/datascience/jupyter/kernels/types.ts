@@ -17,7 +17,13 @@ import type {
 import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
 import type { PythonEnvironment } from '../../../pythonEnvironments/info';
-import type { IJupyterKernel, IJupyterKernelSpec, InterruptResult, KernelSocketInformation } from '../../types';
+import type {
+    IJupyterKernel,
+    IJupyterKernelSpec,
+    INotebook,
+    InterruptResult,
+    KernelSocketInformation
+} from '../../types';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
@@ -115,11 +121,19 @@ export interface IKernelSelectionListProvider<T extends KernelConnectionMetadata
 }
 
 export interface IKernel extends IAsyncDisposable {
-    readonly uri: Uri;
+    readonly notebookUri: Uri;
+    /**
+     * In the case of Notebooks, this is the same as the Notebook Uri.
+     * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).
+     * However if we create an intearctive window without a file, then this is undefined.
+     */
+    readonly resourceUri: Resource;
     readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>;
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
     readonly onRestarted: Event<void>;
+    readonly onWillRestart: Event<void>;
+    readonly onWillInterrupt: Event<void>;
     readonly status: ServerStatus;
     readonly disposed: boolean;
     /**
@@ -128,23 +142,34 @@ export interface IKernel extends IAsyncDisposable {
      */
     readonly info?: KernelMessage.IInfoReplyMsg['content'];
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    readonly notebook?: INotebook;
     start(options?: { disableUI?: boolean; document: NotebookDocument }): Promise<void>;
     interrupt(document: NotebookDocument): Promise<InterruptResult>;
-    restart(): Promise<void>;
+    restart(document: NotebookDocument): Promise<void>;
     executeCell(cell: NotebookCell): Promise<void>;
     executeAllCells(document: NotebookDocument): Promise<void>;
+    executeHidden(code: string, file: string, document: NotebookDocument): Promise<void>;
 }
 
-export type KernelOptions = { metadata: KernelConnectionMetadata; controller: NotebookController };
+export type KernelOptions = {
+    metadata: KernelConnectionMetadata;
+    controller: NotebookController;
+    /**
+     * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
+     * In the case of Notebooks, just pass the uri of the notebook.
+     */
+    resourceUri: Resource;
+};
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
+    onDidRestartKernel: Event<IKernel>;
     /**
-     * Get hold of the active kernel for a given Uri (Notebook or other file).
+     * Get hold of the active kernel for a given Notebook.
      */
-    get(uri: Uri): IKernel | undefined;
+    get(notebook: NotebookDocument): IKernel | undefined;
     /**
-     * Gets or creates a kernel for a given Uri.
-     * WARNING: If called with different options for same Uri, old kernel associated with the Uri will be disposed.
+     * Gets or creates a kernel for a given Notebook.
+     * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
-    getOrCreate(uri: Uri, options: KernelOptions): IKernel | undefined;
+    getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel | undefined;
 }

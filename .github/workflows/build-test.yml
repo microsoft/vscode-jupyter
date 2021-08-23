@@ -4,6 +4,9 @@
 
 name: Build and Test
 
+permissions:
+  deployments: write
+
 on:
   pull_request:
     branches:
@@ -20,7 +23,7 @@ on:
       - 'release/*'
       - 'release-*'
   schedule:
-    - cron: "0 9 * * 1-5" # 9am UTC, Monday-Friday (2am PDT, after VS Code Insider builds which is 11pm PDT)
+    - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code Insider builds which is 11pm PDT)
   workflow_dispatch:
 env:
   NODE_VERSION: 12.14.1
@@ -70,11 +73,11 @@ jobs:
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-    #   - name: insiders channel
-    #     # Scheduled builds will publish Insider builds.
-    #     if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
-    #     run: |
-    #       echo "release_channel=insider" >> $GITHUB_ENV
+      - name: insiders channel
+        # Scheduled builds will publish Insider builds.
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+        run: |
+          echo "release_channel=insider" >> $GITHUB_ENV
 
       - name: release
         if: github.event_name == 'push' && contains(github.ref, 'refs/heads/release')
@@ -325,6 +328,9 @@ jobs:
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Ts-Unit Test Report
 
+      - name: Create coverage folder (if not created)
+        run: npx gulp createNycFolder
+
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
@@ -344,13 +350,11 @@ jobs:
       matrix:
         os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
         python: [3.8]
-        test-suite: [group1, group2, group3, group4]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Use conda for group1 and group3
-        if: matrix.test-suite == 'group1' || matrix.test-suite == 'group3'
         run: |
           echo "conda_python=true" >> $GITHUB_ENV
 
@@ -501,11 +505,19 @@ jobs:
         if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os == 'macos-latest'
         run: pip install torch torchvision torchaudio
 
+
+      - name: Use Conda Python ${{matrix.python}}
+        uses: conda-incubator/setup-miniconda@v2
+        if: env.conda_python
+        with:
+          auto-update-conda: true
+          activate-environment: functional_test_env_2
+          python-version: ${{matrix.python}}
+
       - name: Install secondary conda environment
         shell: bash -l {0}
         if: env.conda_python
         run: |
-          conda create --name functional_test_env_2
           conda activate functional_test_env_2
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -524,7 +536,7 @@ jobs:
 
       - name: Run functional tests
         shell: bash -l {0}
-        run: npm run test:functional:parallel -- --${{matrix.test-suite}}
+        run: npm run test:functional:parallel
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -541,9 +553,10 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Functional Test Report ${{matrix.test-suite}} ${{matrix.os}}
+          check_name: Functional Test Report ${{matrix.os}}
         if: steps.test_functional_group.outcome == 'failure' && failure()
 
+      # Mosts tests are commented, hence nothing runs, thus no coverage (if not commented, CI falls over as this code expects coverage files)
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
@@ -763,6 +776,13 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
+      - name: Install screen capture dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install imagemagick
+
+      - name: Install screen capture
+        run: npm i -D screenshot-desktop
+
         # Check to see if we should build webviews or not
       - name: Check if we need to build webviews
         if: matrix.test-suite != 'integration' && matrix.test-suite != 'notebookAndWebview'
@@ -907,6 +927,8 @@ jobs:
           check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
         if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
 
+      - name: Create coverage folder (if not created)
+        run: npx gulp createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
@@ -915,6 +937,14 @@ jobs:
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
+          retention-days: 1
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Screenshots-${{matrix.os}}-${{matrix.pythonVersion}}-${{matrix.python}}-${{matrix.jupyter}}-${{matrix.test-suite}}
+          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
           retention-days: 1
 
   smoke-tests:
@@ -991,6 +1021,9 @@ jobs:
         with:
           name: smoke-test-${{matrix.os}}.log
           path: './smoke-test.log'
+
+      - name: Create coverage folder (if not created)
+        run: npx gulp createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports

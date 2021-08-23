@@ -9,7 +9,6 @@ import { Memento, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../../client/common/application/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
-import { Commands } from '../../../../client/datascience/constants';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { createPythonInterpreter } from '../../../utils/interpreters';
@@ -35,8 +34,7 @@ suite('DataScience - Kernel Dependency Service', () => {
             instance(installer),
             instance(memento),
             false,
-            instance(cmdManager),
-            true
+            instance(cmdManager)
         );
     });
     [undefined, Uri.file('test.py'), Uri.file('test.ipynb')].forEach((resource) => {
@@ -113,26 +111,6 @@ suite('DataScience - Kernel Dependency Service', () => {
                 await assert.isRejected(promise, 'Install failed - kaboom');
             });
         });
-    });
-    test('Select kernel instead of installing (interactive window)', async () => {
-        when(cmdManager.executeCommand(anything())).thenResolve();
-        when(cmdManager.executeCommand(anything(), anything())).thenResolve();
-        when(memento.get(anything(), anything())).thenReturn(false);
-        when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-        when(installer.install(Product.ipykernel, interpreter, anything(), true)).thenResolve(
-            InstallerResponse.Installed
-        );
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(
-            DataScience.selectKernel() as any
-        );
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
-            DataScience.selectKernel() as any
-        );
-
-        const promise = dependencyService.installMissingDependencies(Uri.file('test.py'), interpreter);
-
-        await assert.isRejected(promise, 'IPyKernel not installed into interpreter name:abc');
-        verify(cmdManager.executeCommand(Commands.SwitchJupyterKernel, anything())).once();
     });
     test('Select kernel instead of installing (notebook)', async () => {
         when(cmdManager.executeCommand(anything())).thenResolve();

@@ -4,74 +4,83 @@
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
-import { IS_CI_SERVER } from '../../../test/ciConstants';
+import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { IVSCodeNotebook } from '../../common/application/types';
+import { disposeAllDisposables } from '../../common/helpers';
+import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry } from '../constants';
-import { CellState, ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../types';
+import { createJupyterCellFromVSCNotebookCell, isJupyterNotebook } from '../notebook/helpers/helpers';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 @injectable()
-export class CellOutputMimeTypeTracker implements IExtensionSingleActivationService, INotebookExecutionLogger {
+export class CellOutputMimeTypeTracker implements IExtensionSingleActivationService, IDisposable {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
     private sentMimeTypes: Set<string> = new Set<string>();
+    private readonly disposables: IDisposable[] = [];
 
-    constructor(@inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider) {
-        this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
+    constructor(
+        @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+    ) {
+        disposables.push(this);
+        this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
+        this.vscNotebook.onDidCloseNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
+        this.vscNotebook.onDidSaveNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
+        this.vscNotebook.onDidChangeNotebookCellExecutionState(
+            this.onDidChangeNotebookCellExecutionState,
+            this,
+            this.disposables
+        );
+    }
+    public async activate(): Promise<void> {
+        //
     }
 
     public dispose() {
+        disposeAllDisposables(this.disposables);
         this.pendingChecks.clear();
     }
-
-    public onKernelStarted() {
-        // Do nothing on started
-    }
-
-    public onKernelRestarted() {
-        // Do nothing on restarted
-    }
-    public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
-        // Do nothing on pre execute
-    }
-    public async postExecute(cell: ICell, silent: boolean): Promise<void> {
-        if (!silent && cell.data.cell_type === 'code') {
-            this.scheduleCheck(this.createCellKey(cell), this.checkCell.bind(this, cell));
+    public async onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): Promise<void> {
+        if (!isJupyterNotebook(e.cell.notebook)) {
+            return;
         }
+        this.scheduleCheck(e.cell.document.uri.toString(), this.checkCell.bind(this, e.cell));
     }
-    public async activate(): Promise<void> {
-        // Act like all of our open documents just opened; our timeout will make sure this is delayed.
-        this.notebookEditorProvider.editors.forEach((e) => this.onOpenedOrClosedNotebook(e));
-    }
-
-    private onOpenedOrClosedNotebook(e: INotebookEditor) {
-        if (e.file) {
-            this.scheduleCheck(e.file.fsPath, this.checkNotebook.bind(this, e));
+    private onDidOpenCloseDocument(doc: NotebookDocument) {
+        if (!isJupyterNotebook(doc)) {
+            return;
         }
+        doc.getCells().forEach((cell) => {
+            if (cell.kind === NotebookCellKind.Code) {
+                cell.outputs.forEach((output) => output.items.forEach((item) => this.sendTelemetry(item.mime)));
+            }
+        });
     }
-    private getCellOutputMimeTypes(cell: { data: nbformat.IBaseCell; id: string; state: CellState }): string[] {
-        if (cell.data.cell_type === 'markdown') {
+    private getCellOutputMimeTypes(cell: NotebookCell): string[] {
+        if (cell.kind === NotebookCellKind.Markup) {
             return ['markdown'];
         }
-        if (cell.data.cell_type !== 'code') {
+        if (cell.document.languageId === 'raw') {
             return [];
         }
+        const nbCell = createJupyterCellFromVSCNotebookCell(cell);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const outputs: nbformat.IOutput[] = cell.data.outputs as any;
+        const outputs: nbformat.IOutput[] = nbCell.outputs as any;
         if (!Array.isArray(outputs)) {
             return [];
         }
-        switch (cell.state) {
-            case CellState.editing:
-            case CellState.error:
-            case CellState.executing:
-                return [];
-            default: {
-                return flatten(outputs.map(this.getOutputMimeTypes.bind(this)));
-            }
+        if (
+            cell.executionSummary?.executionOrder &&
+            cell.executionSummary?.executionOrder > 0 &&
+            cell.executionSummary?.success
+        ) {
+            return flatten(outputs.map(this.getOutputMimeTypes.bind(this)));
         }
+        return [];
     }
     private getOutputMimeTypes(output: nbformat.IOutput): string[] {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -107,30 +116,10 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         this.pendingChecks.set(id, setTimeout(check, 5000));
     }
 
-    private createCellKey(cell: { id: string }): string {
-        return cell.id;
-    }
-
     @captureTelemetry(Telemetry.HashedCellOutputMimeTypePerf)
-    private checkCell(cell: { data: nbformat.IBaseCell; id: string; state: CellState }) {
-        this.pendingChecks.delete(this.createCellKey(cell));
+    private checkCell(cell: NotebookCell) {
+        this.pendingChecks.delete(cell.document.uri.toString());
         this.getCellOutputMimeTypes(cell).forEach(this.sendTelemetry.bind(this));
-    }
-
-    @captureTelemetry(Telemetry.HashedNotebookCellOutputMimeTypePerf)
-    private checkNotebook(e: INotebookEditor) {
-        this.pendingChecks.delete(e.file.fsPath);
-        if (!e.model) {
-            return;
-        }
-        try {
-            e.model?.getCellsWithId().forEach(this.checkCell.bind(this));
-        } catch (ex) {
-            // Can fail on CI, if the notebook has been closed or the like
-            if (!IS_CI_SERVER) {
-                throw ex;
-            }
-        }
     }
 
     private sendTelemetry(mimeType: string) {

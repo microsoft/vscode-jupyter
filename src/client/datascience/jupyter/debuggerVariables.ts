@@ -4,11 +4,12 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 
-import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
+import { DebugAdapterTracker, DebugSession, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IDebugService } from '../../common/application/types';
+import { IDebugService, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
+import { IDebuggingManager } from '../../debugger/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DataFrameLoading, GetVariableInfo, Identifiers, Telemetry } from '../constants';
 import { DebugLocationTracker } from '../debugLocationTracker';
@@ -43,9 +44,14 @@ export class DebuggerVariables extends DebugLocationTracker
     private importedGetVariableInfoScriptsIntoKernel = new Set<string>();
     private watchedNotebooks = new Map<string, Disposable[]>();
     private debuggingStarted = false;
+    private currentVariablesReference = 0;
+    private currentSeqNumsForVariables = new Set<Number>();
+
     constructor(
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
-        @inject(IConfigurationService) private configService: IConfigurationService
+        @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
     ) {
         super(undefined);
     }
@@ -55,7 +61,10 @@ export class DebuggerVariables extends DebugLocationTracker
     }
 
     public get active(): boolean {
-        return this.debugService.activeDebugSession !== undefined && this.debuggingStarted;
+        return (
+            (this.debugService.activeDebugSession !== undefined || this.getDebuggingManagerSession() !== undefined) &&
+            this.debuggingStarted
+        );
     }
 
     // IJupyterVariables implementation
@@ -207,6 +216,19 @@ export class DebuggerVariables extends DebugLocationTracker
         return JSON.parse(results.result);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public onWillReceiveMessage(message: any) {
+        super.onWillReceiveMessage(message);
+        if (
+            message.type === 'request' &&
+            message.command === 'variables' &&
+            message.arguments &&
+            this.currentVariablesReference === message.arguments.variablesReference
+        ) {
+            this.currentSeqNumsForVariables.add(message.seq);
+        }
+    }
+
     // This special DebugAdapterTracker function listens to messages sent from the debug adapter to VS Code
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onDidSendMessage(message: any) {
@@ -214,10 +236,32 @@ export class DebuggerVariables extends DebugLocationTracker
         // When the initialize response comes back, indicate we have started.
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
-        } else if (message.type === 'response' && message.command === 'variables' && message.body) {
+        } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
+            const response = message as DebugProtocol.ScopesResponse;
+
+            // Keep track of variablesReference because "hover" requests also try to update variables
+            const newVariablesReference = response.body.scopes[0].variablesReference;
+            if (newVariablesReference !== this.currentVariablesReference) {
+                this.currentVariablesReference = newVariablesReference;
+                this.currentSeqNumsForVariables.clear();
+            }
+        } else if (
+            message.type === 'response' &&
+            message.command === 'variables' &&
+            message.body &&
+            this.currentSeqNumsForVariables.has(message.request_seq)
+        ) {
             // If using the interactive debugger, update our variables.
             // eslint-disable-next-line
             // TODO: Figure out what resource to use
+
+            // Only update variables if it came from a "scopes" command and not a "hover"
+            // 1. Scopes command will come first with a variablesReference number
+            // 2. onWillReceiveMessage will have that variablesReference and
+            // will request for variables with a seq number
+            // 3. We only updateVariables if the seq number is one of the sequence numbers that
+            // came with the most recent 'scopes' variablesReference
+
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
             this.monkeyPatchDataViewableVariables(message);
         } else if (message.type === 'event' && message.event === 'terminated') {
@@ -362,6 +406,13 @@ export class DebuggerVariables extends DebugLocationTracker
         });
 
         this.refreshEventEmitter.fire();
+    }
+
+    private getDebuggingManagerSession(): DebugSession | undefined {
+        const activeNotebook = this.vscNotebook.activeNotebookEditor;
+        if (activeNotebook) {
+            return this.debuggingManager.getDebugSession(activeNotebook.document);
+        }
     }
 }
 

@@ -13,8 +13,9 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
+import { isCI } from '../../common/constants';
 import { BaseError } from '../../common/errors/types';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { DataScience } from '../../common/utils/localize';
@@ -45,7 +46,7 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly idleTimeout: number,
         private readonly kernelService: JupyterKernelService
     ) {
-        super(resource, restartSessionUsed, workingDirectory, idleTimeout);
+        super(resource, restartSessionUsed, workingDirectory);
         this.kernelConnectionMetadata = kernelSpec;
     }
 
@@ -103,6 +104,7 @@ export class JupyterSession extends BaseJupyterSession {
                 newSession.isRemoteSession = true;
                 newSession.resource = resource;
             } else {
+                traceInfoIf(isCI, `createNewKernelSession ${kernelConnection?.id}`);
                 newSession = await this.createSession(
                     resource,
                     this.serverSettings,
@@ -147,6 +149,7 @@ export class JupyterSession extends BaseJupyterSession {
         let exception: any;
         while (tryCount < 3) {
             try {
+                traceInfoIf(isCI, `JupyterSession.createNewKernelSession ${tryCount}, id is ${kernelConnection?.id}`);
                 result = await this.createSession(
                     resource,
                     session.serverSettings,
@@ -240,6 +243,7 @@ export class JupyterSession extends BaseJupyterSession {
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (kernelConnection?.interpreter && this.connInfo.localLaunch) {
             // Make sure the kernel actually exists and is up to date.
+            traceInfoIf(isCI, `JupyterSession.createSession ${kernelConnection.id}`);
             await this.kernelService.ensureKernelIsUsable(resource, kernelConnection, cancelToken, disableUI);
         }
 

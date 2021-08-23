@@ -12,8 +12,9 @@ import {
 } from 'vscode';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
+import { isCI } from '../../common/constants';
 import { disposeAllDisposables } from '../../common/helpers';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceInfoIf } from '../../common/logger';
 import { IAsyncDisposableRegistry, IDisposable, IDisposableRegistry } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -146,7 +147,13 @@ export class NotebookIPyWidgetCoordinator {
     private initializeNotebookCommunication(editor: NotebookEditor) {
         const notebook = editor.document;
         const controller = this.selectedNotebookController.get(notebook);
-        if (this.notebookCommunications.has(editor) || !controller) {
+        if (!controller) {
+            traceInfo(
+                `No controller, hence notebook communications cannot be initialized for editor ${editor.document.uri.toString()}`
+            );
+            return;
+        }
+        if (this.notebookCommunications.has(editor)) {
             traceInfo(`notebook communications already initialized for editor ${editor.document.uri.toString()}`);
             return;
         }
@@ -214,7 +221,7 @@ export class NotebookIPyWidgetCoordinator {
             // Attach message requests to this webview (should dupe to all of them)
             c.postMessage(
                 (e) => {
-                    traceInfo(`${ConsoleForegroundColors.Green}Widget Coordinator sent ${e.message}`);
+                    traceInfoIf(isCI, `${ConsoleForegroundColors.Green}Widget Coordinator sent ${e.message}`);
                     // Special case for webview URI translation
                     if (e.message === InteractiveWindowMessages.ConvertUriForUseInWebViewRequest) {
                         c.onMessage(InteractiveWindowMessages.ConvertUriForUseInWebViewResponse, {
@@ -230,7 +237,7 @@ export class NotebookIPyWidgetCoordinator {
             );
             webview.onDidReceiveMessage(
                 (m) => {
-                    traceInfo(`${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
+                    traceInfoIf(isCI, `${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
                     c.onMessage(m.type, m.payload);
 
                     // Special case the WidgetManager loaded message. It means we're ready

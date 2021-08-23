@@ -3,8 +3,6 @@
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient } from '../common/types';
 import { AmlComputeContext } from './amlContext';
-import { LiveShareApi } from '../datascience/liveshare/liveshare';
-import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
@@ -12,7 +10,6 @@ import { ActiveResourceService } from './application/activeResource';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ClipboardService } from './application/clipboard';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
-import { CustomEditorService } from './application/customEditorService';
 import { DebugService } from './application/debugService';
 import { DocumentManager } from './application/documentManager';
 import { EncryptedStorage } from './application/encryptedStorage';
@@ -23,12 +20,10 @@ import {
     IActiveResourceService,
     IApplicationEnvironment,
     IClipboard,
-    ICustomEditorService,
     IDebugService,
     IDocumentManager,
     IEncryptedStorage,
     ILanguageService,
-    ILiveShareApi,
     IVSCodeNotebook
 } from './application/types';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
@@ -82,7 +77,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IFileDownloader>(IFileDownloader, FileDownloader);
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
-    serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 
@@ -91,8 +85,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
-    serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);
-    serviceManager.addBinding(IImportTracker, INotebookExecutionLogger);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ImportTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         LanguageInitializer
@@ -110,9 +103,4 @@ export function registerTypes(serviceManager: IServiceManager) {
         PortAttributesProviders
     );
     serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
-    serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        CustomEditorService
-    );
 }

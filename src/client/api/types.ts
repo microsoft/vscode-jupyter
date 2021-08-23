@@ -4,7 +4,7 @@
 import { CancellationToken, Disposable, Event, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import { InterpreterUri } from '../common/installer/types';
-import { InstallerResponse, Product, Resource } from '../common/types';
+import { InstallerResponse, Product, ProductInstallStatus, Resource } from '../common/types';
 import { IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 export type ILanguageServerConnection = Pick<
@@ -28,7 +28,6 @@ export interface IPythonExtensionChecker {
     readonly isPythonExtensionInstalled: boolean;
     readonly isPythonExtensionActive: boolean;
     showPythonExtensionInstallRequiredPrompt(): Promise<void>;
-    showPythonExtensionInstallRecommendedPrompt(): Promise<void>;
 }
 
 /**
@@ -93,6 +92,14 @@ export type PythonApi = {
         reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse>;
     /**
+     * IInstaller
+     */
+    isProductVersionCompatible(
+        product: Product,
+        semVerRequirement: string,
+        resource?: PythonEnvironment
+    ): Promise<ProductInstallStatus>;
+    /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
      */
     getInterpreterPathSelectedForJupyterServer(): string | undefined;
@@ -120,6 +127,11 @@ export interface IPythonInstaller {
         cancel?: CancellationToken,
         reInstallAndUpdate?: boolean
     ): Promise<InstallerResponse>;
+    isProductVersionCompatible(
+        product: Product,
+        semVerRequirement: string,
+        resource?: PythonEnvironment
+    ): Promise<ProductInstallStatus>;
 }
 
 export const IPythonDebuggerPathProvider = Symbol('IPythonDebuggerPathProvider');

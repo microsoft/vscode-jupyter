@@ -27,7 +27,6 @@ import {
 import { IInstaller, Product, Resource } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
-import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { CodeSnippets, Identifiers } from '../../client/datascience/constants';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import {
@@ -47,6 +46,7 @@ import { InterpreterService } from '../interpreters/interpreterService';
 import { MockJupyterSession } from './mockJupyterSession';
 import { MockProcessService } from './mockProcessService';
 import { MockPythonService } from './mockPythonService';
+import { createCodeCell } from '../../datascience-ui/common/cellFactory';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 
@@ -92,7 +92,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private pythonServices: MockPythonService[] = [];
     private activeInterpreter: PythonEnvironment | undefined;
     private sessionTimeout: number | undefined;
-    private cellDictionary: Record<string, ICell> = {};
+    private cellDictionary: Record<string, nbformat.IBaseCell> = {};
     private kernelSpecs: { name: string; dir: string }[] = [];
     private currentSession: MockJupyterSession | undefined;
     private connInfo: IJupyterConnection | undefined;
@@ -301,120 +301,118 @@ export class MockJupyterManager implements IJupyterSessionManager {
             evalue: message,
             traceback: traceback ? traceback : [message]
         };
-
-        this.addCell(code, result);
+        const cell = createCodeCell(code);
+        cell.outputs = [result];
+        this.addCell(cell);
     }
 
     public addContinuousOutputCell(
         code: string,
-        resultGenerator: (cancelToken: CancellationToken) => Promise<{ result: string; haveMore: boolean }>
+        resultGenerator: (cancelToken: CancellationToken) => Promise<{ result: string; haveMore: boolean }>,
+        doNotUseICell?: boolean
     ) {
-        const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
+        const cells = doNotUseICell
+            ? [createCodeCell(code)]
+            : generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
         cells.forEach((c) => {
-            const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
-            if (c.data.cell_type === 'code') {
-                const taggedResult = {
-                    output_type: 'generator'
-                };
-                const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;
-                data.outputs = [...data.outputs, taggedResult];
-
-                // Tag on our extra data
-                (taggedResult as any).resultGenerator = async (t: CancellationToken) => {
-                    const result = await resultGenerator(t);
-                    return {
-                        result: this.createStreamResult(result.result),
-                        haveMore: result.haveMore
+            const source = doNotUseICell ? (c as nbformat.ICodeCell).source : (c as ICell).data.source;
+            const key = concatMultilineString(source).replace(LineFeedRegEx, '').toLowerCase();
+            if (doNotUseICell) {
+                const cell = c as nbformat.ICodeCell;
+                if (cell.cell_type === 'code') {
+                    const taggedResult = {
+                        output_type: 'generator'
                     };
-                };
+                    cell.outputs = [...cell.outputs, taggedResult];
 
-                // Save in the cell.
-                c.data = data;
-            }
-
-            // Save each in our dictionary for future use.
-            // Note: Our entire setup is recreated each test so this dictionary
-            // should be unique per test
-            this.cellDictionary[key] = c;
-        });
-    }
-
-    public addInputCell(
-        code: string,
-        result?:
-            | undefined
-            | string
-            | number
-            | nbformat.IUnrecognizedOutput
-            | nbformat.IExecuteResult
-            | nbformat.IDisplayData
-            | nbformat.IStream
-            | nbformat.IError,
-        mimeType?: string
-    ) {
-        const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
-        cells.forEach((c) => {
-            const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
-            if (c.data.cell_type === 'code') {
-                const taggedResult = {
-                    output_type: 'input'
-                };
-                const massagedResult = this.massageCellResult(result, mimeType);
-                const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;
-                if (result) {
-                    data.outputs = [...data.outputs, taggedResult, massagedResult];
-                } else {
+                    // Tag on our extra data
+                    (taggedResult as any).resultGenerator = async (t: CancellationToken) => {
+                        const result = await resultGenerator(t);
+                        return {
+                            result: this.createStreamResult(result.result),
+                            haveMore: result.haveMore
+                        };
+                    };
+                }
+            } else {
+                const cell = c as ICell;
+                if (cell.data.cell_type === 'code') {
+                    const taggedResult = {
+                        output_type: 'generator'
+                    };
+                    const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
                     data.outputs = [...data.outputs, taggedResult];
-                }
-                // Save in the cell.
-                c.data = data;
-            }
 
-            // Save each in our dictionary for future use.
-            // Note: Our entire setup is recreated each test so this dictionary
-            // should be unique per test
-            this.cellDictionary[key] = c;
-        });
-    }
+                    // Tag on our extra data
+                    (taggedResult as any).resultGenerator = async (t: CancellationToken) => {
+                        const result = await resultGenerator(t);
+                        return {
+                            result: this.createStreamResult(result.result),
+                            haveMore: result.haveMore
+                        };
+                    };
 
-    public addCell(
-        code: string,
-        result?:
-            | undefined
-            | string
-            | number
-            | nbformat.IUnrecognizedOutput
-            | nbformat.IExecuteResult
-            | nbformat.IDisplayData
-            | nbformat.IStream
-            | nbformat.IError
-            | string[],
-        mimeType?: string | string[]
-    ) {
-        const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
-        cells.forEach((c) => {
-            const cellMatcher = new CellMatcher();
-            const key = cellMatcher
-                .stripFirstMarker(concatMultilineString(c.data.source))
-                .replace(LineFeedRegEx, '')
-                .toLowerCase();
-            if (c.data.cell_type === 'code') {
-                if (mimeType && Array.isArray(mimeType) && Array.isArray(result)) {
-                    for (let i = 0; i < mimeType.length; i = i + 1) {
-                        this.addCellOutput(c, result[i], mimeType[i]);
-                    }
-                } else if (!Array.isArray(result) && !Array.isArray(mimeType)) {
-                    this.addCellOutput(c, result, mimeType);
+                    // Save in the cell.
+                    cell.data = data;
                 }
             }
 
             // Save each in our dictionary for future use.
             // Note: Our entire setup is recreated each test so this dictionary
             // should be unique per test
-            this.cellDictionary[key] = c;
+            this.cellDictionary[key] = c as any;
         });
     }
 
+    // public addInputICell(
+    //     code: string,
+    //     result?:
+    //         | undefined
+    //         | string
+    //         | number
+    //         | nbformat.IUnrecognizedOutput
+    //         | nbformat.IExecuteResult
+    //         | nbformat.IDisplayData
+    //         | nbformat.IStream
+    //         | nbformat.IError,
+    //     mimeType?: string
+    // ) {
+    //     const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
+    //     cells.forEach((c) => {
+    //         const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
+    //         if (c.data.cell_type === 'code') {
+    //             const taggedResult = {
+    //                 output_type: 'input'
+    //             };
+    //             const massagedResult = this.massageCellResult(result, mimeType);
+    //             const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;
+    //             if (result) {
+    //                 data.outputs = [...data.outputs, taggedResult, massagedResult];
+    //             } else {
+    //                 data.outputs = [...data.outputs, taggedResult];
+    //             }
+    //             // Save in the cell.
+    //             c.data = data;
+    //         }
+
+    //         // Save each in our dictionary for future use.
+    //         // Note: Our entire setup is recreated each test so this dictionary
+    //         // should be unique per test
+    //         this.cellDictionary[key] = c as any;
+    //     });
+    // }
+
+    public addCell(cell: nbformat.IBaseCell | string, output?: string | number | any, mimeType?: any) {
+        if (typeof cell === 'string') {
+            cell = createCodeCell(cell);
+        }
+        if (typeof output !== 'undefined') {
+            const outputItem = this.massageCellResult(output, mimeType);
+            (cell as nbformat.ICodeCell).outputs = [outputItem];
+        }
+        const key = concatMultilineString(cell.source).replace(LineFeedRegEx, '').toLowerCase();
+        this.cellDictionary[key] = cell as any;
+    }
     public setWaitTime(timeout: number | undefined) {
         this.sessionTimeout = timeout;
     }
@@ -454,29 +452,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.addCell(CodeSnippets.UpdateCWDAndPath.format(workingDir));
         this.addCell('import os\nos.getcwd()', path.join(workingDir));
         this.addCell('import sys\nsys.path[0]', path.join(workingDir));
-    }
-
-    private addCellOutput(
-        cell: ICell,
-        result?:
-            | undefined
-            | string
-            | number
-            | nbformat.IUnrecognizedOutput
-            | nbformat.IExecuteResult
-            | nbformat.IDisplayData
-            | nbformat.IStream
-            | nbformat.IError,
-        mimeType?: string
-    ) {
-        const massagedResult = this.massageCellResult(result, mimeType);
-        const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
-        if (result) {
-            data.outputs = [...data.outputs, massagedResult];
-        } else {
-            data.outputs = [...data.outputs];
-        }
-        cell.data = data;
     }
 
     private createNewSession(): MockJupyterSession {

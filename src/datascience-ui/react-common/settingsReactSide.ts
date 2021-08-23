@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { IJupyterExtraSettings } from '../../client/datascience/types';
 
 export function getDefaultSettings(): IJupyterExtraSettings {
@@ -32,7 +31,7 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         variableExplorerExclude: 'module;function;builtin_function_or_method',
-        enablePlotViewer: true,
+        generateSVGPlots: false,
         interactiveWindowMode: 'multiple',
         extraSettings: {
             editor: {
@@ -51,7 +50,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
                 fontFamily: "Consolas, 'Courier New', monospace"
             },
             theme: 'Default Dark+',
-            useCustomEditorApi: false,
             hasPythonExtension: true
         },
         intellisenseOptions: {
@@ -78,40 +76,4 @@ export function getDefaultSettings(): IJupyterExtraSettings {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return result as any;
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function computeEditorOptions(settings: IJupyterExtraSettings): monacoEditor.editor.IEditorOptions {
-    const intellisenseOptions = settings.intellisenseOptions;
-    const extraSettings = settings.extraSettings;
-    if (intellisenseOptions && extraSettings) {
-        return {
-            quickSuggestions: {
-                other: intellisenseOptions.quickSuggestions.other,
-                comments: intellisenseOptions.quickSuggestions.comments,
-                strings: intellisenseOptions.quickSuggestions.strings
-            },
-            acceptSuggestionOnEnter: intellisenseOptions.acceptSuggestionOnEnter,
-            quickSuggestionsDelay: intellisenseOptions.quickSuggestionsDelay,
-            suggestOnTriggerCharacters: intellisenseOptions.suggestOnTriggerCharacters,
-            tabCompletion: intellisenseOptions.tabCompletion,
-            suggest: {
-                localityBonus: intellisenseOptions.suggestLocalityBonus
-            },
-            suggestSelection: intellisenseOptions.suggestSelection,
-            wordBasedSuggestions: intellisenseOptions.wordBasedSuggestions,
-            parameterHints: {
-                enabled: intellisenseOptions.parameterHintsEnabled
-            },
-            cursorStyle: extraSettings.editor.cursor,
-            cursorBlinking: extraSettings.editor.cursorBlink,
-            autoClosingBrackets: extraSettings.editor.autoClosingBrackets as any,
-            autoClosingQuotes: extraSettings.editor.autoClosingQuotes as any,
-            autoIndent: extraSettings.editor.autoIndent as any,
-            autoSurround: extraSettings.editor.autoSurround as any,
-            fontLigatures: extraSettings.editor.fontLigatures
-        };
-    }
-
-    return {};
 }

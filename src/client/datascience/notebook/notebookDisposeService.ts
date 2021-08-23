@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
-import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -20,24 +19,16 @@ export class NotebookDisposeService implements IExtensionSingleActivationService
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNb: boolean
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {}
     public async activate(): Promise<void> {
-        if (!this.useNativeNb) {
-            return;
-        }
-
         this.vscNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
     }
     private onDidCloseNotebookDocument(document: NotebookDocument) {
         traceInfo(`Notebook Closed ${document.uri.toString()}`);
-        const kernel = this.kernelProvider.get(document.uri);
+        const kernel = this.kernelProvider.get(document);
         if (kernel) {
-            traceInfo(
-                `Kernel got disposed as a result of closing the notebook ${document.uri.toString()}`,
-                kernel.uri.toString()
-            );
+            traceInfo(`Kernel got disposed as a result of closing the notebook`, kernel.notebookUri.toString());
             kernel.dispose().catch(noop);
         }
         this.notebookProvider.disposeAssociatedNotebook({ identity: document.uri });

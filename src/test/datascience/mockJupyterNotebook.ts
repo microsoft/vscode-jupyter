@@ -93,6 +93,9 @@ export class MockJupyterNotebook implements INotebook {
     public clear(_id: string): void {
         noop();
     }
+    public async runInitialSetup(): Promise<void> {
+        noop();
+    }
     public executeObservable(_code: string, _f: string, _line: number): Observable<ICell[]> {
         throw new Error('Method not implemented');
     }
@@ -124,10 +127,6 @@ export class MockJupyterNotebook implements INotebook {
         throw new Error('Method not implemented');
     }
 
-    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
-        noop();
-    }
-
     public addLogger(_logger: INotebookExecutionLogger): void {
         noop();
     }
@@ -157,10 +156,6 @@ export class MockJupyterNotebook implements INotebook {
 
     public getKernelConnection(): KernelConnectionMetadata | undefined {
         return;
-    }
-
-    public setKernelConnection(_spec: KernelConnectionMetadata, _timeout: number): Promise<void> {
-        return Promise.resolve();
     }
 
     public getLoggers(): INotebookExecutionLogger[] {

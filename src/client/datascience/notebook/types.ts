@@ -3,15 +3,16 @@
 import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 
-export const INotebookContentProvider = Symbol('INotebookContentProvider');
-
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 
 export const INotebookControllerManager = Symbol('INotebookControllerManager');
 export interface INotebookControllerManager {
     readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: VSCodeNotebookController }>;
+    loadNotebookControllers(): Promise<void>;
     getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined;
-    getNotebookControllers(): Promise<VSCodeNotebookController[] | undefined>;
+    // Marked test only, just for tests to access registered controllers
+    registeredNotebookControllers(): VSCodeNotebookController[];
+    getInteractiveController(): Promise<VSCodeNotebookController | undefined>;
 }
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',

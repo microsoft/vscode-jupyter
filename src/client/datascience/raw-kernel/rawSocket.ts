@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 import type { KernelMessage } from '@jupyterlab/services';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
-import { IDisposable } from 'monaco-editor';
 import * as uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
 import { traceError } from '../../common/logger';
+import { IDisposable } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IKernelConnection } from '../kernel-launcher/types';
 import { IWebSocketLike } from '../kernelSocketWrapper';
@@ -159,10 +159,56 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
         // Wire up all of the different channels.
         const result: IChannels = {
-            iopub: this.generateChannel(connection, 'iopub', () => new zmq.Subscriber()),
-            shell: this.generateChannel(connection, 'shell', () => new zmq.Dealer({ routingId })),
-            control: this.generateChannel(connection, 'control', () => new zmq.Dealer({ routingId })),
-            stdin: this.generateChannel(connection, 'stdin', () => new zmq.Dealer({ routingId }))
+            iopub: this.generateChannel(
+                connection,
+                'iopub',
+                () =>
+                    new zmq.Subscriber({
+                        maxMessageSize: -1,
+                        // If we get messages too fast and we're too slow in reading/handling the messages,
+                        // then Node will stop reading messages from the stream & we'll stop getting the messages.
+                        // See below comments on this config item:
+                        // The high water mark is a hard limit on the maximum number of incoming messages ØMQ
+                        // shall queue in memory for any single peer that the specified socket is communicating with.
+                        // A value of zero means no limit.
+                        // If this limit has been reached the socket shall enter an exceptional state and
+                        // depending on the socket type, ØMQ shall take appropriate action such as blocking or dropping sent messages.
+                        receiveHighWaterMark: 0
+                    })
+            ),
+            shell: this.generateChannel(
+                connection,
+                'shell',
+                () =>
+                    new zmq.Dealer({
+                        routingId,
+                        sendHighWaterMark: 0,
+                        receiveHighWaterMark: 0,
+                        maxMessageSize: -1
+                    })
+            ),
+            control: this.generateChannel(
+                connection,
+                'control',
+                () =>
+                    new zmq.Dealer({
+                        routingId,
+                        sendHighWaterMark: 0,
+                        receiveHighWaterMark: 0,
+                        maxMessageSize: -1
+                    })
+            ),
+            stdin: this.generateChannel(
+                connection,
+                'stdin',
+                () =>
+                    new zmq.Dealer({
+                        routingId,
+                        sendHighWaterMark: 0,
+                        receiveHighWaterMark: 0,
+                        maxMessageSize: -1
+                    })
+            )
         };
         // What about hb port? Enchannel didn't use this one.
 

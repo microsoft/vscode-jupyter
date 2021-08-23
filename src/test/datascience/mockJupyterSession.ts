@@ -11,11 +11,14 @@ import { JupyterInvalidKernelError } from '../../client/datascience/jupyter/jupy
 import { JupyterWaitForIdleError } from '../../client/datascience/jupyter/jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
-import { ICell, IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
+import { IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
 import { Resource } from '../../client/common/types';
+import { randomBytes } from 'crypto';
+import { nbformat } from '@jupyterlab/coreutils';
+import { concatMultilineString } from '../../datascience-ui/common';
 
 const LineFeedRegEx = /(\r\n|\n)/g;
 
@@ -23,7 +26,7 @@ const LineFeedRegEx = /(\r\n|\n)/g;
 export class MockJupyterSession implements IJupyterSession {
     public readonly workingDirectory = '';
     public readonly kernelSocket = new Observable<KernelSocketInformation | undefined>();
-    private dict: Record<string, ICell>;
+    private dict: Map<string, nbformat.IBaseCell>;
     private restartedEvent: EventEmitter<void> = new EventEmitter<void>();
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     private timedelay: number;
@@ -32,15 +35,25 @@ export class MockJupyterSession implements IJupyterSession {
     private executes: string[] = [];
     private forceRestartTimeout: boolean = false;
     private completionTimeout: number = 1;
-    private lastRequest: MockJupyterRequest | undefined;
+    private lastRequest: Kernel.IFuture<any, any> | undefined;
     private _status = ServerStatus.Busy;
     constructor(
-        cellDictionary: Record<string, ICell>,
+        cellDictionary: Record<string, nbformat.IBaseCell> | nbformat.IBaseCell[],
         timedelay: number,
         private pendingIdleFailure: boolean = false,
         private pendingKernelChangeFailure: boolean = false
     ) {
-        this.dict = cellDictionary;
+        this.dict = new Map<string, nbformat.IBaseCell>();
+        if (Array.isArray(cellDictionary)) {
+            cellDictionary.forEach((cell) => {
+                const source = concatMultilineString(cell.source);
+                this.dict.set(source, cell);
+            });
+        } else {
+            Object.keys(cellDictionary).forEach((key) => {
+                this.dict.set(key, cellDictionary[key]);
+            });
+        }
         this.timedelay = timedelay;
         // Switch to idle after a timeout
         setTimeout(() => this.changeStatus(ServerStatus.Idle), 100);
@@ -60,8 +73,15 @@ export class MockJupyterSession implements IJupyterSession {
         }
         return this.onStatusChangedEvent.event;
     }
+    public get onIOPubMessage(): Event<KernelMessage.IIOPubMessage> {
+        return new EventEmitter<KernelMessage.IIOPubMessage>().event;
+    }
     public get status(): ServerStatus {
         return this._status;
+    }
+
+    public get sessionId(): string {
+        return randomBytes(8).toString('hex');
     }
 
     public async restart(_timeout: number): Promise<void> {
@@ -124,7 +144,8 @@ export class MockJupyterSession implements IJupyterSession {
         // Create a new dummy request
         this.executionCount += content.store_history && content.code.trim().length > 0 ? 1 : 0;
         const tokenSource = new CancellationTokenSource();
-        const request = new MockJupyterRequest(cell, this.timedelay, this.executionCount, tokenSource.token);
+        let request: Kernel.IFuture<any, any>;
+        request = new MockJupyterRequest(cell, this.timedelay, this.executionCount, tokenSource.token);
         this.outstandingRequestTokenSources.push(tokenSource);
 
         // When it finishes, it should not be an outstanding request anymore
@@ -137,6 +158,13 @@ export class MockJupyterSession implements IJupyterSession {
         request.done.then(removeHandler).catch(removeHandler);
         this.lastRequest = request;
         return request;
+    }
+
+    public requestDebug(
+        _content: KernelMessage.IDebugRequestMsg['content'],
+        _disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined {
+        return undefined;
     }
 
     public requestInspect(
@@ -306,12 +334,12 @@ export class MockJupyterSession implements IJupyterSession {
         this.onStatusChangedEvent.fire(newStatus);
     }
 
-    private findCell = (code: string): ICell => {
+    private findCell = (code: string): nbformat.IBaseCell => {
         // Match skipping line separators
         const withoutLines = code.replace(LineFeedRegEx, '').toLowerCase();
 
-        if (this.dict.hasOwnProperty(withoutLines)) {
-            return this.dict[withoutLines] as ICell;
+        if (this.dict.has(withoutLines)) {
+            return this.dict.get(withoutLines)!;
         }
         // eslint-disable-next-line no-console
         console.log(`Cell '${code}' not found in mock`);

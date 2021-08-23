@@ -11,6 +11,7 @@ import { IDisposable } from '../../../../client/common/types';
 import { getTextOutputValue } from '../../../../client/datascience/notebook/helpers/helpers';
 import { NotebookCompletionProvider } from '../../../../client/datascience/notebook/intellisense/completionProvider';
 import { IExtensionTestApi } from '../../../common';
+import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
 import {
     canRunNotebookTests,
@@ -31,8 +32,13 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
     let completionProvider: NotebookCompletionProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
+        traceInfo(`Start Suite Code Completion via Jupyter`);
         this.timeout(120_000);
         api = await initialize();
+        if (IS_REMOTE_NATIVE_TEST) {
+            // https://github.com/microsoft/vscode-jupyter/issues/6331
+            return this.skip();
+        }
         if (!(await canRunNotebookTests())) {
             return this.skip();
         }
@@ -41,6 +47,7 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         completionProvider = api.serviceContainer.get<NotebookCompletionProvider>(NotebookCompletionProvider);
+        traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -79,10 +86,17 @@ suite('DataScience - VSCode Notebook - (Code Completion via Jupyter) (slow)', fu
         };
         traceInfo('Get completions in test');
         const completions = await completionProvider.provideCompletionItems(cell2.document, position, token, context);
-        console.log(JSON.stringify(completions));
         const items = completions.map((item) => item.label);
         assert.isOk(items.length);
-        assert.include(items, 'bit_length');
-        assert.include(items, 'to_bytes');
+        assert.ok(
+            items.find((item) =>
+                typeof item === 'string' ? item.includes('bit_length') : item.label.includes('bit_length')
+            )
+        );
+        assert.ok(
+            items.find((item) =>
+                typeof item === 'string' ? item.includes('to_bytes') : item.label.includes('to_bytes')
+            )
+        );
     });
 });

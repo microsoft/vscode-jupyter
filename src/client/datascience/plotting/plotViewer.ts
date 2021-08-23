@@ -5,12 +5,12 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Event, EventEmitter, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
 
 import { traceInfo } from '../../../client/common/logger';
 import { createDeferred } from '../../../client/common/utils/async';
 import { IApplicationShell, IWebviewPanelProvider, IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 
 import { IFileSystem } from '../../common/platform/types';
@@ -34,8 +34,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IFileSystem) private fs: IFileSystem,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
+        @inject(IFileSystem) private fs: IFileSystem
     ) {
         super(
             configuration,
@@ -45,10 +44,9 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             workspaceService,
             (c, v, d) => new PlotViewerMessageListener(c, v, d),
             plotDir,
-            [path.join(plotDir, 'commons.initial.bundle.js'), path.join(plotDir, 'plotViewer.js')],
+            [path.join(plotDir, 'plotViewer.js')],
             localize.DataScience.plotViewerTitle(),
-            ViewColumn.One,
-            useCustomEditorApi
+            ViewColumn.One
         );
         // Load the web panel using our current directory as we don't expect to load any other files
         super.loadWebview(process.cwd()).catch(traceError);
@@ -139,25 +137,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
                 const ext = path.extname(file.fsPath);
                 switch (ext.toLowerCase()) {
                     case '.pdf':
-                        traceInfo('Attempting pdf write...');
-                        // Import here since pdfkit is so huge.
-                        // eslint-disable-next-line @typescript-eslint/no-require-imports
-                        const SVGtoPDF = require('svg-to-pdfkit');
-                        const deferred = createDeferred<void>();
-                        // eslint-disable-next-line @typescript-eslint/no-require-imports
-                        const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');
-                        const doc = new pdfkit();
-                        const ws = this.fs.createLocalWriteStream(file.fsPath);
-                        traceInfo(`Writing pdf to ${file.fsPath}`);
-                        ws.on('finish', () => deferred.resolve);
-                        // See docs or demo from source https://cdn.statically.io/gh/alafr/SVG-to-PDFKit/master/examples/demo.htm
-                        // How to resize to fit (fit within the height & width of page).
-                        SVGtoPDF(doc, payload.svg, 0, 0, { preserveAspectRatio: 'xMinYMin meet' });
-                        doc.pipe(ws);
-                        doc.end();
-                        traceInfo(`Finishing pdf to ${file.fsPath}`);
-                        await deferred.promise;
-                        traceInfo(`Completed pdf to ${file.fsPath}`);
+                        await saveSvgToPdf(payload.svg, this.fs, file);
                         break;
 
                     case '.png':
@@ -174,7 +154,29 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             }
         } catch (e) {
             traceError(e);
-            this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e));
+            void this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e));
         }
     }
+}
+
+export async function saveSvgToPdf(svg: string, fs: IFileSystem, file: Uri) {
+    traceInfo('Attempting pdf write...');
+    // Import here since pdfkit is so huge.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const SVGtoPDF = require('svg-to-pdfkit');
+    const deferred = createDeferred<void>();
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');
+    const doc = new pdfkit();
+    const ws = fs.createLocalWriteStream(file.fsPath);
+    traceInfo(`Writing pdf to ${file.fsPath}`);
+    ws.on('finish', () => deferred.resolve);
+    // See docs or demo from source https://cdn.statically.io/gh/alafr/SVG-to-PDFKit/master/examples/demo.htm
+    // How to resize to fit (fit within the height & width of page).
+    SVGtoPDF(doc, svg, 0, 0, { preserveAspectRatio: 'xMinYMin meet' });
+    doc.pipe(ws);
+    doc.end();
+    traceInfo(`Finishing pdf to ${file.fsPath}`);
+    await deferred.promise;
+    traceInfo(`Completed pdf to ${file.fsPath}`);
 }

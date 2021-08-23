@@ -3,13 +3,11 @@
 
 'use strict';
 
-import { NotebookContentProvider as VSCNotebookContentProvider } from 'vscode';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
-import { NotebookContentProvider } from './contentProvider';
 import { CreationOptionService } from './creation/creationOptionsService';
 import { NotebookCreator } from './creation/notebookCreator';
 import { NotebookCellLanguageService } from './cellLanguageService';
@@ -20,10 +18,13 @@ import { IntroduceNativeNotebookStartPage } from './introStartPage';
 import { NotebookControllerManager } from './notebookControllerManager';
 import { NotebookDisposeService } from './notebookDisposeService';
 import { RemoteSwitcher } from './remoteSwitcher';
-import { INotebookContentProvider, INotebookControllerManager } from './types';
+import { INotebookControllerManager } from './types';
+import { RendererCommunication } from './outputs/rendererCommunication';
+import { PlotSaveHandler } from './outputs/plotSaveHandler';
+import { PlotViewHandler } from './outputs/plotViewHandler';
+import { CellOutputDisplayIdTracker } from '../jupyter/kernels/cellDisplayIdTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<VSCNotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookIntegration
@@ -43,6 +44,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
+    serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         GitHubIssueCodeLensProvider
@@ -56,5 +58,11 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<CreationOptionService>(CreationOptionService, CreationOptionService);
     serviceManager.addSingleton<NotebookCreator>(NotebookCreator, NotebookCreator);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
+    serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
+    serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        RendererCommunication
+    );
     serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);
 }

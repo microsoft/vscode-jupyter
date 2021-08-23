@@ -5,16 +5,17 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { TextDocument } from 'vscode';
+import { NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
 import { splitMultilineString } from '../../datascience-ui/common';
-import { IS_CI_SERVER } from '../../test/ciConstants';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IDocumentManager } from '../common/application/types';
-import { isTestExecution } from '../common/constants';
+import { IDocumentManager, IVSCodeNotebook } from '../common/application/types';
+import { isCI, isTestExecution, PYTHON_LANGUAGE } from '../common/constants';
 import '../common/extensions';
+import { disposeAllDisposables } from '../common/helpers';
+import { IDisposable, IDisposableRegistry } from '../common/types';
 import { noop } from '../common/utils/misc';
-import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../datascience/types';
+import { isJupyterNotebook } from '../datascience/notebook/helpers/helpers';
 import { EventName } from './constants';
 import { getTelemetrySafeHashedString } from './helpers';
 
@@ -47,44 +48,33 @@ const MAX_DOCUMENT_LINES = 1000;
 const testExecution = isTestExecution();
 
 @injectable()
-export class ImportTracker implements IExtensionSingleActivationService, INotebookExecutionLogger {
+export class ImportTracker implements IExtensionSingleActivationService, IDisposable {
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
+    private disposables: IDisposable[] = [];
     private sentMatches: Set<string> = new Set<string>();
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
+        @inject(IVSCodeNotebook) private vscNotebook: IVSCodeNotebook,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t));
-        this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t));
-        this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
-        this.notebookEditorProvider.onDidCloseNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
+        disposables.push(this);
+        this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t), this.disposables);
+        this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t), this.disposables);
+        this.vscNotebook.onDidOpenNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t), this.disposables);
+        this.vscNotebook.onDidCloseNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t), this.disposables);
+        this.vscNotebook.onDidSaveNotebookDocument((t) => this.onOpenedOrClosedNotebookDocument(t), this.disposables);
+        this.vscNotebook.onDidChangeNotebookCellExecutionState((e) => this.checkNotebookCell(e), this, disposables);
     }
 
     public dispose() {
+        disposeAllDisposables(this.disposables);
         this.pendingChecks.clear();
-    }
-
-    public onKernelStarted() {
-        // Do nothing on started
-    }
-
-    public onKernelRestarted() {
-        // Do nothing on restarted
-    }
-    public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
-        // Do nothing on pre execute
-    }
-    public async postExecute(cell: ICell, silent: boolean): Promise<void> {
-        // Check for imports in the cell itself.
-        if (!silent && cell.data.cell_type === 'code') {
-            this.scheduleCheck(this.createCellKey(cell), this.checkCell.bind(this, cell));
-        }
     }
 
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
         this.documentManager.textDocuments.forEach((d) => this.onOpenedOrSavedDocument(d));
-        this.notebookEditorProvider.editors.forEach((e) => this.onOpenedOrClosedNotebook(e));
+        this.vscNotebook.notebookDocuments.forEach((e) => this.checkNotebookDocument(e));
     }
 
     private getDocumentLines(document: TextDocument): (string | undefined)[] {
@@ -100,45 +90,49 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
             .filter((f: string | undefined) => f);
     }
 
-    private getNotebookLines(e: INotebookEditor): (string | undefined)[] {
-        let result: (string | undefined)[] = [];
-        if (e.model) {
-            try {
-                e.model
-                    .getCellsWithId()
-                    .filter((c) => c.data.cell_type === 'code')
-                    .forEach((c) => {
-                        const cellArray = this.getCellLines(c.data as nbformat.ICodeCell);
-                        if (result.length < MAX_DOCUMENT_LINES) {
-                            result = [...result, ...cellArray];
-                        }
-                    });
-            } catch (ex) {
-                // Can fail on CI, if the notebook has been closed or the like
-                if (!IS_CI_SERVER) {
-                    throw ex;
-                }
+    private getNotebookDocumentLines(e: NotebookDocument): (string | undefined)[] {
+        const result: (string | undefined)[] = [];
+        try {
+            e.getCells()
+                .filter((cell) => cell.kind === NotebookCellKind.Code)
+                .filter((cell) => cell.document.languageId === PYTHON_LANGUAGE)
+                .forEach((c) => {
+                    const cellArray = this.getCellLinesFromSource(c.document.getText());
+                    if (result.length < MAX_DOCUMENT_LINES) {
+                        result.push(...cellArray);
+                    }
+                });
+        } catch (ex) {
+            // Can fail on CI, if the notebook has been closed or the like
+            if (!isCI) {
+                throw ex;
             }
         }
         return result;
     }
 
-    private getCellLines(cell: nbformat.ICodeCell): (string | undefined)[] {
+    private getCellLinesFromSource(source: nbformat.MultilineString): (string | undefined)[] {
         // Split into multiple lines removing line feeds on the end.
-        return splitMultilineString(cell.source).map((s) => s.replace(/\n/g, ''));
+        return splitMultilineString(source).map((s) => s.replace(/\n/g, ''));
     }
 
     private onOpenedOrSavedDocument(document: TextDocument) {
         // Make sure this is a Python file.
         if (path.extname(document.fileName) === '.py') {
             this.scheduleDocument(document);
+        } else if (
+            document.notebook &&
+            isJupyterNotebook(document.notebook) &&
+            document.languageId === PYTHON_LANGUAGE
+        ) {
+            this.scheduleDocument(document);
         }
     }
-
-    private onOpenedOrClosedNotebook(e: INotebookEditor) {
-        if (e.file) {
-            this.scheduleCheck(e.file.fsPath, this.checkNotebook.bind(this, e));
+    private onOpenedOrClosedNotebookDocument(e: NotebookDocument) {
+        if (!isJupyterNotebook(e)) {
+            return;
         }
+        this.scheduleCheck(e.uri.fsPath, this.checkNotebookDocument.bind(this, e));
     }
 
     private scheduleDocument(document: TextDocument) {
@@ -164,25 +158,35 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         }
     }
 
-    private createCellKey(cell: ICell): string {
-        return `${cell.file}${cell.id}`;
+    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
+    private checkNotebookDocument(e: NotebookDocument) {
+        this.pendingChecks.delete(e.uri.fsPath);
+        const lines = this.getNotebookDocumentLines(e);
+        this.lookForImports(lines);
     }
 
     @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
-    private checkCell(cell: ICell) {
-        if (cell.data.cell_type !== 'code') {
+    private checkNotebookCell(e: NotebookCellExecutionStateChangeEvent) {
+        if (!isJupyterNotebook(e.cell.notebook)) {
             return;
         }
-        this.pendingChecks.delete(this.createCellKey(cell));
-        const lines = this.getCellLines(cell.data as nbformat.ICodeCell);
-        this.lookForImports(lines);
-    }
+        this.pendingChecks.delete(e.cell.document.uri.toString());
+        const result: (string | undefined)[] = [];
+        try {
+            if (e.cell.kind === NotebookCellKind.Code && e.cell.document.languageId === PYTHON_LANGUAGE) {
+                const cellArray = this.getCellLinesFromSource(e.cell.document.getText());
+                if (result.length < MAX_DOCUMENT_LINES) {
+                    result.push(...cellArray);
+                }
+            }
+        } catch (ex) {
+            // Can fail on CI, if the notebook has been closed or the like
+            if (!isCI) {
+                throw ex;
+            }
+        }
 
-    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
-    private checkNotebook(e: INotebookEditor) {
-        this.pendingChecks.delete(e.file.fsPath);
-        const lines = this.getNotebookLines(e);
-        this.lookForImports(lines);
+        this.lookForImports(result);
     }
 
     @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
@@ -201,7 +205,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
         const hash = getTelemetrySafeHashedString(packageName);
-        sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedName: hash });
+        sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedNamev2: hash });
     }
 
     private lookForImports(lines: (string | undefined)[]) {

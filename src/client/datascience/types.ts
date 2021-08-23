@@ -16,8 +16,8 @@ import {
     Disposable,
     Event,
     HoverProvider,
-    LanguageConfiguration,
     NotebookCell,
+    NotebookEditor,
     QuickPickItem,
     Range,
     TextDocument,
@@ -35,10 +35,9 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
-import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
-import { KernelConnectionMetadata, NotebookCellRunState } from './jupyter/kernels/types';
+import { KernelConnectionMetadata } from './jupyter/kernels/types';
 import { KernelStateEventArgs } from './notebookExtensibility';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -118,7 +117,9 @@ export interface INotebookCompletion {
         start: number;
         end: number;
     };
-    metadata: {};
+    metadata: {
+        _jupyter_types_experimental?: { end: number; start: number; text: string; type?: string }[];
+    };
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
@@ -182,8 +183,7 @@ export interface INotebook extends IAsyncDisposable {
     onDisposed: Event<void>;
     onKernelChanged: Event<KernelConnectionMetadata>;
     onKernelRestarted: Event<void>;
-    onKernelInterrupted: Event<void>;
-    clear(id: string): void;
+    onDidFinishExecuting?: Event<ICell>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(
         code: string,
@@ -199,41 +199,19 @@ export interface INotebook extends IAsyncDisposable {
         offsetInCode: number,
         cancelToken?: CancellationToken
     ): Promise<INotebookCompletion>;
-    restartKernel(timeoutInMs: number): Promise<void>;
     waitForIdle(timeoutInMs: number): Promise<void>;
-    interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
     setLaunchingFile(file: string): Promise<void>;
-    getSysInfo(): Promise<ICell | undefined>;
     requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg>;
-    setMatplotLibStyle(useDark: boolean): Promise<void>;
     getMatchingInterpreter(): PythonEnvironment | undefined;
     /**
      * Gets the metadata that's used to start/connect to a Kernel.
      */
     getKernelConnection(): KernelConnectionMetadata | undefined;
-    /**
-     * Sets the metadata that's used to start/connect to a Kernel.
-     * Doing so results in a new kernel being started (i.e. a change in the kernel).
-     */
-    setKernelConnection(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void>;
     getLoggers(): INotebookExecutionLogger[];
-    registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void;
-    sendCommMessage(
-        buffers: (ArrayBuffer | ArrayBufferView)[],
-        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        msgId: any
-    ): Kernel.IShellFuture<
-        KernelMessage.IShellMessage<'comm_msg'>,
-        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
-    >;
-    requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
     registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
@@ -272,7 +250,7 @@ export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean, language: string, resource: Uri): Promise<void>;
-    onKernelStarted(resource: Uri): void;
+    nativePostExecute?(cell: NotebookCell): Promise<void>;
     onKernelRestarted(resource: Uri): void;
     preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
 }
@@ -316,9 +294,11 @@ export interface IJupyterPasswordConnect {
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
+    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    readonly sessionId: string;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
@@ -327,6 +307,10 @@ export interface IJupyterSession extends IAsyncDisposable {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+    requestDebug(
+        content: KernelMessage.IDebugRequestMsg['content'],
+        disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> | undefined;
     requestComplete(
         content: KernelMessage.ICompleteRequestMsg['content']
     ): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
@@ -486,10 +470,10 @@ export interface IInteractiveWindowProvider {
      */
     getOrCreate(owner: Resource): Promise<IInteractiveWindow>;
     /**
-     * Synchronizes with the other peers in a live share connection to make sure it has the same window open
-     * @param window window on this side
+     * Given a text document, return the associated interactive window if one exists.
+     * @param owner The URI of a text document which may be associated with an interactive window.
      */
-    synchronize(window: IInteractiveWindow): Promise<void>;
+    get(owner: Uri): IInteractiveWindow | undefined;
 }
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
@@ -520,35 +504,22 @@ export interface ILocalResourceUriConverter {
 }
 
 export interface IInteractiveBase extends Disposable {
-    onExecutedCode?: Event<string>;
     notebook?: INotebook;
-    startProgress(): void;
-    stopProgress(): void;
     undoCells(): void;
     redoCells(): void;
     toggleOutput?(): void;
     removeAllCells(): void;
-    interruptKernel(): Promise<void>;
-    restartKernel(): Promise<void>;
     hasCell(id: string): Promise<boolean>;
-    createWebviewCellButton(
-        buttonId: string,
-        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
-        codicon: string,
-        statusToEnable: CellState[],
-        tooltip: string
-    ): IDisposable;
 }
 
-export const IInteractiveWindow = Symbol('IInteractiveWindow');
 export interface IInteractiveWindow extends IInteractiveBase {
     readonly onDidChangeViewState: Event<void>;
-    readonly visible: boolean;
-    readonly active: boolean;
     readonly owner: Resource;
     readonly submitters: Uri[];
     readonly identity: Uri;
     readonly title: string;
+    readonly notebookUri?: Uri;
+    readonly readyPromise?: Promise<NotebookEditor>;
     closed: Event<IInteractiveWindow>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
@@ -563,6 +534,8 @@ export interface IInteractiveWindow extends IInteractiveBase {
     collapseAllCells(): void;
     exportCells(): void;
     scrollToCell(id: string): void;
+    exportAs(cells?: ICell[]): void;
+    export(cells?: ICell[]): void;
 }
 
 export interface IInteractiveWindowLoadable extends IInteractiveWindow {
@@ -574,108 +547,34 @@ export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
     readonly activeEditor: INotebookEditor | undefined;
     readonly editors: INotebookEditor[];
-    readonly onDidOpenNotebookEditor: Event<INotebookEditor>;
     readonly onDidChangeActiveNotebookEditor: Event<INotebookEditor | undefined>;
     readonly onDidCloseNotebookEditor: Event<INotebookEditor>;
     open(file: Uri): Promise<INotebookEditor>;
-    show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<INotebookEditor>;
 }
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends Disposable, IInteractiveBase {
-    /**
-     * Type of editor, whether it is the old, custom or native notebook editor.
-     * Once VSC Notebook is stable, this property can be removed.
-     */
-    readonly type: 'old' | 'custom' | 'native';
-    readonly onDidChangeViewState: Event<void>;
     readonly closed: Event<INotebookEditor>;
-    readonly executed?: Event<INotebookEditor>;
-    readonly modified: Event<INotebookEditor>;
-    readonly saved: Event<INotebookEditor>;
-    /**
-     * Is this notebook representing an untitled file which has never been saved yet.
-     */
-    readonly isUntitled: boolean;
-    /**
-     * `true` if there are unpersisted changes.
-     */
-    readonly isDirty: boolean;
     readonly file: Uri;
-    readonly visible: boolean;
-    readonly active: boolean;
-    readonly model: INotebookModel;
+    readonly model?: INotebookModel;
+    readonly notebookMetadata: nbformat.INotebookMetadata | undefined;
     notebook?: INotebook;
-    show(): Promise<void>;
     runAllCells(): void;
-    runSelectedCell(): void;
     addCellBelow(): void;
     undoCells(): void;
     redoCells(): void;
     removeAllCells(): void;
     expandAllCells(): void;
     collapseAllCells(): void;
-    interruptKernel(): Promise<void>;
-    restartKernel(): Promise<void>;
-    syncAllCells(): Promise<void>;
+    getContent(): string;
 }
 
 export const INotebookExtensibility = Symbol('INotebookExtensibility');
 
 export interface INotebookExtensibility {
     readonly onKernelStateChange: Event<KernelStateEventArgs>;
-}
-
-export const IWebviewExtensibility = Symbol('IWebviewExtensibility');
-
-export interface IWebviewExtensibility {
-    registerCellToolbarButton(
-        callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
-        codicon: string,
-        statusToEnable: NotebookCellRunState[],
-        tooltip: string
-    ): IDisposable;
-}
-
-export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
-
-/**
- * Listens to history messages to provide extra functionality
- */
-export interface IInteractiveWindowListener extends IDisposable {
-    /**
-     * Fires this event when posting a response message
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    postMessage: Event<{ message: string; payload: any }>;
-    /**
-     * Fires this event when posting a message to the interactive base.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    postInternalMessage?: Event<{ message: string; payload: any }>;
-    /**
-     * Handles messages that the interactive window receives
-     * @param message message type
-     * @param payload message payload
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onMessage(message: string, payload?: any): void;
-    /**
-     * Fired when the view state of the interactive window changes
-     * @param args
-     */
-    onViewStateChanged?(args: WebViewViewChangeEventArgs): void;
-}
-
-// Wraps the vscode API in order to send messages back and forth from a webview
-export const IPostOffice = Symbol('IPostOffice');
-export interface IPostOffice {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    post(message: string, params: any[] | undefined): void;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    listen(message: string, listener: (args: any[] | undefined) => void): void;
 }
 
 // Wraps the vscode CodeLensProvider base class
@@ -746,7 +645,6 @@ export interface ICell {
     line: number;
     state: CellState;
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
-    extraLines?: number[];
 }
 
 // CellRange is used as the basis for creating new ICells.
@@ -776,14 +674,11 @@ export interface IMessageCell extends nbformat.IBaseCell {
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
     generateThemeCss(resource: Resource, isDark: boolean, theme: string): Promise<string>;
-    generateMonacoTheme(resource: Resource, isDark: boolean, theme: string): Promise<JSONObject>;
 }
 
 export const IThemeFinder = Symbol('IThemeFinder');
 export interface IThemeFinder {
     findThemeRootJson(themeName: string): Promise<string | undefined>;
-    findTmLanguage(language: string): Promise<string | undefined>;
-    findLanguageConfiguration(language: string): Promise<LanguageConfiguration | undefined>;
     isThemeDark(themeName: string): Promise<boolean | undefined>;
 }
 
@@ -791,23 +686,10 @@ export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
     // interactive window. Dispose of the returned object when done.
-    set(
-        message: string,
-        showInWebView: boolean,
-        timeout?: number,
-        canceled?: () => void,
-        interactivePanel?: IInteractiveBase
-    ): Disposable;
+    set(message: string, timeout?: number, canceled?: () => void): Disposable;
 
     // call this function to wait for a promise while displaying status
-    waitWithStatus<T>(
-        promise: () => Promise<T>,
-        message: string,
-        showInWebView: boolean,
-        timeout?: number,
-        canceled?: () => void,
-        interactivePanel?: IInteractiveBase
-    ): Promise<T>;
+    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void): Promise<T>;
 }
 
 export interface IJupyterCommand {
@@ -851,7 +733,6 @@ export interface IJupyterExtraSettings extends IJupyterSettings {
             fontFamily: string;
         };
         theme: string;
-        useCustomEditorApi: boolean;
         hasPythonExtension: boolean;
     };
     intellisenseOptions: {
@@ -1007,7 +888,7 @@ export interface ICellHashProvider {
     getHashes(): IFileHashes[];
     getExecutionCount(): number;
     incExecutionCount(): void;
-    generateHashFileName(cell: ICell, executionCount: number): string;
+    addCellHash(notebookCell: NotebookCell): Promise<void>;
 }
 
 export interface IDebugLocation {
@@ -1117,23 +998,7 @@ export interface INbConvertExportToPythonService {
 }
 
 export interface INotebookModel {
-    readonly indentAmount: string;
-    readonly onDidDispose: Event<void>;
     readonly file: Uri;
-    readonly isDirty: boolean;
-    readonly isUntitled: boolean;
-    readonly changed: Event<NotebookModelChange>;
-    readonly onDidEdit: Event<NotebookModelChange>;
-    readonly isDisposed: boolean;
-    readonly metadata: nbformat.INotebookMetadata | undefined;
-    readonly isTrusted: boolean;
-    readonly cellCount: number;
-    /**
-     * @deprecated
-     * Use only with old notebooks, when using with new Notebooks, use VSC API instead.
-     */
-    getCellsWithId(): { data: nbformat.IBaseCell; id: string; state: CellState }[];
-    getContent(): string;
     /**
      * Dispose of the Notebook model.
      *
@@ -1152,18 +1017,6 @@ export interface IModelLoadOptions {
     skipLoadingDirtyContents?: boolean;
 }
 
-export const INotebookStorage = Symbol('INotebookStorage');
-
-export interface INotebookStorage {
-    generateBackupId(model: INotebookModel): string;
-    save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
-    saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
-    backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void>;
-    get(file: Uri): INotebookModel | undefined;
-    getOrCreateModel(options: IModelLoadOptions): Promise<INotebookModel>;
-    revert(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
-    deleteBackup(model: INotebookModel, backupId?: string): Promise<void>;
-}
 type WebViewViewState = {
     readonly visible: boolean;
     readonly active: boolean;
@@ -1459,22 +1312,7 @@ export interface IExternalWebviewCellButton {
     running: boolean;
 }
 
-export interface IExternalWebviewCellButtonWithCallback extends IExternalWebviewCellButton {
-    // Callback is only used on the extension side. Don't pass to the UI
-    callback(cell: NotebookCell, isInteractive: boolean, resource: Uri): Promise<void>;
-}
-
 export interface IExternalCommandFromWebview {
     buttonId: string;
     cell: ICell;
-}
-
-export const INotebookModelSynchronization = Symbol.for('INotebookModelSynchronization');
-/**
- * Service used to make sure a notebook model matches the code displayed in the UI (whichever UI is hosting the model)
- * See this bug here:
- * https://github.com/microsoft/vscode-jupyter/issues/1701
- */
-export interface INotebookModelSynchronization {
-    syncAllCells(model: INotebookModel): Promise<void>;
 }

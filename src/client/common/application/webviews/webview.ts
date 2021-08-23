@@ -88,7 +88,15 @@ export abstract class Webview implements IWebview {
         const fontAwesomePath = this.webviewHost.webview
             .asWebviewUri(
                 Uri.file(
-                    path.join(this.options.rootPath, 'node_modules', 'font-awesome', 'css', 'font-awesome.min.css')
+                    path.join(
+                        this.options.rootPath,
+                        'out',
+                        'fontAwesome',
+                        'node_modules',
+                        'font-awesome',
+                        'css',
+                        'font-awesome.min.css'
+                    )
                 )
             )
             .toString();

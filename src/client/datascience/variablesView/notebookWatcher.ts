@@ -8,13 +8,24 @@ import {
     notebooks,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
-    Uri
+    Uri,
+    window,
+    workspace
 } from 'vscode';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
+import { IKernelProvider } from '../jupyter/kernels/types';
+import { isJupyterNotebook } from '../notebook/helpers/helpers';
 import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
-import { INotebook, INotebookEditor, INotebookEditorProvider, INotebookExtensibility } from '../types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    INotebook,
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookExtensibility
+} from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 
 interface IExecutionCountEntry {
@@ -37,12 +48,14 @@ export class NotebookWatcher implements INotebookWatcher {
         return this._onDidRestartActiveNotebook.event;
     }
     public get activeNotebook(): INotebook | undefined {
-        return this.notebookEditorProvider.activeEditor?.notebook;
+        return this.notebookEditorProvider.activeEditor?.notebook || this.getActiveInteractiveWindowNotebook();
     }
     public get activeNotebookExecutionCount(): number | undefined {
-        if (this.notebookEditorProvider.activeEditor) {
-            const executionCount = this.getExecutionCount(this.notebookEditorProvider.activeEditor.file);
-
+        const activeInteractiveWindow = this.getActiveInteractiveWindow();
+        const activeNotebookOrInteractiveWindow =
+            this.notebookEditorProvider.activeEditor?.file || activeInteractiveWindow?.notebookUri;
+        if (activeNotebookOrInteractiveWindow) {
+            const executionCount = this.getExecutionCount(activeNotebookOrInteractiveWindow);
             return executionCount?.executionCount;
         }
 
@@ -61,6 +74,8 @@ export class NotebookWatcher implements INotebookWatcher {
 
     constructor(
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(INotebookExtensibility) private readonly notebookExtensibility: INotebookExtensibility,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
@@ -69,6 +84,11 @@ export class NotebookWatcher implements INotebookWatcher {
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
         this.notebookEditorProvider.onDidCloseNotebookEditor(this.notebookEditorClosed, this, this.disposables);
+        this.kernelProvider.onDidRestartKernel(
+            (kernel) => this.handleRestart({ state: KernelState.restarted, resource: kernel.notebookUri }),
+            this,
+            this.disposables
+        );
         notebooks.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
@@ -77,11 +97,17 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Handle when a cell finishes execution
-    private onDidChangeNotebookCellExecutionState(cellStateChange: NotebookCellExecutionStateChangeEvent): void {
+    private async onDidChangeNotebookCellExecutionState(
+        cellStateChange: NotebookCellExecutionStateChangeEvent
+    ): Promise<void> {
+        if (!isJupyterNotebook(cellStateChange.cell.notebook)) {
+            return;
+        }
+
         // If a cell has moved to idle, update our state
         if (cellStateChange.state === NotebookCellExecutionState.Idle) {
             // Convert to the old KernelStateEventArgs format
-            this.handleExecute({
+            await this.handleExecute({
                 resource: cellStateChange.cell.notebook.uri,
                 state: KernelState.executed,
                 cell: cellStateChange.cell,
@@ -91,10 +117,10 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Handle kernel state changes
-    private kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
+    private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
         switch (kernelStateEvent.state) {
             case KernelState.restarted:
-                this.handleRestart(kernelStateEvent);
+                await this.handleRestart(kernelStateEvent);
                 break;
             default:
                 break;
@@ -102,7 +128,7 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Handle a kernel execution event
-    private handleExecute(kernelStateEvent: KernelStateEventArgs) {
+    private async handleExecute(kernelStateEvent: KernelStateEventArgs) {
         // We are not interested in silent executions
         if (this.isNonSilentExecution(kernelStateEvent)) {
             // First, update our execution counts, regardless of if this is the active document
@@ -115,8 +141,7 @@ export class NotebookWatcher implements INotebookWatcher {
 
             // Next, if this is the active document, send out our notifications
             if (
-                //this.isActiveNotebookExecution(kernelStateEvent) &&
-                this.isActiveNotebookEvent(kernelStateEvent) &&
+                (await this.isActiveNotebookEvent(kernelStateEvent)) &&
                 kernelStateEvent.cell?.executionSummary?.executionOrder !== undefined
             ) {
                 this._onDidExecuteActiveNotebook.fire({
@@ -127,13 +152,12 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Handle a kernel restart event
-    private handleRestart(kernelStateEvent: KernelStateEventArgs) {
+    private async handleRestart(kernelStateEvent: KernelStateEventArgs) {
         // First delete any execution counts that we are holding for this
         this.deleteExecutionCount(kernelStateEvent.resource);
 
         // If this is the active notebook, send our restart message
-        //if (this.isActiveNotebookRestart(kernelStateEvent)) {
-        if (this.isActiveNotebookEvent(kernelStateEvent)) {
+        if (await this.isActiveNotebookEvent(kernelStateEvent)) {
             this._onDidRestartActiveNotebook.fire();
         }
     }
@@ -171,14 +195,40 @@ export class NotebookWatcher implements INotebookWatcher {
     }
 
     // Check to see if this event was on the active notebook
-    private isActiveNotebookEvent(kernelStateEvent: KernelStateEventArgs): boolean {
+    private async isActiveNotebookEvent(kernelStateEvent: KernelStateEventArgs): Promise<boolean> {
         if (
             this.notebookEditorProvider.activeEditor &&
             this.fileSystem.arePathsSame(this.notebookEditorProvider.activeEditor.file, kernelStateEvent.resource)
         ) {
             return true;
         }
+        const activeInteractiveWindow = this.getActiveInteractiveWindow();
+        if (
+            activeInteractiveWindow?.notebookUri !== undefined &&
+            this.fileSystem.arePathsSame(activeInteractiveWindow.notebookUri, kernelStateEvent.resource)
+        ) {
+            return true;
+        }
         return false;
+    }
+
+    private getActiveInteractiveWindow(): IInteractiveWindow | undefined {
+        if (window.activeTextEditor === undefined) {
+            return;
+        }
+        const textDocumentUri = window.activeTextEditor.document.uri;
+        return this.interactiveWindowProvider.get(textDocumentUri);
+    }
+
+    private getActiveInteractiveWindowNotebook(): INotebook | undefined {
+        const interactiveWindow = this.getActiveInteractiveWindow();
+        const notebookDocument = workspace.notebookDocuments.find(
+            (notebookDocument) => notebookDocument.uri.toString() === interactiveWindow?.notebookUri?.toString()
+        );
+        if (notebookDocument === undefined) {
+            return;
+        }
+        return this.kernelProvider.get(notebookDocument)?.notebook;
     }
 
     // If the Uri is in the execution count tracker, return it, if not return undefined

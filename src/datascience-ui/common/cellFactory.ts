@@ -9,7 +9,7 @@ const cloneDeep = require('lodash/cloneDeep');
 import '../../client/common/extensions';
 import { appendLineFeed, generateMarkdownFromCodeLines } from './index';
 
-function uncommentMagicCommands(line: string): string {
+export function uncommentMagicCommands(line: string): string {
     // Uncomment lines that are shell assignments (starting with #!),
     // line magic (starting with #!%) or cell magic (starting with #!%%).
     if (/^#\s*!/.test(line)) {

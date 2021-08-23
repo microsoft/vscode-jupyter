@@ -26,7 +26,7 @@ process.env.VSC_JUPYTER_CI_TEST = '1';
 process.env.VSC_JUPYTER_UNIT_TEST = '1';
 process.env.NODE_ENV = 'production'; // Make sure react is using production bits or we can run out of memory.
 
-import { setUpDomEnvironment, setupTranspile } from './datascience/reactHelpers';
+import { setUpDomEnvironment } from './datascience/reactHelpers';
 import { initialize } from './vscode-mock';
 
 // Custom module loader so we skip .css files that break non webpack wrapped compiles
@@ -79,9 +79,6 @@ if (process.argv.indexOf('--fast') === -1) {
     // nteract/transforms-full expects to run in the browser so we have to fake
     // parts of the browser here.
     setUpDomEnvironment();
-
-    // Also have to setup babel to get the monaco editor to work.
-    setupTranspile();
 }
 
 // Rebuild with nyc
@@ -93,8 +90,13 @@ exports.mochaHooks = {
 
         // Output the nyc coverage if we have any
         if (nyc) {
-            nyc.writeCoverageFile();
-            nycPromise = nyc.report();
+            try {
+                nyc.writeCoverageFile();
+                nycPromise = nyc.report();
+            } catch (ex) {
+                console.error(`Failed to generate NYC reports`, ex);
+                nycPromise = Promise.resolve();
+            }
         }
 
         const kernelLauncherMod = require('../client/datascience/kernel-launcher/kernelLauncher');

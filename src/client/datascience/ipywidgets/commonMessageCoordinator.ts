@@ -13,8 +13,8 @@ import {
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
-import { traceError, traceInfo } from '../../common/logger';
+import { isCI, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
+import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import {
@@ -237,7 +237,7 @@ export class CommonMessageCoordinator {
         // If no one is listening to the messages, then cache these.
         // It means its too early to dispatch the messages, we need to wait for the event handlers to get bound.
         if (!this.listeningToPostMessageEvent) {
-            traceInfo(`${ConsoleForegroundColors.Green}Queuing messages (no listenerts)`);
+            traceInfoIf(isCI, `${ConsoleForegroundColors.Green}Queuing messages (no listenerts)`);
             this.cachedMessages.push(data);
             return;
         }

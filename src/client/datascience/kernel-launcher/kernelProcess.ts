@@ -110,11 +110,11 @@ export class KernelProcess implements IKernelProcess {
             deferred.reject(new KernelProcessExited(exitCode || -1));
         });
 
-        exeObs.proc!.stdout.on('data', (data: Buffer | string) => {
+        exeObs.proc!.stdout?.on('data', (data: Buffer | string) => {
             traceInfo(`KernelProcess output: ${(data || '').toString()}`);
         });
 
-        exeObs.proc!.stderr.on('data', (data: Buffer | string) => {
+        exeObs.proc!.stderr?.on('data', (data: Buffer | string) => {
             stderrProc += data.toString();
             traceInfo(`KernelProcess error: ${(data || '').toString()}`);
         });
@@ -194,7 +194,8 @@ export class KernelProcess implements IKernelProcess {
                     localize.DataScience.kernelDied().format(Commands.ViewJupyterOutput, errorMessage),
                     // Include what ever we have as the stderr.
                     stderrProc + '\n' + stderr + '\n',
-                    e
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    e as any
                 );
             } else {
                 traceError('Timed out waiting to get a heartbeat from kernel process.');
@@ -341,7 +342,10 @@ export class KernelProcess implements IKernelProcess {
             traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
             const [executionService, env] = await Promise.all([
                 this.processExecutionFactory.create(this.resource),
-                this.kernelEnvVarsService.getEnvironmentVariables(this.resource, this.launchKernelSpec)
+                // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
+                // Note that there might still be python env vars to merge from the kernel spec in the case of something like
+                // a Java kernel registered in a conda environment
+                this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec)
             ]);
 
             // Add quotations to arguments if they have a blank space in them.

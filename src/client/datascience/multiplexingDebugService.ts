@@ -139,7 +139,7 @@ export class MultiplexingDebugService implements IJupyterDebugService {
             this.jupyterDebugService.stop();
         } else {
             // Stop our debugging UI session, no await as we just want it stopped
-            this.commandManager.executeCommand('workbench.action.debug.stop');
+            void this.commandManager.executeCommand('workbench.action.debug.stop');
         }
     }
 

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, Uri } from 'vscode';
+import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, Uri, workspace } from 'vscode';
 
 import { IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { traceWarning } from '../../common/logger';
@@ -10,17 +10,14 @@ import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { generateCellRangesFromDocument } from '../cellFactory';
-import { CodeLensCommands, Commands, Identifiers } from '../constants';
-import { InteractiveWindowMessages, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
+import { CodeLensCommands, Commands } from '../constants';
 import {
     ICell,
     ICellHashProvider,
     ICellRange,
     ICodeLensFactory,
     IFileHashes,
-    IInteractiveWindowListener,
     INotebook,
     INotebookProvider
 } from '../types';
@@ -45,14 +42,8 @@ type PerNotebookData = {
  * to cells being execute so it can add 'goto' lenses on cells that have already been run.
  */
 @injectable()
-export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowListener {
+export class CodeLensFactory implements ICodeLensFactory {
     private updateEvent: EventEmitter<void> = new EventEmitter<void>();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
-        message: string;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        payload: any;
-    }>();
     private notebookData = new Map<string, PerNotebookData>();
     private codeLensCache = new Map<string, CodeLensCacheData>();
     constructor(
@@ -67,54 +58,6 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings.bind(this));
         this.notebookProvider.onNotebookCreated(this.onNotebookCreated.bind(this));
     }
-
-    public dispose(): void {
-        noop();
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public get postMessage(): Event<{ message: string; payload: any }> {
-        return this.postEmitter.event;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public onMessage(message: string, payload?: any) {
-        switch (message) {
-            case InteractiveWindowMessages.NotebookIdentity:
-                if (payload.type === 'interactive') {
-                    this.trackNotebook(payload.resource);
-                }
-                break;
-
-            case InteractiveWindowMessages.NotebookClose:
-                if (payload.type === 'interactive') {
-                    this.untrackNotebook(payload.resource);
-                }
-                break;
-
-            case InteractiveWindowMessages.AddedSysInfo:
-                if (payload && payload.type) {
-                    const reason = payload.type as SysInfoReason;
-                    if (reason !== SysInfoReason.Interrupt) {
-                        this.clearExecutionCounts(payload.notebookIdentity);
-                    }
-                }
-                break;
-
-            case InteractiveWindowMessages.FinishCell:
-                const cell = payload.cell as ICell;
-                if (cell && cell.data && cell.data.execution_count) {
-                    if (cell.file && cell.file !== Identifiers.EmptyFileName) {
-                        this.updateExecutionCounts(payload.notebookIdentity, cell);
-                    }
-                }
-                break;
-
-            default:
-                break;
-        }
-    }
-
     public get updateRequired(): Event<void> {
         return this.updateEvent.event;
     }
@@ -208,14 +151,6 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         }
         return cache;
     }
-
-    private trackNotebook(identity: Uri) {
-        // Setup our per notebook data if not already tracked.
-        if (!this.notebookData.has(identity.toString())) {
-            this.notebookData.set(identity.toString(), this.createNotebookData());
-        }
-    }
-
     private createNotebookData(): PerNotebookData {
         return {
             cellExecutionCounts: new Map<string, string>(),
@@ -223,21 +158,6 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             hashProvider: undefined
         };
     }
-
-    private untrackNotebook(identity: Uri) {
-        this.notebookData.delete(identity.toString());
-        this.updateEvent.fire();
-    }
-
-    private clearExecutionCounts(identity: Uri) {
-        const data = this.notebookData.get(identity.toString());
-        if (data) {
-            data.cellExecutionCounts.clear();
-            data.documentExecutionCounts.clear();
-            this.updateEvent.fire();
-        }
-    }
-
     private getDocumentExecutionCounts(key: string): number[] {
         return [...this.notebookData.values()]
             .map((d) => d.documentExecutionCounts.get(key))
@@ -272,6 +192,11 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         args.notebook.onDisposed(() => {
             this.notebookData.delete(key);
         });
+        if (args.notebook.onDidFinishExecuting !== undefined) {
+            args.notebook.onDidFinishExecuting((cell: ICell) => {
+                this.updateExecutionCounts(args.identity, cell);
+            });
+        }
     }
 
     private getHashProviders(): ICellHashProvider[] {
@@ -353,6 +278,11 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         commandName: string,
         isFirst: boolean
     ): CodeLens | undefined {
+        // Do not generate interactive window codelenses for TextDocuments which are part of NotebookDocuments
+        if (workspace.notebookDocuments.find((notebook) => notebook.uri.toString() === document.uri.toString())) {
+            return;
+        }
+
         // We only support specific commands
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.

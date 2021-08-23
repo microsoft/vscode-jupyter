@@ -9,9 +9,7 @@
 'use strict';
 
 const gulp = require('gulp');
-const ts = require('gulp-typescript');
 const spawn = require('cross-spawn');
-const colors = require('colors/safe');
 const path = require('path');
 const del = require('del');
 const fs = require('fs-extra');
@@ -20,9 +18,9 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
-const { ExtensionRootDir } = require('./build/util');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 const { downloadRendererExtension } = require('./build/ci/downloadRenderer');
+const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
@@ -35,6 +33,16 @@ gulp.task('compile', async (done) => {
     } catch (e) {
         done(e);
     }
+});
+
+gulp.task('createNycFolder', async (done) => {
+    try {
+        const fs = require('fs');
+        fs.mkdirSync(path.join(__dirname, '.nyc_output'));
+    } catch (e) {
+        //
+    }
+    done();
 });
 
 gulp.task('output:clean', () => del(['coverage']));
@@ -65,6 +73,9 @@ gulp.task('checkNpmDependencies', (done) => {
         { name: 'node_modules/trim', version: '0.0.3' }
     ];
     function checkPackageVersions(packages, parent) {
+        if (!packages) {
+            return;
+        }
         expectedVersions.forEach((expectedVersion) => {
             if (!packages[expectedVersion.name]) {
                 return;
@@ -83,6 +94,9 @@ gulp.task('checkNpmDependencies', (done) => {
         });
     }
     function checkPackageDependencies(packages) {
+        if (!packages) {
+            return;
+        }
         Object.keys(packages).forEach((packageName) => {
             const dependencies = packages[packageName]['dependencies'];
             if (dependencies) {
@@ -103,8 +117,6 @@ gulp.task('checkNpmDependencies', (done) => {
 });
 
 gulp.task('compile-ipywidgets', () => buildIPyWidgets());
-
-const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
 async function buildIPyWidgets() {
     // if the output ipywidgest file exists, then no need to re-build.
@@ -130,7 +142,9 @@ gulp.task('compile-viewers', async () => {
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
-    gulp.task('compile-webviews', async () => {});
+    gulp.task('compile-webviews', async () => {
+        // Do nothing, just eliminate js errors
+    });
 } else {
     gulp.task(
         'compile-webviews',
@@ -169,12 +183,25 @@ async function updateBuildNumber(args) {
         const packageJson = JSON.parse(packageJsonContents);
 
         // Change version number
+        // 3rd part of version is limited to Max Int32 numbers (in VSC Marketplace).
+        // Hence build numbers can only be YYYY.MMM.2147483647
+        // NOTE: For each of the following strip the first 3 characters from the build number.
+        //  E.g. if we have build number of `build number = 3264527301, then take 4527301
+
+        // To ensure we can have point releases & insider builds, we're going with the following format:
+        // Insider & Release builds will be YYYY.MMM.100<build number>
+        // When we have a hot fix, we update the version to YYYY.MMM.110<build number>
+        // If we have more hot fixes, they'll be YYYY.MMM.120<build number>, YYYY.MMM.130<build number>, & so on.
+
         const versionParts = packageJson.version.split('.');
         const buildNumberPortion =
             versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
         const newVersion =
             versionParts.length > 1
-                ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}`
+                ? `${versionParts[0]}.${versionParts[1]}.${versionParts[2].substring(
+                      0,
+                      3
+                  )}${buildNumberPortion.substring(0, buildNumberPortion.length - 3)}`
                 : packageJson.version;
         packageJson.version = newVersion;
 
@@ -235,7 +262,6 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
                 'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
                 'WARNING in webpack performance recommendations:',
-                'WARNING in ./node_modules/vsls/vscode.js',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
                 'WARNING in ./node_modules/keyv/src/index.js',
                 'ERROR in ./node_modules/got/index.js',

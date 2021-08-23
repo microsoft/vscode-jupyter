@@ -150,14 +150,14 @@ export namespace DataScience {
         'DataScience.pythonExtensionRequiredToRunNotebook',
         'Python Extension required to run Python notebooks.'
     );
+    export const newNotebookUI = localize(
+        'DataScience.newNotebookUI',
+        "Welcome to VS Code's new notebook experience!  We think you'll find it faster and more pleasing to use. [Learn more...](https://aka.ms/NewNotebookUI)"
+    );
+    export const customizeLayout = localize('DataScience.customizeLayout', 'Customize Layout');
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
         'The Python extension is required to perform that task. Click Yes to open Python extension installation page.'
-    );
-
-    export const pythonExtensionRecommended = localize(
-        'DataScience.pythonExtensionRecommended',
-        'Installation of the Python Extension is strongly recommended when working with Python notebooks. For all features and the most seamless experience, would you like to install now?'
     );
 
     export const pythonExtensionInstalled = localize(
@@ -405,6 +405,8 @@ export namespace DataScience {
     );
     export const restartedKernelHeader = localize('DataScience.restartedKernelHeader', 'Restarted {0}');
     export const startedNewKernelHeader = localize('DataScience.startedNewKernelHeader', 'Started {0}');
+    export const startingNewKernelHeader = localize('DataScience.kernelStarting', '_Connecting to kernel..._');
+    export const startingNewKernelCustomHeader = localize('DataScience.kernelStartingCustom', '_Connecting to {0}..._');
     export const connectKernelHeader = localize('DataScience.connectKernelHeader', 'Connected to {0}');
 
     export const jupyterSelectURIPrompt = localize(
@@ -458,6 +460,10 @@ export namespace DataScience {
     export const pythonNotInstalled = localize(
         'DataScience.installPython',
         'Python is not installed. \nPlease [download](https://www.python.org/downloads) and install Python in order to execute cells in this notebook.'
+    );
+    export const pythonNotInstalledNonMarkdown = localize(
+        'DataScience.installPythonNonMarkdown',
+        'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook from here https://www.python.org/downloads.'
     );
     export const kernelNotInstalled = localize(
         'DataScience.installKernel',
@@ -920,18 +926,6 @@ export namespace DataScience {
         'Connecting to kernel.'
     );
 
-    export const reloadCustomEditor = localize(
-        'DataScience.reloadCustomEditor',
-        'Please reload VS Code to use the custom editor API'
-    );
-    export const reloadVSCodeNotebookEditor = localize(
-        'DataScience.reloadVSCodeNotebookEditor',
-        'Please reload VS Code to use the Notebook Editor'
-    );
-    export const usingPreviewNotebookWithOtherNotebookWarning = localize(
-        'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
-        'Opening the same file in the Preview Notebook Editor and stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
-    );
     export const insecureSessionMessage = localize(
         'DataScience.insecureSessionMessage',
         'Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?'
@@ -946,23 +940,14 @@ export namespace DataScience {
         'DataScience.ipykernelNotInstalled',
         'IPyKernel not installed into interpreter {0}'
     );
-    export const illegalEditorConfig = localize(
-        'DataScience.illegalEditorConfig',
-        'CustomEditor and NativeNotebook experiments cannot be turned on together'
-    );
-    export const invalidCustomEditor = localize(
-        'DataScience.invalidCustomEditor',
-        'Using the Jupyter notebook editor requires the stable version of VS code and the CustomEditor experiment to be enabled.'
-    );
+    export const needIpykernel6 = localize('DataScience.needIpykernel6', 'Ipykernel setup required for this feature');
+    export const setup = localize('DataScience.setup', 'Setup');
+    export const startingRunByLine = localize('DataScience.startingRunByLine', 'Starting Run by Line');
     export const showDataViewerFail = localize(
         'DataScience.showDataViewerFail',
         'Failed to create the Data Viewer. Check the Jupyter tab of the Output window for more info.'
     );
 
-    export const kernelTipMessage = localize(
-        'DataScience.kernelTipMessage',
-        'Tip: You can change your notebook kernel in the status bar.'
-    );
     export const placeHolderToSelectOptionForNotebookCreation = localize(
         'DataScience.notebookCreationPickerPlaceHolder',
         'Select an option to create a blank notebook'
@@ -973,6 +958,12 @@ export namespace DataScience {
         'DataScience.recommendExtensionForNotebook',
         "The {0} extension is recommended for notebooks targetting the language '{1}'."
     );
+    export const kernelWasNotStarted = localize(
+        'DataScience.kernelWasNotStarted',
+        'Kernel was not started. A kernel session is needed to start debugging.'
+    );
+    export const noNotebookToDebug = localize('DataScience.noNotebookToDebug', 'No active notebook document to debug.');
+    export const cantStartDebugging = localize('DataScience.cantStartDebugging', "Can't start debugging.");
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

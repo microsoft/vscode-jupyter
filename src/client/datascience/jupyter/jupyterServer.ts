@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import { injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { ILiveShareApi } from '../../common/application/types';
 import '../../common/extensions';
 import { traceError, traceInfo } from '../../common/logger';
 import {
@@ -37,6 +37,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
 
+@injectable()
 export class JupyterServerBase implements INotebookServer {
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private _id = uuid();
@@ -48,7 +49,6 @@ export class JupyterServerBase implements INotebookServer {
     private savedSession: IJupyterSession | undefined;
 
     constructor(
-        _liveShare: ILiveShareApi,
         private asyncRegistry: IAsyncDisposableRegistry,
         private disposableRegistry: IDisposableRegistry,
         protected readonly configService: IConfigurationService,
@@ -253,7 +253,7 @@ export class JupyterServerBase implements INotebookServer {
 
         notebook
             .then((nb) => {
-                const oldDispose = nb.dispose;
+                const oldDispose = nb.dispose.bind(nb);
                 nb.dispose = () => {
                     this.notebooks.delete(identity.toString());
                     return oldDispose();

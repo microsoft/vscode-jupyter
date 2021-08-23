@@ -3,13 +3,11 @@
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 
-import { nbformat } from '@jupyterlab/coreutils';
 import { assert, expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
-import { instance, mock, when } from 'ts-mockito';
 import {
     WorkspaceEdit,
     commands,
@@ -18,7 +16,6 @@ import {
     window,
     workspace,
     NotebookCell,
-    NotebookContentProvider as VSCNotebookContentProvider,
     NotebookDocument,
     NotebookCellKind,
     NotebookCellOutputItem,
@@ -30,10 +27,9 @@ import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { disposeAllDisposables } from '../../../client/common/helpers';
 import { traceInfo } from '../../../client/common/logger';
-import { GLOBAL_MEMENTO, ICryptoUtils, IDisposable, IMemento } from '../../../client/common/types';
+import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { swallowExceptions } from '../../../client/common/utils/misc';
-import { CellExecution } from '../../../client/datascience/jupyter/kernels/cellExecution';
 import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
 import {
@@ -43,30 +39,22 @@ import {
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/cellLanguageService';
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
-import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
-import {
-    CellOutputMimeTypes,
-    INotebookContentProvider,
-    INotebookControllerManager
-} from '../../../client/datascience/notebook/types';
-import { VSCodeNotebookModel } from '../../../client/datascience/notebookStorage/vscNotebookModel';
+import { CellOutputMimeTypes, INotebookControllerManager } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
-import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
+import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
-import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 
 // Running in Conda environments, things can be a little slower.
-const defaultTimeout = IS_CONDA_TEST ? 30_000 : 15_000;
+export const defaultNotebookTestTimeout = 60_000;
 
 async function getServices() {
     const api = await initialize();
     return {
-        contentProvider: api.serviceContainer.get<VSCNotebookContentProvider>(INotebookContentProvider),
         vscodeNotebook: api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
         editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider),
         notebookControllerManager: api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager),
@@ -199,7 +187,7 @@ export async function shutdownAllNotebooks() {
         ...notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()),
         kernelProvider.dispose()
     ]);
-    const notebookEditorProvider = api.serviceContainer.get<NotebookEditorProvider>(VSCodeNotebookProvider);
+    const notebookEditorProvider = api.serviceContainer.get<NotebookEditorProvider>(INotebookEditorProvider);
     notebookEditorProvider.dispose();
 }
 
@@ -247,7 +235,7 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     await waitForKernelToGetAutoSelected(undefined, 10_000);
 
     // Get the list of NotebookControllers for this document
-    const notebookControllers = await notebookControllerManager.getNotebookControllers();
+    const notebookControllers = notebookControllerManager.registeredNotebookControllers();
 
     // Get the list of kernels possible
     traceInfo(`Controllers found for wait search: ${notebookControllers?.map((k) => `${k.label}:${k.id}`).join('\n')}`);
@@ -274,13 +262,14 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     // Send a select kernel on the active notebook editor
     void commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
     const isRightKernel = () => {
-        if (!vscodeNotebook.activeNotebookEditor) {
+        const doc = vscodeNotebook.activeNotebookEditor?.document;
+        if (!doc) {
             return false;
         }
 
-        const selectedController = notebookControllerManager.getSelectedNotebookController(
-            vscodeNotebook.activeNotebookEditor.document
-        );
+        const selectedController = notebookControllerManager
+            .registeredNotebookControllers()
+            .find((item) => item.isAssociatedWithDocument(doc));
         if (!selectedController) {
             return false;
         }
@@ -293,7 +282,7 @@ export async function waitForKernelToChange(criteria: { labelOrId?: string; inte
     };
     await waitForCondition(
         async () => isRightKernel(),
-        defaultTimeout,
+        defaultNotebookTestTimeout,
         `Kernel with criteria ${JSON.stringify(criteria)} not selected`
     );
 
@@ -310,16 +299,20 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     let selectedController: VSCodeNotebookController;
     await waitForCondition(
         async () => {
-            const controller = notebookControllerManager.getSelectedNotebookController(
-                vscodeNotebook.activeNotebookEditor?.document!
-            );
+            const doc = vscodeNotebook.activeNotebookEditor?.document;
+            if (!doc) {
+                return false;
+            }
+            const controller = notebookControllerManager
+                .registeredNotebookControllers()
+                .find((item) => item.isAssociatedWithDocument(doc));
             if (controller) {
                 selectedController = controller;
             }
             return controller !== undefined;
         },
         time,
-        'Failed to set notebook controllers'
+        `Failed to set notebook controllers in ${time}ms for ${vscodeNotebook.activeNotebookEditor?.document?.uri?.toString()}`
     );
     let kernelInfo = '';
     const isRightKernel = () => {
@@ -358,7 +351,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     };
     // Wait for the active kernel to be a julia kernel.
     const errorMessage = expectedLanguage ? `${expectedLanguage} kernel not auto selected` : 'Kernel not auto selected';
-    await waitForCondition(async () => isRightKernel(), defaultTimeout, errorMessage);
+    await waitForCondition(async () => isRightKernel(), defaultNotebookTestTimeout, errorMessage);
     // If it works, make sure kernel has enough time to actually switch the active notebook to this
     // kernel (kernel changes are async)
     await waitForCondition(
@@ -451,9 +444,8 @@ export async function prewarmNotebooks() {
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
-        await runAllCellsInActiveNotebook();
+        await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
         // Wait for Jupyter to start.
-        await waitForExecutionCompletedSuccessfully(cell, 60_000);
         await closeActiveWindows();
     } finally {
         disposables.forEach((d) => d.dispose());
@@ -478,30 +470,53 @@ function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
  * In tests we can end up deleting cells. However if extension is still dealing with the cells, we need to give it some time to finish.
  */
 export async function waitForCellExecutionToComplete(cell: NotebookCell) {
-    if (!CellExecution.cellsCompletedForTesting.has(cell)) {
-        CellExecution.cellsCompletedForTesting.set(cell, createDeferred<void>());
-    }
-    // Yes hacky approach, however its difficult to synchronize everything as we update cells in a few places while executing.
-    // 100ms should be plenty sufficient for other code to get executed when dealing with cells.
-    // Again, we need to wait for rest of execution code to access the cells.
-    // Else in tests we'd delete the cells & the extension code could fall over trying to access non-existent cells.
-    // In fact code doesn't fall over, but VS Code just hangs in tests.
-    // If this doesn't work on CI, we'll need to clean up and write more code to ensure we remove these race conditions as done with `CellExecution.cellsCompleted`.
-    await CellExecution.cellsCompletedForTesting.get(cell)!.promise;
+    // if (!CellExecution.cellsCompletedForTesting.has(cell)) {
+    //     CellExecution.cellsCompletedForTesting.set(cell, createDeferred<void>());
+    // }
+    // // Yes hacky approach, however its difficult to synchronize everything as we update cells in a few places while executing.
+    // // 100ms should be plenty sufficient for other code to get executed when dealing with cells.
+    // // Again, we need to wait for rest of execution code to access the cells.
+    // // Else in tests we'd delete the cells & the extension code could fall over trying to access non-existent cells.
+    // // In fact code doesn't fall over, but VS Code just hangs in tests.
+    // // If this doesn't work on CI, we'll need to clean up and write more code to ensure we remove these race conditions as done with `CellExecution.cellsCompleted`.
+    // await CellExecution.cellsCompletedForTesting.get(cell)!.promise;
+    await waitForCondition(
+        async () => (cell.executionSummary?.executionOrder || 0) > 0,
+        defaultNotebookTestTimeout,
+        'Execution did not complete'
+    );
     await sleep(100);
 }
-export async function waitForExecutionCompletedSuccessfully(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForOutputs(
+    cell: NotebookCell,
+    expectedNumberOfOutputs: number,
+    timeout: number = defaultNotebookTestTimeout
+) {
     await waitForCondition(
-        async () => assertHasExecutionCompletedSuccessfully(cell),
+        async () => cell.outputs.length === expectedNumberOfOutputs,
         timeout,
         `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
-    await waitForCellExecutionToComplete(cell);
+}
+export async function waitForExecutionCompletedSuccessfully(
+    cell: NotebookCell,
+    timeout: number = defaultNotebookTestTimeout
+) {
+    await Promise.all([
+        waitForCondition(
+            async () => assertHasExecutionCompletedSuccessfully(cell),
+            timeout,
+            `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(
+                cell
+            )}`
+        ),
+        waitForCellExecutionToComplete(cell)
+    ]);
 }
 /**
  * When a cell is running (in progress), the start time will be > 0.
  */
-export async function waitForExecutionInProgress(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForExecutionInProgress(cell: NotebookCell, timeout: number = defaultNotebookTestTimeout) {
     await waitForCondition(
         async () => {
             return (
@@ -516,7 +531,7 @@ export async function waitForExecutionInProgress(cell: NotebookCell, timeout: nu
 /**
  * When a cell is queued for execution (in progress), the start time, last duration & status message will be `empty`.
  */
-export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForQueuedForExecution(cell: NotebookCell, timeout: number = defaultNotebookTestTimeout) {
     await waitForCondition(
         async () => {
             return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending;
@@ -527,7 +542,10 @@ export async function waitForQueuedForExecution(cell: NotebookCell, timeout: num
         )}`
     );
 }
-export async function waitForQueuedForExecutionOrExecuting(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForQueuedForExecutionOrExecuting(
+    cell: NotebookCell,
+    timeout: number = defaultNotebookTestTimeout
+) {
     await waitForCondition(
         async () => {
             return (
@@ -543,7 +561,10 @@ export async function waitForQueuedForExecutionOrExecuting(cell: NotebookCell, t
         )}`
     );
 }
-export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForEmptyCellExecutionCompleted(
+    cell: NotebookCell,
+    timeout: number = defaultNotebookTestTimeout
+) {
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
@@ -553,7 +574,10 @@ export async function waitForEmptyCellExecutionCompleted(cell: NotebookCell, tim
     );
     await waitForCellExecutionToComplete(cell);
 }
-export async function waitForExecutionCompletedWithErrors(cell: NotebookCell, timeout: number = defaultTimeout) {
+export async function waitForExecutionCompletedWithErrors(
+    cell: NotebookCell,
+    timeout: number = defaultNotebookTestTimeout
+) {
     await waitForCondition(
         async () => assertHasExecutionCompletedWithErrors(cell),
         timeout,
@@ -568,6 +592,22 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
         hasErrorOutput(cell.outputs)
     );
 }
+function getCellOutputs(cell: NotebookCell) {
+    return cell.outputs.length
+        ? cell.outputs.map((output) => output.items.map(getOutputText).join('\n')).join('\n')
+        : '<No cell outputs>';
+}
+function getOutputText(output: NotebookCellOutputItem) {
+    if (
+        output.mime !== CellOutputMimeTypes.stdout &&
+        output.mime !== CellOutputMimeTypes.stderr &&
+        output.mime !== 'text/plain' &&
+        output.mime !== 'text/markdown'
+    ) {
+        return '';
+    }
+    return Buffer.from(output.data as Uint8Array).toString('utf8');
+}
 function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExactMatch = true) {
     if (
         output.mime !== CellOutputMimeTypes.stdout &&
@@ -578,10 +618,8 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
         return false;
     }
     try {
-        const haystack = Buffer.from(output.data as Uint8Array)
-            .toString('utf8')
-            .trim();
-        return isExactMatch ? haystack === value : haystack.includes(value);
+        const haystack = Buffer.from(output.data as Uint8Array).toString('utf8');
+        return isExactMatch ? haystack === value || haystack.trim() === value : haystack.includes(value);
     } catch {
         return false;
     }
@@ -598,17 +636,18 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     );
     return result;
 }
-export async function waitForTextOutputInVSCode(
+export async function waitForTextOutput(
     cell: NotebookCell,
     text: string,
-    index: number,
+    index: number = 0,
     isExactMatch = true,
-    timeout = 1_000
+    timeout = defaultNotebookTestTimeout
 ) {
     await waitForCondition(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
         timeout,
-        `Output does not contain provided text '${text}' for Cell ${cell.index + 1}`
+        () =>
+            `Output does not contain provided text '${text}' for Cell ${cell.index + 1}, it is ${getCellOutputs(cell)}`
     );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
@@ -644,48 +683,8 @@ export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
     return true;
 }
 
-export async function saveActiveNotebook(disposables: IDisposable[]) {
-    const api = await initialize();
-    const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
-    if (editorProvider.activeEditor instanceof NotebookEditor) {
-        await commands.executeCommand('workbench.action.files.saveAll');
-    } else {
-        const savedEvent = createEventHandler(editorProvider.activeEditor!.model!, 'changed', disposables);
-        await commands.executeCommand('workbench.action.files.saveAll');
-
-        await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
-    }
-}
-export function createNotebookModel(
-    uri: Uri,
-    globalMemento: Memento,
-    crypto: ICryptoUtils,
-    nb?: Partial<nbformat.INotebookContent>
-) {
-    const nbJson: nbformat.INotebookContent = {
-        cells: [],
-        metadata: {
-            orig_nbformat: 4
-        },
-        nbformat: 4,
-        nbformat_minor: 4,
-        ...(nb || {})
-    };
-    const mockVSC = mock<IVSCodeNotebook>();
-    when(mockVSC.notebookEditors).thenReturn([]);
-    when(mockVSC.notebookDocuments).thenReturn([]);
-
-    return new VSCodeNotebookModel(
-        () => true,
-        uri,
-        globalMemento,
-        crypto,
-        nbJson,
-        ' ',
-        3,
-        instance(mockVSC),
-        nb?.metadata?.language_info?.name || PYTHON_LANGUAGE
-    );
+export async function saveActiveNotebook() {
+    await commands.executeCommand('workbench.action.files.saveAll');
 }
 export async function runCell(cell: NotebookCell) {
     const api = await initialize();

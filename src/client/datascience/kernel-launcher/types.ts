@@ -58,7 +58,15 @@ export interface ILocalKernelFinder {
         option?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<LocalKernelConnectionMetadata | undefined>;
-    listKernels(resource: Resource, cancelToken?: CancellationToken): Promise<LocalKernelConnectionMetadata[]>;
+    listNonPythonKernels(
+        cancelToken?: CancellationToken,
+        useCache?: 'useCache' | 'ignoreCache'
+    ): Promise<LocalKernelConnectionMetadata[]>;
+    listKernels(
+        resource: Resource,
+        cancelToken?: CancellationToken,
+        useCache?: 'useCache' | 'ignoreCache'
+    ): Promise<LocalKernelConnectionMetadata[]>;
     getKernelSpecRootPath(): Promise<string | undefined>;
 }
 

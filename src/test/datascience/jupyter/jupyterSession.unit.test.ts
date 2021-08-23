@@ -10,7 +10,7 @@ import {
 } from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
 import { DefaultSession } from '@jupyterlab/services/lib/session/default';
-import { ISignal, Signal } from '@phosphor/commands/node_modules/@phosphor/signaling';
+import { ISignal } from '@phosphor/commands/node_modules/@phosphor/signaling';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -63,9 +63,11 @@ suite('DataScience - JupyterSession', () => {
         session = mock<ISessionWithSocket>();
         kernel = mock(DefaultKernel);
         when(session.kernel).thenReturn(instance(kernel));
-        statusChangedSignal = mock(Signal);
-        kernelChangedSignal = mock(Signal);
-        const ioPubSignal = mock(Signal);
+        statusChangedSignal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
+        kernelChangedSignal = mock<ISignal<ISessionWithSocket, IKernelChangedArgs>>();
+        const ioPubSignal = mock<
+            ISignal<ISessionWithSocket, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
+        >();
         when(session.statusChanged).thenReturn(instance(statusChangedSignal));
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
         when(session.iopubMessage).thenReturn(instance(ioPubSignal));
@@ -320,7 +322,7 @@ suite('DataScience - JupyterSession', () => {
             });
             suite('Switching kernels', () => {
                 setup(async () => {
-                    const signal = mock(Signal);
+                    const signal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
                     when(remoteSession.statusChanged).thenReturn(instance(signal));
                     verify(sessionManager.startNew(anything())).once();
                     when(sessionManager.connectTo(newActiveRemoteKernel.session)).thenReturn(
@@ -369,9 +371,11 @@ suite('DataScience - JupyterSession', () => {
             setup(async () => {
                 newSession = mock(DefaultSession);
                 newKernelConnection = mock(DefaultKernel);
-                newStatusChangedSignal = mock(Signal);
-                newKernelChangedSignal = mock(Signal);
-                const newIoPubSignal = mock(Signal);
+                newStatusChangedSignal = mock<ISignal<Session.ISession, Kernel.Status>>();
+                newKernelChangedSignal = mock<ISignal<Session.ISession, IKernelChangedArgs>>();
+                const newIoPubSignal = mock<
+                    ISignal<Session.ISession, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
+                >();
                 restartSessionCreatedEvent = createDeferred();
                 restartSessionUsedEvent = createDeferred();
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));

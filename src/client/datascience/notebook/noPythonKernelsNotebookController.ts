@@ -10,13 +10,13 @@ import { Common, DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { LanguagesSupportedByPythonkernel, PythonExtension, Telemetry } from '../constants';
-import { JupyterNotebookView } from './constants';
 import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
 
 export class NoPythonKernelsNotebookController implements Disposable {
     private readonly disposables: IDisposable[] = [];
     private readonly controller: NotebookController;
     constructor(
+        viewType: string,
         private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
         disposableRegistry: IDisposableRegistry,
@@ -25,8 +25,8 @@ export class NoPythonKernelsNotebookController implements Disposable {
     ) {
         disposableRegistry.push(this);
         this.controller = this.notebookApi.createNotebookController(
-            'Python 3',
-            JupyterNotebookView,
+            `NoPythonController_${viewType}`,
+            viewType,
             'Python 3',
             this.handleExecution.bind(this)
         );
@@ -76,7 +76,7 @@ export class NoPythonKernelsNotebookController implements Disposable {
     private async handleExecutionWithoutPython() {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
         const selection = await this.appShell.showErrorMessage(
-            DataScience.pythonNotInstalled(),
+            DataScience.pythonNotInstalledNonMarkdown(),
             { modal: true },
             Common.install()
         );

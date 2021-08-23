@@ -71,6 +71,12 @@ export enum Product {
     pandas = 23
 }
 
+export enum ProductInstallStatus {
+    Installed,
+    NotInstalled,
+    NeedsUpgrade
+}
+
 export enum ModuleNamePurpose {
     install = 1,
     run = 2
@@ -103,7 +109,6 @@ export interface IPathUtils {
      * @memberof IPathUtils
      */
     readonly separator: string;
-    getPathVariableName(): 'Path' | 'PATH';
     basename(pathValue: string, ext?: string): string;
     getDisplayName(pathValue: string, cwd?: string): string;
 }
@@ -144,7 +149,7 @@ export interface IJupyterSettings {
     askForLargeDataFrames: boolean;
     readonly enableAutoMoveToNextCell: boolean;
     readonly askForKernelRestart: boolean;
-    readonly enablePlotViewer: boolean;
+    readonly generateSVGPlots: boolean;
     readonly codeLenses: string;
     readonly debugCodeLenses: string;
     readonly debugpyDistPath: string;

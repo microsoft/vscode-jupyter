@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CellState } from '../../../../client/datascience/types';
 import { IMainState, IServerState } from '../../mainState';
 import { postActionToExtension } from '../helpers';
 import { CommonActionType, CommonReducerArg } from './types';
@@ -48,23 +47,5 @@ export namespace Kernel {
             };
         }
         return arg.prevState;
-    }
-
-    export function handleRestarted<T>(arg: CommonReducerArg<T>) {
-        // When we restart, make sure to turn off all executing cells. They aren't executing anymore
-        const newVMs = [...arg.prevState.cellVMs];
-        newVMs.forEach((vm, i) => {
-            if (vm.cell.state !== CellState.finished && vm.cell.state !== CellState.error) {
-                newVMs[i] = { ...vm, hasBeenRun: false, cell: { ...vm.cell, state: CellState.finished } };
-            }
-        });
-
-        return {
-            ...arg.prevState,
-            cellVMs: newVMs,
-            pendingVariableCount: 0,
-            variables: [],
-            currentExecutionCount: 0
-        };
     }
 }

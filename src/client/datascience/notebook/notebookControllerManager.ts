@@ -5,66 +5,69 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IVSCodeNotebook,
+    IWorkspaceService
+} from '../../common/application/types';
 import { traceError, traceInfo, traceInfoIf } from '../../common/logger';
 import {
     IConfigurationService,
     IDisposableRegistry,
     IExtensionContext,
     IExtensions,
-    IPathUtils,
-    Resource
+    IPathUtils
 } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { sendNotebookOrKernelLanguageTelemetry } from '../common';
 import { Telemetry } from '../constants';
 import {
-    areKernelConnectionsEqual,
+    createInterpreterKernelSpec,
     getDisplayNameOrNameOfKernelConnection,
-    isLocalLaunch
+    getKernelId,
+    isLocalLaunch,
+    isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
-import { IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
-import { INotebookStorageProvider } from '../notebookStorage/notebookStorageProvider';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { INotebookProvider } from '../types';
-import { getNotebookMetadata, isJupyterNotebook, trackKernelInNotebookMetadata } from './helpers/helpers';
+import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
-import { JupyterNotebookView } from './constants';
+import { InteractiveWindowView, JupyterNotebookView } from './constants';
 import { NotebookIPyWidgetCoordinator } from '../ipywidgets/notebookIPyWidgetCoordinator';
-import { IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendTelemetryEvent } from '../../telemetry';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
+import { noop } from '../../common/utils/misc';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { isCI } from '../../common/constants';
+import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
  */
 @injectable()
 export class NotebookControllerManager implements INotebookControllerManager, IExtensionSyncActivationService {
-    // Keep tabs on which controller is selected relative to each notebook document
-    private controllerMapping = new WeakMap<NotebookDocument, VSCodeNotebookController | undefined>();
-
-    // When opening a document, track our find preferred search so that we can cancel if needed
-    private findPreferredInProgress = new WeakMap<NotebookDocument, CancellationTokenSource>();
-
     private readonly _onNotebookControllerSelected: EventEmitter<{
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
 
     // Promise to resolve when we have loaded our controllers
-    private controllersPromise?: Promise<VSCodeNotebookController[]>;
-
+    private controllersPromise?: Promise<void>;
+    private activeInterpreterControllerPromise?: Promise<VSCodeNotebookController | undefined>;
     // Listing of the controllers that we have registered
-    private registeredControllers: VSCodeNotebookController[] = [];
+    private registeredControllers = new Map<string, VSCodeNotebookController>();
 
-    private cancelToken: CancellationTokenSource | undefined;
     private readonly isLocalLaunch: boolean;
+    private wasPythonInstalledWhenFetchingControllers?: boolean;
+    private interactiveNoPythonController?: NoPythonKernelsNotebookController;
+    private notbeookNoPythonController?: NoPythonKernelsNotebookController;
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -78,12 +81,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
-        @inject(INotebookStorageProvider) private readonly storageProvider: INotebookStorageProvider,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
         @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
         @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IDocumentManager) private readonly docManager: IDocumentManager,
+        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -92,206 +98,270 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.disposables.push(this._onNotebookControllerSelected);
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
+    public async getInteractiveController(): Promise<VSCodeNotebookController | undefined> {
+        return this.createActiveInterpreterController();
+    }
 
     get onNotebookControllerSelected() {
         return this._onNotebookControllerSelected.event;
+    }
+    public getSelectedNotebookController(notebook: NotebookDocument) {
+        return Array.from(this.registeredControllers.values()).find((item) => item.isAssociatedWithDocument(notebook));
     }
 
     public activate() {
         // Sign up for document either opening or closing
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
-        this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposables);
-
+        // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
+        if (this.isLocalLaunch) {
+            this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
+        }
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
     }
 
-    // Look up what NotebookController is currently selected for the given notebook document
-    public getSelectedNotebookController(document: NotebookDocument): VSCodeNotebookController | undefined {
-        if (this.controllerMapping.has(document)) {
-            return this.controllerMapping.get(document);
-        }
+    // Function to expose currently registered controllers to test code only
+    public registeredNotebookControllers(): VSCodeNotebookController[] {
+        return Array.from(this.registeredControllers.values());
     }
 
     // Find all the notebook controllers that we have registered
-    public async getNotebookControllers(): Promise<VSCodeNotebookController[]> {
+    public async loadNotebookControllers(): Promise<void> {
         if (!this.controllersPromise) {
-            this.controllersPromise = this.loadNotebookControllers()
-                .then((controllers) => {
-                    // Just assign here as this is our initial set of controllers
-                    // anything that adds or updates should make sure the initial load has happened first
-                    this.registeredControllers = controllers;
-                    return controllers;
-                })
+            const stopWatch = new StopWatch();
+
+            // Fetch the list of kernels ignoring the cache.
+            Promise.all([
+                this.loadNotebookControllersImpl(true, 'ignoreCache'),
+                this.loadNotebookControllersImpl(false, 'ignoreCache')
+            ]).catch((ex) => console.error('Failed to fetch controllers without cache', ex));
+
+            // Fetch the list of kernels from the cache (note: if there's nothing in the case, it will fallback to searching).
+            this.controllersPromise = Promise.all([
+                this.loadNotebookControllersImpl(true, 'useCache'),
+                this.loadNotebookControllersImpl(false, 'useCache')
+            ])
+                .then(() => noop())
                 .catch((error) => {
                     traceError('Error loading notebook controllers', error);
                     throw error;
+                })
+                .finally(() => {
+                    // Send telemetry related to fetching the kernel connections
+                    sendKernelListTelemetry(
+                        Uri.file('test.ipynb'), // Give a dummy ipynb value, we need this as its used in telemetry to determine the resource.
+                        Array.from(this.registeredControllers.values()).map((item) => item.connection),
+                        stopWatch
+                    );
+
+                    traceInfoIf(
+                        !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
+                        `Providing notebook controllers with length ${this.registeredControllers.size}.`
+                    );
                 });
         }
         return this.controllersPromise;
     }
 
-    // Turn all our kernelConnections that we know about into registered NotebookControllers
-    private async loadNotebookControllers(): Promise<VSCodeNotebookController[]> {
-        const stopWatch = new StopWatch();
+    public getOrCreateController(
+        pythonInterpreter: PythonEnvironment,
+        notebookType: 'interactive' | 'jupyter-notebook'
+    ): VSCodeNotebookController | undefined {
+        // Ensure that the controller corresponding to the active interpreter
+        // has been successfully created
+        const spec = createInterpreterKernelSpec(pythonInterpreter);
+        const result: PythonKernelConnectionMetadata = {
+            kind: 'startUsingPythonInterpreter',
+            kernelSpec: spec,
+            interpreter: pythonInterpreter,
+            id: getKernelId(spec, pythonInterpreter)
+        };
+        this.createNotebookControllers([result]);
 
-        try {
-            this.cancelToken = new CancellationTokenSource();
+        // Return the created controller
+        return this.registeredNotebookControllers().find(
+            (controller) =>
+                // We register each of our kernels as two controllers
+                // because controllers are currently per-viewtype. Find
+                // the one for the interactive viewtype for now
+                controller.controller.notebookType === notebookType &&
+                controller.connection.kind === 'startUsingPythonInterpreter' &&
+                controller.connection.interpreter?.path === pythonInterpreter?.path &&
+                controller.connection.interpreter.displayName === pythonInterpreter.displayName
+        );
+    }
 
-            const connections = await this.getKernelConnectionMetadata(this.cancelToken.token);
+    private async createActiveInterpreterController() {
+        if (this.activeInterpreterControllerPromise) {
+            return this.activeInterpreterControllerPromise;
+        }
+        const promise = async () => {
+            // Fetch the active interpreter and use the matching controller
+            const api = await this.pythonApi.getApi();
+            const activeInterpreter = await api.getActiveInterpreter();
 
-            if (this.cancelToken.token.isCancellationRequested) {
-                // Bail out on making the controllers if we are cancelling
-                traceInfo('Cancelled loading notebook controllers');
-                return [];
+            if (!activeInterpreter) {
+                return;
             }
+            return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
+        };
+        this.activeInterpreterControllerPromise = promise();
+        return this.activeInterpreterControllerPromise;
+    }
+    /**
+     * Turn all our kernelConnections that we know about into registered NotebookControllers
+     */
+    private async loadNotebookControllersImpl(
+        listLocalNonPythonKernels: boolean,
+        useCache?: 'useCache' | 'ignoreCache'
+    ): Promise<void> {
+        const cancelToken = new CancellationTokenSource();
+        this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
+        const connections = await this.getKernelConnectionMetadata(
+            listLocalNonPythonKernels,
+            cancelToken.token,
+            useCache
+        );
+        // Now create the actual controllers from our connections
+        this.createNotebookControllers(connections);
+        // If we're listing Python kernels & there aren't any, then add a placeholder for `Python` which will prompt users to install python
+        if (!listLocalNonPythonKernels) {
+            if (connections.some((item) => isPythonKernelConnection(item))) {
+                this.removeNoPythonControllers();
+            } else {
+                this.regsiterNoPythonControllers();
+            }
+        }
+    }
+    private removeNoPythonControllers() {
+        this.notbeookNoPythonController?.dispose();
+        this.interactiveNoPythonController?.dispose();
 
-            // Now create the actual controllers from our connections
-            const controllers = await this.createNotebookControllers(connections);
-
-            // Send telemetry related to fetching the kernel connections
-            sendKernelListTelemetry(
-                Uri.file('test.ipynb'), // Give a dummy ipynb value, we need this as its used in telemetry to determine the resource.
-                controllers.map((item) => item.connection),
-                stopWatch
-            );
-
-            traceInfoIf(
-                !!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT,
-                `Providing notebook controllers with length ${controllers.length}.`
-            );
-
-            return controllers;
-        } finally {
-            this.cancelToken = undefined;
+        this.notbeookNoPythonController = undefined;
+        this.interactiveNoPythonController = undefined;
+    }
+    private regsiterNoPythonControllers() {
+        if (this.notbeookNoPythonController) {
+            return;
+        }
+        this.notbeookNoPythonController = new NoPythonKernelsNotebookController(
+            JupyterNotebookView,
+            this.notebook,
+            this.commandManager,
+            this.disposables,
+            this.extensionChecker,
+            this.appShell
+        );
+        this.interactiveNoPythonController = new NoPythonKernelsNotebookController(
+            InteractiveWindowView,
+            this.notebook,
+            this.commandManager,
+            this.disposables,
+            this.extensionChecker,
+            this.appShell
+        );
+        this.disposables.push(this.interactiveNoPythonController);
+        this.disposables.push(this.notbeookNoPythonController);
+    }
+    private async onDidChangeExtensions() {
+        if (!this.isLocalLaunch || !this.controllersPromise) {
+            return;
+        }
+        // If we just installed the Pytohn extnsion and we fetched the controllers, then fetch it again.
+        if (!this.wasPythonInstalledWhenFetchingControllers && this.extensionChecker.isPythonExtensionInstalled) {
+            this.controllersPromise = undefined;
+            await this.loadNotebookControllers();
         }
     }
 
-    private onDidChangeExtensions() {
-        // KERNELPUSH: On extension load we might fetch different kernels, need to invalidate here and regen
-    }
-
     // When a document is opened we need to look for a perferred kernel for it
-    private onDidOpenNotebookDocument(document: NotebookDocument) {
+    private async onDidOpenNotebookDocument(document: NotebookDocument) {
         // Restrict to only our notebook documents
-        if (document.notebookType !== JupyterNotebookView || !this.workspace.isTrusted) {
+        if (
+            (document.notebookType !== JupyterNotebookView && document.notebookType !== InteractiveWindowView) ||
+            !this.workspace.isTrusted
+        ) {
             return;
         }
 
         // Keep track of a token per document so that we can cancel the search if the doc is closed
         const preferredSearchToken = new CancellationTokenSource();
-        this.findPreferredInProgress.set(document, preferredSearchToken);
+        const disposable = this.notebook.onDidCloseNotebookDocument(
+            (e) => (e === document ? preferredSearchToken.cancel() : undefined),
+            this,
+            this.disposables
+        );
 
-        if (!this.isLocalLaunch) {
-            // For a remote connection check for new live kernel models before we find preferred
-            this.updateRemoteConnections(preferredSearchToken.token)
-                .then(() => {
-                    this.findPreferredController(document, preferredSearchToken.token).catch((error) => {
-                        traceError(error);
-                    });
-                })
-                .finally(() => {
-                    // Make sure that we clear our finding in progress when done
-                    this.findPreferredInProgress.delete(document);
-                });
-        } else {
-            this.findPreferredController(document, preferredSearchToken.token).finally(() => {
-                // Make sure that we clear our finding in progress when done
-                this.findPreferredInProgress.delete(document);
-            });
-        }
-    }
-
-    // Find the preferred controller for the given notebook document
-    private async findPreferredController(document: NotebookDocument, cancelToken: CancellationToken) {
         // Prep so that we can track the selected controller for this document
-        this.controllerMapping.set(document, undefined);
+        traceInfoIf(isCI, `Clear controller mapping for ${document.uri.toString()}`);
+        const loadControllersPromise = this.loadNotebookControllers();
 
-        return this.findPreferredKernel(document, cancelToken).then(async (preferredConnection) => {
-            if (cancelToken.isCancellationRequested) {
-                traceInfo('Find preferred kernel cancelled');
-                return;
+        if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
+            // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
+            this.createActiveInterpreterController().catch(noop);
+        }
+        try {
+            let preferredConnection: KernelConnectionMetadata | undefined;
+            if (this.isLocalLaunch) {
+                preferredConnection = await this.localKernelFinder.findKernel(
+                    document.uri,
+                    getNotebookMetadata(document),
+                    preferredSearchToken.token
+                );
+            } else {
+                // For a remote connection check for new live kernel models before we find preferred
+                await this.updateRemoteConnections(preferredSearchToken.token);
+                const connection = await this.notebookProvider.connect({
+                    getOnly: false,
+                    resource: document.uri,
+                    disableUI: false,
+                    localOnly: false
+                });
+                preferredConnection = await this.remoteKernelFinder.findKernel(
+                    document.uri,
+                    connection,
+                    getNotebookMetadata(document),
+                    preferredSearchToken.token
+                );
             }
 
             // If we found a preferred kernel, set the association on the NotebookController
-            if (preferredConnection) {
-                traceInfo(
-                    `PreferredConnection: ${
-                        preferredConnection.id
-                    } found for NotebookDocument: ${document.uri.toString()}`
-                );
-                this.setPreferredController(document, preferredConnection).catch(traceError);
+            if (preferredSearchToken.token.isCancellationRequested) {
+                traceInfo('Find preferred kernel cancelled');
+                return;
             }
-        });
-    }
+            if (!preferredConnection) {
+                traceInfoIf(isCI, `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`);
+                return;
+            }
 
-    // For the given document, find the notebook controller that matches this kernel connection and associate the two
-    private async setPreferredController(document: NotebookDocument, kernelConnection: KernelConnectionMetadata) {
-        // Wait for our controllers to be loaded before we try to set a preferred on
-        // can happen if a document is opened quick and we have not yet loaded our controllers
-        const controllers = await this.getNotebookControllers();
-
-        const targetController = controllers.find((value) => {
-            // Check for a connection match
-            return areKernelConnectionsEqual(kernelConnection, value.connection);
-        });
-
-        if (targetController) {
-            traceInfo(`TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`);
-            await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
-
-            // When we set the target controller we don't actually get a selected event from our controllers
-            // to get around that when we see affinity here 'force' an event as if a user selected it
-            this.handleOnNotebookControllerSelected({ notebook: document, controller: targetController }).catch(
-                traceError
+            traceInfo(
+                `PreferredConnection: ${preferredConnection.id} found for NotebookDocument: ${document.uri.toString()}`
             );
+            // Wait for our controllers to be loaded before we try to set a preferred on
+            // can happen if a document is opened quick and we have not yet loaded our controllers
+            await loadControllersPromise;
+            const targetController = Array.from(this.registeredControllers.values()).find(
+                (value) => preferredConnection?.id === value.connection.id
+            );
+
+            if (targetController) {
+                traceInfo(`TargetController found ID: ${targetController.id} for document ${document.uri.toString()}`);
+                await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+            } else {
+                traceInfoIf(
+                    isCI,
+                    `TargetController nof found ID: ${preferredConnection.id} for document ${document.uri.toString()}`
+                );
+            }
+        } catch (ex) {
+            traceError('Failed to find & set preferred controllers', ex);
+        } finally {
+            disposable.dispose();
         }
     }
 
-    private async findPreferredKernel(
-        document: NotebookDocument,
-        token: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined> {
-        // Don't look for a preferred kernel until we have finished our initial controller load
-        await this.getNotebookControllers();
-
-        let preferred: KernelConnectionMetadata | undefined;
-
-        if (this.isLocalLaunch) {
-            const preferredConnectionPromise = preferred
-                ? Promise.resolve(preferred)
-                : this.localKernelFinder.findKernel(document.uri, getNotebookMetadata(document), token);
-            preferred = await preferredConnectionPromise;
-        } else {
-            const connection = await this.notebookProvider.connect({
-                getOnly: false,
-                resource: document.uri,
-                disableUI: false,
-                localOnly: false
-            });
-
-            const preferredConnectionPromise = preferred
-                ? Promise.resolve(preferred)
-                : this.remoteKernelFinder.findKernel(document.uri, connection, getNotebookMetadata(document), token);
-            preferred = await preferredConnectionPromise;
-        }
-
-        return preferred;
-    }
-
-    private onDidCloseNotebookDocument(document: NotebookDocument) {
-        // When we close a document, cancel any preferred searches in progress
-        if (this.findPreferredInProgress.has(document)) {
-            this.findPreferredInProgress.get(document)?.cancel();
-        }
-
-        // Remove from our current selection tracking list
-        if (this.controllerMapping.has(document)) {
-            this.controllerMapping.delete(document);
-        }
-    }
-
-    private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]): VSCodeNotebookController[] {
+    private createNotebookControllers(kernelConnections: KernelConnectionMetadata[]) {
         // First sort our items by label
         const connectionsWithLabel = kernelConnections.map((value) => {
             return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
@@ -306,45 +376,50 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
         });
 
-        // Map KernelConnectionMetadata => NotebookController
-        const controllers: VSCodeNotebookController[] = [];
         connectionsWithLabel.forEach((value) => {
-            const controller = this.createNotebookController(value.connection, value.label);
-            if (controller) {
-                controllers.push(controller);
-            }
+            this.createNotebookController(value.connection, value.label);
         });
-
-        return controllers;
     }
-    private createNotebookController(
-        kernelConnection: KernelConnectionMetadata,
-        label: string
-    ): VSCodeNotebookController | undefined {
+    private createNotebookController(kernelConnection: KernelConnectionMetadata, label: string) {
         try {
             // Create notebook selector
-            const controller = new VSCodeNotebookController(
-                kernelConnection,
-                label,
-                this.notebook,
-                this.commandManager,
-                this.kernelProvider,
-                this.preferredRemoteKernelIdProvider,
-                this.context,
-                this,
-                this.pathUtils,
-                this.disposables,
-                this.languageService,
-                this.workspace
-            );
+            [
+                [kernelConnection.id, JupyterNotebookView],
+                [`${kernelConnection.id} (Interactive)`, InteractiveWindowView]
+            ]
+                .filter(([id]) => !this.registeredControllers.has(id))
+                .forEach(([id, viewType]) => {
+                    const controller = new VSCodeNotebookController(
+                        kernelConnection,
+                        id,
+                        viewType,
+                        label,
+                        this.notebook,
+                        this.commandManager,
+                        this.kernelProvider,
+                        this.preferredRemoteKernelIdProvider,
+                        this.context,
+                        this.pathUtils,
+                        this.disposables,
+                        this.languageService,
+                        this.workspace,
+                        this.isLocalLaunch ? 'local' : 'remote',
+                        this.interpreterPackages,
+                        this.configuration,
+                        this.widgetCoordinator,
+                        this.docManager
+                    );
+                    // Hook up to if this NotebookController is selected or de-selected
+                    controller.onNotebookControllerSelected(
+                        this.handleOnNotebookControllerSelected,
+                        this,
+                        this.disposables
+                    );
 
-            // Hook up to if this NotebookController is selected or de-selected
-            controller.onNotebookControllerSelected(this.handleOnNotebookControllerSelected, this, this.disposables);
-
-            // We are disposing as documents are closed, but do this as well
-            this.disposables.push(controller);
-
-            return controller;
+                    // We are disposing as documents are closed, but do this as well
+                    this.disposables.push(controller);
+                    this.registeredControllers.set(controller.id, controller);
+                });
         } catch (ex) {
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
@@ -357,54 +432,47 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceError(`Failed to create notebook controller for ${kernelConnection.id}`, ex);
         }
     }
-
     // A new NotebookController has been selected, find the associated notebook document and update it
     private async handleOnNotebookControllerSelected(event: {
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }) {
-        this.widgetCoordinator.setActiveController(event.notebook, event.controller);
-        if (this.controllerMapping.has(event.notebook)) {
-            this.controllerMapping.set(event.notebook, event.controller);
-
-            // Now actually handle the change
-            await this.notebookKernelChanged(event.notebook, event.controller);
-
-            // Now notify out that we have updated a notebooks controller
-            this._onNotebookControllerSelected.fire(event);
-        }
+        // Now notify out that we have updated a notebooks controller
+        this._onNotebookControllerSelected.fire(event);
     }
 
-    private async getKernelConnectionMetadata(token: CancellationToken): Promise<KernelConnectionMetadata[]> {
-        let kernels: KernelConnectionMetadata[] = [];
-
-        // Instead of a specific resource, we can just search on undefined for the workspace
-        const resource: Resource = undefined;
-
+    private async getKernelConnectionMetadata(
+        listLocalNonPythonKernels: boolean,
+        token: CancellationToken,
+        useCache: 'useCache' | 'ignoreCache' = 'ignoreCache'
+    ): Promise<KernelConnectionMetadata[]> {
         if (this.isLocalLaunch) {
-            kernels = await this.localKernelFinder.listKernels(resource, token);
+            return listLocalNonPythonKernels
+                ? this.localKernelFinder.listNonPythonKernels(token, useCache)
+                : this.localKernelFinder.listKernels(undefined, token, useCache);
         } else {
+            if (listLocalNonPythonKernels) {
+                return [];
+            }
             const connection = await this.notebookProvider.connect({
                 getOnly: false,
-                resource: resource,
+                resource: undefined,
                 disableUI: false,
                 localOnly: false
             });
 
-            kernels = await this.remoteKernelFinder.listKernels(resource, connection, token);
+            return this.remoteKernelFinder.listKernels(undefined, connection, token);
         }
-
-        return kernels;
     }
 
     // Update any new or removed kernel connections, LiveKernelModels might be added or removed
     // during remote connections
     private async updateRemoteConnections(cancelToken: CancellationToken) {
         // Don't update until initial load is done
-        await this.getNotebookControllers();
+        await this.loadNotebookControllers();
 
         // We've connected and done the intial fetch, so this is speedy
-        const connections = await this.getKernelConnectionMetadata(cancelToken);
+        const connections = await this.getKernelConnectionMetadata(false, cancelToken);
 
         if (cancelToken.isCancellationRequested) {
             // Bail out on making the controllers if we are cancelling
@@ -414,15 +482,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Look for any connections that are not registered already as controllers
         const missingConnections = connections.filter((connection) => {
-            return !this.registeredControllers.some((controller) => {
-                return controller.id === connection.id;
-            });
+            return !this.registeredControllers.has(connection.id);
         });
 
         // Look for any controllers that we have disposed
-        const disposedControllers = this.registeredControllers.filter((controller) => {
+        const disposedControllers = Array.from(this.registeredControllers.values()).filter((controller) => {
             return !connections.some((connection) => {
-                return connection.id === controller.id;
+                return connection.id === controller.connection.id;
             });
         });
 
@@ -433,105 +499,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             });
 
             connectionsWithLabel.forEach((value) => {
-                const controller = this.createNotebookController(value.connection, value.label);
-                if (controller) {
-                    this.registeredControllers.push(controller);
-                }
+                this.createNotebookController(value.connection, value.label);
             });
         }
 
         // If we have any out of date connections, dispose of them
         disposedControllers.forEach((controller) => {
+            this.registeredControllers.delete(controller.id);
+            traceInfoIf(isCI, `Disposing controller ${controller.id}`);
             controller.dispose();
         });
-    }
-
-    private async notebookKernelChanged(document: NotebookDocument, controller: VSCodeNotebookController) {
-        // We're only interested in our Jupyter Notebooks.
-        if (!isJupyterNotebook(document)) {
-            trackKernelInNotebookMetadata(document, undefined);
-            return;
-        }
-        const selectedKernelConnectionMetadata = controller.connection;
-
-        const model = this.storageProvider.get(document.uri);
-        if (model && model.isTrusted === false) {
-            // eslint-disable-next-line
-            // TODO: https://github.com/microsoft/vscode-python/issues/13476
-            // If a model is not trusted, we cannot change the kernel (this results in changes to notebook metadata).
-            // This is because we store selected kernel in the notebook metadata.
-            traceInfoIf(!!process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT, 'Kernel not switched, model not trusted');
-            return;
-        }
-
-        const existingKernel = this.kernelProvider.get(document.uri);
-        if (
-            existingKernel &&
-            areKernelConnectionsEqual(existingKernel.kernelConnectionMetadata, selectedKernelConnectionMetadata)
-        ) {
-            traceInfo('Switch kernel did not change kernel.');
-            return;
-        }
-        switch (controller.connection.kind) {
-            case 'startUsingPythonInterpreter':
-                sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, PYTHON_LANGUAGE);
-                break;
-            case 'connectToLiveKernel':
-                sendNotebookOrKernelLanguageTelemetry(
-                    Telemetry.SwitchToExistingKernel,
-                    controller.connection.kernelModel.language
-                );
-                break;
-            case 'startUsingKernelSpec':
-                sendNotebookOrKernelLanguageTelemetry(
-                    Telemetry.SwitchToExistingKernel,
-                    controller.connection.kernelSpec.language
-                );
-                break;
-            default:
-            // We don't know as its the default kernel on Jupyter server.
-        }
-        trackKernelResourceInformation(document.uri, { kernelConnection: controller.connection });
-        sendKernelTelemetryEvent(document.uri, Telemetry.SwitchKernel);
-        // If we have an existing kernel, then we know for a fact the user is changing the kernel.
-        // Else VSC is just setting a kernel for a notebook after it has opened.
-        if (existingKernel) {
-            const telemetryEvent = this.isLocalLaunch
-                ? Telemetry.SelectLocalJupyterKernel
-                : Telemetry.SelectRemoteJupyterKernel;
-            sendKernelTelemetryEvent(document.uri, telemetryEvent);
-            this.notebook.notebookEditors
-                .filter((editor) => editor.document === document)
-                .forEach((editor) =>
-                    controller.postMessage(
-                        { message: IPyWidgetMessages.IPyWidgets_onKernelChanged, payload: undefined },
-                        editor
-                    )
-                );
-        }
-        if (selectedKernelConnectionMetadata.interpreter) {
-            this.interpreterPackages.trackPackages(selectedKernelConnectionMetadata.interpreter);
-        }
-
-        trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
-
-        // Make this the new kernel (calling this method will associate the new kernel with this Uri).
-        // Calling `getOrCreate` will ensure a kernel is created and it is mapped to the Uri provided.
-        // This will dispose any existing (older kernels) associated with this notebook.
-        // This way other parts of extension have access to this kernel immediately after event is handled.
-        // Unlike webview notebooks we cannot revert to old kernel if kernel switching fails.
-        const newKernel = this.kernelProvider.getOrCreate(document.uri, {
-            metadata: selectedKernelConnectionMetadata,
-            controller: controller.controller
-        });
-        traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}}`);
-
-        // Before we start the notebook, make sure the metadata is set to this new kernel.
-        trackKernelInNotebookMetadata(document, selectedKernelConnectionMetadata);
-
-        // Auto start the local kernels.
-        // if (newKernel && !this.configuration.getSettings(undefined).disableJupyterAutoStart && this.isLocalLaunch) {
-        //     await newKernel.start({ disableUI: true, document }).catch(noop);
-        // }
     }
 }

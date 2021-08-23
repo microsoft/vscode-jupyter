@@ -8,6 +8,22 @@ permissions:
   issues: write
 
 jobs:
+  # From https://github.com/marketplace/actions/github-script#apply-a-label-to-an-issue.
+  add-needs-triage-label:
+    name: "Add 'classify'"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v4.0.2
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['needs-triage']
+            })
+            
   assignIssue:
     name: Assign Issue to Someone
     runs-on: ubuntu-latest

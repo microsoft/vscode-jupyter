@@ -5,13 +5,12 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { DebugConfiguration, Disposable } from 'vscode';
-import * as vsls from 'vsls/vscode';
 import { concatMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { IPythonDebuggerPathProvider } from '../../api/types';
+import { IPythonDebuggerPathProvider, IPythonInstaller } from '../../api/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, Product, ProductInstallStatus } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { traceCellResults } from '../common';
 import { Identifiers } from '../constants';
@@ -28,7 +27,6 @@ import {
 } from '../types';
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
-import { ILiveShareHasRole } from './liveshare/types';
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
@@ -39,13 +37,15 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private readonly tracingEnableCode: string;
     private readonly tracingDisableCode: string;
     private runningByLine: boolean = false;
+    private isUsingPyKernel6OrLater?: boolean;
     constructor(
         @inject(IPythonDebuggerPathProvider) private readonly debuggerPathProvider: IPythonDebuggerPathProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IJupyterDebugService)
         @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
         private debugService: IJupyterDebugService,
-        @inject(IPlatformService) private platform: IPlatformService
+        @inject(IPlatformService) private platform: IPlatformService,
+        @inject(IPythonInstaller) private installer: IPythonInstaller
     ) {
         this.debuggerPackage = 'debugpy';
         this.enableDebuggerCode = `import debugpy;debugpy.listen(('localhost', 0))`;
@@ -78,7 +78,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     public async startDebugging(notebook: INotebook): Promise<void> {
+        const result = await this.installer.isProductVersionCompatible(
+            Product.ipykernel,
+            '>=6.0.0',
+            notebook.getKernelConnection()?.interpreter
+        );
         const settings = this.configService.getSettings(notebook.resource);
+        this.isUsingPyKernel6OrLater = result === ProductInstallStatus.Installed;
         return this.startDebugSession(
             (c) => this.debugService.startDebugging(undefined, c),
             notebook,
@@ -137,18 +143,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         if (config) {
             traceInfo('connected to notebook during debugging');
 
-            // First check if this is a live share session. Skip debugging attach on the guest
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const hasRole = (notebook as any) as ILiveShareHasRole;
-            if (hasRole && hasRole.role && hasRole.role === vsls.Role.Guest) {
-                traceInfo('guest mode attach skipped');
-            } else {
-                await startCommand(config);
+            await startCommand(config);
 
-                // Force the debugger to update its list of breakpoints. This is used
-                // to make sure the breakpoint list is up to date when we do code file hashes
-                this.debugService.removeBreakpoints([]);
-            }
+            // Force the debugger to update its list of breakpoints. This is used
+            // to make sure the breakpoint list is up to date when we do code file hashes
+            this.debugService.removeBreakpoints([]);
 
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
             const importResults = await this.executeSilently(notebook, this.waitForDebugClientCode);
@@ -275,12 +274,15 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private buildSourceMap(fileHash: IFileHashes): ISourceMapRequest {
         const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.file }, pydevdSourceMaps: [] };
-
         sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map((cellHash) => {
             return {
                 line: cellHash.line,
                 endLine: cellHash.endLine,
-                runtimeSource: { path: `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>` },
+                runtimeSource: {
+                    path: this.isUsingPyKernel6OrLater
+                        ? fileHash.file
+                        : `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>`
+                },
                 runtimeLine: cellHash.runtimeLine
             };
         });

@@ -9,10 +9,6 @@ import { ICommandManager } from '../../client/common/application/types';
 import { traceInfo } from '../../client/common/logger';
 import { IJupyterSettings } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
-import {
-    AskForSaveResult,
-    NativeEditorOldWebView
-} from '../../client/datascience/interactive-ipynb/nativeEditorOldWebView';
 import { INotebookEditorProvider } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { CommandSource } from '../../client/testing/common/constants';
@@ -49,7 +45,7 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         variableExplorerExclude: 'module;function;builtin_function_or_method',
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-        enablePlotViewer: true,
+        generateSVGPlots: false,
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],
@@ -81,11 +77,7 @@ export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
     // fs.writeFile(file, JSON.stringify(diff), { encoding: 'utf-8' }).ignoreErrors();
 }
 
-export async function openNotebook(
-    serviceContainer: IServiceContainer,
-    ipynbFile: string,
-    options: { ignoreSavingOldNotebooks?: boolean } = { ignoreSavingOldNotebooks: true }
-) {
+export async function openNotebook(serviceContainer: IServiceContainer, ipynbFile: string) {
     traceInfo(`Opening notebook ${ipynbFile}`);
     const cmd = serviceContainer.get<ICommandManager>(ICommandManager);
     await cmd.executeCommand(Commands.OpenNotebook, Uri.file(ipynbFile), undefined, CommandSource.commandPalette);
@@ -100,14 +92,5 @@ export async function openNotebook(
         'Notebook not opened'
     );
 
-    if (
-        options.ignoreSavingOldNotebooks &&
-        editorProvider.activeEditor &&
-        editorProvider.activeEditor instanceof NativeEditorOldWebView
-    ) {
-        // We don't care about changes, no need to save them.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (editorProvider.activeEditor as any).askForSave = () => Promise.resolve(AskForSaveResult.No);
-    }
     traceInfo(`Opened notebook ${ipynbFile}`);
 }
