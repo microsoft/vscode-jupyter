@@ -17,6 +17,7 @@ import {
 import { noop } from '../../../common/utils/misc';
 import { InteractiveWindowView } from '../../notebook/constants';
 import {
+    ICellHashProvider,
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
     INotebookEditorProvider,
@@ -42,7 +43,8 @@ export class KernelProvider implements IKernelProvider {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
         @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(ICellHashProvider) private cellHashProvider: ICellHashProvider
     ) {
         this.asyncDisposables.push(this);
     }
@@ -86,7 +88,8 @@ export class KernelProvider implements IKernelProvider {
             options.controller,
             this.configService,
             this.outputTracker,
-            this.workspaceService
+            this.workspaceService,
+            this.cellHashProvider
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel));
         this.asyncDisposables.push(kernel);
@@ -126,5 +129,3 @@ export class KernelProvider implements IKernelProvider {
         this.kernelsByNotebook.delete(notebook);
     }
 }
-
-// export class KernelProvider {

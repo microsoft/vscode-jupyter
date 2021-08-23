@@ -35,6 +35,7 @@ import { CodeSnippets, Identifiers, Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
+    ICellHashProvider,
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
     INotebook,
@@ -119,7 +120,8 @@ export class Kernel implements IKernel {
         controller: NotebookController,
         private readonly configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
-        private readonly workspaceService: IWorkspaceService
+        private readonly workspaceService: IWorkspaceService,
+        private cellHashProvider: ICellHashProvider
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -136,6 +138,9 @@ export class Kernel implements IKernel {
     public async executeCell(cell: NotebookCell): Promise<void> {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document: cell.notebook });
+        if (cell.notebook.notebookType === InteractiveWindowView) {
+            await this.cellHashProvider.addCellHash(cell);
+        }
         const promise = this.kernelExecution.executeCell(notebookPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         await promise;
