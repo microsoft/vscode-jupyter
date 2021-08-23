@@ -63,9 +63,10 @@ export class ExportCommands implements IDisposable {
         this.disposables.push(disposable);
     }
 
-    private async nativeNotebookExport(uri?: Uri) {
-        const editor = uri
-            ? this.notebookProvider.editors.find((item) => this.fs.arePathsSame(item.file, uri))
+    private async nativeNotebookExport(uri?: Uri | { notebookEditor: { notebookUri: Uri } }) {
+        const notebookUri = uri !== undefined && 'notebookEditor' in uri ? uri.notebookEditor.notebookUri : uri;
+        const editor = notebookUri
+            ? this.notebookProvider.editors.find((item) => this.fs.arePathsSame(item.file, notebookUri))
             : this.notebookProvider.activeEditor;
 
         if (editor) {
