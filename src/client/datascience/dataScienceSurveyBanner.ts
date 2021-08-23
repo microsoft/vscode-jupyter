@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import {
@@ -18,9 +18,7 @@ import {
     IsCodeSpace
 } from '../common/types';
 import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
 import { MillisecondsInADay } from '../constants';
-import { JupyterNotebookView } from './notebook/constants';
 import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
 import { INotebookExtensibility } from './types';
 
@@ -104,7 +102,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     ];
     private readonly showBannerState = new Map<BannerType, IPersistentState<ShowBannerWithExpiryTime>>();
     private static surveyDelay = false;
-    private readonly NotebookOpenThreshold = 15; // Document opens before showing survey
     private readonly NotebookExecutionThreshold = 250; // Cell executions before showing survey
 
     constructor(
@@ -112,7 +109,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
-        @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
@@ -127,15 +123,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     public async activate() {
-        this.vscodeNotebook.onDidOpenNotebookDocument(
-            (e) => {
-                if (e.notebookType === JupyterNotebookView) {
-                    this.openedNotebook().catch(noop);
-                }
-            },
-            this,
-            this.disposables
-        );
         this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
     }
 
@@ -173,9 +160,8 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         }
 
         const executionCount: number = this.getExecutionCount(type);
-        const notebookCount: number = this.getOpenNotebookCount(type);
 
-        return executionCount >= this.NotebookExecutionThreshold || notebookCount > this.NotebookOpenThreshold;
+        return executionCount >= this.NotebookExecutionThreshold;
     }
 
     private setPersistentState(type: BannerType, val: string): void {
@@ -201,18 +187,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         }
     }
 
-    private getOpenNotebookCount(type: BannerType): number {
-        switch (type) {
-            case BannerType.InsidersNotebookSurvey:
-                return this.getPersistentState(InsidersNotebookSurveyStateKeys.OpenNotebookCount);
-            case BannerType.ExperimentNotebookSurvey:
-                return this.getPersistentState(ExperimentNotebookSurveyStateKeys.OpenNotebookCount);
-            default:
-                traceError('Invalid Banner type');
-                return -1;
-        }
-    }
-
     private getExecutionCount(type: BannerType): number {
         switch (type) {
             case BannerType.InsidersNotebookSurvey:
@@ -228,17 +202,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     private getPersistentState(val: string): number {
         const state = this.persistentState.createGlobalPersistentState<number>(val, 0);
         return state.value;
-    }
-
-    private async openedNotebook() {
-        void this.updateStateAndShowBanner(
-            InsidersNotebookSurveyStateKeys.OpenNotebookCount,
-            BannerType.InsidersNotebookSurvey
-        );
-        void this.updateStateAndShowBanner(
-            ExperimentNotebookSurveyStateKeys.OpenNotebookCount,
-            BannerType.ExperimentNotebookSurvey
-        );
     }
 
     private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
