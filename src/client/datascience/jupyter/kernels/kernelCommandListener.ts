@@ -82,7 +82,8 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             notebookUri ??
             window.activeNotebookEditor?.document.uri ??
             this.interactiveWindowProvider.activeWindow?.notebookUri ??
-            (window.activeTextEditor?.document.uri && this.interactiveWindowProvider.get(window.activeTextEditor.document.uri)?.notebookUri);
+            (window.activeTextEditor?.document.uri &&
+                this.interactiveWindowProvider.get(window.activeTextEditor.document.uri)?.notebookUri);
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
         if (document === undefined) {
@@ -124,7 +125,8 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             notebookUri ??
             window.activeNotebookEditor?.document.uri ??
             this.interactiveWindowProvider.activeWindow?.notebookUri ??
-            (window.activeTextEditor?.document.uri && this.interactiveWindowProvider.get(window.activeTextEditor.document.uri)?.notebookUri);
+            (window.activeTextEditor?.document.uri &&
+                this.interactiveWindowProvider.get(window.activeTextEditor.document.uri)?.notebookUri);
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
         if (document === undefined) {
