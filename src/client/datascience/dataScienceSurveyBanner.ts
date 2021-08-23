@@ -4,9 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { UIKind } from 'vscode';
+import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import {
@@ -19,8 +19,7 @@ import {
 } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { MillisecondsInADay } from '../constants';
-import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
-import { INotebookExtensibility } from './types';
+import { isJupyterNotebook } from './notebook/helpers/helpers';
 
 export enum DSSurveyStateKeys {
     ShowBanner = 'ShowDSSurveyBanner',
@@ -109,8 +108,8 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
+        @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
-        @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
         this.setPersistentState(BannerType.InsidersNotebookSurvey, InsidersNotebookSurveyStateKeys.ShowBanner);
@@ -123,7 +122,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     public async activate() {
-        this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
+        this.vscodeNotebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, this.disposables);
     }
 
     public async showBanner(type: BannerType): Promise<void> {
@@ -204,8 +203,16 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         return state.value;
     }
 
-    private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
-        if (kernelStateEvent.state === KernelState.executed) {
+    // Handle when a cell finishes execution
+    private async onDidChangeNotebookCellExecutionState(
+        cellStateChange: NotebookCellExecutionStateChangeEvent
+    ): Promise<void> {
+        if (!isJupyterNotebook(cellStateChange.cell.notebook)) {
+            return;
+        }
+
+        // If cell has moved to executing, update the execution count 
+        if (cellStateChange.state === NotebookCellExecutionState.Executing) {
             void this.updateStateAndShowBanner(
                 InsidersNotebookSurveyStateKeys.ExecutionCount,
                 BannerType.InsidersNotebookSurvey
