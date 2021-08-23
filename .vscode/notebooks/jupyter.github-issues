@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-08-13"
+    "value": "$TODAYS_DATE=2021-08-23"
   },
   {
     "kind": 1,
@@ -27,7 +27,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TEAM_AUTHOR_INCLUSION = author:DavidKutu author:joyceerhl author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff\r\n$TEAM_AUTHOR_EXLUSION = -author:DavidKutu -author:joyceerhl -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff\r\n\r\n$TEAM_ASSIGNMENT = assignee:DavidKutu assignee:joyceerhl assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff"
+    "value": "$TEAM_AUTHOR_INCLUSION = author:DavidKutu author:joyceerhl author:DonJayamanne author:rchiodo author:greazer author:IanMatthewHuff author:rebornix author:roblourens\r\n$TEAM_AUTHOR_EXLUSION = -author:DavidKutu -author:joyceerhl -author:DonJayamanne -author:rchiodo -author:greazer -author:IanMatthewHuff -author:rebornix -author:roblourens\r\n\r\n$TEAM_ASSIGNMENT = assignee:DavidKutu assignee:joyceerhl assignee:DonJayamanne assignee:rchiodo assignee:greazer assignee:IanMatthewHuff"
   },
   {
     "kind": 1,
@@ -102,7 +102,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
   },
   {
     "kind": 1,
@@ -112,7 +112,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
   },
   {
     "kind": 1,
