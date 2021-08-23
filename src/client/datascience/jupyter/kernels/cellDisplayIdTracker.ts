@@ -4,6 +4,7 @@
 import { injectable, inject } from 'inversify';
 import { NotebookCell, NotebookCellOutput, NotebookDocument } from 'vscode';
 import { IVSCodeNotebook } from '../../../common/application/types';
+import { isJupyterNotebook } from '../../notebook/helpers/helpers';
 
 @injectable()
 export class CellOutputDisplayIdTracker {
@@ -14,6 +15,9 @@ export class CellOutputDisplayIdTracker {
     private cellToDisplayIdMapping = new WeakMap<NotebookCell, string>();
     constructor(@inject(IVSCodeNotebook) notebooks: IVSCodeNotebook) {
         notebooks.onDidChangeNotebookDocument((e) => {
+            if (!isJupyterNotebook(e.document)) {
+                return;
+            }
             // We are only interested in cells that were cleared
             if (e.type === 'changeCellOutputs') {
                 e.cells

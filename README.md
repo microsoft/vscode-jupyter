@@ -2,6 +2,8 @@
 
 A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today. Many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
+The Jupyter Extension includes the Jupyter Keymaps extension by default. The Jupyter Keymaps extension provides Jupyter-consistent keymaps and can be disabled or uninstalled. 
+
 ## Notebook support
 
 The Jupyter Extension uses the [built-in notebook support](https://code.visualstudio.com/api/extension-guides/notebook#:~:text=The%20Notebook%20API%20allows%20Visual%20Studio%20Code%20extensions,allows%20for%20similar%20experiences%20inside%20Visual%20Studio%20Code.) from VS code. This UI gives a number of advantages to users of notebooks:
@@ -46,7 +48,7 @@ The Jupyter Extension supports other languages in addition to Python such as Jul
 
     <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
 
--   Select your kernel by clicking on the kernel picker in the bottom right of the status bar or by invoking the `"Notebook: Select Notebook Kernel"` command.
+-   Select your kernel by clicking on the kernel picker in the top right of the notebook or by invoking the `"Notebook: Select Notebook Kernel"` command.
 
     <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/KernelPicker.gif?>
 

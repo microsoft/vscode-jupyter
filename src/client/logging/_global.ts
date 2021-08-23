@@ -80,7 +80,7 @@ export function log(logLevel: LogLevel, ...args: Arguments) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function logVerbose(...args: any[]) {
-    log(LogLevel.Info, ...args);
+    log(LogLevel.Trace, ...args);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

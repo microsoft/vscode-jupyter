@@ -8,13 +8,11 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
-import { traceError, traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands, Telemetry } from '../constants';
 import { IDataScienceCommandListener, IDataScienceErrorHandler, INotebookEditorProvider } from '../types';
-import { isUri } from '../../common/utils/misc';
 
 @injectable()
 export class NativeEditorCommandListener implements IDataScienceCommandListener {
@@ -33,14 +31,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, (notebookUri: Uri | undefined) =>
-                this.interruptKernel(notebookUri)
-            )
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel())
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
@@ -89,36 +79,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         const activeEditor = this.provider.activeEditor;
         if (activeEditor) {
             activeEditor.removeAllCells();
-        }
-    }
-
-    private interruptKernel(notebookUri: Uri | undefined) {
-        // `document` may be undefined if this command is invoked from the command palette.
-        if (isUri(notebookUri)) {
-            traceInfo(`Interrupt requested for ${notebookUri.toString()} in nativeEditorCommandListener`);
-            traceInfo(`this.provider.activeEditor?.file.toString() = ${this.provider.activeEditor?.file.toString()}`);
-            traceInfo(`this.provider.editors = ${this.provider.editors.map((item) => item.file.toString())}`);
-            const target =
-                this.provider.activeEditor?.file.toString() === notebookUri.toString()
-                    ? this.provider.activeEditor
-                    : this.provider.editors.find((editor) => editor.file.toString() === notebookUri.toString());
-            if (target) {
-                target.interruptKernel().ignoreErrors();
-            } else {
-                traceInfo(
-                    `Interrupt requested for ${notebookUri.toString()} in nativeEditorCommandListener & editor not found`
-                );
-            }
-        } else {
-            traceInfo(`Interrupt requested for active editor in nativeEditorCommandListener`);
-            this.provider.activeEditor?.interruptKernel().ignoreErrors();
-        }
-    }
-
-    private async restartKernel() {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            await activeEditor.restartKernel().catch(traceError.bind('Failed to restart kernel'));
         }
     }
 

@@ -25,7 +25,7 @@ import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getResourceType } from '../../common';
-import { Commands, Telemetry } from '../../constants';
+import { Telemetry } from '../../constants';
 import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
@@ -69,7 +69,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Get the result of the question
         try {
             const result = await promise;
-            this.handleKernelDependencyResponse(resource, result, interpreter);
+            this.handleKernelDependencyResponse(result, interpreter);
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(interpreter.path);
@@ -80,7 +80,6 @@ export class KernelDependencyService implements IKernelDependencyService {
     }
 
     private handleKernelDependencyResponse(
-        resource: Resource,
         response: KernelInterpreterDependencyResponse,
         interpreter: PythonEnvironment
     ) {
@@ -88,17 +87,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             return;
         }
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
-            if (getResourceType(resource) === 'notebook') {
-                this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
-            } else {
-                this.commandManager
-                    .executeCommand(Commands.SwitchJupyterKernel, {
-                        currentKernelDisplayName: interpreter.displayName,
-                        identity: resource,
-                        resource
-                    })
-                    .then(noop, noop);
-            }
+            this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
         }
         throw new IpyKernelNotInstalledError(
             DataScience.ipykernelNotInstalled().format(

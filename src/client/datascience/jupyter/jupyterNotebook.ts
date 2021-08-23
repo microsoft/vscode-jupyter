@@ -10,13 +10,13 @@ import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import '../../common/extensions';
-import { traceError, traceInfo, traceInfoIf, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
-import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -32,7 +32,6 @@ import {
     INotebookCompletion,
     INotebookExecutionInfo,
     INotebookExecutionLogger,
-    InterruptResult,
     KernelSocketInformation
 } from '../types';
 import { expandWorkingDir } from './jupyterUtils';
@@ -41,7 +40,7 @@ import { KernelConnectionMetadata } from './kernels/types';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
-import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -49,12 +48,8 @@ import { handleTensorBoardDisplayDataOutput } from '../notebook/helpers/executio
 import {
     getInterpreterFromKernelConnectionMetadata,
     getKernelConnectionLanguage,
-    isPythonKernelConnection,
-    sendTelemetryForPythonKernelExecutable
+    isPythonKernelConnection
 } from './kernels/helpers';
-import { isResourceNativeNotebook } from '../notebook/helpers/helpers';
-import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
-import { IPythonExecutionFactory } from '../../common/process/types';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -157,7 +152,6 @@ class CellSubscriber {
 export class JupyterNotebookBase implements INotebook {
     private sessionStartTime: number;
     private pendingCellSubscriptions: CellSubscriber[] = [];
-    private ranInitialSetup = false;
     private _resource: Resource;
     private _identity: Uri;
     private _disposed: boolean = false;
@@ -180,15 +174,10 @@ export class JupyterNotebookBase implements INotebook {
     public get onKernelRestarted(): Event<void> {
         return this.kernelRestarted.event;
     }
-    public get onKernelInterrupted(): Event<void> {
-        return this.kernelInterrupted.event;
-    }
     private readonly kernelRestarted = new EventEmitter<void>();
-    private readonly kernelInterrupted = new EventEmitter<void>();
     private disposedEvent = new EventEmitter<void>();
     private finishedExecuting = new EventEmitter<ICell>();
     private sessionStatusChanged: Disposable | undefined;
-    private initializedMatplotlib = false;
     private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => void>();
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this.session.kernelSocket;
@@ -208,9 +197,7 @@ export class JupyterNotebookBase implements INotebook {
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
         private applicationService: IApplicationShell,
-        private fs: IFileSystem,
-        private readonly vscNotebook: IVSCodeNotebook,
-        private readonly executionFactory: IPythonExecutionFactory
+        private fs: IFileSystem
     ) {
         this.sessionStartTime = Date.now();
 
@@ -225,8 +212,6 @@ export class JupyterNotebookBase implements INotebook {
 
         // Make a copy of the launch info so we can update it in this class
         this._executionInfo = cloneDeep(executionInfo);
-
-        this.logKernelStarted().ignoreErrors();
     }
 
     public get connection() {
@@ -285,98 +270,6 @@ export class JupyterNotebookBase implements INotebook {
 
     public waitForIdle(timeoutMs: number): Promise<void> {
         return this.session ? this.session.waitForIdle(timeoutMs) : Promise.resolve();
-    }
-
-    // Set up our initial plotting and imports
-    // eslint-disable-next-line complexity
-    public async initialize(cancelToken?: CancellationToken): Promise<void> {
-        if (this.ranInitialSetup) {
-            return;
-        }
-        this.ranInitialSetup = true;
-        this._workingDirectory = undefined;
-
-        traceInfo(`Initial setup for ${this.identity.toString()} starting ...`);
-
-        try {
-            // When we start our notebook initial, change to our workspace or user specified root directory
-            await this.updateWorkingDirectoryAndPath();
-            traceInfoIf(isCI, `Initial setup after for updateWorkingDirectoryAndPath ...`);
-            let isDefinitelyNotAPythonKernel = false;
-            if (
-                this._executionInfo.kernelConnectionMetadata?.kind === 'startUsingKernelSpec' &&
-                this._executionInfo.kernelConnectionMetadata.kernelSpec.language &&
-                this._executionInfo.kernelConnectionMetadata.kernelSpec.language.toLowerCase() !==
-                    PYTHON_LANGUAGE.toLocaleLowerCase()
-            ) {
-                isDefinitelyNotAPythonKernel = true;
-            }
-            if (
-                this._executionInfo.kernelConnectionMetadata?.kind === 'connectToLiveKernel' &&
-                this._executionInfo.kernelConnectionMetadata.kernelModel.language &&
-                this._executionInfo.kernelConnectionMetadata.kernelModel.language.toLowerCase() !==
-                    PYTHON_LANGUAGE.toLocaleLowerCase()
-            ) {
-                isDefinitelyNotAPythonKernel = true;
-            }
-
-            const settings = this.configService.getSettings(this.resource);
-            if (settings && settings.themeMatplotlibPlots) {
-                // We're theming matplotlibs, so we have to setup our default state.
-                traceInfoIf(isCI, `Initialize config for plots for ${this.identity.toString()}`);
-                if (!isDefinitelyNotAPythonKernel) {
-                    await this.initializeMatplotlib(cancelToken);
-                }
-            } else {
-                this.initializedMatplotlib = false;
-                const configInit =
-                    (!settings || settings.enablePlotViewer) &&
-                    !isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
-                        ? CodeSnippets.ConfigSvg
-                        : CodeSnippets.ConfigPng;
-                traceInfoIf(isCI, `Initialize config for plots for ${this.identity.toString()}`);
-                if (!isDefinitelyNotAPythonKernel) {
-                    await this.executeSilently(configInit, cancelToken);
-                }
-            }
-            traceInfoIf(isCI, `Initial setup for ${this.identity.toString()} half way ...`);
-            if (
-                !isDefinitelyNotAPythonKernel &&
-                this._executionInfo.connectionInfo.localLaunch &&
-                this._executionInfo.kernelConnectionMetadata
-            ) {
-                await sendTelemetryForPythonKernelExecutable(
-                    this,
-                    this._resource?.fsPath || this._identity.fsPath,
-                    this._executionInfo.kernelConnectionMetadata,
-                    this.executionFactory
-                );
-            }
-            // Run any startup commands that we specified. Support the old form too
-            let setting = settings.runStartupCommands || settings.runMagicCommands;
-
-            // Convert to string in case we get an array of startup commands.
-            if (Array.isArray(setting)) {
-                setting = setting.join(`\n`);
-            }
-
-            if (setting) {
-                // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
-                traceInfoIf(isCI, 'Begin Run startup code for notebook');
-                const cleanedUp = setting.replace(/\\n/g, '\n');
-                const cells = await this.executeSilently(cleanedUp, cancelToken);
-                traceInfoIf(isCI, `Run startup code for notebook: ${cleanedUp} - results: ${cells.length}`);
-            }
-
-            traceInfo(`Initial setup complete for ${this.identity.toString()}`);
-        } catch (e) {
-            traceWarning('Failed initialize', e);
-        }
-    }
-
-    public clear(_id: string): void {
-        // We don't do anything as we don't cache results in this class.
-        noop();
     }
 
     public execute(
@@ -485,182 +378,11 @@ export class JupyterNotebookBase implements INotebook {
             );
         });
     }
-
-    public async getSysInfo(): Promise<ICell> {
-        const info = await this.requestKernelInfo();
-
-        // Gather up help links and the banner
-        const content = info.content as KernelMessage.IInfoReply;
-        const messages = [content.banner];
-
-        // Skip help links for now. Too wordy and not clickable. Can add this later
-        // content.help_links.forEach((h) => messages.push(`${h.text} : ${h.url}`));
-
-        return {
-            data: {
-                cell_type: 'messages',
-                messages: messages,
-                metadata: {},
-                source: []
-            },
-            id: uuid(),
-            file: '',
-            line: 0,
-            state: CellState.finished
-        };
-    }
     public fireRestart() {
         // Tell our loggers & anyone listening to the events.
         this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
         this.kernelRestarted.fire();
     }
-    @captureTelemetry(Telemetry.RestartJupyterTime)
-    public async restartKernel(timeoutMs: number): Promise<void> {
-        if (this.session) {
-            // Update our start time so we don't keep sending responses
-            this.sessionStartTime = Date.now();
-
-            traceInfo('restartKernel - finishing cells that are outstanding');
-            // Complete all pending as an error. We're restarting
-            this.finishUncompletedCells();
-            traceInfo('restartKernel - restarting kernel');
-
-            // Restart our kernel
-            await this.session.restart(timeoutMs);
-
-            // Rerun our initial setup for the notebook
-            await this.runInitialSetup();
-
-            // Tell our loggers
-            this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
-            traceInfo(`Time to restart kernel is ${(Date.now() - this.sessionStartTime) / 1000}s`);
-            this.kernelRestarted.fire();
-            return;
-        }
-
-        throw this.getDisposedError();
-    }
-
-    public async runInitialSetup() {
-        this.ranInitialSetup = false;
-        traceInfo('restartKernel - initialSetup');
-        await this.initialize();
-        traceInfo('restartKernel - initialSetup completed');
-    }
-
-    @captureTelemetry(Telemetry.InterruptJupyterTime)
-    public async interruptKernel(timeoutMs: number): Promise<InterruptResult> {
-        if (this.session) {
-            // Keep track of our current time. If our start time gets reset, we
-            // restarted the kernel.
-            const interruptBeginTime = Date.now();
-
-            // Get just the first pending cell (it should be the oldest). If it doesn't finish
-            // by our timeout, then our interrupt didn't work.
-            const firstPending =
-                this.pendingCellSubscriptions.length > 0 ? this.pendingCellSubscriptions[0] : undefined;
-
-            // Create a promise that resolves when the first pending cell finishes
-            const finished = firstPending ? firstPending.promise : Promise.resolve(CellState.finished);
-
-            // Create a deferred promise that resolves if we have a failure
-            const restarted = createDeferred<CellState[]>();
-
-            // Listen to status change events so we can tell if we're restarting
-            const restartHandler = (e: ServerStatus) => {
-                if (e === ServerStatus.Restarting) {
-                    // We restarted the kernel.
-                    this.sessionStartTime = Date.now();
-                    traceWarning('Kernel restarting during interrupt');
-
-                    // Indicate we have to redo initial setup. We can't wait for starting though
-                    // because sometimes it doesn't happen
-                    this.ranInitialSetup = false;
-
-                    // Indicate we restarted the race below
-                    restarted.resolve([]);
-
-                    // Fail all of the active (might be new ones) pending cell executes. We restarted.
-                    this.finishUncompletedCells();
-                }
-            };
-            const restartHandlerToken = this.session.onSessionStatusChanged(restartHandler);
-
-            // Start our interrupt. If it fails, indicate a restart
-            this.session.interrupt(timeoutMs).catch((exc) => {
-                traceWarning(`Error during interrupt: ${exc}`);
-                restarted.resolve([]);
-            });
-            const stopWatch = new StopWatch();
-            const promise = (async () => {
-                try {
-                    // Wait for all of the pending cells to finish or the timeout to fire
-                    const result = await waitForPromise(Promise.race([finished, restarted.promise]), timeoutMs);
-
-                    // See if we restarted or not
-                    if (restarted.completed) {
-                        return InterruptResult.Restarted;
-                    }
-
-                    if (result === null) {
-                        // We timed out. You might think we should stop our pending list, but that's not
-                        // up to us. The cells are still executing. The user has to request a restart or try again
-                        return InterruptResult.TimedOut;
-                    }
-
-                    // Cancel all other pending cells as we interrupted.
-                    this.finishUncompletedCells();
-
-                    // Fire event that we interrupted.
-                    this.kernelInterrupted.fire();
-
-                    // Indicate the interrupt worked.
-                    return InterruptResult.Success;
-                } catch (exc) {
-                    // Something failed. See if we restarted or not.
-                    if (this.sessionStartTime && interruptBeginTime < this.sessionStartTime) {
-                        return InterruptResult.Restarted;
-                    }
-
-                    // Otherwise a real error occurred.
-                    sendKernelTelemetryEvent(
-                        this.resource,
-                        Telemetry.NotebookInterrupt,
-                        stopWatch.elapsedTime,
-                        undefined,
-                        exc
-                    );
-                    throw exc;
-                } finally {
-                    restartHandlerToken.dispose();
-                }
-            })();
-            return promise.then((result) => {
-                sendKernelTelemetryEvent(this.resource, Telemetry.NotebookInterrupt, stopWatch.elapsedTime, { result });
-                return result;
-            });
-        }
-
-        throw this.getDisposedError();
-    }
-
-    public async setMatplotLibStyle(useDark: boolean): Promise<void> {
-        // Make sure matplotlib is initialized
-        if (!this.initializedMatplotlib) {
-            await this.initializeMatplotlib();
-        }
-
-        const settings = this.configService.getSettings(this.resource);
-        if (settings.themeMatplotlibPlots && !settings.ignoreVscodeTheme) {
-            // Reset the matplotlib style based on if dark or not.
-            await this.executeSilently(
-                useDark
-                    ? "matplotlib.style.use('dark_background')"
-                    : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`
-            );
-        }
-    }
-
     public async getCompletion(
         cellCode: string,
         offsetInCode: number,
@@ -712,72 +434,15 @@ export class JupyterNotebookBase implements INotebook {
     public getKernelConnection(): KernelConnectionMetadata | undefined {
         return this._executionInfo.kernelConnectionMetadata;
     }
-
-    public async setKernelConnection(connectionMetadata: KernelConnectionMetadata, timeoutMS: number): Promise<void> {
-        // We need to start a new session with the new kernel spec
-        if (this.session) {
-            // Turn off setup
-            this.ranInitialSetup = false;
-
-            // Change the kernel on the session
-            await this.session.changeKernel(this.resource, connectionMetadata, timeoutMS);
-
-            // Change our own kernel spec
-            // Only after session was successfully created.
-            this._executionInfo.kernelConnectionMetadata = connectionMetadata;
-
-            // Rerun our initial setup
-            await this.initialize();
-        } else {
-            // Change our own kernel spec
-            this._executionInfo.kernelConnectionMetadata = connectionMetadata;
-        }
-
-        this.kernelChanged.fire(connectionMetadata);
-    }
-
     public getLoggers(): INotebookExecutionLogger[] {
         return this.loggers;
     }
-
-    public registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => void): void {
-        this.ioPubListeners.add(listener);
-    }
-
     public registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ) {
         if (this.session) {
             this.session.registerCommTarget(targetName, callback);
-        } else {
-            throw new Error(localize.DataScience.sessionDisposed());
-        }
-    }
-
-    public sendCommMessage(
-        buffers: (ArrayBuffer | ArrayBufferView)[],
-        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        msgId: any
-    ): Kernel.IShellFuture<
-        KernelMessage.IShellMessage<'comm_msg'>,
-        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
-    > {
-        if (this.session) {
-            return this.session.sendCommMessage(buffers, content, metadata, msgId);
-        } else {
-            throw new Error(localize.DataScience.sessionDisposed());
-        }
-    }
-
-    public requestCommInfo(
-        content: KernelMessage.ICommInfoRequestMsg['content']
-    ): Promise<KernelMessage.ICommInfoReplyMsg> {
-        if (this.session) {
-            return this.session.requestCommInfo(content);
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
         }
@@ -802,36 +467,6 @@ export class JupyterNotebookBase implements INotebook {
             throw new Error(localize.DataScience.sessionDisposed());
         }
     }
-
-    private async logKernelStarted() {
-        this.loggers.forEach((l) => l.onKernelStarted(this.getNotebookId()));
-    }
-
-    private async initializeMatplotlib(cancelToken?: CancellationToken): Promise<void> {
-        const settings = this.configService.getSettings(this.resource);
-        if (settings && settings.themeMatplotlibPlots) {
-            const matplobInit =
-                (!settings || settings.enablePlotViewer) &&
-                !isResourceNativeNotebook(this._resource, this.vscNotebook, this.fs)
-                    ? CodeSnippets.MatplotLibInitSvg
-                    : CodeSnippets.MatplotLibInitPng;
-
-            traceInfo(`Initialize matplotlib for ${this.identity.toString()}`);
-            // Force matplotlib to inline and save the default style. We'll use this later if we
-            // get a request to update style
-            await this.executeSilently(matplobInit, cancelToken);
-
-            // Use this flag to detemine if we need to rerun this or not.
-            this.initializedMatplotlib = true;
-        }
-    }
-
-    private finishUncompletedCells() {
-        const copyPending = [...this.pendingCellSubscriptions];
-        copyPending.forEach((c) => c.cancel());
-        this.pendingCellSubscriptions = [];
-    }
-
     @captureTelemetry(Telemetry.HiddenCellTime)
     private executeSilently(code: string, cancelToken?: CancellationToken): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
@@ -972,7 +607,7 @@ export class JupyterNotebookBase implements INotebook {
     };
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
-        traceInfo('UpdateWorkingDirectoryAndPath');
+        traceInfo('UpdateWorkingDirectoryAndPath in Jupyter Notebook');
         if (this._executionInfo && this._executionInfo.connectionInfo.localLaunch && !this._workingDirectory) {
             // See what our working dir is supposed to be
             const suggested = this._executionInfo.workingDir;

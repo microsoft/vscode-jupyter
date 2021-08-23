@@ -43,10 +43,6 @@ export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
         }
     }
 
-    public onKernelStarted() {
-        noop();
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onKernelRestarted() {
         this.runFiles.clear();

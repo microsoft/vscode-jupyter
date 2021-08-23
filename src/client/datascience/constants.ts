@@ -77,8 +77,6 @@ export namespace Commands {
     export const RunAllCells = 'jupyter.runallcells';
     export const RunAllCellsAbove = 'jupyter.runallcellsabove';
     export const RunCellAndAllBelow = 'jupyter.runcellandallbelow';
-    export const SetJupyterKernel = 'jupyter.setKernel';
-    export const SwitchJupyterKernel = 'jupyter.switchKernel';
     export const RunAllCellsAbovePalette = 'jupyter.runallcellsabove.palette';
     export const RunCellAndAllBelowPalette = 'jupyter.runcurrentcellandallbelow.palette';
     export const RunToLine = 'jupyter.runtoline';
@@ -96,9 +94,6 @@ export namespace Commands {
     export const SelectJupyterCommandLine = 'jupyter.selectjupytercommandline';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'jupyter.exportfileandoutputasnotebook';
-    export const UndoCells = 'jupyter.undocells';
-    export const RedoCells = 'jupyter.redocells';
-    export const RemoveAllCells = 'jupyter.removeallcells';
     export const InterruptKernel = 'jupyter.interruptkernel';
     export const RestartKernel = 'jupyter.restartkernel';
     export const NotebookEditorUndoCells = 'jupyter.notebookeditor.undocells';
@@ -156,12 +151,6 @@ export namespace Commands {
     export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
-    export const NotebookEditorKeybindSave = 'jupyter.notebookeditor.keybind.save';
-    export const NotebookEditorKeybindUndo = 'jupyter.notebookeditor.keybind.undo';
-    export const NotebookEditorKeybindRenderMarkdownAndSelectBelow =
-        'jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow';
-    export const NotebookEditorKeybindExecuteCell = 'jupyter.notebookeditor.keybind.executeCell';
-    export const NotebookEditorToggleOutput = 'jupyter.notebookeditor.keybind.toggleOutput';
     export const InteractiveClearAll = 'jupyter.interactive.clearAllCells';
     export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
     export const InteractiveGoToCode = 'jupyter.interactive.goToCode';
@@ -172,6 +161,7 @@ export namespace Commands {
     export const RunByLine = 'jupyter.runByLine';
     export const RunAndDebugCell = 'jupyter.runAndDebugCell';
     export const RunByLineContinue = 'jupyter.runByLineContinue';
+    export const RunByLineStop = 'jupyter.runByLineStop';
 }
 
 export namespace CodeLensCommands {
@@ -658,10 +648,10 @@ export namespace CodeSnippets {
     ];
     export const ChangeDirectoryCommentIdentifier = '# ms-toolsai.jupyter added'; // Not translated so can compare.
     export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
-    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = {'svg', 'png'}`;
-    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = {'png'}`;
-    export const ConfigSvg = `%config InlineBackend.figure_formats = {'svg', 'png'}`;
-    export const ConfigPng = `%config InlineBackend.figure_formats = {'png'}`;
+    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = ['svg', 'png']`;
+    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = ['png']`;
+    export const ConfigSvg = `%config InlineBackend.figure_formats = ['svg', 'png']`;
+    export const ConfigPng = `%config InlineBackend.figure_formats = ['png']`;
     export const UpdateCWDAndPath =
         'import os\nimport sys\n%cd "{0}"\nif os.getcwd() not in sys.path:\n    sys.path.insert(0, os.getcwd())';
     export const disableJedi = '%config Completer.use_jedi = False';
@@ -673,7 +663,6 @@ export enum JupyterCommands {
     KernelSpecCommand = 'kernelspec'
 }
 
-export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
 export const DataScienceStartupTime = Symbol('DataScienceStartupTime');
 
 // Default for notebook version (major & minor) used when creating notebooks.

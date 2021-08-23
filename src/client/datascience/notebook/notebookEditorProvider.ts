@@ -14,24 +14,16 @@ import {
     NotebookCellData,
     NotebookCellKind
 } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 
-import { IConfigurationService, IDisposableRegistry, IExtensions } from '../../common/types';
+import { IDisposableRegistry, IExtensions } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
-import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, defaultNotebookFormat, Telemetry } from '../constants';
-import { IKernelProvider } from '../jupyter/kernels/types';
-import {
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookExecutionLogger,
-    INotebookProvider,
-    IStatusProvider
-} from '../types';
+import { INotebookEditor, INotebookEditorProvider } from '../types';
 import { JupyterNotebookView } from './constants';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { isJupyterNotebook } from './helpers/helpers';
@@ -79,15 +71,15 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(NotebookCellLanguageService) private readonly cellLanguageService: NotebookCellLanguageService,
         @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         disposables.push(this);
+        // Register notebook documents that are already open e.g. after a workspace reload
+        for (const notebookDocument of this.vscodeNotebook.notebookDocuments) {
+            void this.onDidOpenNotebookDocument(notebookDocument);
+        }
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
         this.disposables.push(
@@ -188,21 +180,12 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
         if (!editor) {
-            const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
-            const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
-            const loggers = this.serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger);
             editor = new NotebookEditor(
                 doc,
                 this.vscodeNotebook,
                 this.commandManager,
-                notebookProvider,
-                kernelProvider,
-                this.statusProvider,
-                this.appShell,
-                this.configurationService,
                 this.disposables,
                 this.cellLanguageService,
-                loggers,
                 this.extensions
             );
             this.onEditorOpened(editor);

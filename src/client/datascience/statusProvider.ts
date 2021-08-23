@@ -6,7 +6,7 @@ import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 
 import { IApplicationShell } from '../common/application/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { IInteractiveBase, IStatusProvider } from './types';
+import { IStatusProvider } from './types';
 
 class StatusItem implements Disposable {
     private deferred: Deferred<void>;
@@ -55,18 +55,12 @@ export class StatusProvider implements IStatusProvider {
 
     constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell) {}
 
-    public set(
-        message: string,
-        showInWebView: boolean,
-        timeout?: number,
-        cancel?: () => void,
-        panel?: IInteractiveBase
-    ): Disposable {
+    public set(message: string, timeout?: number, cancel?: () => void): Disposable {
         // Start our progress
-        this.incrementCount(showInWebView, panel);
+        this.incrementCount();
 
         // Create a StatusItem that will return our promise
-        const statusItem = new StatusItem(message, () => this.decrementCount(panel), timeout);
+        const statusItem = new StatusItem(message, () => this.decrementCount(), timeout);
 
         const progressOptions: ProgressOptions = {
             location: cancel ? ProgressLocation.Notification : ProgressLocation.Window,
@@ -75,7 +69,7 @@ export class StatusProvider implements IStatusProvider {
         };
 
         // Set our application shell status with a busy icon
-        this.applicationShell.withProgress(progressOptions, (_p, c) => {
+        void this.applicationShell.withProgress(progressOptions, (_p, c) => {
             if (c && cancel) {
                 c.onCancellationRequested(() => {
                     cancel();
@@ -91,13 +85,11 @@ export class StatusProvider implements IStatusProvider {
     public async waitWithStatus<T>(
         promise: () => Promise<T>,
         message: string,
-        showInWebView: boolean,
         timeout?: number,
-        cancel?: () => void,
-        panel?: IInteractiveBase
+        cancel?: () => void
     ): Promise<T> {
         // Create a status item and wait for our promise to either finish or reject
-        const status = this.set(message, showInWebView, timeout, cancel, panel);
+        const status = this.set(message, timeout, cancel);
         let result: T;
         try {
             result = await promise();
@@ -107,22 +99,12 @@ export class StatusProvider implements IStatusProvider {
         return result;
     }
 
-    private incrementCount = (showInWebView: boolean, panel?: IInteractiveBase) => {
-        if (this.statusCount === 0) {
-            if (panel && showInWebView) {
-                panel.startProgress();
-            }
-        }
+    private incrementCount = () => {
         this.statusCount += 1;
     };
 
-    private decrementCount = (panel?: IInteractiveBase) => {
+    private decrementCount = () => {
         const updatedCount = this.statusCount - 1;
-        if (updatedCount === 0) {
-            if (panel) {
-                panel.stopProgress();
-            }
-        }
         this.statusCount = Math.max(updatedCount, 0);
     };
 }

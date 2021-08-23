@@ -11,7 +11,6 @@ import { EventEmitter, NotebookDocument, TextDocument } from 'vscode';
 import { IDocumentManager, IVSCodeNotebook } from '../../client/common/application/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { IDisposable } from '../../client/common/types';
-import { generateCells } from '../../client/datascience/cellFactory';
 import { EventName } from '../../client/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../client/telemetry/helpers';
 import { ImportTracker } from '../../client/telemetry/importTracker';
@@ -46,7 +45,7 @@ suite('Import Tracker', () => {
             }
 
             Reporter.properties.pop(); // HASHED_PACKAGE_PERF
-            expect(Reporter.properties).to.deep.equal(hashes.map((hash) => ({ hashedName: hash })));
+            expect(Reporter.properties).to.deep.equal(hashes.map((hash) => ({ hashedNamev2: hash })));
         }
 
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
@@ -105,14 +104,6 @@ suite('Import Tracker', () => {
         documentManager.setup((d) => d.textDocuments).returns(() => [doc.object]);
         await importTracker.activate();
 
-        Reporter.expectHashes(pandasHash);
-    });
-
-    test('Execute notebook', async () => {
-        await importTracker.postExecute(
-            generateCells(undefined, 'import pandas\r\n', 'foo.py', 0, false, '1')[0],
-            false
-        );
         Reporter.expectHashes(pandasHash);
     });
 

@@ -35,8 +35,7 @@ import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
     IJupyterDebugger,
-    INotebookExporter,
-    IStatusProvider
+    INotebookExporter
 } from '../types';
 import { NativeInteractiveWindow } from './nativeInteractiveWindow';
 
@@ -124,7 +123,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         const result = new NativeInteractiveWindow(
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
-            this.serviceContainer.get<IStatusProvider>(IStatusProvider),
             this.serviceContainer.get<IFileSystem>(IFileSystem),
             this.serviceContainer.get<IConfigurationService>(IConfigurationService),
             this.serviceContainer.get<ICommandManager>(ICommandManager),

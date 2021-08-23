@@ -24,6 +24,7 @@ import { populateTelemetryWithErrorInfo } from '../common/errors';
 import { ErrorCategory, TelemetryErrorProperties } from '../common/errors/types';
 import { noop } from '../common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
+import { DebuggingTelemetry } from '../debugger/constants';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -470,7 +471,7 @@ export interface IEventNamePropertyMapping {
          *
          * @type {string}
          */
-        hashedName: string;
+        hashedNamev2: string;
     };
     [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
 
@@ -1415,5 +1416,17 @@ export interface IEventNamePropertyMapping {
         notebookMetadataProvided: boolean; // Whether notebook metadata was provided.
         hasKernelSpecInMetadata: boolean; // Whether we have kernelspec info in the notebook metadata.
         kernelConnectionFound: boolean; // Whether a kernel connection was found or not.
+    };
+    [DebuggingTelemetry.clickedOnSetup]: never | undefined;
+    [DebuggingTelemetry.closedModal]: never | undefined;
+    [DebuggingTelemetry.ipykernel6Status]: {
+        status: 'installed' | 'notInstalled';
+    };
+    [DebuggingTelemetry.clickedRunByLine]: never | undefined;
+    [DebuggingTelemetry.successfullyStartedRunByLine]: never | undefined;
+    [DebuggingTelemetry.clickedRunAndDebugCell]: never | undefined;
+    [DebuggingTelemetry.successfullyStartedRunAndDebugCell]: never | undefined;
+    [DebuggingTelemetry.endedSession]: {
+        reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
     };
 }

@@ -7,14 +7,14 @@ import { IApplicationShell } from '../../../common/application/types';
 import { JVSC_EXTENSION_DisplayName, JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../common/constants';
 import { DataScience } from '../../../common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry, VSCodeNotebookProvider } from '../../constants';
+import { Telemetry } from '../../constants';
 import { INotebookEditorProvider } from '../../types';
 import { CreationOptionService } from './creationOptionsService';
 
 @injectable()
 export class NotebookCreator {
     constructor(
-        @inject(VSCodeNotebookProvider) private readonly editorProvider: INotebookEditorProvider,
+        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(CreationOptionService) private readonly creationOptionsService: CreationOptionService
     ) {}
