@@ -115,47 +115,60 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunByLine);
         }
 
-        this.jupyterSession.onIOPubMessage((msg: KernelMessage.IIOPubMessage) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const anyMsg = msg as any;
+        this.disposables.push(
+            this.jupyterSession.onIOPubMessage((msg: KernelMessage.IIOPubMessage) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const anyMsg = msg as any;
 
-            if (anyMsg.header.msg_type === 'debug_event') {
-                if (anyMsg.content.event === 'stopped') {
-                    this.threadId = anyMsg.content.body.threadId;
-                    // We want to get the variables for the variable view every time we stop
-                    // This call starts that
-                    this.stackTrace();
+                if (anyMsg.header.msg_type === 'debug_event') {
+                    if (anyMsg.content.event === 'stopped') {
+                        this.threadId = anyMsg.content.body.threadId;
+                        // We want to get the variables for the variable view every time we stop
+                        // This call starts that
+                        this.stackTrace();
+                    }
+                    this.sendMessage.fire(msg.content);
                 }
-                this.sendMessage.fire(msg.content);
-            }
-        });
+            })
+        );
 
         if (this.kernel) {
-            this.kernel.onWillRestart(() => {
-                sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onARestart' });
-                this.disconnect();
-            });
-            this.kernel.onWillInterrupt(() => {
-                sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onAnInterrupt' });
-                this.disconnect();
-            });
-            this.kernel.onDisposed(() => {
-                void debug.stopDebugging(this.session);
-                this.endSession.fire(this.session);
-                sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
-            });
+            this.disposables.push(
+                this.kernel.onWillRestart(() => {
+                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onARestart' });
+                    this.disconnect();
+                })
+            );
+            this.disposables.push(
+                this.kernel.onWillInterrupt(() => {
+                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onAnInterrupt' });
+                    this.disconnect();
+                })
+            );
+            this.disposables.push(
+                this.kernel.onDisposed(() => {
+                    void debug.stopDebugging(this.session);
+                    this.endSession.fire(this.session);
+                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
+                })
+            );
         }
 
-        notebooks.onDidChangeNotebookCellExecutionState(
-            (cellStateChange: NotebookCellExecutionStateChangeEvent) => {
-                // If a cell has moved to idle, stop the debug session
-                if (cellStateChange.state === NotebookCellExecutionState.Idle) {
-                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
-                    this.disconnect();
-                }
-            },
-            this,
-            this.disposables
+        this.disposables.push(
+            notebooks.onDidChangeNotebookCellExecutionState(
+                (cellStateChange: NotebookCellExecutionStateChangeEvent) => {
+                    // If a cell has moved to idle, stop the debug session
+                    if (
+                        this.configuration.__cellIndex === cellStateChange.cell.index &&
+                        cellStateChange.state === NotebookCellExecutionState.Idle
+                    ) {
+                        sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
+                        this.disconnect();
+                    }
+                },
+                this,
+                this.disposables
+            )
         );
 
         this.disposables.push(this.onDidSendMessage((msg) => this.trace('to client', JSON.stringify(msg))));
