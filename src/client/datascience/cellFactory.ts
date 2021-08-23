@@ -204,7 +204,7 @@ export function generateCellsFromNotebookDocument(
         .filter((cell) => !cell.metadata.isInteractiveWindowMessageCell)
         .map((cell) => {
             // Reinstate cell structure + comments from cell metadata
-            let code = cell.document.getText().splitLines();
+            let code = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
             if (cell.metadata.interactiveWindowCellMarker !== undefined) {
                 code.unshift(cell.metadata.interactiveWindowCellMarker + '\n');
             }
