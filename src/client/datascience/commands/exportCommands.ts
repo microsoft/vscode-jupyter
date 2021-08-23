@@ -12,6 +12,7 @@ import { IApplicationShell, ICommandManager } from '../../common/application/typ
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
+import { isUri } from '../../common/utils/misc';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
@@ -63,9 +64,10 @@ export class ExportCommands implements IDisposable {
         this.disposables.push(disposable);
     }
 
-    private async nativeNotebookExport(uri?: Uri) {
-        const editor = uri
-            ? this.notebookProvider.editors.find((item) => this.fs.arePathsSame(item.file, uri))
+    private async nativeNotebookExport(context?: Uri | { notebookEditor: { notebookUri: Uri } }) {
+        const notebookUri = isUri(context) ? context : context?.notebookEditor.notebookUri;
+        const editor = notebookUri
+            ? this.notebookProvider.editors.find((item) => this.fs.arePathsSame(item.file, notebookUri))
             : this.notebookProvider.activeEditor;
 
         if (editor) {

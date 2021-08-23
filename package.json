@@ -722,6 +722,7 @@
                 "title": "%DataScience.exportDialogTitle%",
                 "shortTitle": "%DataScience.exportAsNotebook.shorttitle%",
                 "icon": "$(save-as)",
+                "enablement": "notebookType == interactive",
                 "category": "Jupyter"
             },
             {
@@ -731,6 +732,7 @@
                     "light": "resources/light/export_to_python.svg",
                     "dark": "resources/dark/export_to_python.svg"
                 },
+                "enablement": "notebookType == interactive",
                 "category": "Jupyter"
             },
             {
