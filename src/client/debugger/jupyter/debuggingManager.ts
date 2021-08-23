@@ -185,34 +185,29 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             this.commandManager.registerCommand(DSCommands.RunByLine, async (cell: NotebookCell | undefined) => {
                 sendTelemetryEvent(DebuggingTelemetry.clickedRunByLine);
-                void this.appShell.withProgress(
-                    { location: ProgressLocation.Notification, title: DataScience.startingRunByLine() },
-                    async () => {
-                        const editor = this.vscNotebook.activeNotebookEditor;
-                        if (!cell) {
-                            const range = editor?.selections[0];
-                            if (range) {
-                                cell = editor?.document.cellAt(range.start);
-                            }
-                        }
-
-                        if (!cell) {
-                            return;
-                        }
-
-                        if (editor) {
-                            if (await this.checkForIpykernel6(editor.document)) {
-                                this.updateToolbar(true);
-                                this.updateCellToolbar(true);
-                                await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
-                            } else {
-                                void this.installIpykernel6();
-                            }
-                        } else {
-                            void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
-                        }
+                const editor = this.vscNotebook.activeNotebookEditor;
+                if (!cell) {
+                    const range = editor?.selections[0];
+                    if (range) {
+                        cell = editor?.document.cellAt(range.start);
                     }
-                );
+                }
+
+                if (!cell) {
+                    return;
+                }
+
+                if (editor) {
+                    if (await this.checkForIpykernel6(editor.document, DataScience.startingRunByLine())) {
+                        this.updateToolbar(true);
+                        this.updateCellToolbar(true);
+                        await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
+                    } else {
+                        void this.installIpykernel6();
+                    }
+                } else {
+                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+                }
             }),
 
             this.commandManager.registerCommand(DSCommands.RunByLineContinue, (cell: NotebookCell | undefined) => {
@@ -380,7 +375,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         return kernel;
     }
 
-    private async checkForIpykernel6(doc: NotebookDocument): Promise<boolean> {
+    private async checkForIpykernel6(doc: NotebookDocument, waitingMessage?: string): Promise<boolean> {
         try {
             const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
             const interpreter = controller?.connection.interpreter;
@@ -390,11 +385,13 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     return true;
                 }
 
-                const status = await this.pythonInstaller.isProductVersionCompatible(
-                    Product.ipykernel,
-                    '>=6.0.0',
-                    interpreter
-                );
+                const checkCompatible = () => this.pythonInstaller.isProductVersionCompatible(Product.ipykernel, '>=6.0.0', interpreter);
+                const status = waitingMessage ?
+                    await this.appShell.withProgress(
+                        { location: ProgressLocation.Notification, title: waitingMessage },
+                        checkCompatible
+                    ) :
+                    await checkCompatible();
                 const result = status === ProductInstallStatus.Installed;
 
                 sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
