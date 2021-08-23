@@ -25,7 +25,7 @@ import * as path from 'path';
 import { IJupyterSession } from '../../datascience/types';
 import { KernelMessage } from '@jupyterlab/services';
 import { ICommandManager } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IKernelDebugAdapter } from '../types';
 import { IDisposable } from '../../common/types';
@@ -202,6 +202,12 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             this,
             this.disposables
         );
+
+        this.disposables.push(this.onDidSendMessage((msg) => this.trace('to client', JSON.stringify(msg))));
+    }
+
+    private trace(tag: string, msg: string) {
+        traceVerbose(`[Debug] ${tag}: ${msg}`);
     }
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
@@ -342,6 +348,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             }
         });
 
+        this.trace('to kernel', JSON.stringify(message));
         if (message.type === 'request') {
             this.sendMessage.fire(message);
             const request = debugRequest(message as DebugProtocol.Request, this.jupyterSession.sessionId);

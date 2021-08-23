@@ -112,7 +112,11 @@ async function activateLegacy(
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
     // XXX Move this *after* abExperiments is activated?
-    setLoggingLevel(configuration.getSettings().logging.level);
+    const settings = configuration.getSettings();
+    setLoggingLevel(settings.logging.level);
+    settings.onDidChange(() => {
+        setLoggingLevel(settings.logging.level);
+    });
 
     // Register datascience types after experiments have loaded.
     // To ensure we can register types based on experiments.
