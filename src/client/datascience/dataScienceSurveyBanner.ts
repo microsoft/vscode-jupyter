@@ -21,21 +21,13 @@ import * as localize from '../common/utils/localize';
 import { MillisecondsInADay } from '../constants';
 import { isJupyterNotebook } from './notebook/helpers/helpers';
 
-export enum DSSurveyStateKeys {
-    ShowBanner = 'ShowDSSurveyBanner',
-    OpenNotebookCount = 'DS_OpenNotebookCount',
-    ExecutionCount = 'DS_ExecutionCount'
-}
-
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',
-    OpenNotebookCount = 'DS_InsidersNotebookOpenNotebookCount',
     ExecutionCount = 'DS_InsidersNotebookExecutionCount'
 }
 
 export enum ExperimentNotebookSurveyStateKeys {
     ShowBanner = 'ShowExperimentNotebookSurveyBanner',
-    OpenNotebookCount = 'DS_ExperimentNotebookOpenNotebookCount',
     ExecutionCount = 'DS_ExperimentNotebookExecutionCount'
 }
 
