@@ -385,13 +385,14 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     return true;
                 }
 
-                const checkCompatible = () => this.pythonInstaller.isProductVersionCompatible(Product.ipykernel, '>=6.0.0', interpreter);
-                const status = waitingMessage ?
-                    await this.appShell.withProgress(
-                        { location: ProgressLocation.Notification, title: waitingMessage },
-                        checkCompatible
-                    ) :
-                    await checkCompatible();
+                const checkCompatible = () =>
+                    this.pythonInstaller.isProductVersionCompatible(Product.ipykernel, '>=6.0.0', interpreter);
+                const status = waitingMessage
+                    ? await this.appShell.withProgress(
+                          { location: ProgressLocation.Notification, title: waitingMessage },
+                          checkCompatible
+                      )
+                    : await checkCompatible();
                 const result = status === ProductInstallStatus.Installed;
 
                 sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
