@@ -114,7 +114,11 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     public async activate() {
-        this.vscodeNotebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, this.disposables);
+        this.vscodeNotebook.onDidChangeNotebookCellExecutionState(
+            this.onDidChangeNotebookCellExecutionState,
+            this,
+            this.disposables
+        );
     }
 
     public async showBanner(type: BannerType): Promise<void> {
@@ -203,7 +207,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
             return;
         }
 
-        // If cell has moved to executing, update the execution count 
+        // If cell has moved to executing, update the execution count
         if (cellStateChange.state === NotebookCellExecutionState.Executing) {
             void this.updateStateAndShowBanner(
                 InsidersNotebookSurveyStateKeys.ExecutionCount,
