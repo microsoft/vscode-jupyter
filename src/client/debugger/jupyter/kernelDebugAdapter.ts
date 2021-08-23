@@ -228,10 +228,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         // clean temp files
         this.cellToFile.forEach((tempPath) => {
             const norm = path.normalize(tempPath);
-            const dir = path.dirname(norm);
             try {
                 void this.fs.deleteLocalFile(norm);
-                void this.fs.deleteLocalDirectory(dir);
             } catch {
                 traceError('Error deleting temporary debug files');
             }
