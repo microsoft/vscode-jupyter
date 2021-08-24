@@ -192,7 +192,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
         // Call stackTrace to determine whether to forward the stop event to the client, and also to
         // start the process of updating the variables view.
-        const stResponse = await this.stackTrace({ startFrame: 0, levels: 1 });
+        const stResponse = await this.getStackTrace({ startFrame: 0, levels: 1 });
 
         const sf = stResponse.stackFrames[0];
         const cell = this.notebookDocument.cellAt(this.configuration.__cellIndex!);
@@ -261,7 +261,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         });
     }
 
-    private stackTrace(args?: {
+    private getStackTrace(args?: {
         startFrame?: number;
         levels?: number;
     }): Promise<DebugProtocol.StackTraceResponse['body']> {
