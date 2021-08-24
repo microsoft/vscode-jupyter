@@ -30,12 +30,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
-import {
-    IInteractiveWindow,
-    IInteractiveWindowProvider,
-    IJupyterDebugger,
-    INotebookExporter
-} from '../types';
+import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterDebugger, INotebookExporter } from '../types';
 import { NativeInteractiveWindow } from './nativeInteractiveWindow';
 
 // Export for testing
