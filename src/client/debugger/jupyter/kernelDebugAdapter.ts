@@ -116,16 +116,19 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         }
 
         this.disposables.push(
-            this.jupyterSession.onIOPubMessage((msg: KernelMessage.IIOPubMessage) => {
+            this.jupyterSession.onIOPubMessage(async (msg: KernelMessage.IIOPubMessage) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const anyMsg = msg as any;
+
+                this.trace('event', JSON.stringify(msg));
 
                 if (anyMsg.header.msg_type === 'debug_event') {
                     if (anyMsg.content.event === 'stopped') {
                         this.threadId = anyMsg.content.body.threadId;
-                        // We want to get the variables for the variable view every time we stop
-                        // This call starts that
-                        this.stackTrace();
+                        if (await this.handleStoppedEvent()) {
+                            this.trace('intercepted', JSON.stringify(anyMsg.content));
+                            return;
+                        }
                     }
                     this.sendMessage.fire(msg.content);
                 }
@@ -170,8 +173,30 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 this.disposables
             )
         );
+    }
 
-        this.disposables.push(this.onDidSendMessage((msg) => this.trace('to client', JSON.stringify(msg))));
+    private async handleStoppedEvent(): Promise<boolean> {
+        if (await this.shouldStepIn()) {
+            this.runByLineContinue();
+            return true;
+        }
+
+        return false;
+    }
+
+    private async shouldStepIn(): Promise<boolean> {
+        // If we're in run by line and are stopped at another path, continue
+        if (this.configuration.__mode !== KernelDebugMode.RunByLine) {
+            return false;
+        }
+
+        // Call stackTrace to determine whether to forward the stop event to the client, and also to
+        // start the process of updating the variables view.
+        const stResponse = await this.stackTrace({ startFrame: 0, levels: 1 });
+
+        const sf = stResponse.stackFrames[0];
+        const cell = this.notebookDocument.cellAt(this.configuration.__cellIndex!);
+        return !!sf.source && sf.source.path !== cell.document.uri.toString();
     }
 
     private trace(tag: string, msg: string) {
@@ -236,8 +261,15 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         });
     }
 
-    private stackTrace(): void {
-        void this.session.customRequest('stackTrace', { threadId: this.threadId });
+    private stackTrace(args?: {
+        startFrame?: number;
+        levels?: number;
+    }): Promise<DebugProtocol.StackTraceResponse['body']> {
+        return this.session.customRequest('stackTrace', {
+            threadId: this.threadId,
+            startFrame: args?.startFrame,
+            levels: args?.levels
+        }) as Promise<DebugProtocol.StackTraceResponse['body']>;
     }
 
     private scopes(frameId: number): void {
@@ -346,17 +378,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
             (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
                 this.scopes(sf.id);
-
-                // If we're in run by line and are stopped at another path, continue
-                if (
-                    this.configuration.__mode === KernelDebugMode.RunByLine &&
-                    this.configuration.__cellIndex !== undefined
-                ) {
-                    const cell = this.notebookDocument.cellAt(this.configuration.__cellIndex);
-                    if (sf.source && sf.source.path !== cell.document.uri.toString()) {
-                        this.runByLineContinue();
-                    }
-                }
             });
         }
 
@@ -367,6 +388,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             });
         }
 
+        this.trace('response', JSON.stringify(message));
         this.sendMessage.fire(message);
     }
 
