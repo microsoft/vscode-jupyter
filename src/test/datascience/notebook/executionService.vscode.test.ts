@@ -521,8 +521,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             'output from cell 2 should be printed before last background output from cell 1'
         );
     });
-    test('Outputs with support for ansic code `\u001b[A`', async function () {
-        return this.skip();
+    test.only('Outputs with support for ansic code `\u001b[A`', async function () {
         // Ansi Code `<esc>[A` means move cursor up, i.e. replace previous line with the new output (or erase previous line & start there).
         const cell1 = await insertCodeCell(
             dedent`
@@ -590,8 +589,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(output1Lines.length, 4);
         assert.equal(output2Lines.length, 3);
     });
-    test('Stderr & stdout outputs should go into separate outputs', async function () {
-        return this.skip();
+    test.only('Stderr & stdout outputs should go into separate outputs', async function () {
         await insertCodeCell(
             dedent`
             import sys
