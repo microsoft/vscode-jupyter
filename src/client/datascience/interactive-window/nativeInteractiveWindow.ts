@@ -409,7 +409,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return false;
         }
         const file = fileUri.fsPath;
-        let result = true;
         try {
             // Before we try to execute code make sure that we have an initial directory set
             // Normally set via the workspace, but we might not have one here if loading a single loose file
@@ -437,7 +436,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 await this.jupyterDebugger.stopDebugging(notebook);
             }
         }
-        return result;
+        return !!notebookCell.executionSummary?.success;
     }
 
     public undoCells() {
