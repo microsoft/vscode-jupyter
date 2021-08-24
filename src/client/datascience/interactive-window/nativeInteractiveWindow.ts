@@ -432,7 +432,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
             await this.cellHashProvider.addCellHash(notebookCell);
             await this.kernel!.executeCell(notebookCell);
-            
+
             traceInfo(`Finished execution for ${id}`);
         } finally {
             if (isDebug) {
