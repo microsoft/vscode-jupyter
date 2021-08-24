@@ -1185,13 +1185,13 @@
                     "command": "jupyter.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.haveinteractive && jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
+                    "when": "jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.haveinteractive && jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
+                    "when": "jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.undocells",
