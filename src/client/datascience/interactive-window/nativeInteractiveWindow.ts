@@ -61,7 +61,6 @@ import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import {
     CellState,
-    ICellHashProvider,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowLoadable,
@@ -132,8 +131,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly kernelProvider: IKernelProvider,
         private readonly disposables: IDisposableRegistry,
-        private readonly jupyterDebugger: IJupyterDebugger,
-        private readonly cellHashProvider: ICellHashProvider
+        private readonly jupyterDebugger: IJupyterDebugger
     ) {
         // Set our owner and first submitter
         this._owner = owner;
@@ -431,7 +429,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
             await this.setFileInKernel(file, notebookEditor.document);
 
-            await this.cellHashProvider.addCellHash(notebookCell);
             await this.kernel!.executeCell(notebookCell);
 
             traceInfo(`Finished execution for ${id}`);
