@@ -621,7 +621,7 @@ function convertStreamOutput(output: NotebookCellOutput): JupyterOutput {
     const outputs: string[] = [];
     output.items
         .filter((opit) => opit.mime === CellOutputMimeTypes.stderr || opit.mime === CellOutputMimeTypes.stdout)
-        .map((opit) => convertOutputMimeToJupyterOutput(opit.mime, opit.data as Uint8Array) as string)
+        .map((opit) => textDecoder.decode(opit.data))
         .forEach((value) => {
             // Ensure each line is a seprate entry in an array (ending with \n).
             const lines = value.split('\n');
