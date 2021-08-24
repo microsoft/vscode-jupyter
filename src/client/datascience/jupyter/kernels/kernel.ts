@@ -140,13 +140,6 @@ export class Kernel implements IKernel {
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         await promise;
     }
-    public async executeAllCells(document: NotebookDocument): Promise<void> {
-        const stopWatch = new StopWatch();
-        const notebookPromise = this.startNotebook({ disableUI: false, document });
-        const promise = this.kernelExecution.executeAllCells(notebookPromise, document);
-        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
-        await promise;
-    }
     public async executeHidden(code: string, file: string, document: NotebookDocument) {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document });

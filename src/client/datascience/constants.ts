@@ -549,7 +549,6 @@ export enum NativeMouseCommandTelemetry {
  */
 export enum VSCodeNativeTelemetry {
     AddCell = 'DATASCIENCE.VSCODE_NATIVE.INSERT_CELL',
-    RunAllCells = 'DATASCIENCE.VSCODE_NATIVE.RUN_ALL',
     DeleteCell = 'DATASCIENCE.VSCODE_NATIVE.DELETE_CELL',
     MoveCell = 'DATASCIENCE.VSCODE_NATIVE.MOVE_CELL',
     ChangeToCode = 'DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_CODE', // Not guaranteed to work see, https://github.com/microsoft/vscode/issues/100042
