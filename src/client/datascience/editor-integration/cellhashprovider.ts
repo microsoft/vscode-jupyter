@@ -108,7 +108,10 @@ export class CellHashProvider implements ICellHashProvider {
             this.executionCount += 1;
 
             // Skip hash on unknown file though
-            if (cell.metadata.interactive?.file !== Identifiers.EmptyFileName) {
+            if (
+                cell.metadata.interactive !== undefined &&
+                cell.metadata.interactive?.file !== Identifiers.EmptyFileName
+            ) {
                 await this.generateHash(cell, this.executionCount);
             }
         }
