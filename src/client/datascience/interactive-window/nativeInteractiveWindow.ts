@@ -55,7 +55,7 @@ import {
     InteractiveWindowMessages,
     ISubmitNewCell
 } from '../interactive-common/interactiveWindowTypes';
-import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider, KernelConnectionMetadata, NotebookCellRunState } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
@@ -409,6 +409,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             return false;
         }
         const file = fileUri.fsPath;
+        let result = true;
         try {
             // Before we try to execute code make sure that we have an initial directory set
             // Normally set via the workspace, but we might not have one here if loading a single loose file
@@ -428,7 +429,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
             await this.setFileInKernel(file, notebookEditor.document);
 
-            await this.kernel!.executeCell(notebookCell);
+            result = (await this.kernel!.executeCell(notebookCell)) === NotebookCellRunState.Success;
 
             traceInfo(`Finished execution for ${id}`);
         } finally {
@@ -436,7 +437,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 await this.jupyterDebugger.stopDebugging(notebook);
             }
         }
-        return !!notebookCell.executionSummary?.success;
+        return result;
     }
 
     public undoCells() {

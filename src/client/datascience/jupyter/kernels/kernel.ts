@@ -47,7 +47,7 @@ import {
 } from '../../types';
 import { getSysInfoReasonHeader, isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
+import type { IKernel, IKernelProvider, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { isCI, MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
@@ -135,7 +135,7 @@ export class Kernel implements IKernel {
         );
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
-    public async executeCell(cell: NotebookCell): Promise<void> {
+    public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document: cell.notebook });
         if (cell.notebook.notebookType === InteractiveWindowView) {
@@ -144,6 +144,7 @@ export class Kernel implements IKernel {
         const promise = this.kernelExecution.executeCell(notebookPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         await promise;
+        return promise;
     }
     public async executeHidden(code: string, file: string, document: NotebookDocument) {
         const stopWatch = new StopWatch();
