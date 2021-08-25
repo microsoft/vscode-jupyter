@@ -22,6 +22,7 @@ import { IFileSystem } from '../../common/platform/types';
 
 import { IConfigurationService } from '../../common/types';
 import { getCellResource } from '../cellFactory';
+import { CellMatcher } from '../cellMatcher';
 import { Identifiers } from '../constants';
 import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes, INotebook } from '../types';
 
@@ -133,7 +134,13 @@ export class CellHashProvider implements ICellHashProvider {
     }
 
     public extractExecutableLines(cell: NotebookCell): string[] {
-        const lines = splitMultilineString(cell.document.getText());
+        const cellMatcher = new CellMatcher(this.configService.getSettings(getCellResource(cell)));
+        const lines = splitMultilineString(cell.metadata.interactive.originalSource);
+        
+        // Only strip this off the first line. Otherwise we want the markers in the code.
+        if (lines.length > 0 && (cellMatcher.isCode(lines[0]) || cellMatcher.isMarkdown(lines[0]))) {
+            return lines.slice(1);
+        }
         return lines;
     }
 
@@ -147,7 +154,7 @@ export class CellHashProvider implements ICellHashProvider {
             // Compute the code that will really be sent to jupyter
             const { stripped, trueStartLine } = this.extractStrippedLines(cell);
 
-            const line = doc.lineAt(trueStartLine + 1);
+            const line = doc.lineAt(trueStartLine);
             const endLine = doc.lineAt(Math.min(trueStartLine + stripped.length - 1, doc.lineCount - 1));
 
             // Find the first non blank line
@@ -251,8 +258,8 @@ export class CellHashProvider implements ICellHashProvider {
     }
 
     private extractStrippedLines(cell: NotebookCell): { stripped: string[]; trueStartLine: number } {
+        const lines = splitMultilineString(cell.metadata.interactive.originalSource);
         // Compute the code that will really be sent to jupyter
-        const lines = splitMultilineString(cell.document.getText());
         const stripped = this.extractExecutableLines(cell);
 
         // Figure out our true 'start' line. This is what we need to tell the debugger is
@@ -264,7 +271,6 @@ export class CellHashProvider implements ICellHashProvider {
                 break;
             }
         }
-
         // Find the first non blank line
         let firstNonBlankIndex = 0;
         while (firstNonBlankIndex < stripped.length && stripped[firstNonBlankIndex].trim().length === 0) {
