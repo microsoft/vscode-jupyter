@@ -19,6 +19,7 @@ import { JupyterNotebookBase } from '../jupyterNotebook';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
+import { NotebookCellRunState } from './types';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -50,9 +51,9 @@ export class KernelExecution implements IDisposable {
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
-    public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<void> {
+    public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<NotebookCellRunState> {
         if (cell.kind == NotebookCellKind.Markup) {
-            return;
+            return NotebookCellRunState.Success;
         }
         sendKernelTelemetryEvent(cell.notebook.uri, Telemetry.ExecuteNativeCell);
 
@@ -63,7 +64,8 @@ export class KernelExecution implements IDisposable {
 
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, notebookPromise);
         executionQueue.queueCell(cell);
-        await executionQueue.waitForCompletion([cell]);
+        const result = await executionQueue.waitForCompletion([cell]);
+        return result[0];
     }
 
     /**

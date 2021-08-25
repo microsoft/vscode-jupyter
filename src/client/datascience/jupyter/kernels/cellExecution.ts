@@ -96,7 +96,7 @@ export class CellExecutionFactory {
  *
  */
 export class CellExecution implements IDisposable {
-    public get result(): Promise<NotebookCellRunState | undefined> {
+    public get result(): Promise<NotebookCellRunState> {
         return this._result.promise;
     }
     /**
@@ -113,7 +113,7 @@ export class CellExecution implements IDisposable {
 
     private stopWatch = new StopWatch();
 
-    private readonly _result = createDeferred<NotebookCellRunState | undefined>();
+    private readonly _result = createDeferred<NotebookCellRunState>();
 
     private started?: boolean;
 
