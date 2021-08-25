@@ -634,6 +634,11 @@ function convertStreamOutput(output: NotebookCellOutput): JupyterOutput {
                 outputs.push(line);
             }
         });
+
+    for (let index = 0; index < outputs.length - 1; index++) {
+        outputs[index] = `${outputs[index]}\n`;
+    }
+
     // Skip last one if empty (it's the only one that could be length 0)
     if (outputs.length && outputs[outputs.length - 1].length === 0) {
         outputs.pop();
@@ -713,11 +718,11 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
             // Unless we already know its an unknown output type.
             const outputType: nbformat.OutputType =
                 <nbformat.OutputType>customMetadata?.outputType || (isStream ? 'stream' : 'display_data');
-                sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
-                    isErrorOutput: outputType === 'error'
-                });
+            sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
+                isErrorOutput: outputType === 'error'
+            });
 
-                let unknownOutput: nbformat.IUnrecognizedOutput | nbformat.IDisplayData | nbformat.IStream;
+            let unknownOutput: nbformat.IUnrecognizedOutput | nbformat.IDisplayData | nbformat.IStream;
             if (outputType === 'stream') {
                 // If saving as `stream` ensure the mandatory properties are set.
                 unknownOutput = convertStreamOutput(output);
