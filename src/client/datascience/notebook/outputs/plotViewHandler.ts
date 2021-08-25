@@ -56,7 +56,8 @@ function convertPngToSvg(pngOutput: NotebookCellOutputItem): string {
     // Of note here, we want the dims on the SVG element, and the image at 100% this is due to how the SVG control
     // in the plot viewer works. The injected svg is sized down to 100px x 100px on the plot selection list so if
     // dims are set on the image then it scales out of bounds
-    return `<svg height="${dims.height}" width="${dims.width}">
+    return `<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<svg height="${dims.height}" width="${dims.width}" version="1.1" viewBox="0 0 386 248" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <g>
         <image xmlns="http://www.w3.org/2000/svg" x="0" y="0" height="100%" width="100%" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="data:image/png;base64,${imageData}"/>
     </g>
