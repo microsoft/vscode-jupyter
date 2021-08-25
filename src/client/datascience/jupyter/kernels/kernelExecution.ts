@@ -11,7 +11,7 @@ import { IDisposable, IDisposableRegistry } from '../../../common/types';
 import { createDeferred, waitForPromise } from '../../../common/utils/async';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { captureTelemetry } from '../../../telemetry';
-import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
+import { Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { IDataScienceErrorHandler, IJupyterSession, INotebook, InterruptResult } from '../../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
@@ -66,35 +66,6 @@ export class KernelExecution implements IDisposable {
         await executionQueue.waitForCompletion([cell]);
     }
 
-    @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
-    @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
-    public async executeAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
-        sendKernelTelemetryEvent(document.uri, Telemetry.ExecuteNativeCell);
-
-        // If we're restarting, wait for it to finish
-        if (this._restartPromise) {
-            await this._restartPromise;
-        }
-
-        // Only run code cells that are not already running.
-        const cellsThatWeCanRun = document.getCells().filter((cell) => cell.kind === NotebookCellKind.Code);
-        if (cellsThatWeCanRun.length === 0) {
-            // This is an unlikely scenario (UI doesn't allow this).
-            // Seen this in CI tests when we manually run whole document using the commands.
-            return;
-        }
-
-        const executionQueue = this.getOrCreateCellExecutionQueue(document, notebookPromise);
-
-        try {
-            traceInfo('Update notebook execution state as running');
-
-            cellsThatWeCanRun.forEach((cell) => executionQueue.queueCell(cell));
-            await executionQueue.waitForCompletion(cellsThatWeCanRun);
-        } finally {
-            traceInfo('Restore notebook state to idle after completion');
-        }
-    }
     /**
      * Interrupts the execution of cells.
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.

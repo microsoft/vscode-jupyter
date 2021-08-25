@@ -35,7 +35,6 @@ interface IExecutionCountEntry {
 
 // For any class that is monitoring the active notebook document, this class will update you
 // when the active notebook changes or if the execution count is updated on the active notebook
-// NOTE: Currently this class is only looking at native notebook documents
 @injectable()
 export class NotebookWatcher implements INotebookWatcher {
     public get onDidChangeActiveNotebook(): Event<IActiveNotebookChangedEvent> {

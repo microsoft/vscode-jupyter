@@ -146,6 +146,10 @@ suite('DataScience - VariableView', function () {
         // Now create a second document
         await createEmptyPythonNotebook(disposables);
 
+        // Verify that the view is empty
+        const emptyHtmlResult = await variableView?.getHTMLById('variable-view-main-panel');
+        verifyViewVariables([], emptyHtmlResult);
+
         // Execute a cell on the second document
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 0 });
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
