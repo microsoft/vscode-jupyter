@@ -435,6 +435,7 @@ function translateDisplayDataOutput(
     }
     const items: NotebookCellOutputItem[] = [];
     if (output.data) {
+        // eslint-disable-next-line no-restricted-syntax
         for (const key in output.data) {
             items.push(convertJupyterOutputToBuffer(key, output.data[key]));
         }
@@ -670,6 +671,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
         case 'display_data': {
             result = {
                 output_type: 'display_data',
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.items.reduce((prev: any, curr) => {
                     prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
@@ -681,6 +683,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
         case 'execute_result': {
             result = {
                 output_type: 'execute_result',
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.items.reduce((prev: any, curr) => {
                     prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
@@ -694,6 +697,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
         case 'update_display_data': {
             result = {
                 output_type: 'update_display_data',
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data: output.items.reduce((prev: any, curr) => {
                     prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
@@ -743,6 +747,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
                 unknownOutput.metadata = customMetadata.metadata;
             }
             if (output.items.length > 0) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 unknownOutput.data = output.items.reduce((prev: any, curr) => {
                     prev[curr.mime] = convertOutputMimeToJupyterOutput(curr.mime, curr.data as Uint8Array);
                     return prev;
