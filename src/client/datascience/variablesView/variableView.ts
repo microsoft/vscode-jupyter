@@ -30,6 +30,7 @@ import {
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IJupyterVariablesRequest,
+    IJupyterVariablesResponse,
     INotebook,
     IThemeFinder
 } from '../types';
@@ -191,6 +192,17 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, {
                 variableCount: response.totalCount
             });
+        } else {
+            // If there isn't an active notebook or interactive window, clear the variables
+            const response: IJupyterVariablesResponse = {
+                executionCount: args.executionCount,
+                pageStartIndex: -1,
+                pageResponse: [],
+                totalCount: 0,
+                refreshCount: args.refreshCount
+            };
+
+            this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
         }
     }
 
