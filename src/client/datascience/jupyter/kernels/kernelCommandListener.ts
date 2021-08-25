@@ -145,7 +145,13 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 const dontAskAgain = DataScience.restartKernelMessageDontAskAgain();
                 const no = DataScience.restartKernelMessageNo();
 
-                const response = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
+                const response = await this.applicationShell.showInformationMessage(
+                    message,
+                    { modal: true },
+                    yes,
+                    dontAskAgain,
+                    no
+                );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
                     void this.applicationShell.withProgress(
