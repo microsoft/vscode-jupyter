@@ -192,13 +192,6 @@
     1. Open VSCode settings, change `Send Selection To Interactive Window` to true
     1. Select a chunk of code, shift-enter should send that selection to the Interactive Windows
     1. Move your cursor to a line, but don't select anything. Shift-enter should send that line to the Interactive Window
--   [ ] Multiple installs
-    1. Close and re-open VSCode to make sure that all jupyter servers are closed
-    1. Also make sure you are set to locally launch Jupyter and not to connect to an existing URI
-    1. In addition to your main testing environment install a new python or miniconda install (conda won't work as it has Jupyter by default)
-    1. In VS code change the python interpreter to the new install
-    1. Try `Run Cell`
-    1. You should get a message that Jupyter was not found and that it is defaulting back to launch on the python instance that has Jupyter
 -   [ ] Jupyter Hub support
 
     1. Windows install instructions
