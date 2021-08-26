@@ -27,7 +27,7 @@ import { ICommandManager } from '../../common/application/types';
 import { traceError, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IKernelDebugAdapter } from '../types';
-import { IDisposable } from '../../common/types';
+import { IConfigurationService, IDisposable } from '../../common/types';
 import { Commands, Identifiers } from '../../datascience/constants';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -95,7 +95,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         private readonly jupyterSession: IJupyterSession,
         private commandManager: ICommandManager,
         private fs: IFileSystem,
-        private readonly kernel: IKernel | undefined
+        private readonly kernel: IKernel | undefined,
+        private settings: IConfigurationService
     ) {
         void this.dumpAllCells();
 
@@ -506,7 +507,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             this.sendRequestToJupyterSession(message);
 
             // Open variable view
-            await this.commandManager.executeCommand(Commands.OpenVariableView);
+            const settings = this.settings.getSettings();
+            if (settings.showVariableViewWhenDebugging) {
+                await this.commandManager.executeCommand(Commands.OpenVariableView);
+            }
         }
 
         // Run cell

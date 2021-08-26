@@ -20,7 +20,7 @@ import {
 } from 'vscode';
 import * as path from 'path';
 import { IKernel, IKernelProvider } from '../../datascience/jupyter/kernels/types';
-import { IDisposable, Product, ProductInstallStatus } from '../../common/types';
+import { IConfigurationService, IDisposable, Product, ProductInstallStatus } from '../../common/types';
 import { IKernelDebugAdapterConfig, KernelDebugAdapter, KernelDebugMode } from './kernelDebugAdapter';
 import { INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
@@ -97,7 +97,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IPythonInstaller) private pythonInstaller: IPythonInstaller
+        @inject(IPythonInstaller) private pythonInstaller: IPythonInstaller,
+        @inject(IConfigurationService) private settings: IConfigurationService
     ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
@@ -147,7 +148,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                                     notebook.session,
                                     this.commandManager,
                                     this.fs,
-                                    kernel
+                                    kernel,
+                                    this.settings
                                 );
                                 this.disposables.push(
                                     adapter.onDidSendMessage((msg: DebugProtocolMessage) => {
