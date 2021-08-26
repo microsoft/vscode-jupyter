@@ -43,7 +43,7 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
 }
 
 export function getCellResource(cell: NotebookCell): Resource {
-    if (cell.metadata.interactive.file !== Identifiers.EmptyFileName) {
+    if (cell.metadata.interactive?.file !== undefined && cell.metadata.interactive.file !== Identifiers.EmptyFileName) {
         return Uri.file(cell.metadata.interactive.file);
     }
     return undefined;
