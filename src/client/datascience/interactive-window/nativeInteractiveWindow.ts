@@ -641,7 +641,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             interactiveWindowCellMarker,
             interactive: {
                 file: file.fsPath,
-                line: line
+                line: line,
+                originalSource: code
             },
             executionId: id
         };
