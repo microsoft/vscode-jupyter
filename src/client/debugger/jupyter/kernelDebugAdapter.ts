@@ -28,7 +28,7 @@ import { traceError, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IKernelDebugAdapter } from '../types';
 import { IDisposable } from '../../common/types';
-import { Commands } from '../../datascience/constants';
+import { Commands, Identifiers } from '../../datascience/constants';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../constants';
@@ -470,6 +470,13 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     private async initializeExecute(seq: number) {
+        // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
+        // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
+        if (this.kernel) {
+            const code = 'import debugpy\ndebugpy.debug_this_thread()';
+            await this.kernel.executeHidden(code, Identifiers.EmptyFileName, this.notebookDocument);
+        }
+
         // put breakpoint at the beginning of the cell
         const cellIndex = Number(this.configuration.__cellIndex);
         const cell = this.notebookDocument.cellAt(cellIndex);
