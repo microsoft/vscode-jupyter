@@ -136,7 +136,7 @@ export class CellHashProvider implements ICellHashProvider {
     public extractExecutableLines(cell: NotebookCell): string[] {
         const cellMatcher = new CellMatcher(this.configService.getSettings(getCellResource(cell)));
         const lines = splitMultilineString(cell.metadata.interactive.originalSource);
-        
+
         // Only strip this off the first line. Otherwise we want the markers in the code.
         if (lines.length > 0 && (cellMatcher.isCode(lines[0]) || cellMatcher.isMarkdown(lines[0]))) {
             return lines.slice(1);
