@@ -92,6 +92,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     public verboseLogging: boolean = false;
+    public showVariableViewWhenDebugging: boolean = true;
+
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
             Tensor: ['shape', 'dtype', 'device']
