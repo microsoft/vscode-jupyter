@@ -425,28 +425,32 @@ export class Kernel implements IKernel {
                 sysInfoMessages.unshift(connectionString);
             }
 
-            // Append a markdown cell containing the sys info to the end of the NotebookDocument
             return chainWithPendingUpdates(notebookDocument, (edit) => {
                 if (notebookDocument.cellCount) {
-                    const lastCell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
+                    const placeholderCell = notebookDocument
+                        .getCells()
+                        .find(
+                            (cell) =>
+                                cell.kind === NotebookCellKind.Markup &&
+                                cell.metadata.isInteractiveWindowMessageCell &&
+                                cell.metadata.isPlaceholder
+                        );
 
-                    if (
-                        lastCell.kind === NotebookCellKind.Markup &&
-                        lastCell.metadata.isInteractiveWindowMessageCell &&
-                        lastCell.metadata.isPlaceholder
-                    ) {
+                    // If there is a placeholder cell in the notebook, overwrite that
+                    if (placeholderCell !== undefined) {
                         edit.replace(
-                            lastCell.document.uri,
-                            new Range(0, 0, lastCell.document.lineCount, 0),
+                            placeholderCell.document.uri,
+                            new Range(0, 0, placeholderCell.document.lineCount, 0),
                             sysInfoMessages.join('  \n')
                         );
-                        edit.replaceNotebookCellMetadata(notebookDocument.uri, lastCell.index, {
+                        edit.replaceNotebookCellMetadata(notebookDocument.uri, placeholderCell.index, {
                             isInteractiveWindowMessageCell: true
                         });
                         return;
                     }
                 }
 
+                // Append a markdown cell containing the sys info to the end of the NotebookDocument
                 const markdownCell = new NotebookCellData(
                     NotebookCellKind.Markup,
                     sysInfoMessages.join('  \n'),
