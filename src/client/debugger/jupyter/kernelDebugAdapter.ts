@@ -470,6 +470,13 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     private async initializeExecute(seq: number) {
+        // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed
+        // executing that code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
+        if (this.kernel) {
+            const code = 'import debugpy\ndebugpy.debug_this_thread()';
+            await this.kernel.executeHidden(code, '', this.notebookDocument);
+        }
+
         // put breakpoint at the beginning of the cell
         const cellIndex = Number(this.configuration.__cellIndex);
         const cell = this.notebookDocument.cellAt(cellIndex);
