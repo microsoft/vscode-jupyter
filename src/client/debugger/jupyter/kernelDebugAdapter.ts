@@ -377,7 +377,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         // Here we catch the stackTrace response and we use its id to send a scope message
         if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
             (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
-                this.scopes(sf.id);
+                const cell = this.notebookDocument.cellAt(this.configuration.__cellIndex!);
+                if (sf.source && sf.source.path === cell.document.uri.toString()) {
+                    this.scopes(sf.id);
+                }
             });
         }
 
