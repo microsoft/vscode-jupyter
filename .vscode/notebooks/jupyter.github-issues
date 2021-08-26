@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-08-23"
+    "value": "$TODAYS_DATE=2021-08-26"
   },
   {
     "kind": 1,
@@ -62,7 +62,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### Commented on by Me"
+    "value": "### Commented on by me today"
   },
   {
     "kind": 2,
@@ -117,7 +117,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "-----\r\n## Current milestone"
+    "value": "-----\r\n## Current milestone queries"
   },
   {
     "kind": 1,
@@ -142,7 +142,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:open is:issue label:testplan-item $CURRENT_MILESTONE $TEAM_AUTHOR_INCLUSION sort:created-asc"
+    "value": "$ALL_REPOS is:issue label:testplan-item $CURRENT_MILESTONE $TEAM_AUTHOR_INCLUSION sort:created-asc"
   },
   {
     "kind": 1,
@@ -157,7 +157,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "#### *verification-needed* issues in our repo"
+    "value": "#### *verification-needed* issues in our repo\r\n\r\nThe *verification-needed* label is added to issues that do not have the \"bug\" label and are not covered in a testplan for the endgame. Typically small enhancements."
   },
   {
     "kind": 2,
@@ -167,7 +167,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "#### Bugs closed but not marked as verified or verification-needed\r\nTechnically, all bugs fixed during the milestone should be verified. This query shows any stragglers we may have missed."
+    "value": "#### Bugs needing to be verified\r\nClosed issues in the current milestone that have the *bug* label need to be verified during endgame. Once verified, the *verified* label needs to be added."
   },
   {
     "kind": 2,
