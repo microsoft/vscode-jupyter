@@ -60,7 +60,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
-    private activeInterpreterControllerPromise?: Promise<VSCodeNotebookController | undefined>;
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
 
@@ -99,7 +98,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
     public async getInteractiveController(): Promise<VSCodeNotebookController | undefined> {
-        return this.createActiveInterpreterController();
+        return this.createActiveInterpreterController(InteractiveWindowView);
     }
 
     get onNotebookControllerSelected() {
@@ -191,22 +190,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         );
     }
 
-    private async createActiveInterpreterController() {
-        if (this.activeInterpreterControllerPromise) {
-            return this.activeInterpreterControllerPromise;
-        }
-        const promise = async () => {
-            // Fetch the active interpreter and use the matching controller
-            const api = await this.pythonApi.getApi();
-            const activeInterpreter = await api.getActiveInterpreter();
+    private async createActiveInterpreterController(
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ) {
+        // Fetch the active interpreter and use the matching controller
+        const api = await this.pythonApi.getApi();
+        const activeInterpreter = await api.getActiveInterpreter();
 
-            if (!activeInterpreter) {
-                return;
-            }
-            return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
-        };
-        this.activeInterpreterControllerPromise = promise();
-        return this.activeInterpreterControllerPromise;
+        if (!activeInterpreter) {
+            return;
+        }
+        return this.getOrCreateController(activeInterpreter, notebookType);
     }
     /**
      * Turn all our kernelConnections that we know about into registered NotebookControllers
@@ -298,7 +292,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
-            this.createActiveInterpreterController().catch(noop);
+            this.createActiveInterpreterController(JupyterNotebookView).catch(noop);
         }
         try {
             let preferredConnection: KernelConnectionMetadata | undefined;
