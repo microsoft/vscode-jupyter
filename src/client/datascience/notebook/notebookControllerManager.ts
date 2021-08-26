@@ -190,7 +190,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         );
     }
 
-    private async createActiveInterpreterController(notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView) {
+    private async createActiveInterpreterController(
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ) {
         // Fetch the active interpreter and use the matching controller
         const api = await this.pythonApi.getApi();
         const activeInterpreter = await api.getActiveInterpreter();
