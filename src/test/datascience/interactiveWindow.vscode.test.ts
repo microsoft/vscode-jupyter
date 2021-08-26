@@ -9,6 +9,7 @@ import { NativeInteractiveWindow } from '../../client/datascience/interactive-wi
 import { NativeInteractiveWindowProvider } from '../../client/datascience/interactive-window/nativeInteractiveWindowProvider';
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../common';
+import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { closeActiveWindows, initialize } from '../initialize';
 import { assertHasTextOutputInVSCode } from './notebook/helper';
 
@@ -16,7 +17,10 @@ suite('Interactive window', async () => {
     let api: IExtensionTestApi;
     let interactiveWindowProvider: NativeInteractiveWindowProvider;
 
-    setup(async () => {
+    setup(async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
     });
