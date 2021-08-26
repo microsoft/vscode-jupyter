@@ -28,7 +28,7 @@ import { traceError, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IKernelDebugAdapter } from '../types';
 import { IDisposable } from '../../common/types';
-import { Commands } from '../../datascience/constants';
+import { Commands, Identifiers } from '../../datascience/constants';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../constants';
@@ -474,7 +474,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
         if (this.kernel) {
             const code = 'import debugpy\ndebugpy.debug_this_thread()';
-            await this.kernel.executeHidden(code, '', this.notebookDocument);
+            await this.kernel.executeHidden(code, Identifiers.EmptyFileName, this.notebookDocument);
         }
 
         // put breakpoint at the beginning of the cell
