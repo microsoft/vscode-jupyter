@@ -36,7 +36,7 @@ suite('Interactive window', async () => {
             editBuilder.insert(new vscode.Position(0, 0), 'print("foo")');
         });
 
-        // interactive.execute
+        // Run the code in the input box
         await vscode.commands.executeCommand('interactive.execute');
 
         // Inspect notebookDocument for output
