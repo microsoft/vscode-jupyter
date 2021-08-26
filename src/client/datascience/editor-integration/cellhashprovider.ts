@@ -135,7 +135,7 @@ export class CellHashProvider implements ICellHashProvider {
 
     public extractExecutableLines(cell: NotebookCell): string[] {
         const cellMatcher = new CellMatcher(this.configService.getSettings(getCellResource(cell)));
-        const lines = splitMultilineString(cell.metadata.interactive.originalSource);
+        const lines = splitMultilineString(cell.metadata.interactive?.originalSource ?? cell.document.getText());
 
         // Only strip this off the first line. Otherwise we want the markers in the code.
         if (lines.length > 0 && (cellMatcher.isCode(lines[0]) || cellMatcher.isMarkdown(lines[0]))) {
@@ -145,6 +145,9 @@ export class CellHashProvider implements ICellHashProvider {
     }
 
     private async generateHash(cell: NotebookCell, expectedCount: number): Promise<void> {
+        if (cell.metadata.interactive === undefined) {
+            return;
+        }
         // Find the text document that matches. We need more information than
         // the add code gives us
         const { line: cellLine, file } = cell.metadata.interactive;
@@ -258,13 +261,13 @@ export class CellHashProvider implements ICellHashProvider {
     }
 
     private extractStrippedLines(cell: NotebookCell): { stripped: string[]; trueStartLine: number } {
-        const lines = splitMultilineString(cell.metadata.interactive.originalSource);
+        const lines = splitMultilineString(cell.metadata.interactive?.originalSource);
         // Compute the code that will really be sent to jupyter
         const stripped = this.extractExecutableLines(cell);
 
         // Figure out our true 'start' line. This is what we need to tell the debugger is
         // actually the start of the code as that's what Jupyter will be getting.
-        let trueStartLine = cell.metadata.interactive.line;
+        let trueStartLine = cell.metadata.interactive?.line;
         for (let i = 0; i < stripped.length; i += 1) {
             if (stripped[i] !== lines[i]) {
                 trueStartLine += i + 1;

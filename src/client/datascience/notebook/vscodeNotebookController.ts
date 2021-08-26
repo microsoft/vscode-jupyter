@@ -45,7 +45,7 @@ import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
-import { InteractiveWindowView } from './constants';
+import { InteractiveWindowView, JupyterNotebookView } from './constants';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
 
 export class VSCodeNotebookController implements Disposable {
@@ -414,7 +414,7 @@ export class VSCodeNotebookController implements Disposable {
     private async setAsActiveControllerForTests(notebook: NotebookDocument) {
         // Only when running tests should we force the selection of the kernel.
         // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
-        if (this.context.extensionMode !== ExtensionMode.Test) {
+        if (this.context.extensionMode !== ExtensionMode.Test || notebook.notebookType !== JupyterNotebookView) {
             return;
         }
         traceInfoIf(isCI, `Command notebook.selectKernel executing for ${notebook.uri.toString()} ${this.id}`);
