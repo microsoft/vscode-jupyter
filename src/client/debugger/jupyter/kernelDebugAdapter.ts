@@ -379,8 +379,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
                 if (this.configuration.__mode === KernelDebugMode.RunByLine) {
                     // Only call scopes (and variables) if we are stopped on the cell we are executing
-                    const cell = this.notebookDocument.cellAt(this.configuration.__cellIndex!);
-                    if (sf.source && sf.source.path === cell.document.uri.toString()) {
+                    if (sf.source && this.debugCellUri && sf.source.path === this.debugCellUri.toString()) {
                         this.scopes(sf.id);
                     }
                 } else {
