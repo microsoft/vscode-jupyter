@@ -32,6 +32,8 @@ import { Commands, Identifiers } from '../../datascience/constants';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../constants';
+import { parseForComments } from '../../../datascience-ui/common';
+import { noop } from '../../common/utils/misc';
 
 interface dumpCellResponse {
     sourcePath: string; // filename for the dumped source
@@ -497,20 +499,20 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
         if (this.configuration.__mode === KernelDebugMode.RunByLine) {
             const textLines = cell.document.getText().split('\r\n');
-            let firstLine = 0;
-            for (let i = 0; i < textLines.length; i++) {
-                if (textLines[i].trim().charAt(0) === '#') {
-                    continue;
+            const lineList: number[] = [];
+            parseForComments(
+                textLines,
+                () => noop(),
+                (s, i) => {
+                    if (s.trim().length !== 0) {
+                        lineList.push(i);
+                    }
                 }
-                if (textLines[i].trim().length === 0) {
-                    continue;
-                }
-                firstLine = i;
-                break;
-            }
+            );
+            lineList.sort();
 
             const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
-                line: firstLine + 1
+                line: lineList[0] + 1
             };
             const splitPath = cell.notebook.uri.path.split('/');
             const name = splitPath[splitPath.length - 1];
@@ -523,7 +525,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                         name: name,
                         path: cell.document.uri.toString()
                     },
-                    lines: [firstLine + 1],
+                    lines: [lineList[0] + 1],
                     breakpoints: [initialBreakpoint],
                     sourceModified: false
                 }
