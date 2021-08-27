@@ -322,7 +322,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         preferredSearchToken.token
                     );
                 }
-    
+
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredSearchToken.token.isCancellationRequested) {
                     traceInfo('Find preferred kernel cancelled');
@@ -332,9 +332,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     traceInfoIf(isCI, `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`);
                     return;
                 }
-    
+
                 traceInfo(
-                    `PreferredConnection: ${preferredConnection.id} found for NotebookDocument: ${document.uri.toString()}`
+                    `PreferredConnection: ${
+                        preferredConnection.id
+                    } found for NotebookDocument: ${document.uri.toString()}`
                 );
             }
             // Wait for our controllers to be loaded before we try to set a preferred on
