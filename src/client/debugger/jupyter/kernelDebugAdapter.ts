@@ -496,8 +496,21 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         await this.dumpCell(cell.document.uri.toString());
 
         if (this.configuration.__mode === KernelDebugMode.RunByLine) {
+            const textLines = cell.document.getText().split('\r\n');
+            let firstLine = 0;
+            for (let i = 0; i < textLines.length; i++) {
+                if (textLines[i].trim().charAt(0) === '#') {
+                    continue;
+                }
+                if (textLines[i].trim().length === 0) {
+                    continue;
+                }
+                firstLine = i;
+                break;
+            }
+
             const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
-                line: 1
+                line: firstLine + 1
             };
             const splitPath = cell.notebook.uri.path.split('/');
             const name = splitPath[splitPath.length - 1];
@@ -510,7 +523,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                         name: name,
                         path: cell.document.uri.toString()
                     },
-                    lines: [1],
+                    lines: [firstLine + 1],
                     breakpoints: [initialBreakpoint],
                     sourceModified: false
                 }
