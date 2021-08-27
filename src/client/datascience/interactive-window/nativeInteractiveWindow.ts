@@ -156,6 +156,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private async createReadyPromise(): Promise<NotebookEditor> {
         const preferredController = await this.notebookControllerManager.getInteractiveController();
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
+        traceInfo(`Starting interactive window with controller ID ${controllerId}`);
         const hasOwningFile = this.owner !== undefined;
         const { notebookEditor } = ((await this.commandManager.executeCommand(
             'interactive.open',
