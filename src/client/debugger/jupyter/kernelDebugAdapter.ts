@@ -498,7 +498,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         await this.dumpCell(cell.document.uri.toString());
 
         if (this.configuration.__mode === KernelDebugMode.RunByLine) {
-            const textLines = cell.document.getText().split('\r\n');
+            const textLines = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
             const lineList: number[] = [];
             parseForComments(
                 textLines,
@@ -511,31 +511,33 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             );
             lineList.sort();
 
-            const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
-                line: lineList[0] + 1
-            };
-            const splitPath = cell.notebook.uri.path.split('/');
-            const name = splitPath[splitPath.length - 1];
-            const message: DebugProtocol.SetBreakpointsRequest = {
-                seq: seq + 1,
-                type: 'request',
-                command: 'setBreakpoints',
-                arguments: {
-                    source: {
-                        name: name,
-                        path: cell.document.uri.toString()
-                    },
-                    lines: [lineList[0] + 1],
-                    breakpoints: [initialBreakpoint],
-                    sourceModified: false
-                }
-            };
-            this.sendRequestToJupyterSession(message);
+            if (lineList.length !== 0) {
+                const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
+                    line: lineList[0] + 1
+                };
+                const splitPath = cell.notebook.uri.path.split('/');
+                const name = splitPath[splitPath.length - 1];
+                const message: DebugProtocol.SetBreakpointsRequest = {
+                    seq: seq + 1,
+                    type: 'request',
+                    command: 'setBreakpoints',
+                    arguments: {
+                        source: {
+                            name: name,
+                            path: cell.document.uri.toString()
+                        },
+                        lines: [lineList[0] + 1],
+                        breakpoints: [initialBreakpoint],
+                        sourceModified: false
+                    }
+                };
+                this.sendRequestToJupyterSession(message);
 
-            // Open variable view
-            const settings = this.settings.getSettings();
-            if (settings.showVariableViewWhenDebugging) {
-                await this.commandManager.executeCommand(Commands.OpenVariableView);
+                // Open variable view
+                const settings = this.settings.getSettings();
+                if (settings.showVariableViewWhenDebugging) {
+                    await this.commandManager.executeCommand(Commands.OpenVariableView);
+                }
             }
         }
 
