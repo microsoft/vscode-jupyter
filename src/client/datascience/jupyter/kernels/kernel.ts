@@ -58,6 +58,7 @@ import { calculateWorkingDirectory } from '../../utils';
 import { expandWorkingDir } from '../jupyterUtils';
 import type { nbformat } from '@jupyterlab/coreutils';
 import { concatMultilineString } from '../../../../datascience-ui/common';
+import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -105,6 +106,7 @@ export class Kernel implements IKernel {
     private readonly kernelExecution: KernelExecution;
     private startCancellation = new CancellationTokenSource();
     private _workingDirectory?: string;
+    private cellHashProvider: ICellHashProvider;
     constructor(
         public readonly notebookUri: Uri,
         public readonly resourceUri: Resource,
@@ -123,7 +125,7 @@ export class Kernel implements IKernel {
         private readonly configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
         private readonly workspaceService: IWorkspaceService,
-        private cellHashProvider: ICellHashProvider
+        cellHashProviderFactory: CellHashProviderFactory
     ) {
         this.kernelExecution = new KernelExecution(
             kernelProvider,
@@ -135,6 +137,7 @@ export class Kernel implements IKernel {
             controller,
             outputTracker
         );
+        this.cellHashProvider = cellHashProviderFactory.getOrCreate(this);
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {

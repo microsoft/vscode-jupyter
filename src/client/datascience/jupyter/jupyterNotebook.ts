@@ -161,9 +161,6 @@ export class JupyterNotebookBase implements INotebook {
     public get onDisposed(): Event<void> {
         return this.disposedEvent.event;
     }
-    public get onDidFinishExecuting(): Event<ICell> {
-        return this.finishedExecuting.event;
-    }
     public get onKernelChanged(): Event<KernelConnectionMetadata> {
         return this.kernelChanged.event;
     }
@@ -176,7 +173,6 @@ export class JupyterNotebookBase implements INotebook {
     }
     private readonly kernelRestarted = new EventEmitter<void>();
     private disposedEvent = new EventEmitter<void>();
-    private finishedExecuting = new EventEmitter<ICell>();
     private sessionStatusChanged: Disposable | undefined;
     private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => void>();
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
@@ -355,11 +351,6 @@ export class JupyterNotebookBase implements INotebook {
             result.subscribe(
                 (cells) => {
                     subscriber.next(cells);
-                    cells.forEach((cell) => {
-                        if (cell.state === CellState.finished || cell.state === CellState.error) {
-                            this.finishedExecuting.fire(cell);
-                        }
-                    });
                 },
                 (error) => {
                     subscriber.error(error);

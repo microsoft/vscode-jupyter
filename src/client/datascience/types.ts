@@ -37,7 +37,7 @@ import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
-import { KernelConnectionMetadata } from './jupyter/kernels/types';
+import { IKernel, KernelConnectionMetadata } from './jupyter/kernels/types';
 import { KernelStateEventArgs } from './notebookExtensibility';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -183,7 +183,6 @@ export interface INotebook extends IAsyncDisposable {
     onDisposed: Event<void>;
     onKernelChanged: Event<KernelConnectionMetadata>;
     onKernelRestarted: Event<void>;
-    onDidFinishExecuting?: Event<ICell>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(
         code: string,
@@ -273,9 +272,9 @@ export interface IJupyterExecution extends IAsyncDisposable {
 
 export const IJupyterDebugger = Symbol('IJupyterDebugger');
 export interface IJupyterDebugger {
-    startDebugging(notebook: INotebook): Promise<void>;
-    stopDebugging(notebook: INotebook): Promise<void>;
-    onRestart(notebook: INotebook): void;
+    startDebugging(kernel: IKernel): Promise<void>;
+    stopDebugging(kernel: IKernel): Promise<void>;
+    onRestart(kernel: IKernel): void;
 }
 
 export interface IJupyterPasswordConnectInfo {
@@ -880,7 +879,6 @@ export interface ICellHashListener {
     hashesUpdated(hashes: IFileHashes[]): Promise<void>;
 }
 
-export const ICellHashProvider = Symbol('ICellHashProvider');
 export interface ICellHashProvider {
     updated: Event<void>;
     getHashes(): IFileHashes[];

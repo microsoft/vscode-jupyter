@@ -117,7 +117,6 @@ import { JupyterVariableDataProvider } from '../../client/datascience/data-viewi
 import { JupyterVariableDataProviderFactory } from '../../client/datascience/data-viewing/jupyterVariableDataProviderFactory';
 import { IDataViewer, IDataViewerFactory } from '../../client/datascience/data-viewing/types';
 import { DebugLocationTrackerFactory } from '../../client/datascience/debugLocationTrackerFactory';
-import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
 import { CodeLensFactory } from '../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
@@ -185,7 +184,6 @@ import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
     ICellHashListener,
-    ICellHashProvider,
     ICodeCssGenerator,
     ICodeLensFactory,
     ICodeWatcher,
@@ -277,6 +275,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../client/dat
 import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
 import { HostJupyterServer } from '../../client/datascience/jupyter/liveshare/hostJupyterServer';
 import { HostRawNotebookProvider } from '../../client/datascience/raw-kernel/liveshare/hostRawNotebookProvider';
+import { CellHashProviderFactory } from '../../client/datascience/editor-integration/cellHashProviderFactory';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -606,9 +605,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             mockDebugService,
             Identifiers.MULTIPLEXING_DEBUGSERVICE
         );
-        this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [
-            INotebookExecutionLogger
-        ]);
+        this.serviceManager.addSingleton<CellHashProviderFactory>(CellHashProviderFactory, CellHashProviderFactory);
         this.serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);

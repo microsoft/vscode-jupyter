@@ -24,7 +24,8 @@ import { IConfigurationService } from '../../common/types';
 import { getCellResource } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Identifiers } from '../constants';
-import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes, INotebook } from '../types';
+import { getInteractiveCellMetadata } from '../interactive-window/nativeInteractiveWindow';
+import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
@@ -151,7 +152,7 @@ export class CellHashProvider implements ICellHashProvider {
         // Find the text document that matches. We need more information than
         // the add code gives us
         const { line: cellLine, file } = cell.metadata.interactive;
-        const executionId = cell.metadata.executionId;
+        const id = getInteractiveCellMetadata(cell).id;
         const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, file));
         if (doc) {
             // Compute the code that will really be sent to jupyter
@@ -189,7 +190,7 @@ export class CellHashProvider implements ICellHashProvider {
                 trimmedRightCode: stripped.map((s) => s.replace(/[ \t\r]+\n$/g, '\n')).join(''),
                 realCode,
                 runtimeLine,
-                id: executionId,
+                id: id,
                 timestamp: Date.now()
             };
 
@@ -417,13 +418,5 @@ export class CellHashProvider implements ICellHashProvider {
             }
         }
         return _escape(traceFrame);
-    }
-}
-
-export function getCellHashProvider(notebook: INotebook): ICellHashProvider | undefined {
-    const logger = notebook.getLoggers().find((f) => f instanceof CellHashProvider);
-    if (logger) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (logger as any) as ICellHashProvider;
     }
 }

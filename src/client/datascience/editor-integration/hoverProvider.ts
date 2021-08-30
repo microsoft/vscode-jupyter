@@ -23,8 +23,6 @@ import {
     INotebookExecutionLogger
 } from '../types';
 
-// This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
-// hashes for cells.
 @injectable()
 export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
     private runFiles = new Set<string>();

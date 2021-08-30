@@ -29,7 +29,6 @@ import { JupyterVariableDataProviderFactory } from './data-viewing/jupyterVariab
 import { IDataViewer, IDataViewerFactory } from './data-viewing/types';
 import { DataScience } from './datascience';
 import { DebugLocationTrackerFactory } from './debugLocationTrackerFactory';
-import { CellHashProvider } from './editor-integration/cellhashprovider';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
@@ -106,7 +105,6 @@ import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
     ICellHashListener,
-    ICellHashProvider,
     ICodeCssGenerator,
     ICodeLensFactory,
     ICodeWatcher,
@@ -171,6 +169,7 @@ import { HostJupyterExecution } from './jupyter/liveshare/hostJupyterExecution';
 import { HostJupyterServer } from './jupyter/liveshare/hostJupyterServer';
 import { HostRawNotebookProvider } from './raw-kernel/liveshare/hostRawNotebookProvider';
 import { KernelCommandListener } from './jupyter/kernels/kernelCommandListener';
+import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -199,7 +198,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
 
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
-    serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
+    serviceManager.addSingleton<CellHashProviderFactory>(CellHashProviderFactory, CellHashProviderFactory);
     serviceManager.addSingleton<IHoverProvider>(IHoverProvider, HoverProvider);
     serviceManager.addBinding(IHoverProvider, INotebookExecutionLogger);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);

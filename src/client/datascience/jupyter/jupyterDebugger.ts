@@ -23,6 +23,7 @@ import {
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
 import { executeSilently, getPlainTextOrStreamOutput } from './kernels/kernel';
+import { IKernel } from './kernels/types';
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
@@ -48,7 +49,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         this.tracingEnableCode = `from debugpy import trace_this_thread;trace_this_thread(True)`;
         this.tracingDisableCode = `from debugpy import trace_this_thread;trace_this_thread(False)`;
     }
-    public async startDebugging(notebook: INotebook): Promise<void> {
+    public async startDebugging(kernel: IKernel): Promise<void> {
+        const notebook = kernel.notebook;
+        if (!notebook) {
+            throw new Error('Notebook not initialized');
+        }
         const result = await this.installer.isProductVersionCompatible(
             Product.ipykernel,
             '>=6.0.0',
@@ -66,7 +71,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         );
     }
 
-    public async stopDebugging(notebook: INotebook): Promise<void> {
+    public async stopDebugging(kernel: IKernel): Promise<void> {
+        const notebook = kernel.notebook;
+        if (!notebook) {
+            return;
+        }
         const config = this.configs.get(notebook.identity.toString());
         if (config) {
             traceInfo('stop debugging');
@@ -82,8 +91,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
     }
 
-    public onRestart(notebook: INotebook): void {
-        this.configs.delete(notebook.identity.toString());
+    public onRestart(kernel: IKernel): void {
+        if (!kernel.notebook) {
+            return;
+        }
+        this.configs.delete(kernel.notebook.identity.toString());
     }
 
     public async hashesUpdated(hashes: IFileHashes[]): Promise<void> {
