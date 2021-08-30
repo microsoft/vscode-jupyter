@@ -31,7 +31,7 @@ import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterDebugger, INotebookExporter } from '../types';
-import { NativeInteractiveWindow } from './nativeInteractiveWindow';
+import { NativeInteractiveWindow } from './interactiveWindow';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
