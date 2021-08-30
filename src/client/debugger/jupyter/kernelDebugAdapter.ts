@@ -498,6 +498,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         await this.dumpCell(cell.document.uri.toString());
 
         if (this.configuration.__mode === KernelDebugMode.RunByLine) {
+            // This will save the code lines of the cell in lineList (so ignore comments and emtpy lines)
+            // Its done to set the Run by Line breakpoint on the first code line
             const textLines = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
             const lineList: number[] = [];
             parseForComments(
@@ -511,19 +513,18 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             );
             lineList.sort();
 
+            // Don't send the SetBreakpointsRequest or open the variable view if there are no code lines
             if (lineList.length !== 0) {
                 const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
                     line: lineList[0] + 1
                 };
-                const splitPath = cell.notebook.uri.path.split('/');
-                const name = splitPath[splitPath.length - 1];
                 const message: DebugProtocol.SetBreakpointsRequest = {
                     seq: seq + 1,
                     type: 'request',
                     command: 'setBreakpoints',
                     arguments: {
                         source: {
-                            name: name,
+                            name: path.basename(cell.notebook.uri.path),
                             path: cell.document.uri.toString()
                         },
                         lines: [lineList[0] + 1],
@@ -536,7 +537,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 // Open variable view
                 const settings = this.settings.getSettings();
                 if (settings.showVariableViewWhenDebugging) {
-                    await this.commandManager.executeCommand(Commands.OpenVariableView);
+                    void this.commandManager.executeCommand(Commands.OpenVariableView);
                 }
             }
         }
