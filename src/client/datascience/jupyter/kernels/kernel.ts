@@ -34,7 +34,6 @@ import { CodeSnippets, Identifiers, Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
-    ICellHashProvider,
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
     IJupyterSession,
@@ -47,7 +46,7 @@ import {
 } from '../../types';
 import { getSysInfoReasonHeader, isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import type { IKernel, IKernelProvider, KernelConnectionMetadata, NotebookCellRunState } from './types';
+import type { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { isCI, MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
@@ -106,7 +105,6 @@ export class Kernel implements IKernel {
     private readonly kernelExecution: KernelExecution;
     private startCancellation = new CancellationTokenSource();
     private _workingDirectory?: string;
-    private cellHashProvider: ICellHashProvider;
     constructor(
         public readonly notebookUri: Uri,
         public readonly resourceUri: Resource,
@@ -117,7 +115,6 @@ export class Kernel implements IKernel {
         interruptTimeout: number,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
-        kernelProvider: IKernelProvider,
         private readonly appShell: IApplicationShell,
         private readonly fs: IFileSystem,
         private readonly serverStorage: IJupyterServerUriStorage,
@@ -125,26 +122,26 @@ export class Kernel implements IKernel {
         private readonly configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
         private readonly workspaceService: IWorkspaceService,
-        cellHashProviderFactory: CellHashProviderFactory
+        private readonly cellHashProviderFactory: CellHashProviderFactory
     ) {
         this.kernelExecution = new KernelExecution(
-            kernelProvider,
+            this,
             errorHandler,
             appShell,
             kernelConnectionMetadata,
             interruptTimeout,
             disposables,
             controller,
-            outputTracker
+            outputTracker,
+            cellHashProviderFactory
         );
-        this.cellHashProvider = cellHashProviderFactory.getOrCreate(this);
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document: cell.notebook });
         if (cell.notebook.notebookType === InteractiveWindowView) {
-            await this.cellHashProvider.addCellHash(cell);
+            await this.cellHashProviderFactory.getOrCreate(this).addCellHash(cell);
         }
         const promise = this.kernelExecution.executeCell(notebookPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);

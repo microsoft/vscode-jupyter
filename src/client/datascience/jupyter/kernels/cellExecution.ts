@@ -42,12 +42,19 @@ import {
     translateCellDisplayOutput,
     translateErrorOutput
 } from '../../notebook/helpers/helpers';
-import { IDataScienceErrorHandler, IJupyterSession, INotebook, INotebookExecutionLogger } from '../../types';
+import {
+    ICellHashProvider,
+    IDataScienceErrorHandler,
+    IJupyterSession,
+    INotebook,
+    INotebookExecutionLogger
+} from '../../types';
 import { isPythonKernelConnection } from './helpers';
-import { KernelConnectionMetadata, NotebookCellRunState } from './types';
+import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { disposeAllDisposables } from '../../../common/helpers';
+import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -65,11 +72,13 @@ type DisplayData = nbformat.IDisplayData & {
 
 export class CellExecutionFactory {
     constructor(
+        private readonly kernel: IKernel,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly appShell: IApplicationShell,
         private readonly disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
-        private readonly outputTracker: CellOutputDisplayIdTracker
+        private readonly outputTracker: CellOutputDisplayIdTracker,
+        private readonly cellHashProviderFactory: CellHashProviderFactory
     ) {}
 
     public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
@@ -81,7 +90,8 @@ export class CellExecutionFactory {
             metadata,
             this.disposables,
             this.controller,
-            this.outputTracker
+            this.outputTracker,
+            this.cellHashProviderFactory.getOrCreate(this.kernel)
         );
     }
 }
@@ -141,7 +151,8 @@ export class CellExecution implements IDisposable {
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
         disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
-        private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker
+        private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
+        private readonly cellHashProvider: ICellHashProvider
     ) {
         disposables.push(this);
         workspace.onDidCloseTextDocument(
@@ -191,9 +202,19 @@ export class CellExecution implements IDisposable {
         metadata: Readonly<KernelConnectionMetadata>,
         disposables: IDisposableRegistry,
         controller: NotebookController,
-        outputTracker: CellOutputDisplayIdTracker
+        outputTracker: CellOutputDisplayIdTracker,
+        cellHashProvider: ICellHashProvider
     ) {
-        return new CellExecution(cell, errorHandler, appService, metadata, disposables, controller, outputTracker);
+        return new CellExecution(
+            cell,
+            errorHandler,
+            appService,
+            metadata,
+            disposables,
+            controller,
+            outputTracker,
+            cellHashProvider
+        );
     }
     public async start(notebook: INotebook) {
         if (this.cancelHandled) {
@@ -797,8 +818,9 @@ export class CellExecution implements IDisposable {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
-            traceback: msg.content.traceback
+            traceback: this.cellHashProvider.modifyTraceback(msg.content.traceback)
         };
+
         this.addToCellData(output, clearState);
         this.cellHasErrorsInOutput = true;
     }

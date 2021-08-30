@@ -55,7 +55,7 @@ export class KernelProvider implements IKernelProvider {
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
         @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(CellHashProviderFactory) private cellHashProvider: CellHashProviderFactory,
+        @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook
     ) {
         this.asyncDisposables.push(this);
@@ -97,7 +97,6 @@ export class KernelProvider implements IKernelProvider {
             interruptTimeout,
             this.errorHandler,
             this.editorProvider,
-            this,
             this.appShell,
             this.fs,
             this.serverStorage,
@@ -105,7 +104,7 @@ export class KernelProvider implements IKernelProvider {
             this.configService,
             this.outputTracker,
             this.workspaceService,
-            this.cellHashProvider
+            this.cellHashProviderFactory
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
