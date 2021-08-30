@@ -883,7 +883,7 @@ suite('Jupyter Execution', async () => {
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             allowLiveShare: false,
-            enablePlotViewer: true,
+            generateSVGPlots: false,
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],

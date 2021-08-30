@@ -139,17 +139,14 @@ function buildConfiguration(bundle) {
     // Folder inside `datascience-ui` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
     const filesToCopy = [];
-    if (bundle === 'notebook') {
+    if (bundle === 'ipywidgetsRenderer') {
         // Include files only for notebooks.
         filesToCopy.push(
             ...[
                 {
-                    from: 'out/ipywidgets/dist/ipywidgets.js',
-                    context: './'
-                },
-                {
                     from: 'node_modules/font-awesome/**/*',
-                    context: './'
+                    context: './',
+                    to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
                 },
                 {
                     from: path.join(
@@ -160,7 +157,7 @@ function buildConfiguration(bundle) {
                         'notebook',
                         'fontAwesomeLoader.js'
                     ),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                    to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
                 }
             ]
         );

@@ -31,7 +31,7 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         variableExplorerExclude: 'module;function;builtin_function_or_method',
-        enablePlotViewer: true,
+        generateSVGPlots: false,
         interactiveWindowMode: 'multiple',
         extraSettings: {
             editor: {
@@ -50,7 +50,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
                 fontFamily: "Consolas, 'Courier New', monospace"
             },
             theme: 'Default Dark+',
-            useCustomEditorApi: false,
             hasPythonExtension: true
         },
         intellisenseOptions: {

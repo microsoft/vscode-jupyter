@@ -1,7 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
-export const __ = '';
+suite('Dummy9', () => {
+    test('dummy9', () => {
+        //
+    });
+});
 // import { nbformat } from '@jupyterlab/coreutils';
 // import { assert } from 'chai';
 // import { ChildProcess } from 'child_process';

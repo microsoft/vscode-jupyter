@@ -3,8 +3,6 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as path from 'path';
 import {
-    CancellationError,
-    ConfigurationTarget,
     Event,
     EventEmitter,
     NotebookCell,
@@ -35,7 +33,7 @@ import {
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import * as uuid from 'uuid/v4';
 
@@ -47,7 +45,6 @@ import {
     Resource
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
@@ -58,25 +55,20 @@ import {
     InteractiveWindowMessages,
     ISubmitNewCell
 } from '../interactive-common/interactiveWindowTypes';
-import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider, KernelConnectionMetadata, NotebookCellRunState } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import {
     CellState,
-    ICell,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowLoadable,
     IJupyterDebugger,
     INotebookExporter,
-    InterruptResult,
-    IStatusProvider,
     WebViewViewChangeEventArgs
 } from '../types';
 import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
-import { cellOutputToVSCCellOutput } from '../notebook/helpers/helpers';
 import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
@@ -85,12 +77,6 @@ import { INativeInteractiveWindow } from './types';
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
-    }
-    public get visible(): boolean {
-        return true; // TODO VS Code needs to provide an API for this
-    }
-    public get active(): boolean {
-        return true; // TODO VS Code needs to provide an API for this
     }
     // Promise that resolves when the interactive window is ready to handle code execution.
     public get readyPromise(): Promise<NotebookEditor> {
@@ -112,7 +98,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get notebookUri(): Uri | undefined {
         return this.notebookDocument?.uri;
     }
-    public isInteractive = true;
     public notebookController: VSCodeNotebookController | undefined;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
@@ -124,7 +109,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     protected fileInKernel: string | undefined;
 
     private isDisposed = false;
-    private restartingKernel = false;
     private kernel: IKernel | undefined;
     private kernelLoadPromise: Promise<void> | undefined;
     private initialControllerSelected: Deferred<void>;
@@ -135,7 +119,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     constructor(
         private readonly applicationShell: IApplicationShell,
         private readonly documentManager: IDocumentManager,
-        private readonly statusProvider: IStatusProvider,
         private readonly fs: IFileSystem,
         private readonly configuration: IConfigurationService,
         private readonly commandManager: ICommandManager,
@@ -173,6 +156,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private async createReadyPromise(): Promise<NotebookEditor> {
         const preferredController = await this.notebookControllerManager.getInteractiveController();
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
+        traceInfo(`Starting interactive window with controller ID ${controllerId}`);
         const hasOwningFile = this.owner !== undefined;
         const { notebookEditor } = ((await this.commandManager.executeCommand(
             'interactive.open',
@@ -428,8 +412,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const file = fileUri.fsPath;
         let result = true;
         try {
-            const finishedAddingCode = createDeferred<void>();
-
             // Before we try to execute code make sure that we have an initial directory set
             // Normally set via the workspace, but we might not have one here if loading a single loose file
             if (file !== Identifiers.EmptyFileName) {
@@ -448,44 +430,8 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
             await this.setFileInKernel(file, notebookEditor.document);
 
-            const owningResource = this.owningResource;
-            const observable = this.kernel!.notebook!.executeObservable(code, file, line, id, false);
-            const temporaryExecution = this.notebookController!.controller.createNotebookCellExecution(notebookCell);
-            temporaryExecution?.start();
+            result = (await this.kernel!.executeCell(notebookCell)) === NotebookCellRunState.Success;
 
-            // Sign up for cell changes
-            observable.subscribe(
-                (cells: ICell[]) => {
-                    const cell = cells[0].data;
-                    if (cell.cell_type === 'code') {
-                        // Then send the combined output to the UI
-                        const converted = cell.outputs.map(cellOutputToVSCCellOutput);
-                        void temporaryExecution.replaceOutput(converted);
-                        const executionCount = cell.execution_count;
-                        if (executionCount) {
-                            temporaryExecution.executionOrder = parseInt(executionCount.toString(), 10);
-                        }
-
-                        // Any errors will move our result to false (if allowed)
-                        if (this.configuration.getSettings(owningResource).stopOnError) {
-                            result = result && cells.find((c) => c.state === CellState.error) === undefined;
-                        }
-                    }
-                },
-                (error) => {
-                    traceError(`Error executing a cell: `, error);
-                    if (!(error instanceof CancellationError)) {
-                        this.applicationShell.showErrorMessage(error.toString()).then(noop, noop);
-                    }
-                },
-                () => {
-                    temporaryExecution.end(result);
-                    finishedAddingCode.resolve();
-                }
-            );
-
-            // Wait for the cell to finish
-            await finishedAddingCode.promise;
             traceInfo(`Finished execution for ${id}`);
         } finally {
             if (isDebug) {
@@ -493,136 +439,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             }
         }
         return result;
-    }
-
-    // TODO Migrate all of this code into a common command handler
-    public async interruptKernel(): Promise<void> {
-        // trackKernelResourceInformation(this._notebook?.resource, { interruptKernel: true });
-        const notebookEditor = await this._editorReadyPromise;
-        if (this.kernel && !this.restartingKernel) {
-            const status = this.statusProvider.set(
-                localize.DataScience.interruptKernelStatus(),
-                true,
-                undefined,
-                undefined,
-                this
-            );
-
-            try {
-                const result = await this.kernel.interrupt(notebookEditor.document);
-                status.dispose();
-
-                // We timed out, ask the user if they want to restart instead.
-                if (result === InterruptResult.TimedOut && !this.restartingKernel) {
-                    const message = localize.DataScience.restartKernelAfterInterruptMessage();
-                    const yes = localize.DataScience.restartKernelMessageYes();
-                    const no = localize.DataScience.restartKernelMessageNo();
-                    const v = await this.applicationShell.showInformationMessage(message, yes, no);
-                    if (v === yes) {
-                        await this.restartKernelInternal();
-                    }
-                } else if (result === InterruptResult.Restarted) {
-                    // Uh-oh, keyboard interrupt crashed the kernel.
-                    // this.addSysInfo(SysInfoReason.Interrupt).ignoreErrors(); // This should be handled in kernel.ts
-                }
-            } catch (err) {
-                status.dispose();
-                traceError(err);
-                this.applicationShell.showErrorMessage(err).then(noop, noop);
-            }
-        }
-    }
-
-    // TODO Migrate all of this code into a common command handler
-    public async restartKernel(): Promise<void> {
-        if (this.kernel && !this.restartingKernel) {
-            this.restartingKernel = true;
-            this.startProgress();
-
-            try {
-                if (await this.shouldAskForRestart()) {
-                    // Ask the user if they want us to restart or not.
-                    const message = localize.DataScience.restartKernelMessage();
-                    const yes = localize.DataScience.restartKernelMessageYes();
-                    const dontAskAgain = localize.DataScience.restartKernelMessageDontAskAgain();
-                    const no = localize.DataScience.restartKernelMessageNo();
-
-                    const v = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
-                    if (v === dontAskAgain) {
-                        await this.disableAskForRestart();
-                        await this.restartKernelInternal();
-                    } else if (v === yes) {
-                        await this.restartKernelInternal();
-                    }
-                } else {
-                    await this.restartKernelInternal();
-                }
-            } finally {
-                this.restartingKernel = false;
-                this.stopProgress();
-            }
-        }
-    }
-
-    private async shouldAskForRestart(): Promise<boolean> {
-        const settings = this.configuration.getSettings(this.owningResource);
-        return settings && settings.askForKernelRestart === true;
-    }
-
-    private async disableAskForRestart(): Promise<void> {
-        const settings = this.configuration.getSettings(this.owningResource);
-        if (settings) {
-            this.configuration
-                .updateSetting('askForKernelRestart', false, undefined, ConfigurationTarget.Global)
-                .ignoreErrors();
-        }
-    }
-
-    private async restartKernelInternal(): Promise<void> {
-        this.restartingKernel = true;
-        const notebookEditor = await this._editorReadyPromise;
-
-        // Set our status
-        const status = this.statusProvider.set(
-            localize.DataScience.restartingKernelStatus(),
-            true,
-            undefined,
-            undefined,
-            this
-        );
-
-        try {
-            if (this.kernel && notebookEditor) {
-                await this.kernel.restart(notebookEditor.document);
-
-                // Reset our file in the kernel.
-                const fileInKernel = this.fileInKernel;
-                this.fileInKernel = undefined;
-                if (fileInKernel) {
-                    // TODO this should really be done in the IKernel itself
-                    await this.setFileInKernel(fileInKernel, notebookEditor.document);
-                }
-
-                // // Compute if dark or not.
-                // const knownDark = await this.isDark();
-
-                // // Before we run any cells, update the dark setting
-                // await this.kernel?.notebook?.setMatplotLibStyle(knownDark);
-            }
-        } catch (exc) {
-            // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server
-            if (exc instanceof JupyterKernelPromiseFailedError && this.kernel) {
-                await this.kernel.dispose();
-                await this.kernel.restart(notebookEditor.document);
-            } else {
-                // Show the error message
-                this.applicationShell.showErrorMessage(exc).then(noop, noop);
-                traceError(exc);
-            }
-        } finally {
-            status.dispose();
-            this.restartingKernel = false;
-        }
     }
 
     public undoCells() {
@@ -812,7 +628,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             : cellMatcher.stripFirstMarker(code).trim();
         const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
-        // Insert code cell into NotebookDocument
+        // Insert cell into NotebookDocument
         const language =
             workspace.textDocuments.find((document) => document.uri.toString() === this.owner?.toString())
                 ?.languageId ?? PYTHON_LANGUAGE;
@@ -822,11 +638,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
         notebookCellData.metadata = {
-            inputCollapsed: !isMarkdown,
+            inputCollapsed: !isMarkdown && settings.collapseCellInputCodeByDefault,
             interactiveWindowCellMarker,
             interactive: {
                 file: file.fsPath,
-                line: line
+                line: line,
+                originalSource: code
             },
             executionId: id
         };
@@ -906,14 +723,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     public get title() {
         return '';
-    }
-
-    public startProgress() {
-        noop();
-    }
-
-    public stopProgress() {
-        noop();
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

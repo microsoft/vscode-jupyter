@@ -1,7 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
-export const _ = '';
+suite('Dummy12', () => {
+    test('dummy12', () => {
+        //
+    });
+});
 // import { assert } from 'chai';
 // import { ChildProcess } from 'child_process';
 // import * as path from 'path';

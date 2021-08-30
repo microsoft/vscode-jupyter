@@ -2,30 +2,27 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IWorkspaceService } from '../../common/application/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService } from '../../common/types';
-import {
-    IInteractiveWindow,
-    IInteractiveWindowProvider,
-    INotebookCreationTracker,
-    INotebookEditorProvider,
-    INotebookProvider
-} from '../types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { isJupyterNotebook } from '../notebook/helpers/helpers';
+import { IInteractiveWindow, IInteractiveWindowProvider, INotebookCreationTracker, INotebookProvider } from '../types';
 
 @injectable()
 export class ServerPreload implements IExtensionSingleActivationService {
     constructor(
         @inject(INotebookCreationTracker)
         private readonly tracker: INotebookCreationTracker,
-        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
+        @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebook.bind(this));
+        notebook.onDidOpenNotebookDocument(this.onDidOpenNotebook.bind(this), this, disposables);
         this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.onDidOpenOrCloseInteractive.bind(this));
     }
     public activate(): Promise<void> {
@@ -85,7 +82,10 @@ export class ServerPreload implements IExtensionSingleActivationService {
         }
     }
 
-    private onDidOpenNotebook() {
+    private onDidOpenNotebook(doc: NotebookDocument) {
+        if (!isJupyterNotebook(doc)) {
+            return;
+        }
         // Automatically start a server whenever we open a notebook
         this.createServerIfNecessary().ignoreErrors();
     }

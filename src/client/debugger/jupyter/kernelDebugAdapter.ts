@@ -10,64 +10,30 @@ import {
     NotebookCell,
     Event,
     EventEmitter,
-    DebugProtocolMessage
+    DebugProtocolMessage,
+    notebooks,
+    NotebookCellExecutionStateChangeEvent,
+    NotebookCellExecutionState,
+    DebugConfiguration,
+    Uri,
+    NotebookCellKind,
+    debug
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { randomBytes } from 'crypto';
 import * as path from 'path';
-import { IDebuggingCellMap, IJupyterSession } from '../../datascience/types';
+import { IJupyterSession } from '../../datascience/types';
 import { KernelMessage } from '@jupyterlab/services';
 import { ICommandManager } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IKernelDebugAdapter } from '../types';
-
-const debugRequest = (message: DebugProtocol.Request, jupyterSessionId: string): KernelMessage.IDebugRequestMsg => {
-    return {
-        channel: 'control',
-        header: {
-            msg_id: randomBytes(8).toString('hex'),
-            date: new Date().toISOString(),
-            version: '5.2',
-            msg_type: 'debug_request',
-            username: 'vscode',
-            session: jupyterSessionId
-        },
-        metadata: {},
-        parent_header: {},
-        content: {
-            seq: message.seq,
-            type: 'request',
-            command: message.command,
-            arguments: message.arguments
-        }
-    };
-};
-
-const debugResponse = (message: DebugProtocol.Response, jupyterSessionId: string): KernelMessage.IDebugReplyMsg => {
-    return {
-        channel: 'control',
-        header: {
-            msg_id: randomBytes(8).toString('hex'),
-            date: new Date().toISOString(),
-            version: '5.2',
-            msg_type: 'debug_reply',
-            username: 'vscode',
-            session: jupyterSessionId
-        },
-        metadata: {},
-        parent_header: {},
-        content: {
-            seq: message.seq,
-            type: 'response',
-            request_seq: message.request_seq,
-            success: message.success,
-            command: message.command,
-            message: message.message,
-            body: message.body
-        }
-    };
-};
+import { IConfigurationService, IDisposable } from '../../common/types';
+import { Commands, Identifiers } from '../../datascience/constants';
+import { IKernel } from '../../datascience/jupyter/kernels/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { DebuggingTelemetry } from '../constants';
+import { parseForComments } from '../../../datascience-ui/common';
+import { noop } from '../../common/utils/misc';
 
 interface dumpCellResponse {
     sourcePath: string; // filename for the dumped source
@@ -88,42 +54,156 @@ interface debugInfoResponseBreakpoint {
     breakpoints: DebugProtocol.SourceBreakpoint[]; // list of breakpoints for that source file
 }
 
+export enum KernelDebugMode {
+    RunByLine,
+    Cell,
+    Everything
+}
+
+export interface IKernelDebugAdapterConfig extends DebugConfiguration {
+    __mode: KernelDebugMode;
+    __cellIndex?: number;
+}
+
+function assertIsDebugConfig(thing: unknown): asserts thing is IKernelDebugAdapterConfig {
+    const config = thing as IKernelDebugAdapterConfig;
+    if (
+        typeof config.__mode === 'undefined' ||
+        ((config.__mode === KernelDebugMode.Cell || config.__mode === KernelDebugMode.RunByLine) &&
+            typeof config.__cellIndex === 'undefined')
+    ) {
+        throw new Error('Invalid launch configuration');
+    }
+}
+
 // For info on the custom requests implemented by jupyter see:
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#additions-to-the-dap
-export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
+export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, IDisposable {
     private readonly fileToCell = new Map<string, NotebookCell>();
     private readonly cellToFile = new Map<string, string>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
-    private isRunByLine = false;
-    private runByLineThreadId: number = 1;
-    private runByLineSeq: number = 0;
-
+    private readonly endSession = new EventEmitter<DebugSession>();
+    private readonly configuration: IKernelDebugAdapterConfig;
+    private threadId: number = 1;
+    private readonly disposables: IDisposable[] = [];
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
+    onDidEndSession: Event<DebugSession> = this.endSession.event;
+    public readonly debugCellUri: Uri | undefined;
 
     constructor(
         private session: DebugSession,
         private notebookDocument: NotebookDocument,
         private readonly jupyterSession: IJupyterSession,
-        private cellMap: IDebuggingCellMap,
         private commandManager: ICommandManager,
-        private fs: IFileSystem
+        private fs: IFileSystem,
+        private readonly kernel: IKernel | undefined,
+        private settings: IConfigurationService
     ) {
-        if (this.session.name.includes('RBL=')) {
-            this.isRunByLine = true;
-        }
-        const iopubHandler = (msg: KernelMessage.IIOPubMessage) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const content = msg.content as any;
-            if (content.event === 'stopped') {
-                this.runByLineThreadId = content.body.threadId;
-                this.runByLineSeq = content.seq;
-                this.sendMessage.fire(msg.content);
-            }
-        };
-        this.jupyterSession.onIOPubMessage(iopubHandler);
+        void this.dumpAllCells();
 
-        void this.dumpCellsThatRanBeforeDebuggingBegan();
+        const configuration = this.session.configuration;
+        assertIsDebugConfig(configuration);
+        this.configuration = configuration;
+
+        if (configuration.__mode === KernelDebugMode.Cell || configuration.__mode === KernelDebugMode.RunByLine) {
+            this.debugCellUri = notebookDocument.cellAt(configuration.__cellIndex!)?.document.uri;
+        }
+
+        if (configuration.__mode === KernelDebugMode.Cell) {
+            sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
+        }
+
+        if (configuration.__mode === KernelDebugMode.RunByLine) {
+            sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunByLine);
+        }
+
+        this.disposables.push(
+            this.jupyterSession.onIOPubMessage(async (msg: KernelMessage.IIOPubMessage) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const anyMsg = msg as any;
+
+                this.trace('event', JSON.stringify(msg));
+
+                if (anyMsg.header.msg_type === 'debug_event') {
+                    if (anyMsg.content.event === 'stopped') {
+                        this.threadId = anyMsg.content.body.threadId;
+                        if (await this.handleStoppedEvent()) {
+                            this.trace('intercepted', JSON.stringify(anyMsg.content));
+                            return;
+                        }
+                    }
+                    this.sendMessage.fire(msg.content);
+                }
+            })
+        );
+
+        if (this.kernel) {
+            this.disposables.push(
+                this.kernel.onWillRestart(() => {
+                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onARestart' });
+                    this.disconnect();
+                })
+            );
+            this.disposables.push(
+                this.kernel.onWillInterrupt(() => {
+                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onAnInterrupt' });
+                    this.disconnect();
+                })
+            );
+            this.disposables.push(
+                this.kernel.onDisposed(() => {
+                    void debug.stopDebugging(this.session);
+                    this.endSession.fire(this.session);
+                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
+                })
+            );
+        }
+
+        this.disposables.push(
+            notebooks.onDidChangeNotebookCellExecutionState(
+                (cellStateChange: NotebookCellExecutionStateChangeEvent) => {
+                    // If a cell has moved to idle, stop the debug session
+                    if (
+                        this.configuration.__cellIndex === cellStateChange.cell.index &&
+                        cellStateChange.state === NotebookCellExecutionState.Idle
+                    ) {
+                        sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
+                        this.disconnect();
+                    }
+                },
+                this,
+                this.disposables
+            )
+        );
+    }
+
+    private async handleStoppedEvent(): Promise<boolean> {
+        if (await this.shouldStepIn()) {
+            this.runByLineContinue();
+            return true;
+        }
+
+        return false;
+    }
+
+    private async shouldStepIn(): Promise<boolean> {
+        // If we're in run by line and are stopped at another path, continue
+        if (this.configuration.__mode !== KernelDebugMode.RunByLine) {
+            return false;
+        }
+
+        // Call stackTrace to determine whether to forward the stop event to the client, and also to
+        // start the process of updating the variables view.
+        const stResponse = await this.getStackTrace({ startFrame: 0, levels: 1 });
+
+        const sf = stResponse.stackFrames[0];
+        const cell = this.notebookDocument.cellAt(this.configuration.__cellIndex!);
+        return !!sf.source && sf.source.path !== cell.document.uri.toString();
+    }
+
+    private trace(tag: string, msg: string) {
+        traceVerbose(`[Debug] ${tag}: ${msg}`);
     }
 
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
@@ -143,74 +223,71 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             await this.debugInfo();
         }
 
-        // after disconnecting, hide the breakpoint margin
-        if (
-            !this.isRunByLine &&
-            message.type === 'request' &&
-            (message as DebugProtocol.Request).command === 'disconnect'
-        ) {
-            void this.commandManager.executeCommand('notebook.toggleBreakpointMargin', this.notebookDocument);
-        }
-
         // initialize Run By Line
         if (
-            this.isRunByLine &&
+            (this.configuration.__mode === KernelDebugMode.RunByLine ||
+                this.configuration.__mode === KernelDebugMode.Cell) &&
             message.type === 'request' &&
             (message as DebugProtocol.Request).command === 'configurationDone'
         ) {
-            await this.initializeRunByLine(message.seq);
+            await this.initializeExecute(message.seq);
         }
 
         this.sendRequestToJupyterSession(message);
     }
 
-    public runByLineContinue() {
-        if (this.isRunByLine) {
-            const message: DebugProtocol.StepInRequest = {
-                seq: this.runByLineSeq,
-                type: 'request',
-                command: 'stepIn',
-                arguments: {
-                    threadId: this.runByLineThreadId
-                }
-            };
+    public get debugSession(): DebugSession {
+        return this.session;
+    }
 
-            this.sendRequestToJupyterSession(message);
+    public runByLineContinue() {
+        if (this.configuration.__mode === KernelDebugMode.RunByLine) {
+            void this.session.customRequest('stepIn', { threadId: this.threadId });
         }
     }
 
-    public runByLineStop() {
-        if (this.isRunByLine) {
-            const message: DebugProtocol.DisconnectRequest = {
-                seq: this.runByLineSeq,
-                type: 'request',
-                command: 'disconnect',
-                arguments: {
-                    restart: false
-                }
-            };
-
-            this.sendRequestToJupyterSession(message);
-        }
+    public disconnect() {
+        void this.session.customRequest('disconnect', { restart: false });
+        this.endSession.fire(this.session);
     }
 
     dispose() {
+        this.disposables.forEach((d) => d.dispose());
         // clean temp files
         this.cellToFile.forEach((tempPath) => {
             const norm = path.normalize(tempPath);
-            const dir = path.dirname(norm);
             try {
                 void this.fs.deleteLocalFile(norm);
-                void this.fs.deleteLocalDirectory(dir);
             } catch {
                 traceError('Error deleting temporary debug files');
             }
         });
     }
 
-    private async dumpCellsThatRanBeforeDebuggingBegan() {
-        this.cellMap.getCellsAnClearQueue(this.notebookDocument).forEach(async (cell) => {
-            await this.dumpCell(cell.document.uri.toString());
+    private getStackTrace(args?: {
+        startFrame?: number;
+        levels?: number;
+    }): Promise<DebugProtocol.StackTraceResponse['body']> {
+        return this.session.customRequest('stackTrace', {
+            threadId: this.threadId,
+            startFrame: args?.startFrame,
+            levels: args?.levels
+        }) as Promise<DebugProtocol.StackTraceResponse['body']>;
+    }
+
+    private scopes(frameId: number): void {
+        void this.session.customRequest('scopes', { frameId });
+    }
+
+    private variables(variablesReference: number): void {
+        void this.session.customRequest('variables', { variablesReference });
+    }
+
+    private dumpAllCells() {
+        this.notebookDocument.getCells().forEach((cell) => {
+            if (cell.kind === NotebookCellKind.Code) {
+                void this.dumpCell(cell.document.uri.toString());
+            }
         });
     }
 
@@ -231,22 +308,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
 
     private async debugInfo(): Promise<void> {
         const response = await this.session.customRequest('debugInfo');
-
-        // If there's breakpoints at this point, send a message to VS Code to keep them
-        (response as debugInfoResponse).breakpoints.forEach((breakpoint) => {
-            const message: DebugProtocol.SetBreakpointsRequest = {
-                seq: 0,
-                type: 'request',
-                command: 'setBreakpoints',
-                arguments: {
-                    source: {
-                        path: breakpoint.source
-                    },
-                    breakpoints: breakpoint.breakpoints
-                }
-            };
-            this.sendMessage.fire(message);
-        });
 
         // If there's stopped threads at this point, continue them all
         (response as debugInfoResponse).stoppedThreads.forEach((thread: number) => {
@@ -272,26 +333,26 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             }
         });
 
+        this.trace('to kernel', JSON.stringify(message));
         if (message.type === 'request') {
-            const request = debugRequest(message as DebugProtocol.Request, this.jupyterSession.sessionId);
+            const request = message as DebugProtocol.Request;
             const control = this.jupyterSession.requestDebug({
-                seq: request.content.seq,
+                seq: request.seq,
                 type: 'request',
-                command: request.content.command,
-                arguments: request.content.arguments
+                command: request.command,
+                arguments: request.arguments
             });
 
             if (control) {
                 control.onReply = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
-                control.onIOPub = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
             }
         } else if (message.type === 'response') {
             // responses of reverse requests
-            const response = debugResponse(message as DebugProtocol.Response, this.jupyterSession.sessionId);
+            const response = message as DebugProtocol.Response;
             this.jupyterSession.requestDebug({
-                seq: response.content.seq,
+                seq: response.seq,
                 type: 'request',
-                command: response.content.command
+                command: response.command
             });
         } else {
             // cannot send via iopub, no way to handle events even if they existed
@@ -313,6 +374,35 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
             }
         });
 
+        // To get the variables for the Variables view:
+        // We have to send the variables message. For that, we need a variablesReference from scopes,
+        // and for that, we need an id from the stackTrace message.
+        // Here we catch the stackTrace response and we use its id to send a scope message
+        if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
+            (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
+                if (this.configuration.__mode === KernelDebugMode.RunByLine) {
+                    // Only call scopes (and variables) if we are stopped on the cell we are executing
+                    if (sf.source && this.debugCellUri && sf.source.path === this.debugCellUri.toString()) {
+                        this.scopes(sf.id);
+                    }
+                } else {
+                    // Only call scopes (and variables) if we are stopped on the notebook we are executing
+                    const docURI = path.basename(this.notebookDocument.uri.toString());
+                    if (sf.source && sf.source.path && sf.source.path.includes(docURI)) {
+                        this.scopes(sf.id);
+                    }
+                }
+            });
+        }
+
+        // Catch the scopes response and use its variablesReference to send a variables message
+        if ((message as DebugProtocol.ScopesResponse).command === 'scopes') {
+            (message as DebugProtocol.ScopesResponse).body.scopes.forEach((s) => {
+                this.variables(s.variablesReference);
+            });
+        }
+
+        this.trace('response', JSON.stringify(message));
         this.sendMessage.fire(message);
     }
 
@@ -393,58 +483,69 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter {
         }
     }
 
-    private async initializeRunByLine(seq: number) {
-        const response = await this.session.customRequest('debugInfo');
-
-        // If there's breakpoints at this point, send a message to VS Code to delete them
-        (response as debugInfoResponse).breakpoints.forEach((breakpoint) => {
-            const message: DebugProtocol.SetBreakpointsRequest = {
-                seq: 0,
-                type: 'request',
-                command: 'setBreakpoints',
-                arguments: {
-                    source: {
-                        path: breakpoint.source
-                    },
-                    breakpoints: []
-                }
-            };
-            this.sendMessage.fire(message);
-        });
-
-        // put breakpoint at the beginning of the cell
-        const index = this.session.name.indexOf('RBL=');
-        const cellIndex = Number(this.session.name.substring(index + 4));
-        const cell = this.notebookDocument.cellAt(cellIndex);
-
-        const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
-            line: 1
-        };
-        const splitPath = cell.notebook.uri.path.split('/');
-        const name = splitPath[splitPath.length - 1];
-        const message: DebugProtocol.SetBreakpointsRequest = {
-            seq: seq + 1,
-            type: 'request',
-            command: 'setBreakpoints',
-            arguments: {
-                source: {
-                    name: name,
-                    path: cell.document.uri.toString()
-                },
-                lines: [1],
-                breakpoints: [initialBreakpoint],
-                sourceModified: false
-            }
-        };
-
-        const args = (message as DebugProtocol.Request).arguments;
-        if (args.source && args.source.path && args.source.path.indexOf('vscode-notebook-cell:') === 0) {
-            await this.dumpCell(args.source.path);
+    private async initializeExecute(seq: number) {
+        // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
+        // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
+        if (this.kernel) {
+            const code = 'import debugpy\ndebugpy.debug_this_thread()';
+            await this.kernel.executeHidden(code, Identifiers.EmptyFileName, this.notebookDocument);
         }
 
-        this.sendRequestToJupyterSession(message);
+        // put breakpoint at the beginning of the cell
+        const cellIndex = Number(this.configuration.__cellIndex);
+        const cell = this.notebookDocument.cellAt(cellIndex);
+
+        await this.dumpCell(cell.document.uri.toString());
+
+        if (this.configuration.__mode === KernelDebugMode.RunByLine) {
+            // This will save the code lines of the cell in lineList (so ignore comments and emtpy lines)
+            // Its done to set the Run by Line breakpoint on the first code line
+            const textLines = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
+            const lineList: number[] = [];
+            parseForComments(
+                textLines,
+                () => noop(),
+                (s, i) => {
+                    if (s.trim().length !== 0) {
+                        lineList.push(i);
+                    }
+                }
+            );
+            lineList.sort();
+
+            // Don't send the SetBreakpointsRequest or open the variable view if there are no code lines
+            if (lineList.length !== 0) {
+                const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
+                    line: lineList[0] + 1
+                };
+                const message: DebugProtocol.SetBreakpointsRequest = {
+                    seq: seq + 1,
+                    type: 'request',
+                    command: 'setBreakpoints',
+                    arguments: {
+                        source: {
+                            name: path.basename(cell.notebook.uri.path),
+                            path: cell.document.uri.toString()
+                        },
+                        lines: [lineList[0] + 1],
+                        breakpoints: [initialBreakpoint],
+                        sourceModified: false
+                    }
+                };
+                this.sendRequestToJupyterSession(message);
+
+                // Open variable view
+                const settings = this.settings.getSettings();
+                if (settings.showVariableViewWhenDebugging) {
+                    void this.commandManager.executeCommand(Commands.OpenVariableView);
+                }
+            }
+        }
 
         // Run cell
-        await this.commandManager.executeCommand('notebook.cell.execute');
+        void this.commandManager.executeCommand('notebook.cell.execute', {
+            ranges: [{ start: cell.index, end: cell.index + 1 }],
+            document: cell.document.uri
+        });
     }
 }

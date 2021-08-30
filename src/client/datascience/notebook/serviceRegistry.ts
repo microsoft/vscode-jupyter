@@ -8,7 +8,6 @@ import { IServiceManager } from '../../ioc/types';
 import { GitHubIssueCodeLensProvider } from '../../logging/gitHubIssueCodeLensProvider';
 import { KernelProvider } from '../jupyter/kernels/kernelProvider';
 import { IKernelProvider } from '../jupyter/kernels/types';
-import { NotebookSerializer } from './notebookSerializer';
 import { CreationOptionService } from './creation/creationOptionsService';
 import { NotebookCreator } from './creation/notebookCreator';
 import { NotebookCellLanguageService } from './cellLanguageService';
@@ -23,9 +22,9 @@ import { INotebookControllerManager } from './types';
 import { RendererCommunication } from './outputs/rendererCommunication';
 import { PlotSaveHandler } from './outputs/plotSaveHandler';
 import { PlotViewHandler } from './outputs/plotViewHandler';
+import { CellOutputDisplayIdTracker } from '../jupyter/kernels/cellDisplayIdTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<NotebookSerializer>(NotebookSerializer, NotebookSerializer);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookIntegration
@@ -45,6 +44,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
+    serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         GitHubIssueCodeLensProvider

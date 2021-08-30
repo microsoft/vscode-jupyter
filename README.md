@@ -2,12 +2,14 @@
 
 A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) that provides basic notebook support for [language kernels](https://github.com/jupyter/jupyter/wiki/Jupyter-kernels) that are supported in [Jupyter Notebooks](https://jupyter.org/) today. Many language kernels will work with no modification. To enable advanced features, modifications may be needed in the VS Code language extensions.
 
+The Jupyter Extension includes the Jupyter Keymaps extension by default. The Jupyter Keymaps extension provides Jupyter-consistent keymaps and can be disabled or uninstalled. 
+
 ## Notebook support
 
 The Jupyter Extension uses the [built-in notebook support](https://code.visualstudio.com/api/extension-guides/notebook#:~:text=The%20Notebook%20API%20allows%20Visual%20Studio%20Code%20extensions,allows%20for%20similar%20experiences%20inside%20Visual%20Studio%20Code.) from VS code. This UI gives a number of advantages to users of notebooks:
 
--   Out of the box support for VS Code's vast array of basic code editing features like [hot exit](https://code.visualstudio.com/docs/editor/codebasics#_hot-exit), [find & replace](https://code.visualstudio.com/docs/editor/codebasics#_find-and-replace), and [code folding](https://code.visualstudio.com/docs/editor/codebasics#_folding). 
--   Editor extensions like [VIM](https://marketplace.visualstudio.com/items?itemName=vscodevim.vim), [bracket colorization](https://marketplace.visualstudio.com/items?itemName=CoenraadS.bracket-pair-colorizer), linters and many more are available while editing a cell. 
+-   Out of the box support for VS Code's vast array of basic code editing features like [hot exit](https://code.visualstudio.com/docs/editor/codebasics#_hot-exit), [find & replace](https://code.visualstudio.com/docs/editor/codebasics#_find-and-replace), and [code folding](https://code.visualstudio.com/docs/editor/codebasics#_folding).
+-   Editor extensions like [VIM](https://marketplace.visualstudio.com/items?itemName=vscodevim.vim), [bracket colorization](https://marketplace.visualstudio.com/items?itemName=CoenraadS.bracket-pair-colorizer), linters and many more are available while editing a cell.
 -   Deep integration with general workbench and file-based features in VS Code like [outline view](https://code.visualstudio.com/docs/getstarted/userinterface#_outline-view) (Table of Contents), [breadcrumbs](https://code.visualstudio.com/docs/getstarted/userinterface#_breadcrumbs) and [other operations](https://code.visualstudio.com/docs/getstarted/userinterface).
 -   Fast load times for Jupyter notebook (.ipynb) files. Any notebook file is loaded and rendered as quickly as possible, while execution-related operations are initialized behind the scenes.
 -   Includes a [notebook-friendly diff tool](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_custom-notebook-diffing), making it much easier to compare and see differences between code cells, output and metadata.
@@ -20,6 +22,17 @@ The Jupyter Extension uses the [built-in notebook support](https://code.visualst
 Whether you are on VS Code Stable or VS Code Insiders, if you would like to work with Python just make sure you're using the latest version of the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python) to enjoy the joint partnership of the Python and Juypter Extensions.
 
 Please follow the [Python Extension ReadMe](https://github.com/microsoft/vscode-python/blob/main/README.md) instructions to get started and visit the [Python Documentation](https://code.visualstudio.com/docs/python/jupyter-support) to learn more about how the Python and Jupyter Extension are working together to provide an optimum Python notebooks experience.
+
+### Run by Line
+
+To start a lightweight debugging session and run code cells line by line in Python notebooks, press `F10` while selecting a cell or click the Run by Line button on the cell toolbar.
+
+Once you start a Run by Line session the Variable Explorer will appear and variable values will update as you iterate through your code.
+
+To run through the rest of the cell during a Run by Line session hit `Ctrl+Enter`. To stop, you can click the interrupt button on the left side of the cell.
+
+To set it up, follow the steps [here](https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks).
+<img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/runbyline.gif?>
 
 ## Working with other Languages
 
@@ -46,7 +59,7 @@ The Jupyter Extension supports other languages in addition to Python such as Jul
 
     <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
 
--   Select your kernel by clicking on the kernel picker in the bottom right of the status bar or by invoking the `"Notebook: Select Notebook Kernel"` command.
+-   Select your kernel by clicking on the kernel picker in the top right of the notebook or by invoking the `"Notebook: Select Notebook Kernel"` command.
 
     <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/KernelPicker.gif?>
 

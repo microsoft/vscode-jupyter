@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import { notebooks } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../activation/types';
-import { UseVSCodeNotebookEditorApi } from '../../../common/constants';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { IDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
@@ -16,7 +15,6 @@ import { PlotViewHandler } from './plotViewHandler';
 export class RendererCommunication implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
-        @inject(UseVSCodeNotebookEditorApi) private readonly useVSCNotebook: boolean,
         @inject(PlotSaveHandler) private readonly plotSaveHandler: PlotSaveHandler,
         @inject(PlotViewHandler) private readonly plotViewHandler: PlotViewHandler
     ) {}
@@ -25,10 +23,6 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
         disposeAllDisposables(this.disposables);
     }
     public activate() {
-        if (!this.useVSCNotebook) {
-            return;
-        }
-
         const api = notebooks.createRendererMessaging(JupyterNotebookRenderer);
         api.onDidReceiveMessage(
             ({ editor, message }) => {

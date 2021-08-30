@@ -132,6 +132,8 @@ export interface IKernel extends IAsyncDisposable {
     readonly onStatusChanged: Event<ServerStatus>;
     readonly onDisposed: Event<void>;
     readonly onRestarted: Event<void>;
+    readonly onWillRestart: Event<void>;
+    readonly onWillInterrupt: Event<void>;
     readonly status: ServerStatus;
     readonly disposed: boolean;
     /**
@@ -144,8 +146,7 @@ export interface IKernel extends IAsyncDisposable {
     start(options?: { disableUI?: boolean; document: NotebookDocument }): Promise<void>;
     interrupt(document: NotebookDocument): Promise<InterruptResult>;
     restart(document: NotebookDocument): Promise<void>;
-    executeCell(cell: NotebookCell): Promise<void>;
-    executeAllCells(document: NotebookDocument): Promise<void>;
+    executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
     executeHidden(code: string, file: string, document: NotebookDocument): Promise<void>;
 }
 
@@ -160,6 +161,7 @@ export type KernelOptions = {
 };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
+    onDidRestartKernel: Event<IKernel>;
     /**
      * Get hold of the active kernel for a given Notebook.
      */

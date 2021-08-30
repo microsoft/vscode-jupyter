@@ -24,6 +24,7 @@ import { populateTelemetryWithErrorInfo } from '../common/errors';
 import { ErrorCategory, TelemetryErrorProperties } from '../common/errors/types';
 import { noop } from '../common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
+import { DebuggingTelemetry } from '../debugger/constants';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -470,7 +471,7 @@ export interface IEventNamePropertyMapping {
          *
          * @type {string}
          */
-        hashedName: string;
+        hashedNamev2: string;
     };
     [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
 
@@ -1297,7 +1298,6 @@ export interface IEventNamePropertyMapping {
     [VSCodeNativeTelemetry.MoveCell]: never | undefined;
     [VSCodeNativeTelemetry.ChangeToCode]: never | undefined;
     [VSCodeNativeTelemetry.ChangeToMarkdown]: never | undefined;
-    [VSCodeNativeTelemetry.RunAllCells]: never | undefined;
     [Telemetry.VSCNotebookCellTranslationFailed]: {
         isErrorOutput: boolean; // Whether we're trying to translate an error output when we shuldn't be.
     };
@@ -1379,16 +1379,6 @@ export interface IEventNamePropertyMapping {
         source: SliceOperationSource;
     };
     /*
-     * Telemetry sent when we update custom editor associations.
-     */
-    [Telemetry.UpdateCustomEditorAssociation]: {
-        /**
-         * 'added' means we enabled custom editor for user and ensured ipynb opens with custom editor.
-         * 'removed' means we custom editor is not enabled for the user and ensured ipynb doesn't open with custom editor.
-         */
-        type: 'added' | 'removed';
-    } & Partial<TelemetryErrorProperties>;
-    /*
      * Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
      */
     [Telemetry.FailedToCreateNotebookController]: {
@@ -1425,5 +1415,17 @@ export interface IEventNamePropertyMapping {
         notebookMetadataProvided: boolean; // Whether notebook metadata was provided.
         hasKernelSpecInMetadata: boolean; // Whether we have kernelspec info in the notebook metadata.
         kernelConnectionFound: boolean; // Whether a kernel connection was found or not.
+    };
+    [DebuggingTelemetry.clickedOnSetup]: never | undefined;
+    [DebuggingTelemetry.closedModal]: never | undefined;
+    [DebuggingTelemetry.ipykernel6Status]: {
+        status: 'installed' | 'notInstalled';
+    };
+    [DebuggingTelemetry.clickedRunByLine]: never | undefined;
+    [DebuggingTelemetry.successfullyStartedRunByLine]: never | undefined;
+    [DebuggingTelemetry.clickedRunAndDebugCell]: never | undefined;
+    [DebuggingTelemetry.successfullyStartedRunAndDebugCell]: never | undefined;
+    [DebuggingTelemetry.endedSession]: {
+        reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
     };
 }

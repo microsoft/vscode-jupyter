@@ -11,8 +11,6 @@ import { EventEmitter, NotebookDocument, TextDocument } from 'vscode';
 import { IDocumentManager, IVSCodeNotebook } from '../../client/common/application/types';
 import { disposeAllDisposables } from '../../client/common/helpers';
 import { IDisposable } from '../../client/common/types';
-import { generateCells } from '../../client/datascience/cellFactory';
-import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../client/datascience/types';
 import { EventName } from '../../client/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../client/telemetry/helpers';
 import { ImportTracker } from '../../client/telemetry/importTracker';
@@ -23,11 +21,8 @@ suite('Import Tracker', () => {
     const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
     let importTracker: ImportTracker;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
-    let nativeProvider: TypeMoq.IMock<INotebookEditorProvider>;
     let openedEventEmitter: EventEmitter<TextDocument>;
     let savedEventEmitter: EventEmitter<TextDocument>;
-    let openedNotebookEmitter: EventEmitter<INotebookEditor>;
-    let closedNotebookEmitter: EventEmitter<INotebookEditor>;
     const pandasHash: string = getTelemetrySafeHashedString('pandas');
     const elephasHash: string = getTelemetrySafeHashedString('elephas');
     const kerasHash: string = getTelemetrySafeHashedString('keras');
@@ -50,7 +45,7 @@ suite('Import Tracker', () => {
             }
 
             Reporter.properties.pop(); // HASHED_PACKAGE_PERF
-            expect(Reporter.properties).to.deep.equal(hashes.map((hash) => ({ hashedName: hash })));
+            expect(Reporter.properties).to.deep.equal(hashes.map((hash) => ({ hashedNamev2: hash })));
         }
 
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
@@ -66,17 +61,10 @@ suite('Import Tracker', () => {
 
         openedEventEmitter = new EventEmitter<TextDocument>();
         savedEventEmitter = new EventEmitter<TextDocument>();
-        openedNotebookEmitter = new EventEmitter<INotebookEditor>();
-        closedNotebookEmitter = new EventEmitter<INotebookEditor>();
 
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         documentManager.setup((a) => a.onDidOpenTextDocument).returns(() => openedEventEmitter.event);
         documentManager.setup((a) => a.onDidSaveTextDocument).returns(() => savedEventEmitter.event);
-
-        nativeProvider = TypeMoq.Mock.ofType<INotebookEditorProvider>();
-        nativeProvider.setup((n) => n.onDidOpenNotebookEditor).returns(() => openedNotebookEmitter.event);
-        nativeProvider.setup((n) => n.onDidCloseNotebookEditor).returns(() => closedNotebookEmitter.event);
-        nativeProvider.setup((n) => n.editors).returns(() => []);
 
         rewiremock.enable();
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
@@ -86,8 +74,9 @@ suite('Import Tracker', () => {
         disposables.push(onDidOpenCloseNbEvent);
         when(vscNb.onDidOpenNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
         when(vscNb.onDidCloseNotebookDocument).thenReturn(onDidOpenCloseNbEvent.event);
+        when(vscNb.notebookDocuments).thenReturn([]);
 
-        importTracker = new ImportTracker(documentManager.object, instance(vscNb), nativeProvider.object, disposables);
+        importTracker = new ImportTracker(documentManager.object, instance(vscNb), disposables);
     });
     teardown(() => {
         process.env.VSC_JUPYTER_UNIT_TEST = oldValueOfVSC_JUPYTER_UNIT_TEST;
@@ -104,14 +93,6 @@ suite('Import Tracker', () => {
         ev.fire(textDoc.object);
     }
 
-    function emitNotebookEvent(code: string, ev: EventEmitter<INotebookEditor>) {
-        const notebook = TypeMoq.Mock.ofType<INotebookEditor>();
-        const model = TypeMoq.Mock.ofType<INotebookModel>();
-        notebook.setup((n) => n.model).returns(() => model.object);
-        model.setup((m) => m.getCellsWithId()).returns(() => generateCells(undefined, code, 'foo.py', 0, false, '1'));
-        ev.fire(notebook.object);
-    }
-
     test('Open document', () => {
         emitDocEvent('import pandas\r\n', openedEventEmitter);
 
@@ -123,24 +104,6 @@ suite('Import Tracker', () => {
         documentManager.setup((d) => d.textDocuments).returns(() => [doc.object]);
         await importTracker.activate();
 
-        Reporter.expectHashes(pandasHash);
-    });
-
-    test('Open notebook', () => {
-        emitNotebookEvent('import pandas\r\n', openedNotebookEmitter);
-        Reporter.expectHashes(pandasHash);
-    });
-
-    test('Close notebook', () => {
-        emitNotebookEvent('import pandas\r\n', closedNotebookEmitter);
-        Reporter.expectHashes(pandasHash);
-    });
-
-    test('Execute notebook', async () => {
-        await importTracker.postExecute(
-            generateCells(undefined, 'import pandas\r\n', 'foo.py', 0, false, '1')[0],
-            false
-        );
         Reporter.expectHashes(pandasHash);
     });
 

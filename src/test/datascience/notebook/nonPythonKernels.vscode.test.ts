@@ -11,7 +11,6 @@ import { IPythonExtensionChecker } from '../../../client/api/types';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { traceInfo } from '../../../client/common/logger';
 import { IDisposable } from '../../../client/common/types';
-import { VSCodeNotebookProvider } from '../../../client/datascience/constants';
 import { NotebookCellLanguageService } from '../../../client/datascience/notebook/cellLanguageService';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
@@ -31,7 +30,8 @@ import {
     saveActiveNotebook,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
-    workAroundVSCodeNotebookStartPages
+    workAroundVSCodeNotebookStartPages,
+    waitForTextOutput
 } from './helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -93,7 +93,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         sinon.restore();
         await workAroundVSCodeNotebookStartPages();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(VSCodeNotebookProvider);
+        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
     });
     setup(async function () {
@@ -137,11 +137,11 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await waitForKernelToGetAutoSelected();
         await insertMarkdownCell('# Hello');
-        await saveActiveNotebook([]);
+        await saveActiveNotebook();
 
         // Add another cell, to ensure changes are detected by our code.
         await insertMarkdownCell('# Hello');
-        await saveActiveNotebook([]);
+        await saveActiveNotebook();
         await closeNotebooks();
 
         // Wait for the default cell language to change.
@@ -178,10 +178,12 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await openNotebook(api.serviceContainer, testJuliaNb.fsPath);
         await insertCodeCell('123456', { language: 'julia', index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await runCell(cell);
         // Wait till execution count changes and status is success.
-        await waitForExecutionCompletedSuccessfully(cell, 60_000);
-        assertHasTextOutputInVSCode(cell, '123456', 0, false);
+        await Promise.all([
+            runCell(cell),
+            waitForExecutionCompletedSuccessfully(cell, 60_000),
+            waitForTextOutput(cell, '123456', 0, false)
+        ]);
     });
     test('Can run a CSharp notebook', async function () {
         return this.skip(); // Flakey disabled and tracked by 4738

@@ -32,6 +32,34 @@
             }
         },
         {
+            "name": "Extension (with daemon compilation)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--enable-proposed-api"],
+            "stopOnEntry": false,
+            "smartStep": true,
+            "sourceMaps": true,
+            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "skipFiles": ["<node_internals>/**"],
+            "env": {
+                // Disable this to turoff on redux & console logging during debugging
+                "VSC_JUPYTER_FORCE_LOGGING": "1",
+                // Enable this to try out new experiments locally
+                "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "1",
+                // Enable this to log telemetry to the output during debugging
+                "XVSC_JUPYTER_LOG_TELEMETRY": "1",
+                // Enable this to log IPYWIDGET messages
+                "XVSC_JUPYTER_LOG_IPYWIDGETS": "1",
+                // Enable this to log debugger output. Directory must exist ahead of time
+                "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output_Ex"
+            },
+            "presentation": {
+                "group": "1_extension",
+                "order": 1
+            }
+        },
+        {
             "name": "Extension (UI in Browser)",
             "type": "extensionHost",
             "request": "launch",

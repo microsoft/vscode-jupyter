@@ -253,7 +253,7 @@ export class JupyterServerBase implements INotebookServer {
 
         notebook
             .then((nb) => {
-                const oldDispose = nb.dispose;
+                const oldDispose = nb.dispose.bind(nb);
                 nb.dispose = () => {
                     this.notebooks.delete(identity.toString());
                     return oldDispose();

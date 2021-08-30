@@ -754,18 +754,6 @@ export namespace DataScience {
         'DataScience.notebookNotFound',
         'python -m jupyter notebook --version is not running'
     );
-    export const findJupyterCommandProgress = localize(
-        'DataScience.findJupyterCommandProgress',
-        'Active interpreter does not support {0}. Searching for the best available interpreter.'
-    );
-    export const findJupyterCommandProgressCheckInterpreter = localize(
-        'DataScience.findJupyterCommandProgressCheckInterpreter',
-        'Checking {0}.'
-    );
-    export const findJupyterCommandProgressSearchCurrentPath = localize(
-        'DataScience.findJupyterCommandProgressSearchCurrentPath',
-        'Searching current path.'
-    );
     export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
     export const fallbackToUseActiveInterpreterAsKernel = localize(
         'DataScience.fallbackToUseActiveInterpeterAsKernel',
@@ -926,18 +914,6 @@ export namespace DataScience {
         'Connecting to kernel.'
     );
 
-    export const reloadCustomEditor = localize(
-        'DataScience.reloadCustomEditor',
-        'Please reload VS Code to use the custom editor API'
-    );
-    export const reloadVSCodeNotebookEditor = localize(
-        'DataScience.reloadVSCodeNotebookEditor',
-        'Please reload VS Code to use the Notebook Editor'
-    );
-    export const usingPreviewNotebookWithOtherNotebookWarning = localize(
-        'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
-        'Opening the same file in the Preview Notebook Editor and stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
-    );
     export const insecureSessionMessage = localize(
         'DataScience.insecureSessionMessage',
         'Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?'
@@ -952,10 +928,9 @@ export namespace DataScience {
         'DataScience.ipykernelNotInstalled',
         'IPyKernel not installed into interpreter {0}'
     );
-    export const illegalEditorConfig = localize(
-        'DataScience.illegalEditorConfig',
-        'CustomEditor and NativeNotebook experiments cannot be turned on together'
-    );
+    export const needIpykernel6 = localize('DataScience.needIpykernel6', 'Ipykernel setup required for this feature');
+    export const setup = localize('DataScience.setup', 'Setup');
+    export const startingRunByLine = localize('DataScience.startingRunByLine', 'Starting Run by Line');
     export const showDataViewerFail = localize(
         'DataScience.showDataViewerFail',
         'Failed to create the Data Viewer. Check the Jupyter tab of the Output window for more info.'
@@ -977,10 +952,6 @@ export namespace DataScience {
     );
     export const noNotebookToDebug = localize('DataScience.noNotebookToDebug', 'No active notebook document to debug.');
     export const cantStartDebugging = localize('DataScience.cantStartDebugging', "Can't start debugging.");
-    export const pythonKernelDebugAdapter = localize(
-        'DataScience.pythonKernelDebugAdapter',
-        'Python Kernel Debug Adapter'
-    );
 }
 
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values

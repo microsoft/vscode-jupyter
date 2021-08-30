@@ -66,8 +66,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
         @unmanaged() protected rootPath: string,
-        @unmanaged() protected scripts: string[],
-        @unmanaged() protected readonly useCustomEditorApi: boolean
+        @unmanaged() protected scripts: string[]
     ) {
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
@@ -252,7 +251,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                     fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
                 theme,
-                useCustomEditorApi: this.useCustomEditorApi,
                 hasPythonExtension: pythonExt !== undefined
             },
             intellisenseOptions: {

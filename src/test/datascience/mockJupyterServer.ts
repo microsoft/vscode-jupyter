@@ -3,7 +3,6 @@
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { TemporaryFile } from '../../client/common/platform/types';
-import { noop } from '../../client/common/utils/misc';
 import { getNameOfKernelConnection } from '../../client/datascience/jupyter/kernels/helpers';
 import {
     IJupyterConnection,
@@ -40,10 +39,6 @@ export class MockJupyterServer implements INotebookServer {
 
     public async getNotebook(_resource: Uri): Promise<INotebook | undefined> {
         return new MockJupyterNotebook(this.getConnectionInfo());
-    }
-
-    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
-        noop();
     }
     public getConnectionInfo(): IJupyterConnection | undefined {
         return this.launchInfo ? this.launchInfo.connectionInfo : undefined;

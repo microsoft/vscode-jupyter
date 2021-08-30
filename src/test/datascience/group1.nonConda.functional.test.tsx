@@ -1,6 +1,12 @@
-// // Copyright (c) Microsoft Corporation. All rights reserved.
-// // Licensed under the MIT License.
-// 'use strict';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+suite('Dummy4', () => {
+    test('dummy4', () => {
+        //
+    });
+});
 // import * as assert from 'assert';
 // import { Disposable } from 'vscode';
 

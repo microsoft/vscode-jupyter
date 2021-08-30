@@ -328,6 +328,9 @@ jobs:
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Ts-Unit Test Report
 
+      - name: Create coverage folder (if not created)
+        run: npx gulp createNycFolder
+
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
@@ -347,13 +350,11 @@ jobs:
       matrix:
         os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
         python: [3.8]
-        test-suite: [group1, group2]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Use conda for group1 and group3
-        if: matrix.test-suite == 'group1' || matrix.test-suite == 'group3'
         run: |
           echo "conda_python=true" >> $GITHUB_ENV
 
@@ -535,7 +536,7 @@ jobs:
 
       - name: Run functional tests
         shell: bash -l {0}
-        run: npm run test:functional:parallel -- --${{matrix.test-suite}}
+        run: npm run test:functional:parallel
         env:
           VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
@@ -552,9 +553,10 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Functional Test Report ${{matrix.test-suite}} ${{matrix.os}}
+          check_name: Functional Test Report ${{matrix.os}}
         if: steps.test_functional_group.outcome == 'failure' && failure()
 
+      # Mosts tests are commented, hence nothing runs, thus no coverage (if not commented, CI falls over as this code expects coverage files)
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
@@ -925,6 +927,9 @@ jobs:
           check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}} ${{matrix.test-suite}}
         if: steps.test_notebook_webview_vscode.outcome == 'failure' && failure()
 
+      - name: Create coverage folder (if not created)
+        run: npx gulp createNycFolder
+
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v2
@@ -1016,6 +1021,9 @@ jobs:
         with:
           name: smoke-test-${{matrix.os}}.log
           path: './smoke-test.log'
+
+      - name: Create coverage folder (if not created)
+        run: npx gulp createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports

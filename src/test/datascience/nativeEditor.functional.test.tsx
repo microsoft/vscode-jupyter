@@ -1,3 +1,12 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+suite('Dummy8', () => {
+    test('dummy8', () => {
+        //
+    });
+});
 // // Copyright (c) Microsoft Corporation. All rights reserved.
 // // Licensed under the MIT License.
 // 'use strict';

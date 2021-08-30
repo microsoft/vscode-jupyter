@@ -41,11 +41,11 @@ import { isDefaultPythonKernelSpecName } from '../../kernel-launcher/localPython
 // Helper functions for dealing with kernels and kernelspecs
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
-const connectionFilePlaceholder = '{connection_file}';
+export const connectionFilePlaceholder = '{connection_file}';
 
 // Find the index of the connection file placeholder in a kernelspec
 export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpec>): number {
-    return kernelSpec.argv.indexOf(connectionFilePlaceholder);
+    return kernelSpec.argv.findIndex((arg) => arg.includes(connectionFilePlaceholder));
 }
 
 type ConnectionWithKernelSpec =

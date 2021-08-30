@@ -113,7 +113,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             enableCellCodeLens: true,
-            enablePlotViewer: true,
+            generateSVGPlots: false,
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],

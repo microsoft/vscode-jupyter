@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Event, EventEmitter, Memento, window } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Memento, Uri, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 
 import {
@@ -30,13 +30,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
-import {
-    IInteractiveWindow,
-    IInteractiveWindowProvider,
-    IJupyterDebugger,
-    INotebookExporter,
-    IStatusProvider
-} from '../types';
+import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterDebugger, INotebookExporter } from '../types';
 import { NativeInteractiveWindow } from './nativeInteractiveWindow';
 
 // Export for testing
@@ -90,7 +84,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         const mode = await this.getInteractiveMode(resource);
 
         // See if we already have a match
-        let result = this.get(resource, mode) as IInteractiveWindow;
+        let result = this.getExisting(resource, mode) as IInteractiveWindow;
         if (!result) {
             // No match. Create a new item.
             result = this.create(resource, mode);
@@ -98,6 +92,15 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
 
         await result.readyPromise;
         return result;
+    }
+
+    /**
+     * Given a text document, return the associated interactive window if one exists.
+     * @param owner The URI of a text document which may be associated with an interactive window.
+     */
+    public get(owner: Uri): IInteractiveWindow | undefined {
+        const mode = this.configService.getSettings(owner).interactiveWindowMode;
+        return this.getExisting(owner, mode);
     }
 
     public async dispose(): Promise<void> {
@@ -114,7 +117,6 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         const result = new NativeInteractiveWindow(
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
-            this.serviceContainer.get<IStatusProvider>(IStatusProvider),
             this.serviceContainer.get<IFileSystem>(IFileSystem),
             this.serviceContainer.get<IConfigurationService>(IConfigurationService),
             this.serviceContainer.get<ICommandManager>(ICommandManager),
@@ -182,7 +184,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
         return result;
     }
 
-    private get(owner: Resource, interactiveMode: InteractiveWindowMode): IInteractiveWindow | undefined {
+    public getExisting(owner: Resource, interactiveMode: InteractiveWindowMode): IInteractiveWindow | undefined {
         // Single mode means there's only ever one.
         if (interactiveMode === 'single') {
             return this._windows.length > 0 ? this._windows[0] : undefined;

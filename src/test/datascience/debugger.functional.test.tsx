@@ -1,6 +1,12 @@
-// // Copyright (c) Microsoft Corporation. All rights reserved.
-// // Licensed under the MIT License.
-// 'use strict';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+suite('Dummy2', () => {
+    test('dummy2', () => {
+        //
+    });
+});
 // import * as assert from 'assert';
 // import * as path from 'path';
 // import * as TypeMoq from 'typemoq';

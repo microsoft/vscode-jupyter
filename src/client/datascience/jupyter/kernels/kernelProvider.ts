@@ -4,25 +4,26 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument } from 'vscode';
-import { IApplicationShell } from '../../../common/application/types';
+import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
     IConfigurationService,
-    IDisposableRegistry,
-    IExtensionContext
+    IDisposableRegistry
 } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { InteractiveWindowView } from '../../notebook/constants';
 import {
+    ICellHashProvider,
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
     INotebookEditorProvider,
     INotebookProvider
 } from '../../types';
+import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { Kernel } from './kernel';
 import { IKernel, IKernelProvider, KernelOptions } from './types';
 
@@ -30,6 +31,7 @@ import { IKernel, IKernelProvider, KernelOptions } from './types';
 export class KernelProvider implements IKernelProvider {
     private readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
+    private readonly _onDidRestartKernel = new EventEmitter<IKernel>();
     constructor(
         @inject(IAsyncDisposableRegistry) private asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
@@ -39,10 +41,16 @@ export class KernelProvider implements IKernelProvider {
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
+        @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(ICellHashProvider) private cellHashProvider: ICellHashProvider
     ) {
         this.asyncDisposables.push(this);
+    }
+
+    public get onDidRestartKernel(): Event<IKernel> {
+        return this._onDidRestartKernel.event;
     }
 
     public get(notebook: NotebookDocument): IKernel | undefined {
@@ -76,11 +84,14 @@ export class KernelProvider implements IKernelProvider {
             this,
             this.appShell,
             this.fs,
-            this.context,
             this.serverStorage,
             options.controller,
-            this.configService
+            this.configService,
+            this.outputTracker,
+            this.workspaceService,
+            this.cellHashProvider
         );
+        kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel));
         this.asyncDisposables.push(kernel);
         this.kernelsByNotebook.set(notebook, { options, kernel });
         this.deleteMappingIfKernelIsDisposed(notebook, kernel);
@@ -118,5 +129,3 @@ export class KernelProvider implements IKernelProvider {
         this.kernelsByNotebook.delete(notebook);
     }
 }
-
-// export class KernelProvider {

@@ -45,7 +45,7 @@ import { InterpreterPackages } from '../telemetry/interpreterPackages';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
 import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
-import { InteractiveWindowView } from './constants';
+import { InteractiveWindowView, JupyterNotebookView } from './constants';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from './helpers/helpers';
 
 export class VSCodeNotebookController implements Disposable {
@@ -133,7 +133,7 @@ export class VSCodeNotebookController implements Disposable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public postMessage(message: any, editor?: NotebookEditor): Thenable<boolean> {
         const messageType = message && 'message' in message ? message.message : '';
-        traceInfo(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
+        traceInfoIf(isCI, `${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
         return this.controller.postMessage(message, editor);
     }
 
@@ -159,7 +159,7 @@ export class VSCodeNotebookController implements Disposable {
     // Handle the execution of notebook cell
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
-            traceInfo('No cells passed to handleExecution');
+            traceInfoIf(isCI, 'No cells passed to handleExecution');
             return;
         }
         // When we receive a cell execute request, first ensure that the notebook is trusted.
@@ -240,7 +240,7 @@ export class VSCodeNotebookController implements Disposable {
             join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'require.js'),
             join(this.context.extensionPath, 'out', 'ipywidgets', 'dist', 'ipywidgets.js'),
             join(this.context.extensionPath, 'out', 'datascience-ui', 'ipywidgetsKernel', 'ipywidgetsKernel.js'),
-            join(this.context.extensionPath, 'out', 'datascience-ui', 'notebook', 'fontAwesomeLoader.js')
+            join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
         ].map((uri) => new NotebookRendererScript(Uri.file(uri)));
     }
 
@@ -414,11 +414,7 @@ export class VSCodeNotebookController implements Disposable {
     private async setAsActiveControllerForTests(notebook: NotebookDocument) {
         // Only when running tests should we force the selection of the kernel.
         // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
-        if (this.context.extensionMode !== ExtensionMode.Test) {
-            return;
-        }
-        // Don't force selection for interactive window, as it gets started with the right controller
-        if (notebook.notebookType === InteractiveWindowView) {
+        if (this.context.extensionMode !== ExtensionMode.Test || notebook.notebookType !== JupyterNotebookView) {
             return;
         }
         traceInfoIf(isCI, `Command notebook.selectKernel executing for ${notebook.uri.toString()} ${this.id}`);

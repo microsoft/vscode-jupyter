@@ -5,10 +5,8 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import { IPythonInstaller } from '../../../api/types';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import { UseVSCodeNotebookEditorApi } from '../../../common/constants';
 import { isModulePresentInEnvironment } from '../../../common/installer/productInstaller';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceDecorators, traceInfo } from '../../../common/logger';
@@ -19,17 +17,15 @@ import {
     InstallerResponse,
     IsCodeSpace,
     Product,
-    ProductInstallStatus,
     Resource
 } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { IServiceContainer } from '../../../ioc/types';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getResourceType } from '../../common';
-import { Commands, Telemetry } from '../../constants';
+import { Telemetry } from '../../constants';
 import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
@@ -43,11 +39,9 @@ export class KernelDependencyService implements IKernelDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeNb: boolean
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
@@ -75,7 +69,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Get the result of the question
         try {
             const result = await promise;
-            this.handleKernelDependencyResponse(resource, result, interpreter);
+            this.handleKernelDependencyResponse(result, interpreter);
         } finally {
             // Don't need to cache anymore
             this.installPromises.delete(interpreter.path);
@@ -85,28 +79,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         return this.installer.isInstalled(Product.ipykernel, interpreter).then((installed) => installed === true);
     }
 
-    // The requirement for debugging is ipykernel v6 or newer
-    public async areDebuggingDependenciesInstalled(
-        interpreter: PythonEnvironment,
-        _token?: CancellationToken
-    ): Promise<boolean> {
-        try {
-            const installer = await this.serviceContainer.get<IPythonInstaller>(IPythonInstaller);
-            const result = await installer.isProductVersionCompatible(Product.ipykernel, '>=6.0.0', interpreter);
-            switch (result) {
-                case ProductInstallStatus.Installed:
-                    return true;
-                case ProductInstallStatus.NotInstalled:
-                case ProductInstallStatus.NeedsUpgrade:
-                default:
-                    return false;
-            }
-        } catch {
-            return false;
-        }
-    }
     private handleKernelDependencyResponse(
-        resource: Resource,
         response: KernelInterpreterDependencyResponse,
         interpreter: PythonEnvironment
     ) {
@@ -114,17 +87,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             return;
         }
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
-            if (getResourceType(resource) === 'notebook' && this.useNativeNb) {
-                this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
-            } else {
-                this.commandManager
-                    .executeCommand(Commands.SwitchJupyterKernel, {
-                        currentKernelDisplayName: interpreter.displayName,
-                        identity: resource,
-                        resource
-                    })
-                    .then(noop, noop);
-            }
+            this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
         }
         throw new IpyKernelNotInstalledError(
             DataScience.ipykernelNotInstalled().format(
