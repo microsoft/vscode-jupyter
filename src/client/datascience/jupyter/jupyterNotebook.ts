@@ -5,7 +5,6 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
-import * as uuid from 'uuid/v4';
 import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -20,10 +19,10 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { CodeSnippets, Identifiers, Telemetry } from '../constants';
+import { CodeSnippets, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
@@ -50,6 +49,7 @@ import {
     getKernelConnectionLanguage,
     isPythonKernelConnection
 } from './kernels/helpers';
+import { executeSilently } from './kernels/kernel';
 
 class CellSubscriber {
     public get startTime(): number {
@@ -277,14 +277,13 @@ export class JupyterNotebookBase implements INotebook {
         file: string,
         line: number,
         id: string,
-        cancelToken?: CancellationToken,
-        silent?: boolean
+        cancelToken?: CancellationToken
     ): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
         // Attempt to evaluate this cell in the jupyter notebook.
-        const observable = this.executeObservable(code, file, line, id, silent);
+        const observable = this.executeObservable(code, file, line, id);
         let output: ICell[];
 
         observable.subscribe(
@@ -348,16 +347,10 @@ export class JupyterNotebookBase implements INotebook {
         return this.updateWorkingDirectoryAndPath(file);
     }
 
-    public executeObservable(
-        code: string,
-        file: string,
-        line: number,
-        id: string,
-        silent: boolean = false
-    ): Observable<ICell[]> {
+    public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
         // Create an observable and wrap the result so we can time it.
         const stopWatch = new StopWatch();
-        const result = this.executeObservableImpl(code, file, line, id, silent);
+        const result = this.executeObservableImpl(code, file, line, id);
         return new Observable<ICell[]>((subscriber) => {
             result.subscribe(
                 (cells) => {
@@ -467,43 +460,7 @@ export class JupyterNotebookBase implements INotebook {
             throw new Error(localize.DataScience.sessionDisposed());
         }
     }
-    @captureTelemetry(Telemetry.HiddenCellTime)
-    private executeSilently(code: string, cancelToken?: CancellationToken): Promise<ICell[]> {
-        // Create a deferred that we'll fire when we're done
-        const deferred = createDeferred<ICell[]>();
-
-        // Attempt to evaluate this cell in the jupyter notebook
-        const observable = this.executeObservableImpl(code, Identifiers.EmptyFileName, 0, uuid(), true);
-        let output: ICell[];
-
-        observable.subscribe(
-            (cells: ICell[]) => {
-                output = cells;
-            },
-            (error) => {
-                deferred.reject(error);
-            },
-            () => {
-                deferred.resolve(output);
-            }
-        );
-
-        if (cancelToken) {
-            this.disposableRegistry.push(
-                cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError()))
-            );
-        }
-
-        // Wait for the execution to finish
-        return deferred.promise;
-    }
-    private executeObservableImpl(
-        code: string,
-        file: string,
-        line: number,
-        id: string,
-        silent?: boolean
-    ): Observable<ICell[]> {
+    private executeObservableImpl(code: string, file: string, line: number, id: string): Observable<ICell[]> {
         // If we have a session, execute the code now.
         if (this.session) {
             // Generate our cells ahead of time
@@ -514,13 +471,13 @@ export class JupyterNotebookBase implements INotebook {
                 // We need to combine results
                 return this.combineObservables(
                     this.executeMarkdownObservable(cells[0]),
-                    this.executeCodeObservable(cells[1], silent)
+                    this.executeCodeObservable(cells[1])
                 );
             } else if (cells.length > 0) {
                 // Either markdown or or code
                 return this.combineObservables(
                     cells[0].data.cell_type === 'code'
-                        ? this.executeCodeObservable(cells[0], silent)
+                        ? this.executeCodeObservable(cells[0])
                         : this.executeMarkdownObservable(cells[0])
                 );
             }
@@ -537,7 +494,6 @@ export class JupyterNotebookBase implements INotebook {
 
     private generateRequest = (
         code: string,
-        silent?: boolean,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         metadata?: Record<string, any>
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined => {
@@ -551,9 +507,9 @@ export class JupyterNotebookBase implements INotebook {
                           code: cellMatcher.stripFirstMarker(code),
                           stop_on_error: false,
                           allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
-                          store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
+                          store_history: true // Silent actually means don't output anything. Store_history is what affects execution_count
                       },
-                      silent, // Dispose only silent futures. Otherwise update_display_data doesn't find a future for a previous cell.
+                      false, // Dispose only silent futures. Otherwise update_display_data doesn't find a future for a previous cell.
                       metadata
                   )
                 : undefined;
@@ -642,13 +598,12 @@ export class JupyterNotebookBase implements INotebook {
             (await this.fs.localDirectoryExists(directory))
         ) {
             traceInfo('changeDirectoryIfPossible');
-            await this.executeSilently(CodeSnippets.UpdateCWDAndPath.format(directory));
+            await executeSilently(this.session, CodeSnippets.UpdateCWDAndPath.format(directory));
         }
     };
 
     private handleIOPub(
         subscriber: CellSubscriber,
-        silent: boolean | undefined,
         clearState: RefBool,
         msg: KernelMessage.IIOPubMessage
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -660,7 +615,7 @@ export class JupyterNotebookBase implements INotebook {
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         // Create a trimming function. Only trim user output. Silent output requires the full thing
-        const trimFunc = silent ? (s: string) => s : this.trimOutput.bind(this);
+        const trimFunc = this.trimOutput.bind(this);
         let shouldUpdateSubscriber = true;
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
@@ -749,17 +704,12 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
-    private handleReply(
-        subscriber: CellSubscriber,
-        silent: boolean | undefined,
-        clearState: RefBool,
-        msg: KernelMessage.IShellControlMessage
-    ) {
+    private handleReply(subscriber: CellSubscriber, clearState: RefBool, msg: KernelMessage.IShellControlMessage) {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         // Create a trimming function. Only trim user output. Silent output requires the full thing
-        const trimFunc = silent ? (s: string) => s : this.trimOutput.bind(this);
+        const trimFunc = this.trimOutput.bind(this);
 
         if (jupyterLab.KernelMessage.isExecuteReplyMsg(msg)) {
             this.handleExecuteReply(msg, clearState, subscriber.cell, trimFunc);
@@ -775,7 +725,7 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     // eslint-disable-next-line
-    private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
+    private handleCodeRequest = (subscriber: CellSubscriber) => {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {
             // Double check process is still running
@@ -785,7 +735,7 @@ export class JupyterNotebookBase implements INotebook {
                 subscriber.error(this.sessionStartTime, exitError);
                 subscriber.complete(this.sessionStartTime);
             } else {
-                const request = this.generateRequest(concatMultilineString(subscriber.cell.data.source), silent, {
+                const request = this.generateRequest(concatMultilineString(subscriber.cell.data.source), {
                     ...subscriber.cell.data.metadata,
                     ...{ cellId: subscriber.cell.id }
                 });
@@ -823,9 +773,9 @@ export class JupyterNotebookBase implements INotebook {
                     });
 
                     // Listen to messages.
-                    request.onIOPub = this.handleIOPub.bind(this, subscriber, silent, clearState);
+                    request.onIOPub = this.handleIOPub.bind(this, subscriber, clearState);
                     request.onStdin = this.handleInputRequest.bind(this, subscriber);
-                    request.onReply = this.handleReply.bind(this, subscriber, silent, clearState);
+                    request.onReply = this.handleReply.bind(this, subscriber, clearState);
 
                     // When the request finishes we are done
                     request.done
@@ -863,12 +813,11 @@ export class JupyterNotebookBase implements INotebook {
         }
     };
 
-    private executeCodeObservable(cell: ICell, silent?: boolean): Observable<ICell> {
+    private executeCodeObservable(cell: ICell): Observable<ICell> {
         return new Observable<ICell>((subscriber) => {
             // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
             // run before our cells.
             subscriber.next(cell);
-            const isSilent = silent !== undefined ? silent : false;
 
             // Wrap the subscriber and save it. It is now pending and waiting completion. Have to do this
             // synchronously so it happens before interruptions.
@@ -877,28 +826,28 @@ export class JupyterNotebookBase implements INotebook {
                 this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter((p) => p !== self);
 
                 // Indicate success or failure
-                this.logPostCode(cell, isSilent).ignoreErrors();
+                this.logPostCode(cell).ignoreErrors();
             });
             this.pendingCellSubscriptions.push(cellSubscriber);
 
             // Log the pre execution.
-            this.logPreCode(cell, isSilent)
+            this.logPreCode(cell)
                 .then(() => {
                     // Now send our real request. This should call back on the cellsubscriber when it's done.
-                    this.handleCodeRequest(cellSubscriber, silent);
+                    this.handleCodeRequest(cellSubscriber);
                 })
                 .ignoreErrors();
         });
     }
 
-    private async logPreCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this.loggers.map((l) => l.preExecute(cell, silent)));
+    private async logPreCode(cell: ICell): Promise<void> {
+        await Promise.all(this.loggers.map((l) => l.preExecute(cell, false)));
     }
 
-    private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
+    private async logPostCode(cell: ICell): Promise<void> {
         const language = getKernelConnectionLanguage(this.getKernelConnection()) || PYTHON_LANGUAGE;
         await Promise.all(
-            this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent, language, this.getNotebookId()))
+            this.loggers.map((l) => l.postExecute(cloneDeep(cell), false, language, this.getNotebookId()))
         );
     }
 

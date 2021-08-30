@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import * as uuid from 'uuid/v4';
 import * as path from 'path';
 import type { Kernel } from '@jupyterlab/services';
 import { IJupyterKernelSpec, INotebook } from '../../types';
@@ -37,6 +36,7 @@ import { getResourceType } from '../../common';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { isDefaultPythonKernelSpecName } from '../../kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
+import { executeSilently } from './kernel';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -648,12 +648,12 @@ export async function sendTelemetryForPythonKernelExecutable(
     }
     try {
         traceInfoIf(isCI, 'Begin sendTelemetryForPythonKernelExecutable');
-        const cells = await notebook.execute('import sys\nprint(sys.executable)', file, 0, uuid(), undefined, true);
-        if (cells.length === 0 || !Array.isArray(cells[0].data.outputs) || cells[0].data.outputs.length === 0) {
+        const outputs = await executeSilently(notebook.session, 'import sys\nprint(sys.executable)');
+        if (outputs.length === 0) {
             return;
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const output: nbformat.IStream = cells[0].data.outputs[0] as any;
+        const output: nbformat.IStream = outputs[0] as any;
         if (output.name !== 'stdout' && output.output_type !== 'stream') {
             return;
         }
