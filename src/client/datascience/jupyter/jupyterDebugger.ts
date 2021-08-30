@@ -3,20 +3,15 @@
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
-import * as uuid from 'uuid/v4';
 import { DebugConfiguration, Disposable } from 'vscode';
-import { concatMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IPythonDebuggerPathProvider, IPythonInstaller } from '../../api/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, Product, ProductInstallStatus } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { traceCellResults } from '../common';
 import { Identifiers } from '../constants';
 import {
-    CellState,
-    ICell,
     ICellHashListener,
     IFileHashes,
     IJupyterConnection,
@@ -27,6 +22,7 @@ import {
 } from '../types';
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
+import { executeSilently, getPlainTextOrStreamOutput } from './kernels/kernel';
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
@@ -36,7 +32,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private readonly waitForDebugClientCode: string;
     private readonly tracingEnableCode: string;
     private readonly tracingDisableCode: string;
-    private runningByLine: boolean = false;
     private isUsingPyKernel6OrLater?: boolean;
     constructor(
         @inject(IPythonDebuggerPathProvider) private readonly debuggerPathProvider: IPythonDebuggerPathProvider,
@@ -53,30 +48,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         this.tracingEnableCode = `from debugpy import trace_this_thread;trace_this_thread(True)`;
         this.tracingDisableCode = `from debugpy import trace_this_thread;trace_this_thread(False)`;
     }
-
-    public get isRunningByLine(): boolean {
-        return this.debugService.activeDebugSession !== undefined && this.runningByLine;
-    }
-
-    public startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void> {
-        this.runningByLine = true;
-        traceInfo(`Running by line for ${cellHashFileName}`);
-        const config: Partial<DebugConfiguration> = {
-            justMyCode: false,
-            rules: [
-                {
-                    include: false,
-                    path: '**/*'
-                },
-                {
-                    include: true,
-                    path: cellHashFileName
-                }
-            ]
-        };
-        return this.startDebugSession((c) => this.debugService.startRunByLine(c), notebook, config, true);
-    }
-
     public async startDebugging(notebook: INotebook): Promise<void> {
         const result = await this.installer.isProductVersionCompatible(
             Product.ipykernel,
@@ -96,7 +67,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     public async stopDebugging(notebook: INotebook): Promise<void> {
-        this.runningByLine = false;
         const config = this.configs.get(notebook.identity.toString());
         if (config) {
             traceInfo('stop debugging');
@@ -107,7 +77,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             // Disable tracing after we disconnect because we don't want to step through this
             // code if the user was in step mode.
             if (notebook.status !== ServerStatus.Dead && notebook.status !== ServerStatus.NotStarted) {
-                await this.executeSilently(notebook, this.tracingDisableCode);
+                await executeSilently(notebook.session, this.tracingDisableCode);
             }
         }
     }
@@ -150,15 +120,15 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             this.debugService.removeBreakpoints([]);
 
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
-            const importResults = await this.executeSilently(notebook, this.waitForDebugClientCode);
-            if (importResults.length === 0 || importResults[0].state === CellState.error) {
+            const importResults = await executeSilently(notebook.session, this.waitForDebugClientCode);
+            if (importResults.some((item) => item.output_type === 'error')) {
                 traceWarning(`${this.debuggerPackage} not found in path.`);
             } else {
-                traceCellResults('import startup', importResults);
+                traceInfo(`import startup: ${getPlainTextOrStreamOutput(importResults)}`);
             }
 
             // Then enable tracing
-            await this.executeSilently(notebook, this.tracingEnableCode);
+            await executeSilently(notebook.session, this.tracingEnableCode);
         }
     }
 
@@ -264,11 +234,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         const debuggerPathList = await this.calculateDebuggerPathList(notebook);
 
         if (debuggerPathList && debuggerPathList.length > 0) {
-            const result = await this.executeSilently(
-                notebook,
+            const result = await executeSilently(
+                notebook.session,
                 `import sys\r\nsys.path.extend([${debuggerPathList}])\r\nsys.path`
             );
-            traceCellResults('Appending paths', result);
+            traceInfo(`Appending paths: ${getPlainTextOrStreamOutput(result)}`);
         }
     }
 
@@ -290,14 +260,12 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return sourceMapRequest;
     }
 
-    private executeSilently(notebook: INotebook, code: string): Promise<ICell[]> {
-        return notebook.execute(code, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
-    }
+    private async connectToLocal(notebook: INotebook): Promise<{ port: number; host: string }> {
+        const outputs = await executeSilently(notebook.session, this.enableDebuggerCode);
 
-    // Pull our connection info out from the cells returned by enable_attach
-    private parseConnectInfo(cells: ICell[]): { port: number; host: string } {
-        if (cells.length > 0) {
-            let enableAttachString = this.extractOutput(cells[0]);
+        // Pull our connection info out from the cells returned by enable_attach
+        if (outputs.length > 0) {
+            let enableAttachString = getPlainTextOrStreamOutput(outputs);
             if (enableAttachString) {
                 enableAttachString = enableAttachString.trimQuotes();
 
@@ -314,41 +282,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             }
         }
         // if we cannot parse the connect information, throw so we exit out of debugging
-        if (cells[0]?.data) {
-            const outputs = cells[0].data.outputs as nbformat.IOutput[];
-            if (outputs[0]) {
-                const error = outputs[0] as nbformat.IError;
-                throw new JupyterDebuggerNotInstalledError(this.debuggerPackage, error.ename);
-            }
+        if (outputs.length > 0 && outputs[0].output_type === 'error') {
+            const error = outputs[0] as nbformat.IError;
+            throw new JupyterDebuggerNotInstalledError(this.debuggerPackage, error.ename);
         }
         throw new JupyterDebuggerNotInstalledError(
             localize.DataScience.jupyterDebuggerOutputParseError().format(this.debuggerPackage)
         );
-    }
-
-    private extractOutput(cell: ICell): string | undefined {
-        if (cell.state === CellState.error || cell.state === CellState.finished) {
-            const outputs = cell.data.outputs as nbformat.IOutput[];
-            if (outputs.length > 0) {
-                const data = outputs[0].data;
-                if (data && data.hasOwnProperty('text/plain')) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    return concatMultilineString((data as any)['text/plain']);
-                }
-                if (outputs[0].output_type === 'stream') {
-                    const stream = outputs[0] as nbformat.IStream;
-                    return concatMultilineString(stream.text, true);
-                }
-            }
-        }
-        return undefined;
-    }
-
-    private async connectToLocal(notebook: INotebook): Promise<{ port: number; host: string }> {
-        const enableDebuggerResults = await this.executeSilently(notebook, this.enableDebuggerCode);
-
-        // Save our connection info to this notebook
-        return this.parseConnectInfo(enableDebuggerResults);
     }
 
     private async connectToRemote(
