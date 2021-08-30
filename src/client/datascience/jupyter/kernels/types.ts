@@ -147,7 +147,7 @@ export interface IKernel extends IAsyncDisposable {
     interrupt(document: NotebookDocument): Promise<InterruptResult>;
     restart(document: NotebookDocument): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
-    executeHidden(code: string, file: string, document: NotebookDocument): Promise<void>;
+    executeHidden(code: string, document: NotebookDocument): Promise<void>;
 }
 
 export type KernelOptions = {

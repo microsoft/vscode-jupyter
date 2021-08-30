@@ -3,10 +3,9 @@
 
 'use strict';
 
-import { KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import * as uuid from 'uuid/v4';
 import * as path from 'path';
 import {
     CancellationTokenSource,
@@ -38,6 +37,7 @@ import {
     ICellHashProvider,
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
+    IJupyterSession,
     INotebook,
     INotebookEditorProvider,
     INotebookProvider,
@@ -56,6 +56,8 @@ import { DataScience } from '../../../common/utils/localize';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { calculateWorkingDirectory } from '../../utils';
 import { expandWorkingDir } from '../jupyterUtils';
+import type { nbformat } from '@jupyterlab/coreutils';
+import { concatMultilineString } from '../../../../datascience-ui/common';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -146,10 +148,10 @@ export class Kernel implements IKernel {
         await promise;
         return promise;
     }
-    public async executeHidden(code: string, file: string, document: NotebookDocument) {
+    public async executeHidden(code: string, document: NotebookDocument) {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document });
-        const promise = this.notebook!.execute(code, file, 0, uuid(), undefined, true);
+        const promise = notebookPromise.then((nb) => executeSilently(nb.session, code));
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         await promise;
     }
@@ -553,17 +555,89 @@ export class Kernel implements IKernel {
         if (!this.notebook) {
             return;
         }
-        const request = this.notebook.session.requestExecute(
-            {
-                code,
-                silent: true,
-                stop_on_error: false,
-                allow_stdin: true,
-                store_history: false
-            },
-            true
-        );
-
-        await request?.done;
+        await executeSilently(this.notebook.session, code);
     }
+}
+
+export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+    const request = session.requestExecute(
+        {
+            code,
+            silent: true,
+            stop_on_error: false,
+            allow_stdin: true,
+            store_history: false
+        },
+        true
+    );
+    if (!request) {
+        return [];
+    }
+    const outputs: nbformat.IOutput[] = [];
+    request.onIOPub = (msg) => {
+        if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+            if (
+                outputs.length > 0 &&
+                outputs[outputs.length - 1].output_type === 'stream' &&
+                outputs[outputs.length - 1].name === msg.content.name
+            ) {
+                const streamOutput = outputs[outputs.length - 1] as nbformat.IStream;
+                streamOutput.text += msg.content.text;
+            } else {
+                const streamOutput: nbformat.IStream = {
+                    name: msg.content.name,
+                    text: msg.content.text,
+                    output_type: 'stream'
+                };
+                outputs.push(streamOutput);
+            }
+        } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+            const output: nbformat.IExecuteResult = {
+                data: msg.content.data,
+                execution_count: msg.content.execution_count,
+                metadata: msg.content.metadata,
+                output_type: 'execute_result'
+            };
+            outputs.push(output);
+        } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+            const output: nbformat.IDisplayData = {
+                data: msg.content.data,
+                metadata: msg.content.metadata,
+                output_type: 'display_data'
+            };
+            outputs.push(output);
+        } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+            const output: nbformat.IError = {
+                ename: msg.content.ename,
+                evalue: msg.content.evalue,
+                traceback: msg.content.traceback,
+                output_type: 'error'
+            };
+            outputs.push(output);
+        }
+    };
+    await request.done;
+
+    return outputs;
+}
+
+/**
+ * From the outputs, get the text/plain or stream outputs as a simple string.
+ */
+export function getPlainTextOrStreamOutput(outputs: nbformat.IOutput[]) {
+    if (outputs.length > 0) {
+        const data = outputs[0].data;
+        if (data && data.hasOwnProperty('text/plain')) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return concatMultilineString((data as any)['text/plain']);
+        }
+        if (outputs[0].output_type === 'stream') {
+            const stream = outputs[0] as nbformat.IStream;
+            return concatMultilineString(stream.text, true);
+        }
+    }
+    return;
 }
