@@ -54,7 +54,7 @@ export class CellHashProvider implements ICellHashProvider {
     private executionCount: number = 0;
     private hashes: Map<string, IRangedCellHash[]> = new Map<string, IRangedCellHash[]>();
     private updateEventEmitter: EventEmitter<void> = new EventEmitter<void>();
-    private traceBackRegexes = new Map<string, RegExp>();
+    private traceBackRegexes = new Map<string, RegExp[]>();
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -206,10 +206,11 @@ export class CellHashProvider implements ICellHashProvider {
             // Save a regex to find this file later when looking for
             // exceptions in output
             if (!this.traceBackRegexes.has(file)) {
-                const fileDisplayName = this.fs.getDisplayName(file);
-                const escaped = _escapeRegExp(fileDisplayName);
-                const fileMatchRegex = new RegExp(`\\[.*?;32m${escaped}`);
-                this.traceBackRegexes.set(file, fileMatchRegex);
+                const fileMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(file)}`);
+                const fileDisplayNameMatchRegex = new RegExp(
+                    `\\[.*?;32m${_escapeRegExp(this.fs.getDisplayName(file))}`
+                );
+                this.traceBackRegexes.set(file, [fileMatchRegex, fileDisplayNameMatchRegex]);
             }
 
             // Tell listeners we have new hashes.
@@ -379,7 +380,9 @@ export class CellHashProvider implements ICellHashProvider {
     private modifyTracebackFrame(traceFrame: string): string {
         // See if this item matches any of our cell files
         const regexes = [...this.traceBackRegexes.entries()];
-        const match = regexes.find((e) => e[1].test(traceFrame));
+        const match = regexes.find((e) => {
+            return e[1].some((regExp) => regExp.test(traceFrame));
+        });
         if (match) {
             // We have a match, pull out the source lines
             let sourceLines = '';
@@ -397,6 +400,20 @@ export class CellHashProvider implements ICellHashProvider {
                     const newLine = offset + n - 1;
                     return `${prefix}<a href='file://${match[0]}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
                 });
+            }
+        } else {
+            const matchingFile = regexes.find((e) => traceFrame.includes(e[0]));
+            if (matchingFile) {
+                const offset = this.findCellOffset(this.hashes.get(matchingFile[0]), traceFrame);
+                if (offset) {
+                    return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
+                        const n = parseInt(num, 10);
+                        const newLine = offset + n - 1;
+                        return `${prefix}<a href='file://${matchingFile[0]}?line=${newLine}'>${
+                            newLine + 1
+                        }</a>${suffix}`;
+                    });
+                }
             }
         }
         return traceFrame;
