@@ -38,7 +38,6 @@ import { IDataViewerDataProvider } from './data-viewing/types';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import { IKernel, KernelConnectionMetadata } from './jupyter/kernels/types';
-import { KernelStateEventArgs } from './notebookExtensibility';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
@@ -206,7 +205,6 @@ export interface INotebook extends IAsyncDisposable {
      * Gets the metadata that's used to start/connect to a Kernel.
      */
     getKernelConnection(): KernelConnectionMetadata | undefined;
-    getLoggers(): INotebookExecutionLogger[];
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
@@ -246,12 +244,7 @@ export interface IHoverProvider extends HoverProvider {}
 export const IHoverProvider = Symbol('IHoverProvider');
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
-export interface INotebookExecutionLogger extends IDisposable {
-    preExecute(cell: ICell, silent: boolean): Promise<void>;
-    postExecute(cell: ICell, silent: boolean, language: string, resource: Uri): Promise<void>;
-    nativePostExecute?(cell: NotebookCell): Promise<void>;
-    onKernelRestarted(resource: Uri): void;
-}
+export interface INotebookExecutionLogger extends IDisposable {}
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
@@ -565,12 +558,6 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     expandAllCells(): void;
     collapseAllCells(): void;
     getContent(): string;
-}
-
-export const INotebookExtensibility = Symbol('INotebookExtensibility');
-
-export interface INotebookExtensibility {
-    readonly onKernelStateChange: Event<KernelStateEventArgs>;
 }
 
 // Wraps the vscode CodeLensProvider base class

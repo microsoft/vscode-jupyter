@@ -19,7 +19,6 @@ import { getInteractiveCellMetadata } from '../interactive-window/nativeInteract
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
 import {
-    ICell,
     IHoverProvider,
     IInteractiveWindowProvider,
     IJupyterVariables,
@@ -44,20 +43,11 @@ export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
         notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
         kernelProvider.onDidRestartKernel(() => this.runFiles.clear(), this, disposables);
     }
-    async postExecute(_cell: ICell, _silent: boolean, _language: string, _resource: vscode.Uri): Promise<void> {
-        //
-    }
-    onKernelRestarted(_resource: vscode.Uri): void {
-        //
-    }
 
     public dispose() {
         if (this.hoverProviderRegistration) {
             this.hoverProviderRegistration.dispose();
         }
-    }
-    async preExecute(_: ICell, _silent: boolean): Promise<void> {
-        //
     }
     private async onDidChangeNotebookCellExecutionState(
         e: vscode.NotebookCellExecutionStateChangeEvent

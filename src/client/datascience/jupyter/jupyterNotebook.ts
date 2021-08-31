@@ -39,16 +39,11 @@ import { KernelConnectionMetadata } from './kernels/types';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
-import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { handleTensorBoardDisplayDataOutput } from '../notebook/helpers/executionHelpers';
-import {
-    getInterpreterFromKernelConnectionMetadata,
-    getKernelConnectionLanguage,
-    isPythonKernelConnection
-} from './kernels/helpers';
+import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } from './kernels/helpers';
 import { executeSilently } from './kernels/kernel';
 
 class CellSubscriber {
@@ -372,8 +367,6 @@ export class JupyterNotebookBase implements INotebook {
         });
     }
     public fireRestart() {
-        // Tell our loggers & anyone listening to the events.
-        this.loggers.forEach((l) => l.onKernelRestarted(this.getNotebookId()));
         this.kernelRestarted.fire();
     }
     public async getCompletion(
@@ -426,9 +419,6 @@ export class JupyterNotebookBase implements INotebook {
 
     public getKernelConnection(): KernelConnectionMetadata | undefined {
         return this._executionInfo.kernelConnectionMetadata;
-    }
-    public getLoggers(): INotebookExecutionLogger[] {
-        return this.loggers;
     }
     public registerCommTarget(
         targetName: string,
@@ -816,31 +806,12 @@ export class JupyterNotebookBase implements INotebook {
             const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
                 // Subscriber completed, remove from subscriptions.
                 this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter((p) => p !== self);
-
-                // Indicate success or failure
-                this.logPostCode(cell).ignoreErrors();
             });
             this.pendingCellSubscriptions.push(cellSubscriber);
 
-            // Log the pre execution.
-            this.logPreCode(cell)
-                .then(() => {
-                    // Now send our real request. This should call back on the cellsubscriber when it's done.
-                    this.handleCodeRequest(cellSubscriber);
-                })
-                .ignoreErrors();
+            // Now send our real request. This should call back on the cellsubscriber when it's done.
+            this.handleCodeRequest(cellSubscriber);
         });
-    }
-
-    private async logPreCode(cell: ICell): Promise<void> {
-        await Promise.all(this.loggers.map((l) => l.preExecute(cell, false)));
-    }
-
-    private async logPostCode(cell: ICell): Promise<void> {
-        const language = getKernelConnectionLanguage(this.getKernelConnection()) || PYTHON_LANGUAGE;
-        await Promise.all(
-            this.loggers.map((l) => l.postExecute(cloneDeep(cell), false, language, this.getNotebookId()))
-        );
     }
 
     private addToCellData = (
@@ -1067,9 +1038,5 @@ export class JupyterNotebookBase implements INotebook {
         }
 
         return outputString.substr(outputString.length - outputLimit);
-    }
-
-    private getNotebookId(): Uri {
-        return this.identity;
     }
 }

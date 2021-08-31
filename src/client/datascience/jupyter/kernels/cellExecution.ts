@@ -42,13 +42,7 @@ import {
     translateCellDisplayOutput,
     translateErrorOutput
 } from '../../notebook/helpers/helpers';
-import {
-    ICellHashProvider,
-    IDataScienceErrorHandler,
-    IJupyterSession,
-    INotebook,
-    INotebookExecutionLogger
-} from '../../types';
+import { ICellHashProvider, IDataScienceErrorHandler, IJupyterSession, INotebook } from '../../types';
 import { isPythonKernelConnection } from './helpers';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { Kernel } from '@jupyterlab/services';
@@ -253,7 +247,7 @@ export class CellExecution implements IDisposable {
         this.stopWatch.reset();
 
         // Begin the request that will modify our cell.
-        this.execute(notebook.session, notebook.getLoggers())
+        this.execute(notebook.session)
             .catch((e) => this.completedWithErrors(e))
             .finally(() => this.dispose())
             .catch(noop);
@@ -426,15 +420,10 @@ export class CellExecution implements IDisposable {
         return !this.cell.document.isClosed;
     }
 
-    private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
+    private async execute(session: IJupyterSession) {
         const code = this.cell.metadata?.interactive?.modifiedSource ?? this.cell.document.getText();
         traceCellMessage(this.cell, 'Send code for execution');
         await this.executeCodeCell(code, session);
-        loggers.forEach((l) => {
-            if (l.nativePostExecute) {
-                l.nativePostExecute(this.cell).then(noop, noop);
-            }
-        });
     }
 
     private async executeCodeCell(code: string, session: IJupyterSession) {
