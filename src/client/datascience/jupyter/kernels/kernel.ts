@@ -428,22 +428,25 @@ export class Kernel implements IKernel {
             }
 
             return chainWithPendingUpdates(notebookDocument, (edit) => {
-                // Overwrite the most recent placeholder cell
-                for (let i = notebookDocument.cellCount - 1; i >= 0; i -= 1) {
-                    const cell = notebookDocument.cellAt(i);
-                    if (
-                        cell.kind === NotebookCellKind.Markup &&
-                        cell.metadata.isInteractiveWindowMessageCell &&
-                        cell.metadata.isPlaceholder
-                    ) {
+                if (notebookDocument.cellCount) {
+                    const placeholderCell = notebookDocument
+                        .getCells()
+                        .find(
+                            (cell) =>
+                                cell.kind === NotebookCellKind.Markup &&
+                                cell.metadata.isInteractiveWindowMessageCell &&
+                                cell.metadata.isPlaceholder
+                        );
+
+                    // If there is a placeholder cell in the notebook, overwrite that
+                    if (placeholderCell !== undefined) {
                         edit.replace(
-                            cell.document.uri,
-                            new Range(0, 0, cell.document.lineCount, 0),
+                            placeholderCell.document.uri,
+                            new Range(0, 0, placeholderCell.document.lineCount, 0),
                             sysInfoMessages.join('  \n')
                         );
-                        edit.replaceNotebookCellMetadata(notebookDocument.uri, cell.index, {
-                            isInteractiveWindowMessageCell: true,
-                            isPlaceholder: false // replaceNotebookCellMetadata doesn't zero other metadata properties
+                        edit.replaceNotebookCellMetadata(notebookDocument.uri, placeholderCell.index, {
+                            isInteractiveWindowMessageCell: true
                         });
                         return;
                     }
