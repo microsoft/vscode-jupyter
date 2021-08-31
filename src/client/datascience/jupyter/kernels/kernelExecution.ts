@@ -18,8 +18,9 @@ import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { JupyterNotebookBase } from '../jupyterNotebook';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
-import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
+import type { IKernel, KernelConnectionMetadata } from './types';
 import { NotebookCellRunState } from './types';
+import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -32,21 +33,24 @@ export class KernelExecution implements IDisposable {
     private _interruptPromise?: Promise<InterruptResult>;
     private _restartPromise?: Promise<void>;
     constructor(
-        private readonly kernelProvider: IKernelProvider,
+        private readonly kernel: IKernel,
         errorHandler: IDataScienceErrorHandler,
         appShell: IApplicationShell,
         readonly metadata: Readonly<KernelConnectionMetadata>,
         private readonly interruptTimeout: number,
         disposables: IDisposableRegistry,
-        private readonly controller: NotebookController,
-        outputTracker: CellOutputDisplayIdTracker
+        controller: NotebookController,
+        outputTracker: CellOutputDisplayIdTracker,
+        cellHashProviderFactory: CellHashProviderFactory
     ) {
         this.executionFactory = new CellExecutionFactory(
+            kernel,
             errorHandler,
             appShell,
             disposables,
             controller,
-            outputTracker
+            outputTracker,
+            cellHashProviderFactory
         );
     }
 
@@ -147,7 +151,7 @@ export class KernelExecution implements IDisposable {
         }
 
         // We need to add the handler to kernel immediately (before we resolve the notebook, else its possible user hits restart or the like and we miss that event).
-        const wrappedNotebookPromise = this.getKernel(document).then(() => notebookPromise);
+        const wrappedNotebookPromise = this.kernel.start({ document }).then(() => notebookPromise);
 
         const newCellExecutionQueue = new CellExecutionQueue(
             wrappedNotebookPromise,
@@ -254,21 +258,5 @@ export class KernelExecution implements IDisposable {
         });
 
         (notebook as JupyterNotebookBase).fireRestart();
-    }
-
-    private async getKernel(document: NotebookDocument): Promise<IKernel> {
-        let kernel = this.kernelProvider.get(document);
-        if (!kernel) {
-            kernel = this.kernelProvider.getOrCreate(document, {
-                metadata: this.metadata,
-                controller: this.controller,
-                resourceUri: document.uri
-            });
-        }
-        if (!kernel) {
-            throw new Error('Unable to create a Kernel to run cell');
-        }
-        await kernel.start({ document });
-        return kernel;
     }
 }

@@ -74,6 +74,19 @@ import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
 import { INativeInteractiveWindow } from './types';
 
+type InteractiveCellMetadata = {
+    inputCollapsed: boolean;
+    interactiveWindowCellMarker: string;
+    interactive: {
+        file: string;
+        line: number;
+        originalSource: string;
+    };
+    id: string;
+};
+export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellMetadata {
+    return cell.metadata as InteractiveCellMetadata;
+}
 export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
@@ -421,10 +434,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             if (isDebug) {
                 await this.kernel!.executeHidden(
                     `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`,
-                    file,
                     notebookEditor.document
                 );
-                await this.jupyterDebugger.startDebugging(notebook);
+                await this.jupyterDebugger.startDebugging(this.kernel!);
             }
 
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
@@ -435,7 +447,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             traceInfo(`Finished execution for ${id}`);
         } finally {
             if (isDebug) {
-                await this.jupyterDebugger.stopDebugging(notebook);
+                await this.jupyterDebugger.stopDebugging(this.kernel!);
             }
         }
         return result;
@@ -486,7 +498,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     public async scrollToCell(id: string): Promise<void> {
         const notebookEditor = await this._editorReadyPromise;
-        const matchingCell = notebookEditor.document.getCells().find((cell) => cell.metadata.executionId === id);
+        const matchingCell = notebookEditor.document
+            .getCells()
+            .find((cell) => getInteractiveCellMetadata(cell).id === id);
         if (matchingCell) {
             this.revealCell(matchingCell, notebookEditor);
         }
@@ -506,7 +520,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         if (!notebookEditor) {
             return false;
         }
-        return notebookEditor.document.getCells().find((cell) => cell.metadata.executionId === id) !== undefined;
+        return notebookEditor.document.getCells().some((cell) => getInteractiveCellMetadata(cell).id === id);
     }
 
     public get owningResource(): Resource {
@@ -568,7 +582,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // If in perFile mode, set only once
         if (this.mode === 'perFile' && !this.fileInKernel && this.kernel && file !== Identifiers.EmptyFileName) {
             this.fileInKernel = file;
-            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, notebookDocument);
+            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookDocument);
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
             this.mode !== 'perFile' &&
@@ -577,7 +591,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         ) {
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
-            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, notebookDocument);
+            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookDocument);
         }
     }
 
@@ -637,7 +651,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             strippedCode,
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
-        notebookCellData.metadata = {
+        notebookCellData.metadata = <InteractiveCellMetadata>{
             inputCollapsed: !isMarkdown && settings.collapseCellInputCodeByDefault,
             interactiveWindowCellMarker,
             interactive: {
@@ -645,7 +659,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
                 line: line,
                 originalSource: code
             },
-            executionId: id
+            id: id
         };
         await chainWithPendingUpdates(notebookDocument, (edit) => {
             edit.replaceNotebookCells(

@@ -147,7 +147,7 @@ export interface IKernel extends IAsyncDisposable {
     interrupt(document: NotebookDocument): Promise<InterruptResult>;
     restart(document: NotebookDocument): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
-    executeHidden(code: string, file: string, document: NotebookDocument): Promise<void>;
+    executeHidden(code: string, document: NotebookDocument): Promise<void>;
 }
 
 export type KernelOptions = {
@@ -161,7 +161,9 @@ export type KernelOptions = {
 };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
+    readonly kernels: Readonly<IKernel[]>;
     onDidRestartKernel: Event<IKernel>;
+    onDidDisposeKernel: Event<IKernel>;
     /**
      * Get hold of the active kernel for a given Notebook.
      */

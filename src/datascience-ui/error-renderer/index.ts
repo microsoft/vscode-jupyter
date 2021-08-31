@@ -71,13 +71,30 @@ export const activate: ActivationFunction = (_context) => {
             }
 
             const metadata: any = outputItem.metadata;
-            const traceback: string[] =
+            let traceback: string[] =
                 metadata?.outputType === 'error' && metadata?.transient && Array.isArray(metadata?.transient)
                     ? metadata?.transient
                     : Array.isArray(outputItemJson.stack)
                     ? outputItemJson.stack.map((item: string) => escape(item))
                     : [escape(outputItemJson.stack)];
 
+            // Fix links in tracebacks.
+            // RegEx `<a href='<file path>?line=<linenumber>'>line number</a>`
+            // When we escape, the links would be escaped as well.
+            // We need to unescape them.
+            const regExp = new RegExp(/&lt;a href=&#39;file:(.*(?=\?))\?line=(\d*)&#39;&gt;(\d*)&lt;\/a&gt;/);
+            traceback = traceback.map((line) => {
+                let matches: RegExpExecArray | undefined | null;
+                while ((matches = regExp.exec(line)) !== null) {
+                    if (matches.length === 4) {
+                        line = line.replace(
+                            matches[0],
+                            `<a href='file:${matches[1]}?line=${matches[2]}'>${matches[3]}<a>`
+                        );
+                    }
+                }
+                return line;
+            });
             const html = traceback.some((item) => item.trim().length)
                 ? converter.toHtml(traceback.join('\n'))
                 : undefined;
@@ -89,6 +106,11 @@ export const activate: ActivationFunction = (_context) => {
                 traceback.addEventListener('click', (e) => {
                     handleInnerClick(e, _context);
                 });
+            } else {
+                // We can't display nothing (other extesnsions might have differen formats of errors, like Julia, .NET, etc).
+                const tbEle = document.createElement('div');
+                container.appendChild(tbEle);
+                tbEle.innerHTML = traceback.join('<br>');
             }
         }
     };

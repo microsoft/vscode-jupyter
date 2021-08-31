@@ -42,12 +42,13 @@ import {
     translateCellDisplayOutput,
     translateErrorOutput
 } from '../../notebook/helpers/helpers';
-import { IDataScienceErrorHandler, IJupyterSession, INotebook, INotebookExecutionLogger } from '../../types';
+import { ICellHashProvider, IDataScienceErrorHandler, IJupyterSession, INotebook } from '../../types';
 import { isPythonKernelConnection } from './helpers';
-import { KernelConnectionMetadata, NotebookCellRunState } from './types';
+import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { disposeAllDisposables } from '../../../common/helpers';
+import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -65,11 +66,13 @@ type DisplayData = nbformat.IDisplayData & {
 
 export class CellExecutionFactory {
     constructor(
+        private readonly kernel: IKernel,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly appShell: IApplicationShell,
         private readonly disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
-        private readonly outputTracker: CellOutputDisplayIdTracker
+        private readonly outputTracker: CellOutputDisplayIdTracker,
+        private readonly cellHashProviderFactory: CellHashProviderFactory
     ) {}
 
     public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
@@ -81,7 +84,8 @@ export class CellExecutionFactory {
             metadata,
             this.disposables,
             this.controller,
-            this.outputTracker
+            this.outputTracker,
+            this.cellHashProviderFactory.getOrCreate(this.kernel)
         );
     }
 }
@@ -141,7 +145,8 @@ export class CellExecution implements IDisposable {
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
         disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
-        private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker
+        private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
+        private readonly cellHashProvider: ICellHashProvider
     ) {
         disposables.push(this);
         workspace.onDidCloseTextDocument(
@@ -191,9 +196,19 @@ export class CellExecution implements IDisposable {
         metadata: Readonly<KernelConnectionMetadata>,
         disposables: IDisposableRegistry,
         controller: NotebookController,
-        outputTracker: CellOutputDisplayIdTracker
+        outputTracker: CellOutputDisplayIdTracker,
+        cellHashProvider: ICellHashProvider
     ) {
-        return new CellExecution(cell, errorHandler, appService, metadata, disposables, controller, outputTracker);
+        return new CellExecution(
+            cell,
+            errorHandler,
+            appService,
+            metadata,
+            disposables,
+            controller,
+            outputTracker,
+            cellHashProvider
+        );
     }
     public async start(notebook: INotebook) {
         if (this.cancelHandled) {
@@ -232,7 +247,7 @@ export class CellExecution implements IDisposable {
         this.stopWatch.reset();
 
         // Begin the request that will modify our cell.
-        this.execute(notebook.session, notebook.getLoggers())
+        this.execute(notebook.session)
             .catch((e) => this.completedWithErrors(e))
             .finally(() => this.dispose())
             .catch(noop);
@@ -405,18 +420,13 @@ export class CellExecution implements IDisposable {
         return !this.cell.document.isClosed;
     }
 
-    private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
+    private async execute(session: IJupyterSession) {
         const code = this.cell.metadata?.interactive?.modifiedSource ?? this.cell.document.getText();
         traceCellMessage(this.cell, 'Send code for execution');
-        await this.executeCodeCell(code, session, loggers);
-        loggers.forEach((l) => {
-            if (l.nativePostExecute) {
-                l.nativePostExecute(this.cell).then(noop, noop);
-            }
-        });
+        await this.executeCodeCell(code, session);
     }
 
-    private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
+    private async executeCodeCell(code: string, session: IJupyterSession) {
         // Skip if no code to execute
         if (code.trim().length === 0 || this.cell.document.isClosed) {
             traceCellMessage(this.cell, 'Empty cell execution');
@@ -460,7 +470,7 @@ export class CellExecution implements IDisposable {
             if (this.cell.document.isClosed) {
                 request.dispose();
             }
-            this.handleIOPub(clearState, loggers, msg);
+            this.handleIOPub(clearState, msg);
         };
         request.onReply = (msg) => {
             // Cell has been deleted or the like.
@@ -497,10 +507,7 @@ export class CellExecution implements IDisposable {
         }
     }
     @swallowExceptions()
-    private handleIOPub(clearState: RefBool, loggers: INotebookExecutionLogger[], msg: KernelMessage.IIOPubMessage) {
-        // Let our loggers get a first crack at the message. They may change it
-        loggers.forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
-
+    private handleIOPub(clearState: RefBool, msg: KernelMessage.IIOPubMessage) {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
@@ -797,8 +804,9 @@ export class CellExecution implements IDisposable {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
-            traceback: msg.content.traceback
+            traceback: this.cellHashProvider.modifyTraceback(msg.content.traceback)
         };
+
         this.addToCellData(output, clearState);
         this.cellHasErrorsInOutput = true;
     }

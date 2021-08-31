@@ -3,19 +3,13 @@
 
 'use strict';
 
-import { Event, ExtensionMode } from 'vscode';
+import { ExtensionMode } from 'vscode';
 import { IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { traceError } from './common/logger';
 import { IExtensionContext } from './common/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
-import { KernelStateEventArgs } from './datascience/notebookExtensibility';
-import {
-    IJupyterUriProvider,
-    IJupyterUriProviderRegistration,
-    INotebookEditorProvider,
-    INotebookExtensibility
-} from './datascience/types';
+import { IJupyterUriProvider, IJupyterUriProviderRegistration, INotebookEditorProvider } from './datascience/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 
 /*
@@ -30,10 +24,6 @@ export interface IExtensionApi {
      * @memberof IExtensionApi
      */
     ready: Promise<void>;
-    /**
-     * Do not use this to monitor execution state of cells of Native Notebooks (use VS Code API).
-     */
-    readonly onKernelStateChange: Event<KernelStateEventArgs>;
     /**
      * Launches Data Viewer component.
      * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
@@ -59,7 +49,6 @@ export function buildApi(
     serviceContainer: IServiceContainer,
     context: IExtensionContext
 ): IExtensionApi {
-    const notebookExtensibility = serviceContainer.get<INotebookExtensibility>(INotebookExtensibility);
     let registered = false;
     const api: IExtensionApi = {
         // 'ready' will propagate the exception, but we must log it here first.
@@ -83,7 +72,6 @@ export function buildApi(
             const container = serviceContainer.get<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration);
             container.registerProvider(picker);
         },
-        onKernelStateChange: notebookExtensibility.onKernelStateChange.bind(notebookExtensibility),
         createBlankNotebook: async (options: { defaultCellLanguage: string }): Promise<void> => {
             const service = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
             await service.createNew(options);
