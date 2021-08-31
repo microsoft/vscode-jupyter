@@ -43,6 +43,7 @@ export const KnownKernelLanguageAliases = new Map<string, string>([
     ['c++14', 'c++']
 ]);
 export const jupyterLanguageToMonacoLanguageMapping = new Map([
+    ['bash', 'shellscript'],
     ['c#', 'csharp'],
     ['f#', 'fsharp'],
     ['q#', 'qsharp'],

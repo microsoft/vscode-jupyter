@@ -55,6 +55,8 @@
    ([#7280](https://github.com/Microsoft/vscode-jupyter/issues/7280))
 1. Ensure that interactive window is started with active Python interpreter after active interpreter is changed.
    ([#7301](https://github.com/Microsoft/vscode-jupyter/issues/7301))
+1. Restore support for Bash Kernel.
+   ([#7345](https://github.com/microsoft/vscode-jupyter/issues/7345))
 
 ### Code Health
 
