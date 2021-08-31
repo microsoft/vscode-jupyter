@@ -122,7 +122,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:closed label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue is:closed label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
   },
   {
     "kind": 1,
