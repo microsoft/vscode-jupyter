@@ -48,8 +48,8 @@ suite('Interactive window', async () => {
             (notebookDocument) => notebookDocument.uri.toString() === activeInteractiveWindow.notebookUri?.toString()
         );
         assert.ok(notebook !== undefined, 'No interactive window found');
-        const index = notebook!.cellCount - 1;
-        const cell = notebook!.cellAt(index);
-        await waitForCondition(async () => assertHasTextOutputInVSCode(cell, 'foo'), 15_000, 'Incorrect output');
+        const cell = notebook?.getCells().find((c) => c.kind === vscode.NotebookCellKind.Code);
+        assert.ok(cell !== undefined, 'Cell is undefined');
+        await waitForCondition(async () => assertHasTextOutputInVSCode(cell!, 'foo'), 15_000, 'Incorrect output');
     });
 });
