@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
@@ -15,9 +15,9 @@ import {
     IDisposableRegistry
 } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
+import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebook/constants';
 import {
-    ICellHashProvider,
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
     INotebookEditorProvider,
@@ -32,6 +32,17 @@ export class KernelProvider implements IKernelProvider {
     private readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
     private readonly _onDidRestartKernel = new EventEmitter<IKernel>();
+    private readonly _onDidDisposeKernel = new EventEmitter<IKernel>();
+    public get kernels() {
+        const kernels = new Set<IKernel>();
+        this.notebook.notebookDocuments.forEach((item) => {
+            const kernel = this.get(item);
+            if (kernel) {
+                kernels.add(kernel);
+            }
+        });
+        return Array.from(kernels);
+    }
     constructor(
         @inject(IAsyncDisposableRegistry) private asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
@@ -44,9 +55,14 @@ export class KernelProvider implements IKernelProvider {
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
         @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(ICellHashProvider) private cellHashProvider: ICellHashProvider
+        @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
+        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook
     ) {
         this.asyncDisposables.push(this);
+    }
+
+    public get onDidDisposeKernel(): Event<IKernel> {
+        return this._onDidDisposeKernel.event;
     }
 
     public get onDidRestartKernel(): Event<IKernel> {
@@ -81,7 +97,6 @@ export class KernelProvider implements IKernelProvider {
             interruptTimeout,
             this.errorHandler,
             this.editorProvider,
-            this,
             this.appShell,
             this.fs,
             this.serverStorage,
@@ -89,9 +104,10 @@ export class KernelProvider implements IKernelProvider {
             this.configService,
             this.outputTracker,
             this.workspaceService,
-            this.cellHashProvider
+            this.cellHashProviderFactory
         );
-        kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel));
+        kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
+        kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
         this.asyncDisposables.push(kernel);
         this.kernelsByNotebook.set(notebook, { options, kernel });
         this.deleteMappingIfKernelIsDisposed(notebook, kernel);
