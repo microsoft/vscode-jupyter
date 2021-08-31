@@ -39,11 +39,16 @@ import { KernelConnectionMetadata } from './kernels/types';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineString, formatStreamText, splitMultilineString } from '../../../datascience-ui/common';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { RefBool } from '../../common/refBool';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { handleTensorBoardDisplayDataOutput } from '../notebook/helpers/executionHelpers';
-import { getInterpreterFromKernelConnectionMetadata, isPythonKernelConnection } from './kernels/helpers';
+import {
+    getInterpreterFromKernelConnectionMetadata,
+    getKernelConnectionLanguage,
+    isPythonKernelConnection
+} from './kernels/helpers';
 import { executeSilently } from './kernels/kernel';
 
 class CellSubscriber {
@@ -156,6 +161,9 @@ export class JupyterNotebookBase implements INotebook {
     public get onDisposed(): Event<void> {
         return this.disposedEvent.event;
     }
+    public get onDidFinishExecuting(): Event<ICell> {
+        return this.finishedExecuting.event;
+    }
     public get onKernelChanged(): Event<KernelConnectionMetadata> {
         return this.kernelChanged.event;
     }
@@ -168,6 +176,7 @@ export class JupyterNotebookBase implements INotebook {
     }
     private readonly kernelRestarted = new EventEmitter<void>();
     private disposedEvent = new EventEmitter<void>();
+    private finishedExecuting = new EventEmitter<ICell>();
     private sessionStatusChanged: Disposable | undefined;
     private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => void>();
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
@@ -346,6 +355,11 @@ export class JupyterNotebookBase implements INotebook {
             result.subscribe(
                 (cells) => {
                     subscriber.next(cells);
+                    cells.forEach((cell) => {
+                        if (cell.state === CellState.finished || cell.state === CellState.error) {
+                            this.finishedExecuting.fire(cell);
+                        }
+                    });
                 },
                 (error) => {
                     subscriber.error(error);
@@ -588,12 +602,7 @@ export class JupyterNotebookBase implements INotebook {
         }
     };
 
-    private handleIOPub(
-        subscriber: CellSubscriber,
-        clearState: RefBool,
-        msg: KernelMessage.IIOPubMessage
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ) {
+    private handleIOPub(subscriber: CellSubscriber, clearState: RefBool, msg: KernelMessage.IIOPubMessage) {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
@@ -807,12 +816,31 @@ export class JupyterNotebookBase implements INotebook {
             const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
                 // Subscriber completed, remove from subscriptions.
                 this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter((p) => p !== self);
+
+                // Indicate success or failure
+                this.logPostCode(cell).ignoreErrors();
             });
             this.pendingCellSubscriptions.push(cellSubscriber);
 
-            // Now send our real request. This should call back on the cellsubscriber when it's done.
-            this.handleCodeRequest(cellSubscriber);
+            // Log the pre execution.
+            this.logPreCode(cell)
+                .then(() => {
+                    // Now send our real request. This should call back on the cellsubscriber when it's done.
+                    this.handleCodeRequest(cellSubscriber);
+                })
+                .ignoreErrors();
         });
+    }
+
+    private async logPreCode(cell: ICell): Promise<void> {
+        await Promise.all(this.loggers.map((l) => l.preExecute(cell, false)));
+    }
+
+    private async logPostCode(cell: ICell): Promise<void> {
+        const language = getKernelConnectionLanguage(this.getKernelConnection()) || PYTHON_LANGUAGE;
+        await Promise.all(
+            this.loggers.map((l) => l.postExecute(cloneDeep(cell), false, language, this.getNotebookId()))
+        );
     }
 
     private addToCellData = (
