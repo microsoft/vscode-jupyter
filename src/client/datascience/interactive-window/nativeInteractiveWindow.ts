@@ -421,7 +421,6 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             if (isDebug) {
                 await this.kernel!.executeHidden(
                     `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`,
-                    file,
                     notebookEditor.document
                 );
                 await this.jupyterDebugger.startDebugging(notebook);
@@ -568,7 +567,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // If in perFile mode, set only once
         if (this.mode === 'perFile' && !this.fileInKernel && this.kernel && file !== Identifiers.EmptyFileName) {
             this.fileInKernel = file;
-            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, notebookDocument);
+            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookDocument);
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
             this.mode !== 'perFile' &&
@@ -577,7 +576,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         ) {
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
-            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, notebookDocument);
+            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookDocument);
         }
     }
 
