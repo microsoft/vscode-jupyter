@@ -478,7 +478,6 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
             // Scroll to cell in the one that has the cell. We need this so
             // we don't activate all of them.
             // eslint-disable-next-line @typescript-eslint/prefer-for-of
-            possibles.forEach((item) => item.scrollToCell(id));
             for (let i = 0; i < possibles.length; i += 1) {
                 if (await possibles[i].hasCell(id)) {
                     possibles[i].scrollToCell(id);
