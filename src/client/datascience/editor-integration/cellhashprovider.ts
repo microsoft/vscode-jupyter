@@ -28,8 +28,6 @@ import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '..
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)(.*)/g;
 
 interface IRangedCellHash extends ICellHash {
@@ -397,12 +395,10 @@ export class CellHashProvider implements ICellHashProvider {
                 return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                     const n = parseInt(num, 10);
                     const newLine = offset + n - 1;
-                    return `${_escape(prefix)}<a href='file://${match[0]}?line=${newLine}'>${newLine + 1}</a>${_escape(
-                        suffix
-                    )}`;
+                    return `${prefix}<a href='file://${match[0]}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
                 });
             }
         }
-        return _escape(traceFrame);
+        return traceFrame;
     }
 }
