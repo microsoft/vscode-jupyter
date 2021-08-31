@@ -29,7 +29,6 @@ import { JupyterVariableDataProviderFactory } from './data-viewing/jupyterVariab
 import { IDataViewer, IDataViewerFactory } from './data-viewing/types';
 import { DataScience } from './datascience';
 import { DebugLocationTrackerFactory } from './debugLocationTrackerFactory';
-import { CellHashProvider } from './editor-integration/cellhashprovider';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
@@ -95,7 +94,6 @@ import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
 import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
 import { registerTypes as registerContextTypes } from './telemetry/serviceRegistry';
 import { NotebookCreationTracker } from './notebookAndInteractiveTracker';
-import { NotebookExtensibility } from './notebookExtensibility';
 import { PreferredRemoteKernelIdProvider } from './notebookStorage/preferredRemoteKernelIdProvider';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
@@ -106,7 +104,6 @@ import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
     ICellHashListener,
-    ICellHashProvider,
     ICodeCssGenerator,
     ICodeLensFactory,
     ICodeWatcher,
@@ -140,7 +137,6 @@ import {
     INotebookEditorProvider,
     INotebookExecutionLogger,
     INotebookExporter,
-    INotebookExtensibility,
     INotebookImporter,
     INotebookProvider,
     INotebookServer,
@@ -171,6 +167,7 @@ import { HostJupyterExecution } from './jupyter/liveshare/hostJupyterExecution';
 import { HostJupyterServer } from './jupyter/liveshare/hostJupyterServer';
 import { HostRawNotebookProvider } from './raw-kernel/liveshare/hostRawNotebookProvider';
 import { KernelCommandListener } from './jupyter/kernels/kernelCommandListener';
+import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -199,7 +196,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
 
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
-    serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
+    serviceManager.addSingleton<CellHashProviderFactory>(CellHashProviderFactory, CellHashProviderFactory);
     serviceManager.addSingleton<IHoverProvider>(IHoverProvider, HoverProvider);
     serviceManager.addBinding(IHoverProvider, INotebookExecutionLogger);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
@@ -300,8 +297,6 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     serviceManager.addSingleton<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration, JupyterUriProviderRegistration);
     serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
-    serviceManager.addSingleton<INotebookExtensibility>(INotebookExtensibility, NotebookExtensibility);
-    serviceManager.addBinding(INotebookExtensibility, INotebookExecutionLogger);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ExtensionRecommendationService);
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [IExtensionSingleActivationService]);
