@@ -429,7 +429,7 @@ export class CellExecution implements IDisposable {
     private async execute(session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
         const code = this.cell.metadata?.interactive?.modifiedSource ?? this.cell.document.getText();
         traceCellMessage(this.cell, 'Send code for execution');
-        await this.executeCodeCell(code, session, loggers);
+        await this.executeCodeCell(code, session);
         loggers.forEach((l) => {
             if (l.nativePostExecute) {
                 l.nativePostExecute(this.cell).then(noop, noop);
@@ -437,7 +437,7 @@ export class CellExecution implements IDisposable {
         });
     }
 
-    private async executeCodeCell(code: string, session: IJupyterSession, loggers: INotebookExecutionLogger[]) {
+    private async executeCodeCell(code: string, session: IJupyterSession) {
         // Skip if no code to execute
         if (code.trim().length === 0 || this.cell.document.isClosed) {
             traceCellMessage(this.cell, 'Empty cell execution');
@@ -481,7 +481,7 @@ export class CellExecution implements IDisposable {
             if (this.cell.document.isClosed) {
                 request.dispose();
             }
-            this.handleIOPub(clearState, loggers, msg);
+            this.handleIOPub(clearState, msg);
         };
         request.onReply = (msg) => {
             // Cell has been deleted or the like.
@@ -518,10 +518,7 @@ export class CellExecution implements IDisposable {
         }
     }
     @swallowExceptions()
-    private handleIOPub(clearState: RefBool, loggers: INotebookExecutionLogger[], msg: KernelMessage.IIOPubMessage) {
-        // Let our loggers get a first crack at the message. They may change it
-        loggers.forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
-
+    private handleIOPub(clearState: RefBool, msg: KernelMessage.IIOPubMessage) {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
