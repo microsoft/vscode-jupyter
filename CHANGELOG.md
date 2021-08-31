@@ -51,8 +51,6 @@
    ([#7265](https://github.com/Microsoft/vscode-jupyter/issues/7265))
 1. When no notebook or interactive window is active then clear the variables view.
    ([#7266](https://github.com/Microsoft/vscode-jupyter/issues/7266))
-1. Fix placeholder 'Connecting to...' sys info cell not being overwritten after a kernel connection is established if cells are added to the interactive window first.
-   ([#7280](https://github.com/Microsoft/vscode-jupyter/issues/7280))
 1. Ensure that interactive window is started with active Python interpreter after active interpreter is changed.
    ([#7301](https://github.com/Microsoft/vscode-jupyter/issues/7301))
 1. Restore support for Bash Kernel.
