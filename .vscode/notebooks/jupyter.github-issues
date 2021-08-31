@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-08-26"
+    "value": "$TODAYS_DATE=2021-08-30"
   },
   {
     "kind": 1,
@@ -57,7 +57,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$ALL_REPOS is:open is:issue in:title 'YourSearchTerm'"
+    "value": "$ALL_REPOS is:open is:issue "
   },
   {
     "kind": 1,
@@ -102,7 +102,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue label:needs-triage -$TEAM_AUTHOR_INCLUSION sort:created-asc"
   },
   {
     "kind": 1,
@@ -112,7 +112,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open $TEAM_AUTHOR_INCLUSION sort:created-asc"
   },
   {
     "kind": 1,
@@ -127,7 +127,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue -label:iteration-plan -label:release-plan $CURRENT_MILESTONE sort:comments-asc"
+    "value": "$JUPYTER_ALL_REPOS is:open is:issue label:release-plan $CURRENT_MILESTONE sort:comments-asc"
   },
   {
     "kind": 1,
