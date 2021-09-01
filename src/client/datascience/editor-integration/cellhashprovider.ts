@@ -23,7 +23,7 @@ import { IConfigurationService } from '../../common/types';
 import { getCellResource } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Identifiers } from '../constants';
-import { getInteractiveCellMetadata } from '../interactive-window/nativeInteractiveWindow';
+import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
 import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
@@ -134,9 +134,9 @@ export class CellHashProvider implements ICellHashProvider {
         // Find the text document that matches. We need more information than
         // the add code gives us
         const { line: cellLine, file } = cell.metadata.interactive;
-        const id = getInteractiveCellMetadata(cell).id;
+        const id = getInteractiveCellMetadata(cell)?.id;
         const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, file));
-        if (doc) {
+        if (doc && id) {
             // Compute the code that will really be sent to jupyter
             const { stripped, trueStartLine } = this.extractStrippedLines(cell);
 

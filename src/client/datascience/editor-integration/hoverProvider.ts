@@ -15,7 +15,7 @@ import { sleep } from '../../common/utils/async';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
-import { getInteractiveCellMetadata } from '../interactive-window/nativeInteractiveWindow';
+import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
 import {
@@ -57,7 +57,10 @@ export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
                 return;
             }
             const size = this.runFiles.size;
-            this.runFiles.add(getInteractiveCellMetadata(e.cell).interactive.file.toLocaleLowerCase());
+            const metadata = getInteractiveCellMetadata(e.cell);
+            if (metadata !== undefined) {
+                this.runFiles.add(metadata.interactive.file.toLocaleLowerCase());
+            }
             if (size !== this.runFiles.size) {
                 await this.initializeHoverProvider();
             }

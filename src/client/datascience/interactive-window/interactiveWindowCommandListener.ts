@@ -15,6 +15,7 @@ import {
     TextEditor,
     Uri,
     ViewColumn,
+    window,
     workspace,
     WorkspaceEdit
 } from 'vscode';
@@ -134,14 +135,14 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.ExpandAllCells,
-                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                async (context?: { notebookEditor: { notebookUri: Uri } }) =>
                     this.expandAllCells(context?.notebookEditor.notebookUri)
             )
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.CollapseAllCells,
-                (context?: { notebookEditor: { notebookUri: Uri } }) =>
+                async (context?: { notebookEditor: { notebookUri: Uri } }) =>
                     this.collapseAllCells(context?.notebookEditor.notebookUri)
             )
         );
@@ -372,21 +373,19 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         return this.exportDialog.showDialog(ExportFormat.ipynb, file);
     }
 
-    private expandAllCells(uri?: Uri) {
-        const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
-            : this.interactiveWindowProvider.activeWindow;
+    private async expandAllCells(uri?: Uri) {
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        traceInfo(`Expanding all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
         if (interactiveWindow) {
-            interactiveWindow.expandAllCells();
+            await interactiveWindow.expandAllCells();
         }
     }
 
-    private collapseAllCells(uri?: Uri) {
-        const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
-            : this.interactiveWindowProvider.activeWindow;
+    private async collapseAllCells(uri?: Uri) {
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        traceInfo(`Collapsing all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
         if (interactiveWindow) {
-            interactiveWindow.collapseAllCells();
+            await interactiveWindow.collapseAllCells();
         }
     }
 
@@ -398,18 +397,14 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
     }
 
     private exportAs(uri?: Uri) {
-        const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
-            : this.interactiveWindowProvider.activeWindow;
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
         if (interactiveWindow) {
             interactiveWindow.exportAs();
         }
     }
 
     private export(uri?: Uri) {
-        const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
-            : this.interactiveWindowProvider.activeWindow;
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
         if (interactiveWindow) {
             interactiveWindow.export();
         }
@@ -488,9 +483,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
     }
 
     private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
-        // Use the context if invoked from interactive/toolbar
-        // Then fallback to the active interactive window
-        const uri = context?.notebookEditor.notebookUri ?? this.interactiveWindowProvider.activeWindow?.notebookUri;
+        const uri = this.getTargetInteractiveWindow(context?.notebookEditor.notebookUri)?.notebookUri;
         if (!uri) {
             return;
         }
@@ -550,5 +543,23 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
             ].join('\n');
             await this.clipboard.writeText(source);
         }
+    }
+
+    private getTargetInteractiveWindow(notebookUri: Uri | undefined) {
+        let targetInteractiveWindow;
+        if (notebookUri !== undefined) {
+            targetInteractiveWindow = this.interactiveWindowProvider.windows.find(
+                (w) => w.notebookUri?.toString() === notebookUri.toString()
+            );
+        } else if (notebookUri === undefined && this.interactiveWindowProvider.activeWindow !== undefined) {
+            targetInteractiveWindow = this.interactiveWindowProvider.activeWindow;
+        } else if (
+            notebookUri === undefined &&
+            this.interactiveWindowProvider.activeWindow === undefined &&
+            window.activeTextEditor?.document.uri !== undefined
+        ) {
+            targetInteractiveWindow = this.interactiveWindowProvider.get(window.activeTextEditor.document.uri);
+        }
+        return targetInteractiveWindow;
     }
 }

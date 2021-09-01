@@ -84,10 +84,12 @@ type InteractiveCellMetadata = {
     };
     id: string;
 };
-export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellMetadata {
-    return cell.metadata as InteractiveCellMetadata;
+export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellMetadata | undefined {
+    if (cell.metadata.interactive !== undefined) {
+        return cell.metadata as InteractiveCellMetadata;
+    }
 }
-export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
+export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
@@ -500,7 +502,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const notebookEditor = await this._editorReadyPromise;
         const matchingCell = notebookEditor.document
             .getCells()
-            .find((cell) => getInteractiveCellMetadata(cell).id === id);
+            .find((cell) => getInteractiveCellMetadata(cell)?.id === id);
         if (matchingCell) {
             this.revealCell(matchingCell, notebookEditor);
         }
@@ -514,13 +516,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         }, 200); // Rendering output is async so the output is not guaranteed to immediately exist
     }
 
-    // TODO this does not need to be async since we no longer need to roundtrip to the UI
     public async hasCell(id: string): Promise<boolean> {
         const notebookEditor = await this._editorReadyPromise;
         if (!notebookEditor) {
             return false;
         }
-        return notebookEditor.document.getCells().some((cell) => getInteractiveCellMetadata(cell).id === id);
+        return notebookEditor.document.getCells().some((cell) => getInteractiveCellMetadata(cell)?.id === id);
     }
 
     public get owningResource(): Resource {

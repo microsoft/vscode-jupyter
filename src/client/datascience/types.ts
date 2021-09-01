@@ -519,8 +519,8 @@ export interface IInteractiveWindow extends IInteractiveBase {
         editor?: TextEditor,
         runningStopWatch?: StopWatch
     ): Promise<boolean>;
-    expandAllCells(): void;
-    collapseAllCells(): void;
+    expandAllCells(): Promise<void>;
+    collapseAllCells(): Promise<void>;
     exportCells(): void;
     scrollToCell(id: string): void;
     exportAs(cells?: ICell[]): void;

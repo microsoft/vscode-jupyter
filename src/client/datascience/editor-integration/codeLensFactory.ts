@@ -22,7 +22,7 @@ import { IConfigurationService, IDisposableRegistry, Resource } from '../../comm
 import * as localize from '../../common/utils/localize';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CodeLensCommands, Commands } from '../constants';
-import { getInteractiveCellMetadata } from '../interactive-window/nativeInteractiveWindow';
+import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
 import { ICellHashProvider, ICellRange, ICodeLensFactory, IFileHashes } from '../types';
@@ -184,7 +184,7 @@ export class CodeLensFactory implements ICodeLensFactory {
             };
             this.notebookData.set(e.cell.notebook.uri.toString(), data);
         }
-        if (data) {
+        if (data !== undefined && metadata !== undefined) {
             data.cellExecutionCounts.set(metadata.id, e.cell.executionSummary.executionOrder);
             data.documentExecutionCounts.set(
                 metadata.interactive.file.toLowerCase(),
