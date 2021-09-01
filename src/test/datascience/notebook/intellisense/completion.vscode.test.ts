@@ -4,11 +4,11 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position } from 'vscode';
+import { commands, CompletionList, Position } from 'vscode';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
-import { NotebookCompletionProvider } from '../../../../client/datascience/notebook/intellisense/completionProvider';
+import { getTextOutputValue } from '../../../../client/datascience/notebook/helpers/helpers';
 import { IExtensionTestApi } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
@@ -24,11 +24,10 @@ import {
 } from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) (slow)', function () {
+suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completion (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
-    let completionProvider: NotebookCompletionProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo(`Start Suite Code Completion via Jupyter`);
@@ -45,7 +44,6 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        completionProvider = api.serviceContainer.get<NotebookCompletionProvider>(NotebookCompletionProvider);
         traceInfo(`Start Suite (Completed) Code Completion via Jupyter`);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
@@ -64,40 +62,46 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Execute cell and get completions that require jupyter', async () => {
-        await insertCodeCell('%pip install pandas', {
-            index: 0
-        });
+    test('Execute cell and get completions for variable', async () => {
+        await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
 
         await runCell(cell);
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
-        await insertCodeCell('import pandas as pd\ndf = pd.read_csv("./notebook/intellisense/names.csv")\n', {
-            index: 1
-        });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+        const outputText = getTextOutputValue(cell.outputs[0]).trim();
+        traceInfo(`Cell Output ${outputText}`);
+        await insertCodeCell('a.', { index: 1 });
+        const cell2 = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
-        await runCell(cell2);
-
-        // Wait till execution count changes and status is success.
-        await waitForExecutionCompletedSuccessfully(cell2);
-        await insertCodeCell('df.', { index: 2 });
-        const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
-
-        const token = new CancellationTokenSource().token;
-        const position = new Position(0, 3);
-        const context: CompletionContext = {
-            triggerKind: CompletionTriggerKind.TriggerCharacter,
-            triggerCharacter: '.'
-        };
+        const position = new Position(0, 2);
         traceInfo('Get completions in test');
-        const completions = await completionProvider.provideCompletionItems(cell3.document, position, token, context);
-        const items = completions.map((item) => item.label);
+        // Executing the command `vscode.executeCompletionItemProvider` to simulate triggering completion
+        const completions = (await commands.executeCommand(
+            'vscode.executeCompletionItemProvider',
+            cell2.document.uri,
+            position
+        )) as CompletionList;
+        const items = completions.items.map((item) => item.label);
         assert.isOk(items.length);
         assert.ok(
-            items.find((item) => (typeof item === 'string' ? item.includes('Name') : item.label.includes('Name')))
+            items.find((item) =>
+                typeof item === 'string' ? item.includes('bit_length') : item.label.includes('bit_length')
+            )
         );
+        assert.ok(
+            items.find((item) =>
+                typeof item === 'string' ? item.includes('to_bytes') : item.label.includes('to_bytes')
+            )
+        );
+    });
+
+    test('Get completions in interactive window', async () => {
+        // Waiting for Joyce's work for creating IW
+        // gist of test
+        // get the uri of the input box
+        // get completions after typing in the input box
+        // test completions have expected results
     });
 });

@@ -513,7 +513,8 @@ export function clearPendingTimers() {
 export async function waitForCondition(
     condition: () => Promise<boolean>,
     timeoutMs: number,
-    errorMessage: string | (() => string)
+    errorMessage: string | (() => string),
+    intervalTimeoutMs: number = 10
 ): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
         const timeout = setTimeout(() => {
@@ -531,7 +532,7 @@ export async function waitForCondition(
             clearTimeout(timeout);
             clearInterval(timer);
             resolve();
-        }, 10);
+        }, intervalTimeoutMs);
         pendingTimers.push(timer);
         pendingTimers.push(timeout);
     });

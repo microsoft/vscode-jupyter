@@ -26,7 +26,11 @@ import {
     Event,
     env,
     UIKind,
-    DebugSession
+    DebugSession,
+    languages,
+    Position,
+    Hover,
+    Diagnostic
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -166,10 +170,7 @@ export async function createTemporaryNotebook(
 }
 
 export async function canRunNotebookTests() {
-    if (
-        //isInsiders() ||
-        !process.env.VSC_JUPYTER_RUN_NB_TEST
-    ) {
+    if (!isInsiders() && !process.env.VSC_JUPYTER_RUN_NB_TEST) {
         console.log(
             `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
                 process.env.VSC_JUPYTER_RUN_NB_TEST
@@ -621,6 +622,49 @@ export async function waitForExecutionCompletedWithErrors(
     );
     await waitForCellExecutionToComplete(cell);
 }
+
+export async function waitForDiagnostics(
+    uri: Uri,
+    timeout: number = defaultNotebookTestTimeout
+): Promise<Diagnostic[]> {
+    let diagnostics: Diagnostic[] = [];
+    await waitForCondition(
+        async () => {
+            diagnostics = languages.getDiagnostics(uri);
+            if (diagnostics && diagnostics.length) {
+                return true;
+            }
+            return false;
+        },
+        timeout,
+        `No diagnostics found for ${uri}`,
+        250
+    );
+    return diagnostics;
+}
+
+export async function waitForHover(
+    uri: Uri,
+    pos: Position,
+    timeout: number = defaultNotebookTestTimeout
+): Promise<Hover[]> {
+    let hovers: Hover[] = [];
+    await waitForCondition(
+        async () => {
+            // Use a command to get back the list of hovers
+            hovers = (await commands.executeCommand('vscode.executeHoverProvider', uri, pos)) as Hover[];
+            if (hovers && hovers.length) {
+                return true;
+            }
+            return false;
+        },
+        timeout,
+        `No hovers found for ${uri}`,
+        250
+    );
+    return hovers;
+}
+
 function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
     return (
         (cell.executionSummary?.executionOrder ?? 0) > 0 &&

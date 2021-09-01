@@ -4,7 +4,7 @@ import { spawnSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
-import { PythonExtension } from '../client/datascience/constants';
+import { PylanceExtension, PythonExtension } from '../client/datascience/constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from './constants';
 import { initializeLogger } from './testLogger';
 import * as tmp from 'tmp';
@@ -65,6 +65,13 @@ async function installPythonExtension(vscodeExecutablePath: string) {
     console.info('Installing Python Extension');
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
     spawnSync(cliPath, ['--install-extension', PythonExtension], {
+        encoding: 'utf-8',
+        stdio: 'inherit'
+    });
+
+    // Make sure pylance is there too as we'll use it for intellisense tests
+    console.info('Installing Pylance Extension');
+    spawnSync(cliPath, ['--install-extension', PylanceExtension], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
