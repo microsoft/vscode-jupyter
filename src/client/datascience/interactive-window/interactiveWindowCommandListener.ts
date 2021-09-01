@@ -15,6 +15,7 @@ import {
     TextEditor,
     Uri,
     ViewColumn,
+    window,
     workspace,
     WorkspaceEdit
 } from 'vscode';
@@ -63,7 +64,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         @inject(IExportManager) private exportManager: IExportManager,
         @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard
-    ) { }
+    ) {}
 
     public register(commandManager: ICommandManager): void {
         let disposable = commandManager.registerCommand(Commands.CreateNewInteractive, () =>
@@ -373,18 +374,14 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
     }
 
     private async expandAllCells(uri?: Uri) {
-        const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
-            : this.interactiveWindowProvider.activeWindow;
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
         if (interactiveWindow) {
             await interactiveWindow.expandAllCells();
         }
     }
 
     private async collapseAllCells(uri?: Uri) {
-        const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
-            : this.interactiveWindowProvider.activeWindow;
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
         if (interactiveWindow) {
             await interactiveWindow.collapseAllCells();
         }
@@ -398,18 +395,14 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
     }
 
     private exportAs(uri?: Uri) {
-        const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
-            : this.interactiveWindowProvider.activeWindow;
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
         if (interactiveWindow) {
             interactiveWindow.exportAs();
         }
     }
 
     private export(uri?: Uri) {
-        const interactiveWindow = uri
-            ? this.interactiveWindowProvider.windows.find((window) => window.notebookUri?.toString() === uri.toString())
-            : this.interactiveWindowProvider.activeWindow;
+        const interactiveWindow = this.getTargetInteractiveWindow(uri);
         if (interactiveWindow) {
             interactiveWindow.export();
         }
@@ -490,7 +483,8 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
     private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
         // Use the context if invoked from interactive/toolbar
         // Then fallback to the active interactive window
-        const uri = context?.notebookEditor.notebookUri ?? this.interactiveWindowProvider.activeWindow?.notebookUri;
+        // Make all commands work even when invoked from Python file context
+        const uri = this.getTargetInteractiveWindow(context?.notebookEditor.notebookUri)?.notebookUri;
         if (!uri) {
             return;
         }
@@ -550,5 +544,23 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
             ].join('\n');
             await this.clipboard.writeText(source);
         }
+    }
+
+    private getTargetInteractiveWindow(notebookUri: Uri | undefined) {
+        let targetInteractiveWindow;
+        if (notebookUri !== undefined) {
+            targetInteractiveWindow = this.interactiveWindowProvider.windows.find(
+                (w) => w.notebookUri?.toString() === notebookUri.toString()
+            );
+        } else if (notebookUri === undefined && this.interactiveWindowProvider.activeWindow !== undefined) {
+            targetInteractiveWindow = this.interactiveWindowProvider.activeWindow;
+        } else if (
+            notebookUri === undefined &&
+            this.interactiveWindowProvider.activeWindow === undefined &&
+            window.activeTextEditor?.document.uri !== undefined
+        ) {
+            targetInteractiveWindow = this.interactiveWindowProvider.get(window.activeTextEditor.document.uri);
+        }
+        return targetInteractiveWindow;
     }
 }

@@ -31,13 +31,13 @@ import { IExportDialog } from '../export/types';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterDebugger, INotebookExporter } from '../types';
-import { NativeInteractiveWindow } from './interactiveWindow';
+import { InteractiveWindow } from './interactiveWindow';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
 
 @injectable()
-export class NativeInteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
+export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
     }
@@ -57,7 +57,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
-    private _windows: NativeInteractiveWindow[] = [];
+    private _windows: InteractiveWindow[] = [];
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -114,7 +114,7 @@ export class NativeInteractiveWindowProvider implements IInteractiveWindowProvid
     private create(resource: Resource, mode: InteractiveWindowMode) {
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
-        const result = new NativeInteractiveWindow(
+        const result = new InteractiveWindow(
             this.serviceContainer.get<IApplicationShell>(IApplicationShell),
             this.serviceContainer.get<IDocumentManager>(IDocumentManager),
             this.serviceContainer.get<IFileSystem>(IFileSystem),
