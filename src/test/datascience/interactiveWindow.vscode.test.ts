@@ -54,7 +54,7 @@ suite('Interactive window', async () => {
         )) as InteractiveWindow;
         await activeInteractiveWindow.readyPromise;
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
-        return activeInteractiveWindow;
+        return { activeInteractiveWindow, untitledPythonFile };
     }
 
     async function waitForLastCellToComplete(interactiveWindow: InteractiveWindow) {
@@ -77,7 +77,7 @@ suite('Interactive window', async () => {
 
     test('Execute cell from Python file', async () => {
         const source = 'print(42)';
-        const activeInteractiveWindow = await submitFromPythonFile(source);
+        const { activeInteractiveWindow } = await submitFromPythonFile(source);
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
@@ -138,7 +138,7 @@ for i in range(10):
     clear_output()
     print("Hello World {0}!".format(i))
 `;
-        const activeInteractiveWindow = await submitFromPythonFile(text);
+        const { activeInteractiveWindow } = await submitFromPythonFile(text);
         const cell = await waitForLastCellToComplete(activeInteractiveWindow);
         assertHasTextOutputInVSCode(cell!, 'Hello World 9!');
     });
@@ -166,9 +166,7 @@ for i in range(10):
 
     test('Collapse / expand cell', async () => {
         // Cell should initially be collapsed
-        const activeInteractiveWindow = await createStandaloneInteractiveWindow();
-        await insertIntoInputEditor('a=1\na');
-        await vscode.commands.executeCommand('interactive.execute');
+        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile('a=1\na');
         const codeCell = await waitForLastCellToComplete(activeInteractiveWindow);
         assert.ok(codeCell.metadata.inputCollapsed === true, 'Cell input not initially collapsed');
 
@@ -193,7 +191,11 @@ for i in range(10):
 # 2. Profit
 #
 # [Link](http://www.microsoft.com)`;
-        await submitFromPythonFile(markdownSource);
+        const edit = new vscode.WorkspaceEdit();
+        const line = untitledPythonFile.getText().length;
+        edit.insert(untitledPythonFile.uri, new vscode.Position(line, 0), markdownSource);
+        await vscode.workspace.applyEdit(edit);
+        await activeInteractiveWindow.addCode(markdownSource, untitledPythonFile.uri, line);
 
         // Verify markdown cell is initially expanded
         const notebookDocument = vscode.workspace.notebookDocuments.find(
