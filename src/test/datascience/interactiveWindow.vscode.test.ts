@@ -166,10 +166,9 @@ for i in range(10):
 
     test('Collapse / expand cell', async () => {
         // Cell should initially be collapsed
-        const activeInteractiveWindow = await submitFromPythonFile('# %%\na=1\na');
-        const notebookDocument = vscode.workspace.notebookDocuments.find(
-            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
-        );
+        const activeInteractiveWindow = await createStandaloneInteractiveWindow();
+        await insertIntoInputEditor('a=1\na');
+        await vscode.commands.executeCommand('interactive.execute');
         const codeCell = await waitForLastCellToComplete(activeInteractiveWindow);
         assert.ok(codeCell.metadata.inputCollapsed === true, 'Cell input not initially collapsed');
 
@@ -197,6 +196,9 @@ for i in range(10):
         await submitFromPythonFile(markdownSource);
 
         // Verify markdown cell is initially expanded
+        const notebookDocument = vscode.workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        );
         const markdownCell = notebookDocument?.cellAt(notebookDocument.cellCount - 1);
         assert.ok(markdownCell?.metadata.inputCollapsed === false, 'Collapsing all cells should skip markdown cells');
 

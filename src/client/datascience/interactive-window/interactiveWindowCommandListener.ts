@@ -375,7 +375,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
 
     private async expandAllCells(uri?: Uri) {
         const interactiveWindow = this.getTargetInteractiveWindow(uri);
-        traceInfo(`Expanding all cells in interactive window with uri ${uri}`);
+        traceInfo(`Expanding all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
         if (interactiveWindow) {
             await interactiveWindow.expandAllCells();
         }
@@ -383,7 +383,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
 
     private async collapseAllCells(uri?: Uri) {
         const interactiveWindow = this.getTargetInteractiveWindow(uri);
-        traceInfo(`Collapsing all cells in interactive window with uri ${uri}`);
+        traceInfo(`Collapsing all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
         if (interactiveWindow) {
             await interactiveWindow.collapseAllCells();
         }
