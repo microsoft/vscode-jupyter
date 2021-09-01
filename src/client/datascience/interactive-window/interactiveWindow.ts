@@ -84,8 +84,10 @@ type InteractiveCellMetadata = {
     };
     id: string;
 };
-export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellMetadata {
-    return cell.metadata as InteractiveCellMetadata;
+export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellMetadata | undefined {
+    if (cell.metadata.interactive !== undefined) {
+        return cell.metadata as InteractiveCellMetadata;
+    }
 }
 export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {

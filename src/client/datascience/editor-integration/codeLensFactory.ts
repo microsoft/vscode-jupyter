@@ -184,7 +184,7 @@ export class CodeLensFactory implements ICodeLensFactory {
             };
             this.notebookData.set(e.cell.notebook.uri.toString(), data);
         }
-        if (data && metadata.interactive !== undefined) {
+        if (data !== undefined && metadata !== undefined) {
             data.cellExecutionCounts.set(metadata.id, e.cell.executionSummary.executionOrder);
             data.documentExecutionCounts.set(
                 metadata.interactive.file.toLowerCase(),
