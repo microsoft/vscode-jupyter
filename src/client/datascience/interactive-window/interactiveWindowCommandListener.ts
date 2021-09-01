@@ -64,7 +64,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
         @inject(IExportManager) private exportManager: IExportManager,
         @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard
-    ) {}
+    ) { }
 
     public register(commandManager: ICommandManager): void {
         let disposable = commandManager.registerCommand(Commands.CreateNewInteractive, () =>
@@ -375,6 +375,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
 
     private async expandAllCells(uri?: Uri) {
         const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        traceInfo(`Expanding all cells in interactive window with uri ${uri}`);
         if (interactiveWindow) {
             await interactiveWindow.expandAllCells();
         }
@@ -382,6 +383,7 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
 
     private async collapseAllCells(uri?: Uri) {
         const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        traceInfo(`Collapsing all cells in interactive window with uri ${uri}`);
         if (interactiveWindow) {
             await interactiveWindow.collapseAllCells();
         }
