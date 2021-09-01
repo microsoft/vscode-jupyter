@@ -134,9 +134,9 @@ export class CellHashProvider implements ICellHashProvider {
         // Find the text document that matches. We need more information than
         // the add code gives us
         const { line: cellLine, file } = cell.metadata.interactive;
-        const id = getInteractiveCellMetadata(cell).id;
+        const id = getInteractiveCellMetadata(cell)?.id;
         const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, file));
-        if (doc) {
+        if (doc && id) {
             // Compute the code that will really be sent to jupyter
             const { stripped, trueStartLine } = this.extractStrippedLines(cell);
 

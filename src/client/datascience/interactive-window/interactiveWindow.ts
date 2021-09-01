@@ -502,7 +502,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const notebookEditor = await this._editorReadyPromise;
         const matchingCell = notebookEditor.document
             .getCells()
-            .find((cell) => getInteractiveCellMetadata(cell).id === id);
+            .find((cell) => getInteractiveCellMetadata(cell)?.id === id);
         if (matchingCell) {
             this.revealCell(matchingCell, notebookEditor);
         }
@@ -516,13 +516,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }, 200); // Rendering output is async so the output is not guaranteed to immediately exist
     }
 
-    // TODO this does not need to be async since we no longer need to roundtrip to the UI
     public async hasCell(id: string): Promise<boolean> {
         const notebookEditor = await this._editorReadyPromise;
         if (!notebookEditor) {
             return false;
         }
-        return notebookEditor.document.getCells().some((cell) => getInteractiveCellMetadata(cell).id === id);
+        return notebookEditor.document.getCells().some((cell) => getInteractiveCellMetadata(cell)?.id === id);
     }
 
     public get owningResource(): Resource {

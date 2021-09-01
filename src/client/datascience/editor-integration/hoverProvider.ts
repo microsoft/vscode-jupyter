@@ -57,7 +57,10 @@ export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
                 return;
             }
             const size = this.runFiles.size;
-            this.runFiles.add(getInteractiveCellMetadata(e.cell).interactive.file.toLocaleLowerCase());
+            const metadata = getInteractiveCellMetadata(e.cell);
+            if (metadata !== undefined) {
+                this.runFiles.add(metadata.interactive.file.toLocaleLowerCase());
+            }
             if (size !== this.runFiles.size) {
                 await this.initializeHoverProvider();
             }
