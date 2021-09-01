@@ -483,9 +483,6 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
     }
 
     private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
-        // Use the context if invoked from interactive/toolbar
-        // Then fallback to the active interactive window
-        // Make all commands work even when invoked from Python file context
         const uri = this.getTargetInteractiveWindow(context?.notebookEditor.notebookUri)?.notebookUri;
         if (!uri) {
             return;
