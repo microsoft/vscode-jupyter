@@ -86,7 +86,7 @@ suite('CellHashProvider Unit Tests', () => {
                     line,
                     originalSource: code
                 },
-                executionId: 1
+                id: 1
             },
             outputs: [],
             mime: undefined
