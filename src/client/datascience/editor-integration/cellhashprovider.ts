@@ -409,8 +409,9 @@ export class CellHashProvider implements ICellHashProvider {
                     return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                         const n = parseInt(num, 10);
                         const newLine = offset + n - 1;
-                        return `${prefix}<a href='file://${matchingFile[0]}?line=${newLine}'>${newLine + 1
-                            }</a>${suffix}`;
+                        return `${prefix}<a href='file://${matchingFile[0]}?line=${newLine}'>${
+                            newLine + 1
+                        }</a>${suffix}`;
                     });
                 }
             }
