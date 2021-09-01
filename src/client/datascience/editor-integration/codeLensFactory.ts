@@ -2,26 +2,31 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, Uri, workspace } from 'vscode';
+import {
+    CodeLens,
+    Command,
+    Event,
+    EventEmitter,
+    NotebookCellExecutionState,
+    NotebookCellExecutionStateChangeEvent,
+    Range,
+    TextDocument,
+    workspace
+} from 'vscode';
 
-import { IDocumentManager, IWorkspaceService } from '../../common/application/types';
+import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import { traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
-import { IConfigurationService, Resource } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CodeLensCommands, Commands } from '../constants';
-import {
-    ICell,
-    ICellHashProvider,
-    ICellRange,
-    ICodeLensFactory,
-    IFileHashes,
-    INotebook,
-    INotebookProvider
-} from '../types';
-import { getCellHashProvider } from './cellhashprovider';
+import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
+import { IKernelProvider } from '../jupyter/kernels/types';
+import { InteractiveWindowView } from '../notebook/constants';
+import { ICellHashProvider, ICellRange, ICodeLensFactory, IFileHashes } from '../types';
+import { CellHashProviderFactory } from './cellHashProviderFactory';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;
@@ -32,9 +37,8 @@ type CodeLensCacheData = {
 };
 
 type PerNotebookData = {
-    cellExecutionCounts: Map<string, string>;
+    cellExecutionCounts: Map<string, number>;
     documentExecutionCounts: Map<string, number>;
-    hashProvider: ICellHashProvider | undefined;
 };
 
 /**
@@ -48,15 +52,23 @@ export class CodeLensFactory implements ICodeLensFactory {
     private codeLensCache = new Map<string, CodeLensCacheData>();
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(CellHashProviderFactory) private readonly cellHashProviderFactory: CellHashProviderFactory,
+        @inject(IKernelProvider) kernelProvider: IKernelProvider
     ) {
-        this.documentManager.onDidCloseTextDocument(this.onClosedDocument.bind(this));
-        this.workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear());
-        this.configService.getSettings(undefined).onDidChange(this.onChangedSettings.bind(this));
-        this.notebookProvider.onNotebookCreated(this.onNotebookCreated.bind(this));
+        this.documentManager.onDidCloseTextDocument(this.onClosedDocument, this, disposables);
+        this.workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
+        this.configService.getSettings(undefined).onDidChange(this.onChangedSettings, this, disposables);
+        notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
+        kernelProvider.onDidDisposeKernel(
+            (kernel) => this.notebookData.delete(kernel.notebookUri.toString()),
+            this,
+            disposables
+        );
     }
     public get updateRequired(): Event<void> {
         return this.updateEvent.event;
@@ -151,56 +163,39 @@ export class CodeLensFactory implements ICodeLensFactory {
         }
         return cache;
     }
-    private createNotebookData(): PerNotebookData {
-        return {
-            cellExecutionCounts: new Map<string, string>(),
-            documentExecutionCounts: new Map<string, number>(),
-            hashProvider: undefined
-        };
-    }
     private getDocumentExecutionCounts(key: string): number[] {
         return [...this.notebookData.values()]
             .map((d) => d.documentExecutionCounts.get(key))
             .filter((n) => n !== undefined) as number[];
     }
-
-    private updateExecutionCounts(identity: Uri, cell: ICell) {
-        let data = this.notebookData.get(identity.toString());
-        if (!data) {
-            data = this.createNotebookData();
+    private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
+        if (e.cell.notebook.notebookType !== InteractiveWindowView) {
+            return;
         }
-        if (data && cell.data.execution_count) {
-            data.cellExecutionCounts.set(cell.id, cell.data.execution_count?.toString());
+        if (e.state !== NotebookCellExecutionState.Idle || !e.cell.executionSummary?.executionOrder) {
+            return;
+        }
+        const metadata = getInteractiveCellMetadata(e.cell);
+        let data = this.notebookData.get(e.cell.notebook.uri.toString());
+        if (!data) {
+            data = {
+                cellExecutionCounts: new Map<string, number>(),
+                documentExecutionCounts: new Map<string, number>()
+            };
+            this.notebookData.set(e.cell.notebook.uri.toString(), data);
+        }
+        if (data) {
+            data.cellExecutionCounts.set(metadata.id, e.cell.executionSummary.executionOrder);
             data.documentExecutionCounts.set(
-                cell.file.toLowerCase(),
-                parseInt(cell.data.execution_count.toString(), 10)
+                metadata.interactive.file.toLowerCase(),
+                e.cell.executionSummary.executionOrder
             );
             this.updateEvent.fire();
         }
     }
 
-    private onNotebookCreated(args: { identity: Uri; notebook: INotebook }) {
-        const key = args.identity.toString();
-        let data = this.notebookData.get(key);
-        if (!data) {
-            data = this.createNotebookData();
-            this.notebookData.set(key, data);
-        }
-        if (data) {
-            data.hashProvider = getCellHashProvider(args.notebook);
-        }
-        args.notebook.onDisposed(() => {
-            this.notebookData.delete(key);
-        });
-        if (args.notebook.onDidFinishExecuting !== undefined) {
-            args.notebook.onDidFinishExecuting((cell: ICell) => {
-                this.updateExecutionCounts(args.identity, cell);
-            });
-        }
-    }
-
     private getHashProviders(): ICellHashProvider[] {
-        return [...this.notebookData.values()].filter((v) => v.hashProvider).map((v) => v.hashProvider!);
+        return this.cellHashProviderFactory.cellHashProviders;
     }
 
     private getHashes(): IFileHashes[] {
@@ -426,7 +421,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                     return this.generateCodeLens(
                         range,
                         Commands.ScrollToCell,
-                        localize.DataScience.scrollToCellTitleFormatMessage().format(matchingExecutionCount),
+                        localize.DataScience.scrollToCellTitleFormatMessage().format(matchingExecutionCount.toString()),
                         [document.uri, rangeMatch.id]
                     );
                 }

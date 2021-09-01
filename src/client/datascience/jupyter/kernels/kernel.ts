@@ -34,7 +34,6 @@ import { CodeSnippets, Identifiers, Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
-    ICellHashProvider,
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
     IJupyterSession,
@@ -47,7 +46,7 @@ import {
 } from '../../types';
 import { getSysInfoReasonHeader, isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import type { IKernel, IKernelProvider, KernelConnectionMetadata, NotebookCellRunState } from './types';
+import type { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { isCI, MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
@@ -58,6 +57,7 @@ import { calculateWorkingDirectory } from '../../utils';
 import { expandWorkingDir } from '../jupyterUtils';
 import type { nbformat } from '@jupyterlab/coreutils';
 import { concatMultilineString } from '../../../../datascience-ui/common';
+import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -115,7 +115,6 @@ export class Kernel implements IKernel {
         interruptTimeout: number,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
-        kernelProvider: IKernelProvider,
         private readonly appShell: IApplicationShell,
         private readonly fs: IFileSystem,
         private readonly serverStorage: IJupyterServerUriStorage,
@@ -123,17 +122,18 @@ export class Kernel implements IKernel {
         private readonly configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
         private readonly workspaceService: IWorkspaceService,
-        private cellHashProvider: ICellHashProvider
+        private readonly cellHashProviderFactory: CellHashProviderFactory
     ) {
         this.kernelExecution = new KernelExecution(
-            kernelProvider,
+            this,
             errorHandler,
             appShell,
             kernelConnectionMetadata,
             interruptTimeout,
             disposables,
             controller,
-            outputTracker
+            outputTracker,
+            cellHashProviderFactory
         );
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
@@ -141,7 +141,7 @@ export class Kernel implements IKernel {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document: cell.notebook });
         if (cell.notebook.notebookType === InteractiveWindowView) {
-            await this.cellHashProvider.addCellHash(cell);
+            await this.cellHashProviderFactory.getOrCreate(this).addCellHash(cell);
         }
         const promise = this.kernelExecution.executeCell(notebookPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
@@ -566,7 +566,7 @@ export async function executeSilently(session: IJupyterSession, code: string): P
     const request = session.requestExecute(
         {
             code,
-            silent: true,
+            silent: false,
             stop_on_error: false,
             allow_stdin: true,
             store_history: false

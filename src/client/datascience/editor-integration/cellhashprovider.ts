@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { KernelMessage } from '@jupyterlab/services';
 import * as hashjs from 'hash.js';
 import { inject, injectable, multiInject, optional } from 'inversify';
 import stripAnsi from 'strip-ansi';
@@ -24,12 +23,11 @@ import { IConfigurationService } from '../../common/types';
 import { getCellResource } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Identifiers } from '../constants';
-import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes, INotebook } from '../types';
+import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
+import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)(.*)/g;
 
 interface IRangedCellHash extends ICellHash {
@@ -56,7 +54,7 @@ export class CellHashProvider implements ICellHashProvider {
     private executionCount: number = 0;
     private hashes: Map<string, IRangedCellHash[]> = new Map<string, IRangedCellHash[]>();
     private updateEventEmitter: EventEmitter<void> = new EventEmitter<void>();
-    private traceBackRegexes = new Map<string, RegExp>();
+    private traceBackRegexes = new Map<string, RegExp[]>();
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -118,21 +116,6 @@ export class CellHashProvider implements ICellHashProvider {
         }
     }
 
-    public preHandleIOPub(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage {
-        // When an error message comes, rewrite the traceback so we can jump back to the correct
-        // cell. For now this only works with the interactive window
-        if (msg.header.msg_type === 'error') {
-            return {
-                ...msg,
-                content: {
-                    ...msg.content,
-                    transient: this.modifyTraceback(msg as KernelMessage.IErrorMsg) // NOSONAR
-                }
-            };
-        }
-        return msg;
-    }
-
     public extractExecutableLines(cell: NotebookCell): string[] {
         const cellMatcher = new CellMatcher(this.configService.getSettings(getCellResource(cell)));
         const lines = splitMultilineString(cell.metadata.interactive?.originalSource ?? cell.document.getText());
@@ -151,7 +134,7 @@ export class CellHashProvider implements ICellHashProvider {
         // Find the text document that matches. We need more information than
         // the add code gives us
         const { line: cellLine, file } = cell.metadata.interactive;
-        const executionId = cell.metadata.executionId;
+        const id = getInteractiveCellMetadata(cell).id;
         const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, file));
         if (doc) {
             // Compute the code that will really be sent to jupyter
@@ -189,7 +172,7 @@ export class CellHashProvider implements ICellHashProvider {
                 trimmedRightCode: stripped.map((s) => s.replace(/[ \t\r]+\n$/g, '\n')).join(''),
                 realCode,
                 runtimeLine,
-                id: executionId,
+                id: id,
                 timestamp: Date.now()
             };
 
@@ -223,10 +206,11 @@ export class CellHashProvider implements ICellHashProvider {
             // Save a regex to find this file later when looking for
             // exceptions in output
             if (!this.traceBackRegexes.has(file)) {
-                const fileDisplayName = this.fs.getDisplayName(file);
-                const escaped = _escapeRegExp(fileDisplayName);
-                const fileMatchRegex = new RegExp(`\\[.*?;32m${escaped}`);
-                this.traceBackRegexes.set(file, fileMatchRegex);
+                const fileMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(file)}`);
+                const fileDisplayNameMatchRegex = new RegExp(
+                    `\\[.*?;32m${_escapeRegExp(this.fs.getDisplayName(file))}`
+                );
+                this.traceBackRegexes.set(file, [fileMatchRegex, fileDisplayNameMatchRegex]);
             }
 
             // Tell listeners we have new hashes.
@@ -361,17 +345,19 @@ export class CellHashProvider implements ICellHashProvider {
         return 1;
     }
 
-    // This function will modify a traceback from an error message.
-    // Tracebacks take a form like so:
-    // "[1;31m---------------------------------------------------------------------------[0m"
-    // "[1;31mZeroDivisionError[0m                         Traceback (most recent call last)"
-    // "[1;32md:\Training\SnakePython\foo.py[0m in [0;36m<module>[1;34m[0m\n[0;32m      1[0m [0mprint[0m[1;33m([0m[1;34m'some more'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 2[1;33m [0mcause_error[0m[1;33m([0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
-    // "[1;32md:\Training\SnakePython\foo.py[0m in [0;36mcause_error[1;34m()[0m\n[0;32m      3[0m     [0mprint[0m[1;33m([0m[1;34m'error'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0;32m      4[0m     [0mprint[0m[1;33m([0m[1;34m'now'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 5[1;33m     [0mprint[0m[1;33m([0m [1;36m1[0m [1;33m/[0m [1;36m0[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
-    // "[1;31mZeroDivisionError[0m: division by zero"
-    // Each item in the array being a stack frame.
-    private modifyTraceback(msg: KernelMessage.IErrorMsg): string[] {
+    /**
+     * This function will modify a traceback from an error message.
+     * Tracebacks take a form like so:
+     * "[1;31m---------------------------------------------------------------------------[0m"
+     * "[1;31mZeroDivisionError[0m                         Traceback (most recent call last)"
+     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36m<module>[1;34m[0m\n[0;32m      1[0m [0mprint[0m[1;33m([0m[1;34m'some more'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 2[1;33m [0mcause_error[0m[1;33m([0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
+     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36mcause_error[1;34m()[0m\n[0;32m      3[0m     [0mprint[0m[1;33m([0m[1;34m'error'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0;32m      4[0m     [0mprint[0m[1;33m([0m[1;34m'now'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 5[1;33m     [0mprint[0m[1;33m([0m [1;36m1[0m [1;33m/[0m [1;36m0[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
+     * "[1;31mZeroDivisionError[0m: division by zero"
+     * Each item in the array being a stack frame.
+     */
+    public modifyTraceback(traceback: string[]): string[] {
         // Do one frame at a time.
-        return msg.content.traceback ? msg.content.traceback.map(this.modifyTracebackFrame.bind(this)) : [];
+        return Array.isArray(traceback) ? traceback.map(this.modifyTracebackFrame.bind(this)) : [];
     }
 
     private findCellOffset(hashes: IRangedCellHash[] | undefined, codeLines: string): number | undefined {
@@ -394,7 +380,9 @@ export class CellHashProvider implements ICellHashProvider {
     private modifyTracebackFrame(traceFrame: string): string {
         // See if this item matches any of our cell files
         const regexes = [...this.traceBackRegexes.entries()];
-        const match = regexes.find((e) => e[1].test(traceFrame));
+        const match = regexes.find((e) => {
+            return e[1].some((regExp) => regExp.test(traceFrame));
+        });
         if (match) {
             // We have a match, pull out the source lines
             let sourceLines = '';
@@ -410,20 +398,23 @@ export class CellHashProvider implements ICellHashProvider {
                 return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                     const n = parseInt(num, 10);
                     const newLine = offset + n - 1;
-                    return `${_escape(prefix)}<a href='file://${match[0]}?line=${newLine}'>${newLine + 1}</a>${_escape(
-                        suffix
-                    )}`;
+                    return `${prefix}<a href='file://${match[0]}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
                 });
             }
+        } else {
+            const matchingFile = regexes.find((e) => traceFrame.includes(e[0]));
+            if (matchingFile) {
+                const offset = this.findCellOffset(this.hashes.get(matchingFile[0]), traceFrame);
+                if (offset) {
+                    return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
+                        const n = parseInt(num, 10);
+                        const newLine = offset + n - 1;
+                        return `${prefix}<a href='file://${matchingFile[0]}?line=${newLine}'>${newLine + 1
+                            }</a>${suffix}`;
+                    });
+                }
+            }
         }
-        return _escape(traceFrame);
-    }
-}
-
-export function getCellHashProvider(notebook: INotebook): ICellHashProvider | undefined {
-    const logger = notebook.getLoggers().find((f) => f instanceof CellHashProvider);
-    if (logger) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (logger as any) as ICellHashProvider;
+        return traceFrame;
     }
 }

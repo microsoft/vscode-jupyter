@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-08-26"
+    "value": "$TODAYS_DATE=2021-08-30"
   },
   {
     "kind": 1,
@@ -37,7 +37,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$CURRENT_MILESTONE=milestone:\"August 2021\"\r\n$NEXT_MILESTONE=milestone:\"September 2021\""
+    "value": "$CURRENT_MILESTONE=milestone:\"September 2021\"\r\n$RECOVERY_MILESTONE=milestone:\"August 2021 Recovery\"\r\n$NEXT_MILESTONE=milestone:\"October 2021\""
   },
   {
     "kind": 1,
@@ -47,7 +47,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$AREAS_INCLUSION = label:engineering label:3rd-party-extension label:azureml label:codespaces label:conda label:data-viewer label:documentation label:dotnet-interactive label:gather label:intellisense label:interactive-window-debugging label:interactive-window label:ipywidgets label:kernel-crash label:kernel-enumeration label:kernel-issues label:keyboard-shortcuts label:language-any label:language-python label:language-python-environment label:language-julia label:language-R label:liveshare label:markdown label:nbformat label:notebook-automated-testing label:notebook-debugging label:notebook-diff label:notebook-execution label:notebook-extensibility label:notebook-getting-started label:notebook-import-export label:notebook-params-papermill label:notebook-remote label:notebook-rendering label:notebook-serialization-save-load label:notebook-templates label:notebook-workflow label:plot-viewer label:polyglot label:pyspark label:python-environment label:pytorch label:run-by-line label:telemetry label:themes label:toc-outline label:variable-explorer label:webview-cleanup label:webview-notebook label:WSL\r\n$AREAS_EXCLUSION = -label:engineering -label:3rd-party-extension -label:azureml -label:codespaces -label:conda -label:data-viewer -label:documentation -label:dotnet-interactive -label:gather -label:intellisense -label:interactive-window-debugging -label:interactive-window -label:ipywidgets -label:kernel-crash -label:kernel-enumeration -label:kernel-issues -label:keyboard-shortcuts -label:language-any -label:language-python -label:language-python-environment -label:language-julia -label:language-R -label:liveshare -label:markdown -label:nbformat -label:notebook-automated-testing -label:notebook-debugging -label:notebook-diff -label:notebook-execution -label:notebook-extensibility -label:notebook-getting-started -label:notebook-import-export -label:notebook-params-papermill -label:notebook-remote -label:notebook-rendering -label:notebook-serialization-save-load -label:notebook-templates -label:notebook-workflow -label:plot-viewer -label:polyglot -label:pyspark -label:python-environment -label:pytorch -label:run-by-line -label:telemetry -label:themes -label:toc-outline -label:variable-explorer -label:webview-cleanup -label:webview-notebook -label:WSL"
+    "value": "$AREAS=engineering,3rd-party-extension,azureml,codespaces,conda,data-viewer,documentation,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-debugging,notebook-diff,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-params-papermill,notebook-remote,notebook-rendering,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,webview-cleanup,webview-notebook,WSL"
   },
   {
     "kind": 1,
@@ -102,7 +102,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
   },
   {
     "kind": 1,
@@ -112,7 +112,17 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Closed before they hit formal triage"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$JUPYTER_ALL_REPOS is:issue is:closed label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc"
   },
   {
     "kind": 1,
@@ -192,7 +202,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue $AREAS_EXCLUSION $CATEGORY_EXCLUSION in:title interactive"
+    "value": "$JUPYTER_ALL_REPOS is:open is:issue -label:$AREAS"
   },
   {
     "kind": 1,

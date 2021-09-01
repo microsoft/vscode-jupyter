@@ -115,7 +115,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         const onDisposed = new EventEmitter<void>();
         disposables.push(onDisposed);
-        when(inotebook.getLoggers()).thenReturn([]);
         when(inotebook.dispose()).thenResolve();
         when(inotebook.onDisposed).thenReturn(onDisposed.event);
         when(inotebook.connection).thenReturn(undefined);
