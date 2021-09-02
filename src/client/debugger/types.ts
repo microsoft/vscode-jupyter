@@ -20,6 +20,7 @@ export interface IDebuggingManager {
     getDebugMode(notebook: NotebookDocument): KernelDebugMode | undefined;
     getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined;
     getDebugCell(notebook: NotebookDocument): NotebookCell | undefined;
+    getDebugAdapter(notebook: NotebookDocument): IKernelDebugAdapter | undefined;
 }
 
 export interface DebuggingDelegate {

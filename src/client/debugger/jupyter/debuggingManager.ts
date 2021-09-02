@@ -83,6 +83,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private debuggingInProgress: ContextKey;
     private runByLineInProgress: ContextKey;
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
+    private notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapter>();
     private notebookToRunByLineController = new Map<NotebookDocument, RunByLineController>();
     private cache = new Map<PythonEnvironment, boolean>();
     private readonly disposables: IDisposable[] = [];
@@ -248,6 +249,10 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         return controller?.debugCell;
     }
 
+    public getDebugAdapter(notebook: NotebookDocument): KernelDebugAdapter | undefined {
+        return this.notebookToDebugAdapter.get(notebook);
+    }
+
     private updateToolbar(debugging: boolean) {
         this.debuggingInProgress.set(debugging).ignoreErrors();
     }
@@ -315,6 +320,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (dbg && session.id === (await dbg.session).id) {
                 this.notebookToDebugger.delete(doc);
+                this.notebookToDebugAdapter.delete(doc);
                 break;
             }
         }
@@ -358,6 +364,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         adapter.setDebuggingDelegate(controller);
                     }
 
+                    this.notebookToDebugAdapter.set(debug.document, adapter);
                     this.disposables.push(adapter.onDidEndSession(this.endSession.bind(this)));
                     return new DebugAdapterInlineImplementation(adapter);
                 } else {
@@ -410,9 +417,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     this.pythonInstaller.isProductVersionCompatible(Product.ipykernel, '>=6.0.0', interpreter);
                 const status = waitingMessage
                     ? await this.appShell.withProgress(
-                          { location: ProgressLocation.Notification, title: waitingMessage },
-                          checkCompatible
-                      )
+                        { location: ProgressLocation.Notification, title: waitingMessage },
+                        checkCompatible
+                    )
                     : await checkCompatible();
                 const result = status === ProductInstallStatus.Installed;
 

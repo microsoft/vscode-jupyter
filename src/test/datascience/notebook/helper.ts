@@ -22,7 +22,10 @@ import {
     NotebookRange,
     NotebookCellExecutionState,
     NotebookCellData,
-    notebooks
+    notebooks,
+    Event,
+    env,
+    UIKind
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -49,6 +52,7 @@ import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
+import { KernelDebugAdapter } from '../../../client/debugger/jupyter/kernelDebugAdapter';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -622,7 +626,7 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
         hasErrorOutput(cell.outputs)
     );
 }
-function getCellOutputs(cell: NotebookCell) {
+export function getCellOutputs(cell: NotebookCell) {
     return cell.outputs.length
         ? cell.outputs.map((output) => output.items.map(getOutputText).join('\n')).join('\n')
         : '<No cell outputs>';
@@ -792,4 +796,38 @@ export async function hijackPrompt(
         displayed: displayed.promise,
         clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.text)
     };
+}
+
+export async function asPromise<T>(
+    event: Event<T>,
+    timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
+): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        const handle = setTimeout(() => {
+            sub.dispose();
+            reject(new Error('asPromise TIMEOUT reached'));
+        }, timeout);
+
+        const sub = event((e) => {
+            clearTimeout(handle);
+            sub.dispose();
+            resolve(e);
+        });
+    });
+}
+
+export async function waitForEvent<T>(
+    eventType: string,
+    debugAdapter: KernelDebugAdapter,
+    timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
+): Promise<T> {
+    setTimeout(() => {
+        return;
+    }, timeout);
+    while (true) {
+        const msg: any = await asPromise(debugAdapter.onDidSendMessage);
+        if (msg.event === eventType) {
+            return msg;
+        }
+    }
 }
