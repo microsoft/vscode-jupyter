@@ -803,16 +803,15 @@ export async function asPromise<T>(
     timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
 ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-        const handle = setTimeout(() => {
-            sub.dispose();
-            reject(new Error('asPromise TIMEOUT reached'));
-        }, timeout);
-
         const sub = event((e) => {
             clearTimeout(handle);
             sub.dispose();
             resolve(e);
         });
+        const handle = setTimeout(() => {
+            sub.dispose();
+            reject(new Error('asPromise TIMEOUT reached'));
+        }, timeout);
     });
 }
 
