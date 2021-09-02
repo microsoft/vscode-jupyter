@@ -53,6 +53,7 @@ import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 import { KernelDebugAdapter } from '../../../client/debugger/jupyter/kernelDebugAdapter';
+import { Exception } from 'typemoq/Error/Exception';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -803,8 +804,8 @@ export async function asPromise<T>(
     timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
 ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const handle = setTimeout(() => {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
             sub.dispose();
             reject(new Error('asPromise TIMEOUT reached'));
         }, timeout);
@@ -822,7 +823,7 @@ export async function waitForEvent<T>(
     timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
 ): Promise<T> {
     setTimeout(() => {
-        return;
+        throw new Exception('Test: Debugging Timeout', `${eventType} message took too long to arrive`);
     }, timeout);
     while (true) {
         const msg: any = await asPromise(debugAdapter.onDidSendMessage);
