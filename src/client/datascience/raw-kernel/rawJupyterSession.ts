@@ -246,27 +246,19 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     protected startRestartSession(timeout: number) {
-        if (!this.restartSessionPromise && this.session) {
-            this.restartSessionPromise = this.createRestartSession(
-                this.session.resource,
-                this.kernelConnectionMetadata,
-                this.session,
-                timeout
-            );
+        if (!this.restartSessionPromise) {
+            this.restartSessionPromise = this.createRestartSession(timeout);
         }
     }
     protected async createRestartSession(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata | undefined,
-        _session: ISessionWithSocket,
         timeout: number,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
-        if (!kernelConnection || kernelConnection.kind === 'connectToLiveKernel') {
+        if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
             // Need to have connected before restarting and can't use a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
         }
-        const startPromise = this.startRawSession(resource, kernelConnection, timeout, cancelToken);
+        const startPromise = this.startRawSession(this.resource, this.kernelConnectionMetadata, timeout, cancelToken);
         return startPromise.then((session) => {
             this.restartSessionCreated(session.kernel);
             return session;
