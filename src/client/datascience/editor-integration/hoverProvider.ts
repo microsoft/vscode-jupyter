@@ -4,6 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 
 import * as vscode from 'vscode';
+import { IExtensionSyncActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { PYTHON } from '../../common/constants';
@@ -18,16 +19,9 @@ import { Identifiers, Telemetry } from '../constants';
 import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { InteractiveWindowView } from '../notebook/constants';
-import {
-    IHoverProvider,
-    IInteractiveWindowProvider,
-    IJupyterVariables,
-    INotebook,
-    INotebookExecutionLogger
-} from '../types';
-
+import { IInteractiveWindowProvider, IJupyterVariables, INotebook } from '../types';
 @injectable()
-export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
+export class HoverProvider implements IExtensionSyncActivationService, vscode.HoverProvider {
     private runFiles = new Set<string>();
     private hoverProviderRegistration: vscode.Disposable | undefined;
     private stopWatch = new StopWatch();
@@ -37,13 +31,17 @@ export class HoverProvider implements INotebookExecutionLogger, IHoverProvider {
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
-    ) {
-        notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
-        kernelProvider.onDidRestartKernel(() => this.runFiles.clear(), this, disposables);
+    ) {}
+    public activate() {
+        this.notebook.onDidChangeNotebookCellExecutionState(
+            this.onDidChangeNotebookCellExecutionState,
+            this,
+            this.disposables
+        );
+        this.kernelProvider.onDidRestartKernel(() => this.runFiles.clear(), this, this.disposables);
     }
-
     public dispose() {
         if (this.hoverProviderRegistration) {
             this.hoverProviderRegistration.dispose();

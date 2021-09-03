@@ -212,7 +212,6 @@ import {
     INbConvertExportToPythonService,
     INbConvertInterpreterDependencyChecker,
     INotebookCreationTracker,
-    INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
     INotebookProvider,
@@ -606,7 +605,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             Identifiers.MULTIPLEXING_DEBUGSERVICE
         );
         this.serviceManager.addSingleton<CellHashProviderFactory>(CellHashProviderFactory, CellHashProviderFactory);
-        this.serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
+        this.serviceManager.addSingleton<HoverProvider>(HoverProvider, HoverProvider);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
         this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);

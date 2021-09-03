@@ -30,7 +30,6 @@ import {
     INotebook,
     INotebookCompletion,
     INotebookExecutionInfo,
-    INotebookExecutionLogger,
     KernelSocketInformation
 } from '../types';
 import { expandWorkingDir } from './jupyterUtils';
@@ -186,7 +185,6 @@ export class JupyterNotebookBase implements INotebook {
         private configService: IConfigurationService,
         private disposableRegistry: IDisposableRegistry,
         executionInfo: INotebookExecutionInfo,
-        private loggers: INotebookExecutionLogger[],
         resource: Resource,
         identity: Uri,
         private getDisposedError: () => Error,
@@ -224,7 +222,6 @@ export class JupyterNotebookBase implements INotebook {
                 this.sessionStatusChanged.dispose();
                 this.onStatusChangedEvent = undefined;
             }
-            this.loggers.forEach((d) => d.dispose());
             this.disposedEvent.fire();
 
             try {

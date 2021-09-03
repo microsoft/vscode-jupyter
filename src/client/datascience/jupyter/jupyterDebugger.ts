@@ -91,13 +91,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
     }
 
-    public onRestart(kernel: IKernel): void {
-        if (!kernel.notebook) {
-            return;
-        }
-        this.configs.delete(kernel.notebook.identity.toString());
-    }
-
     public async hashesUpdated(hashes: IFileHashes[]): Promise<void> {
         // Make sure that we have an active debugging session at this point
         if (this.debugService.activeDebugSession) {

@@ -31,7 +31,6 @@ import { CodeSnippets, Identifiers } from '../../client/datascience/constants';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
-    IJupyterConnection,
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
@@ -96,7 +95,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private cellDictionary: Record<string, nbformat.IBaseCell> = {};
     private kernelSpecs: { name: string; dir: string }[] = [];
     private currentSession: MockJupyterSession | undefined;
-    private connInfo: IJupyterConnection | undefined;
     private cleanTemp: (() => void) | undefined;
     private pendingSessionFailure = false;
     private pendingKernelChangeFailure = false;
@@ -213,9 +211,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     public get onRestartSessionUsed() {
         return this.restartSessionUsedEvent.event;
-    }
-    public getConnInfo(): IJupyterConnection {
-        return this.connInfo!;
     }
 
     public makeActive(interpreter: PythonEnvironment) {
@@ -422,10 +417,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
         if (this.cleanTemp) {
             this.cleanTemp();
         }
-    }
-
-    public async initialize(connInfo: IJupyterConnection): Promise<void> {
-        this.connInfo = connInfo;
     }
 
     public startNew(

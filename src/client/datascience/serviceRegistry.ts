@@ -112,7 +112,6 @@ import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IDebugLocationTracker,
-    IHoverProvider,
     IInteractiveWindowProvider,
     IJupyterCommandFactory,
     IJupyterDebugger,
@@ -135,7 +134,6 @@ import {
     INbConvertInterpreterDependencyChecker,
     INotebookCreationTracker,
     INotebookEditorProvider,
-    INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
     INotebookProvider,
@@ -197,8 +195,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     // This condition is temporary.
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
     serviceManager.addSingleton<CellHashProviderFactory>(CellHashProviderFactory, CellHashProviderFactory);
-    serviceManager.addSingleton<IHoverProvider>(IHoverProvider, HoverProvider);
-    serviceManager.addBinding(IHoverProvider, INotebookExecutionLogger);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
