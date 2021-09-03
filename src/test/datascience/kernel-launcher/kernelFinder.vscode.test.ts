@@ -13,11 +13,7 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { traceInfo } from '../../../client/common/logger';
-import { spawnSync } from 'child_process';
-import {
-    areInterpreterPathsSame,
-    getNormalizedInterpreterPath
-} from '../../../client/pythonEnvironments/info/interpreter';
+import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info/interpreter';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {
