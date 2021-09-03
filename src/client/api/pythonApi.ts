@@ -14,9 +14,11 @@
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Disposable, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
+import { traceInfo } from '../common/logger';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
@@ -313,6 +315,8 @@ export class InterpreterSelector implements IInterpreterSelector {
         return this.apiProvider.getApi().then((api) => api.getSuggestions(resource));
     }
 }
+
+const interpreterCacheForCI = new Map<string, PythonEnvironment[]>();
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class InterpreterService implements IInterpreterService {
@@ -345,7 +349,24 @@ export class InterpreterService implements IInterpreterService {
     @captureTelemetry(Telemetry.InterpreterListingPerf)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
-        return this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
+        const promise = this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
+        if (isCI) {
+            promise
+                .then((items) => {
+                    const current = interpreterCacheForCI.get(resource?.toString() || '');
+                    const itemToStore = items;
+                    if (
+                        current &&
+                        (itemToStore === current || JSON.stringify(itemToStore) === JSON.stringify(current))
+                    ) {
+                        return;
+                    }
+                    interpreterCacheForCI.set(resource?.toString() || '', itemToStore);
+                    traceInfo(`Interpreter list is ${JSON.stringify(items)}`);
+                })
+                .catch(noop);
+        }
+        return promise;
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
