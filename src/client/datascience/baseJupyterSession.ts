@@ -7,7 +7,6 @@ import type { Slot } from '@phosphor/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
-import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { WrappedError } from '../common/errors/types';
 import { traceError, traceInfo, traceInfoIf, traceWarning } from '../common/logger';
@@ -222,8 +221,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
 
         // Just kill the current session and switch to the other
-        if (this.restartSessionPromise && this.session) {
-            traceInfo(`Restarting ${this.session.kernel.id}`);
+        if (this.restartSessionPromise) {
+            traceInfo(`Restarting ${this.session?.kernel.id}`);
 
             // Save old state for shutdown
             const oldSession = this.session;
@@ -242,7 +241,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
             this.restartSessionPromise = undefined;
             traceInfo('Started new restart session');
-            if (oldStatusHandler) {
+            if (oldStatusHandler && oldSession) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
             }
             this.shutdownSession(oldSession, undefined, false).ignoreErrors();
@@ -366,14 +365,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     // Sub classes need to implement their own restarting specific code
     protected abstract startRestartSession(timeout: number): void;
-    protected abstract createRestartSession(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata | undefined,
-        session: ISessionWithSocket,
-        timeout: number,
-        cancelToken?: CancellationToken
-    ): Promise<ISessionWithSocket>;
-
     // Sub classes need to implement their own kernel change specific code
     protected abstract createNewKernelSession(
         resource: Resource,
