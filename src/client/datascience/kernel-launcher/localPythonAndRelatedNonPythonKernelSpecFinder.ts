@@ -21,6 +21,7 @@ import { IPythonExtensionChecker } from '../../api/types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
+import { areInterpreterPathsSame } from '../../pythonEnvironments/info/interpreter';
 
 export const isDefaultPythonKernelSpecName = /python\d*.?\d*$/;
 
@@ -223,7 +224,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         if (
                             k.language === PYTHON_LANGUAGE &&
                             k.metadata?.interpreter?.path &&
-                            k.metadata?.interpreter?.path !== activeInterpreter?.path
+                            !areInterpreterPathsSame(k.metadata?.interpreter?.path, activeInterpreter?.path)
                         ) {
                             try {
                                 interpreter = await this.interpreterService.getInterpreterDetails(
@@ -278,7 +279,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             if (a.kernelSpec.display_name.toUpperCase() === b.kernelSpec.display_name.toUpperCase()) {
                 return 0;
             } else if (
-                a.interpreter?.path === activeInterpreter?.path &&
+                areInterpreterPathsSame(a.interpreter?.path, activeInterpreter?.path) &&
                 a.kernelSpec.display_name.toUpperCase() === activeInterpreter?.displayName?.toUpperCase()
             ) {
                 return -1;

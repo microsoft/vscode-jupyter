@@ -4,6 +4,7 @@
 import { sha256 } from 'hash.js';
 import { InterpreterInformation, PythonEnvironment } from '.';
 import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../common/process/internal/scripts';
+import { getOSType, OSType } from '../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 import { parsePythonVersion } from './pythonVersion';
 
@@ -76,5 +77,40 @@ export async function getInterpreterInfo(
 }
 
 export function getInterpreterHash(interpreter: PythonEnvironment | {path: string}){
-    return sha256().update(interpreter.path).digest('hex');
+    const interpreterPath = getNormalizedInterpreterPath(interpreter.path);
+    return sha256().update(interpreterPath).digest('hex');
+}
+
+/**
+ * Sometimes on CI, we have paths such as (this could happen on user machines as well)
+ *  - /opt/hostedtoolcache/Python/3.8.11/x64/python
+ *  - /opt/hostedtoolcache/Python/3.8.11/x64/bin/python
+ *  They are both the same.
+ * This function will take that into account.
+ */
+export function areInterpreterPathsSame(path1: string = '', path2:string = ''){
+    return getNormalizedInterpreterPath(path1) === getNormalizedInterpreterPath(path2);
+}
+/**
+ * Sometimes on CI, we have paths such as (this could happen on user machines as well)
+ *  - /opt/hostedtoolcache/Python/3.8.11/x64/python
+ *  - /opt/hostedtoolcache/Python/3.8.11/x64/bin/python
+ *  They are both the same.
+ * This function will take that into account.
+ */
+ export function getNormalizedInterpreterPath(path:string = ''){
+    // No need to generate hashes, its unnecessarily slow.
+    if (!path.endsWith('/bin/python')) {
+        return path;
+    }
+    // Sometimes on CI, we have paths such as (this could happen on user machines as well)
+    // - /opt/hostedtoolcache/Python/3.8.11/x64/python
+    // - /opt/hostedtoolcache/Python/3.8.11/x64/bin/python
+    // They are both the same.
+    // To ensure we treat them as the same, lets drop the `bin` on unix.
+    if ([OSType.OSX, OSType.OSX].includes(getOSType())){
+        // We need to exclude paths such as `/usr/bin/python`
+        return path.endsWith('/bin/python') && path.split('/').length > 4 ? path.replace('/bin/python', '/pyhton') : path;
+    }
+    return path;
 }

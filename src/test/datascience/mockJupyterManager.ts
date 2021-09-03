@@ -47,6 +47,7 @@ import { MockJupyterSession } from './mockJupyterSession';
 import { MockProcessService } from './mockProcessService';
 import { MockPythonService } from './mockPythonService';
 import { createCodeCell } from '../../datascience-ui/common/cellFactory';
+import { areInterpreterPathsSame } from '../../client/pythonEnvironments/info/interpreter';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 
@@ -117,7 +118,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.interpreterService
             .setup((i) => i.getInterpreterDetails(TypeMoq.It.isAnyString()))
             .returns((p) => {
-                const found = this.installedInterpreters.find((i) => i.path === p);
+                const found = this.installedInterpreters.find((i) => areInterpreterPathsSame(i.path, p));
                 if (found) {
                     return Promise.resolve(found);
                 }
@@ -126,7 +127,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.interpreterService
             .setup((i) => i.updateInterpreter(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_r, p) => {
-                const found = this.installedInterpreters.find((i) => i.path === p);
+                const found = this.installedInterpreters.find((i) => areInterpreterPathsSame(i.path, p));
                 if (found) {
                     this.activeInterpreter = found;
                 }

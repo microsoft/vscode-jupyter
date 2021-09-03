@@ -28,7 +28,11 @@ import { Settings, Telemetry } from '../../constants';
 import { concatMultilineString } from '../../../../datascience-ui/common';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError, traceInfo, traceInfoIf } from '../../../common/logger';
-import { getInterpreterHash } from '../../../pythonEnvironments/info/interpreter';
+import {
+    areInterpreterPathsSame,
+    getInterpreterHash,
+    getNormalizedInterpreterPath
+} from '../../../pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../../../telemetry/helpers';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { Uri } from 'vscode';
@@ -91,8 +95,8 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
         // Lets not assume that non-python kernrels cannot have such issues
         argsForGenerationOfId = spec.argv.join('#').toLowerCase();
     }
-    return `${spec.id || ''}.${specName}.${spec.interpreterPath || spec.path}.${
-        interpreter?.path || ''
+    return `${spec.id || ''}.${specName}.${getNormalizedInterpreterPath(spec.interpreterPath || spec.path)}.${
+        getNormalizedInterpreterPath(interpreter?.path) || ''
     }.${argsForGenerationOfId}`;
 }
 
@@ -405,7 +409,8 @@ export function findPreferredKernel(
         //  Find kernel that matches the preferred interpreter.
         const kernelMatchingPreferredInterpreter = kernels.find(
             (kernel) =>
-                kernel.kind === 'startUsingPythonInterpreter' && kernel.interpreter.path === preferredInterpreter.path
+                kernel.kind === 'startUsingPythonInterpreter' &&
+                areInterpreterPathsSame(kernel.interpreter.path, preferredInterpreter.path)
         );
         if (kernelMatchingPreferredInterpreter) {
             return kernelMatchingPreferredInterpreter;
@@ -438,7 +443,7 @@ export function findPreferredKernel(
                       spec.kind === 'startUsingPythonInterpreter' &&
                       spec.kernelSpec &&
                       spec.kernelSpec.language === PYTHON_LANGUAGE &&
-                      spec.interpreter.path === preferredInterpreter.path
+                      areInterpreterPathsSame(spec.interpreter.path, preferredInterpreter.path)
                   ) {
                       return true;
                   }
@@ -511,7 +516,7 @@ export function findPreferredKernel(
                     spec.path &&
                     spec.path.length > 0 &&
                     preferredInterpreter &&
-                    spec.path === preferredInterpreter.path &&
+                    areInterpreterPathsSame(spec.path, preferredInterpreter.path) &&
                     nbMetadataLanguage === PYTHON_LANGUAGE
                 ) {
                     // Path match. This is worth more if no notebook metadata as that should
@@ -684,6 +689,7 @@ export function findPreferredKernel(
             }
         });
     }
+    traceInfoIf(isCI && index >= 0, `Preferred kernel is ${JSON.stringify(kernels[index])}`);
     return index >= 0 ? kernels[index] : undefined;
 }
 
@@ -711,13 +717,16 @@ export async function sendTelemetryForPythonKernelExecutable(
             return;
         }
         const sysExecutable = concatMultilineString(output.text).trim().toLowerCase();
-        const match = kernelConnection.interpreter.path.toLowerCase() === sysExecutable;
+        const match = areInterpreterPathsSame(
+            kernelConnection.interpreter.path.toLowerCase(),
+            sysExecutable.toLowerCase()
+        );
+        sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
+            match: match ? 'true' : 'false',
+            kernelConnectionType: kernelConnection.kind
+        });
+        trackKernelResourceInformation(Uri.file(file), { interpreterMatchesKernel: match });
         if (match) {
-            sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
-                match: match ? 'true' : 'false',
-                kernelConnectionType: kernelConnection.kind
-            });
-            trackKernelResourceInformation(Uri.file(file), { interpreterMatchesKernel: match });
             return;
         }
 
