@@ -104,10 +104,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             this.debugCellUri = notebookDocument.cellAt(configuration.__cellIndex!)?.document.uri;
         }
 
-        if (configuration.__mode === KernelDebugMode.Cell) {
-            sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
-        }
-
         this.disposables.push(
             this.jupyterSession.onIOPubMessage(async (msg: KernelMessage.IIOPubMessage) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any

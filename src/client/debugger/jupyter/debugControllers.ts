@@ -15,6 +15,32 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../constants';
 import { DebuggingDelegate, IKernelDebugAdapter } from '../types';
 
+export class DebugCellController implements DebuggingDelegate {
+    constructor(
+        private readonly debugAdapter: IKernelDebugAdapter,
+        public readonly debugCell: NotebookCell,
+        private readonly kernel: IKernel,
+        private readonly commandManager: ICommandManager
+    ) {
+        sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
+    }
+
+    public async willSendEvent(_msg: DebugProtocolMessage): Promise<boolean> {
+        return false;
+    }
+
+    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
+        if (request.command === 'configurationDone') {
+            await cellDebugSetup(this.kernel, this.debugAdapter, this.debugCell);
+
+            void this.commandManager.executeCommand('notebook.cell.execute', {
+                ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
+                document: this.debugCell.document.uri
+            });
+        }
+    }
+}
+
 export class RunByLineController implements DebuggingDelegate {
     private lastPausedThreadId: number | undefined;
 
@@ -85,15 +111,7 @@ export class RunByLineController implements DebuggingDelegate {
     }
 
     private async initializeExecute() {
-        // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
-        // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
-        if (this.kernel) {
-            const code = 'import debugpy\ndebugpy.debug_this_thread()';
-            await this.kernel.executeHidden(code, this.debugCell.notebook);
-        }
-
-        // put breakpoint at the beginning of the cell
-        await this.debugAdapter.dumpCell(this.debugCell.index);
+        await cellDebugSetup(this.kernel, this.debugAdapter, this.debugCell);
 
         // This will save the code lines of the cell in lineList (so ignore comments and emtpy lines)
         // Its done to set the Run by Line breakpoint on the first code line
@@ -137,4 +155,19 @@ export class RunByLineController implements DebuggingDelegate {
             document: this.debugCell.document.uri
         });
     }
+}
+
+async function cellDebugSetup(
+    kernel: IKernel,
+    debugAdapter: IKernelDebugAdapter,
+    debugCell: NotebookCell
+): Promise<void> {
+    // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
+    // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
+    if (kernel) {
+        const code = 'import debugpy\ndebugpy.debug_this_thread()';
+        await kernel.executeHidden(code, debugCell.notebook);
+    }
+
+    await debugAdapter.dumpCell(debugCell.index);
 }

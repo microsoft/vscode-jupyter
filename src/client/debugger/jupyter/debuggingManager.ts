@@ -45,7 +45,7 @@ import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
 import { IPythonInstaller } from '../../api/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { RunByLineController } from './runByLineController';
+import { DebugCellController, RunByLineController } from './debugControllers';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -348,6 +348,10 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         );
                         adapter.setDebuggingDelegate(controller);
                         this.notebookToRunByLineController.set(debug.document, controller);
+                    } else if (config.__mode === KernelDebugMode.Cell && typeof config.__cellIndex === 'number') {
+                        const cell = activeDoc.cellAt(config.__cellIndex);
+                        const controller = new DebugCellController(adapter, cell, kernel!, this.commandManager);
+                        adapter.setDebuggingDelegate(controller);
                     }
 
                     this.disposables.push(
