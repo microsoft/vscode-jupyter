@@ -40,7 +40,7 @@ import {
 } from '../../../client/pythonEnvironments/info/interpreter';
 
 [false, true].forEach((isWindows) => {
-    suite.only(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
+    suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         // suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let kernelFinder: ILocalKernelFinder;
         let interpreterService: IInterpreterService;
