@@ -443,6 +443,8 @@ export function findPreferredKernel(
               })
             : -1;
 
+        traceInfoIf(isCI, `preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpecIndex}`);
+
         for (let i = 0; kernels && i < kernels?.length; i = i + 1) {
             const metadata = kernels[i];
             const spec = metadata.kind !== 'connectToLiveKernel' ? metadata.kernelSpec : undefined;
@@ -451,6 +453,10 @@ export function findPreferredKernel(
             let subScore = 0;
 
             if (spec) {
+                traceInfoIf(isCI, `Checking kernel Spec ${JSON.stringify(spec)}`);
+                traceInfoIf(isCI, `isPythonKernelSpec(spec) = ${isPythonKernelSpec(spec)}`);
+                traceInfoIf(isCI, `isKernelRegisteredByUs(spec) = ${isKernelRegisteredByUs(spec)}`);
+
                 // Check if the kernel spec name matches the hash of the generated kernel spec name.
                 // This approach of storing our generated kernelspec name in metadadata is not longer practiced.
                 if (
