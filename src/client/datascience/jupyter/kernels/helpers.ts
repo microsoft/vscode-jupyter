@@ -470,6 +470,7 @@ export function findPreferredKernel(
                     spec.name === getInterpreterKernelSpecName(preferredInterpreter)
                 ) {
                     // This is a perfect match.
+                    traceInfoIf(isCI, 'Increased score by +100 for matching names without notebook metadata');
                     score += 100;
                 }
 
@@ -483,6 +484,7 @@ export function findPreferredKernel(
                     notebookMetadata.kernelspec.name === spec.name
                 ) {
                     // This is a perfect match.
+                    traceInfoIf(isCI, 'Increased score by +100 for matching names in notbeook metadata');
                     score += 100;
                 }
 
@@ -499,6 +501,7 @@ export function findPreferredKernel(
                     getInterpreterHash(metadata.interpreter) === notebookMetadata.interpreter.hash
                 ) {
                     // This is a perfect match.
+                    traceInfoIf(isCI, 'Increased score by +100 for matching interpreter in notbeook metadata');
                     score += 100;
                 }
 
@@ -513,6 +516,10 @@ export function findPreferredKernel(
                 ) {
                     // Path match. This is worth more if no notebook metadata as that should
                     // match first.
+                    traceInfoIf(
+                        isCI,
+                        `Increased score by ${notebookMetadata ? 1 : 8} for matching spec.path in notbeook metadata`
+                    );
                     score += notebookMetadata ? 1 : 8;
                 }
 
@@ -531,6 +538,7 @@ export function findPreferredKernel(
                         // See if the version number matches
                         const nameVersion = parseInt(match[1][0], 10);
                         if (nameVersion && nameVersion === preferredInterpreter.version.major) {
+                            traceInfoIf(isCI, 'Increased score by +4 for matching major version');
                             score += 4;
                         }
                     }
@@ -538,6 +546,7 @@ export function findPreferredKernel(
 
                 // See if the display name already matches.
                 if (spec.display_name && spec.display_name === notebookMetadata?.kernelspec?.display_name) {
+                    traceInfoIf(isCI, 'Increased score by +16 for matching display_name with metadata');
                     score += 16;
                 }
                 // See if the name of the environments match (kernel name == environment name).
@@ -550,6 +559,7 @@ export function findPreferredKernel(
                     nbMetadataLanguage === PYTHON_LANGUAGE &&
                     !notebookMetadata?.kernelspec?.name.toLowerCase().match(isDefaultPythonKernelSpecName)
                 ) {
+                    traceInfoIf(isCI, 'Increased score by +16 for matching env name');
                     score += 16;
                 }
 
@@ -560,6 +570,7 @@ export function findPreferredKernel(
                     !notebookMetadata?.kernelspec?.display_name &&
                     nbMetadataLanguage === PYTHON_LANGUAGE
                 ) {
+                    traceInfoIf(isCI, 'Increased score by +16 for matching display_name with interpreter');
                     score += 10;
                 }
 
@@ -570,8 +581,9 @@ export function findPreferredKernel(
                             metadata
                         )} is ${score}`
                     );
+                    traceInfoIf(isCI, 'Increased score by +1 for matching language');
                     subScore = 1;
-                    score = 1;
+                    score = +1;
                 }
                 // Give python 3 environments a higher priority over others.
                 // E.g. if we end up just looking at the suppof ot ehe languages, then Python2 & Python3 will both get 1.
@@ -585,6 +597,7 @@ export function findPreferredKernel(
                         metadata.interpreter?.path?.toLowerCase().includes('python3') ||
                         spec.argv[0].toLocaleLowerCase().includes('python3'))
                 ) {
+                    traceInfoIf(isCI, 'Increased score by +1 for matching major version 3');
                     score += 1;
                     subScore += 1;
                     traceInfo(
@@ -602,6 +615,7 @@ export function findPreferredKernel(
                     preferredInterpreter &&
                     spec.interpreterPath === preferredInterpreter?.path
                 ) {
+                    traceInfoIf(isCI, 'Increased score by +1 for matching spec.interpreterPath');
                     score += 10;
                 }
             }
