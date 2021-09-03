@@ -3,6 +3,7 @@
 
 import { sha256 } from 'hash.js';
 import { InterpreterInformation, PythonEnvironment } from '.';
+import { IFileSystem } from '../../common/platform/types';
 import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../common/process/internal/scripts';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
@@ -88,8 +89,10 @@ export function getInterpreterHash(interpreter: PythonEnvironment | {path: strin
  *  They are both the same.
  * This function will take that into account.
  */
-export function areInterpreterPathsSame(path1: string = '', path2:string = ''){
-    return getNormalizedInterpreterPath(path1) === getNormalizedInterpreterPath(path2);
+export function areInterpreterPathsSame(path1: string = '', path2:string = '', fs: IFileSystem){
+    const norm1 = getNormalizedInterpreterPath(path1);
+    const norm2 = getNormalizedInterpreterPath(path2);
+    return norm1 === norm2 || (fs && fs.areLocalPathsSame(norm1, norm2));
 }
 /**
  * Sometimes on CI, we have paths such as (this could happen on user machines as well)
@@ -110,7 +113,7 @@ export function areInterpreterPathsSame(path1: string = '', path2:string = ''){
     // To ensure we treat them as the same, lets drop the `bin` on unix.
     if ([OSType.OSX, OSType.OSX].includes(getOSType())){
         // We need to exclude paths such as `/usr/bin/python`
-        return path.endsWith('/bin/python') && path.split('/').length > 4 ? path.replace('/bin/python', '/pyhton') : path;
+        return path.endsWith('/bin/python') && path.split('/').length > 4 ? path.replace('/bin/python', '/python') : path;
     }
     return path;
 }
