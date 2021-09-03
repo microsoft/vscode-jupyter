@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { BaseError } from '../../common/errors/types';
 import { traceInfo } from '../../common/logger';
-import { ObservableExecutionResult } from '../../common/process/types';
+import { IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
 import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { traceDecorators } from '../../logging';
@@ -39,6 +39,7 @@ export class PythonKernelLauncherDaemon implements IDisposable {
     private readonly processesToDispose: ChildProcess[] = [];
     constructor(
         @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool,
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(KernelEnvironmentVariablesService)
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService
     ) {}
@@ -49,19 +50,39 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         kernelSpec: IJupyterKernelSpec,
         interpreter?: PythonEnvironment
     ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon | undefined }> {
+        // Check to see if we this is a python kernel that we can start using our daemon.
+        const args = kernelSpec.argv.slice();
+        const modulePrefixIndex = args.findIndex((item) => item === '-m');
+
+        // If we don't have a module in kernelspec arfv such as `[python, -m, ipykernel]`
+        // Then just launch the python kernel as a regular python executable without the daemon.
+        const daemonPromise =
+            modulePrefixIndex === -1
+                ? this.pythonExecFactory.createActivatedEnvironment({
+                      resource,
+                      interpreter,
+                      bypassCondaExecution: true
+                  })
+                : this.daemonPool.get(resource, kernelSpec, interpreter);
         traceInfo(`Launching kernel daemon for ${kernelSpec.display_name} # ${interpreter?.path}`);
         const [daemon, wdExists, env] = await Promise.all([
-            this.daemonPool.get(resource, kernelSpec, interpreter),
+            daemonPromise,
             fs.pathExists(workingDirectory),
             this.kernelEnvVarsService.getEnvironmentVariables(resource, interpreter, kernelSpec)
         ]);
 
-        // Check to see if we have the type of kernelspec that we expect
-        const args = kernelSpec.argv.slice();
-        const modulePrefixIndex = args.findIndex((item) => item === '-m');
-        if (modulePrefixIndex === -1) {
-            throw new UnsupportedKernelSpec(args);
+        // If we don't have a module argument, then launch as a standard python executable.
+        if (modulePrefixIndex === -1 && !('start' in daemon)) {
+            // If we don't have a KernelDaemon here & we're not running a Python module either.
+            // The kernelspec argv could be something like [python, main.py, --something, --something-else, -f,{connection_file}]
+            const observableOutput = daemon.execObservable(args.slice(1), {
+                cwd: wdExists ? workingDirectory : process.cwd(),
+                env
+            });
+
+            return { observableOutput, daemon: undefined };
         }
+
         const moduleName = args[modulePrefixIndex + 1];
         const moduleArgs = args.slice(modulePrefixIndex + 2);
 
