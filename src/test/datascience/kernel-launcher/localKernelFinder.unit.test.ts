@@ -147,11 +147,11 @@ import { OSType } from '../../../client/common/utils/platform';
         const python3811spec: Kernel.ISpecModel = {
             display_name: python3_8_11_InterpreterNoBinPython.displayName!,
             name: 'python3811jvsc74a57bd06bf34dd489c90df3f2c7e4a7a969c3a519895dd38f693a4499ab76afdf92a529',
-            argv: [python3_8_11_InterpreterNoBinPython.path],
+            argv: [isWindows ? python3_8_11_Interpreter.path : python3_8_11_InterpreterNoBinPython.path],
             language: 'python',
             resources: {},
             metadata: {
-                interpreter: python3_8_11_InterpreterNoBinPython
+                interpreter: isWindows ? python3_8_11_Interpreter : python3_8_11_InterpreterNoBinPython
             }
         };
         const python2Interpreter: PythonEnvironment = {
