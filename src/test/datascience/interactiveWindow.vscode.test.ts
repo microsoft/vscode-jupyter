@@ -22,6 +22,7 @@ suite('Interactive window', async () => {
         if (IS_REMOTE_NATIVE_TEST) {
             return this.skip();
         }
+        return this.skip();
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
     });
