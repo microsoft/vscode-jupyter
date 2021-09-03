@@ -305,7 +305,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const exactMatch = interpreters.find((i) => {
             if (
                 kernelSpec.metadata?.interpreter?.path &&
-                areInterpreterPathsSame(kernelSpec.metadata?.interpreter?.path, i.path, this.fs)
+                areInterpreterPathsSame(kernelSpec.metadata?.interpreter?.path, i.path, undefined, this.fs)
             ) {
                 traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
                 return true;
@@ -320,7 +320,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0 ? kernelSpec.argv[0] : undefined;
         if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
             const exactMatchBasedOnArgv = interpreters.find((i) => {
-                if (areInterpreterPathsSame(pathInArgv, i.path, this.fs)) {
+                if (areInterpreterPathsSame(pathInArgv, i.path, undefined, this.fs)) {
                     traceInfo(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
                     return true;
                 }

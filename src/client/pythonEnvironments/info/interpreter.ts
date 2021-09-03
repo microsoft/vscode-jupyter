@@ -89,9 +89,9 @@ export function getInterpreterHash(interpreter: PythonEnvironment | {path: strin
  *  They are both the same.
  * This function will take that into account.
  */
-export function areInterpreterPathsSame(path1: string = '', path2:string = '', fs?: IFileSystem){
-    const norm1 = getNormalizedInterpreterPath(path1);
-    const norm2 = getNormalizedInterpreterPath(path2);
+export function areInterpreterPathsSame(path1: string = '', path2:string = '', ostype = getOSType(), fs?: IFileSystem){
+    const norm1 = getNormalizedInterpreterPath(path1, ostype);
+    const norm2 = getNormalizedInterpreterPath(path2, ostype);
     return norm1 === norm2 || (fs && fs.areLocalPathsSame(norm1, norm2));
 }
 /**

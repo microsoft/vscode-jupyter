@@ -438,13 +438,21 @@ import { OSType } from '../../../client/common/utils/platform';
                 const condaKernel = kernels.find(
                     (k) =>
                         k.interpreter &&
-                        areInterpreterPathsSame(k.interpreter.path, condaEnvironment.path) &&
+                        areInterpreterPathsSame(
+                            k.interpreter.path,
+                            condaEnvironment.path,
+                            isWindows ? OSType.Windows : OSType.Linux
+                        ) &&
                         k.kind === 'startUsingPythonInterpreter'
                 );
                 const python2Kernel = kernels.find(
                     (k) =>
                         k.interpreter &&
-                        areInterpreterPathsSame(k.interpreter.path, python2Interpreter.path) &&
+                        areInterpreterPathsSame(
+                            k.interpreter.path,
+                            python2Interpreter.path,
+                            isWindows ? OSType.Windows : OSType.Linux
+                        ) &&
                         k.kind === 'startUsingPythonInterpreter'
                 );
                 assert.ok(condaKernel, 'Conda kernel not returned by itself');
@@ -678,6 +686,19 @@ import { OSType } from '../../../client/common/utils/platform';
                     orig_nbformat: 2
                 });
                 assert.deepEqual({ ...kernel?.interpreter, path: '' }, { ...activeInterpreter, path: '' });
+                console.log(`Is Windows = ${isWindows}`);
+                console.log(
+                    `getNormalizedInterpreterPath(kernel?.interpreter?.path, isWindows ? OSType.Windows : OSType.Linux) = ${getNormalizedInterpreterPath(
+                        kernel?.interpreter?.path,
+                        isWindows ? OSType.Windows : OSType.Linux
+                    )}`
+                );
+                console.log(
+                    `getNormalizedInterpreterPath(activeInterpreter.path, isWindows ? OSType.Windows : OSType.Linux) = ${getNormalizedInterpreterPath(
+                        activeInterpreter.path,
+                        isWindows ? OSType.Windows : OSType.Linux
+                    )}`
+                );
                 assert.equal(
                     getNormalizedInterpreterPath(kernel?.interpreter?.path, isWindows ? OSType.Windows : OSType.Linux),
                     getNormalizedInterpreterPath(activeInterpreter.path, isWindows ? OSType.Windows : OSType.Linux)
