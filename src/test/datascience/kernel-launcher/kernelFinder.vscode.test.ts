@@ -14,6 +14,10 @@ import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { traceInfo } from '../../../client/common/logger';
 import { spawnSync } from 'child_process';
+import {
+    areInterpreterPathsSame,
+    getNormalizedInterpreterPath
+} from '../../../client/pythonEnvironments/info/interpreter';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {
@@ -58,28 +62,10 @@ suite('DataScience - Kernels Finder', () => {
         if (!kernelSpec?.interpreter) {
             throw new Error('Kernelspec & interpreter info should not be empty');
         }
-        const fullyQualifiedKernelPythonPath = spawnSync(kernelSpec.interpreter.path, [
-            '-c',
-            'import sys;print(sys.executable)'
-        ])
-            .stdout.toString()
-            .trim();
-
-        const fullyQualifiedInterpreterPythonPath = spawnSync(interpreter!.path, [
-            '-c',
-            'import sys;print(sys.executable)'
-        ])
-            .stdout.toString()
-            .trim();
 
         assert.isTrue(
-            kernelSpec?.interpreter?.path.toLowerCase() === interpreter?.path.toLocaleLowerCase() ||
-                fullyQualifiedKernelPythonPath.toLowerCase() === interpreter?.path.toLocaleLowerCase() ||
-                kernelSpec?.interpreter?.path.toLowerCase() ===
-                    fullyQualifiedInterpreterPythonPath.toLocaleLowerCase() ||
-                fullyQualifiedKernelPythonPath.toLowerCase() ===
-                    fullyQualifiedInterpreterPythonPath.toLocaleLowerCase(),
-            `No interpreter found, kernelspec interpreter is ${kernelSpec?.interpreter?.path} & ${fullyQualifiedKernelPythonPath}, but expected ${interpreter?.path} or ${fullyQualifiedInterpreterPythonPath}`
+            areInterpreterPathsSame(kernelSpec.interpreter.path.toLowerCase(), interpreter?.path.toLocaleLowerCase()),
+            `No interpreter found, kernelspec interpreter is ${kernelSpec.interpreter.path} but expected ${interpreter?.path}`
         );
     });
     test('Interpreter kernel returned if kernelspec metadata not provided', async () => {
@@ -94,28 +80,9 @@ suite('DataScience - Kernels Finder', () => {
         if (!kernelSpec?.interpreter) {
             throw new Error('Kernelspec & interpreter info should not be empty');
         }
-        const fullyQualifiedKernelPythonPath = spawnSync(kernelSpec.interpreter.path, [
-            '-c',
-            'import sys;print(sys.executable)'
-        ])
-            .stdout.toString()
-            .trim();
-
-        const fullyQualifiedInterpreterPythonPath = spawnSync(interpreter!.path, [
-            '-c',
-            'import sys;print(sys.executable)'
-        ])
-            .stdout.toString()
-            .trim();
-
         assert.isTrue(
-            kernelSpec?.interpreter?.path.toLowerCase() === interpreter?.path.toLocaleLowerCase() ||
-                fullyQualifiedKernelPythonPath.toLowerCase() === interpreter?.path.toLocaleLowerCase() ||
-                kernelSpec?.interpreter?.path.toLowerCase() ===
-                    fullyQualifiedInterpreterPythonPath.toLocaleLowerCase() ||
-                fullyQualifiedKernelPythonPath.toLowerCase() ===
-                    fullyQualifiedInterpreterPythonPath.toLocaleLowerCase(),
-            `No interpreter found, kernelspec interpreter is ${kernelSpec?.interpreter?.path} & ${fullyQualifiedKernelPythonPath}, but expected ${interpreter?.path} or ${fullyQualifiedInterpreterPythonPath}`
+            areInterpreterPathsSame(kernelSpec.interpreter.path.toLowerCase(), interpreter?.path.toLocaleLowerCase()),
+            `No interpreter found, kernelspec interpreter is ${kernelSpec.interpreter.path} but expected ${interpreter?.path}`
         );
     });
     test('Can find a Python kernel based on language', async () => {
