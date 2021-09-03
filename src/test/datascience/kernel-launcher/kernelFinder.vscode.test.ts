@@ -58,7 +58,14 @@ suite('DataScience - Kernels Finder', () => {
         if (!kernelSpec?.interpreter) {
             throw new Error('Kernelspec & interpreter info should not be empty');
         }
-        const fullyQualifiedPythonPath = spawnSync(kernelSpec.interpreter.path, [
+        const fullyQualifiedKernelPythonPath = spawnSync(kernelSpec.interpreter.path, [
+            '-c',
+            'import sys;print(sys.executable)'
+        ])
+            .stdout.toString()
+            .trim();
+
+        const fullyQualifiedInterpreterPythonPath = spawnSync(interpreter!.path, [
             '-c',
             'import sys;print(sys.executable)'
         ])
@@ -67,8 +74,12 @@ suite('DataScience - Kernels Finder', () => {
 
         assert.isTrue(
             kernelSpec?.interpreter?.path.toLowerCase() === interpreter?.path.toLocaleLowerCase() ||
-                fullyQualifiedPythonPath.toLowerCase() === interpreter?.path.toLocaleLowerCase(),
-            `No interpreter found, kernelspec interpreter is ${kernelSpec?.interpreter?.path} & ${fullyQualifiedPythonPath}, but expected ${interpreter?.path}`
+                fullyQualifiedKernelPythonPath.toLowerCase() === interpreter?.path.toLocaleLowerCase() ||
+                kernelSpec?.interpreter?.path.toLowerCase() ===
+                    fullyQualifiedInterpreterPythonPath.toLocaleLowerCase() ||
+                fullyQualifiedKernelPythonPath.toLowerCase() ===
+                    fullyQualifiedInterpreterPythonPath.toLocaleLowerCase(),
+            `No interpreter found, kernelspec interpreter is ${kernelSpec?.interpreter?.path} & ${fullyQualifiedKernelPythonPath}, but expected ${interpreter?.path} or ${fullyQualifiedInterpreterPythonPath}`
         );
     });
     test('Interpreter kernel returned if kernelspec metadata not provided', async () => {
@@ -83,7 +94,14 @@ suite('DataScience - Kernels Finder', () => {
         if (!kernelSpec?.interpreter) {
             throw new Error('Kernelspec & interpreter info should not be empty');
         }
-        const fullyQualifiedPythonPath = spawnSync(kernelSpec.interpreter.path, [
+        const fullyQualifiedKernelPythonPath = spawnSync(kernelSpec.interpreter.path, [
+            '-c',
+            'import sys;print(sys.executable)'
+        ])
+            .stdout.toString()
+            .trim();
+
+        const fullyQualifiedInterpreterPythonPath = spawnSync(interpreter!.path, [
             '-c',
             'import sys;print(sys.executable)'
         ])
@@ -92,8 +110,12 @@ suite('DataScience - Kernels Finder', () => {
 
         assert.isTrue(
             kernelSpec?.interpreter?.path.toLowerCase() === interpreter?.path.toLocaleLowerCase() ||
-                fullyQualifiedPythonPath.toLowerCase() === interpreter?.path.toLocaleLowerCase(),
-            `No interpreter found, kernelspec interpreter is ${kernelSpec?.interpreter?.path} & ${fullyQualifiedPythonPath}, but expected ${interpreter?.path}`
+                fullyQualifiedKernelPythonPath.toLowerCase() === interpreter?.path.toLocaleLowerCase() ||
+                kernelSpec?.interpreter?.path.toLowerCase() ===
+                    fullyQualifiedInterpreterPythonPath.toLocaleLowerCase() ||
+                fullyQualifiedKernelPythonPath.toLowerCase() ===
+                    fullyQualifiedInterpreterPythonPath.toLocaleLowerCase(),
+            `No interpreter found, kernelspec interpreter is ${kernelSpec?.interpreter?.path} & ${fullyQualifiedKernelPythonPath}, but expected ${interpreter?.path} or ${fullyQualifiedInterpreterPythonPath}`
         );
     });
     test('Can find a Python kernel based on language', async () => {
