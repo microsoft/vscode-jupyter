@@ -618,9 +618,7 @@ export function findPreferredKernel(
                         'interpreter' in notebookMetadata &&
                         notebookMetadata.interpreter &&
                         typeof notebookMetadata.interpreter === 'object' &&
-                        'hash' in notebookMetadata.interpreter &&
-                        metadata.kind === 'startUsingPythonInterpreter' &&
-                        notebookMetadata.interpreter
+                        metadata.kind === 'startUsingPythonInterpreter'
                     ) {
                         const nbMetadataInterpreter = notebookMetadata.interpreter as Partial<PythonEnvironment>;
                         if (
