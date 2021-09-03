@@ -38,6 +38,7 @@ import {
     getInterpreterHash,
     getNormalizedInterpreterPath
 } from '../../../client/pythonEnvironments/info/interpreter';
+import { OSType } from '../../../client/common/utils/platform';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -678,8 +679,8 @@ import {
                 });
                 assert.deepEqual({ ...kernel?.interpreter, path: '' }, { ...activeInterpreter, path: '' });
                 assert.equal(
-                    getNormalizedInterpreterPath(kernel?.interpreter?.path),
-                    getNormalizedInterpreterPath(activeInterpreter.path)
+                    getNormalizedInterpreterPath(kernel?.interpreter?.path, isWindows ? OSType.Windows : OSType.Linux),
+                    getNormalizedInterpreterPath(activeInterpreter.path, isWindows ? OSType.Windows : OSType.Linux)
                 );
             });
             test('Return conda interpreter if we have conda env name as kernelspec name in notebook metadata', async () => {
