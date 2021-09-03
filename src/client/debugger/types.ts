@@ -9,13 +9,11 @@ export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTe
 export interface IKernelDebugAdapter {
     debugSession: DebugSession;
     stepIn(threadId: number): Thenable<DebugProtocol.StepInResponse['body']>;
-    stackTrace(args?: {
-        threadId: number;
-        startFrame?: number;
-        levels?: number;
-    }): Thenable<DebugProtocol.StackTraceResponse['body']>;
+    stackTrace(args: DebugProtocol.StackTraceArguments): Thenable<DebugProtocol.StackTraceResponse['body']>;
+    setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Thenable<DebugProtocol.SetBreakpointsResponse['body']>;
     disconnect(): void;
     onDidEndSession: Event<DebugSession>;
+    dumpCell(index: number): Promise<void>;
 }
 
 export const IDebuggingManager = Symbol('IDebuggingManager');
@@ -26,7 +24,12 @@ export interface IDebuggingManager {
 
 export interface DebuggingDelegate {
     /**
-     * Returns true to signal that sending the message is vetoed.
+     * Called for every event sent from the debug adapter to the client. Returns true to signal that sending the message is vetoed.
      */
-    willSendMessage(msg: DebugProtocolMessage): Promise<boolean>;
+    willSendEvent(msg: DebugProtocolMessage): Promise<boolean>;
+
+    /**
+     * Called for every request sent from the client to the debug adapter.
+     */
+    willSendRequest(request: DebugProtocol.Request): Promise<void>;
 }

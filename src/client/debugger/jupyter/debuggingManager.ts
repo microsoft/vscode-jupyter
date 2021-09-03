@@ -192,7 +192,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 }
 
                 const controller = this.notebookToRunByLineController.get(cell.notebook);
-                if (controller && controller.debugCellUri?.toString() === cell.document.uri.toString()) {
+                if (controller && controller.debugCell.document.uri.toString() === cell.document.uri.toString()) {
                     controller.continue();
                 }
             }),
@@ -323,6 +323,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         if (this.vscNotebook.activeNotebookEditor) {
             const activeDoc = this.vscNotebook.activeNotebookEditor.document;
 
+            // TODO we apparently always have a kernel here, clean up typings
             const kernel = await this.ensureKernelIsRunning(activeDoc);
             const debug = this.getDebuggerByUri(activeDoc);
 
@@ -334,19 +335,17 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 });
                 if (notebook && notebook.session) {
                     debug.resolve(session);
-                    const adapter = new KernelDebugAdapter(
-                        session,
-                        debug.document,
-                        notebook.session,
-                        this.commandManager,
-                        this.fs,
-                        kernel,
-                        this.settings
-                    );
+                    const adapter = new KernelDebugAdapter(session, debug.document, notebook.session, this.fs, kernel);
 
                     if (config.__mode === KernelDebugMode.RunByLine && typeof config.__cellIndex === 'number') {
-                        const cellUri = activeDoc.cellAt(config.__cellIndex).document.uri;
-                        const controller = new RunByLineController(adapter, cellUri);
+                        const cell = activeDoc.cellAt(config.__cellIndex);
+                        const controller = new RunByLineController(
+                            adapter,
+                            cell,
+                            this.commandManager,
+                            kernel!,
+                            this.settings
+                        );
                         adapter.setDebuggingDelegate(controller);
                         this.notebookToRunByLineController.set(debug.document, controller);
                     }

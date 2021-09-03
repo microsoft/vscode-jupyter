@@ -1,14 +1,32 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { DebugProtocolMessage, Uri } from 'vscode';
+import * as path from 'path';
+import { DebugProtocolMessage, NotebookCell } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { parseForComments } from '../../../datascience-ui/common';
+import { ICommandManager } from '../../common/application/types';
 import { traceVerbose } from '../../common/logger';
+import { IConfigurationService } from '../../common/types';
+import { noop } from '../../common/utils/misc';
+import { Commands } from '../../datascience/constants';
+import { IKernel } from '../../datascience/jupyter/kernels/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { DebuggingTelemetry } from '../constants';
 import { DebuggingDelegate, IKernelDebugAdapter } from '../types';
 
 export class RunByLineController implements DebuggingDelegate {
     private lastPausedThreadId: number | undefined;
 
-    constructor(private readonly debugAdapter: IKernelDebugAdapter, public readonly debugCellUri: Uri) {}
+    constructor(
+        private readonly debugAdapter: IKernelDebugAdapter,
+        public readonly debugCell: NotebookCell,
+        private readonly commandManager: ICommandManager,
+        private readonly kernel: IKernel,
+        private readonly settings: IConfigurationService
+    ) {
+        sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunByLine);
+    }
 
     public continue(): void {
         if (typeof this.lastPausedThreadId !== 'number') {
@@ -23,7 +41,7 @@ export class RunByLineController implements DebuggingDelegate {
         this.debugAdapter.disconnect();
     }
 
-    public async willSendMessage(msg: DebugProtocolMessage): Promise<boolean> {
+    public async willSendEvent(msg: DebugProtocolMessage): Promise<boolean> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const anyMsg = msg as any;
 
@@ -36,6 +54,12 @@ export class RunByLineController implements DebuggingDelegate {
         }
 
         return false;
+    }
+
+    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
+        if (request.command === 'configurationDone') {
+            await this.initializeExecute();
+        }
     }
 
     private async handleStoppedEvent(threadId: number): Promise<boolean> {
@@ -53,10 +77,64 @@ export class RunByLineController implements DebuggingDelegate {
         const stResponse = await this.debugAdapter.stackTrace({ threadId, startFrame: 0, levels: 1 });
 
         const sf = stResponse.stackFrames[0];
-        return !!sf.source && sf.source.path !== this.debugCellUri.toString();
+        return !!sf.source && sf.source.path !== this.debugCell.document.uri.toString();
     }
 
     private trace(tag: string, msg: string) {
         traceVerbose(`[Debug-RBL] ${tag}: ${msg}`);
+    }
+
+    private async initializeExecute() {
+        // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
+        // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
+        if (this.kernel) {
+            const code = 'import debugpy\ndebugpy.debug_this_thread()';
+            await this.kernel.executeHidden(code, this.debugCell.notebook);
+        }
+
+        // put breakpoint at the beginning of the cell
+        await this.debugAdapter.dumpCell(this.debugCell.index);
+
+        // This will save the code lines of the cell in lineList (so ignore comments and emtpy lines)
+        // Its done to set the Run by Line breakpoint on the first code line
+        const textLines = this.debugCell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
+        const lineList: number[] = [];
+        parseForComments(
+            textLines,
+            () => noop(),
+            (s, i) => {
+                if (s.trim().length !== 0) {
+                    lineList.push(i);
+                }
+            }
+        );
+        lineList.sort();
+
+        // Don't send the SetBreakpointsRequest or open the variable view if there are no code lines
+        if (lineList.length !== 0) {
+            const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
+                line: lineList[0] + 1
+            };
+            await this.debugAdapter.setBreakpoints({
+                source: {
+                    name: path.basename(this.debugCell.notebook.uri.path),
+                    path: this.debugCell.document.uri.toString()
+                },
+                breakpoints: [initialBreakpoint],
+                sourceModified: false
+            });
+
+            // Open variable view
+            const settings = this.settings.getSettings();
+            if (settings.showVariableViewWhenDebugging) {
+                void this.commandManager.executeCommand(Commands.OpenVariableView);
+            }
+        }
+
+        // Run cell
+        void this.commandManager.executeCommand('notebook.cell.execute', {
+            ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
+            document: this.debugCell.document.uri
+        });
     }
 }
