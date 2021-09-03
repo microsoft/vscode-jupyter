@@ -523,27 +523,6 @@ export function findPreferredKernel(
                     score += notebookMetadata ? 1 : 8;
                 }
 
-                // See if the version is the same
-                if (
-                    preferredInterpreter &&
-                    preferredInterpreter.version &&
-                    spec &&
-                    spec.name &&
-                    nbMetadataLanguage === PYTHON_LANGUAGE &&
-                    !isKernelRegisteredByUs(spec)
-                ) {
-                    // Search for a digit on the end of the name. It should match our major version
-                    const match = /\D+(\d+)/.exec(spec.name);
-                    if (match && match !== null && match.length > 0) {
-                        // See if the version number matches
-                        const nameVersion = parseInt(match[1][0], 10);
-                        if (nameVersion && nameVersion === preferredInterpreter.version.major) {
-                            traceInfoIf(isCI, 'Increased score by +4 for matching major version');
-                            score += 4;
-                        }
-                    }
-                }
-
                 // See if the display name already matches.
                 if (spec.display_name && spec.display_name === notebookMetadata?.kernelspec?.display_name) {
                     traceInfoIf(isCI, 'Increased score by +16 for matching display_name with metadata');
@@ -585,6 +564,28 @@ export function findPreferredKernel(
                     subScore = 1;
                     score = +1;
                 }
+
+                // See if the version is the same
+                if (
+                    preferredInterpreter &&
+                    preferredInterpreter.version &&
+                    spec &&
+                    spec.name &&
+                    nbMetadataLanguage === PYTHON_LANGUAGE &&
+                    !isKernelRegisteredByUs(spec)
+                ) {
+                    // Search for a digit on the end of the name. It should match our major version
+                    const match = /\D+(\d+)/.exec(spec.name);
+                    if (match && match !== null && match.length > 0) {
+                        // See if the version number matches
+                        const nameVersion = parseInt(match[1][0], 10);
+                        if (nameVersion && nameVersion === preferredInterpreter.version.major) {
+                            traceInfoIf(isCI, 'Increased score by +4 for matching major version');
+                            score += 4;
+                        }
+                    }
+                }
+
                 // Give python 3 environments a higher priority over others.
                 // E.g. if we end up just looking at the suppof ot ehe languages, then Python2 & Python3 will both get 1.
                 // But Python 3 is definitely preferred over Python 2.
@@ -605,6 +606,35 @@ export function findPreferredKernel(
                             metadata
                         )} is ${score}`
                     );
+
+                    // If the versions match exactly, then increase the score by another 1
+                    if (
+                        typeof notebookMetadata === 'object' &&
+                        'interpreter' in notebookMetadata &&
+                        notebookMetadata.interpreter &&
+                        typeof notebookMetadata.interpreter === 'object' &&
+                        'hash' in notebookMetadata.interpreter &&
+                        metadata.kind === 'startUsingPythonInterpreter' &&
+                        notebookMetadata.interpreter
+                    ) {
+                        const nbMetadataInterpreter = notebookMetadata.interpreter as Partial<PythonEnvironment>;
+                        if (
+                            nbMetadataInterpreter.version?.raw &&
+                            nbMetadataInterpreter.version?.raw === metadata.interpreter.version?.raw
+                        ) {
+                            traceInfoIf(
+                                isCI,
+                                'Increased score by +3 for matching raw version in notebook metadata interpreter'
+                            );
+                            score += 3;
+                        }
+                    } else if (
+                        metadata.interpreter?.version?.raw &&
+                        metadata.interpreter?.version?.raw === preferredInterpreter?.version?.raw
+                    ) {
+                        traceInfoIf(isCI, 'Increased score by +3 for matching raw version in preferred interpreter');
+                        score += 3;
+                    }
                 }
 
                 // If ther'es no kernelspec in the metadata (e.g. blank notebooks),
