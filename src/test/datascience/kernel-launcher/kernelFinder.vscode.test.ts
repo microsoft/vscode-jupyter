@@ -13,6 +13,7 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import { traceInfo } from '../../../client/common/logger';
+import { spawnSync } from 'child_process';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {
@@ -54,8 +55,21 @@ suite('DataScience - Kernels Finder', () => {
                 name: PYTHON_LANGUAGE
             }
         });
-        assert.ok(kernelSpec);
-        assert.equal(kernelSpec?.interpreter?.path, interpreter?.path, 'No interpreter found');
+        if (!kernelSpec?.interpreter) {
+            throw new Error('Kernelspec & interpreter info should not be empty');
+        }
+        const fullyQualifiedPythonPath = spawnSync(kernelSpec.interpreter.path, [
+            '-c',
+            'import sys;print(sys.executable)'
+        ])
+            .stdout.toString()
+            .trim();
+
+        assert.isTrue(
+            kernelSpec?.interpreter?.path.toLowerCase() === interpreter?.path.toLocaleLowerCase() ||
+                fullyQualifiedPythonPath.toLowerCase() === interpreter?.path.toLocaleLowerCase(),
+            `No interpreter found, kernelspec interpreter is ${kernelSpec?.interpreter?.path} & ${fullyQualifiedPythonPath}, but expected ${interpreter?.path}`
+        );
     });
     test('Interpreter kernel returned if kernelspec metadata not provided', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
@@ -66,8 +80,21 @@ suite('DataScience - Kernels Finder', () => {
                 name: PYTHON_LANGUAGE
             }
         });
-        assert.ok(kernelSpec);
-        assert.equal(kernelSpec?.interpreter?.path, interpreter?.path, 'No interpreter found');
+        if (!kernelSpec?.interpreter) {
+            throw new Error('Kernelspec & interpreter info should not be empty');
+        }
+        const fullyQualifiedPythonPath = spawnSync(kernelSpec.interpreter.path, [
+            '-c',
+            'import sys;print(sys.executable)'
+        ])
+            .stdout.toString()
+            .trim();
+
+        assert.isTrue(
+            kernelSpec?.interpreter?.path.toLowerCase() === interpreter?.path.toLocaleLowerCase() ||
+                fullyQualifiedPythonPath.toLowerCase() === interpreter?.path.toLocaleLowerCase(),
+            `No interpreter found, kernelspec interpreter is ${kernelSpec?.interpreter?.path} & ${fullyQualifiedPythonPath}, but expected ${interpreter?.path}`
+        );
     });
     test('Can find a Python kernel based on language', async () => {
         const kernelSpec = await kernelFinder.findKernel(resourceToUse, {
