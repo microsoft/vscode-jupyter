@@ -26,7 +26,7 @@ import { KernelMessage } from '@jupyterlab/services';
 import { ICommandManager } from '../../common/application/types';
 import { traceError, traceVerbose } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IKernelDebugAdapter } from '../types';
+import { DebuggingDelegate, IKernelDebugAdapter } from '../types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import { Commands } from '../../datascience/constants';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
@@ -65,7 +65,7 @@ export interface IKernelDebugAdapterConfig extends DebugConfiguration {
     __cellIndex?: number;
 }
 
-function assertIsDebugConfig(thing: unknown): asserts thing is IKernelDebugAdapterConfig {
+export function assertIsDebugConfig(thing: unknown): asserts thing is IKernelDebugAdapterConfig {
     const config = thing as IKernelDebugAdapterConfig;
     if (
         typeof config.__mode === 'undefined' ||
@@ -85,8 +85,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private readonly endSession = new EventEmitter<DebugSession>();
     private readonly configuration: IKernelDebugAdapterConfig;
-    private threadId: number = 1;
     private readonly disposables: IDisposable[] = [];
+    private delegate: DebuggingDelegate | undefined;
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCellUri: Uri | undefined;
@@ -123,17 +123,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const anyMsg = msg as any;
 
-                this.trace('event', JSON.stringify(msg));
-
                 if (anyMsg.header.msg_type === 'debug_event') {
-                    if (anyMsg.content.event === 'stopped') {
-                        this.threadId = anyMsg.content.body.threadId;
-                        if (await this.handleStoppedEvent()) {
-                            this.trace('intercepted', JSON.stringify(anyMsg.content));
-                            return;
-                        }
+                    this.trace('event', JSON.stringify(msg));
+                    if (!(await this.delegate?.willSendMessage(anyMsg))) {
+                        this.sendMessage.fire(msg.content);
                     }
-                    this.sendMessage.fire(msg.content);
                 }
             })
         );
@@ -178,28 +172,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         );
     }
 
-    private async handleStoppedEvent(): Promise<boolean> {
-        if (await this.shouldStepIn()) {
-            this.runByLineContinue();
-            return true;
-        }
-
-        return false;
-    }
-
-    private async shouldStepIn(): Promise<boolean> {
-        // If we're in run by line and are stopped at another path, continue
-        if (this.configuration.__mode !== KernelDebugMode.RunByLine) {
-            return false;
-        }
-
-        // Call stackTrace to determine whether to forward the stop event to the client, and also to
-        // start the process of updating the variables view.
-        const stResponse = await this.getStackTrace({ startFrame: 0, levels: 1 });
-
-        const sf = stResponse.stackFrames[0];
-        const cell = this.notebookDocument.cellAt(this.configuration.__cellIndex!);
-        return !!sf.source && sf.source.path !== cell.document.uri.toString();
+    public setDebuggingDelegate(delegate: DebuggingDelegate) {
+        this.delegate = delegate;
     }
 
     private trace(tag: string, msg: string) {
@@ -240,10 +214,8 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         return this.session;
     }
 
-    public runByLineContinue() {
-        if (this.configuration.__mode === KernelDebugMode.RunByLine) {
-            void this.session.customRequest('stepIn', { threadId: this.threadId });
-        }
+    public stepIn(threadId: number): Thenable<DebugProtocol.StepInResponse['body']> {
+        return this.session.customRequest('stepIn', { threadId });
     }
 
     public disconnect() {
@@ -264,15 +236,16 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         });
     }
 
-    private getStackTrace(args?: {
+    public stackTrace(args?: {
+        threadId: number;
         startFrame?: number;
         levels?: number;
-    }): Promise<DebugProtocol.StackTraceResponse['body']> {
+    }): Thenable<DebugProtocol.StackTraceResponse['body']> {
         return this.session.customRequest('stackTrace', {
-            threadId: this.threadId,
+            threadId: args?.threadId,
             startFrame: args?.startFrame,
             levels: args?.levels
-        }) as Promise<DebugProtocol.StackTraceResponse['body']>;
+        });
     }
 
     private scopes(frameId: number): void {

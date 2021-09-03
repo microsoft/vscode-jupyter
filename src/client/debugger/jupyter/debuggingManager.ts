@@ -16,12 +16,18 @@ import {
     DebugConfiguration,
     EventEmitter,
     DebugProtocolMessage,
-    ProgressLocation
+    ProgressLocation,
+    DebugAdapterDescriptor
 } from 'vscode';
 import * as path from 'path';
 import { IKernel, IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IConfigurationService, IDisposable, Product, ProductInstallStatus } from '../../common/types';
-import { IKernelDebugAdapterConfig, KernelDebugAdapter, KernelDebugMode } from './kernelDebugAdapter';
+import {
+    assertIsDebugConfig,
+    IKernelDebugAdapterConfig,
+    KernelDebugAdapter,
+    KernelDebugMode
+} from './kernelDebugAdapter';
 import { INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -39,6 +45,7 @@ import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
 import { IPythonInstaller } from '../../api/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { RunByLineController } from './runByLineController';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -84,7 +91,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private debuggingInProgress: ContextKey;
     private runByLineInProgress: ContextKey;
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
-    private notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapter>();
+    private notebookToRunByLineController = new Map<NotebookDocument, RunByLineController>();
     private cache = new Map<PythonEnvironment, boolean>();
     private readonly disposables: IDisposable[] = [];
     private readonly _onDidFireVariablesEvent = new EventEmitter<void>();
@@ -127,48 +134,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             // factory for kernel debug adapters
             debug.registerDebugAdapterDescriptorFactory(pythonKernelDebugAdapter, {
-                createDebugAdapterDescriptor: async (session) => {
-                    if (this.vscNotebook.activeNotebookEditor) {
-                        const activeDoc = this.vscNotebook.activeNotebookEditor.document;
-
-                        const kernel = await this.ensureKernelIsRunning(activeDoc);
-                        const debug = this.getDebuggerByUri(activeDoc);
-
-                        if (debug) {
-                            const notebook = await this.notebookProvider.getOrCreateNotebook({
-                                resource: debug.document.uri,
-                                identity: debug.document.uri,
-                                getOnly: true
-                            });
-                            if (notebook && notebook.session) {
-                                debug.resolve(session);
-                                const adapter = new KernelDebugAdapter(
-                                    session,
-                                    debug.document,
-                                    notebook.session,
-                                    this.commandManager,
-                                    this.fs,
-                                    kernel,
-                                    this.settings
-                                );
-                                this.disposables.push(
-                                    adapter.onDidSendMessage((msg: DebugProtocolMessage) => {
-                                        if ((msg as DebugProtocol.VariablesResponse).command === 'variables') {
-                                            this._onDidFireVariablesEvent.fire();
-                                        }
-                                    }),
-                                    adapter.onDidEndSession(this.endSession.bind(this))
-                                );
-                                this.notebookToDebugAdapter.set(debug.document, adapter);
-                                return new DebugAdapterInlineImplementation(adapter);
-                            } else {
-                                void this.appShell.showInformationMessage(DataScience.kernelWasNotStarted());
-                            }
-                        }
-                    }
-                    traceError('Debug sessions should start only from the cell toolbar command');
-                    return;
-                }
+                createDebugAdapterDescriptor: async (session) => this.createDebugAdapterDescriptor(session)
             }),
 
             this.commandManager.registerCommand(DSCommands.DebugNotebook, async () => {
@@ -213,8 +179,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             }),
 
             this.commandManager.registerCommand(DSCommands.RunByLineContinue, (cell: NotebookCell | undefined) => {
-                const editor = this.vscNotebook.activeNotebookEditor;
                 if (!cell) {
+                    const editor = this.vscNotebook.activeNotebookEditor;
                     const range = editor?.selections[0];
                     if (range) {
                         cell = editor?.document.cellAt(range.start);
@@ -225,19 +191,19 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     return;
                 }
 
-                const adapter = this.notebookToDebugAdapter.get(cell.notebook);
-                if (adapter && adapter.debugCellUri?.toString() === cell.document.uri.toString()) {
-                    adapter.runByLineContinue();
+                const controller = this.notebookToRunByLineController.get(cell.notebook);
+                if (controller && controller.debugCellUri?.toString() === cell.document.uri.toString()) {
+                    controller.continue();
                 }
             }),
 
             this.commandManager.registerCommand(DSCommands.RunByLineStop, () => {
                 const editor = this.vscNotebook.activeNotebookEditor;
                 if (editor) {
-                    const adapter = this.notebookToDebugAdapter.get(editor.document);
-                    if (adapter) {
+                    const controller = this.notebookToRunByLineController.get(editor.document);
+                    if (controller) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'withKeybinding' });
-                        adapter.disconnect();
+                        controller.stop();
                     }
                 }
             }),
@@ -274,11 +240,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         this.disposables.forEach((d) => d.dispose());
     }
 
-    public getDebugSession(notebook: NotebookDocument): DebugSession | undefined {
-        const adapter = this.notebookToDebugAdapter.get(notebook);
-        if (adapter) {
-            return adapter.debugSession;
-        }
+    public isDebugging(notebook: NotebookDocument): boolean {
+        return this.notebookToDebugger.has(notebook);
     }
 
     private updateToolbar(debugging: boolean) {
@@ -351,6 +314,59 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 break;
             }
         }
+    }
+
+    private async createDebugAdapterDescriptor(session: DebugSession): Promise<DebugAdapterDescriptor | undefined> {
+        const config = session.configuration;
+        assertIsDebugConfig(config);
+
+        if (this.vscNotebook.activeNotebookEditor) {
+            const activeDoc = this.vscNotebook.activeNotebookEditor.document;
+
+            const kernel = await this.ensureKernelIsRunning(activeDoc);
+            const debug = this.getDebuggerByUri(activeDoc);
+
+            if (debug) {
+                const notebook = await this.notebookProvider.getOrCreateNotebook({
+                    resource: debug.document.uri,
+                    identity: debug.document.uri,
+                    getOnly: true
+                });
+                if (notebook && notebook.session) {
+                    debug.resolve(session);
+                    const adapter = new KernelDebugAdapter(
+                        session,
+                        debug.document,
+                        notebook.session,
+                        this.commandManager,
+                        this.fs,
+                        kernel,
+                        this.settings
+                    );
+
+                    if (config.__mode === KernelDebugMode.RunByLine && typeof config.__cellIndex === 'number') {
+                        const cellUri = activeDoc.cellAt(config.__cellIndex).document.uri;
+                        const controller = new RunByLineController(adapter, cellUri);
+                        adapter.setDebuggingDelegate(controller);
+                        this.notebookToRunByLineController.set(debug.document, controller);
+                    }
+
+                    this.disposables.push(
+                        adapter.onDidSendMessage((msg: DebugProtocolMessage) => {
+                            if ((msg as DebugProtocol.VariablesResponse).command === 'variables') {
+                                this._onDidFireVariablesEvent.fire();
+                            }
+                        }),
+                        adapter.onDidEndSession(this.endSession.bind(this))
+                    );
+                    return new DebugAdapterInlineImplementation(adapter);
+                } else {
+                    void this.appShell.showInformationMessage(DataScience.kernelWasNotStarted());
+                }
+            }
+        }
+        traceError('Debug sessions should start only from the cell toolbar command');
+        return;
     }
 
     private getDebuggerByUri(document: NotebookDocument): Debugger | undefined {
