@@ -111,7 +111,7 @@ export function areInterpreterPathsSame(path1: string = '', path2:string = '', o
     // - /opt/hostedtoolcache/Python/3.8.11/x64/bin/python
     // They are both the same.
     // To ensure we treat them as the same, lets drop the `bin` on unix.
-    if ([OSType.OSX, OSType.OSX].includes(ostype)){
+    if ([OSType.Linux, OSType.OSX].includes(ostype)){
         // We need to exclude paths such as `/usr/bin/python`
         return path.endsWith('/bin/python') && path.split('/').length > 4 ? path.replace('/bin/python', '/python') : path;
     }
