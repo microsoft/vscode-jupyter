@@ -369,12 +369,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // Try to run cell 1 again, it should fail with errors.
         await Promise.all([
             runCell(cell1),
-            waitForCondition(
-                async () => cell1.executionSummary?.success === false,
-                10_000,
-                () =>
-                    `Cell 1 did not fail Current ExecCount = ${cell1.executionSummary?.executionOrder} && Success =${cell1.executionSummary?.success}`
-            )
+            waitForCondition(async () => cell1.executionSummary?.success === false, 10_000, 'Cell 1 did not fail')
         ]);
         assert.isUndefined(
             cell1.executionSummary?.executionOrder,
