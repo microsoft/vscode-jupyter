@@ -92,7 +92,7 @@ export function getInterpreterHash(interpreter: PythonEnvironment | {path: strin
 export function areInterpreterPathsSame(path1: string = '', path2:string = '', ostype = getOSType(), fs?: IFileSystem){
     const norm1 = getNormalizedInterpreterPath(path1, ostype);
     const norm2 = getNormalizedInterpreterPath(path2, ostype);
-    return norm1 === norm2 || (fs && fs.areLocalPathsSame(norm1, norm2));
+    return norm1 === norm2 || (fs ? fs.areLocalPathsSame(norm1, norm2) : false);
 }
 /**
  * Sometimes on CI, we have paths such as (this could happen on user machines as well)
