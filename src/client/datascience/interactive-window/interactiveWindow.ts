@@ -639,7 +639,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const cellMatcher = new CellMatcher(settings);
         const isMarkdown = cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
         const strippedCode = isMarkdown
-            ? generateMarkdownFromCodeLines(code.splitLines()).join('\n')
+            ? generateMarkdownFromCodeLines(code.splitLines()).join('')
             : cellMatcher.stripFirstMarker(code).trim();
         const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
