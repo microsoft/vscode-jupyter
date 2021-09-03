@@ -468,6 +468,8 @@ jobs:
       - name: Install Python Libs
         if: env.conda_python == ''
         run: |
+          python --version
+          python -c "import sys;print(sys.executable)"
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
@@ -734,6 +736,8 @@ jobs:
       - name: Install Python Libs
         if: matrix.python != 'conda' && matrix.python != 'noPython'
         run: |
+          python --version
+          python -c "import sys;print(sys.executable)"
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
