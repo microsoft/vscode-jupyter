@@ -646,9 +646,9 @@ export function findPreferredKernel(
                 if (
                     !notebookMetadata?.kernelspec &&
                     preferredInterpreter &&
-                    spec.interpreterPath === preferredInterpreter?.path
+                    areInterpreterPathsSame(spec.interpreterPath, preferredInterpreter?.path)
                 ) {
-                    traceInfoIf(isCI, 'Increased score by +1 for matching spec.interpreterPath');
+                    traceInfoIf(isCI, 'Increased score by +10 for matching spec.interpreterPath');
                     score += 10;
                 }
             }
