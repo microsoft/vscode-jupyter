@@ -212,7 +212,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO $JUPYTER_INTERNAL_REPO is:open is:issue -label:$ADMIN_AREAS -label:$FEATURE_AREAS -label:needs-triage\r\n$JUPYTER_INTERNAL_REPO is:open is:issue -label:$ADMIN_AREAS -label:$FEATURE_AREAS -label:needs-triage\r\n//$JUPYTER_DATA_WRANGLER_REPO is:open is:issue -label:$ADMIN_AREAS -label:$FEATURE_AREAS -label:needs-triage"
+    "value": "$JUPYTER_REPO is:open is:issue -label:$ADMIN_AREAS -label:$FEATURE_AREAS -label:needs-triage\r\n$JUPYTER_INTERNAL_REPO is:open is:issue -label:$ADMIN_AREAS -label:$FEATURE_AREAS -label:needs-triage\r\n//$JUPYTER_DATA_WRANGLER_REPO is:open is:issue -label:$ADMIN_AREAS -label:$FEATURE_AREAS -label:needs-triage"
   },
   {
     "kind": 1,
