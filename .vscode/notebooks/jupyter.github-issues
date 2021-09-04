@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-08-30"
+    "value": "$TODAYS_DATE=2021-09-03"
   },
   {
     "kind": 1,
@@ -17,7 +17,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internabacklog\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
+    "value": "$JUPYTER_REPO=repo:microsoft/vscode-jupyter\r\n$JUPYTER_INTERNAL_REPO=repo:microsoft/vscode-jupyter-internal \r\n$JUPYTER_DATA_WRANGLER_REPO=repo:microsoft/vscode-data-wrangler\r\n$JUPYTER_ALL_REPOS=$JUPYTER_REPO $JUPYTER_INTERNAL_REPO $JUPYTER_DATA_WRANGLER_REPO\r\n$VSCODE_REPOS=repo:microsoft/vscode repo:microsoft/vscode-internabacklog\r\n$PYTHON_REPOS=repo:microsoft/vscode-python\r\n$ALL_REPOS=$JUPYTER_ALL_REPOS $VSCODE_REPOS $PYTHON_REPOS\r\n\r\n// project:microsoft/vscode-jupyter/3 == monthly-release\r\n// project:microsoft/vscode-jupyter-internal/1 == monthly-release\r\n$PROJECT_BOARDS=project:microsoft/vscode-jupyter/3 project:microsoft/vscode-jupyter-internal/1\r\n"
   },
   {
     "kind": 1,
@@ -47,7 +47,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$AREAS=engineering,3rd-party-extension,azureml,codespaces,conda,data-viewer,documentation,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-debugging,notebook-diff,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-params-papermill,notebook-remote,notebook-rendering,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,webview-cleanup,webview-notebook,WSL"
+    "value": "$FEATURE_AREAS=3rd-party-extension,azureml,codespaces,conda,data-prep,data-viewer,documentation,dotnet-interactive,gather,intellisense,interactive-window-debugging,interactive-window,ipywidgets,kernel-crash,kernel-enumeration,kernel-issues,keyboard-shortcuts,language-any,language-python,language-python-environment,language-julia,language-R,liveshare,markdown,nbformat,notebook-automated-testing,notebook-compatibility,notebook-debugging,notebook-diff,notebook-execution,notebook-extensibility,notebook-getting-started,notebook-import-export,notebook-params-papermill,notebook-remote,notebook-rendering,notebook-serialization-save-load,notebook-templates,notebook-workflow,plot-viewer,polyglot,pyspark,python-environment,pytorch,run-by-line,telemetry,themes,toc-outline,variable-explorer,webview-cleanup,webview-notebook,WSL\r\n$ADMIN_AREAS=engineering,iteration-plan-candidate,release-plan,discussion,pm-task"
   },
   {
     "kind": 1,
@@ -152,7 +152,7 @@
   {
     "kind": 1,
     "language": "markdown",
-    "value": "### EndGame for Current Milestone"
+    "value": "----\r\n## EndGame for Current Milestone"
   },
   {
     "kind": 1,
@@ -212,7 +212,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:open is:issue -label:$AREAS"
+    "value": "$JUPYTER_REPO $JUPYTER_INTERNAL_REPO is:open is:issue -label:$ADMIN_AREAS -label:$FEATURE_AREAS -label:needs-triage"
   },
   {
     "kind": 1,
