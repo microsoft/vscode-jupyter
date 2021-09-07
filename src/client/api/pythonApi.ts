@@ -18,7 +18,7 @@ import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
-import { traceInfo } from '../common/logger';
+import { traceInfo, traceInfoIf } from '../common/logger';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
@@ -371,6 +371,7 @@ export class InterpreterService implements IInterpreterService {
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
+        traceInfoIf(isCI, `getActiveInterpreter in Python API for ${resource?.toString()}`);
         this.hookupOnDidChangeInterpreterEvent();
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
         let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
@@ -385,6 +386,13 @@ export class InterpreterService implements IInterpreterService {
                         this.workspaceCachedActiveInterpreter.delete(workspaceId);
                     }
                 });
+                if (isCI) {
+                    promise
+                        .then((item) =>
+                            traceInfo(`Active Interpreter in Python API for ${resource?.toString()} is ${item?.path}`)
+                        )
+                        .catch(noop);
+                }
             }
         }
         return promise;
