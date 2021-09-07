@@ -6,13 +6,13 @@
 import * as path from 'path';
 import { assert } from 'chai';
 import { Uri, workspace } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { getKernelConnectionLanguage } from '../../../client/datascience/jupyter/kernels/helpers';
 import { ILocalKernelFinder } from '../../../client/datascience/kernel-launcher/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
-import { traceInfo } from '../../../client/common/logger';
+import { traceInfo, traceInfoIf } from '../../../client/common/logger';
 import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info/interpreter';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -48,6 +48,7 @@ suite('DataScience - Kernels Finder', () => {
     });
     test('Python kernel returned if no matching kernel found', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
+        traceInfoIf(isCI, `Active interpreter is ${interpreter?.path}`);
         const kernelSpec = await kernelFinder.findKernel(resourceToUse, {
             kernelspec: { display_name: 'foobar', name: 'foobar' },
             orig_nbformat: 4,
