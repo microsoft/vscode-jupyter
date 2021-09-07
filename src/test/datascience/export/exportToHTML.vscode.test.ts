@@ -5,7 +5,6 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { CancellationTokenSource, Uri } from 'vscode';
-import { traceInfo } from '../../../client/common/logger';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { ExportInterpreterFinder } from '../../../client/datascience/export/exportInterpreterFinder';
 import { ExportFormat, IExport } from '../../../client/datascience/export/types';
@@ -39,7 +38,6 @@ suite('DataScience - Export HTML', function () {
         await file.dispose();
         const token = new CancellationTokenSource();
         const interpreter = await exportInterpreterFinder.getExportInterpreter(ExportFormat.html);
-        traceInfo(`Interpreter for exporting is ${interpreter.path}`);
         await exportToHTML.export(
             Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
             target,

@@ -1,6 +1,4 @@
 import { inject, injectable } from 'inversify';
-import { isCI } from '../../common/constants';
-import { traceInfoIf } from '../../common/logger';
 import * as localize from '../../common/utils/localize';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService';
@@ -35,7 +33,6 @@ export class ExportInterpreterFinder {
 
             // If an interpreter was not passed in, work with the main jupyter interperter
             const selectedJupyterInterpreter = await this.jupyterInterpreterService.getSelectedInterpreter();
-            traceInfoIf(isCI, `selectedJupyterInterpreter is ${selectedJupyterInterpreter?.path}`);
             if (selectedJupyterInterpreter) {
                 if (await this.checkNotebookInterpreter(selectedJupyterInterpreter)) {
                     return selectedJupyterInterpreter;

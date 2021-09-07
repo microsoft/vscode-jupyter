@@ -891,7 +891,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (!this.mockJupyter) {
             const interpreterService = this.serviceManager.get<IInterpreterService>(IInterpreterService);
             const activeInterpreter = await interpreterService.getActiveInterpreter();
-            traceInfoIf(isCI, `activeInterpreter in DS IOC is ${activeInterpreter?.path}`);
             if (!activeInterpreter || !(await this.hasFunctionalDependencies(activeInterpreter))) {
                 const list = await this.getFunctionalTestInterpreters();
                 if (list.length) {

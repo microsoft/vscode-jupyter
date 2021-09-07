@@ -18,7 +18,7 @@ import { isCI } from '../common/constants';
 import { trackPackageInstalledIntoInterpreter } from '../common/installer/productInstaller';
 import { ProductNames } from '../common/installer/productNames';
 import { InterpreterUri } from '../common/installer/types';
-import { traceInfo, traceInfoIf } from '../common/logger';
+import { traceInfo } from '../common/logger';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
@@ -121,7 +121,6 @@ export class PythonApiProvider implements IPythonApiProvider {
         this.hooksRegistered = true;
         if (!pythonExtension.isActive) {
             await pythonExtension.activate();
-            traceInfoIf(isCI, 'Python extension Activated');
             this.didActivatePython.fire();
         }
         pythonExtension.exports.jupyter.registerHooks();
@@ -349,9 +348,6 @@ export class InterpreterService implements IInterpreterService {
 
     @captureTelemetry(Telemetry.InterpreterListingPerf)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
-        // Ensure resource is not undefined, Because of https://github.com/microsoft/vscode-jupyter/issues/7440
-        resource =
-            (this.workspace.workspaceFolders?.length || 0) > 0 ? this.workspace.workspaceFolders![0].uri : undefined;
         this.hookupOnDidChangeInterpreterEvent();
         const promise = this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
         if (isCI) {
@@ -375,10 +371,6 @@ export class InterpreterService implements IInterpreterService {
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
-        // Ensure resource is not undefined, Because of https://github.com/microsoft/vscode-jupyter/issues/7440
-        resource =
-            (this.workspace.workspaceFolders?.length || 0) > 0 ? this.workspace.workspaceFolders![0].uri : undefined;
-        traceInfoIf(isCI, `getActiveInterpreter in Python API for ${resource?.toString()}`);
         this.hookupOnDidChangeInterpreterEvent();
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
         let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
