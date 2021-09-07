@@ -6,6 +6,8 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { getInterpreterInfo } from '.';
 import { IPythonExtensionChecker } from '../../client/api/types';
+import { isCI } from '../../client/common/constants';
+import { traceInfoIf } from '../../client/common/logger';
 import { Resource } from '../../client/common/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
@@ -44,6 +46,7 @@ export class InterpreterService implements IInterpreterService {
     }
 
     public updateInterpreter(resource: Resource, pythonPath: string): void {
+        traceInfoIf(isCI, `Updating interpreter for ${resource?.toString()} to ${pythonPath}`);
         if (pythonPath.trim().length > 0) {
             this.customInterpretersPerUri.set(resource?.fsPath || '', pythonPath);
         }
