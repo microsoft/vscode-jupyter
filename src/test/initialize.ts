@@ -6,7 +6,7 @@ import type { IDisposable } from '../client/common/types';
 import { clearPendingChainedUpdatesForTests } from '../client/datascience/notebook/helpers/notebookUpdater';
 import {
     clearPendingTimers,
-    enableVerboseLoggingInPythonExtension,
+    disableExperimentsInPythonExtension,
     IExtensionTestApi,
     PYTHON_PATH,
     setPythonPathInWorkspaceRoot
@@ -34,7 +34,7 @@ export function isInsiders() {
 let jupyterServerStarted = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function initialize(): Promise<IExtensionTestApi> {
-    await enableVerboseLoggingInPythonExtension();
+    await disableExperimentsInPythonExtension();
     await initializePython();
     const api = await activateExtension();
     // Ensure we start jupyter server before opening any notebooks or the like.
