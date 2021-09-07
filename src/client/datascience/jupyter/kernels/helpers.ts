@@ -453,6 +453,16 @@ export function findPreferredKernel(
 
         traceInfoIf(isCI, `preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpecIndex}`);
 
+        // If we don't have any kernelspec, then just return the preferred interpreter for notebooks.
+        if (
+            getResourceType(resource) === 'notebook' &&
+            !notebookMetadata?.kernelspec &&
+            preferredInterpreterKernelSpecIndex >= 0
+        ) {
+            traceInfoIf(isCI, "Using preferred interpreter as there's no kernelspec in notebook metadata");
+            return kernels[preferredInterpreterKernelSpecIndex];
+        }
+
         for (let i = 0; kernels && i < kernels?.length; i = i + 1) {
             const metadata = kernels[i];
             const spec = metadata.kind !== 'connectToLiveKernel' ? metadata.kernelSpec : undefined;
