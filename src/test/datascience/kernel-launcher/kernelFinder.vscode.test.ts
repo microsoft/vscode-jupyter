@@ -48,7 +48,8 @@ suite('DataScience - Kernels Finder', () => {
     });
     test('Python kernel returned if no matching kernel found', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
-        traceInfoIf(isCI, `Active interpreter is ${interpreter?.path}`);
+        const interpreter2 = await interpreterService.getActiveInterpreter(undefined);
+        traceInfoIf(isCI, `Active interpreter is ${interpreter?.path} && ${interpreter2?.path}`);
         const kernelSpec = await kernelFinder.findKernel(resourceToUse, {
             kernelspec: { display_name: 'foobar', name: 'foobar' },
             orig_nbformat: 4,
