@@ -471,8 +471,8 @@ export function findPreferredKernel(
                 notebookMetadata.interpreter !== null;
             // If we have a kernelspec (with just the name & display name) & no intepreter information
             // & we cannot find a matching kernel (for the provided name & display name), then just return the preferred interpreter for notebooks.
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const kernelSpec = notebookMetadata.kernelspec;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const definedValuesForKernelSpec = new Set(Object.keys(kernelSpec) as any);
             definedValuesForKernelSpec.delete('name');
             definedValuesForKernelSpec.delete('display_name');
