@@ -348,6 +348,9 @@ export class InterpreterService implements IInterpreterService {
 
     @captureTelemetry(Telemetry.InterpreterListingPerf)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
+        // Ensure resource is not undefined, Because of https://github.com/microsoft/vscode-jupyter/issues/7440
+        resource =
+            (this.workspace.workspaceFolders?.length || 0) > 0 ? this.workspace.workspaceFolders![0].uri : undefined;
         this.hookupOnDidChangeInterpreterEvent();
         const promise = this.apiProvider.getApi().then((api) => api.getInterpreters(resource));
         if (isCI) {
@@ -371,6 +374,9 @@ export class InterpreterService implements IInterpreterService {
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
+        // Ensure resource is not undefined, Because of https://github.com/microsoft/vscode-jupyter/issues/7440
+        resource =
+            (this.workspace.workspaceFolders?.length || 0) > 0 ? this.workspace.workspaceFolders![0].uri : undefined;
         traceInfoIf(isCI, `getActiveInterpreter in Python API for ${resource?.toString()}`);
         this.hookupOnDidChangeInterpreterEvent();
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
