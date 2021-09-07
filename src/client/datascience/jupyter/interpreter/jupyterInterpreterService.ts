@@ -222,7 +222,6 @@ export class JupyterInterpreterService {
         // Nothing saved found, so check our current interpreter
         if (!interpreter) {
             const currentInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
-
             if (currentInterpreter) {
                 // If the current active interpreter has everything installed already just use that
                 if (await this.interpreterConfiguration.areDependenciesInstalled(currentInterpreter, token)) {

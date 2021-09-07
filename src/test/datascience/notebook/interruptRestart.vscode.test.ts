@@ -20,7 +20,7 @@ import {
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
-import { IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 import {
     assertVSCCellIsNotRunning,
@@ -336,6 +336,12 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         ]);
     });
     test('Can restart a kernel after it dies', async function () {
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            // The kernel will auto start if it fails when using Jupyter.
+            // When using Raw we don't use jupyter.
+            return this.skip();
+        }
+
         /*
         Run cell 1 - Print some value
         Run Cell 2 with some code that will cause the kernel to die.
