@@ -290,7 +290,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         traceInfoIf(isCI, `Clear controller mapping for ${document.uri.toString()}`);
         const loadControllersPromise = this.loadNotebookControllers();
 
-        if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
+        if (
+            isPythonNotebook(getNotebookMetadata(document)) &&
+            this.extensionChecker.isPythonExtensionInstalled &&
+            this.isLocalLaunch
+        ) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
             this.createActiveInterpreterController(JupyterNotebookView).catch(noop);
         }
