@@ -574,6 +574,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     env:
       VSC_FORCE_REAL_JUPYTER: 1
+      VSC_PYTHON_FORCE_LOGGING: 1
       VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
     strategy:
       fail-fast: false
