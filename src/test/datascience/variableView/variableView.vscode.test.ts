@@ -36,6 +36,7 @@ suite('DataScience - VariableView', function () {
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo(`Start Test Suite`);
+        return this.skip();
         this.timeout(120_000);
         api = await initialize();
 
