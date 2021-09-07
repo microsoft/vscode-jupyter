@@ -21,7 +21,6 @@ import {
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../../constants';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils';
@@ -33,13 +32,7 @@ import {
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { IKernelLauncher, ILocalKernelFinder } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
-import {
-    INotebook,
-    INotebookExecutionInfo,
-    INotebookExecutionLogger,
-    IRawNotebookProvider,
-    IRawNotebookSupportedService
-} from '../../types';
+import { INotebook, INotebookExecutionInfo, IRawNotebookProvider, IRawNotebookSupportedService } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
@@ -64,7 +57,6 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
         @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
@@ -170,7 +162,6 @@ export class HostRawNotebookProvider extends RawNotebookProviderBase implements 
                         this.configService,
                         this.disposableRegistry,
                         info,
-                        this.serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger),
                         resource,
                         identity,
                         this.getDisposedError.bind(this),

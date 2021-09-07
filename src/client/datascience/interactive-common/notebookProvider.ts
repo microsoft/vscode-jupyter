@@ -13,7 +13,6 @@ import { IConfigurationService, IDisposableRegistry, Resource } from '../../comm
 import { noop } from '../../common/utils/misc';
 import { Identifiers, Settings, Telemetry } from '../constants';
 import { sendKernelTelemetryWhenDone, trackKernelResourceInformation } from '../telemetry/telemetry';
-import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
@@ -29,17 +28,12 @@ export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
     private readonly _onSessionStatusChanged = new EventEmitter<{ status: ServerStatus; notebook: INotebook }>();
-    private _connectionMade = new EventEmitter<boolean>();
-    private _potentialKernelChanged = new EventEmitter<{ identity: Uri; kernelConnection: KernelConnectionMetadata }>();
     private _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
         return [...this.notebooks.values()];
     }
     public get onSessionStatusChanged() {
         return this._onSessionStatusChanged.event;
-    }
-    public get onPotentialKernelChanged() {
-        return this._potentialKernelChanged.event;
     }
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -58,20 +52,8 @@ export class NotebookProvider implements INotebookProvider {
         return this._notebookCreated.event;
     }
 
-    public get onConnectionMade() {
-        return this._connectionMade.event;
-    }
-
     public get type(): 'jupyter' | 'raw' {
         return this._type;
-    }
-
-    // Disconnect from the specified provider
-    public async disconnect(options: ConnectNotebookProviderOptions): Promise<void> {
-        // Only need to disconnect from actual jupyter servers
-        if (!(await this.rawNotebookProvider.supported())) {
-            return this.jupyterNotebookProvider.disconnect(options);
-        }
     }
 
     // Attempt to connect to our server provider, and if we do, return the connection info
@@ -82,16 +64,14 @@ export class NotebookProvider implements INotebookProvider {
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (await this.rawNotebookProvider.supported()) {
             return this.rawNotebookProvider.connect({
-                ...options,
-                onConnectionMade: this.fireConnectionMade.bind(this, options.disableUI!)
+                ...options
             });
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
             serverType === Settings.JupyterServerRemoteLaunch
         ) {
             return this.jupyterNotebookProvider.connect({
-                ...options,
-                onConnectionMade: this.fireConnectionMade.bind(this, options.disableUI!)
+                ...options
             });
         } else if (!options.getOnly) {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
@@ -167,16 +147,6 @@ export class NotebookProvider implements INotebookProvider {
         this.cacheNotebookPromise(options.identity, promise);
 
         return promise;
-    }
-
-    // This method is here so that the kernel selector can pick a kernel and not have
-    // to know about any of the UI that's active.
-    public firePotentialKernelChanged(identity: Uri, kernel: KernelConnectionMetadata) {
-        this._potentialKernelChanged.fire({ identity, kernelConnection: kernel });
-    }
-
-    private fireConnectionMade(disableUI: boolean) {
-        this._connectionMade.fire(disableUI);
     }
 
     // Cache the promise that will return a notebook

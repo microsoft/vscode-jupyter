@@ -14,7 +14,6 @@ import {
     IJupyterSession,
     INotebook,
     INotebookCompletion,
-    INotebookExecutionLogger,
     INotebookProviderConnection,
     InterruptResult,
     KernelSocketInformation
@@ -127,10 +126,6 @@ export class MockJupyterNotebook implements INotebook {
         throw new Error('Method not implemented');
     }
 
-    public addLogger(_logger: INotebookExecutionLogger): void {
-        noop();
-    }
-
     public getSysInfo(): Promise<ICell | undefined> {
         return Promise.resolve(undefined);
     }
@@ -158,70 +153,11 @@ export class MockJupyterNotebook implements INotebook {
         return;
     }
 
-    public getLoggers(): INotebookExecutionLogger[] {
-        return [];
-    }
-
     public registerCommTarget(
         _targetName: string,
         _callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ) {
         noop();
-    }
-
-    public sendCommMessage(
-        buffers: (ArrayBuffer | ArrayBufferView)[],
-        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        msgId: any
-    ): Kernel.IShellFuture<
-        KernelMessage.IShellMessage<'comm_msg'>,
-        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
-    > {
-        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            msgType: 'comm_msg',
-            channel: 'shell',
-            buffers,
-            content,
-            metadata,
-            msgId,
-            session: '1',
-            username: '1'
-        });
-
-        return {
-            done: Promise.resolve(undefined),
-            msg: shellMessage,
-            onReply: noop,
-            onIOPub: noop,
-            onStdin: noop,
-            registerMessageHook: noop,
-            removeMessageHook: noop,
-            sendInputReply: noop,
-            isDisposed: false,
-            dispose: noop
-        };
-    }
-
-    public requestCommInfo(
-        _content: KernelMessage.ICommInfoRequestMsg['content']
-    ): Promise<KernelMessage.ICommInfoReplyMsg> {
-        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommInfoReplyMsg>({
-            msgType: 'comm_info_reply',
-            channel: 'shell',
-            content: {
-                status: 'ok'
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any,
-            metadata: {},
-            session: '1',
-            username: '1'
-        });
-
-        return Promise.resolve(shellMessage);
     }
     public registerMessageHook(
         _msgId: string,

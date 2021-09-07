@@ -3,7 +3,7 @@
 'use strict';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { Identifiers } from '../../client/datascience/constants';
-import { CellState, ICell, IExternalWebviewCellButton, IJupyterExtraSettings } from '../../client/datascience/types';
+import { CellState, ICell, IJupyterExtraSettings } from '../../client/datascience/types';
 import { createCodeCell } from '../common/cellFactory';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
 
@@ -46,7 +46,6 @@ export type IMainState = {
     focusPending: number;
     loaded: boolean;
     kernel: IServerState;
-    externalButtons: IExternalWebviewCellButton[];
 };
 
 export type SelectionAndFocusedInfo = {
@@ -119,8 +118,7 @@ export function generateTestState(_filePath: string = '', _editable: boolean = f
             kernelName: 'Python',
             jupyterServerStatus: ServerStatus.NotStarted,
             language: PYTHON_LANGUAGE
-        },
-        externalButtons: []
+        }
     };
 }
 

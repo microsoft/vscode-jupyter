@@ -48,14 +48,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
-    private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
-        if (!this._jupyterLab) {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
-        }
-        return this._jupyterLab;
-    }
-
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
@@ -77,19 +69,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.connected;
     }
 
-    public get sessionId(): string {
-        if (this._session) {
-            return this._session.id;
-        }
-        return '';
-    }
     protected onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     protected statusHandler: Slot<ISessionWithSocket, Kernel.Status>;
     protected connected: boolean = false;
     protected restartSessionPromise: Promise<ISessionWithSocket | undefined> | undefined;
     private _session: ISessionWithSocket | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
-    private _jupyterLab?: typeof import('@jupyterlab/services');
     private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
     private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
 
@@ -303,45 +288,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
     }
 
-    public sendCommMessage(
-        buffers: (ArrayBuffer | ArrayBufferView)[],
-        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        msgId: any
-    ): Kernel.IShellFuture<
-        KernelMessage.IShellMessage<'comm_msg'>,
-        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
-    > {
-        if (this.session && this.session.kernel && this.jupyterLab) {
-            const shellMessage = this.jupyterLab.KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                msgType: 'comm_msg',
-                channel: 'shell',
-                buffers,
-                content,
-                metadata,
-                msgId,
-                session: this.session.kernel.clientId,
-                username: this.session.kernel.username
-            });
-
-            return this.session.kernel.sendShellMessage(shellMessage, false, true);
-        } else {
-            throw new Error(localize.DataScience.sessionDisposed());
-        }
-    }
-
-    public requestCommInfo(
-        content: KernelMessage.ICommInfoRequestMsg['content']
-    ): Promise<KernelMessage.ICommInfoReplyMsg> {
-        if (this.session?.kernel) {
-            return this.session.kernel.requestCommInfo(content);
-        } else {
-            throw new Error(localize.DataScience.sessionDisposed());
-        }
-    }
     public registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>

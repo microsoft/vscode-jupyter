@@ -16,7 +16,6 @@ import { ServerStatus } from '../../datascience-ui/interactive-common/mainState'
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
 import { Resource } from '../../client/common/types';
-import { randomBytes } from 'crypto';
 import { nbformat } from '@jupyterlab/coreutils';
 import { concatMultilineString } from '../../datascience-ui/common';
 
@@ -27,7 +26,6 @@ export class MockJupyterSession implements IJupyterSession {
     public readonly workingDirectory = '';
     public readonly kernelSocket = new Observable<KernelSocketInformation | undefined>();
     private dict: Map<string, nbformat.IBaseCell>;
-    private restartedEvent: EventEmitter<void> = new EventEmitter<void>();
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     private timedelay: number;
     private executionCount: number = 0;
@@ -63,10 +61,6 @@ export class MockJupyterSession implements IJupyterSession {
         return Promise.resolve();
     }
 
-    public get onRestarted(): Event<void> {
-        return this.restartedEvent.event;
-    }
-
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
@@ -78,10 +72,6 @@ export class MockJupyterSession implements IJupyterSession {
     }
     public get status(): ServerStatus {
         return this._status;
-    }
-
-    public get sessionId(): string {
-        return randomBytes(8).toString('hex');
     }
 
     public async restart(_timeout: number): Promise<void> {
@@ -262,60 +252,6 @@ export class MockJupyterSession implements IJupyterSession {
         noop();
     }
 
-    public sendCommMessage(
-        buffers: (ArrayBuffer | ArrayBufferView)[],
-        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        msgId: any
-    ): Kernel.IShellFuture<
-        KernelMessage.IShellMessage<'comm_msg'>,
-        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
-    > {
-        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            msgType: 'comm_msg',
-            channel: 'shell',
-            buffers,
-            content,
-            metadata,
-            msgId,
-            session: '1',
-            username: '1'
-        });
-
-        return {
-            done: Promise.resolve(undefined),
-            msg: shellMessage,
-            onReply: noop,
-            onIOPub: noop,
-            onStdin: noop,
-            registerMessageHook: noop,
-            removeMessageHook: noop,
-            sendInputReply: noop,
-            isDisposed: false,
-            dispose: noop
-        };
-    }
-
-    public requestCommInfo(
-        _content: KernelMessage.ICommInfoRequestMsg['content']
-    ): Promise<KernelMessage.ICommInfoReplyMsg> {
-        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommInfoReplyMsg>({
-            msgType: 'comm_info_reply',
-            channel: 'shell',
-            content: {
-                status: 'ok'
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any,
-            metadata: {},
-            session: '1',
-            username: '1'
-        });
-
-        return Promise.resolve(shellMessage);
-    }
     public registerMessageHook(
         _msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
