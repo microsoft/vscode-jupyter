@@ -362,7 +362,7 @@ export class InterpreterService implements IInterpreterService {
                         return;
                     }
                     interpreterCacheForCI.set(resource?.toString() || '', itemToStore);
-                    traceInfo(`Interpreter list is ${JSON.stringify(items)}`);
+                    traceInfo(`Interpreter list for ${resource?.toString()} is ${JSON.stringify(items)}`);
                 })
                 .catch(noop);
         }
