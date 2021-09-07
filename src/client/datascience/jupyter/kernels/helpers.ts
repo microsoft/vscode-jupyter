@@ -453,14 +453,51 @@ export function findPreferredKernel(
 
         traceInfoIf(isCI, `preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpecIndex}`);
 
-        // If we don't have any kernelspec, then just return the preferred interpreter for notebooks.
         if (
             getResourceType(resource) === 'notebook' &&
-            !notebookMetadata?.kernelspec &&
-            preferredInterpreterKernelSpecIndex >= 0
+            preferredInterpreterKernelSpecIndex >= 0 &&
+            !remoteKernelPreferredProvider
         ) {
-            traceInfoIf(isCI, "Using preferred interpreter as there's no kernelspec in notebook metadata");
-            return kernels[preferredInterpreterKernelSpecIndex];
+            // If we don't have any kernelspec, then just return the preferred interpreter for notebooks.
+            if (!notebookMetadata?.kernelspec) {
+                traceInfoIf(isCI, "Using preferred interpreter as there's no kernelspec in notebook metadata");
+                return kernels[preferredInterpreterKernelSpecIndex];
+            }
+
+            // Check if we have any interperter information in the kernelspec.
+            const hasInterpreterInfo =
+                'interpreter' in notebookMetadata &&
+                typeof notebookMetadata.interpreter === 'object' &&
+                notebookMetadata.interpreter !== null;
+            // If we have a kernelspec (with just the name & display name) & no intepreter information
+            // & we cannot find a matching kernel (for the provided name & display name), then just return the preferred interpreter for notebooks.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const kernelSpec = notebookMetadata.kernelspec;
+            const definedValuesForKernelSpec = new Set(Object.keys(kernelSpec) as any);
+            definedValuesForKernelSpec.delete('name');
+            definedValuesForKernelSpec.delete('display_name');
+            if (
+                hasInterpreterInfo &&
+                definedValuesForKernelSpec.size === 0 &&
+                !kernels.find((item) => {
+                    if (item.kind === 'startUsingKernelSpec') {
+                        return (
+                            item.kernelSpec.display_name === kernelSpec.display_name ||
+                            item.kernelSpec.name === kernelSpec.name
+                        );
+                    } else if (item.kind === 'startUsingPythonInterpreter') {
+                        return (
+                            item.kernelSpec.display_name === kernelSpec.display_name ||
+                            item.kernelSpec.name === kernelSpec.name ||
+                            item.interpreter.displayName === kernelSpec.display_name ||
+                            item.interpreter.displayName === kernelSpec.name
+                        );
+                    }
+                })
+            ) {
+                traceInfoIf(isCI, "Using preferred interpreter as there's no kernelspec in notebook metadata");
+                return kernels[preferredInterpreterKernelSpecIndex];
+            }
         }
 
         for (let i = 0; kernels && i < kernels?.length; i = i + 1) {
