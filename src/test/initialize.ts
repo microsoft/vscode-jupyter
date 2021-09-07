@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import type { IExtensionApi } from '../client/api';
 import { disposeAllDisposables } from '../client/common/helpers';
 import type { IDisposable } from '../client/common/types';
+import { PythonExtension } from '../client/datascience/constants';
 import { clearPendingChainedUpdatesForTests } from '../client/datascience/notebook/helpers/notebookUpdater';
 import {
     clearPendingTimers,
@@ -34,6 +35,11 @@ export function isInsiders() {
 let jupyterServerStarted = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function initialize(): Promise<IExtensionTestApi> {
+    // If python extension is installed, wait for it to activate (attempt to fix https://github.com/microsoft/vscode-jupyter/issues/7440)
+    const pythonExtension = vscode.extensions.getExtension(PythonExtension);
+    if (pythonExtension) {
+        await pythonExtension.activate();
+    }
     await enableVerboseLoggingInPythonExtension();
     await initializePython();
     const api = await activateExtension();
