@@ -7,7 +7,9 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
+import { isCI } from '../../../common/constants';
 import '../../../common/extensions';
+import { traceInfoIf } from '../../../common/logger';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -222,11 +224,16 @@ export class JupyterInterpreterService {
         // Nothing saved found, so check our current interpreter
         if (!interpreter) {
             const currentInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
-
+            traceInfoIf(isCI, `Active Interpreter in JupyterInterpreterService is ${currentInterpreter?.path}`);
             if (currentInterpreter) {
                 // If the current active interpreter has everything installed already just use that
                 if (await this.interpreterConfiguration.areDependenciesInstalled(currentInterpreter, token)) {
                     interpreter = currentInterpreter;
+                } else {
+                    traceInfoIf(
+                        isCI,
+                        `Dependencies not installed in ${currentInterpreter?.path} (JupyterInterpreterService)`
+                    );
                 }
             }
         }
