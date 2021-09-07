@@ -150,7 +150,17 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
-        assertHasTextOutputInVSCode(cell, getNormalizedInterpreterPath(activeInterpreterPath), 0, false);
+        const output = getTextOutputValue(cell.outputs[0]);
+        if (
+            !output.includes(getNormalizedInterpreterPath(activeInterpreterPath)) &&
+            !output.includes(activeInterpreterPath)
+        ) {
+            assert.fail(
+                output,
+                `Expected ${getNormalizedInterpreterPath(activeInterpreterPath)} or ${activeInterpreterPath}`,
+                'Interpreter does not match'
+            );
+        }
     });
     test('Ensure kernel is auto selected and interpreter is as expected', async function () {
         if (IS_REMOTE_NATIVE_TEST) {
