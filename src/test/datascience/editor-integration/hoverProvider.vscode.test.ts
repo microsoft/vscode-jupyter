@@ -5,15 +5,22 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import {
     IConfigurationService,
+    IDisposable,
     IExperimentService,
     IJupyterSettings,
     IVariableTooltipFields,
     ReadWrite
 } from '../../../client/common/types';
-import { IHoverProvider } from '../../../client/datascience/types';
+import { IInteractiveWindowProvider, IJupyterVariables } from '../../../client/datascience/types';
 import { IExtensionTestApi, openFile, sleep } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_WEBVIEW_BUILD_SKIPPED } from '../../constants';
 import { initialize } from '../../initialize';
+import { HoverProvider } from '../../../client/datascience/editor-integration/hoverProvider';
+import { Identifiers } from '../../../client/datascience/constants';
+import { disposeAllDisposables } from '../../../client/common/helpers';
+import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
+import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 
 suite('Hover provider', async () => {
     const file = path.join(
@@ -28,6 +35,7 @@ suite('Hover provider', async () => {
     let api: IExtensionTestApi;
     let oldSetting: IVariableTooltipFields;
     let sandbox: sinon.SinonSandbox;
+    let disposables: IDisposable[] = [];
     suiteSetup(async function () {
         if (IS_WEBVIEW_BUILD_SKIPPED) {
             console.log('Hover provider tests require webview build to be enabled');
@@ -55,6 +63,7 @@ suite('Hover provider', async () => {
             dsSettings.variableTooltipFields = oldSetting;
         }
     });
+    teardown(() => disposeAllDisposables(disposables));
     test('Tensor tooltips', async () => {
         // Open a Python file
         const textDocument = await openFile(file);
@@ -66,7 +75,15 @@ suite('Hover provider', async () => {
         await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
 
         // Request a hover on the line containing a tensor variable declaration
-        const hoverProvider = api.serviceContainer.get<IHoverProvider>(IHoverProvider);
+        const hoverProvider = new HoverProvider(
+            api.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.KERNEL_VARIABLES),
+            api.serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider),
+            api.serviceContainer.get<IFileSystem>(IFileSystem),
+            api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
+            disposables,
+            api.serviceContainer.get<IKernelProvider>(IKernelProvider)
+        );
+        hoverProvider.activate();
         const position = new vscode.Position(11, 1);
         const cancelTokenSource = new vscode.CancellationTokenSource();
         const result = await hoverProvider.provideHover(textDocument, position, cancelTokenSource.token);

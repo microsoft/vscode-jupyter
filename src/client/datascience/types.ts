@@ -15,7 +15,6 @@ import {
     DebugSession,
     Disposable,
     Event,
-    HoverProvider,
     NotebookCell,
     NotebookEditor,
     QuickPickItem,
@@ -224,7 +223,6 @@ export type ConnectNotebookProviderOptions = {
     token?: CancellationToken;
     resource: Resource;
     metadata?: nbformat.INotebookMetadata;
-    onConnectionMade?(): void; // Optional callback for when the first connection is made
 };
 
 export interface INotebookServerOptions {
@@ -240,22 +238,13 @@ export interface INotebookServerOptions {
     allowUI(): boolean;
 }
 
-export interface IHoverProvider extends HoverProvider {}
-export const IHoverProvider = Symbol('IHoverProvider');
-
-export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
-export interface INotebookExecutionLogger extends IDisposable {}
-
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
-    serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined>;
-    spawnNotebook(file: string): Promise<void>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
@@ -266,7 +255,6 @@ export const IJupyterDebugger = Symbol('IJupyterDebugger');
 export interface IJupyterDebugger {
     startDebugging(kernel: IKernel): Promise<void>;
     stopDebugging(kernel: IKernel): Promise<void>;
-    onRestart(kernel: IKernel): void;
 }
 
 export interface IJupyterPasswordConnectInfo {
@@ -287,7 +275,6 @@ export interface IJupyterSession extends IAsyncDisposable {
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    readonly sessionId: string;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
@@ -312,18 +299,6 @@ export interface IJupyterSession extends IAsyncDisposable {
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void;
-    sendCommMessage(
-        buffers: (ArrayBuffer | ArrayBufferView)[],
-        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        msgId: any
-    ): Kernel.IShellFuture<
-        KernelMessage.IShellMessage<'comm_msg'>,
-        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
-    >;
-    requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
     registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
@@ -361,7 +336,6 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         disableUI?: boolean
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
-    getConnInfo(): IJupyterConnection;
     getRunningKernels(): Promise<IJupyterKernel[]>;
     getRunningSessions(): Promise<Session.IModel[]>;
 }
@@ -547,8 +521,6 @@ export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends Disposable, IInteractiveBase {
     readonly closed: Event<INotebookEditor>;
     readonly file: Uri;
-    readonly model?: INotebookModel;
-    readonly notebookMetadata: nbformat.INotebookMetadata | undefined;
     notebook?: INotebook;
     runAllCells(): void;
     addCellBelow(): void;
@@ -677,7 +649,6 @@ export interface IStatusProvider {
 
 export interface IJupyterCommand {
     interpreter(): Promise<PythonEnvironment | undefined>;
-    execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
@@ -690,7 +661,6 @@ export interface IJupyterCommandFactory {
         interpreter: PythonEnvironment,
         isActiveInterpreter: boolean
     ): IJupyterCommand;
-    createProcessCommand(exe: string, args: string[]): IJupyterCommand;
 }
 
 // Config settings we pass to our react code
@@ -990,26 +960,6 @@ export interface INbConvertExportToPythonService {
     ): Promise<string>;
 }
 
-export interface INotebookModel {
-    readonly file: Uri;
-    /**
-     * Dispose of the Notebook model.
-     *
-     * This is invoked when there are no more references to a given `NotebookModel` (for example when
-     * all editors associated with the document have been closed.)
-     */
-    dispose(): void;
-}
-
-export interface IModelLoadOptions {
-    isNative?: boolean;
-    file: Uri;
-    possibleContents?: string;
-    backupId?: string;
-    defaultCellLanguage?: string;
-    skipLoadingDirtyContents?: boolean;
-}
-
 type WebViewViewState = {
     readonly visible: boolean;
     readonly active: boolean;
@@ -1024,7 +974,6 @@ export type GetServerOptions = {
     resource: Resource;
     metadata?: nbformat.INotebookMetadata;
     kernelConnection?: KernelConnectionMetadata;
-    onConnectionMade?(disableUI?: boolean): void; // Optional callback for when the first connection is made
 };
 
 /**
@@ -1048,16 +997,6 @@ export interface INotebookProvider {
      */
     onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
     onSessionStatusChanged: Event<{ status: ServerStatus; notebook: INotebook }>;
-
-    /**
-     * Fired just the first time that this provider connects
-     */
-    onConnectionMade: Event<boolean | undefined>;
-    /**
-     * Fired when a kernel would have been changed if a notebook had existed.
-     */
-    onPotentialKernelChanged: Event<{ identity: Uri; kernelConnection: KernelConnectionMetadata }>;
-
     /**
      * List of all notebooks (active and ones that are being constructed).
      */
@@ -1075,17 +1014,6 @@ export interface INotebookProvider {
      * Connect to a notebook provider to prepare its connection and to get connection information
      */
     connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined>;
-
-    /**
-     * Disconnect from a notebook provider connection
-     */
-    disconnect(options: ConnectNotebookProviderOptions, cancelToken?: CancellationToken): Promise<void>;
-    /**
-     * Fires the potentialKernelChanged event for a notebook that doesn't exist.
-     * @param identity identity notebook would have
-     * @param kernel kernel that it was changed to.
-     */
-    firePotentialKernelChanged(identity: Uri, kernel: KernelConnectionMetadata): void;
 }
 
 export const IJupyterServerProvider = Symbol('IJupyterServerProvider');
@@ -1296,16 +1224,4 @@ export interface IJupyterServerUriStorage {
     clearUriList(): Promise<void>;
     getUri(): Promise<string>;
     setUri(uri: string): Promise<void>;
-}
-export interface IExternalWebviewCellButton {
-    buttonId: string;
-    codicon: string;
-    statusToEnable: CellState[];
-    tooltip: string;
-    running: boolean;
-}
-
-export interface IExternalCommandFromWebview {
-    buttonId: string;
-    cell: ICell;
 }

@@ -19,7 +19,6 @@ import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { IServiceContainer } from '../../ioc/types';
 import { Telemetry } from '../constants';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
 import {
@@ -53,7 +52,6 @@ export class JupyterServerBase implements INotebookServer {
         private disposableRegistry: IDisposableRegistry,
         protected readonly configService: IConfigurationService,
         private sessionManagerFactory: IJupyterSessionManagerFactory,
-        private serviceContainer: IServiceContainer,
         private jupyterOutputChannel: IOutputChannel
     ) {
         this.asyncRegistry.push(this);
@@ -139,7 +137,6 @@ export class JupyterServerBase implements INotebookServer {
                 savedSession,
                 this.disposableRegistry,
                 this.configService,
-                this.serviceContainer,
                 notebookMetadata,
                 kernelConnection,
                 cancelToken
@@ -272,7 +269,6 @@ export class JupyterServerBase implements INotebookServer {
         _savedSession: IJupyterSession | undefined,
         _disposableRegistry: IDisposableRegistry,
         _configService: IConfigurationService,
-        _serviceContainer: IServiceContainer,
         _notebookMetadata?: nbformat.INotebookMetadata,
         _kernelConnection?: KernelConnectionMetadata,
         _cancelToken?: CancellationToken

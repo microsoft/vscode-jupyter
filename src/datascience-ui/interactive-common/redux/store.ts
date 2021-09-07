@@ -59,8 +59,7 @@ function generateDefaultState(
                 jupyterServerStatus: ServerStatus.NotStarted,
                 language: PYTHON_LANGUAGE
             },
-            settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
-            externalButtons: []
+            settings: testMode ? getDefaultSettings() : undefined // When testing, we don't send (or wait) for the real settings.
         };
     }
 }

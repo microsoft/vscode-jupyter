@@ -33,7 +33,12 @@ import { IExtensions } from '../../../client/common/types';
 import { LocalKnownPathKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localKnownPathKernelSpecFinder';
 import { JupyterPaths } from '../../../client/datascience/kernel-launcher/jupyterPaths';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../client/datascience/kernel-launcher/localPythonAndRelatedNonPythonKernelSpecFinder';
-import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
+import {
+    areInterpreterPathsSame,
+    getInterpreterHash,
+    getNormalizedInterpreterPath
+} from '../../../client/pythonEnvironments/info/interpreter';
+import { OSType } from '../../../client/common/utils/platform';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -94,6 +99,58 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
                 build: ['0'],
                 patch: 0,
                 prerelease: ['0']
+            }
+        };
+        const python3_8_10_Interpreter: PythonEnvironment = {
+            displayName: 'Python 3.8 64bit Environment',
+            path: '/bin/python',
+            sysPrefix: 'python',
+            version: {
+                major: 3,
+                minor: 8,
+                raw: '3.8.10',
+                build: ['0'],
+                patch: 10,
+                prerelease: ['0']
+            }
+        };
+        const python3_8_11_Interpreter: PythonEnvironment = {
+            displayName: 'Python 3.8 64bit Environment',
+            path: '/users/username/pyenv/envs/temp3/bin/python',
+            sysPrefix: 'python',
+            version: {
+                major: 3,
+                minor: 8,
+                raw: '3.8.11',
+                build: ['0'],
+                patch: 11,
+                prerelease: ['0']
+            }
+        };
+        // This is identical to the previous one, path is different, no `/bin/` folder.
+        // Only applies to unix.
+        const python3_8_11_InterpreterNoBinPython: PythonEnvironment = {
+            displayName: 'Python 3.8 64bit Environment',
+            path: '/users/username/pyenv/envs/temp3/python',
+            sysPrefix: 'python',
+            version: {
+                major: 3,
+                minor: 8,
+                raw: '3.8.11',
+                build: ['0'],
+                patch: 11,
+                prerelease: ['0']
+            }
+        };
+        const duplicateEnv = isWindows ? [python3_8_11_Interpreter] : [python3_8_11_InterpreterNoBinPython];
+        const python3811spec: Kernel.ISpecModel = {
+            display_name: python3_8_11_InterpreterNoBinPython.displayName!,
+            name: 'python3811jvsc74a57bd06bf34dd489c90df3f2c7e4a7a969c3a519895dd38f693a4499ab76afdf92a529',
+            argv: [isWindows ? python3_8_11_Interpreter.path : python3_8_11_InterpreterNoBinPython.path],
+            language: 'python',
+            resources: {},
+            metadata: {
+                interpreter: isWindows ? python3_8_11_Interpreter : python3_8_11_InterpreterNoBinPython
             }
         };
         const python2Interpreter: PythonEnvironment = {
@@ -221,7 +278,8 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
                     'python3.json',
                     'python3dupe.json',
                     'julia.json',
-                    'python2.json'
+                    'python2.json',
+                    'python3811.json'
                 ]);
             });
             when(fs.readLocalFile(anything())).thenCall((f) => {
@@ -245,6 +303,9 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
                 }
                 if (f.endsWith('interpreter.json')) {
                     return Promise.resolve(JSON.stringify(interpreterSpec));
+                }
+                if (f.endsWith('python3811.json')) {
+                    return Promise.resolve(JSON.stringify(python3811spec));
                 }
                 throw new Error('Unavailable file');
             });
@@ -311,424 +372,483 @@ import { getInterpreterHash } from '../../../client/pythonEnvironments/info/inte
             );
         });
         // Previously tests passed because the activeInterpreter in the tests was the first interpreter form the list.
-        [python3Interpreter, condaEnvironment, python2Interpreter, condaEnvironmentBase].forEach(
-            (activeInterpreter) => {
-                test('No interpreters used when no python extension', async () => {
-                    // Setup interpreters to match
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+        [
+            python3Interpreter,
+            condaEnvironment,
+            python2Interpreter,
+            condaEnvironmentBase,
+            python3_8_11_Interpreter
+        ].forEach((activeInterpreter) => {
+            test('No interpreters used when no python extension', async () => {
+                // Setup interpreters to match
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
-                    const kernels = await kernelFinder.listKernels(undefined);
-                    const interpreterKernels = kernels.filter((k) => k.interpreter);
-                    assert.ok(kernels.length, 'Kernels not found with no python extension');
-                    assert.equal(
-                        interpreterKernels.length,
-                        0,
-                        'Interpreter kernels should not be possible without python extension'
-                    );
-                });
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
+                const kernels = await kernelFinder.listKernels(undefined);
+                const interpreterKernels = kernels.filter((k) => k.interpreter);
+                assert.ok(kernels.length, 'Kernels not found with no python extension');
+                assert.equal(
+                    interpreterKernels.length,
+                    0,
+                    'Interpreter kernels should not be possible without python extension'
+                );
+            });
 
-                test('Kernels found on disk and in interpreters', async () => {
-                    // Setup interpreters to match
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+            test('Kernels found on disk and in interpreters', async () => {
+                // Setup interpreters to match
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
                         pyEnvInterpreter,
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                    const kernels = await kernelFinder.listKernels(undefined);
+                const kernels = await kernelFinder.listKernels(undefined);
 
-                    // All the python3 kernels should not be listed
-                    const python3Kernels = kernels.filter(
-                        (k) => k.kernelSpec && k.kernelSpec.name === defaultPython3Name
-                    );
-                    assert.equal(python3Kernels.length, 0, 'python 3 kernels should not be displayed');
+                // All the python3 kernels should not be listed
+                const python3Kernels = kernels.filter((k) => k.kernelSpec && k.kernelSpec.name === defaultPython3Name);
+                assert.equal(python3Kernels.length, 0, 'python 3 kernels should not be displayed');
 
-                    // No other kernels should have the python 3 inteprreter
-                    const nonPython3Kernels = kernels.filter(
-                        (k) => k.kernelSpec && k.kernelSpec.name !== defaultPython3Name
-                    );
-                    assert.equal(
-                        nonPython3Kernels.length + python3Kernels.length,
-                        kernels.length,
-                        'Some kernels came back that are pointing to python3 when they shouldnt'
-                    );
+                // No other kernels should have the python 3 inteprreter
+                const nonPython3Kernels = kernels.filter(
+                    (k) => k.kernelSpec && k.kernelSpec.name !== defaultPython3Name
+                );
+                assert.equal(
+                    nonPython3Kernels.length + python3Kernels.length,
+                    kernels.length,
+                    'Some kernels came back that are pointing to python3 when they shouldnt'
+                );
 
-                    // Should be two non kernel spec kernels
-                    const condaKernel = kernels.find(
-                        (k) =>
-                            k.interpreter &&
-                            k.interpreter.path === condaEnvironment.path &&
-                            k.kind === 'startUsingPythonInterpreter'
-                    );
-                    const python2Kernel = kernels.find(
-                        (k) =>
-                            k.interpreter &&
-                            k.interpreter.path === python2Interpreter.path &&
-                            k.kind === 'startUsingPythonInterpreter'
-                    );
-                    assert.ok(condaKernel, 'Conda kernel not returned by itself');
-                    assert.ok(python2Kernel, 'Python 2 kernel not returned');
+                // Should be two non kernel spec kernels
+                const condaKernel = kernels.find(
+                    (k) =>
+                        k.interpreter &&
+                        areInterpreterPathsSame(
+                            k.interpreter.path,
+                            condaEnvironment.path,
+                            isWindows ? OSType.Windows : OSType.Linux
+                        ) &&
+                        k.kind === 'startUsingPythonInterpreter'
+                );
+                const python2Kernel = kernels.find(
+                    (k) =>
+                        k.interpreter &&
+                        areInterpreterPathsSame(
+                            k.interpreter.path,
+                            python2Interpreter.path,
+                            isWindows ? OSType.Windows : OSType.Linux
+                        ) &&
+                        k.kind === 'startUsingPythonInterpreter'
+                );
+                assert.ok(condaKernel, 'Conda kernel not returned by itself');
+                assert.ok(python2Kernel, 'Python 2 kernel not returned');
 
-                    // Both of these kernels should be using default kernel spec
-                    assert.ok((condaKernel as any).kernelSpec, 'No kernel spec on conda kernel');
-                    assert.ok((python2Kernel as any).kernelSpec, 'No kernel spec on python 2 kernel');
+                // Both of these kernels should be using default kernel spec
+                assert.ok((condaKernel as any).kernelSpec, 'No kernel spec on conda kernel');
+                assert.ok((python2Kernel as any).kernelSpec, 'No kernel spec on python 2 kernel');
 
-                    // Non python 3 kernels should include other kernels too (julia and python 2)
-                    assert.ok(nonPython3Kernels.length - 2 > 0, 'No other kernelspec kernels besides python 3 ones');
-                });
-                test('No kernels with same id', async () => {
-                    // Setup interpreters to match
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+                // Non python 3 kernels should include other kernels too (julia and python 2)
+                assert.ok(nonPython3Kernels.length - 2 > 0, 'No other kernelspec kernels besides python 3 ones');
+            });
+            test('No kernels with same id', async () => {
+                // Setup interpreters to match
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                    const kernels = await kernelFinder.listKernels(undefined);
-                    const existing = new Set<string>(kernels.map((k) => k.id));
-                    assert.equal(existing.size, kernels.length, 'Dupe kernels found');
-                });
-                test('Kernel spec name should be different if from interpreter but not if normal', async () => {
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                const kernels = await kernelFinder.listKernels(undefined);
+                const existing = new Set<string>(kernels.map((k) => k.id));
+                assert.equal(existing.size, kernels.length, 'Dupe kernels found');
+            });
+            test('Kernel spec name should be different if from interpreter but not if normal', async () => {
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                    const kernels = await kernelFinder.listKernels(undefined);
+                const kernels = await kernelFinder.listKernels(undefined);
 
-                    // Kernels without interpreters should have a short name
-                    const nonInterpreterKernels = kernels.filter(
-                        (k) => !k.interpreter && (k.kernelSpec?.name.length || 0) < 30
-                    );
-                    assert.ok(nonInterpreterKernels.length, 'No non interpreter kernels with short names');
+                // Kernels without interpreters should have a short name
+                const nonInterpreterKernels = kernels.filter(
+                    (k) => !k.interpreter && (k.kernelSpec?.name.length || 0) < 30
+                );
+                assert.ok(nonInterpreterKernels.length, 'No non interpreter kernels with short names');
 
-                    // Kernels with interpreters that match should have also have short names
-                    const interpretersKernelsThatMatched = kernels.filter(
-                        (k) =>
-                            k.interpreter &&
-                            k.kernelSpec?.specFile &&
-                            !k.kernelSpec?.specFile?.endsWith('interpreter.json') &&
-                            (k.kernelSpec?.name.length || 0 < 30)
-                    );
-                    assert.ok(
-                        interpretersKernelsThatMatched.length,
-                        'No kernels that matched interpreters should have their name changed'
-                    );
+                // Kernels with interpreters that match should have also have short names
+                const interpretersKernelsThatMatched = kernels.filter(
+                    (k) =>
+                        k.interpreter &&
+                        k.kernelSpec?.specFile &&
+                        !k.kernelSpec?.specFile?.endsWith('interpreter.json') &&
+                        (k.kernelSpec?.name.length || 0 < 30)
+                );
+                assert.ok(
+                    interpretersKernelsThatMatched.length,
+                    'No kernels that matched interpreters should have their name changed'
+                );
 
-                    // Kernels from interpreter paths should have a long name
-                    const interpretersKernels = kernels.filter(
-                        (k) =>
-                            k.interpreter &&
-                            k.kernelSpec?.specFile &&
-                            k.kernelSpec?.specFile?.endsWith('interpreter.json') &&
-                            (k.kernelSpec?.name.length || 0) > 30
-                    );
-                    assert.ok(
-                        interpretersKernels.length,
-                        'Kernels from interpreter paths should have their name changed (so jupyter can create a spec for them)'
-                    );
-                });
-                test('All kernels have a spec file', async () => {
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+                // Kernels from interpreter paths should have a long name
+                const interpretersKernels = kernels.filter(
+                    (k) =>
+                        k.interpreter &&
+                        k.kernelSpec?.specFile &&
+                        k.kernelSpec?.specFile?.endsWith('interpreter.json') &&
+                        (k.kernelSpec?.name.length || 0) > 30
+                );
+                assert.ok(
+                    interpretersKernels.length,
+                    'Kernels from interpreter paths should have their name changed (so jupyter can create a spec for them)'
+                );
+            });
+            test('All kernels have a spec file', async () => {
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                    const kernels = await kernelFinder.listKernels(undefined);
-                    const kernelsWithoutSpec = kernels.filter((k) => !k.kernelSpec?.specFile);
-                    assert.equal(
-                        kernelsWithoutSpec.length,
-                        0,
-                        'All kernels should have a spec file (otherwise spec file would make them mutable)'
-                    );
-                });
-                test('Can match based on notebook metadata', async () => {
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                const kernels = await kernelFinder.listKernels(undefined);
+                const kernelsWithoutSpec = kernels.filter((k) => !k.kernelSpec?.specFile);
+                assert.equal(
+                    kernelsWithoutSpec.length,
+                    0,
+                    'All kernels should have a spec file (otherwise spec file would make them mutable)'
+                );
+            });
+            test('Can match based on notebook metadata', async () => {
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-                    const nbUri = Uri.file('test.ipynb');
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                const nbUri = Uri.file('test.ipynb');
 
-                    // Try python
-                    let kernel = await kernelFinder.findKernel(nbUri, {
-                        language_info: { name: PYTHON_LANGUAGE },
-                        orig_nbformat: 4
-                    });
-                    assert.equal(
-                        kernel?.kernelSpec?.language,
-                        'python',
-                        'No python kernel found matching notebook metadata'
-                    );
-
-                    // Julia
-                    kernel = await kernelFinder.findKernel(nbUri, {
-                        language_info: { name: 'julia' },
-                        orig_nbformat: 4
-                    });
-                    assert.equal(
-                        kernel?.kernelSpec?.language,
-                        'julia',
-                        'No julia kernel found matching notebook metadata'
-                    );
-
-                    // Python 2
-                    kernel = await kernelFinder.findKernel(nbUri, {
-                        kernelspec: {
-                            display_name: 'Python 2 on Disk',
-                            name: 'python2'
-                        },
-                        language_info: { name: PYTHON_LANGUAGE },
-                        orig_nbformat: 4
-                    });
-                    assert.equal(
-                        kernel?.kernelSpec?.language,
-                        'python',
-                        'No python2 kernel found matching notebook metadata'
-                    );
-
-                    // Interpreter name
-                    kernel = await kernelFinder.findKernel(nbUri, {
-                        kernelspec: {
-                            display_name: 'Some oddball kernel',
-                            name: getInterpreterKernelSpecName(condaEnvironment)
-                        },
-                        language_info: { name: PYTHON_LANGUAGE },
-                        orig_nbformat: 4
-                    });
-                    assert.ok(kernel, 'No interpreter kernel found matching notebook metadata');
-
-                    // Generic python 3
-                    kernel = await kernelFinder.findKernel(nbUri, {
-                        kernelspec: {
-                            display_name: 'Python 3',
-                            name: defaultPython3Name
-                        },
-                        language_info: { name: PYTHON_LANGUAGE },
-                        orig_nbformat: 4
-                    });
-                    assert.equal(
-                        kernel?.kernelSpec?.language,
-                        'python',
-                        'No kernel found matching default notebook metadata'
-                    );
+                // Try python
+                let kernel = await kernelFinder.findKernel(nbUri, {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4
                 });
-                test('Return active interpreter for interactive window', async () => {
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+                assert.equal(
+                    kernel?.kernelSpec?.language,
+                    'python',
+                    'No python kernel found matching notebook metadata'
+                );
+
+                // Julia
+                kernel = await kernelFinder.findKernel(nbUri, {
+                    language_info: { name: 'julia' },
+                    orig_nbformat: 4
+                });
+                assert.equal(kernel?.kernelSpec?.language, 'julia', 'No julia kernel found matching notebook metadata');
+
+                // Python 2
+                kernel = await kernelFinder.findKernel(nbUri, {
+                    kernelspec: {
+                        display_name: 'Python 2 on Disk',
+                        name: 'python2'
+                    },
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4
+                });
+                assert.equal(
+                    kernel?.kernelSpec?.language,
+                    'python',
+                    'No python2 kernel found matching notebook metadata'
+                );
+
+                // Interpreter name
+                kernel = await kernelFinder.findKernel(nbUri, {
+                    kernelspec: {
+                        display_name: 'Some oddball kernel',
+                        name: getInterpreterKernelSpecName(condaEnvironment)
+                    },
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4
+                });
+                assert.ok(kernel, 'No interpreter kernel found matching notebook metadata');
+
+                // Generic python 3
+                kernel = await kernelFinder.findKernel(nbUri, {
+                    kernelspec: {
+                        display_name: 'Python 3',
+                        name: defaultPython3Name
+                    },
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4
+                });
+                assert.equal(
+                    kernel?.kernelSpec?.language,
+                    'python',
+                    'No kernel found matching default notebook metadata'
+                );
+            });
+            test('Return active interpreter for interactive window', async () => {
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                    // Try python
-                    let kernel = await kernelFinder.findKernel(Uri.file('wow.py'), {
-                        language_info: { name: PYTHON_LANGUAGE },
-                        orig_nbformat: 4
-                    });
-                    assert.equal(
-                        kernel?.kernelSpec?.language,
-                        'python',
-                        'No python kernel found matching notebook metadata'
-                    );
+                // Try python
+                let kernel = await kernelFinder.findKernel(Uri.file('wow.py'), {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4
                 });
-                test('Return active interpreter for interactive window (without passing any metadata)', async () => {
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+                assert.equal(
+                    kernel?.kernelSpec?.language,
+                    'python',
+                    'No python kernel found matching notebook metadata'
+                );
+            });
+            test('Return active interpreter for interactive window (without passing any metadata)', async () => {
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                    // Try python
-                    let kernel = await kernelFinder.findKernel(Uri.file('wow.py'));
-                    assert.equal(
-                        kernel?.kernelSpec?.language,
-                        'python',
-                        'No python kernel found matching notebook metadata'
-                    );
-                });
-                test('Return active interpreter for blank notebooks (metadata only has language)', async () => {
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+                // Try python
+                let kernel = await kernelFinder.findKernel(Uri.file('wow.py'));
+                assert.equal(
+                    kernel?.kernelSpec?.language,
+                    'python',
+                    'No python kernel found matching notebook metadata'
+                );
+            });
+            test('Return active interpreter for blank notebooks (metadata only has language)', async () => {
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                    // Try python
-                    let kernel = await kernelFinder.findKernel(Uri.file('wow.ipynb'), {
-                        language_info: { name: PYTHON_LANGUAGE },
-                        orig_nbformat: 2
-                    });
-                    assert.equal(kernel?.interpreter, activeInterpreter);
+                // Try python
+                let kernel = await kernelFinder.findKernel(Uri.file('wow.ipynb'), {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 2
                 });
-                test('Return conda interpreter if we have conda env name as kernelspec name in notebook metadata', async () => {
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+                assert.deepEqual({ ...kernel?.interpreter, path: '' }, { ...activeInterpreter, path: '' });
+                console.log(`Is Windows = ${isWindows}`);
+                console.log(
+                    `getNormalizedInterpreterPath(kernel?.interpreter?.path, isWindows ? OSType.Windows : OSType.Linux) = ${getNormalizedInterpreterPath(
+                        kernel?.interpreter?.path,
+                        isWindows ? OSType.Windows : OSType.Linux
+                    )}`
+                );
+                console.log(
+                    `getNormalizedInterpreterPath(activeInterpreter.path, isWindows ? OSType.Windows : OSType.Linux) = ${getNormalizedInterpreterPath(
+                        activeInterpreter.path,
+                        isWindows ? OSType.Windows : OSType.Linux
+                    )}`
+                );
+                assert.equal(
+                    getNormalizedInterpreterPath(kernel?.interpreter?.path, isWindows ? OSType.Windows : OSType.Linux),
+                    getNormalizedInterpreterPath(activeInterpreter.path, isWindows ? OSType.Windows : OSType.Linux)
+                );
+            });
+            test('Return conda interpreter if we have conda env name as kernelspec name in notebook metadata', async () => {
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                    let kernel = await kernelFinder.findKernel(Uri.file('wow.ipynb'), {
-                        language_info: { name: PYTHON_LANGUAGE },
-                        orig_nbformat: 4,
-                        kernelspec: {
-                            display_name: condaEnvironment.envName!,
-                            name: condaEnvironment.envName!
-                        }
-                    });
-                    assert.equal(
-                        kernel?.kernelSpec?.language,
-                        'python',
-                        'No python kernel found matching notebook metadata'
-                    );
-                    assert.deepEqual(kernel?.interpreter, condaEnvironment, 'Should match conda env');
+                let kernel = await kernelFinder.findKernel(Uri.file('wow.ipynb'), {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4,
+                    kernelspec: {
+                        display_name: condaEnvironment.envName!,
+                        name: condaEnvironment.envName!
+                    }
                 });
-                test('Can match (exactly) based on notebook metadata (metadata contains kernelspec name that we generated)', async () => {
-                    when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
-                        if (c.startsWith('python')) {
-                            return Promise.resolve(['interpreter.json']);
-                        }
-                        if (c.startsWith('conda')) {
-                            return Promise.resolve(['interpreter.json']);
-                        }
-                        return Promise.resolve([
-                            'python.json',
-                            'pythonPyEnvNew.json',
-                            'python3.json',
-                            'python3dupe.json',
-                            'julia.json',
-                            'python2.json'
-                        ]);
-                    });
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+                assert.equal(
+                    kernel?.kernelSpec?.language,
+                    'python',
+                    'No python kernel found matching notebook metadata'
+                );
+                assert.deepEqual(kernel?.interpreter, condaEnvironment, 'Should match conda env');
+            });
+            test('Can match (exactly) based on notebook metadata (metadata contains kernelspec name that we generated)', async () => {
+                when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
+                    if (c.startsWith('python')) {
+                        return Promise.resolve(['interpreter.json']);
+                    }
+                    if (c.startsWith('conda')) {
+                        return Promise.resolve(['interpreter.json']);
+                    }
+                    return Promise.resolve([
+                        'python.json',
+                        'pythonPyEnvNew.json',
+                        'python3.json',
+                        'python3dupe.json',
+                        'julia.json',
+                        'python2.json'
+                    ]);
+                });
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
                         pyEnvInterpreter, // Previously this would not get picked.
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                    // Generic python 3
-                    let kernel = await kernelFinder.findKernel(Uri.file('test.ipynb'), {
-                        kernelspec: {
-                            display_name: pyEnvPython3spec.display_name,
-                            // Use a kernelspec name that we generate.
-                            name: pyEnvPython3spec.name
-                        },
-                        language_info: { name: PYTHON_LANGUAGE },
-                        orig_nbformat: 4
-                    });
-                    assert.equal(
-                        kernel?.kernelSpec?.language,
-                        'python',
-                        'No kernel found matching default notebook metadata'
-                    );
-                    assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
-                    assert.deepEqual(kernel?.interpreter, pyEnvInterpreter, 'Should start using PyEnv');
-
-                    // Find based on interpreter hash in metadata
-                    kernel = await kernelFinder.findKernel(Uri.file('test.ipynb'), {
-                        kernelspec: {
-                            display_name: 'Something',
-                            name: 'python3'
-                        },
-                        interpreter: {
-                            hash: getInterpreterHash({ path: condaEnvironmentBase.path })
-                        },
-                        language_info: { name: PYTHON_LANGUAGE },
-                        orig_nbformat: 4
-                    });
-                    assert.equal(
-                        kernel?.kernelSpec?.language,
-                        'python',
-                        'No kernel found matching default notebook metadata'
-                    );
-                    assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
-                    assert.deepEqual(kernel?.interpreter, condaEnvironmentBase, 'Should start using PyEnv');
+                // Generic python 3
+                let kernel = await kernelFinder.findKernel(Uri.file('test.ipynb'), {
+                    kernelspec: {
+                        display_name: pyEnvPython3spec.display_name,
+                        // Use a kernelspec name that we generate.
+                        name: pyEnvPython3spec.name
+                    },
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4
                 });
-                test('Can match (exactly) based on notebook metadata (metadata contains kernelspec name that we generated using the new algorightm)', async () => {
-                    when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
-                        if (c.startsWith('python')) {
-                            return Promise.resolve(['interpreter.json']);
-                        }
-                        if (c.startsWith('conda')) {
-                            return Promise.resolve(['interpreter.json']);
-                        }
-                        return Promise.resolve([
-                            'python.json',
-                            'pythonPyEnvNew.json',
-                            'python3.json',
-                            'python3dupe.json',
-                            'julia.json',
-                            'python2.json'
-                        ]);
-                    });
-                    when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
-                    when(interpreterService.getInterpreters(anything())).thenResolve([
+                assert.equal(
+                    kernel?.kernelSpec?.language,
+                    'python',
+                    'No kernel found matching default notebook metadata'
+                );
+                assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
+                assert.deepEqual(kernel?.interpreter, pyEnvInterpreter, 'Should start using PyEnv');
+
+                // Find based on interpreter hash in metadata
+                kernel = await kernelFinder.findKernel(Uri.file('test.ipynb'), {
+                    kernelspec: {
+                        display_name: 'Something',
+                        name: 'python3'
+                    },
+                    interpreter: {
+                        hash: getInterpreterHash({ path: condaEnvironmentBase.path })
+                    },
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4
+                });
+                assert.equal(
+                    kernel?.kernelSpec?.language,
+                    'python',
+                    'No kernel found matching default notebook metadata'
+                );
+                assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
+                assert.deepEqual(kernel?.interpreter, condaEnvironmentBase, 'Should start using PyEnv');
+            });
+            test('Can match (exactly) based on notebook metadata (metadata contains kernelspec name that we generated using the new algorightm)', async () => {
+                when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c, _d) => {
+                    if (c.startsWith('python')) {
+                        return Promise.resolve(['interpreter.json']);
+                    }
+                    if (c.startsWith('conda')) {
+                        return Promise.resolve(['interpreter.json']);
+                    }
+                    return Promise.resolve([
+                        'python.json',
+                        'pythonPyEnvNew.json',
+                        'python3.json',
+                        'python3dupe.json',
+                        'julia.json',
+                        'python2.json'
+                    ]);
+                });
+                when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+                when(interpreterService.getInterpreters(anything())).thenResolve(
+                    duplicateEnv.concat([
                         python3Interpreter,
                         condaEnvironment,
                         python2Interpreter,
                         pyEnvInterpreter,
                         pyEnvInterpreter3, // Previously this would get picked due to the order.
                         pyEnvInterpreter2,
-                        condaEnvironmentBase
-                    ]);
-                    when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+                        condaEnvironmentBase,
+                        python3_8_10_Interpreter
+                    ])
+                );
+                when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                    // Generic python 3
-                    const kernel = await kernelFinder.findKernel(Uri.file('test.ipynb'), {
-                        kernelspec: {
-                            display_name: pyEnvUsingNewNamesPython3spec.display_name,
-                            // Use a kernelspec name that we generate.
-                            name: pyEnvUsingNewNamesPython3spec.name
-                        },
-                        language_info: { name: PYTHON_LANGUAGE },
-                        orig_nbformat: 4
-                    });
-                    assert.equal(
-                        kernel?.kernelSpec?.language,
-                        'python',
-                        'No kernel found matching default notebook metadata'
-                    );
-                    assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
-                    assert.deepEqual(kernel?.interpreter, pyEnvInterpreter2, 'Should start using PyEnv');
+                // Generic python 3
+                const kernel = await kernelFinder.findKernel(Uri.file('test.ipynb'), {
+                    kernelspec: {
+                        display_name: pyEnvUsingNewNamesPython3spec.display_name,
+                        // Use a kernelspec name that we generate.
+                        name: pyEnvUsingNewNamesPython3spec.name
+                    },
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4
                 });
-            }
-        );
+                assert.equal(
+                    kernel?.kernelSpec?.language,
+                    'python',
+                    'No kernel found matching default notebook metadata'
+                );
+                assert.equal(kernel?.kind, 'startUsingPythonInterpreter', 'Should start using Python');
+                assert.deepEqual(kernel?.interpreter, pyEnvInterpreter2, 'Should start using PyEnv');
+            });
+        });
     });
 });

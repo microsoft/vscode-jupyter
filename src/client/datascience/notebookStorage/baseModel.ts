@@ -5,10 +5,8 @@ import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { KernelMessage } from '@jupyterlab/services';
 import * as fastDeepEqual from 'fast-deep-equal';
 import { cloneDeep } from 'lodash';
-import { EventEmitter, Memento, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
-import { defaultNotebookFormat } from '../constants';
 import {
     getInterpreterFromKernelConnectionMetadata,
     isKernelRegisteredByUs,
@@ -16,7 +14,6 @@ import {
     kernelConnectionMetadataHasKernelModel
 } from '../jupyter/kernels/helpers';
 import { KernelConnectionMetadata } from '../jupyter/kernels/types';
-import { INotebookModel } from '../types';
 
 // eslint-disable-next-line complexity
 export function updateNotebookMetadata(
@@ -145,69 +142,4 @@ export function updateNotebookMetadata(
         }
     }
     return { changed, kernelId };
-}
-
-export function getDefaultNotebookContent(pythonNumber: number = 3): Partial<nbformat.INotebookContent> {
-    // Use this to build our metadata object
-    // Use these as the defaults unless we have been given some in the options.
-    const metadata: nbformat.INotebookMetadata = {
-        language_info: {
-            codemirror_mode: {
-                name: 'ipython',
-                version: pythonNumber
-            },
-            file_extension: '.py',
-            mimetype: 'text/x-python',
-            name: 'python',
-            nbconvert_exporter: 'python',
-            pygments_lexer: `ipython${pythonNumber}`,
-            version: pythonNumber
-        },
-        orig_nbformat: defaultNotebookFormat.major
-    };
-
-    // Default notebook data.
-    return {
-        metadata: metadata,
-        nbformat: defaultNotebookFormat.major,
-        nbformat_minor: defaultNotebookFormat.minor
-    };
-}
-
-export abstract class BaseNotebookModel implements INotebookModel {
-    public get file(): Uri {
-        return this._file;
-    }
-    protected _disposed = new EventEmitter<void>();
-    protected _isDisposed?: boolean;
-    protected _kernelConnection?: KernelConnectionMetadata;
-    constructor(
-        protected _file: Uri,
-        protected globalMemento: Memento,
-        protected notebookJson: Partial<nbformat.INotebookContent> = {},
-        public readonly indentAmount: string = ' ',
-        private readonly pythonNumber: number = 3,
-        initializeJsonIfRequired = true
-    ) {
-        // VSCode Notebook Model will execute this itself.
-        // THe problem is we need to override this behavior, however the overriding doesn't work in JS
-        // as some of the dependencies passed as ctor arguments are not available in the ctor.
-        // E.g. in the ctor of the base class, the private members (passed as ctor ares) initialized in child class are not available (unlike other languages).
-        if (initializeJsonIfRequired) {
-            this.ensureNotebookJson();
-        }
-    }
-    public dispose() {
-        this._isDisposed = true;
-        this._disposed.fire();
-    }
-    protected getDefaultNotebookContent() {
-        return getDefaultNotebookContent(this.pythonNumber);
-    }
-
-    protected ensureNotebookJson() {
-        if (!this.notebookJson || !this.notebookJson.metadata) {
-            this.notebookJson = this.getDefaultNotebookContent();
-        }
-    }
 }

@@ -18,12 +18,9 @@ import { KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import {
     ICell,
-    IExternalCommandFromWebview,
-    IExternalWebviewCellButton,
     IJupyterVariable,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
-    INotebookModel,
     KernelSocketOptions
 } from '../types';
 import { BaseReduxActionPayload } from './types';
@@ -63,8 +60,6 @@ export enum InteractiveWindowMessages {
     IPyWidgetUnhandledKernelMessage = 'ipywidget_unhandled_kernel_message',
     IPyWidgetWidgetVersionNotSupported = 'ipywidget_widget_version_not_supported',
     KernelIdle = 'kernel_idle',
-    UpdateExternalCellButtons = 'update_external_cell_buttons',
-    ExecuteExternalCommand = 'execute_external_command',
     GetHTMLByIdRequest = 'get_html_by_id_request',
     GetHTMLByIdResponse = 'get_html_by_id_response'
 }
@@ -140,7 +135,6 @@ export interface INotebookModelChange {
     oldDirty: boolean;
     newDirty: boolean;
     source: 'undo' | 'user' | 'redo';
-    model?: INotebookModel;
 }
 
 export interface INotebookModelSaved extends INotebookModelChange {
@@ -293,8 +287,10 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_onRestartKernel]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_onKernelChanged]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public [IPyWidgetMessages.IPyWidgets_binary_msg]: { id: string; data: any };
+    public [IPyWidgetMessages.IPyWidgets_binary_msg]:
+        | ((ArrayBuffer | ArrayBufferView)[] | undefined)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        | { id: string; data: any };
     public [IPyWidgetMessages.IPyWidgets_msg]: { id: string; data: string };
     public [IPyWidgetMessages.IPyWidgets_msg_received]: { id: string };
     public [IPyWidgetMessages.IPyWidgets_iopub_msg_handled]: { id: string };
@@ -355,8 +351,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.IPyWidgetRenderFailure]: Error;
     public [InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage]: KernelMessage.IMessage;
     public [InteractiveWindowMessages.KernelIdle]: never | undefined;
-    public [InteractiveWindowMessages.UpdateExternalCellButtons]: IExternalWebviewCellButton[];
-    public [InteractiveWindowMessages.ExecuteExternalCommand]: IExternalCommandFromWebview;
     public [InteractiveWindowMessages.GetHTMLByIdRequest]: string;
     public [InteractiveWindowMessages.GetHTMLByIdResponse]: string;
 }

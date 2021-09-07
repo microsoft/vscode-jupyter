@@ -7,71 +7,14 @@ import * as path from 'path';
 import { traceError } from '../../../common/logger';
 import {
     ExecutionResult,
-    IProcessService,
-    IProcessServiceFactory,
     IPythonDaemonExecutionService,
     IPythonExecutionFactory,
-    IPythonExecutionService,
-    ObservableExecutionResult
+    IPythonExecutionService
 } from '../../../common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
-import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { JupyterCommands, JupyterDaemonModule } from '../../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../types';
-
-// JupyterCommand objects represent some process that can be launched that should be guaranteed to work because it
-// was found by testing it previously
-class ProcessJupyterCommand implements IJupyterCommand {
-    private exe: string;
-    private requiredArgs: string[];
-    private launcherPromise: Promise<IProcessService>;
-    private interpreterPromise: Promise<PythonEnvironment | undefined>;
-    private activationHelper: IEnvironmentActivationService;
-
-    constructor(
-        exe: string,
-        args: string[],
-        processServiceFactory: IProcessServiceFactory,
-        activationHelper: IEnvironmentActivationService,
-        interpreterService: IInterpreterService
-    ) {
-        this.exe = exe;
-        this.requiredArgs = args;
-        this.launcherPromise = processServiceFactory.create();
-        this.activationHelper = activationHelper;
-        this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch((_e) => undefined);
-    }
-
-    public interpreter(): Promise<PythonEnvironment | undefined> {
-        return this.interpreterPromise;
-    }
-
-    public async execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> {
-        const newOptions = { ...options };
-        newOptions.env = await this.fixupEnv(newOptions.env);
-        const launcher = await this.launcherPromise;
-        const newArgs = [...this.requiredArgs, ...args];
-        return launcher.execObservable(this.exe, newArgs, newOptions);
-    }
-
-    public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        const newOptions = { ...options };
-        newOptions.env = await this.fixupEnv(newOptions.env);
-        const launcher = await this.launcherPromise;
-        const newArgs = [...this.requiredArgs, ...args];
-        return launcher.exec(this.exe, newArgs, newOptions);
-    }
-
-    private fixupEnv(_env?: NodeJS.ProcessEnv): Promise<NodeJS.ProcessEnv | undefined> {
-        if (this.activationHelper) {
-            return this.activationHelper.getActivatedEnvironmentVariables(undefined);
-        }
-
-        return Promise.resolve(process.env);
-    }
-}
 
 class InterpreterJupyterCommand implements IJupyterCommand {
     protected interpreterPromise: Promise<PythonEnvironment | undefined>;
@@ -128,16 +71,6 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     }
     public interpreter(): Promise<PythonEnvironment | undefined> {
         return this.interpreterPromise;
-    }
-
-    public async execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> {
-        const newOptions = { ...options };
-        const launcher = await this.pythonLauncher;
-        const newArgs = [...this.args, ...args];
-        const moduleName = newArgs[1];
-        newArgs.shift(); // Remove '-m'
-        newArgs.shift(); // Remove module name
-        return launcher.execModuleObservable(moduleName, newArgs, newOptions);
     }
 
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
@@ -295,12 +228,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class JupyterCommandFactory implements IJupyterCommandFactory {
-    constructor(
-        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
-        @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
-        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
-    ) {}
+    constructor(@inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory) {}
 
     public createInterpreterCommand(
         command: JupyterCommands,
@@ -327,15 +255,5 @@ export class JupyterCommandFactory implements IJupyterCommandFactory {
             );
         }
         return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
-    }
-
-    public createProcessCommand(exe: string, args: string[]): IJupyterCommand {
-        return new ProcessJupyterCommand(
-            exe,
-            args,
-            this.processServiceFactory,
-            this.activationHelper,
-            this.interpreterService
-        );
     }
 }

@@ -7,7 +7,6 @@ import type { Slot } from '@phosphor/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
-import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { WrappedError } from '../common/errors/types';
 import { traceError, traceInfo, traceInfoIf, traceWarning } from '../common/logger';
@@ -49,14 +48,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
-    private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
-        if (!this._jupyterLab) {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
-        }
-        return this._jupyterLab;
-    }
-
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
@@ -78,19 +69,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.connected;
     }
 
-    public get sessionId(): string {
-        if (this._session) {
-            return this._session.id;
-        }
-        return '';
-    }
     protected onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     protected statusHandler: Slot<ISessionWithSocket, Kernel.Status>;
     protected connected: boolean = false;
     protected restartSessionPromise: Promise<ISessionWithSocket | undefined> | undefined;
     private _session: ISessionWithSocket | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
-    private _jupyterLab?: typeof import('@jupyterlab/services');
     private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
     private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
 
@@ -222,8 +206,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
 
         // Just kill the current session and switch to the other
-        if (this.restartSessionPromise && this.session) {
-            traceInfo(`Restarting ${this.session.kernel.id}`);
+        if (this.restartSessionPromise) {
+            traceInfo(`Restarting ${this.session?.kernel.id}`);
 
             // Save old state for shutdown
             const oldSession = this.session;
@@ -242,7 +226,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
             this.restartSessionPromise = undefined;
             traceInfo('Started new restart session');
-            if (oldStatusHandler) {
+            if (oldStatusHandler && oldSession) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
             }
             this.shutdownSession(oldSession, undefined, false).ignoreErrors();
@@ -304,45 +288,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
     }
 
-    public sendCommMessage(
-        buffers: (ArrayBuffer | ArrayBufferView)[],
-        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        msgId: any
-    ): Kernel.IShellFuture<
-        KernelMessage.IShellMessage<'comm_msg'>,
-        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
-    > {
-        if (this.session && this.session.kernel && this.jupyterLab) {
-            const shellMessage = this.jupyterLab.KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                msgType: 'comm_msg',
-                channel: 'shell',
-                buffers,
-                content,
-                metadata,
-                msgId,
-                session: this.session.kernel.clientId,
-                username: this.session.kernel.username
-            });
-
-            return this.session.kernel.sendShellMessage(shellMessage, false, true);
-        } else {
-            throw new Error(localize.DataScience.sessionDisposed());
-        }
-    }
-
-    public requestCommInfo(
-        content: KernelMessage.ICommInfoRequestMsg['content']
-    ): Promise<KernelMessage.ICommInfoReplyMsg> {
-        if (this.session?.kernel) {
-            return this.session.kernel.requestCommInfo(content);
-        } else {
-            throw new Error(localize.DataScience.sessionDisposed());
-        }
-    }
     public registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
@@ -366,14 +311,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
     // Sub classes need to implement their own restarting specific code
     protected abstract startRestartSession(timeout: number): void;
-    protected abstract createRestartSession(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata | undefined,
-        session: ISessionWithSocket,
-        timeout: number,
-        cancelToken?: CancellationToken
-    ): Promise<ISessionWithSocket>;
-
     // Sub classes need to implement their own kernel change specific code
     protected abstract createNewKernelSession(
         resource: Resource,

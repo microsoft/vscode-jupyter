@@ -13,7 +13,7 @@ import { ProcessService } from '../../../client/common/process/proc';
 import { IDisposable } from '../../../client/common/types';
 import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { getInterpreterHash } from '../../../client/pythonEnvironments/info/interpreter';
+import { getInterpreterHash, getNormalizedInterpreterPath } from '../../../client/pythonEnvironments/info/interpreter';
 import { getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';
@@ -150,7 +150,17 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
-        assertHasTextOutputInVSCode(cell, activeInterpreterPath, 0, false);
+        const output = getTextOutputValue(cell.outputs[0]);
+        if (
+            !output.includes(getNormalizedInterpreterPath(activeInterpreterPath)) &&
+            !output.includes(activeInterpreterPath)
+        ) {
+            assert.fail(
+                output,
+                `Expected ${getNormalizedInterpreterPath(activeInterpreterPath)} or ${activeInterpreterPath}`,
+                'Interpreter does not match'
+            );
+        }
     });
     test('Ensure kernel is auto selected and interpreter is as expected', async function () {
         if (IS_REMOTE_NATIVE_TEST) {

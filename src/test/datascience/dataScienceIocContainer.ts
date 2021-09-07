@@ -51,13 +51,13 @@ import { WebviewPanelProvider } from '../../client/common/application/webviewPan
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { JupyterSettings } from '../../client/common/configSettings';
-import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { EXTENSION_ROOT_DIR, isCI } from '../../client/common/constants';
 import { CryptoUtils } from '../../client/common/crypto';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { DataScienceProductPathService } from '../../client/common/installer/productPath';
 import { IProductPathService } from '../../client/common/installer/types';
-import { traceError, traceInfo } from '../../client/common/logger';
+import { traceError, traceInfo, traceInfoIf } from '../../client/common/logger';
 import { BrowserService } from '../../client/common/net/browser';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -212,7 +212,6 @@ import {
     INbConvertExportToPythonService,
     INbConvertInterpreterDependencyChecker,
     INotebookCreationTracker,
-    INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
     INotebookProvider,
@@ -606,7 +605,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             Identifiers.MULTIPLEXING_DEBUGSERVICE
         );
         this.serviceManager.addSingleton<CellHashProviderFactory>(CellHashProviderFactory, CellHashProviderFactory);
-        this.serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
+        this.serviceManager.addSingleton<HoverProvider>(HoverProvider, HoverProvider);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
         this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
@@ -768,6 +767,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             );
 
             // Raw Kernel doesn't have a mock layer, so disable ZMQ for mocked jupyter tests
+            traceInfoIf(isCI, 'forceDataScienceSettingsChanged invoked');
             this.forceDataScienceSettingsChanged({ disableZMQSupport: true }, false);
         } else {
             this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);

@@ -59,6 +59,7 @@ import { IEnvironmentActivationService } from '../../client/interpreter/activati
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { areInterpreterPathsSame } from '../../client/pythonEnvironments/info/interpreter';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
@@ -826,21 +827,23 @@ suite('Jupyter Execution', async () => {
             executionFactory.createActivatedEnvironment(argThat((o) => !o || o.interpreter === activeInterpreter))
         ).thenResolve(activeService.object);
         when(
-            executionFactory.createActivatedEnvironment(argThat((o) => o && o.interpreter.path === workingPython.path))
+            executionFactory.createActivatedEnvironment(
+                argThat((o) => o && areInterpreterPathsSame(o.interpreter.path, workingPython.path))
+            )
         ).thenResolve(workingService.object);
         when(
             executionFactory.createActivatedEnvironment(
-                argThat((o) => o && o.interpreter.path === missingKernelPython.path)
+                argThat((o) => o && areInterpreterPathsSame(o.interpreter.path, missingKernelPython.path))
             )
         ).thenResolve(missingKernelService.object);
         when(
             executionFactory.createActivatedEnvironment(
-                argThat((o) => o && o.interpreter.path === missingNotebookPython.path)
+                argThat((o) => o && areInterpreterPathsSame(o.interpreter.path, missingNotebookPython.path))
             )
         ).thenResolve(missingNotebookService.object);
         when(
             executionFactory.createActivatedEnvironment(
-                argThat((o) => o && o.interpreter.path === missingNotebookPython2.path)
+                argThat((o) => o && areInterpreterPathsSame(o.interpreter.path, missingNotebookPython2.path))
             )
         ).thenResolve(missingNotebookService2.object);
         when(processServiceFactory.create()).thenResolve(processService.object);
