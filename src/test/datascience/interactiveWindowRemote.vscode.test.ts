@@ -45,11 +45,11 @@ suite('Interactive window (remote)', async () => {
     }
 
     test('Execute cell from Python file', async () => {
-        const source = 'a="Hello World"\nprint(a)';
+        const source = 'print("Hello World")';
         const { notebookDocument } = await runCellInRemoveInteractiveWindow(source);
 
         const secondCell = notebookDocument?.cellAt(1);
         await waitForExecutionCompletedSuccessfully(secondCell!);
-        assertHasTextOutputInVSCode(secondCell!, '42');
+        assertHasTextOutputInVSCode(secondCell!, 'Hello World');
     });
 });
