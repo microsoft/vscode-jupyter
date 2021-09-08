@@ -337,16 +337,6 @@
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.notebookeditor.keybind.toggleOutput",
-                "title": "%DataScience.toggleCellOutput%",
-                "category": "Notebook"
-            },
-            {
-                "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow",
-                "title": "%DataScience.renderMarkdownAndSelectBelow%",
-                "category": "Notebook"
-            },
-            {
                 "command": "jupyter.selectCell",
                 "title": "%jupyter.command.jupyter.selectCell.title%",
                 "category": "Jupyter"
@@ -963,16 +953,6 @@
                 {
                     "command": "jupyter.runByLineContinue",
                     "title": "Continue",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.notebookeditor.keybind.toggleOutput",
-                    "title": "%DataScience.toggleCellOutput%",
-                    "when": "notebookType == jupyter-notebook"
-                },
-                {
-                    "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow",
-                    "title": "%DataScience.renderMarkdownAndSelectBelow%",
                     "when": "false"
                 },
                 {
