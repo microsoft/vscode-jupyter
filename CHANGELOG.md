@@ -1,5 +1,14 @@
 # Changelog
 
+## 2021.8.204 (9 September 2021)
+
+### Fixes
+
+1. Fixes to restarting of kernels when kernel dies (as opposed to manually restarting a kernel).
+   ([#7167](https://github.com/Microsoft/vscode-jupyter/issues/7167))
+1. Refresh list of remote kernels if a notebook is already open.
+   ([#7385](https://github.com/Microsoft/vscode-jupyter/issues/7385))
+
 ## 2021.8.203 (1 September 2021)
 
 ### Enhancements
