@@ -822,7 +822,9 @@ export async function waitForEvent<T>(
     timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
 ): Promise<T> {
     setTimeout(() => {
-        throw new Error(`Debugging Timeout: ${eventType} message took too long to arrive`);
+        clearTimeout(timeout);
+        console.log(`Test failing --- Debugging Timeout: ${eventType} message took too long to arrive`);
+        return Promise.reject();
     }, timeout);
     while (true) {
         const msg: any = await asPromise(debugAdapter.onDidSendMessage);

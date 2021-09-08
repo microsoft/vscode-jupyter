@@ -27,10 +27,12 @@ import { sleep } from '../core';
 import { IDebuggingManager } from '../../client/debugger/types';
 import { assert } from 'chai';
 import { DebugSession } from 'vscode';
+import { OnMessageListener } from './vscodeTestHelpers';
 import { KernelDebugAdapter } from '../../client/debugger/jupyter/kernelDebugAdapter';
 import { ITestWebviewHost } from './testInterfaces';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
-suite('DataScience - Debugging', function () {
+suite('VSCode Notebook - Debugging', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
@@ -84,7 +86,7 @@ suite('DataScience - Debugging', function () {
     // Cleanup after suite is finished
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test('Run by Line - Full Workflow', async function () {
+    test('Run by Line - Full Workflow (webview-test)', async function () {
         // set up
         await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
@@ -116,13 +118,14 @@ suite('DataScience - Debugging', function () {
 
         // Wait for the stoped event
         msg = await waitForEvent<DebugProtocol.StoppedEvent>('stopped', debugAdapter!);
-        // Wait for variable view to be updated
-        await sleep(1000);
 
-        // Check variable view
+        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = (coreVariableView as any) as ITestWebviewHost;
+        const onMessageListener = new OnMessageListener(variableView);
+        await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
         const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
         verifyViewVariables(expectedVariables, htmlResult);
