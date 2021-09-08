@@ -10,6 +10,10 @@
    ([#6881](https://github.com/Microsoft/vscode-jupyter/issues/6881))
 1. Refresh list of remote kernels if a notebook is already open.
    ([#7385](https://github.com/Microsoft/vscode-jupyter/issues/7385))
+1. Fix allowing the dataframe viewer to open large data frames. Also fix variable fetching code from updating the execution count.
+   ([#7420](https://github.com/Microsoft/vscode-jupyter/issues/7420))
+1. Don't add an extra linefeed in interactive window markdown.
+   ([#7355](https://github.com/Microsoft/vscode-jupyter/issues/7355))
 
 ## 2021.8.203 (1 September 2021)
 
