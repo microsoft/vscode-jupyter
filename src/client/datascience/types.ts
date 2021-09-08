@@ -182,14 +182,7 @@ export interface INotebook extends IAsyncDisposable {
     onKernelChanged: Event<KernelConnectionMetadata>;
     onKernelRestarted: Event<void>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
-    execute(
-        code: string,
-        file: string,
-        line: number,
-        id: string,
-        cancelToken?: CancellationToken,
-        silent?: boolean
-    ): Promise<ICell[]>;
+    execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]>;
     inspect(code: string, offsetInCode?: number, cancelToken?: CancellationToken): Promise<JSONObject>;
     getCompletion(
         cellCode: string,
