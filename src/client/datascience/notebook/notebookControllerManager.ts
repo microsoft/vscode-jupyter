@@ -215,8 +215,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Find the default kernel `python` if we can find one
         // If not available, then return anything thats a python kernel
-        let defaultPythonKernel: VSCodeNotebookController | undefined;
         let defaultPython3Kernel: VSCodeNotebookController | undefined;
+        let defaultPythonKernel: VSCodeNotebookController | undefined;
         let defaultPythonLanguageKernel: VSCodeNotebookController | undefined;
         controllers.forEach((item) => {
             if (item.connection.kind === 'startUsingKernelSpec' && item.connection.kernelSpec.name === 'python') {
@@ -234,7 +234,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
         });
 
-        return defaultPythonKernel || defaultPython3Kernel || defaultPythonLanguageKernel || controllers[0];
+        return defaultPython3Kernel || defaultPythonKernel || defaultPythonLanguageKernel || controllers[0];
     }
     /**
      * Turn all our kernelConnections that we know about into registered NotebookControllers
