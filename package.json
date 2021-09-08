@@ -1444,13 +1444,14 @@
                 "jupyter.enableKeyboardShortcuts": {
                     "type": "boolean",
                     "default": true,
-                    "deprecationMessage": "This setting has been deprecated as Jupyter keyboard shortcuts have been moved into the ms-toolsai.jupyter-keymap extension. If you would like to disable Jupyter keyboard shortcuts, please uninstall or disable that extension instead.",
+                    "deprecationMessage": "This setting is deprecated as Jupyter keyboard shortcuts have been moved into the ms-toolsai.jupyter-keymap extension. If you would like to disable Jupyter keyboard shortcuts, please uninstall or disable that extension instead.",
                     "description": "Enables Jupyter style keyboard shortcuts for Notebooks.",
                     "scope": "application"
                 },
                 "jupyter.allowImportFromNotebook": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
                     "scope": "resource"
                 },
@@ -1526,6 +1527,7 @@
                 "jupyter.searchForJupyter": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Search all installed Python interpreters for a Jupyter installation when starting the Interactive window",
                     "scope": "resource"
                 },
@@ -1550,11 +1552,13 @@
                 "jupyter.allowInput": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Allow the inputting of python code directly into the Interactive window"
                 },
                 "jupyter.showCellInputCode": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Show cell input code.",
                     "scope": "resource"
                 },
@@ -1567,6 +1571,7 @@
                 "jupyter.maxOutputSize": {
                     "type": "number",
                     "default": 400,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Maximum size (in pixels) of text output in the Notebook Editor before a scrollbar appears. First enable scrolling for cell outputs in settings.",
                     "scope": "resource"
                 },
@@ -1579,15 +1584,9 @@
                 "jupyter.enableScrollingForCellOutputs": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Enables scrolling for large cell outputs in the Notebook Editor. This setting does not apply to the Interactive Window.",
                     "scope": "resource"
-                },
-                "jupyter.errorBackgroundColor": {
-                    "type": "string",
-                    "default": "#FFFFFF",
-                    "description": "Background color (in hex) for exception messages in the Interactive window.",
-                    "scope": "resource",
-                    "deprecationMessage": "No longer necessary as the theme colors are used for error messages"
                 },
                 "jupyter.sendSelectionToInteractiveWindow": {
                     "type": "boolean",
@@ -1622,12 +1621,14 @@
                 "jupyter.allowLiveShare": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated as Live Share support for the interactive window no longer exists in the Jupyter extension.",
                     "description": "Allow the Interactive window to be shared during a Live Share session",
                     "scope": "resource"
                 },
                 "jupyter.ignoreVscodeTheme": {
                     "type": "boolean",
                     "default": false,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Don't use the VS Code theme in the Interactive window (requires reload of VS Code). This forces the Interactive window to use 'Light +(default light)' and disables matplotlib defaults.",
                     "scope": "resource"
                 },
@@ -1640,6 +1641,7 @@
                 "jupyter.liveShareConnectionTimeout": {
                     "type": "number",
                     "default": 1000,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Amount of time to wait for guest connections to verify they have the Python extension installed.",
                     "scope": "application"
                 },
@@ -1659,13 +1661,6 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables moving to the next cell when clicking on a 'Run Cell' code lens.",
-                    "scope": "resource"
-                },
-                "jupyter.autoPreviewNotebooksInInteractivePane": {
-                    "type": "boolean",
-                    "deprecationMessage": "No longer supported. Notebooks open directly in their own editor now.",
-                    "default": false,
-                    "description": "When opening ipynb files, automatically preview the contents in the Interactive window.",
                     "scope": "resource"
                 },
                 "jupyter.allowUnauthorizedRemoteConnection": {
@@ -1719,12 +1714,14 @@
                 "jupyter.textOutputLimit": {
                     "type": "number",
                     "default": 20000,
+                    "deprecationMessage": "This setting is deprecated in favor of `notebook.output.textLineLimit`. This setting will be removed in an upcoming release.",
                     "description": "Limit the amount of text in Interactive cell text output to this value. 0 to allow any amount of characters.",
                     "scope": "resource"
                 },
                 "jupyter.colorizeInputBox": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in an upcoming release.",
                     "description": "Whether or not to use the theme's peek color as the background for the input box.",
                     "scope": "resource"
                 },
@@ -1775,13 +1772,6 @@
                     "default": false,
                     "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
                     "scope": "resource"
-                },
-                "jupyter.runMagicCommands": {
-                    "type": "string",
-                    "default": "",
-                    "deprecationMessage": "This setting has been deprecated in favor of 'runStartupCommands'.",
-                    "description": "A series of Python instructions or iPython magic commands separated by '\\n' that will be executed when the interactive window loads.",
-                    "scope": "application"
                 },
                 "jupyter.runStartupCommands": {
                     "type": "array",
