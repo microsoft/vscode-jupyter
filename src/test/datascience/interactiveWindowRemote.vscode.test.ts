@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { assert } from 'chai';
 import { traceInfo } from '../../client/common/logger';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import { runCellInInteractiveWindow } from './interactiveWindow.vscode.test';
