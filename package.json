@@ -1378,6 +1378,14 @@
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "when": "false"
+                },
+                {
+                    "command": "jupyter.interactive.goToCode",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.interactive.removeCell",
+                    "when": "false"
                 }
             ],
             "debug/variables/context": [
