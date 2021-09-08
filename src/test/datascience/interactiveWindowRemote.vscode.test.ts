@@ -15,7 +15,7 @@ import {
     waitForExecutionCompletedSuccessfully
 } from './notebook/helper';
 
-suite('Interactive window', async () => {
+suite('Interactive window (remote)', async () => {
     setup(async function () {
         if (!IS_REMOTE_NATIVE_TEST) {
             return this.skip();
