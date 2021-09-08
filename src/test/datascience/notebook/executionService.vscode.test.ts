@@ -132,7 +132,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.isUndefined(cells[0].executionSummary?.executionOrder);
     });
     test('Clear output in empty cells', async function () {
-        return this.skip();
         await closeNotebooks();
         const nbUri = Uri.file(await createTemporaryNotebook(templateNbPath, disposables));
         await openNotebook(api.serviceContainer, nbUri.fsPath);
@@ -222,7 +221,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
     });
     test('Updating display data', async function () {
-        return this.skip();
         await insertCodeCell('from IPython.display import Markdown\n');
         await insertCodeCell('dh = display(display_id=True)\n');
         await insertCodeCell('dh.update(Markdown("foo"))\n');
@@ -287,7 +285,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);
     });
     test('Clearing output via code', async function () {
-        return this.skip();
         // Assume you are executing a cell that prints numbers 1-100.
         // When printing number 50, you click clear.
         // Cell output should now start printing output from 51 onwards, & not 1.
