@@ -6,6 +6,8 @@
 
 1. Fixes to restarting of kernels when kernel dies (as opposed to manually restarting a kernel).
    ([#7167](https://github.com/Microsoft/vscode-jupyter/issues/7167))
+1. Fixes related to remote connections in `Interactive Window`.
+   ([#6881](https://github.com/Microsoft/vscode-jupyter/issues/6881))
 1. Refresh list of remote kernels if a notebook is already open.
    ([#7385](https://github.com/Microsoft/vscode-jupyter/issues/7385))
 
