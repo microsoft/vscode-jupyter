@@ -58,13 +58,14 @@ async function createTempDir() {
  * Smoke tests & tests running in VSCode require Python extension to be installed.
  */
 async function installPythonExtension(vscodeExecutablePath: string) {
-    if (!requiresPythonExtensionToBeInstalled()) {
+    const pythonVSIX = process.env.VSIX_NAME_PYTHON;
+    if (!requiresPythonExtensionToBeInstalled() || !pythonVSIX) {
         console.info('Python Extension not required');
         return;
     }
     console.info('Installing Python Extension');
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
-    spawnSync(cliPath, ['--install-extension', PythonExtension], {
+    spawnSync(cliPath, ['--install-extension', pythonVSIX], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });

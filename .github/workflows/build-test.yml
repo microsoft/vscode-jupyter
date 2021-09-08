@@ -43,6 +43,7 @@ env:
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install Insiders in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
+  VSIX_NAME_PYTHON: 'ms-python-insiders.vsix'
 
 jobs:
   pick_environment:
@@ -398,6 +399,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1.1.1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
+
+      - name: Download Python VSIX
+        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
+        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
 
       - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v2
