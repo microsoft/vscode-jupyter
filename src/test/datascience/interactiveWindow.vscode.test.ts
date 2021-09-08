@@ -265,7 +265,7 @@ async function insertIntoInputEditor(source: string) {
     });
 }
 
-async function submitFromPythonFile(source: string) {
+export async function submitFromPythonFile(source: string) {
     const api = await initialize();
     const interactiveWindowProvider = api.serviceManager.get<InteractiveWindowProvider>(IInteractiveWindowProvider);
     const untitledPythonFile = await vscode.workspace.openTextDocument({
@@ -296,38 +296,4 @@ async function waitForLastCellToComplete(interactiveWindow: InteractiveWindow) {
     assert.ok(codeCell !== undefined, 'No code cell found in interactive window notebook document');
     await waitForExecutionCompletedSuccessfully(codeCell!);
     return codeCell!;
-}
-
-export async function runCellInInteractiveWindow(source: string) {
-    const api = await initialize();
-    const { activeInteractiveWindow } = await submitFromPythonFile(source);
-    const notebookDocument = vscode.workspace.notebookDocuments.find(
-        (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
-    );
-
-    // Ensure we picked up the active interpreter for use as the kernel
-    const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
-    const activeInterpreter = await pythonApi.getActiveInterpreter();
-    assert.equal(
-        activeInteractiveWindow.notebookController?.connection.interpreter?.path,
-        activeInterpreter?.path,
-        'Controller does not match active interpreter'
-    );
-    assert.equal(
-        activeInteractiveWindow.notebookController?.connection.interpreter?.envName,
-        activeInterpreter?.envName,
-        'Controller does not match active interpreter'
-    );
-
-    // Verify sys info cell
-    const firstCell = notebookDocument?.cellAt(0);
-    assert.ok(firstCell?.metadata.isInteractiveWindowMessageCell, 'First cell should be sys info cell');
-    assert.equal(firstCell?.kind, vscode.NotebookCellKind.Markup, 'First cell should be markdown cell');
-
-    // Verify executed cell input and output
-    const secondCell = notebookDocument?.cellAt(1);
-    const actualSource = secondCell?.document.getText();
-    assert.equal(actualSource, source, `Executed cell has unexpected source code`);
-
-    return { notebookDocument };
 }
