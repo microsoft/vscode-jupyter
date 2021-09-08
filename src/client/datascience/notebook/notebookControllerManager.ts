@@ -45,7 +45,7 @@ import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { noop } from '../../common/utils/misc';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { isCI } from '../../common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -98,7 +98,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
     public async getInteractiveController(): Promise<VSCodeNotebookController | undefined> {
-        return this.createActiveInterpreterController(InteractiveWindowView);
+        if (this.isLocalLaunch) {
+            return this.createActiveInterpreterController(InteractiveWindowView);
+        } else {
+            return this.createDefaultRemoteControllerForInteractiveWindow();
+        }
     }
 
     get onNotebookControllerSelected() {
@@ -112,9 +116,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Sign up for document either opening or closing
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
-        if (this.isLocalLaunch) {
-            this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
-        }
+        this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
     }
@@ -201,6 +203,38 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
         return this.getOrCreateController(activeInterpreter, notebookType);
+    }
+    private async createDefaultRemoteControllerForInteractiveWindow() {
+        // Get all remote kernels
+        await this.loadNotebookControllers();
+        const controllers = this.registeredNotebookControllers();
+        if (controllers.length === 0) {
+            traceError('No remote controllers');
+            return;
+        }
+
+        // Find the default kernel `python` if we can find one
+        // If not available, then return anything thats a python kernel
+        let defaultPython3Kernel: VSCodeNotebookController | undefined;
+        let defaultPythonKernel: VSCodeNotebookController | undefined;
+        let defaultPythonLanguageKernel: VSCodeNotebookController | undefined;
+        controllers.forEach((item) => {
+            if (item.connection.kind === 'startUsingKernelSpec' && item.connection.kernelSpec.name === 'python') {
+                defaultPythonKernel = item;
+            } else if (
+                item.connection.kind === 'startUsingKernelSpec' &&
+                item.connection.kernelSpec.name === 'python3'
+            ) {
+                defaultPython3Kernel = item;
+            } else if (
+                item.connection.kind === 'startUsingKernelSpec' &&
+                item.connection.kernelSpec.language === PYTHON_LANGUAGE
+            ) {
+                defaultPythonLanguageKernel = item;
+            }
+        });
+
+        return defaultPython3Kernel || defaultPythonKernel || defaultPythonLanguageKernel || controllers[0];
     }
     /**
      * Turn all our kernelConnections that we know about into registered NotebookControllers
@@ -290,7 +324,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         traceInfoIf(isCI, `Clear controller mapping for ${document.uri.toString()}`);
         const loadControllersPromise = this.loadNotebookControllers();
 
-        if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
+        if (
+            isPythonNotebook(getNotebookMetadata(document)) &&
+            this.extensionChecker.isPythonExtensionInstalled &&
+            this.isLocalLaunch
+        ) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
             this.createActiveInterpreterController(JupyterNotebookView).catch(noop);
         }

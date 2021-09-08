@@ -139,6 +139,11 @@ async function setGlobalPathToInterpreter(pythonPath?: string): Promise<void> {
     await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
     await disposePythonSettings();
 }
+export async function disableExperimentsInPythonExtension(): Promise<void> {
+    const vscode = require('vscode') as typeof import('vscode');
+    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
+    await pythonConfig.update('experiments.enabled', false, vscode.ConfigurationTarget.Global).then(noop, noop);
+}
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 export async function setAutoSaveDelayInWorkspaceRoot(delayinMS: number) {
