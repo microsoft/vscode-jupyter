@@ -339,6 +339,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         ]);
     });
     test('Can restart a kernel after it dies', async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
         /*
         Run cell 1 - Print some value
         Run Cell 2 with some code that will cause the kernel to die.
