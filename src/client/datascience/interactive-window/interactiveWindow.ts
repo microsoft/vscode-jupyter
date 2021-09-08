@@ -261,11 +261,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this.registerKernel(notebookDocument, controller);
             this.initialControllerSelected.resolve();
         }
+        const currentNotebookUri = notebookDocument.uri.toString();
 
         // Ensure we hear about any controller changes so we can update our cache accordingly
         this.notebookControllerManager.onNotebookControllerSelected(
             (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
-                if (e.notebook !== notebookDocument) {
+                if (e.notebook.uri.toString() !== currentNotebookUri) {
                     return;
                 }
 
@@ -275,10 +276,14 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 ).controller.onDidChangeSelectedNotebooks(
                     (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
                         // Controller was deselected for this InteractiveWindow's NotebookDocument
-                        if (selectedEvent.selected === false && selectedEvent.notebook === notebookDocument) {
+                        if (
+                            selectedEvent.selected === false &&
+                            selectedEvent.notebook.uri.toString() === currentNotebookUri
+                        ) {
                             this.kernelLoadPromise = undefined;
                             this.kernel = undefined;
                             this.notebookController = undefined;
+                            this.executionPromise = undefined;
                             controllerChangeListener.dispose();
                         }
                     },
