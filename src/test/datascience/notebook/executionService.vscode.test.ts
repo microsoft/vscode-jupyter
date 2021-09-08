@@ -40,8 +40,8 @@ import {
     waitForQueuedForExecutionOrExecuting,
     workAroundVSCodeNotebookStartPages,
     waitForTextOutput,
-    waitForEmptyCellExecutionCompleted,
-    defaultNotebookTestTimeout
+    defaultNotebookTestTimeout,
+    waitForCellExecutionState
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
@@ -49,7 +49,6 @@ import { noop } from '../../../client/common/utils/misc';
 import {
     getTextOutputValue,
     hasErrorOutput,
-    NotebookCellStateTracker,
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { IS_CI_SERVER } from '../../ciConstants';
@@ -144,13 +143,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await Promise.all([
             runAllCellsInActiveNotebook(),
-            waitForEmptyCellExecutionCompleted(cells[0]),
-            // Clear the cell and run the empty cell again & the status should change the idle & output cleared.
-            waitForCondition(
-                async () => NotebookCellStateTracker.getCellState(cells[0]) === NotebookCellExecutionState.Idle,
-                defaultNotebookTestTimeout,
-                'Incorrect state'
-            ),
+            waitForCellExecutionState(cells[0], NotebookCellExecutionState.Pending, disposables),
+            waitForCellExecutionState(cells[0], NotebookCellExecutionState.Executing, disposables),
+            waitForCellExecutionState(cells[0], NotebookCellExecutionState.Idle, disposables),
             waitForCondition(
                 async () => cells[0].outputs.length === 0,
                 defaultNotebookTestTimeout,
