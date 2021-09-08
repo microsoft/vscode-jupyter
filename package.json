@@ -67,6 +67,7 @@
         "onCommand:jupyter.selectjupytercommandline",
         "onCommand:jupyter.openVariableView",
         "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
+        "onCommand:jupyter.clearSavedJupyterUris",
         "onNotebook:jupyter-notebook",
         "onNotebook:interactive"
     ],
