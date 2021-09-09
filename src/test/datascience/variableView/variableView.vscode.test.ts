@@ -3,7 +3,7 @@
 'use strict';
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
-import { IDisposable } from '../../../client/common/types';
+import { IDisposable, Product } from '../../../client/common/types';
 import { Commands } from '../../../client/datascience/constants';
 import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
 import { IExtensionTestApi } from '../../common';
@@ -17,7 +17,9 @@ import {
     insertCodeCell,
     prewarmNotebooks,
     waitForExecutionCompletedSuccessfully,
-    workAroundVSCodeNotebookStartPages
+    workAroundVSCodeNotebookStartPages,
+    hijackPrompt,
+    startJupyterServer
 } from '../notebook/helper';
 import { OnMessageListener } from '../vscodeTestHelpers';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -25,7 +27,11 @@ import { verifyViewVariables } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../client/common/logger';
-import { sleep } from '../../core';
+import { ProductNames } from '../../../client/common/installer/productNames';
+import { Common } from '../../../client/common/utils/localize';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 suite('DataScience - VariableView', function () {
     let api: IExtensionTestApi;
@@ -52,9 +58,16 @@ suite('DataScience - VariableView', function () {
             return this.skip();
         }
         await workAroundVSCodeNotebookStartPages();
+        await hijackPrompt(
+            'showErrorMessage',
+            { endsWith: expectedPromptMessageSuffix },
+            { text: Common.install(), clickImmediately: true },
+            disposables
+        );
         //await closeNotebooksAndCleanUpAfterTests(disposables);
         console.log('IANHU b');
-        await sleep(5_000);
+        //await sleep(5_000);
+        await startJupyterServer();
         await prewarmNotebooks();
         console.log('IANHU c');
         sinon.restore();
@@ -72,6 +85,7 @@ suite('DataScience - VariableView', function () {
         sinon.restore();
 
         // Create an editor to use for our tests
+        await startJupyterServer();
         await createEmptyPythonNotebook(disposables);
         console.log('IANHU f');
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
