@@ -45,28 +45,35 @@ suite('DataScience - VariableView', function () {
             return this.skip();
         }
 
+        console.log('IANHU a');
+
         // Don't run if we can't use the native notebook interface
         if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
         await workAroundVSCodeNotebookStartPages();
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        console.log('IANHU b');
         await sleep(5_000);
         await prewarmNotebooks();
+        console.log('IANHU c');
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        console.log('IANHU d');
         traceInfo(`Start Test Suite (completed)`);
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
+        console.log('IANHU e');
         sinon.restore();
 
         // Create an editor to use for our tests
         await createEmptyPythonNotebook(disposables);
+        console.log('IANHU f');
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -80,6 +87,7 @@ suite('DataScience - VariableView', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('Can show VariableView (webview-test)', async function () {
+        console.log('IANHU g');
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
@@ -120,7 +128,7 @@ suite('DataScience - VariableView', function () {
         verifyViewVariables(expectedVariables, htmlResult);
     });
 
-    test('Variable view document switching (webview-test)', async function () {
+    test('VariableView document switching (webview-test)', async function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
