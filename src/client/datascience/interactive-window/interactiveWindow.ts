@@ -37,30 +37,19 @@ import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import * as uuid from 'uuid/v4';
 
-import {
-    IConfigurationService,
-    IDisposable,
-    IDisposableRegistry,
-    InteractiveWindowMode,
-    Resource
-} from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, InteractiveWindowMode, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { generateCellsFromNotebookDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, defaultNotebookFormat, EditorContexts, Identifiers } from '../constants';
 import { ExportFormat, IExportDialog } from '../export/types';
-import {
-    INotebookIdentity,
-    InteractiveWindowMessages,
-    ISubmitNewCell
-} from '../interactive-common/interactiveWindowTypes';
+import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { IKernel, IKernelProvider, KernelConnectionMetadata, NotebookCellRunState } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import {
-    CellState,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowLoadable,
@@ -94,10 +83,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this._onDidChangeViewState.event;
     }
     // Promise that resolves when the interactive window is ready to handle code execution.
-    public get readyPromise(): Promise<NotebookEditor> {
-        return this._editorReadyPromise;
+    public get readyPromise(): Promise<void> {
+        return Promise.all([this._editorReadyPromise, this._kernelReadyPromise]).then(noop, noop);
     }
-
     public get closed(): Event<IInteractiveWindow> {
         return this.closedEvent.event;
     }
@@ -124,10 +112,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     protected fileInKernel: string | undefined;
 
     private isDisposed = false;
-    private kernel: IKernel | undefined;
-    private kernelLoadPromise: Promise<void> | undefined;
-    private initialControllerSelected: Deferred<void>;
     private _editorReadyPromise: Promise<NotebookEditor>;
+    private _controllerReadyPromise: Deferred<VSCodeNotebookController>;
+    private _kernelReadyPromise: Promise<IKernel> | undefined;
     private notebookDocument: NotebookDocument | undefined;
     private executionPromise: Promise<boolean> | undefined;
 
@@ -155,11 +142,17 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this._submitters.push(owner);
         }
 
-        // Wait for a controller to get selected
-        this.initialControllerSelected = createDeferred<void>();
-
         // Request creation of the interactive window from VS Code
-        this._editorReadyPromise = this.createReadyPromise();
+        this._editorReadyPromise = this.createEditorReadyPromise();
+
+        // Wait for a controller to get selected
+        this._controllerReadyPromise = createDeferred<VSCodeNotebookController>();
+
+        // Set up promise for kernel ready
+        this._kernelReadyPromise = this.createKernelReadyPromise();
+
+        // Immediately start trying to connect to kernel
+        void this._kernelReadyPromise;
 
         workspace.onDidCloseNotebookDocument((notebookDocument) => {
             if (notebookDocument === this.notebookDocument) {
@@ -168,7 +161,19 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         });
     }
 
-    private async createReadyPromise(): Promise<NotebookEditor> {
+    private async createKernelReadyPromise(): Promise<IKernel> {
+        const editor = await this._editorReadyPromise;
+        const controller = await this._controllerReadyPromise.promise;
+        const kernel = this.kernelProvider.getOrCreate(editor.document, {
+            metadata: controller!.connection,
+            controller: controller!.controller,
+            resourceUri: this.owner
+        });
+        await kernel.start({ disableUI: false, document: editor.document });
+        return kernel;
+    }
+
+    private async createEditorReadyPromise(): Promise<NotebookEditor> {
         const preferredController = await this.notebookControllerManager.getInteractiveController();
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
         traceInfo(`Starting interactive window with controller ID ${controllerId}`);
@@ -187,7 +192,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             throw new Error('Failed to request creation of interactive window from VS Code.');
         }
         this.notebookDocument = notebookEditor.document;
-        this.loadController(notebookEditor.document);
+        this.listenForControllerSelection(notebookEditor.document);
         this.initializeRendererCommunication();
         return notebookEditor;
     }
@@ -253,20 +258,16 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    private loadController(notebookDocument: NotebookDocument) {
-        // Immediately try to find a selected controller for our NotebookDocument,
-        // as it's possible that a selection event fired before our ctor was able to run
+    private listenForControllerSelection(notebookDocument: NotebookDocument) {
         const controller = this.notebookControllerManager.getSelectedNotebookController(notebookDocument);
         if (controller !== undefined) {
-            this.registerKernel(notebookDocument, controller);
-            this.initialControllerSelected.resolve();
+            this._controllerReadyPromise.resolve(controller);
         }
-        const currentNotebookUri = notebookDocument.uri.toString();
 
-        // Ensure we hear about any controller changes so we can update our cache accordingly
+        // Ensure we hear about any controller changes so we can update our cached promises
         this.notebookControllerManager.onNotebookControllerSelected(
             (e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) => {
-                if (e.notebook.uri.toString() !== currentNotebookUri) {
+                if (e.notebook !== notebookDocument) {
                     return;
                 }
 
@@ -276,13 +277,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 ).controller.onDidChangeSelectedNotebooks(
                     (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
                         // Controller was deselected for this InteractiveWindow's NotebookDocument
-                        if (
-                            selectedEvent.selected === false &&
-                            selectedEvent.notebook.uri.toString() === currentNotebookUri
-                        ) {
-                            this.kernelLoadPromise = undefined;
-                            this.kernel = undefined;
+                        if (selectedEvent.selected === false && selectedEvent.notebook === notebookDocument) {
                             this.notebookController = undefined;
+                            this._controllerReadyPromise = createDeferred<VSCodeNotebookController>();
+                            this._kernelReadyPromise = undefined;
                             this.executionPromise = undefined;
                             controllerChangeListener.dispose();
                         }
@@ -291,23 +289,15 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                     this.disposables
                 );
 
-                this.registerKernel(e.notebook, e.controller);
-                this.initialControllerSelected.resolve();
+                this.notebookController = e.controller;
+                this._controllerReadyPromise.resolve(e.controller);
+
+                // Recreate the kernel ready promise now that we have a new controller
+                this._kernelReadyPromise = this.createKernelReadyPromise();
             },
             this,
             this.disposables
         );
-    }
-
-    private registerKernel(notebookDocument: NotebookDocument, controller: VSCodeNotebookController) {
-        const kernel = this.kernelProvider.getOrCreate(notebookDocument, {
-            metadata: controller.connection,
-            controller: controller.controller,
-            resourceUri: this.owner
-        });
-        this.kernelLoadPromise = kernel.start({ disableUI: false, document: notebookDocument });
-        this.kernel = kernel;
-        this.notebookController = controller;
     }
 
     public async show(): Promise<void> {
@@ -321,8 +311,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public dispose() {
-        if (this.kernel) {
-            this.kernel.dispose().ignoreErrors();
+        if (this._kernelReadyPromise) {
+            this._kernelReadyPromise.then((k) => k.dispose());
         }
         if (this.closedEvent) {
             this.closedEvent.fire(this);
@@ -407,6 +397,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private async createExecutionPromise(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         const notebookEditor = await this._editorReadyPromise;
+        const kernel = await this._kernelReadyPromise;
         await this.updateOwners(fileUri);
         const id = uuid();
 
@@ -425,7 +416,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this.revealCell(notebookCell, notebookEditor);
         }
 
-        const notebook = this.kernel?.notebook;
+        const notebook = kernel?.notebook;
         if (!notebook) {
             return false;
         }
@@ -439,22 +430,22 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             }
 
             if (isDebug) {
-                await this.kernel!.executeHidden(
+                await kernel!.executeHidden(
                     `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`,
                     notebookEditor.document
                 );
-                await this.jupyterDebugger.startDebugging(this.kernel!);
+                await this.jupyterDebugger.startDebugging(kernel!);
             }
 
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-            await this.setFileInKernel(file, notebookEditor.document);
+            await this.setFileInKernel(file, notebookEditor.document, kernel!);
 
-            result = (await this.kernel!.executeCell(notebookCell)) === NotebookCellRunState.Success;
+            result = (await kernel!.executeCell(notebookCell)) === NotebookCellRunState.Success;
 
             traceInfo(`Finished execution for ${id}`);
         } finally {
             if (isDebug) {
-                await this.jupyterDebugger.stopDebugging(this.kernel!);
+                await this.jupyterDebugger.stopDebugging(kernel!);
             }
         }
         return result;
@@ -584,20 +575,20 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    protected async setFileInKernel(file: string, notebookDocument: NotebookDocument): Promise<void> {
+    protected async setFileInKernel(file: string, notebookDocument: NotebookDocument, kernel: IKernel): Promise<void> {
         // If in perFile mode, set only once
-        if (this.mode === 'perFile' && !this.fileInKernel && this.kernel && file !== Identifiers.EmptyFileName) {
+        if (this.mode === 'perFile' && !this.fileInKernel && kernel && file !== Identifiers.EmptyFileName) {
             this.fileInKernel = file;
-            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookDocument);
+            await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookDocument);
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
             this.mode !== 'perFile' &&
-            this.kernel &&
+            kernel &&
             file !== Identifiers.EmptyFileName
         ) {
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
-            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookDocument);
+            await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookDocument);
         }
     }
 
@@ -623,13 +614,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         line: number,
         id: string
     ): Promise<NotebookCell> {
-        // Ensure we have a controller to execute code against
-        if (!this.notebookController) {
-            await this.commandManager.executeCommand('notebook.selectKernel');
-        }
-        await this.initialControllerSelected.promise;
-        await this.kernelLoadPromise;
-
         // ensure editor is opened but not focused
         await this.commandManager.executeCommand(
             'interactive.open',
@@ -700,6 +684,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     public async exportAs() {
         const notebookEditor = await this._editorReadyPromise;
+        const kernel = await this._kernelReadyPromise;
         // Export requires the python extension
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
@@ -710,8 +695,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
-        if (this.kernel) {
-            updateNotebookMetadata(metadata, this.kernel.kernelConnectionMetadata);
+        if (kernel) {
+            updateNotebookMetadata(metadata, kernel.kernelConnectionMetadata);
         }
 
         // Turn the cells into a json object
@@ -733,35 +718,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 contents,
                 this.owningResource,
                 defaultFileName,
-                this.kernel?.kernelConnectionMetadata.interpreter
+                kernel?.kernelConnectionMetadata.interpreter
             )
             .then(noop, noop);
-    }
-
-    /// The following are implemented only for compliance with the IInteractiveWindow
-    /// interface and can be deleted once the native notebooks API migration is complete.
-
-    public get title() {
-        return '';
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public onMessage(_message: string, _payload: any) {
-        noop();
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    protected async submitNewCell(_info: ISubmitNewCell) {
-        noop();
-    }
-
-    public createWebviewCellButton(
-        _buttonId: string,
-        _callback: (cell: NotebookCell, isInteractive: boolean, resource: Uri) => Promise<void>,
-        _codicon: string,
-        _statusToEnable: CellState[],
-        _tooltip: string
-    ): IDisposable {
-        return { dispose: noop };
     }
 }

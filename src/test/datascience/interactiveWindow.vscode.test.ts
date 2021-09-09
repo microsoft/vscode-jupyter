@@ -31,9 +31,7 @@ suite('Interactive window', async () => {
     });
 
     async function createStandaloneInteractiveWindow() {
-        const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
-        await activeInteractiveWindow.readyPromise;
-        return activeInteractiveWindow;
+        return interactiveWindowProvider.getOrCreate(undefined) as Promise<InteractiveWindow>;
     }
 
     async function insertIntoInputEditor(source: string) {
@@ -52,7 +50,6 @@ suite('Interactive window', async () => {
         const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
             untitledPythonFile.uri
         )) as InteractiveWindow;
-        await activeInteractiveWindow.readyPromise;
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
         return { activeInteractiveWindow, untitledPythonFile };
     }
@@ -112,7 +109,6 @@ suite('Interactive window', async () => {
     test('Execute cell from input box', async () => {
         // Create new interactive window
         const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
-        await activeInteractiveWindow.readyPromise;
 
         // Add code to the input box
         await vscode.window.activeTextEditor?.edit((editBuilder) => {
