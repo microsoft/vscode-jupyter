@@ -52,7 +52,7 @@ suite('DataScience - VariableView', function () {
             return this.skip();
         }
         await workAroundVSCodeNotebookStartPages();
-        await closeNotebooksAndCleanUpAfterTests(disposables);
+        //await closeNotebooksAndCleanUpAfterTests(disposables);
         console.log('IANHU b');
         await sleep(5_000);
         await prewarmNotebooks();

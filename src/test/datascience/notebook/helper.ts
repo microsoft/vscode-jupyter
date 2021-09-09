@@ -441,13 +441,18 @@ export async function prewarmNotebooks() {
         if (memento.get(LastSavedNotebookCellLanguage) !== PYTHON_LANGUAGE) {
             await memento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE);
         }
+        console.log('IANHU aa');
         await editorProvider.createNew();
         await insertCodeCell('print("Hello World1")', { index: 0 });
+        console.log('IANHU ab');
         await waitForKernelToGetAutoSelected();
+        console.log('IANHU ac');
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
+        console.log('IANHU ad');
         // Wait for Jupyter to start.
         await closeActiveWindows();
+        console.log('IANHU ae');
     } finally {
         disposables.forEach((d) => d.dispose());
     }
