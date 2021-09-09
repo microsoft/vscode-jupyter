@@ -77,7 +77,7 @@ export class KernelProvider implements IKernelProvider {
         this.pendingDisposables.clear();
         await Promise.all(items);
     }
-    public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel | undefined {
+    public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel {
         const existingKernelInfo = this.kernelsByNotebook.get(notebook);
         if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
             return existingKernelInfo.kernel;

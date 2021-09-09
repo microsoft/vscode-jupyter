@@ -173,14 +173,14 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
         traceInfo(`Starting interactive window with controller ID ${controllerId}`);
         const hasOwningFile = this.owner !== undefined;
-        const { notebookEditor } = ((await this.commandManager.executeCommand(
+        const { notebookEditor } = (await this.commandManager.executeCommand(
             'interactive.open',
             // Keep focus on the owning file if there is one
             { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
             undefined,
             controllerId,
             this.owner && this.mode === 'perFile' ? getInteractiveWindowTitle(this.owner) : undefined
-        )) as unknown) as INativeInteractiveWindow;
+        ) as unknown) as INativeInteractiveWindow;
         if (!notebookEditor) {
             // This means VS Code failed to create an interactive window.
             // This should never happen.
@@ -305,7 +305,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             controller: controller.controller,
             resourceUri: this.owner
         });
-        this.kernelLoadPromise = kernel?.start({ disableUI: false, document: notebookDocument });
+        this.kernelLoadPromise = kernel.start({ disableUI: false, document: notebookDocument });
         this.kernel = kernel;
         this.notebookController = controller;
     }
