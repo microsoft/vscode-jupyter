@@ -35,8 +35,7 @@ suite('DataScience - VariableView', function () {
     let vscodeNotebook: IVSCodeNotebook;
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo(`Start Test Suite`);
-        return this.skip();
+        traceInfo('Start Test Suite');
         this.timeout(120_000);
         api = await initialize();
 
@@ -80,15 +79,7 @@ suite('DataScience - VariableView', function () {
     // Cleanup after suite is finished
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    // Test showing the basic variable view with a value or two
     test('Can show VariableView (webview-test)', async function () {
-        return this.skip();
-        // Add one simple cell and execute it
-        await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        await runCell(cell);
-        await waitForExecutionCompletedSuccessfully(cell);
-
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
@@ -100,13 +91,24 @@ suite('DataScience - VariableView', function () {
         // Add our message listener
         const onMessageListener = new OnMessageListener(variableView);
 
+        // We get one initial refresh of the variables, then a refresh for each cell executed
+        const variablesPromise = onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+            numberOfTimes: 3
+        });
+
+        // Add one simple cell and execute it
+        await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await runCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
+
         // Send a second cell
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
         await runCell(cell2);
 
-        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
-        await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+        // Wait for the expected variable updates
+        await variablesPromise;
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
 
@@ -119,11 +121,6 @@ suite('DataScience - VariableView', function () {
     });
 
     test('Variable view document switching (webview-test)', async function () {
-        // Add one simple cell and execute it
-        await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
-        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
-
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
@@ -135,8 +132,17 @@ suite('DataScience - VariableView', function () {
         // Add our message listener
         const onMessageListener = new OnMessageListener(variableView);
 
-        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
-        await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+        // One intitial refresh, and one cell executed
+        let variablesPromise = onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+            numberOfTimes: 2
+        });
+
+        // Add one simple cell and execute it
+        await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
+
+        await variablesPromise;
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
 
@@ -144,20 +150,29 @@ suite('DataScience - VariableView', function () {
         const expectedVariables = [{ name: 'test', type: 'str', length: '11', value: ' MYTESTVALUE' }];
         verifyViewVariables(expectedVariables, htmlResult);
 
+        // Expect just a refresh on the next transition
+        variablesPromise = onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+            numberOfTimes: 1
+        });
+
         // Now create a second document
         await createEmptyPythonNotebook(disposables);
+
+        await variablesPromise;
 
         // Verify that the view is empty
         const emptyHtmlResult = await variableView?.getHTMLById('variable-view-main-panel');
         verifyViewVariables([], emptyHtmlResult);
 
+        // We expect two cells to update
+        variablesPromise = onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+            numberOfTimes: 2
+        });
+
         // Execute a cell on the second document
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 0 });
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
         await Promise.all([runCell(cell2), waitForExecutionCompletedSuccessfully(cell2)]);
-
-        // Because this document was not open, we need to open the variable view again
-        await commandManager.executeCommand(Commands.OpenVariableView);
 
         // Execute a second cell on the second document
         await insertCodeCell('test3 = "MYTESTVALUE3"', { index: 1 });
@@ -165,7 +180,7 @@ suite('DataScience - VariableView', function () {
         await Promise.all([runCell(cell3), waitForExecutionCompletedSuccessfully(cell3)]);
 
         // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
-        await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
+        await variablesPromise;
 
         const htmlResult2 = await variableView?.getHTMLById('variable-view-main-panel');
 
