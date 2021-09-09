@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { UIKind } from 'vscode';
+import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../common/application/types';
 import '../common/extensions';
@@ -18,27 +18,16 @@ import {
     IsCodeSpace
 } from '../common/types';
 import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
 import { MillisecondsInADay } from '../constants';
-import { JupyterNotebookView } from './notebook/constants';
-import { KernelState, KernelStateEventArgs } from './notebookExtensibility';
-import { INotebookExtensibility } from './types';
-
-export enum DSSurveyStateKeys {
-    ShowBanner = 'ShowDSSurveyBanner',
-    OpenNotebookCount = 'DS_OpenNotebookCount',
-    ExecutionCount = 'DS_ExecutionCount'
-}
+import { isJupyterNotebook } from './notebook/helpers/helpers';
 
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',
-    OpenNotebookCount = 'DS_InsidersNotebookOpenNotebookCount',
     ExecutionCount = 'DS_InsidersNotebookExecutionCount'
 }
 
 export enum ExperimentNotebookSurveyStateKeys {
     ShowBanner = 'ShowExperimentNotebookSurveyBanner',
-    OpenNotebookCount = 'DS_ExperimentNotebookOpenNotebookCount',
     ExecutionCount = 'DS_ExperimentNotebookExecutionCount'
 }
 
@@ -104,7 +93,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     ];
     private readonly showBannerState = new Map<BannerType, IPersistentState<ShowBannerWithExpiryTime>>();
     private static surveyDelay = false;
-    private readonly NotebookOpenThreshold = 15; // Document opens before showing survey
     private readonly NotebookExecutionThreshold = 250; // Cell executions before showing survey
 
     constructor(
@@ -114,7 +102,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IVSCodeNotebook) private vscodeNotebook: IVSCodeNotebook,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
-        @inject(INotebookExtensibility) private notebookExtensibility: INotebookExtensibility,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
         this.setPersistentState(BannerType.InsidersNotebookSurvey, InsidersNotebookSurveyStateKeys.ShowBanner);
@@ -127,16 +114,11 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
     }
 
     public async activate() {
-        this.vscodeNotebook.onDidOpenNotebookDocument(
-            (e) => {
-                if (e.notebookType === JupyterNotebookView) {
-                    this.openedNotebook().catch(noop);
-                }
-            },
+        this.vscodeNotebook.onDidChangeNotebookCellExecutionState(
+            this.onDidChangeNotebookCellExecutionState,
             this,
             this.disposables
         );
-        this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
     }
 
     public async showBanner(type: BannerType): Promise<void> {
@@ -173,9 +155,8 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         }
 
         const executionCount: number = this.getExecutionCount(type);
-        const notebookCount: number = this.getOpenNotebookCount(type);
 
-        return executionCount >= this.NotebookExecutionThreshold || notebookCount > this.NotebookOpenThreshold;
+        return executionCount >= this.NotebookExecutionThreshold;
     }
 
     private setPersistentState(type: BannerType, val: string): void {
@@ -201,18 +182,6 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         }
     }
 
-    private getOpenNotebookCount(type: BannerType): number {
-        switch (type) {
-            case BannerType.InsidersNotebookSurvey:
-                return this.getPersistentState(InsidersNotebookSurveyStateKeys.OpenNotebookCount);
-            case BannerType.ExperimentNotebookSurvey:
-                return this.getPersistentState(ExperimentNotebookSurveyStateKeys.OpenNotebookCount);
-            default:
-                traceError('Invalid Banner type');
-                return -1;
-        }
-    }
-
     private getExecutionCount(type: BannerType): number {
         switch (type) {
             case BannerType.InsidersNotebookSurvey:
@@ -230,19 +199,16 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         return state.value;
     }
 
-    private async openedNotebook() {
-        void this.updateStateAndShowBanner(
-            InsidersNotebookSurveyStateKeys.OpenNotebookCount,
-            BannerType.InsidersNotebookSurvey
-        );
-        void this.updateStateAndShowBanner(
-            ExperimentNotebookSurveyStateKeys.OpenNotebookCount,
-            BannerType.ExperimentNotebookSurvey
-        );
-    }
+    // Handle when a cell finishes execution
+    private async onDidChangeNotebookCellExecutionState(
+        cellStateChange: NotebookCellExecutionStateChangeEvent
+    ): Promise<void> {
+        if (!isJupyterNotebook(cellStateChange.cell.notebook)) {
+            return;
+        }
 
-    private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
-        if (kernelStateEvent.state === KernelState.executed) {
+        // If cell has moved to executing, update the execution count
+        if (cellStateChange.state === NotebookCellExecutionState.Executing) {
             void this.updateStateAndShowBanner(
                 InsidersNotebookSurveyStateKeys.ExecutionCount,
                 BannerType.InsidersNotebookSurvey

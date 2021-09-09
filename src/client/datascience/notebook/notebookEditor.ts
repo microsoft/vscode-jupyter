@@ -11,7 +11,6 @@ import {
     NotebookDocument,
     Uri,
     NotebookCellData,
-    NotebookCell,
     NotebookData
 } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
@@ -21,7 +20,6 @@ import { INotebook, INotebookEditor } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { chainWithPendingUpdates } from './helpers/notebookUpdater';
 import { getNotebookMetadata } from './helpers/helpers';
-import type { nbformat } from '@jupyterlab/coreutils';
 
 export class NotebookEditor implements INotebookEditor {
     public get closed(): Event<INotebookEditor> {
@@ -42,9 +40,6 @@ export class NotebookEditor implements INotebookEditor {
         private extensions: IExtensions
     ) {
         vscodeNotebook.onDidCloseNotebookDocument(this.onClosedDocument, this, disposables);
-    }
-    public get notebookMetadata(): nbformat.INotebookMetadata | undefined {
-        return getNotebookMetadata(this.document);
     }
     public getContent(): string {
         const serializerApi = this.extensions.getExtension<{ exportNotebook: (notebook: NotebookData) => string }>(
@@ -81,30 +76,6 @@ export class NotebookEditor implements INotebookEditor {
     }
     public redoCells(): void {
         this.commandManager.executeCommand('notebook.redo').then(noop, noop);
-    }
-    public toggleOutput(): void {
-        if (!this.vscodeNotebook.activeNotebookEditor) {
-            return;
-        }
-
-        const editor = this.vscodeNotebook.notebookEditors.find((item) => item.document === this.document);
-        if (editor) {
-            const cells: NotebookCell[] = [];
-            editor.selections.map((cr) => {
-                if (!cr.isEmpty) {
-                    for (let index = cr.start; index < cr.end; index++) {
-                        cells.push(editor.document.cellAt(index));
-                    }
-                }
-            });
-            chainWithPendingUpdates(editor.document, (edit) => {
-                cells.forEach((cell) => {
-                    const collapsed = cell.metadata.outputCollapsed || false;
-                    const metadata = { ...cell.metadata, outputCollapsed: !collapsed };
-                    edit.replaceNotebookCellMetadata(editor.document.uri, cell.index, metadata);
-                });
-            }).then(noop, noop);
-        }
     }
     public removeAllCells(): void {
         if (!this.vscodeNotebook.activeNotebookEditor) {

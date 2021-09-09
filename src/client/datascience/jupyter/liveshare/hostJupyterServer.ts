@@ -20,7 +20,6 @@ import {
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { IServiceContainer } from '../../../ioc/types';
 import { isResourceNativeNotebook } from '../../notebook/helpers/helpers';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
@@ -28,7 +27,6 @@ import {
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     INotebook,
-    INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../../types';
@@ -57,12 +55,11 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
         @inject(ILocalKernelFinder) private readonly localKernelFinder: ILocalKernelFinder,
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook
     ) {
-        super(asyncRegistry, disposableRegistry, configService, sessionManager, serviceContainer, outputChannel);
+        super(asyncRegistry, disposableRegistry, configService, sessionManager, outputChannel);
     }
 
     public async dispose(): Promise<void> {
@@ -89,7 +86,6 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
         possibleSession: IJupyterSession | undefined,
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
-        serviceContainer: IServiceContainer,
         notebookMetadata?: nbformat.INotebookMetadata,
         kernelConnection?: KernelConnectionMetadata,
         cancelToken?: CancellationToken
@@ -170,7 +166,6 @@ export class HostJupyterServer extends JupyterServerBase implements INotebookSer
                     configService,
                     disposableRegistry,
                     info,
-                    serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger),
                     resource,
                     identity,
                     this.getDisposedError.bind(this),

@@ -149,7 +149,7 @@ export interface IJupyterSettings {
     askForLargeDataFrames: boolean;
     readonly enableAutoMoveToNextCell: boolean;
     readonly askForKernelRestart: boolean;
-    readonly enablePlotViewer: boolean;
+    readonly generateSVGPlots: boolean;
     readonly codeLenses: string;
     readonly debugCodeLenses: string;
     readonly debugpyDistPath: string;
@@ -174,6 +174,7 @@ export interface IJupyterSettings {
     readonly interactiveWindowMode: InteractiveWindowMode;
     readonly disableZMQSupport: boolean;
     readonly variableTooltipFields: IVariableTooltipFields;
+    readonly showVariableViewWhenDebugging: boolean;
 }
 
 export interface IVariableTooltipFields {
@@ -186,7 +187,7 @@ export interface IWatchableJupyterSettings extends IJupyterSettings {
     readonly onDidChange: Event<void>;
 }
 
-export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug';
+export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
 
 export interface ILoggingSettings {
     readonly level: LogLevel | 'off';

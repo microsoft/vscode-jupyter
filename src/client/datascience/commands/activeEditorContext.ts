@@ -79,6 +79,9 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this,
             this.disposables
         );
+        if (this.vscNotebook.activeNotebookEditor) {
+            this.onDidChangeActiveNotebookEditor(this.vscNotebook.activeNotebookEditor);
+        }
         this.vscNotebook.onDidChangeActiveNotebookEditor(this.onDidChangeActiveNotebookEditor, this, this.disposables);
 
         // Do we already have python file opened.

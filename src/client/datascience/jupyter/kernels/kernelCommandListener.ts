@@ -81,7 +81,9 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         const uri =
             notebookUri ??
             window.activeNotebookEditor?.document.uri ??
-            this.interactiveWindowProvider.activeWindow?.notebookUri;
+            this.interactiveWindowProvider.activeWindow?.notebookUri ??
+            (window.activeTextEditor?.document.uri &&
+                this.interactiveWindowProvider.get(window.activeTextEditor.document.uri)?.notebookUri);
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
         if (document === undefined) {
@@ -122,7 +124,9 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         const uri =
             notebookUri ??
             window.activeNotebookEditor?.document.uri ??
-            this.interactiveWindowProvider.activeWindow?.notebookUri;
+            this.interactiveWindowProvider.activeWindow?.notebookUri ??
+            (window.activeTextEditor?.document.uri &&
+                this.interactiveWindowProvider.get(window.activeTextEditor.document.uri)?.notebookUri);
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
         if (document === undefined) {
@@ -141,7 +145,13 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 const dontAskAgain = DataScience.restartKernelMessageDontAskAgain();
                 const no = DataScience.restartKernelMessageNo();
 
-                const response = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
+                const response = await this.applicationShell.showInformationMessage(
+                    message,
+                    { modal: true },
+                    yes,
+                    dontAskAgain,
+                    no
+                );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
                     void this.applicationShell.withProgress(

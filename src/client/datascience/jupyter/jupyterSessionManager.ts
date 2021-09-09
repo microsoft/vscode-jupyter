@@ -120,10 +120,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
     }
 
-    public getConnInfo(): IJupyterConnection {
-        return this.connInfo!;
-    }
-
     public async initialize(connInfo: IJupyterConnection): Promise<void> {
         this.connInfo = connInfo;
         this.serverSettings = await this.getServerConnectSettings(connInfo);

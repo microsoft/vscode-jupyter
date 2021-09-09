@@ -45,7 +45,7 @@ import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { noop } from '../../common/utils/misc';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { isCI } from '../../common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../../common/constants';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -60,7 +60,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
-    private activeInterpreterControllerPromise?: Promise<VSCodeNotebookController | undefined>;
     // Listing of the controllers that we have registered
     private registeredControllers = new Map<string, VSCodeNotebookController>();
 
@@ -99,7 +98,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.isLocalLaunch = isLocalLaunch(this.configuration);
     }
     public async getInteractiveController(): Promise<VSCodeNotebookController | undefined> {
-        return this.createActiveInterpreterController();
+        if (this.isLocalLaunch) {
+            return this.createActiveInterpreterController(InteractiveWindowView);
+        } else {
+            return this.createDefaultRemoteControllerForInteractiveWindow();
+        }
     }
 
     get onNotebookControllerSelected() {
@@ -113,9 +116,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Sign up for document either opening or closing
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
-        if (this.isLocalLaunch) {
-            this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
-        }
+        this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
         // Be aware of if we need to re-look for kernels on extension change
         this.extensions.onDidChange(this.onDidChangeExtensions, this, this.disposables);
     }
@@ -182,31 +183,58 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.registeredNotebookControllers().find(
             (controller) =>
                 // We register each of our kernels as two controllers
-                // because controllers are currently per-viewtype. Find
-                // the one for the interactive viewtype for now
+                // because controllers are currently per-notebookType. Find
+                // the one for the notebookType we're interested in
                 controller.controller.notebookType === notebookType &&
                 controller.connection.kind === 'startUsingPythonInterpreter' &&
-                controller.connection.interpreter?.path === pythonInterpreter?.path &&
-                controller.connection.interpreter.displayName === pythonInterpreter.displayName
+                // KernelConnectionMetadata.id should be the same as the one we just set up
+                controller.connection.id === result.id
         );
     }
 
-    private async createActiveInterpreterController() {
-        if (this.activeInterpreterControllerPromise) {
-            return this.activeInterpreterControllerPromise;
-        }
-        const promise = async () => {
-            // Fetch the active interpreter and use the matching controller
-            const api = await this.pythonApi.getApi();
-            const activeInterpreter = await api.getActiveInterpreter();
+    private async createActiveInterpreterController(
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ) {
+        // Fetch the active interpreter and use the matching controller
+        const api = await this.pythonApi.getApi();
+        const activeInterpreter = await api.getActiveInterpreter();
 
-            if (!activeInterpreter) {
-                return;
+        if (!activeInterpreter) {
+            return;
+        }
+        return this.getOrCreateController(activeInterpreter, notebookType);
+    }
+    private async createDefaultRemoteControllerForInteractiveWindow() {
+        // Get all remote kernels
+        await this.loadNotebookControllers();
+        const controllers = this.registeredNotebookControllers();
+        if (controllers.length === 0) {
+            traceError('No remote controllers');
+            return;
+        }
+
+        // Find the default kernel `python` if we can find one
+        // If not available, then return anything thats a python kernel
+        let defaultPython3Kernel: VSCodeNotebookController | undefined;
+        let defaultPythonKernel: VSCodeNotebookController | undefined;
+        let defaultPythonLanguageKernel: VSCodeNotebookController | undefined;
+        controllers.forEach((item) => {
+            if (item.connection.kind === 'startUsingKernelSpec' && item.connection.kernelSpec.name === 'python') {
+                defaultPythonKernel = item;
+            } else if (
+                item.connection.kind === 'startUsingKernelSpec' &&
+                item.connection.kernelSpec.name === 'python3'
+            ) {
+                defaultPython3Kernel = item;
+            } else if (
+                item.connection.kind === 'startUsingKernelSpec' &&
+                item.connection.kernelSpec.language === PYTHON_LANGUAGE
+            ) {
+                defaultPythonLanguageKernel = item;
             }
-            return this.getOrCreateController(activeInterpreter, InteractiveWindowView);
-        };
-        this.activeInterpreterControllerPromise = promise();
-        return this.activeInterpreterControllerPromise;
+        });
+
+        return defaultPython3Kernel || defaultPythonKernel || defaultPythonLanguageKernel || controllers[0];
     }
     /**
      * Turn all our kernelConnections that we know about into registered NotebookControllers
@@ -296,48 +324,59 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         traceInfoIf(isCI, `Clear controller mapping for ${document.uri.toString()}`);
         const loadControllersPromise = this.loadNotebookControllers();
 
-        if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
+        if (
+            isPythonNotebook(getNotebookMetadata(document)) &&
+            this.extensionChecker.isPythonExtensionInstalled &&
+            this.isLocalLaunch
+        ) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
-            this.createActiveInterpreterController().catch(noop);
+            this.createActiveInterpreterController(JupyterNotebookView).catch(noop);
         }
+
         try {
             let preferredConnection: KernelConnectionMetadata | undefined;
-            if (this.isLocalLaunch) {
-                preferredConnection = await this.localKernelFinder.findKernel(
-                    document.uri,
-                    getNotebookMetadata(document),
-                    preferredSearchToken.token
-                );
-            } else {
-                // For a remote connection check for new live kernel models before we find preferred
-                await this.updateRemoteConnections(preferredSearchToken.token);
-                const connection = await this.notebookProvider.connect({
-                    getOnly: false,
-                    resource: document.uri,
-                    disableUI: false,
-                    localOnly: false
-                });
-                preferredConnection = await this.remoteKernelFinder.findKernel(
-                    document.uri,
-                    connection,
-                    getNotebookMetadata(document),
-                    preferredSearchToken.token
-                );
-            }
+            // Don't attempt preferred kernel search for interactive window, but do make sure we
+            // load all our controllers for interactive window
+            if (document.notebookType === JupyterNotebookView) {
+                if (this.isLocalLaunch) {
+                    preferredConnection = await this.localKernelFinder.findKernel(
+                        document.uri,
+                        getNotebookMetadata(document),
+                        preferredSearchToken.token
+                    );
+                } else {
+                    // For a remote connection check for new live kernel models before we find preferred
+                    await this.updateRemoteConnections(preferredSearchToken.token);
+                    const connection = await this.notebookProvider.connect({
+                        getOnly: false,
+                        resource: document.uri,
+                        disableUI: false,
+                        localOnly: false
+                    });
+                    preferredConnection = await this.remoteKernelFinder.findKernel(
+                        document.uri,
+                        connection,
+                        getNotebookMetadata(document),
+                        preferredSearchToken.token
+                    );
+                }
 
-            // If we found a preferred kernel, set the association on the NotebookController
-            if (preferredSearchToken.token.isCancellationRequested) {
-                traceInfo('Find preferred kernel cancelled');
-                return;
-            }
-            if (!preferredConnection) {
-                traceInfoIf(isCI, `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`);
-                return;
-            }
+                // If we found a preferred kernel, set the association on the NotebookController
+                if (preferredSearchToken.token.isCancellationRequested) {
+                    traceInfo('Find preferred kernel cancelled');
+                    return;
+                }
+                if (!preferredConnection) {
+                    traceInfoIf(isCI, `PreferredConnection not found for NotebookDocument: ${document.uri.toString()}`);
+                    return;
+                }
 
-            traceInfo(
-                `PreferredConnection: ${preferredConnection.id} found for NotebookDocument: ${document.uri.toString()}`
-            );
+                traceInfo(
+                    `PreferredConnection: ${
+                        preferredConnection.id
+                    } found for NotebookDocument: ${document.uri.toString()}`
+                );
+            }
             // Wait for our controllers to be loaded before we try to set a preferred on
             // can happen if a document is opened quick and we have not yet loaded our controllers
             await loadControllersPromise;
@@ -351,7 +390,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             } else {
                 traceInfoIf(
                     isCI,
-                    `TargetController nof found ID: ${preferredConnection.id} for document ${document.uri.toString()}`
+                    `TargetController not found ID: ${preferredConnection?.id} for document ${document.uri.toString()}`
                 );
             }
         } catch (ex) {

@@ -15,7 +15,6 @@ import {
     DebugSession,
     Disposable,
     Event,
-    HoverProvider,
     NotebookCell,
     NotebookEditor,
     QuickPickItem,
@@ -37,8 +36,7 @@ import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
-import { KernelConnectionMetadata } from './jupyter/kernels/types';
-import { KernelStateEventArgs } from './notebookExtensibility';
+import { IKernel, KernelConnectionMetadata } from './jupyter/kernels/types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;
@@ -183,16 +181,8 @@ export interface INotebook extends IAsyncDisposable {
     onDisposed: Event<void>;
     onKernelChanged: Event<KernelConnectionMetadata>;
     onKernelRestarted: Event<void>;
-    onDidFinishExecuting?: Event<ICell>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
-    execute(
-        code: string,
-        file: string,
-        line: number,
-        id: string,
-        cancelToken?: CancellationToken,
-        silent?: boolean
-    ): Promise<ICell[]>;
+    execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]>;
     inspect(code: string, offsetInCode?: number, cancelToken?: CancellationToken): Promise<JSONObject>;
     getCompletion(
         cellCode: string,
@@ -207,7 +197,6 @@ export interface INotebook extends IAsyncDisposable {
      * Gets the metadata that's used to start/connect to a Kernel.
      */
     getKernelConnection(): KernelConnectionMetadata | undefined;
-    getLoggers(): INotebookExecutionLogger[];
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
@@ -227,7 +216,6 @@ export type ConnectNotebookProviderOptions = {
     token?: CancellationToken;
     resource: Resource;
     metadata?: nbformat.INotebookMetadata;
-    onConnectionMade?(): void; // Optional callback for when the first connection is made
 };
 
 export interface INotebookServerOptions {
@@ -243,28 +231,13 @@ export interface INotebookServerOptions {
     allowUI(): boolean;
 }
 
-export interface IHoverProvider extends HoverProvider {}
-export const IHoverProvider = Symbol('IHoverProvider');
-
-export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
-export interface INotebookExecutionLogger extends IDisposable {
-    preExecute(cell: ICell, silent: boolean): Promise<void>;
-    postExecute(cell: ICell, silent: boolean, language: string, resource: Uri): Promise<void>;
-    nativePostExecute?(cell: NotebookCell): Promise<void>;
-    onKernelRestarted(resource: Uri): void;
-    preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
-}
-
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
-    serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined>;
-    spawnNotebook(file: string): Promise<void>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
@@ -273,11 +246,8 @@ export interface IJupyterExecution extends IAsyncDisposable {
 
 export const IJupyterDebugger = Symbol('IJupyterDebugger');
 export interface IJupyterDebugger {
-    readonly isRunningByLine: boolean;
-    startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void>;
-    startDebugging(notebook: INotebook): Promise<void>;
-    stopDebugging(notebook: INotebook): Promise<void>;
-    onRestart(notebook: INotebook): void;
+    startDebugging(kernel: IKernel): Promise<void>;
+    stopDebugging(kernel: IKernel): Promise<void>;
 }
 
 export interface IJupyterPasswordConnectInfo {
@@ -298,7 +268,6 @@ export interface IJupyterSession extends IAsyncDisposable {
     readonly status: ServerStatus;
     readonly workingDirectory: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    readonly sessionId: string;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
@@ -323,18 +292,6 @@ export interface IJupyterSession extends IAsyncDisposable {
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void;
-    sendCommMessage(
-        buffers: (ArrayBuffer | ArrayBufferView)[],
-        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        msgId: any
-    ): Kernel.IShellFuture<
-        KernelMessage.IShellMessage<'comm_msg'>,
-        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
-    >;
-    requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
     registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
@@ -372,7 +329,6 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         disableUI?: boolean
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
-    getConnInfo(): IJupyterConnection;
     getRunningKernels(): Promise<IJupyterKernel[]>;
     getRunningSessions(): Promise<Session.IModel[]>;
 }
@@ -530,8 +486,8 @@ export interface IInteractiveWindow extends IInteractiveBase {
         editor?: TextEditor,
         runningStopWatch?: StopWatch
     ): Promise<boolean>;
-    expandAllCells(): void;
-    collapseAllCells(): void;
+    expandAllCells(): Promise<void>;
+    collapseAllCells(): Promise<void>;
     exportCells(): void;
     scrollToCell(id: string): void;
     exportAs(cells?: ICell[]): void;
@@ -558,8 +514,6 @@ export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends Disposable, IInteractiveBase {
     readonly closed: Event<INotebookEditor>;
     readonly file: Uri;
-    readonly model?: INotebookModel;
-    readonly notebookMetadata: nbformat.INotebookMetadata | undefined;
     notebook?: INotebook;
     runAllCells(): void;
     addCellBelow(): void;
@@ -569,12 +523,6 @@ export interface INotebookEditor extends Disposable, IInteractiveBase {
     expandAllCells(): void;
     collapseAllCells(): void;
     getContent(): string;
-}
-
-export const INotebookExtensibility = Symbol('INotebookExtensibility');
-
-export interface INotebookExtensibility {
-    readonly onKernelStateChange: Event<KernelStateEventArgs>;
 }
 
 // Wraps the vscode CodeLensProvider base class
@@ -694,7 +642,6 @@ export interface IStatusProvider {
 
 export interface IJupyterCommand {
     interpreter(): Promise<PythonEnvironment | undefined>;
-    execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
@@ -707,7 +654,6 @@ export interface IJupyterCommandFactory {
         interpreter: PythonEnvironment,
         isActiveInterpreter: boolean
     ): IJupyterCommand;
-    createProcessCommand(exe: string, args: string[]): IJupyterCommand;
 }
 
 // Config settings we pass to our react code
@@ -882,13 +828,23 @@ export interface ICellHashListener {
     hashesUpdated(hashes: IFileHashes[]): Promise<void>;
 }
 
-export const ICellHashProvider = Symbol('ICellHashProvider');
 export interface ICellHashProvider {
     updated: Event<void>;
     getHashes(): IFileHashes[];
     getExecutionCount(): number;
     incExecutionCount(): void;
     addCellHash(notebookCell: NotebookCell): Promise<void>;
+    /**
+     * This function will modify a traceback from an error message.
+     * Tracebacks take a form like so:
+     * "[1;31m---------------------------------------------------------------------------[0m"
+     * "[1;31mZeroDivisionError[0m                         Traceback (most recent call last)"
+     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36m<module>[1;34m[0m\n[0;32m      1[0m [0mprint[0m[1;33m([0m[1;34m'some more'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 2[1;33m [0mcause_error[0m[1;33m([0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
+     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36mcause_error[1;34m()[0m\n[0;32m      3[0m     [0mprint[0m[1;33m([0m[1;34m'error'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0;32m      4[0m     [0mprint[0m[1;33m([0m[1;34m'now'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 5[1;33m     [0mprint[0m[1;33m([0m [1;36m1[0m [1;33m/[0m [1;36m0[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
+     * "[1;31mZeroDivisionError[0m: division by zero"
+     * Each item in the array being a stack frame.
+     */
+    modifyTraceback(traceback: string[]): string[];
 }
 
 export interface IDebugLocation {
@@ -997,26 +953,6 @@ export interface INbConvertExportToPythonService {
     ): Promise<string>;
 }
 
-export interface INotebookModel {
-    readonly file: Uri;
-    /**
-     * Dispose of the Notebook model.
-     *
-     * This is invoked when there are no more references to a given `NotebookModel` (for example when
-     * all editors associated with the document have been closed.)
-     */
-    dispose(): void;
-}
-
-export interface IModelLoadOptions {
-    isNative?: boolean;
-    file: Uri;
-    possibleContents?: string;
-    backupId?: string;
-    defaultCellLanguage?: string;
-    skipLoadingDirtyContents?: boolean;
-}
-
 type WebViewViewState = {
     readonly visible: boolean;
     readonly active: boolean;
@@ -1031,7 +967,6 @@ export type GetServerOptions = {
     resource: Resource;
     metadata?: nbformat.INotebookMetadata;
     kernelConnection?: KernelConnectionMetadata;
-    onConnectionMade?(disableUI?: boolean): void; // Optional callback for when the first connection is made
 };
 
 /**
@@ -1055,16 +990,6 @@ export interface INotebookProvider {
      */
     onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
     onSessionStatusChanged: Event<{ status: ServerStatus; notebook: INotebook }>;
-
-    /**
-     * Fired just the first time that this provider connects
-     */
-    onConnectionMade: Event<boolean | undefined>;
-    /**
-     * Fired when a kernel would have been changed if a notebook had existed.
-     */
-    onPotentialKernelChanged: Event<{ identity: Uri; kernelConnection: KernelConnectionMetadata }>;
-
     /**
      * List of all notebooks (active and ones that are being constructed).
      */
@@ -1082,17 +1007,6 @@ export interface INotebookProvider {
      * Connect to a notebook provider to prepare its connection and to get connection information
      */
     connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined>;
-
-    /**
-     * Disconnect from a notebook provider connection
-     */
-    disconnect(options: ConnectNotebookProviderOptions, cancelToken?: CancellationToken): Promise<void>;
-    /**
-     * Fires the potentialKernelChanged event for a notebook that doesn't exist.
-     * @param identity identity notebook would have
-     * @param kernel kernel that it was changed to.
-     */
-    firePotentialKernelChanged(identity: Uri, kernel: KernelConnectionMetadata): void;
 }
 
 export const IJupyterServerProvider = Symbol('IJupyterServerProvider');
@@ -1303,16 +1217,4 @@ export interface IJupyterServerUriStorage {
     clearUriList(): Promise<void>;
     getUri(): Promise<string>;
     setUri(uri: string): Promise<void>;
-}
-export interface IExternalWebviewCellButton {
-    buttonId: string;
-    codicon: string;
-    statusToEnable: CellState[];
-    tooltip: string;
-    running: boolean;
-}
-
-export interface IExternalCommandFromWebview {
-    buttonId: string;
-    cell: ICell;
 }

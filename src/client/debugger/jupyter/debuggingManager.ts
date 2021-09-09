@@ -20,7 +20,7 @@ import {
 } from 'vscode';
 import * as path from 'path';
 import { IKernel, IKernelProvider } from '../../datascience/jupyter/kernels/types';
-import { IDisposable, Product, ProductInstallStatus } from '../../common/types';
+import { IConfigurationService, IDisposable, Product, ProductInstallStatus } from '../../common/types';
 import { IKernelDebugAdapterConfig, KernelDebugAdapter, KernelDebugMode } from './kernelDebugAdapter';
 import { INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
@@ -97,7 +97,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IPythonInstaller) private pythonInstaller: IPythonInstaller
+        @inject(IPythonInstaller) private pythonInstaller: IPythonInstaller,
+        @inject(IConfigurationService) private settings: IConfigurationService
     ) {
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
@@ -147,7 +148,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                                     notebook.session,
                                     this.commandManager,
                                     this.fs,
-                                    kernel
+                                    kernel,
+                                    this.settings
                                 );
                                 this.disposables.push(
                                     adapter.onDidSendMessage((msg: DebugProtocolMessage) => {
@@ -185,34 +187,29 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
 
             this.commandManager.registerCommand(DSCommands.RunByLine, async (cell: NotebookCell | undefined) => {
                 sendTelemetryEvent(DebuggingTelemetry.clickedRunByLine);
-                void this.appShell.withProgress(
-                    { location: ProgressLocation.Notification, title: DataScience.startingRunByLine() },
-                    async () => {
-                        const editor = this.vscNotebook.activeNotebookEditor;
-                        if (!cell) {
-                            const range = editor?.selections[0];
-                            if (range) {
-                                cell = editor?.document.cellAt(range.start);
-                            }
-                        }
-
-                        if (!cell) {
-                            return;
-                        }
-
-                        if (editor) {
-                            if (await this.checkForIpykernel6(editor.document)) {
-                                this.updateToolbar(true);
-                                this.updateCellToolbar(true);
-                                await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
-                            } else {
-                                void this.installIpykernel6();
-                            }
-                        } else {
-                            void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
-                        }
+                const editor = this.vscNotebook.activeNotebookEditor;
+                if (!cell) {
+                    const range = editor?.selections[0];
+                    if (range) {
+                        cell = editor?.document.cellAt(range.start);
                     }
-                );
+                }
+
+                if (!cell) {
+                    return;
+                }
+
+                if (editor) {
+                    if (await this.checkForIpykernel6(editor.document, DataScience.startingRunByLine())) {
+                        this.updateToolbar(true);
+                        this.updateCellToolbar(true);
+                        await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
+                    } else {
+                        void this.installIpykernel6();
+                    }
+                } else {
+                    void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+                }
             }),
 
             this.commandManager.registerCommand(DSCommands.RunByLineContinue, (cell: NotebookCell | undefined) => {
@@ -307,7 +304,10 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             __mode: mode,
             __cellIndex: cell.index
         };
-        const opts = mode === KernelDebugMode.RunByLine ? { debugUI: { simple: true } } : undefined;
+        const opts: DebugSessionOptions | undefined =
+            mode === KernelDebugMode.RunByLine
+                ? { debugUI: { simple: true }, suppressSaveBeforeStart: true }
+                : undefined;
         return this.startDebuggingConfig(doc, config, opts);
     }
 
@@ -380,7 +380,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         return kernel;
     }
 
-    private async checkForIpykernel6(doc: NotebookDocument): Promise<boolean> {
+    private async checkForIpykernel6(doc: NotebookDocument, waitingMessage?: string): Promise<boolean> {
         try {
             const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
             const interpreter = controller?.connection.interpreter;
@@ -390,11 +390,14 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     return true;
                 }
 
-                const status = await this.pythonInstaller.isProductVersionCompatible(
-                    Product.ipykernel,
-                    '>=6.0.0',
-                    interpreter
-                );
+                const checkCompatible = () =>
+                    this.pythonInstaller.isProductVersionCompatible(Product.ipykernel, '>=6.0.0', interpreter);
+                const status = waitingMessage
+                    ? await this.appShell.withProgress(
+                          { location: ProgressLocation.Notification, title: waitingMessage },
+                          checkCompatible
+                      )
+                    : await checkCompatible();
                 const result = status === ProductInstallStatus.Installed;
 
                 sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {

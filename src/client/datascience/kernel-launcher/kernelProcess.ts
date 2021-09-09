@@ -4,7 +4,6 @@
 
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
-import * as tcpPortUsed from 'tcp-port-used';
 import * as tmp from 'tmp';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
@@ -19,7 +18,11 @@ import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
-import { findIndexOfConnectionFile, isPythonKernelConnection } from '../jupyter/kernels/helpers';
+import {
+    connectionFilePlaceholder,
+    findIndexOfConnectionFile,
+    isPythonKernelConnection
+} from '../jupyter/kernels/helpers';
 import { KernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
@@ -166,6 +169,7 @@ export class KernelProcess implements IKernelProcess {
 
         // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
         try {
+            const tcpPortUsed = require('tcp-port-used') as typeof import('tcp-port-used');
             await Promise.race([
                 tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, timeout),
                 deferred.promise,
@@ -282,10 +286,26 @@ export class KernelProcess implements IKernelProcess {
             const tempFile = await this.fileSystem.createTemporaryLocalFile('.json');
             this.connectionFile = tempFile.filePath;
             await tempFile.dispose();
-            await fs.writeFile(this.connectionFile, JSON.stringify(this._connection));
+            await this.fileSystem.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
 
             // Then replace the connection file argument with this file
-            this.launchKernelSpec.argv[indexOfConnectionFile] = this.connectionFile;
+            // Remmeber, non-python kernels can have argv as `--connection-file={connection_file}`,
+            // hence we should not replace the entire entry, but just replace the text `{connection_file}`
+            // See https://github.com/microsoft/vscode-jupyter/issues/7203
+            if (this.launchKernelSpec.argv[indexOfConnectionFile].includes('--connection-file')) {
+                const connectionFile = this.connectionFile.includes(' ')
+                    ? `"${this.connectionFile}"` // Quoted for spaces in file paths.
+                    : this.connectionFile;
+                this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
+                    indexOfConnectionFile
+                ].replace(connectionFilePlaceholder, connectionFile);
+            } else {
+                // Even though we don't have `--connection-file` don't assume it won't be `--config-file` for other kernels.
+                // E.g. in Python the name of the argument is `-f` and in.
+                this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
+                    indexOfConnectionFile
+                ].replace(connectionFilePlaceholder, this.connectionFile);
+            }
         }
     }
 
@@ -352,6 +372,11 @@ export class KernelProcess implements IKernelProcess {
             // This will mainly quote paths so that they can run, other arguments shouldn't be quoted or it may cause errors.
             // The first argument is sliced because it is the executable command.
             const args = this.launchKernelSpec.argv.slice(1).map((a) => {
+                // Some kernel specs (non-python) can have argv as `--connection-file={connection_file}`
+                // The `connection-file` will be quoted when we update it with the real path.
+                if (a.includes('--connection-file')) {
+                    return a;
+                }
                 if (a.includes(' ')) {
                     return `"${a}"`;
                 }

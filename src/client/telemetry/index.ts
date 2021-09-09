@@ -1298,7 +1298,6 @@ export interface IEventNamePropertyMapping {
     [VSCodeNativeTelemetry.MoveCell]: never | undefined;
     [VSCodeNativeTelemetry.ChangeToCode]: never | undefined;
     [VSCodeNativeTelemetry.ChangeToMarkdown]: never | undefined;
-    [VSCodeNativeTelemetry.RunAllCells]: never | undefined;
     [Telemetry.VSCNotebookCellTranslationFailed]: {
         isErrorOutput: boolean; // Whether we're trying to translate an error output when we shuldn't be.
     };

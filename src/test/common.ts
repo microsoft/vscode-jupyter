@@ -10,7 +10,7 @@ import * as glob from 'glob';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
-import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
+import type { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
 import { IDisposable, IJupyterSettings } from '../client/common/types';
@@ -138,6 +138,11 @@ async function setGlobalPathToInterpreter(pythonPath?: string): Promise<void> {
     const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
     await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
     await disposePythonSettings();
+}
+export async function disableExperimentsInPythonExtension(): Promise<void> {
+    const vscode = require('vscode') as typeof import('vscode');
+    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
+    await pythonConfig.update('experiments.enabled', false, vscode.ConfigurationTarget.Global).then(noop, noop);
 }
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 

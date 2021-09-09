@@ -40,8 +40,8 @@ import {
     waitForQueuedForExecutionOrExecuting,
     workAroundVSCodeNotebookStartPages,
     waitForTextOutput,
-    waitForEmptyCellExecutionCompleted,
-    defaultNotebookTestTimeout
+    defaultNotebookTestTimeout,
+    waitForCellExecutionState
 } from './helper';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
@@ -49,7 +49,6 @@ import { noop } from '../../../client/common/utils/misc';
 import {
     getTextOutputValue,
     hasErrorOutput,
-    NotebookCellStateTracker,
     translateCellErrorOutput
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { IS_CI_SERVER } from '../../ciConstants';
@@ -132,7 +131,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.isUndefined(cells[0].executionSummary?.executionOrder);
     });
     test('Clear output in empty cells', async function () {
-        return this.skip();
         await closeNotebooks();
         const nbUri = Uri.file(await createTemporaryNotebook(templateNbPath, disposables));
         await openNotebook(api.serviceContainer, nbUri.fsPath);
@@ -145,13 +143,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await Promise.all([
             runAllCellsInActiveNotebook(),
-            waitForEmptyCellExecutionCompleted(cells[0]),
-            // Clear the cell and run the empty cell again & the status should change the idle & output cleared.
-            waitForCondition(
-                async () => NotebookCellStateTracker.getCellState(cells[0]) === NotebookCellExecutionState.Idle,
-                defaultNotebookTestTimeout,
-                'Incorrect state'
-            ),
+            waitForCellExecutionState(cells[0], NotebookCellExecutionState.Pending, disposables),
+            waitForCellExecutionState(cells[0], NotebookCellExecutionState.Executing, disposables),
+            waitForCellExecutionState(cells[0], NotebookCellExecutionState.Idle, disposables),
             waitForCondition(
                 async () => cells[0].outputs.length === 0,
                 defaultNotebookTestTimeout,
@@ -222,7 +216,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
     });
     test('Updating display data', async function () {
-        return this.skip();
         await insertCodeCell('from IPython.display import Markdown\n');
         await insertCodeCell('dh = display(display_id=True)\n');
         await insertCodeCell('dh.update(Markdown("foo"))\n');
@@ -287,7 +280,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);
     });
     test('Clearing output via code', async function () {
-        return this.skip();
         // Assume you are executing a cell that prints numbers 1-100.
         // When printing number 50, you click clear.
         // Cell output should now start printing output from 51 onwards, & not 1.
@@ -522,7 +514,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         );
     });
     test('Outputs with support for ansic code `\u001b[A`', async function () {
-        return this.skip();
         // Ansi Code `<esc>[A` means move cursor up, i.e. replace previous line with the new output (or erase previous line & start there).
         const cell1 = await insertCodeCell(
             dedent`
@@ -591,7 +582,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(output2Lines.length, 3);
     });
     test('Stderr & stdout outputs should go into separate outputs', async function () {
-        return this.skip();
         await insertCodeCell(
             dedent`
             import sys
@@ -619,8 +609,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo('2. Start execution for test of Stderr & stdout outputs');
         await Promise.all([
             runAllCellsInActiveNotebook(),
-            waitForTextOutput(cells[0], '3', 0, false),
-            waitForTextOutput(cells[0], 'c', 0, false)
+            waitForTextOutput(cells[0], '3', 2, false),
+            waitForTextOutput(cells[0], 'c', 3, false)
         ]);
         traceInfo('2. completed execution for test of Stderr & stdout outputs');
 

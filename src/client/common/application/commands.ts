@@ -47,9 +47,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.EnableDebugLogging]: [];
     [DSCommands.ResetLoggingLevel]: [];
     [DSCommands.OpenVariableView]: [];
-    [DSCommands.NotebookEditorToggleOutput]: [];
-    [DSCommands.NotebookEditorKeybindExecuteCell]: [];
-    [DSCommands.NotebookEditorKeybindRenderMarkdownAndSelectBelow]: [];
     [DSCommands.InteractiveClearAll]: [{ notebookEditor: { notebookUri: Uri } }];
     [DSCommands.InteractiveRemoveCell]: [NotebookCell];
     [DSCommands.InteractiveGoToCode]: [NotebookCell];
@@ -146,7 +143,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ExportToHTML]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.ExportToPDF]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.Export]: [string | undefined, Uri | undefined, string | undefined, PythonEnvironment | undefined];
-    [DSCommands.NativeNotebookExport]: [Uri | undefined];
+    [DSCommands.NativeNotebookExport]: [Uri | undefined | { notebookEditor: { notebookUri: Uri } }];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
@@ -159,8 +156,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ClearSavedJupyterUris]: [];
     [DSCommands.SelectJupyterURI]: [undefined, 'toolbar' | 'nativeNotebookStatusBar' | undefined];
     [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
-    [DSCommands.NotebookEditorKeybindSave]: [];
-    [DSCommands.NotebookEditorKeybindUndo]: [];
     [DSCommands.DebugNotebook]: [];
     [DSCommands.RunByLine]: [NotebookCell];
     [DSCommands.RunAndDebugCell]: [NotebookCell];

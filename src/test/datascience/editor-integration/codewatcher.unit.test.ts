@@ -5,13 +5,24 @@
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, CodeLens, Disposable, EventEmitter, Range, Selection, TextEditor, Uri } from 'vscode';
+import {
+    CancellationTokenSource,
+    CodeLens,
+    Disposable,
+    EventEmitter,
+    NotebookCellExecutionStateChangeEvent,
+    Range,
+    Selection,
+    TextEditor,
+    Uri
+} from 'vscode';
 
 import { instance, mock, when } from 'ts-mockito';
 import {
     ICommandManager,
     IDebugService,
     IDocumentManager,
+    IVSCodeNotebook,
     IWorkspaceService
 } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
@@ -35,6 +46,9 @@ import { MockDocumentManager } from '../mockDocumentManager';
 import { MockJupyterSettings } from '../mockJupyterSettings';
 import { MockEditor } from '../mockTextEditor';
 import { createDocument } from './helpers';
+import { disposeAllDisposables } from '../../../client/common/helpers';
+import { CellHashProviderFactory } from '../../../client/datascience/editor-integration/cellHashProviderFactory';
+import { IKernel, IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -113,7 +127,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             enableCellCodeLens: true,
-            enablePlotViewer: true,
+            generateSVGPlots: false,
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
@@ -138,13 +152,27 @@ suite('DataScience Code Watcher Unit Tests', () => {
         when(notebookProvider.onNotebookCreated).thenReturn(dummyEvent.event);
         const workspace = mock<IWorkspaceService>();
         when(workspace.isTrusted).thenReturn(true);
-        when(workspace.onDidGrantWorkspaceTrust).thenReturn(new EventEmitter<void>().event);
+        const trustedEvent = new EventEmitter<void>();
+        when(workspace.onDidGrantWorkspaceTrust).thenReturn(trustedEvent.event);
+        const notebook = mock<IVSCodeNotebook>();
+        const execStateChangeEvent = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
+        when(notebook.onDidChangeNotebookCellExecutionState).thenReturn(execStateChangeEvent.event);
+        const hashProviderFactory = mock<CellHashProviderFactory>();
+        const kernelProvider = mock<IKernelProvider>();
+        const kernelDisposedEvent = new EventEmitter<IKernel>();
+        when(kernelProvider.onDidDisposeKernel).thenReturn(kernelDisposedEvent.event);
+        disposables.push(trustedEvent);
+        disposables.push(execStateChangeEvent);
+        disposables.push(kernelDisposedEvent);
         const codeLensFactory = new CodeLensFactory(
             configService.object,
-            instance(notebookProvider),
             fileSystem.object,
             documentManager.object,
-            instance(workspace)
+            instance(workspace),
+            instance(notebook),
+            disposables,
+            instance(hashProviderFactory),
+            instance(kernelProvider)
         );
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
@@ -191,7 +219,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             codeLensFactory
         );
     });
-
+    teardown(() => disposeAllDisposables(disposables));
     function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67

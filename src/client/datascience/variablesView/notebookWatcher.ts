@@ -23,8 +23,7 @@ import {
     IInteractiveWindowProvider,
     INotebook,
     INotebookEditor,
-    INotebookEditorProvider,
-    INotebookExtensibility
+    INotebookEditorProvider
 } from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 
@@ -35,7 +34,6 @@ interface IExecutionCountEntry {
 
 // For any class that is monitoring the active notebook document, this class will update you
 // when the active notebook changes or if the execution count is updated on the active notebook
-// NOTE: Currently this class is only looking at native notebook documents
 @injectable()
 export class NotebookWatcher implements INotebookWatcher {
     public get onDidChangeActiveNotebook(): Event<IActiveNotebookChangedEvent> {
@@ -76,12 +74,10 @@ export class NotebookWatcher implements INotebookWatcher {
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(INotebookExtensibility) private readonly notebookExtensibility: INotebookExtensibility,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         // We need to know if kernel state changes or if the active notebook editor is changed
-        this.notebookExtensibility.onKernelStateChange(this.kernelStateChanged, this, this.disposables);
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
         this.notebookEditorProvider.onDidCloseNotebookEditor(this.notebookEditorClosed, this, this.disposables);
         this.kernelProvider.onDidRestartKernel(
@@ -113,17 +109,6 @@ export class NotebookWatcher implements INotebookWatcher {
                 cell: cellStateChange.cell,
                 silent: false
             });
-        }
-    }
-
-    // Handle kernel state changes
-    private async kernelStateChanged(kernelStateEvent: KernelStateEventArgs) {
-        switch (kernelStateEvent.state) {
-            case KernelState.restarted:
-                await this.handleRestart(kernelStateEvent);
-                break;
-            default:
-                break;
         }
     }
 

@@ -39,18 +39,13 @@
 -   [ ] Verify export / import
     1. With the results from `Start and connect to local server` open click the `Export as Jupyter Notebook` button in the Interactive Window
     1. Choose a file location and save the generated .ipynb file
-    1. When the prompt comes up in the lower right choose to open the file in the browser
-    1. The file should open in the web browser and contain the output from the Interactive Window
-    1. Try the same steps and choose to open the file in the ipynb editor.
+    1. When the prompt comes up in the lower right choose to open the file in the ipynb editor.
     1. The file should open in the Notebook Editor.
 -   [ ] Verify text entry
     1. In the Interactive Window type in some new code `print('testing')` and submit it to the Interactive Windows
     1. Verify the output from what you added
 -   [ ] Verify dark and light main themes
     1. Repeat the `Start and connect to local server` and `Verify basic outputs` steps using `Default Dark+` and `Default Light+` themes
--   [ ] Verify tooltips in Python file that has been run in the interactive window
-    1. After manualTestFile.py has been run in the interactive window, place your cursor over the `myTensor` variable.
-    1. Verify that the tooltip that appears contains four lines where the first line says `myTensor: Tensor`, the second line has `shape` information, the third line has `dtype` information, and the fourth line has `device` information.
 -   [ ] Verify Variable Explorer
     1. After manualTestFile.py has been run drop down the Variables section at the top of the Interactive Window
     1. In the Variables list there should be an entry for all variables created. These variables might change as more is added to manualTestFile.py.
@@ -70,7 +65,6 @@
         1. Open up the myDataFrame item
         1. Sort the name column ascending and descending
         1. Sort one of the numerical columns ascending and descending
-        1. Click the Filter Rows button
         1. In the name filter box input 'a' to filter to just name with an a in them
         1. In one of the numerical columns input a number 1 - 9 to filter to just that column
         1. In the 'b' filter box input '> -inf'. Verify that this filters to show just the rows with 1 and 4 in the 'b' column.
@@ -87,24 +81,18 @@
     1. Debugger should start and have an ip indicator on the first line of the cell
     1. Step through the debugger.
     1. Verify the variables tab of the debugger shows variables.
-    1. Verify the variables explorer window shows output not available while debugging
     1. When you get to the end of the cell, the debugger should stop
     1. Output from the cell should show up in the Interactive Window (sometimes you have to finish debugging the cell first)
 
 
 #### Notebook Editor
 
-Please run through the scenarios below for:
-1. Native Editor (default in VS Code Insiders)
-1. Custom Editor (please follow [these instructions](https://stackoverflow.com/questions/67142271/visual-studio-jupyter-notebook/67145446#67145446) to enable Custom Editor in VS Code Insiders)
-
 - [ ] Open notebook and run cells
   1. Create a brand new folder on your machine.
   1. Create a new venv in that folder via command line / terminal `python3 -m venv .newEnv`.
   1. Open VS Code with that folder selected as the current workspace.
-  1. Open command palette with Ctrl+Shift+P and select 'Jupyter: Create New Blank Notebook'. Notebook UI should open. Verify there is a single cell in the notebook.
-     1. (Native notebook only) The cell language (bottom right corner of the notebook cell) should be Python. The cell toolbar should be on the left.
-  1. Click on the kernel picker (for native editor: in the bottom right corner; for custom editor: in the top right corner) and select `.newEnv` from the quickpick that appears.
+  1. Open command palette with Ctrl+Shift+P and select 'Jupyter: Create New Blank Notebook'. Notebook UI should open. Verify there is a single cell in the notebook. The cell language (bottom right corner of the notebook cell) should be Python. The cell toolbar should be on the left.
+  1. Click on the kernel picker in the top right corner and select `.newEnv` from the quickpick that appears.
   1. Add the following code to the empty notebook cell.
    ```
    import sys
@@ -113,7 +101,7 @@ Please run through the scenarios below for:
   1. Click the run button on the cell. You should be prompted to install ipykernel in `.newEnv`. Click the 'Install' button on the prompt to install ipykernel.
   1. After ipykernel is installed the cell should execute successfully and display the current Python interpreter path in the cell output.
   1. Verify that the Python interpreter path in the cell output matches the selected Python environment in the kernel picker.
-  1. Click on the kernel picker (for native editor: in the bottom right corner; for custom editor: in the top right corner) and select a different Python environment.
+  1. Click on the kernel picker in the top right corner and select a different Python environment.
   1. Rerun the first cell and verify that the path in the cell output matches the selected Python environment in the kernel picker.
 -   [ ] Verify notebook editor IntelliSense
     1. Open the src/test/datascience/manualTestFiles/manualTestFile.py in VSCode.
@@ -204,35 +192,6 @@ Please run through the scenarios below for:
     1. Open VSCode settings, change `Send Selection To Interactive Window` to true
     1. Select a chunk of code, shift-enter should send that selection to the Interactive Windows
     1. Move your cursor to a line, but don't select anything. Shift-enter should send that line to the Interactive Window
--   [ ] Multiple installs
-    1. Close and re-open VSCode to make sure that all jupyter servers are closed
-    1. Also make sure you are set to locally launch Jupyter and not to connect to an existing URI
-    1. In addition to your main testing environment install a new python or miniconda install (conda won't work as it has Jupyter by default)
-    1. In VS code change the python interpreter to the new install
-    1. Try `Run Cell`
-    1. You should get a message that Jupyter was not found and that it is defaulting back to launch on the python instance that has Jupyter
--   [ ] LiveShare Support
-    1. Install the LiveShare VSCode Extension
-    1. Open manualTestFile.py in VSCode
-    1. Run the first cell in the file
-    1. Switch to the `Live Share` tab in VS Code and start a session
-        - [ ] Verify server start
-            1. Jupyter server instance should appear in the live share tab
-    1. Open another window of VSCode
-    1. Connect the second instance of VSCode as a Guest to the first Live Share session
-    1. After the workspace opens, open the manualTestFile.py on the Guest instance
-    1. On the Guest instance run a cell from the file, both via the codelens and via the command palette `Run Cell` command
-        - [ ] Verify results
-            1. Output should show up on the Guest Interactive Window
-            1. Same output should show up in the Host Interactive Window
-    1. On the Host instance run a cell from the file, both via the codelens and via the command palette
-        - [ ] Verify results
-            1. Output should show up on the Guest Interactive Window
-            1. Same output should show up in the Host Interactive Window
-    1. Export the file to a notebook
-    1. Open the notebook editor on the host
-    1. Run a cell on the host
-    1. Verify the editor opens on the guest and the cell is run there too
 -   [ ] Jupyter Hub support
 
     1. Windows install instructions

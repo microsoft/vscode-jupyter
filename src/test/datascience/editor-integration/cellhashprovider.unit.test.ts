@@ -83,9 +83,10 @@ suite('CellHashProvider Unit Tests', () => {
             metadata: {
                 interactive: {
                     file: Uri.file(fileName).fsPath,
-                    line
+                    line,
+                    originalSource: code
                 },
-                executionId: 1
+                id: 1
             },
             outputs: [],
             mime: undefined

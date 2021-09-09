@@ -754,18 +754,6 @@ export namespace DataScience {
         'DataScience.notebookNotFound',
         'python -m jupyter notebook --version is not running'
     );
-    export const findJupyterCommandProgress = localize(
-        'DataScience.findJupyterCommandProgress',
-        'Active interpreter does not support {0}. Searching for the best available interpreter.'
-    );
-    export const findJupyterCommandProgressCheckInterpreter = localize(
-        'DataScience.findJupyterCommandProgressCheckInterpreter',
-        'Checking {0}.'
-    );
-    export const findJupyterCommandProgressSearchCurrentPath = localize(
-        'DataScience.findJupyterCommandProgressSearchCurrentPath',
-        'Searching current path.'
-    );
     export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
     export const fallbackToUseActiveInterpreterAsKernel = localize(
         'DataScience.fallbackToUseActiveInterpeterAsKernel',

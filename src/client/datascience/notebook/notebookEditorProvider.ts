@@ -76,6 +76,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IExtensions) private readonly extensions: IExtensions
     ) {
         disposables.push(this);
+        // Register notebook documents that are already open e.g. after a workspace reload
+        for (const notebookDocument of this.vscodeNotebook.notebookDocuments) {
+            void this.onDidOpenNotebookDocument(notebookDocument);
+        }
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
         this.disposables.push(
@@ -219,9 +223,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (editor) {
             this.closedEditor(editor);
             editor.dispose();
-            if (editor.model) {
-                editor.model.dispose();
-            }
         }
         this.notebookEditorsByUri.delete(uri.toString());
         this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());

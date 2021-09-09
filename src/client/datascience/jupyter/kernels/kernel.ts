@@ -3,10 +3,9 @@
 
 'use strict';
 
-import { KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
-import * as uuid from 'uuid/v4';
 import * as path from 'path';
 import {
     CancellationTokenSource,
@@ -37,6 +36,7 @@ import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
     IJupyterServerUriStorage,
+    IJupyterSession,
     INotebook,
     INotebookEditorProvider,
     INotebookProvider,
@@ -46,7 +46,7 @@ import {
 } from '../../types';
 import { getSysInfoReasonHeader, isPythonKernelConnection } from './helpers';
 import { KernelExecution } from './kernelExecution';
-import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
+import type { IKernel, KernelConnectionMetadata, NotebookCellRunState } from './types';
 import { SysInfoReason } from '../../interactive-common/interactiveWindowTypes';
 import { isCI, MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { InteractiveWindowView } from '../../notebook/constants';
@@ -55,6 +55,9 @@ import { DataScience } from '../../../common/utils/localize';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { calculateWorkingDirectory } from '../../utils';
 import { expandWorkingDir } from '../jupyterUtils';
+import type { nbformat } from '@jupyterlab/coreutils';
+import { concatMultilineString } from '../../../../datascience-ui/common';
+import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -112,45 +115,43 @@ export class Kernel implements IKernel {
         interruptTimeout: number,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly editorProvider: INotebookEditorProvider,
-        kernelProvider: IKernelProvider,
         private readonly appShell: IApplicationShell,
         private readonly fs: IFileSystem,
         private readonly serverStorage: IJupyterServerUriStorage,
         controller: NotebookController,
         private readonly configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
-        private readonly workspaceService: IWorkspaceService
+        private readonly workspaceService: IWorkspaceService,
+        private readonly cellHashProviderFactory: CellHashProviderFactory
     ) {
         this.kernelExecution = new KernelExecution(
-            kernelProvider,
+            this,
             errorHandler,
             appShell,
             kernelConnectionMetadata,
             interruptTimeout,
             disposables,
             controller,
-            outputTracker
+            outputTracker,
+            cellHashProviderFactory
         );
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
-    public async executeCell(cell: NotebookCell): Promise<void> {
+    public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document: cell.notebook });
+        if (cell.notebook.notebookType === InteractiveWindowView) {
+            await this.cellHashProviderFactory.getOrCreate(this).addCellHash(cell);
+        }
         const promise = this.kernelExecution.executeCell(notebookPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         await promise;
+        return promise;
     }
-    public async executeAllCells(document: NotebookDocument): Promise<void> {
+    public async executeHidden(code: string, document: NotebookDocument) {
         const stopWatch = new StopWatch();
         const notebookPromise = this.startNotebook({ disableUI: false, document });
-        const promise = this.kernelExecution.executeAllCells(notebookPromise, document);
-        this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
-        await promise;
-    }
-    public async executeHidden(code: string, file: string, document: NotebookDocument) {
-        const stopWatch = new StopWatch();
-        const notebookPromise = this.startNotebook({ disableUI: false, document });
-        const promise = this.notebook!.execute(code, file, 0, uuid(), undefined, true);
+        const promise = notebookPromise.then((nb) => executeSilently(nb.session, code));
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         await promise;
     }
@@ -358,16 +359,12 @@ export class Kernel implements IKernel {
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // Change our initial directory and path
             traceInfoIf(isCI, 'Step D');
-            await this.updateWorkingDirectoryAndPath();
+            await this.updateWorkingDirectoryAndPath(this.resourceUri?.fsPath);
             traceInfoIf(isCI, 'Step H');
 
             traceInfoIf(isCI, 'Step I');
             await this.disableJedi();
             traceInfoIf(isCI, 'Step J');
-            if (this.resourceUri) {
-                await this.notebook.setLaunchingFile(this.resourceUri.fsPath);
-                traceInfoIf(isCI, 'Step K');
-            }
 
             // For Python notebook initialize matplotlib
             await this.initializeMatplotLib();
@@ -430,28 +427,29 @@ export class Kernel implements IKernel {
                 sysInfoMessages.unshift(connectionString);
             }
 
-            // Append a markdown cell containing the sys info to the end of the NotebookDocument
             return chainWithPendingUpdates(notebookDocument, (edit) => {
-                if (notebookDocument.cellCount) {
-                    const lastCell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
-
+                // Overwrite the most recent placeholder cell
+                for (let i = notebookDocument.cellCount - 1; i >= 0; i -= 1) {
+                    const cell = notebookDocument.cellAt(i);
                     if (
-                        lastCell.kind === NotebookCellKind.Markup &&
-                        lastCell.metadata.isInteractiveWindowMessageCell &&
-                        lastCell.metadata.isPlaceholder
+                        cell.kind === NotebookCellKind.Markup &&
+                        cell.metadata.isInteractiveWindowMessageCell &&
+                        cell.metadata.isPlaceholder
                     ) {
                         edit.replace(
-                            lastCell.document.uri,
-                            new Range(0, 0, lastCell.document.lineCount, 0),
+                            cell.document.uri,
+                            new Range(0, 0, cell.document.lineCount, 0),
                             sysInfoMessages.join('  \n')
                         );
-                        edit.replaceNotebookCellMetadata(notebookDocument.uri, lastCell.index, {
-                            isInteractiveWindowMessageCell: true
+                        edit.replaceNotebookCellMetadata(notebookDocument.uri, cell.index, {
+                            isInteractiveWindowMessageCell: true,
+                            isPlaceholder: false // replaceNotebookCellMetadata doesn't zero other metadata properties
                         });
                         return;
                     }
                 }
 
+                // Append a markdown cell containing the sys info to the end of the NotebookDocument
                 const markdownCell = new NotebookCellData(
                     NotebookCellKind.Markup,
                     sysInfoMessages.join('  \n'),
@@ -472,7 +470,7 @@ export class Kernel implements IKernel {
             // We're theming matplotlibs, so we have to setup our default state.
             traceInfoIf(isCI, `Initialize config for plots for ${(this.resourceUri || this.notebookUri).toString()}`);
             const matplobInit =
-                !settings || settings.enablePlotViewer
+                !settings || settings.generateSVGPlots
                     ? CodeSnippets.MatplotLibInitSvg
                     : CodeSnippets.MatplotLibInitPng;
 
@@ -491,7 +489,7 @@ export class Kernel implements IKernel {
                 );
             }
         } else {
-            const configInit = settings && settings.enablePlotViewer ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
+            const configInit = settings && settings.generateSVGPlots ? CodeSnippets.ConfigSvg : CodeSnippets.ConfigPng;
             traceInfoIf(isCI, `Initialize config for plots for ${(this.resourceUri || this.notebookUri).toString()}`);
             await this.executeSilently(configInit);
         }
@@ -557,17 +555,89 @@ export class Kernel implements IKernel {
         if (!this.notebook) {
             return;
         }
-        const request = this.notebook.session.requestExecute(
-            {
-                code,
-                silent: true,
-                stop_on_error: false,
-                allow_stdin: true,
-                store_history: false
-            },
-            true
-        );
-
-        await request?.done;
+        await executeSilently(this.notebook.session, code);
     }
+}
+
+export async function executeSilently(session: IJupyterSession, code: string): Promise<nbformat.IOutput[]> {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+    const request = session.requestExecute(
+        {
+            code,
+            silent: false,
+            stop_on_error: false,
+            allow_stdin: true,
+            store_history: false
+        },
+        true
+    );
+    if (!request) {
+        return [];
+    }
+    const outputs: nbformat.IOutput[] = [];
+    request.onIOPub = (msg) => {
+        if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+            if (
+                outputs.length > 0 &&
+                outputs[outputs.length - 1].output_type === 'stream' &&
+                outputs[outputs.length - 1].name === msg.content.name
+            ) {
+                const streamOutput = outputs[outputs.length - 1] as nbformat.IStream;
+                streamOutput.text += msg.content.text;
+            } else {
+                const streamOutput: nbformat.IStream = {
+                    name: msg.content.name,
+                    text: msg.content.text,
+                    output_type: 'stream'
+                };
+                outputs.push(streamOutput);
+            }
+        } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+            const output: nbformat.IExecuteResult = {
+                data: msg.content.data,
+                execution_count: msg.content.execution_count,
+                metadata: msg.content.metadata,
+                output_type: 'execute_result'
+            };
+            outputs.push(output);
+        } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+            const output: nbformat.IDisplayData = {
+                data: msg.content.data,
+                metadata: msg.content.metadata,
+                output_type: 'display_data'
+            };
+            outputs.push(output);
+        } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+            const output: nbformat.IError = {
+                ename: msg.content.ename,
+                evalue: msg.content.evalue,
+                traceback: msg.content.traceback,
+                output_type: 'error'
+            };
+            outputs.push(output);
+        }
+    };
+    await request.done;
+
+    return outputs;
+}
+
+/**
+ * From the outputs, get the text/plain or stream outputs as a simple string.
+ */
+export function getPlainTextOrStreamOutput(outputs: nbformat.IOutput[]) {
+    if (outputs.length > 0) {
+        const data = outputs[0].data;
+        if (data && data.hasOwnProperty('text/plain')) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return concatMultilineString((data as any)['text/plain']);
+        }
+        if (outputs[0].output_type === 'stream') {
+            const stream = outputs[0] as nbformat.IStream;
+            return concatMultilineString(stream.text, true);
+        }
+    }
+    return;
 }

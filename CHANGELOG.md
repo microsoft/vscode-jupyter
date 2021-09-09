@@ -1,5 +1,86 @@
 # Changelog
 
+## 2021.8.203 (1 September 2021)
+
+### Enhancements
+
+1. Updated the preview to debugging in native notebooks. Set the `jupyter.experimental.debugging` setting to true, and a `Debug Cell` option will appear on the dropdown in the `Execute Cell` button. Pressing it will run the cell and hit any breakpoints you've set.
+   ([#1652](https://github.com/Microsoft/vscode-jupyter/issues/1652))
+1. Added the `Run by Line` feature. In Python notebooks, press `F10` while selecting a cell or click the first button on the cell toolbar to start a lightweight debugging session and run the cell line by line. To set it up, follow the steps [here](https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks).
+   ([#5607](https://github.com/Microsoft/vscode-jupyter/issues/5607))
+1. Add diskpath to logging for loading third party widgets to support local testing of new widget versions.
+   ([#6294](https://github.com/Microsoft/vscode-jupyter/issues/6294))
+1. Default plot output to just PNG, and support showing PNGs or SVGs in the Plot Viewer control. The enablePlotViewer setting still turns on both PNG and SVG plot output, but it's now off by default, not on.
+   ([#6913](https://github.com/Microsoft/vscode-jupyter/issues/6913))
+1. Update Simplified Chinese translation. (thanks [FiftysixTimes7](https://github.com/FiftysixTimes7))
+   ([#7049](https://github.com/Microsoft/vscode-jupyter/issues/7049))
+
+### Fixes
+
+1. Run by line now stops after running the last line.
+   ([#6858](https://github.com/Microsoft/vscode-jupyter/issues/6858))
+1. Ensure execution of `raw` cells are skipped when we have multiple cells.
+   ([#6954](https://github.com/Microsoft/vscode-jupyter/issues/6954))
+1. Fixes to autocompletions returned by Jupyter Kernel (sort as returned by the kernel and trigger when entering quotes).
+   ([#6979](https://github.com/Microsoft/vscode-jupyter/issues/6979))
+1. Populate the interactive window variable explorer when focus is in the #%% Python file.
+   ([#6993](https://github.com/Microsoft/vscode-jupyter/issues/6993))
+1. Reinitialize kernels after a restart, including resetting current working directory and rerunning startup commands.
+   ([#7016](https://github.com/Microsoft/vscode-jupyter/issues/7016))
+1. Restore support for `jupyter.collapseCellInputCodeByDefault` in native interactive window.
+   ([#7031](https://github.com/Microsoft/vscode-jupyter/issues/7031))
+1. Fix restart kernel in native interactive window when executing a #%% cell.
+   ([#7081](https://github.com/Microsoft/vscode-jupyter/issues/7081))
+1. Fix code indentation being lost on interactive window export.
+   ([#7088](https://github.com/Microsoft/vscode-jupyter/issues/7088))
+1. Ensure variable explorer handles kernel restarts.
+   ([#7126](https://github.com/Microsoft/vscode-jupyter/issues/7126))
+1. Add remappable `esc` keybinding to clear contents of native interactive window input box, bound to `interactive.input.clear` command in VS Code core.
+   ([#7157](https://github.com/Microsoft/vscode-jupyter/issues/7157))
+1. Fix ability to use command palette restart/interrupt from command palette when focus is in a Python file linked to an interactive window.
+   ([#7158](https://github.com/Microsoft/vscode-jupyter/issues/7158))
+1. Fix A/B shortcuts to insert cell in command mode instead of edit mode. All Jupyter keyboard shortcuts are now provided through the Jupyter keymap extension, which is included with the Jupyter extension and can be uninstalled.
+   ([#7172](https://github.com/Microsoft/vscode-jupyter/issues/7172))
+1. Fixes kernel spec generation (on Mac M1/Non ZMQ supported machines) to include the appropriate environment.
+   ([#7186](https://github.com/Microsoft/vscode-jupyter/issues/7186))
+1. Support kernelspec argv containing non traditional args for `{connection_file}`.
+   ([#7203](https://github.com/Microsoft/vscode-jupyter/issues/7203))
+1. Fix export for already-open native notebooks.
+   ([#7233](https://github.com/Microsoft/vscode-jupyter/issues/7233))
+1. Fix being able to save PNG plots from the plot viewer.
+   ([#7265](https://github.com/Microsoft/vscode-jupyter/issues/7265))
+1. When no notebook or interactive window is active then clear the variables view.
+   ([#7266](https://github.com/Microsoft/vscode-jupyter/issues/7266))
+1. Fix placeholder 'Connecting to...' sys info cell not being overwritten after a kernel connection is established if cells are added to the interactive window first.
+   ([#7280](https://github.com/Microsoft/vscode-jupyter/issues/7280))
+1. Ensure that interactive window is started with active Python interpreter after active interpreter is changed.
+   ([#7301](https://github.com/Microsoft/vscode-jupyter/issues/7301))
+1. Restore support for Bash Kernel.
+   ([#7345](https://github.com/microsoft/vscode-jupyter/issues/7345))
+
+### Code Health
+
+1. Remove old Interactive Window, old Notebook Editor and LiveShare code (all of this functionality is now Natively supported by VS Code).
+   ([#6488](https://github.com/Microsoft/vscode-jupyter/issues/6488))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+
 ## 2021.8.11 (3 August 2021)
 
 ### Enhancements

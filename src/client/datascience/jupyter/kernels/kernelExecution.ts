@@ -11,14 +11,16 @@ import { IDisposable, IDisposableRegistry } from '../../../common/types';
 import { createDeferred, waitForPromise } from '../../../common/utils/async';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { captureTelemetry } from '../../../telemetry';
-import { Telemetry, VSCodeNativeTelemetry } from '../../constants';
+import { Telemetry } from '../../constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { IDataScienceErrorHandler, IJupyterSession, INotebook, InterruptResult } from '../../types';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { JupyterNotebookBase } from '../jupyterNotebook';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
-import type { IKernel, IKernelProvider, KernelConnectionMetadata } from './types';
+import type { IKernel, KernelConnectionMetadata } from './types';
+import { NotebookCellRunState } from './types';
+import { CellHashProviderFactory } from '../../editor-integration/cellHashProviderFactory';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -31,28 +33,31 @@ export class KernelExecution implements IDisposable {
     private _interruptPromise?: Promise<InterruptResult>;
     private _restartPromise?: Promise<void>;
     constructor(
-        private readonly kernelProvider: IKernelProvider,
+        private readonly kernel: IKernel,
         errorHandler: IDataScienceErrorHandler,
         appShell: IApplicationShell,
         readonly metadata: Readonly<KernelConnectionMetadata>,
         private readonly interruptTimeout: number,
         disposables: IDisposableRegistry,
-        private readonly controller: NotebookController,
-        outputTracker: CellOutputDisplayIdTracker
+        controller: NotebookController,
+        outputTracker: CellOutputDisplayIdTracker,
+        cellHashProviderFactory: CellHashProviderFactory
     ) {
         this.executionFactory = new CellExecutionFactory(
+            kernel,
             errorHandler,
             appShell,
             disposables,
             controller,
-            outputTracker
+            outputTracker,
+            cellHashProviderFactory
         );
     }
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
-    public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<void> {
+    public async executeCell(notebookPromise: Promise<INotebook>, cell: NotebookCell): Promise<NotebookCellRunState> {
         if (cell.kind == NotebookCellKind.Markup) {
-            return;
+            return NotebookCellRunState.Success;
         }
         sendKernelTelemetryEvent(cell.notebook.uri, Telemetry.ExecuteNativeCell);
 
@@ -63,38 +68,10 @@ export class KernelExecution implements IDisposable {
 
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, notebookPromise);
         executionQueue.queueCell(cell);
-        await executionQueue.waitForCompletion([cell]);
+        const result = await executionQueue.waitForCompletion([cell]);
+        return result[0];
     }
 
-    @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
-    @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
-    public async executeAllCells(notebookPromise: Promise<INotebook>, document: NotebookDocument): Promise<void> {
-        sendKernelTelemetryEvent(document.uri, Telemetry.ExecuteNativeCell);
-
-        // If we're restarting, wait for it to finish
-        if (this._restartPromise) {
-            await this._restartPromise;
-        }
-
-        // Only run code cells that are not already running.
-        const cellsThatWeCanRun = document.getCells().filter((cell) => cell.kind === NotebookCellKind.Code);
-        if (cellsThatWeCanRun.length === 0) {
-            // This is an unlikely scenario (UI doesn't allow this).
-            // Seen this in CI tests when we manually run whole document using the commands.
-            return;
-        }
-
-        const executionQueue = this.getOrCreateCellExecutionQueue(document, notebookPromise);
-
-        try {
-            traceInfo('Update notebook execution state as running');
-
-            cellsThatWeCanRun.forEach((cell) => executionQueue.queueCell(cell));
-            await executionQueue.waitForCompletion(cellsThatWeCanRun);
-        } finally {
-            traceInfo('Restore notebook state to idle after completion');
-        }
-    }
     /**
      * Interrupts the execution of cells.
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
@@ -174,7 +151,7 @@ export class KernelExecution implements IDisposable {
         }
 
         // We need to add the handler to kernel immediately (before we resolve the notebook, else its possible user hits restart or the like and we miss that event).
-        const wrappedNotebookPromise = this.getKernel(document).then(() => notebookPromise);
+        const wrappedNotebookPromise = this.kernel.start({ document }).then(() => notebookPromise);
 
         const newCellExecutionQueue = new CellExecutionQueue(
             wrappedNotebookPromise,
@@ -281,21 +258,5 @@ export class KernelExecution implements IDisposable {
         });
 
         (notebook as JupyterNotebookBase).fireRestart();
-    }
-
-    private async getKernel(document: NotebookDocument): Promise<IKernel> {
-        let kernel = this.kernelProvider.get(document);
-        if (!kernel) {
-            kernel = this.kernelProvider.getOrCreate(document, {
-                metadata: this.metadata,
-                controller: this.controller,
-                resourceUri: document.uri
-            });
-        }
-        if (!kernel) {
-            throw new Error('Unable to create a Kernel to run cell');
-        }
-        await kernel.start({ document });
-        return kernel;
     }
 }

@@ -4,7 +4,7 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
+import { CancellationToken, CancellationTokenSource } from 'vscode';
 
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
@@ -46,7 +46,6 @@ const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 @injectable()
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonEnvironment | undefined;
-    private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
     private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration;
@@ -87,10 +86,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    public get serverStarted(): Event<INotebookServerOptions> {
-        return this.startedEmitter.event;
-    }
-
     public dispose(): Promise<void> {
         this.disposed = true;
         this.clearTimeouts();
@@ -119,11 +114,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
             );
         }
         return this.usablePythonInterpreter;
-    }
-
-    public isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        // Supported if we can run a notebook
-        return this.isNotebookSupported(cancelToken);
     }
 
     /* eslint-disable complexity,  */
@@ -319,10 +309,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     }, noop);
             }
         }, cancelToken);
-    }
-
-    public async spawnNotebook(file: string): Promise<void> {
-        return this.jupyterInterpreterService.openNotebook(file);
     }
 
     public getServer(_options?: INotebookServerOptions): Promise<INotebookServer | undefined> {

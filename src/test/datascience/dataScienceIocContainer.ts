@@ -51,13 +51,13 @@ import { WebviewPanelProvider } from '../../client/common/application/webviewPan
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { JupyterSettings } from '../../client/common/configSettings';
-import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { EXTENSION_ROOT_DIR, isCI } from '../../client/common/constants';
 import { CryptoUtils } from '../../client/common/crypto';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { DataScienceProductPathService } from '../../client/common/installer/productPath';
 import { IProductPathService } from '../../client/common/installer/types';
-import { traceError, traceInfo } from '../../client/common/logger';
+import { traceError, traceInfo, traceInfoIf } from '../../client/common/logger';
 import { BrowserService } from '../../client/common/net/browser';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -117,7 +117,6 @@ import { JupyterVariableDataProvider } from '../../client/datascience/data-viewi
 import { JupyterVariableDataProviderFactory } from '../../client/datascience/data-viewing/jupyterVariableDataProviderFactory';
 import { IDataViewer, IDataViewerFactory } from '../../client/datascience/data-viewing/types';
 import { DebugLocationTrackerFactory } from '../../client/datascience/debugLocationTrackerFactory';
-import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
 import { CodeLensFactory } from '../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
@@ -185,7 +184,6 @@ import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
     ICellHashListener,
-    ICellHashProvider,
     ICodeCssGenerator,
     ICodeLensFactory,
     ICodeWatcher,
@@ -214,7 +212,6 @@ import {
     INbConvertExportToPythonService,
     INbConvertInterpreterDependencyChecker,
     INotebookCreationTracker,
-    INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
     INotebookProvider,
@@ -277,6 +274,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../client/dat
 import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
 import { HostJupyterServer } from '../../client/datascience/jupyter/liveshare/hostJupyterServer';
 import { HostRawNotebookProvider } from '../../client/datascience/raw-kernel/liveshare/hostRawNotebookProvider';
+import { CellHashProviderFactory } from '../../client/datascience/editor-integration/cellHashProviderFactory';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -606,10 +604,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             mockDebugService,
             Identifiers.MULTIPLEXING_DEBUGSERVICE
         );
-        this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [
-            INotebookExecutionLogger
-        ]);
-        this.serviceManager.addSingleton<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
+        this.serviceManager.addSingleton<CellHashProviderFactory>(CellHashProviderFactory, CellHashProviderFactory);
+        this.serviceManager.addSingleton<HoverProvider>(HoverProvider, HoverProvider);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
         this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
@@ -771,6 +767,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             );
 
             // Raw Kernel doesn't have a mock layer, so disable ZMQ for mocked jupyter tests
+            traceInfoIf(isCI, 'forceDataScienceSettingsChanged invoked');
             this.forceDataScienceSettingsChanged({ disableZMQSupport: true }, false);
         } else {
             this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
@@ -1105,7 +1102,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             liveShareConnectionTimeout: 100,
-            enablePlotViewer: true,
+            generateSVGPlots: false,
             stopOnFirstLineWhileDebugging: true,
             stopOnError: true,
             addGotoCodeLenses: true,

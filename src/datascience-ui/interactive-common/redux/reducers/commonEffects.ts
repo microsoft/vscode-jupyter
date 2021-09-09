@@ -3,7 +3,6 @@
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../../client/datascience/messages';
-import { IExternalWebviewCellButton } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
 import { storeLocStrings } from '../../../react-common/locReactSide';
 import { postActionToExtension } from '../helpers';
@@ -88,14 +87,6 @@ export namespace CommonEffects {
         // Make sure to tell the extension so it can log telemetry.
         postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetLoadSuccess, arg.payload.data);
         return arg.prevState;
-    }
-    export function handleWebviewButtons(
-        arg: CommonReducerArg<CommonActionType, IExternalWebviewCellButton[]>
-    ): IMainState {
-        return {
-            ...arg.prevState,
-            externalButtons: arg.payload.data
-        };
     }
 
     // Extension has requested HTML for the webview, get it by ID and send it back as a message

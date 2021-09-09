@@ -67,7 +67,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public askForLargeDataFrames: boolean = false;
     public enableAutoMoveToNextCell: boolean = false;
     public askForKernelRestart: boolean = false;
-    public enablePlotViewer: boolean = false;
+    public generateSVGPlots: boolean = false;
     public codeLenses: string = '';
     public debugCodeLenses: string = '';
     public debugpyDistPath: string = '';
@@ -92,6 +92,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     public verboseLogging: boolean = false;
+    public showVariableViewWhenDebugging: boolean = true;
+
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
             Tensor: ['shape', 'dtype', 'device']
@@ -272,6 +274,9 @@ function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefin
         }
         case 'debug': {
             return LogLevel.Debug;
+        }
+        case 'verbose': {
+            return LogLevel.Trace;
         }
         default: {
             return LogLevel.Error;

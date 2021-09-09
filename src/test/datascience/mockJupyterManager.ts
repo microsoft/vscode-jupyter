@@ -31,7 +31,6 @@ import { CodeSnippets, Identifiers } from '../../client/datascience/constants';
 import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
-    IJupyterConnection,
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
@@ -47,6 +46,7 @@ import { MockJupyterSession } from './mockJupyterSession';
 import { MockProcessService } from './mockProcessService';
 import { MockPythonService } from './mockPythonService';
 import { createCodeCell } from '../../datascience-ui/common/cellFactory';
+import { areInterpreterPathsSame } from '../../client/pythonEnvironments/info/interpreter';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 
@@ -95,7 +95,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private cellDictionary: Record<string, nbformat.IBaseCell> = {};
     private kernelSpecs: { name: string; dir: string }[] = [];
     private currentSession: MockJupyterSession | undefined;
-    private connInfo: IJupyterConnection | undefined;
     private cleanTemp: (() => void) | undefined;
     private pendingSessionFailure = false;
     private pendingKernelChangeFailure = false;
@@ -117,7 +116,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.interpreterService
             .setup((i) => i.getInterpreterDetails(TypeMoq.It.isAnyString()))
             .returns((p) => {
-                const found = this.installedInterpreters.find((i) => i.path === p);
+                const found = this.installedInterpreters.find((i) => areInterpreterPathsSame(i.path, p));
                 if (found) {
                     return Promise.resolve(found);
                 }
@@ -126,7 +125,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.interpreterService
             .setup((i) => i.updateInterpreter(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_r, p) => {
-                const found = this.installedInterpreters.find((i) => i.path === p);
+                const found = this.installedInterpreters.find((i) => areInterpreterPathsSame(i.path, p));
                 if (found) {
                     this.activeInterpreter = found;
                 }
@@ -212,9 +211,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     public get onRestartSessionUsed() {
         return this.restartSessionUsedEvent.event;
-    }
-    public getConnInfo(): IJupyterConnection {
-        return this.connInfo!;
     }
 
     public makeActive(interpreter: PythonEnvironment) {
@@ -421,10 +417,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
         if (this.cleanTemp) {
             this.cleanTemp();
         }
-    }
-
-    public async initialize(connInfo: IJupyterConnection): Promise<void> {
-        this.connInfo = connInfo;
     }
 
     public startNew(

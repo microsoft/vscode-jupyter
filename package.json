@@ -1,13 +1,16 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2021.8.200",
+    "version": "2021.9.100",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "enableProposedApi": true,
     "author": {
         "name": "Microsoft Corporation"
     },
+    "extensionPack": [
+        "ms-toolsai.jupyter-keymap"
+    ],
     "license": "MIT",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
     "repository": {
@@ -24,7 +27,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "1.60.0-insider"
+        "vscode": "1.61.0-insider"
     },
     "keywords": [
         "jupyter",
@@ -64,6 +67,7 @@
         "onCommand:jupyter.selectjupytercommandline",
         "onCommand:jupyter.openVariableView",
         "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
+        "onCommand:jupyter.clearSavedJupyterUris",
         "onNotebook:jupyter-notebook",
         "onNotebook:interactive"
     ],
@@ -98,104 +102,14 @@
                 "when": "editorTextFocus && !editorHasSelection && jupyter.hascodecells && !notebookEditorFocused"
             },
             {
-                "key": "F",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.find"
-            },
-            {
-                "key": "K",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "list.focusUp"
-            },
-            {
-                "key": "J",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "list.focusDown"
-            },
-            {
-                "key": "A",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.insertCodeCellAbove"
-            },
-            {
-                "key": "B",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.insertCodeCellBelow"
-            },
-            {
-                "key": "D D",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.delete"
-            },
-            {
-                "key": "Z",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "jupyter.notebookeditor.keybind.undo"
-            },
-            {
-                "key": "S",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "jupyter.notebookeditor.keybind.save"
-            },
-            {
-                "key": "C",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.copy"
-            },
-            {
-                "key": "X",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.cut"
-            },
-            {
-                "key": "V",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.paste"
-            },
-            {
-                "key": "O",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "jupyter.notebookeditor.keybind.toggleOutput"
-            },
-            {
-                "key": "shift+L",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.toggleLineNumbers"
-            },
-            {
-                "key": "L",
-                "when": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.toggleLineNumbers"
-            },
-            {
-                "key": "ctrl+shift+-",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.split"
-            },
-            {
-                "key": "ctrl+enter",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts || notebookCellListFocused && notebookCellType == 'code' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "jupyter.notebookeditor.keybind.executeCell"
-            },
-            {
-                "key": "ctrl+enter",
-                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.quitEdit"
-            },
-            {
-                "key": "shift+enter",
-                "when": "editorTextFocus && inputFocus && notebookEditorFocused && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts || notebookCellListFocused && notebookCellType == 'code' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "notebook.cell.executeAndSelectBelow"
-            },
-            {
-                "key": "shift+enter",
-                "when": "inputFocus && notebookEditorFocused && !editorHasMultipleSelections && !editorHasSelection && !editorHoverVisible && notebookCellType == 'markup' && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts",
-                "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow"
-            },
-            {
                 "key": "shift+enter",
                 "when": "resourceScheme == 'vscode-interactive'",
                 "command": "interactive.execute"
+            },
+            {
+                "key": "escape",
+                "when": "resourceScheme == 'vscode-interactive' && !editorHoverVisible && !suggestWidgetVisible && !isComposing && !inSnippetMode && !exceptionWidgetVisible && !selectionAnchorSet && !LinkedEditingInputVisible && !renameInputVisible && !editorHasSelection && !accessibilityHelpWidgetVisible && !breakpointWidgetVisible && !findWidgetVisible && !markersNavigationVisible && !parameterHintsVisible && !editorHasMultipleSelections && !notificationToastsVisible",
+                "command": "interactive.input.clear"
             },
             {
                 "command": "jupyter.insertCellBelowPosition",
@@ -310,7 +224,7 @@
                 "title": "Run by Line",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.runAndDebugCell",
@@ -323,7 +237,7 @@
                 "title": "Continue",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -421,16 +335,6 @@
                 "command": "jupyter.deleteCells",
                 "title": "%jupyter.command.jupyter.deleteCells.title%",
                 "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.notebookeditor.keybind.toggleOutput",
-                "title": "%DataScience.toggleCellOutput%",
-                "category": "Notebook"
-            },
-            {
-                "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow",
-                "title": "%DataScience.renderMarkdownAndSelectBelow%",
-                "category": "Notebook"
             },
             {
                 "command": "jupyter.selectCell",
@@ -636,18 +540,6 @@
                 "category": "Notebook"
             },
             {
-                "command": "jupyter.notebookeditor.keybind.undo",
-                "title": "%jupyter.command.jupyter.notebookeditor.keybind.undo.title%",
-                "category": "Notebook",
-                "enablement": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts"
-            },
-            {
-                "command": "jupyter.notebookeditor.keybind.save",
-                "title": "%jupyter.command.jupyter.notebookeditor.keybind.save.title%",
-                "category": "Notebook",
-                "enablement": "notebookEditorFocused && !inputFocus && notebookType == jupyter-notebook && config.jupyter.enableKeyboardShortcuts"
-            },
-            {
                 "command": "jupyter.interruptkernel",
                 "title": "%jupyter.command.jupyter.interruptkernel.title%",
                 "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
@@ -821,6 +713,7 @@
                 "title": "%DataScience.exportDialogTitle%",
                 "shortTitle": "%DataScience.exportAsNotebook.shorttitle%",
                 "icon": "$(save-as)",
+                "enablement": "notebookType == interactive",
                 "category": "Jupyter"
             },
             {
@@ -830,6 +723,7 @@
                     "light": "resources/light/export_to_python.svg",
                     "dark": "resources/dark/export_to_python.svg"
                 },
+                "enablement": "notebookType == interactive",
                 "category": "Jupyter"
             },
             {
@@ -949,12 +843,12 @@
             "notebook/cell/title": [
                 {
                     "command": "jupyter.runByLine",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress",
                     "group": "inline/cell@0"
                 },
                 {
                     "command": "jupyter.runByLineContinue",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress",
                     "group": "inline/cell@0"
                 }
             ],
@@ -1059,16 +953,6 @@
                 {
                     "command": "jupyter.runByLineContinue",
                     "title": "Continue",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.notebookeditor.keybind.toggleOutput",
-                    "title": "%DataScience.toggleCellOutput%",
-                    "when": "notebookType == jupyter-notebook"
-                },
-                {
-                    "command": "jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow",
-                    "title": "%DataScience.renderMarkdownAndSelectBelow%",
                     "when": "false"
                 },
                 {
@@ -1282,13 +1166,13 @@
                     "command": "jupyter.interruptkernel",
                     "title": "%jupyter.command.jupyter.interruptkernel.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.haveinteractive && jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
+                    "when": "jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.haveinteractive && jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
+                    "when": "jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.undocells",
@@ -1337,18 +1221,6 @@
                     "title": "%jupyter.command.jupyter.collapseallcells.title%",
                     "category": "Notebook",
                     "when": "notebookEditorFocused && notebookType == 'jupyter-notebook'"
-                },
-                {
-                    "command": "jupyter.notebookeditor.keybind.undo",
-                    "title": "%jupyter.command.jupyter.notebookeditor.keybind.undo.title%",
-                    "category": "Notebook",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.notebookeditor.keybind.save",
-                    "title": "%jupyter.command.jupyter.notebookeditor.keybind.save.title%",
-                    "category": "Notebook",
-                    "when": "false"
                 },
                 {
                     "command": "jupyter.expandallcells",
@@ -1486,6 +1358,14 @@
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "when": "false"
+                },
+                {
+                    "command": "jupyter.interactive.goToCode",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.interactive.removeCell",
+                    "when": "false"
                 }
             ],
             "debug/variables/context": [
@@ -1512,6 +1392,12 @@
                     "description": "Enables the preview debugging experience. Set to true to enable the debugging mode button on native notebooks. Your selected kernel should also have ipykernel 6 installed in order to support debugging. Clicking the button will start a debugging session and will allow you to set and hit breakpoints.",
                     "scope": "application"
                 },
+                "jupyter.showVariableViewWhenDebugging": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Bring up the Variable View when starting a Run by Line session.",
+                    "scope": "application"
+                },
                 "jupyter.logging.level": {
                     "type": "string",
                     "default": "debug",
@@ -1520,7 +1406,8 @@
                         "error",
                         "warn",
                         "info",
-                        "debug"
+                        "debug",
+                        "verbose"
                     ],
                     "description": "The logging level the extension logs at.",
                     "scope": "machine"
@@ -1546,12 +1433,14 @@
                 "jupyter.enableKeyboardShortcuts": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting has been deprecated as Jupyter keyboard shortcuts have been moved into the ms-toolsai.jupyter-keymap extension. If you would like to disable Jupyter keyboard shortcuts, please uninstall or disable that extension instead.",
                     "description": "Enables Jupyter style keyboard shortcuts for Notebooks.",
                     "scope": "application"
                 },
                 "jupyter.allowImportFromNotebook": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
                     "scope": "resource"
                 },
@@ -1627,6 +1516,7 @@
                 "jupyter.searchForJupyter": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Search all installed Python interpreters for a Jupyter installation when starting the Interactive window",
                     "scope": "resource"
                 },
@@ -1651,11 +1541,13 @@
                 "jupyter.allowInput": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Allow the inputting of python code directly into the Interactive window"
                 },
                 "jupyter.showCellInputCode": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Show cell input code.",
                     "scope": "resource"
                 },
@@ -1668,6 +1560,7 @@
                 "jupyter.maxOutputSize": {
                     "type": "number",
                     "default": 400,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Maximum size (in pixels) of text output in the Notebook Editor before a scrollbar appears. First enable scrolling for cell outputs in settings.",
                     "scope": "resource"
                 },
@@ -1680,15 +1573,9 @@
                 "jupyter.enableScrollingForCellOutputs": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Enables scrolling for large cell outputs in the Notebook Editor. This setting does not apply to the Interactive Window.",
                     "scope": "resource"
-                },
-                "jupyter.errorBackgroundColor": {
-                    "type": "string",
-                    "default": "#FFFFFF",
-                    "description": "Background color (in hex) for exception messages in the Interactive window.",
-                    "scope": "resource",
-                    "deprecationMessage": "No longer necessary as the theme colors are used for error messages"
                 },
                 "jupyter.sendSelectionToInteractiveWindow": {
                     "type": "boolean",
@@ -1723,12 +1610,14 @@
                 "jupyter.allowLiveShare": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated as Live Share support for the interactive window no longer exists in the Jupyter extension.",
                     "description": "Allow the Interactive window to be shared during a Live Share session",
                     "scope": "resource"
                 },
                 "jupyter.ignoreVscodeTheme": {
                     "type": "boolean",
                     "default": false,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Don't use the VS Code theme in the Interactive window (requires reload of VS Code). This forces the Interactive window to use 'Light +(default light)' and disables matplotlib defaults.",
                     "scope": "resource"
                 },
@@ -1741,6 +1630,7 @@
                 "jupyter.liveShareConnectionTimeout": {
                     "type": "number",
                     "default": 1000,
+                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
                     "description": "Amount of time to wait for guest connections to verify they have the Python extension installed.",
                     "scope": "application"
                 },
@@ -1762,23 +1652,16 @@
                     "description": "Enables moving to the next cell when clicking on a 'Run Cell' code lens.",
                     "scope": "resource"
                 },
-                "jupyter.autoPreviewNotebooksInInteractivePane": {
-                    "type": "boolean",
-                    "deprecationMessage": "No longer supported. Notebooks open directly in their own editor now.",
-                    "default": false,
-                    "description": "When opening ipynb files, automatically preview the contents in the Interactive window.",
-                    "scope": "resource"
-                },
                 "jupyter.allowUnauthorizedRemoteConnection": {
                     "type": "boolean",
                     "default": false,
                     "description": "Allow for connecting the Interactive window to a https Jupyter server that does not have valid certificates. This can be a security risk, so only use for known and trusted servers.",
                     "scope": "resource"
                 },
-                "jupyter.enablePlotViewer": {
+                "jupyter.generateSVGPlots": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Modify plot output to include SVG output, for better display in the plot viewer",
+                    "description": "Generate SVG output for notebook plots. This allows for better display in the plot viewer at the cost of generation speed and file size.",
                     "scope": "resource"
                 },
                 "jupyter.codeLenses": {
@@ -1820,12 +1703,14 @@
                 "jupyter.textOutputLimit": {
                     "type": "number",
                     "default": 20000,
+                    "deprecationMessage": "This setting is deprecated in favor of `notebook.output.textLineLimit`. This setting will be removed in an upcoming release.",
                     "description": "Limit the amount of text in Interactive cell text output to this value. 0 to allow any amount of characters.",
                     "scope": "resource"
                 },
                 "jupyter.colorizeInputBox": {
                     "type": "boolean",
                     "default": true,
+                    "deprecationMessage": "This setting is deprecated and will be removed in an upcoming release.",
                     "description": "Whether or not to use the theme's peek color as the background for the input box.",
                     "scope": "resource"
                 },
@@ -1876,13 +1761,6 @@
                     "default": false,
                     "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
                     "scope": "resource"
-                },
-                "jupyter.runMagicCommands": {
-                    "type": "string",
-                    "default": "",
-                    "deprecationMessage": "This setting has been deprecated in favor of 'runStartupCommands'.",
-                    "description": "A series of Python instructions or iPython magic commands separated by '\\n' that will be executed when the interactive window loads.",
-                    "scope": "application"
                 },
                 "jupyter.runStartupCommands": {
                     "type": "array",

@@ -55,13 +55,12 @@ import {
     InteractiveWindowMessages,
     ISubmitNewCell
 } from '../interactive-common/interactiveWindowTypes';
-import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
+import { IKernel, IKernelProvider, KernelConnectionMetadata, NotebookCellRunState } from '../jupyter/kernels/types';
 import { INotebookControllerManager } from '../notebook/types';
 import { VSCodeNotebookController } from '../notebook/vscodeNotebookController';
 import { updateNotebookMetadata } from '../notebookStorage/baseModel';
 import {
     CellState,
-    ICellHashProvider,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowLoadable,
@@ -75,7 +74,22 @@ import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
 import { INativeInteractiveWindow } from './types';
 
-export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
+type InteractiveCellMetadata = {
+    inputCollapsed: boolean;
+    interactiveWindowCellMarker: string;
+    interactive: {
+        file: string;
+        line: number;
+        originalSource: string;
+    };
+    id: string;
+};
+export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellMetadata | undefined {
+    if (cell.metadata.interactive !== undefined) {
+        return cell.metadata as InteractiveCellMetadata;
+    }
+}
+export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
@@ -132,8 +146,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly kernelProvider: IKernelProvider,
         private readonly disposables: IDisposableRegistry,
-        private readonly jupyterDebugger: IJupyterDebugger,
-        private readonly cellHashProvider: ICellHashProvider
+        private readonly jupyterDebugger: IJupyterDebugger
     ) {
         // Set our owner and first submitter
         this._owner = owner;
@@ -158,6 +171,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
     private async createReadyPromise(): Promise<NotebookEditor> {
         const preferredController = await this.notebookControllerManager.getInteractiveController();
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
+        traceInfo(`Starting interactive window with controller ID ${controllerId}`);
         const hasOwningFile = this.owner !== undefined;
         const { notebookEditor } = ((await this.commandManager.executeCommand(
             'interactive.open',
@@ -422,22 +436,20 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             if (isDebug) {
                 await this.kernel!.executeHidden(
                     `import os;os.environ["IPYKERNEL_CELL_NAME"] = '${file.replace(/\\/g, '\\\\')}'`,
-                    file,
                     notebookEditor.document
                 );
-                await this.jupyterDebugger.startDebugging(notebook);
+                await this.jupyterDebugger.startDebugging(this.kernel!);
             }
 
             // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
             await this.setFileInKernel(file, notebookEditor.document);
 
-            await this.cellHashProvider.addCellHash(notebookCell);
-            await this.kernel!.executeCell(notebookCell);
+            result = (await this.kernel!.executeCell(notebookCell)) === NotebookCellRunState.Success;
 
             traceInfo(`Finished execution for ${id}`);
         } finally {
             if (isDebug) {
-                await this.jupyterDebugger.stopDebugging(notebook);
+                await this.jupyterDebugger.stopDebugging(this.kernel!);
             }
         }
         return result;
@@ -488,7 +500,9 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
 
     public async scrollToCell(id: string): Promise<void> {
         const notebookEditor = await this._editorReadyPromise;
-        const matchingCell = notebookEditor.document.getCells().find((cell) => cell.metadata.executionId === id);
+        const matchingCell = notebookEditor.document
+            .getCells()
+            .find((cell) => getInteractiveCellMetadata(cell)?.id === id);
         if (matchingCell) {
             this.revealCell(matchingCell, notebookEditor);
         }
@@ -502,13 +516,12 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         }, 200); // Rendering output is async so the output is not guaranteed to immediately exist
     }
 
-    // TODO this does not need to be async since we no longer need to roundtrip to the UI
     public async hasCell(id: string): Promise<boolean> {
         const notebookEditor = await this._editorReadyPromise;
         if (!notebookEditor) {
             return false;
         }
-        return notebookEditor.document.getCells().find((cell) => cell.metadata.executionId === id) !== undefined;
+        return notebookEditor.document.getCells().some((cell) => getInteractiveCellMetadata(cell)?.id === id);
     }
 
     public get owningResource(): Resource {
@@ -570,7 +583,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         // If in perFile mode, set only once
         if (this.mode === 'perFile' && !this.fileInKernel && this.kernel && file !== Identifiers.EmptyFileName) {
             this.fileInKernel = file;
-            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, notebookDocument);
+            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookDocument);
         } else if (
             (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
             this.mode !== 'perFile' &&
@@ -579,7 +592,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         ) {
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
-            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, notebookDocument);
+            await this.kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, notebookDocument);
         }
     }
 
@@ -626,7 +639,7 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
         const cellMatcher = new CellMatcher(settings);
         const isMarkdown = cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
         const strippedCode = isMarkdown
-            ? generateMarkdownFromCodeLines(code.splitLines()).join('\n')
+            ? generateMarkdownFromCodeLines(code.splitLines()).join('')
             : cellMatcher.stripFirstMarker(code).trim();
         const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
@@ -639,14 +652,15 @@ export class NativeInteractiveWindow implements IInteractiveWindowLoadable {
             strippedCode,
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
-        notebookCellData.metadata = {
+        notebookCellData.metadata = <InteractiveCellMetadata>{
             inputCollapsed: !isMarkdown && settings.collapseCellInputCodeByDefault,
             interactiveWindowCellMarker,
             interactive: {
                 file: file.fsPath,
-                line: line
+                line: line,
+                originalSource: code
             },
-            executionId: id
+            id: id
         };
         await chainWithPendingUpdates(notebookDocument, (edit) => {
             edit.replaceNotebookCells(

@@ -43,6 +43,7 @@ export const KnownKernelLanguageAliases = new Map<string, string>([
     ['c++14', 'c++']
 ]);
 export const jupyterLanguageToMonacoLanguageMapping = new Map([
+    ['bash', 'shellscript'],
     ['c#', 'csharp'],
     ['f#', 'fsharp'],
     ['q#', 'qsharp'],
@@ -151,12 +152,6 @@ export namespace Commands {
     export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
     export const OpenVariableView = 'jupyter.openVariableView';
-    export const NotebookEditorKeybindSave = 'jupyter.notebookeditor.keybind.save';
-    export const NotebookEditorKeybindUndo = 'jupyter.notebookeditor.keybind.undo';
-    export const NotebookEditorKeybindRenderMarkdownAndSelectBelow =
-        'jupyter.notebookeditor.keybind.renderMarkdownAndSelectBelow';
-    export const NotebookEditorKeybindExecuteCell = 'jupyter.notebookeditor.keybind.executeCell';
-    export const NotebookEditorToggleOutput = 'jupyter.notebookeditor.keybind.toggleOutput';
     export const InteractiveClearAll = 'jupyter.interactive.clearAllCells';
     export const InteractiveRemoveCell = 'jupyter.interactive.removeCell';
     export const InteractiveGoToCode = 'jupyter.interactive.goToCode';
@@ -555,7 +550,6 @@ export enum NativeMouseCommandTelemetry {
  */
 export enum VSCodeNativeTelemetry {
     AddCell = 'DATASCIENCE.VSCODE_NATIVE.INSERT_CELL',
-    RunAllCells = 'DATASCIENCE.VSCODE_NATIVE.RUN_ALL',
     DeleteCell = 'DATASCIENCE.VSCODE_NATIVE.DELETE_CELL',
     MoveCell = 'DATASCIENCE.VSCODE_NATIVE.MOVE_CELL',
     ChangeToCode = 'DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_CODE', // Not guaranteed to work see, https://github.com/microsoft/vscode/issues/100042

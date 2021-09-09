@@ -20,7 +20,7 @@ import {
 } from '../../../client/datascience/notebook/helpers/helpers';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
-import { IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 import {
     assertVSCCellIsNotRunning,
@@ -112,6 +112,9 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await waitForCondition(async () => hasErrorOutput(cell.outputs), 30_000, 'No errors');
     });
     test('Restarting kernel will cancel cell execution & we can re-run a cell', async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
         traceInfo('Step 1');
         await insertCodeCell('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', { index: 0 });
         const cell = vscEditor.document.cellAt(0);
@@ -173,13 +176,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         // KERNELPUSH
         //await vscEditor.kernel!.interrupt!(vscEditor.document);
     });
-    test('Restarting kernel during run all will skip the rest of the cells', async function () {
-        traceInfo('Step 1');
-        await insertCodeCell('print(1)', { index: 0 });
-        await insertCodeCell('import time\nprint(2)\ntime.sleep(60)', { index: 1 });
-        await insertCodeCell('print(3)', { index: 2 });
-        const cell = vscEditor.document.cellAt(1);
-        // Ensure we click `Yes` when prompted to restart the kernel.
+    function swallowRestartPrompt() {
         const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
         const showInformationMessage = sinon
             .stub(appShell, 'showInformationMessage')
@@ -195,6 +192,15 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         disposables.push({ dispose: () => showInformationMessage.restore() });
 
         (editorProvider.activeEditor as any).shouldAskForRestart = () => Promise.resolve(false);
+    }
+    test('Restarting kernel during run all will skip the rest of the cells', async function () {
+        traceInfo('Step 1');
+        await insertCodeCell('print(1)', { index: 0 });
+        await insertCodeCell('import time\nprint(2)\ntime.sleep(60)', { index: 1 });
+        await insertCodeCell('print(3)', { index: 2 });
+        const cell = vscEditor.document.cellAt(1);
+        // Ensure we click `Yes` when prompted to restart the kernel.
+        swallowRestartPrompt();
         traceInfo(`Step 4. Before execute`);
         traceInfo(`Step 5. After execute`);
         await Promise.all([runAllCellsInActiveNotebook(), waitForTextOutput(cell, '2', 0, false)]);
@@ -331,5 +337,68 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             waitForExecutionCompletedSuccessfully(cell3),
             waitForTextOutput(cell3, '3', 0, false)
         ]);
+    });
+    test('Can restart a kernel after it dies', async function () {
+        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            // The kernel will auto start if it fails when using Jupyter.
+            // When using Raw we don't use jupyter.
+            return this.skip();
+        }
+
+        /*
+        Run cell 1 - Print some value
+        Run Cell 2 with some code that will cause the kernel to die.
+        Run cell 1 again, it should fail as the kernel is dead.
+        Restart kernel & run cell 1, it should work.
+        */
+        await insertCodeCell('1', { index: 0 });
+        await insertCodeCell('import IPython\napp = IPython.Application.instance()\napp.kernel.do_shutdown(True)', {
+            index: 1
+        });
+
+        const [cell1, cell2] = vscEditor.document.getCells();
+        // Ensure we click `Yes` when prompted to restart the kernel.
+        swallowRestartPrompt();
+
+        // Confirm 1 completes, 2 is in progress & 3 is queued.
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell1),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell1, '1', 0, false)
+        ]);
+        assert.strictEqual(cell1.executionSummary?.executionOrder, 1, 'Cell 1 should have an execution order of 1');
+
+        // Try to run cell 1 again, it should fail with errors.
+        await Promise.all([
+            runCell(cell1),
+            waitForCondition(async () => cell1.executionSummary?.success === false, 10_000, 'Cell 1 did not fail')
+        ]);
+        assert.isUndefined(
+            cell1.executionSummary?.executionOrder,
+            'Execution order should be undefined as the cell did not run'
+        );
+
+        // Restart the kernel & use event handler to check if it was restarted successfully.
+        const kernel = api.serviceContainer.get<IKernelProvider>(IKernelProvider).get(cell1.notebook);
+        if (!kernel) {
+            throw new Error('Kernel not available');
+        }
+        const waitForKernelToRestart = createEventHandler(kernel, 'onRestarted', disposables);
+        traceInfo('Step 9 Wait for restart');
+        await Promise.all([
+            commands.executeCommand('jupyter.notebookeditor.restartkernel').then(noop, noop),
+            // Wait for kernel to restart before we execute cells again.
+            waitForKernelToRestart.assertFired(30_000)
+        ]);
+        traceInfo('Step 10 Restarted');
+
+        // Run the first cell again & this time it should work.
+        await Promise.all([
+            runCell(cell1),
+            waitForExecutionCompletedSuccessfully(cell1),
+            waitForTextOutput(cell1, '1', 0, false)
+        ]);
+        assert.strictEqual(cell1.executionSummary?.executionOrder, 1, 'Cell 1 should have an execution order of 1');
     });
 });

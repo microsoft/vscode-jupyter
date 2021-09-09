@@ -33,7 +33,6 @@ export class ExportInterpreterFinder {
 
             // If an interpreter was not passed in, work with the main jupyter interperter
             const selectedJupyterInterpreter = await this.jupyterInterpreterService.getSelectedInterpreter();
-
             if (selectedJupyterInterpreter) {
                 if (await this.checkNotebookInterpreter(selectedJupyterInterpreter)) {
                     return selectedJupyterInterpreter;
