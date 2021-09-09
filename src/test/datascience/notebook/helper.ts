@@ -21,7 +21,8 @@ import {
     NotebookCellOutputItem,
     NotebookRange,
     NotebookCellExecutionState,
-    NotebookCellData
+    NotebookCellData,
+    notebooks
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -487,6 +488,28 @@ export async function waitForCellExecutionToComplete(cell: NotebookCell) {
     );
     await sleep(100);
 }
+export async function waitForCellExecutionState(
+    cell: NotebookCell,
+    state: NotebookCellExecutionState,
+    disposables: IDisposable[],
+    timeout: number = defaultNotebookTestTimeout
+) {
+    const deferred = createDeferred<boolean>();
+    const disposable = notebooks.onDidChangeNotebookCellExecutionState((e) => {
+        if (e.cell !== cell) {
+            return;
+        }
+        if (e.state === state) {
+            deferred.resolve(true);
+        }
+    });
+    disposables.push(disposable);
+    try {
+        await waitForCondition(async () => deferred.promise, timeout, `Execution state did not change to ${state}`);
+    } finally {
+        disposable.dispose();
+    }
+}
 export async function waitForOutputs(
     cell: NotebookCell,
     expectedNumberOfOutputs: number,
@@ -495,7 +518,10 @@ export async function waitForOutputs(
     await waitForCondition(
         async () => cell.outputs.length === expectedNumberOfOutputs,
         timeout,
-        `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(cell)}`
+        () =>
+            `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(
+                cell
+            )}`
     );
 }
 export async function waitForExecutionCompletedSuccessfully(
@@ -506,9 +532,10 @@ export async function waitForExecutionCompletedSuccessfully(
         waitForCondition(
             async () => assertHasExecutionCompletedSuccessfully(cell),
             timeout,
-            `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(
-                cell
-            )}`
+            () =>
+                `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(
+                    cell
+                )}`
         ),
         waitForCellExecutionToComplete(cell)
     ]);
@@ -537,9 +564,10 @@ export async function waitForQueuedForExecution(cell: NotebookCell, timeout: num
             return NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Pending;
         },
         timeout,
-        `Cell ${cell.index + 1} not queued for execution, current state is ${NotebookCellStateTracker.getCellState(
-            cell
-        )}`
+        () =>
+            `Cell ${cell.index + 1} not queued for execution, current state is ${NotebookCellStateTracker.getCellState(
+                cell
+            )}`
     );
 }
 export async function waitForQueuedForExecutionOrExecuting(
@@ -554,11 +582,12 @@ export async function waitForQueuedForExecutionOrExecuting(
             );
         },
         timeout,
-        `Cell ${
-            cell.index + 1
-        } not queued for execution nor already executing, current state is ${NotebookCellStateTracker.getCellState(
-            cell
-        )}`
+        () =>
+            `Cell ${
+                cell.index + 1
+            } not queued for execution nor already executing, current state is ${NotebookCellStateTracker.getCellState(
+                cell
+            )}`
     );
 }
 export async function waitForEmptyCellExecutionCompleted(
@@ -568,9 +597,10 @@ export async function waitForEmptyCellExecutionCompleted(
     await waitForCondition(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
-        `Cell ${
-            cell.index + 1
-        } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
+        () =>
+            `Cell ${
+                cell.index + 1
+            } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);
 }
@@ -581,7 +611,7 @@ export async function waitForExecutionCompletedWithErrors(
     await waitForCondition(
         async () => assertHasExecutionCompletedWithErrors(cell),
         timeout,
-        `Cell ${cell.index + 1} did not fail as expected, State =  ${NotebookCellStateTracker.getCellState(cell)}`
+        () => `Cell ${cell.index + 1} did not fail as expected, State =  ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);
 }

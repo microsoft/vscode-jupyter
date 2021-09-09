@@ -393,7 +393,6 @@
     "DataScience.addCell": "添加单元",
     "DataScience.runAll": "运行所有单元",
     "DataScience.toggleCellOutput": "切换单元输出",
-    "DataScience.renderMarkdownAndSelectBelow": "运行单元并选择下方单元",
     "DataScience.convertingToPythonFile": "将 ipynb 转换为 python 文件",
     "DataScience.untitledNotebookMessage": "如果不保存，所有更改将会丢失。",
     "DataScience.untitledNotebookYes": "保存",
