@@ -39,10 +39,10 @@ suite('DataScience - VariableView', function () {
     let commandManager: ICommandManager;
     let variableViewProvider: ITestVariableViewProvider;
     let vscodeNotebook: IVSCodeNotebook;
-    this.timeout(120_000);
+    this.timeout(240_000);
     suiteSetup(async function () {
         traceInfo('Start Test Suite');
-        this.timeout(120_000);
+        this.timeout(240_000);
         api = await initialize();
 
         // We need to have webviews built to run this, so skip if we don't have them
