@@ -53,6 +53,7 @@ import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 import { KernelDebugAdapter } from '../../../client/debugger/jupyter/kernelDebugAdapter';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -169,8 +170,7 @@ export async function canRunNotebookTests() {
         !process.env.VSC_JUPYTER_RUN_NB_TEST
     ) {
         console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
-                process.env.VSC_JUPYTER_RUN_NB_TEST
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST
             }`
         );
         return false;
@@ -587,8 +587,7 @@ export async function waitForQueuedForExecutionOrExecuting(
         },
         timeout,
         () =>
-            `Cell ${
-                cell.index + 1
+            `Cell ${cell.index + 1
             } not queued for execution nor already executing, current state is ${NotebookCellStateTracker.getCellState(
                 cell
             )}`
@@ -602,8 +601,7 @@ export async function waitForEmptyCellExecutionCompleted(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
         () =>
-            `Cell ${
-                cell.index + 1
+            `Cell ${cell.index + 1
             } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);
@@ -800,6 +798,7 @@ export async function hijackPrompt(
 
 export async function asPromise<T>(
     event: Event<T>,
+    predicate?: (value: T) => boolean,
     timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
 ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
@@ -809,27 +808,27 @@ export async function asPromise<T>(
             reject(new Error('asPromise TIMEOUT reached'));
         }, timeout);
         const sub = event((e) => {
-            clearTimeout(handle);
-            sub.dispose();
-            resolve(e);
+            if (!predicate || predicate(e)) {
+                clearTimeout(handle);
+                sub.dispose();
+                resolve(e);
+            }
         });
     });
 }
 
-export async function waitForEvent<T>(
+export async function waitForDebugEvent<T>(
     eventType: string,
     debugAdapter: KernelDebugAdapter,
     timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
 ): Promise<T> {
-    setTimeout(() => {
-        clearTimeout(timeout);
-        console.log(`Test failing --- Debugging Timeout: ${eventType} message took too long to arrive`);
-        return Promise.reject();
-    }, timeout);
-    while (true) {
-        const msg: any = await asPromise(debugAdapter.onDidSendMessage);
-        if (msg.event === eventType) {
-            return msg;
-        }
-    }
+    return await asPromise(
+        debugAdapter.onDidSendMessage,
+        (message) => (message as DebugProtocol.Event).event === eventType,
+        timeout
+    ) as T;
+}
+
+export async function waitForStoppedEvent(debugAdapter: KernelDebugAdapter): Promise<DebugProtocol.StoppedEvent> {
+    return await waitForDebugEvent('stopped', debugAdapter, 10_000);
 }

@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import * as sinon from 'sinon';
-import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandManager, IVSCodeNotebook } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
 import { Commands } from '../../client/datascience/constants';
 import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
-import { IExtensionTestApi } from '../common';
+import { IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST, IS_WEBVIEW_BUILD_SKIPPED } from '../initialize';
 import {
     canRunNotebookTests,
@@ -17,16 +16,16 @@ import {
     insertCodeCell,
     prewarmNotebooks,
     workAroundVSCodeNotebookStartPages,
-    waitForEvent,
-    getCellOutputs
+    getCellOutputs,
+    defaultNotebookTestTimeout,
+    waitForStoppedEvent
 } from './notebook/helper';
 import { verifyViewVariables } from './variableView/variableViewHelpers';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
 import { traceInfo } from '../../client/common/logger';
-import { sleep } from '../core';
 import { IDebuggingManager } from '../../client/debugger/types';
 import { assert } from 'chai';
-import { DebugSession } from 'vscode';
+import { debug } from 'vscode';
 import { OnMessageListener } from './vscodeTestHelpers';
 import { KernelDebugAdapter } from '../../client/debugger/jupyter/kernelDebugAdapter';
 import { ITestWebviewHost } from './testInterfaces';
@@ -43,7 +42,6 @@ suite('VSCode Notebook - Debugging', function () {
     suiteSetup(async function () {
         traceInfo(`Start Test Suite`);
         this.timeout(120_000);
-        api = await initialize();
 
         // We need to have webviews built to run this, so skip if we don't have them
         if (IS_WEBVIEW_BUILD_SKIPPED) {
@@ -55,9 +53,10 @@ suite('VSCode Notebook - Debugging', function () {
         if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
             return this.skip();
         }
+
+        api = await initialize();
         await workAroundVSCodeNotebookStartPages();
         await closeNotebooksAndCleanUpAfterTests(disposables);
-        await sleep(5_000);
         await prewarmNotebooks();
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -87,77 +86,84 @@ suite('VSCode Notebook - Debugging', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('Run by Line - Full Workflow (webview-test)', async function () {
-        // set up
         await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
-        const cell = doc.getCells()![0]!;
+        const cell = doc.getCells()[0];
 
-        // Start Run by Line
-        await commandManager.executeCommand(Commands.RunByLine, cell);
+        void commandManager.executeCommand(Commands.RunByLine, cell);
 
-        // Check that a debugging session is created
+        await waitForCondition(
+            async () => !!debuggingManager.getDebugSession(doc),
+            defaultNotebookTestTimeout,
+            'DebugSession should start'
+        );
         const session = debuggingManager.getDebugSession(doc);
-        assert.isOk<DebugSession | undefined>(session, 'Session not started');
 
-        // Check that the debug adapter is created
         const debugAdapter = debuggingManager.getDebugAdapter(doc);
         assert.isOk<KernelDebugAdapter | undefined>(debugAdapter, 'DebugAdapter not started');
 
-        // Wait for the stoped event
-        let msg = await waitForEvent<DebugProtocol.StoppedEvent>('stopped', debugAdapter!);
-
-        // Check that we're stopped on the cell
+        const stoppedEvent = await waitForStoppedEvent(debugAdapter!);
         const stack = await session!.customRequest('stackTrace', {
-            threadId: msg.body.threadId
+            threadId: stoppedEvent.body.threadId
         });
         assert.isTrue(stack.stackFrames.length > 0, 'has frames');
-        assert.equal(stack.stackFrames[0].source?.path!, cell.document.uri.toString(), 'Stopped at the worng path');
+        assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
 
-        // continue to the next line
-        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
-
-        // Wait for the stoped event
-        msg = await waitForEvent<DebugProtocol.StoppedEvent>('stopped', debugAdapter!);
-
-        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
         const coreVariableView = await variableViewProvider.activeVariableView;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const variableView = (coreVariableView as any) as ITestWebviewHost;
+        const variableView = coreVariableView as unknown as ITestWebviewHost;
         const onMessageListener = new OnMessageListener(variableView);
+
+        void commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        await waitForStoppedEvent(debugAdapter!);
         await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
 
         const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
         const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
         verifyViewVariables(expectedVariables, htmlResult);
 
-        // Stop run by line and check that the cell ran
-        await commandManager.executeCommand(Commands.RunByLineStop);
-        await sleep(1000);
+        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        await waitForCondition(
+            async () => !debug.activeDebugSession,
+            defaultNotebookTestTimeout,
+            'DebugSession should end'
+        );
+        await waitForCondition(
+            async () => !!cell.outputs.length,
+            defaultNotebookTestTimeout,
+            'Cell should have output'
+        );
         assert.isTrue(getCellOutputs(cell).includes('1'));
     });
 
     test('Run by Line - Interrupt', async function () {
-        // set up
         await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
-        const cell = doc.getCells()![0]!;
+        const cell = doc.getCells()[0];
 
-        // Start Run by Line
-        await commandManager.executeCommand(Commands.RunByLine, cell);
+        void commandManager.executeCommand(Commands.RunByLine, cell);
 
-        // Check that a debugging session is created
-        const session = debuggingManager.getDebugSession(doc);
-        assert.isOk<DebugSession | undefined>(session, 'Session not started');
+        await waitForCondition(
+            async () => !!debuggingManager.getDebugSession(doc),
+            defaultNotebookTestTimeout,
+            'DebugSession should start'
+        );
 
-        // Check that the debug adapter is created
         const debugAdapter = debuggingManager.getDebugAdapter(doc);
         assert.isOk<KernelDebugAdapter | undefined>(debugAdapter, 'DebugAdapter not started');
 
-        // Wait for the stoped event
-        await waitForEvent<DebugProtocol.StoppedEvent>('stopped', debugAdapter!);
+        await waitForStoppedEvent(debugAdapter!);
 
         // Interrupt kernel and check that the cell didn't finish running
         await commandManager.executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: doc.uri } });
-        assert.isTrue(getCellOutputs(cell).includes('KeyboardInterrupt'));
+        await waitForCondition(
+            async () => !debug.activeDebugSession,
+            defaultNotebookTestTimeout,
+            'DebugSession should end'
+        );
+        await waitForCondition(
+            async () => getCellOutputs(cell).includes('KeyboardInterrupt'),
+            defaultNotebookTestTimeout,
+            'Cell should have KeyboardInterrupt output'
+        );
     });
 });
