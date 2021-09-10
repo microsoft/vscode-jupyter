@@ -279,6 +279,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const controller = this.notebookControllerManager.getSelectedNotebookController(notebookDocument);
         if (controller !== undefined) {
             this.registerControllerChangeListener(controller, notebookDocument);
+            this.notebookController = controller;
             this._controllerReadyPromise.resolve(controller);
         }
 
