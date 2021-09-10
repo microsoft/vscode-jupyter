@@ -21,7 +21,8 @@ import {
     commands,
     TextEditorRevealType,
     ViewColumn,
-    NotebookEditor
+    NotebookEditor,
+    Disposable
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import {
@@ -112,6 +113,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     protected fileInKernel: string | undefined;
 
     private isDisposed = false;
+    private internalDisposables: Disposable[] = [];
     private _editorReadyPromise: Promise<NotebookEditor>;
     private _controllerReadyPromise: Deferred<VSCodeNotebookController>;
     private _kernelReadyPromise: Promise<IKernel> | undefined;
@@ -151,9 +153,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // Set up promise for kernel ready
         this._kernelReadyPromise = this.createKernelReadyPromise();
 
-        // Immediately start trying to connect to kernel
-        void this._kernelReadyPromise;
-
         workspace.onDidCloseNotebookDocument((notebookDocument) => {
             if (notebookDocument === this.notebookDocument) {
                 this.closedEvent.fire(this);
@@ -170,6 +169,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             resourceUri: this.owner
         });
         await kernel.start({ disableUI: false, document: editor.document });
+        this.internalDisposables.push(kernel);
         return kernel;
     }
 
@@ -258,9 +258,27 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
+    private registerControllerChangeListener(controller: VSCodeNotebookController, notebookDocument: NotebookDocument) {
+        const controllerChangeListener = controller.controller.onDidChangeSelectedNotebooks(
+            (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
+                // Controller was deselected for this InteractiveWindow's NotebookDocument
+                if (selectedEvent.selected === false && selectedEvent.notebook === notebookDocument) {
+                    this.notebookController = undefined;
+                    this._controllerReadyPromise = createDeferred<VSCodeNotebookController>();
+                    this._kernelReadyPromise = undefined;
+                    this.executionPromise = undefined;
+                    controllerChangeListener.dispose();
+                }
+            },
+            this,
+            this.internalDisposables
+        );
+    }
+
     private listenForControllerSelection(notebookDocument: NotebookDocument) {
         const controller = this.notebookControllerManager.getSelectedNotebookController(notebookDocument);
         if (controller !== undefined) {
+            this.registerControllerChangeListener(controller, notebookDocument);
             this._controllerReadyPromise.resolve(controller);
         }
 
@@ -272,23 +290,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 }
 
                 // Clear cached kernel when the selected controller for this document changes
-                const controllerChangeListener = (
-                    this.notebookController || e.controller
-                ).controller.onDidChangeSelectedNotebooks(
-                    (selectedEvent: { notebook: NotebookDocument; selected: boolean }) => {
-                        // Controller was deselected for this InteractiveWindow's NotebookDocument
-                        if (selectedEvent.selected === false && selectedEvent.notebook === notebookDocument) {
-                            this.notebookController = undefined;
-                            this._controllerReadyPromise = createDeferred<VSCodeNotebookController>();
-                            this._kernelReadyPromise = undefined;
-                            this.executionPromise = undefined;
-                            controllerChangeListener.dispose();
-                        }
-                    },
-                    this,
-                    this.disposables
-                );
-
+                this.registerControllerChangeListener(e.controller, notebookDocument);
                 this.notebookController = e.controller;
                 this._controllerReadyPromise.resolve(e.controller);
 
@@ -296,7 +298,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this._kernelReadyPromise = this.createKernelReadyPromise();
             },
             this,
-            this.disposables
+            this.internalDisposables
         );
     }
 
@@ -311,12 +313,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public dispose() {
-        if (this._kernelReadyPromise) {
-            this._kernelReadyPromise.then((k) => k.dispose());
-        }
-        if (this.closedEvent) {
-            this.closedEvent.fire(this);
-        }
+        this.internalDisposables.forEach((d) => d.dispose());
         this.isDisposed = true;
     }
 
