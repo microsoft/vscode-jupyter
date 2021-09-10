@@ -148,6 +148,7 @@ export class VSCodeNotebookController implements Disposable {
 
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         traceInfo(`Setting controller affinity for ${notebook.uri.toString()} ${this.id}`);
+        console.log('IANHU update notebook affinity');
         this.controller.updateNotebookAffinity(notebook, affinity);
         // Only when running tests should we force the selection of the kernel.
         // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
@@ -412,12 +413,14 @@ export class VSCodeNotebookController implements Disposable {
      * users need to select a kernel (preferred is on top of the list).
      */
     private async setAsActiveControllerForTests(notebook: NotebookDocument) {
+        console.log('IANHU set as active controller');
         // Only when running tests should we force the selection of the kernel.
         // Else the general VS Code behavior is for the user to select a kernel (here we make it look as though use selected it).
         if (this.context.extensionMode !== ExtensionMode.Test || notebook.notebookType !== JupyterNotebookView) {
             return;
         }
         traceInfoIf(isCI, `Command notebook.selectKernel executing for ${notebook.uri.toString()} ${this.id}`);
+        console.log('IANHU set as active controller command executed');
         await this.commandManager.executeCommand('notebook.selectKernel', {
             id: this.id,
             extension: JVSC_EXTENSION_ID
