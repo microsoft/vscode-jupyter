@@ -538,9 +538,9 @@ export async function waitForExecutionCompletedSuccessfully(
             async () => assertHasExecutionCompletedSuccessfully(cell),
             timeout,
             () =>
-                `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(
+                `IANHU Cell ${cell.index + 1} did not complete successfully ${JSON.stringify(
                     cell
-                )}`
+                )}, State = ${NotebookCellStateTracker.getCellState(cell)}`
         ),
         waitForCellExecutionToComplete(cell)
     ]);
@@ -738,7 +738,9 @@ export async function runCell(cell: NotebookCell) {
 export async function runAllCellsInActiveNotebook() {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    console.log('IANHU aaa');
     await waitForKernelToGetAutoSelected(undefined, 60_000);
+    console.log('IANHU aab');
 
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
         throw new Error('No editor or document');
