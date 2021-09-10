@@ -219,7 +219,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     }
 
     private onInteractiveWindowClosed = (interactiveWindow: IInteractiveWindow) => {
-        traceInfo(`Closing interactive window: ${interactiveWindow.title}`);
+        traceInfo(`Closing interactive window: ${interactiveWindow.notebookUri?.toString()}`);
+        interactiveWindow.dispose();
         this._windows = this._windows.filter((w) => w !== interactiveWindow);
         if (this.lastActiveInteractiveWindow === interactiveWindow) {
             this.lastActiveInteractiveWindow = this._windows[0];
