@@ -448,7 +448,7 @@ export async function prewarmNotebooks() {
         await waitForKernelToGetAutoSelected();
         console.log('IANHU ac');
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
-        await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
+        await Promise.all([waitForExecutionCompletedSuccessfully(cell, 240_000), runAllCellsInActiveNotebook()]);
         console.log('IANHU ad');
         // Wait for Jupyter to start.
         await closeActiveWindows();
