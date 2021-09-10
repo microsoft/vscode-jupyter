@@ -88,9 +88,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         if (!result) {
             // No match. Create a new item.
             result = this.create(resource, mode);
-            await result.readyPromise;
         }
 
+        await result.readyPromise;
         return result;
     }
 
