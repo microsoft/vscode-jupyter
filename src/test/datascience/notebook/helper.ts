@@ -42,7 +42,7 @@ import { LastSavedNotebookCellLanguage } from '../../../client/datascience/noteb
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { CellOutputMimeTypes, INotebookControllerManager } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
-import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
+import { captureScreenShot, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
@@ -447,7 +447,9 @@ export async function prewarmNotebooks() {
         console.log('IANHU ab');
         await waitForKernelToGetAutoSelected();
         console.log('IANHU ac');
+        await captureScreenShot('before execute');
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
+        await captureScreenShot('after execute');
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 240_000), runAllCellsInActiveNotebook()]);
         console.log('IANHU ad');
         // Wait for Jupyter to start.
