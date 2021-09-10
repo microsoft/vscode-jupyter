@@ -110,7 +110,7 @@ suite('VSCode Notebook - Debugging', function () {
         assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
 
         const coreVariableView = await variableViewProvider.activeVariableView;
-        const variableView = coreVariableView as unknown as ITestWebviewHost;
+        const variableView = (coreVariableView as unknown) as ITestWebviewHost;
         const onMessageListener = new OnMessageListener(variableView);
 
         void commandManager.executeCommand(Commands.RunByLineContinue, cell);

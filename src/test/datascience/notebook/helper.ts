@@ -170,7 +170,8 @@ export async function canRunNotebookTests() {
         !process.env.VSC_JUPYTER_RUN_NB_TEST
     ) {
         console.log(
-            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${process.env.VSC_JUPYTER_RUN_NB_TEST
+            `Can't run native nb tests isInsiders() = ${isInsiders()}, process.env.VSC_JUPYTER_RUN_NB_TEST = ${
+                process.env.VSC_JUPYTER_RUN_NB_TEST
             }`
         );
         return false;
@@ -587,7 +588,8 @@ export async function waitForQueuedForExecutionOrExecuting(
         },
         timeout,
         () =>
-            `Cell ${cell.index + 1
+            `Cell ${
+                cell.index + 1
             } not queued for execution nor already executing, current state is ${NotebookCellStateTracker.getCellState(
                 cell
             )}`
@@ -601,7 +603,8 @@ export async function waitForEmptyCellExecutionCompleted(
         async () => assertHasEmptyCellExecutionCompleted(cell),
         timeout,
         () =>
-            `Cell ${cell.index + 1
+            `Cell ${
+                cell.index + 1
             } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
     await waitForCellExecutionToComplete(cell);
