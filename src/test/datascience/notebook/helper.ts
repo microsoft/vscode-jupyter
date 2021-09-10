@@ -308,6 +308,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
                 .registeredNotebookControllers()
                 .find((item) => item.isAssociatedWithDocument(doc));
             if (controller) {
+                console.log(`IANHU ${controller.id}`);
                 selectedController = controller;
             }
             return controller !== undefined;
@@ -431,7 +432,7 @@ export async function workAroundVSCodeNotebookStartPages() {
 }
 
 export async function prewarmNotebooks() {
-    const { editorProvider, vscodeNotebook, serviceContainer } = await getServices();
+    const { editorProvider, vscodeNotebook, serviceContainer, notebookControllerManager } = await getServices();
     await closeActiveWindows();
 
     const disposables: IDisposable[] = [];
@@ -446,6 +447,11 @@ export async function prewarmNotebooks() {
         await insertCodeCell('print("Hello World1")', { index: 0 });
         console.log('IANHU ab');
         await waitForKernelToGetAutoSelected();
+        console.log(
+            `IANHU selected controller: ${notebookControllerManager.getSelectedNotebookController(
+                vscodeNotebook.activeNotebookEditor!.document
+            )} Registered Count: ${notebookControllerManager.registeredNotebookControllers().length}`
+        );
         console.log('IANHU ac');
         await captureScreenShot('before execute');
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
