@@ -25,7 +25,6 @@ import { IServiceContainer } from '../../../ioc/types';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
 import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
 import { getActiveInteractiveWindow } from '../../notebook/helpers/helpers';
@@ -140,16 +139,10 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
         // https://github.com/microsoft/vscode-jupyter/issues/6135
         const options = resource ? [installPrompt, selectKernel] : [installPrompt];
-        // In the case of interactive window, due to the current code flow we get this code executed twice,
-        // hence we get two messages about ipykernel not being installed.
-        // THat's a very poor ux, one could end up with two modal dialog boxes (one after the other for interactive).
-        // hence disabling modal dialog for interactive window for now.
-        // Again to be resolved in https://github.com/microsoft/vscode-jupyter/issues/6135
-        const modal = getResourceType(resource) === 'notebook';
         const selection = this.isCodeSpace
             ? installPrompt
             : await Promise.race([
-                  this.appShell.showErrorMessage(message, { modal }, ...options),
+                  this.appShell.showErrorMessage(message, { modal: true }, ...options),
                   promptCancellationPromise
               ]);
         if (installerToken.isCancellationRequested) {
