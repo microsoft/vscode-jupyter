@@ -822,13 +822,13 @@ export async function waitForDebugEvent<T>(
     debugAdapter: KernelDebugAdapter,
     timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
 ): Promise<T> {
-    return await asPromise(
+    return asPromise(
         debugAdapter.onDidSendMessage,
         (message) => (message as DebugProtocol.Event).event === eventType,
         timeout
-    ) as T;
+    ) as Promise<T>;
 }
 
 export async function waitForStoppedEvent(debugAdapter: KernelDebugAdapter): Promise<DebugProtocol.StoppedEvent> {
-    return await waitForDebugEvent('stopped', debugAdapter, 10_000);
+    return waitForDebugEvent('stopped', debugAdapter, 10_000);
 }
