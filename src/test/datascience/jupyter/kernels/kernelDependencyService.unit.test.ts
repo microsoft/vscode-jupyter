@@ -10,6 +10,7 @@ import { IApplicationShell, ICommandManager } from '../../../../client/common/ap
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 
@@ -21,12 +22,14 @@ suite('DataScience - Kernel Dependency Service', () => {
     let appShell: IApplicationShell;
     let cmdManager: ICommandManager;
     let installer: IInstaller;
+    let serviceContainer: IServiceContainer;
     let memento: Memento;
     const interpreter = createPythonInterpreter({ displayName: 'name', envType: EnvironmentType.Conda, path: 'abc' });
     setup(() => {
         appShell = mock<IApplicationShell>();
         installer = mock<IInstaller>();
         cmdManager = mock<ICommandManager>();
+        serviceContainer = mock<IServiceContainer>();
         memento = mock<Memento>();
         when(memento.get(anything(), anything())).thenReturn(false);
         dependencyService = new KernelDependencyService(
@@ -34,7 +37,8 @@ suite('DataScience - Kernel Dependency Service', () => {
             instance(installer),
             instance(memento),
             false,
-            instance(cmdManager)
+            instance(cmdManager),
+            instance(serviceContainer)
         );
     });
     [undefined, Uri.file('test.py'), Uri.file('test.ipynb')].forEach((resource) => {
