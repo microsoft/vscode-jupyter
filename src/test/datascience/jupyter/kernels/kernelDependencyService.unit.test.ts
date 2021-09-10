@@ -10,6 +10,7 @@ import { IApplicationShell, ICommandManager } from '../../../../client/common/ap
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { IInteractiveWindowProvider } from '../../../../client/datascience/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { createPythonInterpreter } from '../../../utils/interpreters';
@@ -126,6 +127,7 @@ suite('DataScience - Kernel Dependency Service', () => {
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
             DataScience.selectKernel() as any
         );
+        when(serviceContainer.get(IInteractiveWindowProvider)).thenReturn(mock(IInteractiveWindowProvider));
 
         const promise = dependencyService.installMissingDependencies(Uri.file('test.ipynb'), interpreter);
 
