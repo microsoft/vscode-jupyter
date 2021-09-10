@@ -43,9 +43,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IServiceContainer) protected serviceContainer: IServiceContainer
-    ) // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
-    {}
+        @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
+    ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
@@ -94,7 +93,9 @@ export class KernelDependencyService implements IKernelDependencyService {
                 this.serviceContainer.get(IInteractiveWindowProvider)
             )?.notebookEditor;
             if (targetNotebookEditor) {
-                this.commandManager.executeCommand('notebook.selectKernel', { notebookEditor: targetNotebookEditor });
+                this.commandManager
+                    .executeCommand('notebook.selectKernel', { notebookEditor: targetNotebookEditor })
+                    .then(noop, noop);
             } else {
                 this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
             }
