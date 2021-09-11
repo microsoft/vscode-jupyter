@@ -242,6 +242,28 @@ for i in range(10):
         );
     });
 
+    test('Leading and trailing empty lines in #%% cell are trimmed', async () => {
+        const actualCode = `    print('foo')
+
+
+
+    print('bar')`;
+        const codeWithWhitespace = `    # %%
+
+
+
+${actualCode}
+
+
+
+
+`;
+        const { activeInteractiveWindow: interactiveWindow } = await submitFromPythonFile(codeWithWhitespace);
+        const lastCell = await waitForLastCellToComplete(interactiveWindow);
+        const actualCellText = lastCell.document.getText();
+        assert.equal(actualCellText, actualCode);
+    });
+
     // todo@joyceerhl
     // test('Verify CWD', () => { });
     // test('Multiple executes go to last active window', async () => { });

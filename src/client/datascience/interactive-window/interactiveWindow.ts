@@ -59,7 +59,7 @@ import {
     WebViewViewChangeEventArgs
 } from '../types';
 import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
-import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
+import { generateMarkdownFromCodeLines, removeLinesFromFrontAndBack } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
 import { INativeInteractiveWindow } from './types';
@@ -627,7 +627,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const isMarkdown = cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
         const strippedCode = isMarkdown
             ? generateMarkdownFromCodeLines(code.splitLines()).join('')
-            : cellMatcher.stripFirstMarker(code).trim();
+            : removeLinesFromFrontAndBack(cellMatcher.stripFirstMarker(code));
         const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
 
         // Insert cell into NotebookDocument
