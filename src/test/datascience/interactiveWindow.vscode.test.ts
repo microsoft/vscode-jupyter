@@ -264,6 +264,18 @@ ${actualCode}
         assert.equal(actualCellText, actualCode);
     });
 
+    test('jupyter.magicCommandsAsComments', async () => {
+        const settings = vscode.workspace.getConfiguration('jupyter', null);
+        await settings.update('magicCommandsAsComments', true);
+        const code = `# %%
+#!%%time
+print('hi')`;
+        const { activeInteractiveWindow } = await submitFromPythonFile(code);
+        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow);
+        assertHasTextOutputInVSCode(lastCell, 'Wall time:', undefined, false);
+        assertHasTextOutputInVSCode(lastCell, 'hi', undefined, false);
+    });
+
     // todo@joyceerhl
     // test('Verify CWD', () => { });
     // test('Multiple executes go to last active window', async () => { });
