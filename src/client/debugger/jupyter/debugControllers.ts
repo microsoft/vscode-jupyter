@@ -13,7 +13,7 @@ import { Commands } from '../../datascience/constants';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../constants';
-import { DebuggingDelegate, IKernelDebugAdapter } from '../types';
+import { DebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../types';
 
 export class DebugCellController implements DebuggingDelegate {
     constructor(
@@ -65,6 +65,11 @@ export class RunByLineController implements DebuggingDelegate {
 
     public stop(): void {
         this.debugAdapter.disconnect();
+    }
+
+    public getMode(): KernelDebugMode {
+        const config = this.debugAdapter.getConfiguration();
+        return config.__mode;
     }
 
     public async willSendEvent(msg: DebugProtocolMessage): Promise<boolean> {

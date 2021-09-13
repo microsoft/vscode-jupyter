@@ -16,10 +16,10 @@ import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { getActiveInteractiveWindow } from '../interactive-window/helpers';
 import { IKernelProvider } from '../jupyter/kernels/types';
+import { isJupyterNotebook } from '../notebook/helpers/helpers';
 import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
 import { IInteractiveWindowProvider, INotebook, INotebookEditor, INotebookEditorProvider } from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
-import { isJupyterNotebook } from '../notebook/helpers/helpers';
 
 interface IExecutionCountEntry {
     uri: Uri;

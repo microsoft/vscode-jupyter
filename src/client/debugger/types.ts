@@ -1,25 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { DebugProtocolMessage, DebugSession, Event, NotebookDocument } from 'vscode';
+import { DebugConfiguration, DebugProtocolMessage, DebugSession, Event, NotebookCell, NotebookDocument } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
-export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
-
 export interface IKernelDebugAdapter {
-    debugSession: DebugSession;
     stepIn(threadId: number): Thenable<DebugProtocol.StepInResponse['body']>;
     stackTrace(args: DebugProtocol.StackTraceArguments): Thenable<DebugProtocol.StackTraceResponse['body']>;
     setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Thenable<DebugProtocol.SetBreakpointsResponse['body']>;
     disconnect(): void;
     onDidEndSession: Event<DebugSession>;
     dumpCell(index: number): Promise<void>;
+    getConfiguration(): IKernelDebugAdapterConfig;
 }
 
 export const IDebuggingManager = Symbol('IDebuggingManager');
 export interface IDebuggingManager {
-    readonly onDidFireVariablesEvent: Event<void>;
     isDebugging(notebook: NotebookDocument): boolean;
+    getDebugMode(notebook: NotebookDocument): KernelDebugMode | undefined;
+    getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined;
+    getDebugCell(notebook: NotebookDocument): NotebookCell | undefined;
 }
 
 export interface DebuggingDelegate {
@@ -32,4 +32,34 @@ export interface DebuggingDelegate {
      * Called for every request sent from the client to the debug adapter.
      */
     willSendRequest(request: DebugProtocol.Request): Promise<void>;
+}
+
+export interface dumpCellResponse {
+    sourcePath: string; // filename for the dumped source
+}
+
+export interface debugInfoResponse {
+    isStarted: boolean; // whether the debugger is started,
+    hashMethod: string; // the hash method for code cell. Default is 'Murmur2',
+    hashSeed: string; // the seed for the hashing of code cells,
+    tmpFilePrefix: string; // prefix for temporary file names
+    tmpFileSuffix: string; // suffix for temporary file names
+    breakpoints: debugInfoResponseBreakpoint[]; // breakpoints currently registered in the debugger.
+    stoppedThreads: number[]; // threads in which the debugger is currently in a stopped state
+}
+
+export interface debugInfoResponseBreakpoint {
+    source: string; // source file
+    breakpoints: DebugProtocol.SourceBreakpoint[]; // list of breakpoints for that source file
+}
+
+export enum KernelDebugMode {
+    RunByLine,
+    Cell,
+    Everything
+}
+
+export interface IKernelDebugAdapterConfig extends DebugConfiguration {
+    __mode: KernelDebugMode;
+    __cellIndex?: number;
 }

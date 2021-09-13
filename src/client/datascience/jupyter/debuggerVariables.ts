@@ -9,7 +9,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
-import { IDebuggingManager } from '../../debugger/types';
+import { IDebuggingManager, KernelDebugMode } from '../../debugger/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DataFrameLoading, GetVariableInfo, Identifiers, Telemetry } from '../constants';
 import { DebugLocationTracker } from '../debugLocationTracker';
@@ -236,6 +236,32 @@ export class DebuggerVariables extends DebugLocationTracker
         // When the initialize response comes back, indicate we have started.
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
+        } else if (
+            (message as DebugProtocol.StackTraceResponse).command === 'stackTrace' &&
+            this.activeNotebookIsDebugging()
+        ) {
+            const sf = (message as DebugProtocol.StackTraceResponse).body.stackFrames[0];
+            const callScopes = async () => {
+                const doc = this.vscNotebook.activeNotebookEditor?.document;
+                if (doc) {
+                    const session = await this.debuggingManager.getDebugSession(doc);
+                    const mode = this.debuggingManager.getDebugMode(doc);
+                    if (mode === KernelDebugMode.RunByLine) {
+                        const cell = this.debuggingManager.getDebugCell(doc);
+                        // Only call scopes (and variables) if we are stopped on the cell we are executing
+                        if (sf.source && cell && sf.source.path === cell.document.uri.toString()) {
+                            void session?.customRequest('scopes', { frameId: sf.id });
+                        }
+                    } else {
+                        // Only call scopes (and variables) if we are stopped on the notebook we are executing
+                        const docURI = path.basename(doc.uri.toString());
+                        if (sf.source && sf.source.path && sf.source.path.includes(docURI)) {
+                            void session?.customRequest('scopes', { frameId: sf.id });
+                        }
+                    }
+                }
+            };
+            void callScopes();
         } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
             const response = message as DebugProtocol.ScopesResponse;
 
@@ -244,6 +270,16 @@ export class DebuggerVariables extends DebugLocationTracker
             if (newVariablesReference !== this.currentVariablesReference) {
                 this.currentVariablesReference = newVariablesReference;
                 this.currentSeqNumsForVariables.clear();
+            }
+
+            // Catch the scopes response and use its variablesReference to send a variables message
+            const doc = this.vscNotebook.activeNotebookEditor?.document;
+            if (this.activeNotebookIsDebugging() && doc) {
+                const callVariables = async () => {
+                    const session = await this.debuggingManager.getDebugSession(doc);
+                    void session?.customRequest('variables', { variablesReference: newVariablesReference });
+                };
+                void callVariables();
             }
         } else if (
             message.type === 'response' &&
@@ -264,6 +300,10 @@ export class DebuggerVariables extends DebugLocationTracker
 
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
             this.monkeyPatchDataViewableVariables(message);
+
+            if (this.activeNotebookIsDebugging()) {
+                this.refreshEventEmitter.fire();
+            }
         } else if (message.type === 'event' && message.event === 'terminated') {
             // When the debugger exits, make sure the variables are cleared
             this.lastKnownVariables = [];
