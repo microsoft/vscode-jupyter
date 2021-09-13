@@ -21,12 +21,14 @@ import {
 } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
+import { IServiceContainer } from '../../../ioc/types';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
-import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
+import { getActiveInteractiveWindow } from '../../notebook/helpers/helpers';
+import { IInteractiveWindowProvider, IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -40,7 +42,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
@@ -86,7 +89,16 @@ export class KernelDependencyService implements IKernelDependencyService {
             return;
         }
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
-            this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
+            const targetNotebookEditor = getActiveInteractiveWindow(
+                this.serviceContainer.get(IInteractiveWindowProvider)
+            )?.notebookEditor;
+            if (targetNotebookEditor) {
+                this.commandManager
+                    .executeCommand('notebook.selectKernel', { notebookEditor: targetNotebookEditor })
+                    .then(noop, noop);
+            } else {
+                this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
+            }
         }
         throw new IpyKernelNotInstalledError(
             DataScience.ipykernelNotInstalled().format(

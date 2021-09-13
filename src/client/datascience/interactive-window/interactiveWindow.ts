@@ -103,6 +103,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get notebookUri(): Uri | undefined {
         return this.notebookDocument?.uri;
     }
+    public get notebookEditor(): NotebookEditor | undefined {
+        return this._notebookEditor;
+    }
     public notebookController: VSCodeNotebookController | undefined;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
@@ -121,6 +124,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _kernelReadyPromise: Promise<IKernel> | undefined;
     private notebookDocument: NotebookDocument | undefined;
     private executionPromise: Promise<boolean> | undefined;
+    private _notebookEditor: NotebookEditor | undefined;
 
     constructor(
         private readonly applicationShell: IApplicationShell,
@@ -195,6 +199,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // This should never happen.
             throw new Error('Failed to request creation of interactive window from VS Code.');
         }
+        this._notebookEditor = notebookEditor;
         this.notebookDocument = notebookEditor.document;
         this.listenForControllerSelection(notebookEditor.document);
         this.initializeRendererCommunication();

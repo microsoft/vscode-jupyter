@@ -3,7 +3,16 @@
 
 'use strict';
 
-import { CancellationToken, NotebookCell, NotebookDocument, Position, TextDocument, Uri, ViewColumn } from 'vscode';
+import {
+    CancellationToken,
+    NotebookCell,
+    NotebookDocument,
+    NotebookEditor,
+    Position,
+    TextDocument,
+    Uri,
+    ViewColumn
+} from 'vscode';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IShowDataViewerFromVariablePanel } from '../../datascience/interactive-common/interactiveWindowTypes';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -90,7 +99,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
-    ['notebook.selectKernel']: [{ id: string; extension: string }] | [];
+    ['notebook.selectKernel']: [{ id?: string; extension?: string; notebookEditor?: NotebookEditor }] | [];
     ['undo']: [];
     ['interactive.open']: [
         { preserveFocus?: boolean; viewColumn?: ViewColumn },
