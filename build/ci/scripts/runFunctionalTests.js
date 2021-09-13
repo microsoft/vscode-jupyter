@@ -89,7 +89,7 @@ async function runIndividualTest(extraArgs, file, index) {
     if (exitCode !== 0) {
         console.log(`Functional tests for ${file} failed with exit code ${exitCode}.`);
     } else {
-        console.log(`Functional test for ${file} succeeded exit code ${exitCode}`);
+        console.log(`Functional test for ${file} succeeded with exit code ${exitCode}`);
     }
 
     return exitCode;
