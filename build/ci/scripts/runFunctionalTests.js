@@ -143,7 +143,7 @@ async function main() {
         } else {
             // Parallel, all at once
             const returnCodes = await Promise.all(files.map(runIndividualTest.bind(undefined, extraArgs)));
-
+            console.log(`Functional test run exit codes: ${JSON.stringify(returnCodes)}`);
             // if there any exit code > 0, get that one.
             returnCode = Math.max(...returnCodes);
         }
