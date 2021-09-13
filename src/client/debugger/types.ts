@@ -4,10 +4,7 @@
 import { DebugConfiguration, DebugProtocolMessage, DebugSession, Event, NotebookCell, NotebookDocument } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
-export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
-
 export interface IKernelDebugAdapter {
-    debugSession: DebugSession;
     stepIn(threadId: number): Thenable<DebugProtocol.StepInResponse['body']>;
     stackTrace(args: DebugProtocol.StackTraceArguments): Thenable<DebugProtocol.StackTraceResponse['body']>;
     setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Thenable<DebugProtocol.SetBreakpointsResponse['body']>;

@@ -161,10 +161,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         this.sendRequestToJupyterSession(message);
     }
 
-    public get debugSession(): DebugSession {
-        return this.session;
-    }
-
     public getConfiguration(): IKernelDebugAdapterConfig {
         return this.configuration;
     }
@@ -262,7 +258,24 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             });
 
             if (control) {
-                control.onReply = (msg) => this.controlCallback(msg.content as DebugProtocol.ProtocolMessage);
+                control.onReply = (msg) => {
+                    const message = msg.content as DebugProtocol.ProtocolMessage;
+                    getMessageSourceAndHookIt(message, (source) => {
+                        if (source && source.path) {
+                            const cell = this.fileToCell.get(source.path);
+                            if (cell) {
+                                source.name = path.basename(cell.document.uri.path);
+                                if (cell.index >= 0) {
+                                    source.name += `, Cell ${cell.index + 1}`;
+                                }
+                                source.path = cell.document.uri.toString();
+                            }
+                        }
+                    });
+
+                    this.trace('response', JSON.stringify(message));
+                    this.sendMessage.fire(message);
+                };
             }
         } else if (message.type === 'response') {
             // responses of reverse requests
@@ -276,23 +289,5 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             // cannot send via iopub, no way to handle events even if they existed
             traceError(`Unknown message type to send ${message.type}`);
         }
-    }
-
-    private controlCallback(message: DebugProtocol.ProtocolMessage): void {
-        getMessageSourceAndHookIt(message as DebugProtocol.ProtocolMessage, (source) => {
-            if (source && source.path) {
-                const cell = this.fileToCell.get(source.path);
-                if (cell) {
-                    source.name = path.basename(cell.document.uri.path);
-                    if (cell.index >= 0) {
-                        source.name += `, Cell ${cell.index + 1}`;
-                    }
-                    source.path = cell.document.uri.toString();
-                }
-            }
-        });
-
-        this.trace('response', JSON.stringify(message));
-        this.sendMessage.fire(message);
     }
 }
