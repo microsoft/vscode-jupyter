@@ -20,7 +20,7 @@ import {
     canRunNotebookTests
 } from '../notebook/helper';
 
-suite('IANHU VSCode Notebook PlotViewer integration - VSCode Notebook', function () {
+suite('VSCode Notebook PlotViewer integration - VSCode Notebook', function () {
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
     const disposables: IDisposable[] = [];
