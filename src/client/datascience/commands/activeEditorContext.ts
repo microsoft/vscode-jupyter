@@ -159,7 +159,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.canInterruptNotebookKernelContext.set(false).ignoreErrors();
         }
     }
-    private async updateContextOfActiveInteractiveWindowKernel() {
+    private updateContextOfActiveInteractiveWindowKernel() {
         const interactiveWindow = getActiveInteractiveWindow(this.interactiveProvider);
         if (interactiveWindow?.notebookUri) {
             this.notebookProvider
