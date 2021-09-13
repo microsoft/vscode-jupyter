@@ -9,6 +9,7 @@ import { IDebugService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
+import { IKernel } from '../../../client/datascience/jupyter/kernels/types';
 import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import { ICellHashListener, IFileHashes } from '../../../client/datascience/types';
 import { MockDocument } from '../mockDocument';
@@ -30,12 +31,14 @@ suite('CellHashProvider Unit Tests', () => {
     let pythonSettings: TypeMoq.IMock<IWatchableJupyterSettings>;
     let debugService: TypeMoq.IMock<IDebugService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let kernel: TypeMoq.IMock<IKernel>;
     const hashListener: HashListener = new HashListener();
     setup(() => {
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         pythonSettings = TypeMoq.Mock.ofType<IWatchableJupyterSettings>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        kernel = TypeMoq.Mock.ofType<IKernel>();
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
         fileSystem
@@ -47,7 +50,8 @@ suite('CellHashProvider Unit Tests', () => {
             configurationService.object,
             debugService.object,
             fileSystem.object,
-            [hashListener]
+            [hashListener],
+            kernel.object
         );
     });
 
