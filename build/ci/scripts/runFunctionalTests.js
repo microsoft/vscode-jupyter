@@ -124,8 +124,8 @@ async function main() {
         groupIndex >= 0 && process.argv.length > 3
             ? process.argv.slice(3)
             : process.argv.length > 2
-            ? process.argv.slice(2)
-            : [];
+                ? process.argv.slice(2)
+                : [];
 
     // Iterate over them, running mocha on each
     var returnCode = 0;
@@ -144,8 +144,8 @@ async function main() {
             // Parallel, all at once
             const returnCodes = await Promise.all(files.map(runIndividualTest.bind(undefined, extraArgs)));
 
-            // Or all of the codes together
-            returnCode = returnCodes.reduce((p, c) => p | c);
+            // if there any exit code > 0, get that one.
+            returnCode = Math.max(...returnCodes);
         }
     } catch (ex) {
         console.log(`Functional tests run failure: ${ex}.`);
