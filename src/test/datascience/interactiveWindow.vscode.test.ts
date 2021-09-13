@@ -12,7 +12,11 @@ import { InteractiveWindowProvider } from '../../client/datascience/interactive-
 import { IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../common';
 import { closeActiveWindows, initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
-import { assertHasTextOutputInVSCode, waitForExecutionCompletedSuccessfully } from './notebook/helper';
+import {
+    assertHasTextOutputInVSCode,
+    assertNotHasTextOutputInVSCode,
+    waitForExecutionCompletedSuccessfully
+} from './notebook/helper';
 
 suite('Interactive window', async () => {
     let api: IExtensionTestApi;
@@ -264,16 +268,30 @@ ${actualCode}
         assert.equal(actualCellText, actualCode);
     });
 
-    test('jupyter.magicCommandsAsComments', async () => {
+    async function runMagicCommandsTest(settingValue: boolean) {
         const settings = vscode.workspace.getConfiguration('jupyter', null);
-        await settings.update('magicCommandsAsComments', true);
+        await settings.update('magicCommandsAsComments', settingValue);
         const code = `# %%
 #!%%time
 print('hi')`;
         const { activeInteractiveWindow } = await submitFromPythonFile(code);
         const lastCell = await waitForLastCellToComplete(activeInteractiveWindow);
-        assertHasTextOutputInVSCode(lastCell, 'Wall time:', undefined, false);
         assertHasTextOutputInVSCode(lastCell, 'hi', undefined, false);
+        return lastCell;
+    }
+
+    test('jupyter.magicCommandsAsComments: `true`', async () => {
+        const lastCell = await runMagicCommandsTest(true);
+        assertHasTextOutputInVSCode(lastCell, 'Wall time:', undefined, false);
+    });
+
+    test('jupyter.magicCommandsAsComments: `false`', async () => {
+        const lastCell = await runMagicCommandsTest(false);
+
+        // Magic should have remained commented
+        for (let outputIndex = 0; outputIndex < lastCell.outputs.length; outputIndex++) {
+            assertNotHasTextOutputInVSCode(lastCell, 'Wall time:', outputIndex, false);
+        }
     });
 
     // todo@joyceerhl
