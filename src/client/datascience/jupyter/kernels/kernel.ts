@@ -234,7 +234,7 @@ export class Kernel implements IKernel {
                 const stopWatch = new StopWatch();
                 try {
                     try {
-                        await this.populateStartKernelInfoForInteractive(
+                        const placeholderCell = await this.populateStartKernelInfoForInteractive(
                             options.document,
                             this.kernelConnectionMetadata
                         );
@@ -253,11 +253,11 @@ export class Kernel implements IKernel {
                             // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
                             throw new Error('Kernel has not been started');
                         }
+                        await this.initializeAfterStart(SysInfoReason.Start, options.document, placeholderCell);
                     } catch (ex) {
                         traceError(`failed to create INotebook in kernel, UI Disabled = ${options.disableUI}`, ex);
                         throw ex;
                     }
-                    await this.initializeAfterStart(SysInfoReason.Start, options.document);
                     sendKernelTelemetryEvent(
                         this.resourceUri,
                         Telemetry.PerceivedJupyterStartupNotebook,
@@ -322,10 +322,16 @@ export class Kernel implements IKernel {
                     [markdownCell]
                 );
             });
+            // This should be the cell we just inserted into the document
+            return notebookDocument.cellAt(notebookDocument.cellCount - 1);
         }
     }
 
-    private async initializeAfterStart(reason: SysInfoReason, notebookDocument: NotebookDocument) {
+    private async initializeAfterStart(
+        reason: SysInfoReason,
+        notebookDocument: NotebookDocument,
+        placeholderCell?: NotebookCell
+    ) {
         traceInfoIf(isCI, 'Step A');
         if (!this.notebook) {
             return;
@@ -381,7 +387,7 @@ export class Kernel implements IKernel {
             .then(async (item) => {
                 this._info = item.content;
                 traceInfoIf(isCI, 'Step N1');
-                await this.addSysInfoForInteractive(reason, notebookDocument, item);
+                await this.addSysInfoForInteractive(reason, notebookDocument, item, placeholderCell);
                 traceInfoIf(isCI, 'Step N2');
             })
             .catch(traceWarning.bind('Failed to request KernelInfo'));
@@ -401,11 +407,13 @@ export class Kernel implements IKernel {
      * @param reason The reason for kernel state change
      * @param notebookDocument The document to add a sys info Markdown cell to
      * @param info The kernel info to include in the sys info message
+     * @param placeholderCell The target sys info cell to overwrite, if any
      */
     private async addSysInfoForInteractive(
         reason: SysInfoReason,
         notebookDocument: NotebookDocument,
-        info: KernelMessage.IInfoReplyMsg
+        info: KernelMessage.IInfoReplyMsg,
+        placeholderCell?: NotebookCell
     ) {
         if (notebookDocument.notebookType !== InteractiveWindowView || this.notebook === undefined) {
             return;
@@ -428,24 +436,26 @@ export class Kernel implements IKernel {
             }
 
             return chainWithPendingUpdates(notebookDocument, (edit) => {
-                // Overwrite the most recent placeholder cell
+                // Overwrite the given placeholder cell if any, or the most recent placeholder cell
                 if (notebookDocument.cellCount > 0) {
-                    const cell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
-                    if (
-                        cell.kind === NotebookCellKind.Markup &&
-                        cell.metadata.isInteractiveWindowMessageCell &&
-                        cell.metadata.isPlaceholder
-                    ) {
-                        edit.replace(
-                            cell.document.uri,
-                            new Range(0, 0, cell.document.lineCount, 0),
-                            sysInfoMessages.join('  \n')
-                        );
-                        edit.replaceNotebookCellMetadata(notebookDocument.uri, cell.index, {
-                            isInteractiveWindowMessageCell: true,
-                            isPlaceholder: false
-                        });
-                        return;
+                    const cell = placeholderCell ?? notebookDocument.cellAt(notebookDocument.cellCount - 1);
+                    if (cell !== undefined && cell.index >= 0) {
+                        if (
+                            cell.kind === NotebookCellKind.Markup &&
+                            cell.metadata.isInteractiveWindowMessageCell &&
+                            cell.metadata.isPlaceholder
+                        ) {
+                            edit.replace(
+                                cell.document.uri,
+                                new Range(0, 0, cell.document.lineCount, 0),
+                                sysInfoMessages.join('  \n')
+                            );
+                            edit.replaceNotebookCellMetadata(notebookDocument.uri, cell.index, {
+                                isInteractiveWindowMessageCell: true,
+                                isPlaceholder: false
+                            });
+                            return;
+                        }
                     }
                 }
 
