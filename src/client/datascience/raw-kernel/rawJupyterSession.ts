@@ -5,6 +5,7 @@ import type { Kernel } from '@jupyterlab/services';
 import type { Slot } from '@phosphor/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError } from '../../common/cancellation';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import { WrappedError } from '../../common/errors/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
@@ -234,8 +235,11 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
         if (session && (session as RawSession).kernelProcess) {
             // Watch to see if our process exits
-            this.processExitHandler = (session as RawSession).kernelProcess.exited(({ exitCode }) => {
-                sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, { exitCode });
+            this.processExitHandler = (session as RawSession).kernelProcess.exited(({ exitCode, reason }) => {
+                sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
+                    exitCode,
+                    exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
+                });
                 traceError(`Raw kernel process exited code: ${exitCode}`);
                 this.shutdown().catch((reason) => {
                     traceError(`Error shutting down jupyter session: ${reason}`);

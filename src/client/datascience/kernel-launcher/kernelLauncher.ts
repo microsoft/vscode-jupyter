@@ -26,6 +26,7 @@ import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
 import { CancellationError } from '../../common/cancellation';
 import { sendKernelTelemetryWhenDone } from '../telemetry/telemetry';
 import { sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -138,9 +139,10 @@ export class KernelLauncher implements IKernelLauncher {
         await kernelProcess.launch(workingDirectory, timeout, cancelToken);
 
         kernelProcess.exited(
-            ({ exitCode }) => {
+            ({ exitCode, reason }) => {
                 sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-                    exitCode
+                    exitCode,
+                    exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
                 });
                 KernelLauncher._usedPorts.delete(connection.control_port);
                 KernelLauncher._usedPorts.delete(connection.hb_port);
