@@ -14,7 +14,6 @@ import {
     NotebookCellKind,
     NotebookCellExecutionState,
     NotebookCellExecutionSummary,
-    window,
     WorkspaceEdit
 } from 'vscode';
 import { concatMultilineString, splitMultilineString } from '../../../../datascience-ui/common';
@@ -26,7 +25,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { KernelConnectionMetadata } from '../../jupyter/kernels/types';
 import { updateNotebookMetadata } from '../../notebookStorage/baseModel';
-import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterKernelSpec } from '../../types';
+import { IJupyterKernelSpec } from '../../types';
 import { InteractiveWindowView, JupyterNotebookView } from '../constants';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
@@ -50,19 +49,6 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     } else {
         return option.notebookType === JupyterNotebookView || option.notebookType === InteractiveWindowView;
     }
-}
-
-export function getActiveInteractiveWindow(
-    interactiveWindowProvider: IInteractiveWindowProvider
-): IInteractiveWindow | undefined {
-    if (interactiveWindowProvider.activeWindow) {
-        return interactiveWindowProvider.activeWindow;
-    }
-    if (window.activeTextEditor === undefined) {
-        return;
-    }
-    const textDocumentUri = window.activeTextEditor.document.uri;
-    return interactiveWindowProvider.get(textDocumentUri);
 }
 
 export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeNotebook, fs: IFileSystem) {
