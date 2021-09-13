@@ -124,8 +124,8 @@ async function main() {
         groupIndex >= 0 && process.argv.length > 3
             ? process.argv.slice(3)
             : process.argv.length > 2
-            ? process.argv.slice(2)
-            : [];
+                ? process.argv.slice(2)
+                : [];
 
     // Iterate over them, running mocha on each
     var returnCode = 0;
@@ -142,6 +142,7 @@ async function main() {
             }
         } else {
             // Parallel, all at once
+            console.log(`Start functional test run for ${JSON.stringify(files)}`);
             const returnCodes = await Promise.all(files.map(runIndividualTest.bind(undefined, extraArgs)));
             console.log(`Functional test run exit codes: ${JSON.stringify(returnCodes)}`);
             // if there any exit code > 0, get that one.
