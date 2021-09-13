@@ -470,12 +470,12 @@ export interface IInteractiveBase extends Disposable {
 
 export interface IInteractiveWindow extends IInteractiveBase {
     readonly onDidChangeViewState: Event<void>;
+    readonly notebookEditor: NotebookEditor | undefined;
     readonly owner: Resource;
     readonly submitters: Uri[];
     readonly identity: Uri;
-    readonly title: string;
     readonly notebookUri?: Uri;
-    readonly readyPromise?: Promise<NotebookEditor>;
+    readonly readyPromise: Promise<void>;
     closed: Event<IInteractiveWindow>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;

@@ -429,8 +429,8 @@ export class Kernel implements IKernel {
 
             return chainWithPendingUpdates(notebookDocument, (edit) => {
                 // Overwrite the most recent placeholder cell
-                for (let i = notebookDocument.cellCount - 1; i >= 0; i -= 1) {
-                    const cell = notebookDocument.cellAt(i);
+                if (notebookDocument.cellCount > 0) {
+                    const cell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
                     if (
                         cell.kind === NotebookCellKind.Markup &&
                         cell.metadata.isInteractiveWindowMessageCell &&
@@ -443,7 +443,7 @@ export class Kernel implements IKernel {
                         );
                         edit.replaceNotebookCellMetadata(notebookDocument.uri, cell.index, {
                             isInteractiveWindowMessageCell: true,
-                            isPlaceholder: false // replaceNotebookCellMetadata doesn't zero other metadata properties
+                            isPlaceholder: false
                         });
                         return;
                     }

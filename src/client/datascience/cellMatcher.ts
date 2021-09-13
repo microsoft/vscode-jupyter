@@ -57,6 +57,14 @@ export class CellMatcher {
         return code;
     }
 
+    public stripFirstMarkerNoConcat(lines: string[]): string[] {
+        // Only strip this off the first line. Otherwise we want the markers in the code.
+        if (lines.length > 0 && (this.isCode(lines[0]) || this.isMarkdown(lines[0]))) {
+            return lines.slice(1);
+        }
+        return lines;
+    }
+
     public getFirstMarker(code: string): string | undefined {
         const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
 

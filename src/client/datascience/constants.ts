@@ -192,6 +192,8 @@ export namespace EditorContexts {
     export const HaveCellSelected = 'jupyter.havecellselected';
     export const CanRestartNotebookKernel = 'jupyter.notebookeditor.canrestartNotebookkernel';
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
+    export const CanRestartInteractiveWindowKernel = 'jupyter.interactive.canRestartNotebookKernel';
+    export const CanInterruptInteractiveWindowKernel = 'jupyter.interactive.canInterruptNotebookKernel';
     export const DebuggingInProgress = 'jupyter.notebookeditor.debuggingInProgress';
     export const RunByLineInProgress = 'jupyter.notebookeditor.runByLineInProgress';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
