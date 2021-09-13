@@ -1242,9 +1242,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionKernelProcessExited]: {
         /**
          * The kernel process's exit reason, based on the error
-         * object's reason, message, or stacktrace.
+         * object's reason
          */
-        reason: string | undefined;
+        exitReason: string | undefined;
         /**
          * The kernel process's exit code.
          */

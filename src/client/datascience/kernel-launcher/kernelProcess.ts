@@ -8,7 +8,7 @@ import * as tmp from 'tmp';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { createPromiseFromCancellation } from '../../common/cancellation';
-import { getErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import { traceDecorators, traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
@@ -106,7 +106,7 @@ export class KernelProcess implements IKernelProcess {
             if (!exitEventFired) {
                 this.exitEvent.fire({
                     exitCode: exitCode || undefined,
-                    reason: getErrorMessageFromPythonTraceback(stderrProc) || stderrProc
+                    reason: getTelemetrySafeErrorMessageFromPythonTraceback(stderrProc) || stderrProc
                 });
                 exitEventFired = true;
             }
@@ -155,7 +155,7 @@ export class KernelProcess implements IKernelProcess {
                         let reason = error.reason || error.message;
                         this.exitEvent.fire({
                             exitCode: error.exitCode,
-                            reason: getErrorMessageFromPythonTraceback(reason) || reason
+                            reason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
                         });
                         exitEventFired = true;
                     }
@@ -192,7 +192,7 @@ export class KernelProcess implements IKernelProcess {
                 traceError(stderrProc || stderr);
                 // If we have the python error message, display that.
                 const errorMessage =
-                    getErrorMessageFromPythonTraceback(stderrProc || stderr) ||
+                    getTelemetrySafeErrorMessageFromPythonTraceback(stderrProc || stderr) ||
                     (stderrProc || stderr).substring(0, 100);
                 throw new KernelDiedError(
                     localize.DataScience.kernelDied().format(Commands.ViewJupyterOutput, errorMessage),

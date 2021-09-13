@@ -21,7 +21,6 @@ module.exports = {
     ignorePatterns: [
         'build/constants.js',
         'build/util.js',
-        'build/ci/scripts/runFunctionalTests.js',
         'build/ci/performance/checkPerformanceResults.js',
         'build/ci/performance/createNewPerformanceBenchmark.js',
         'build/ci/performance/savePerformanceResults.js',
