@@ -548,7 +548,7 @@
                     "light": "resources/light/interrupt.svg",
                     "dark": "resources/dark/interrupt.svg"
                 },
-                "enablement": "isWorkspaceTrusted"
+                "enablement": "isWorkspaceTrusted && jupyter.interactive.canInterruptNotebookKernel"
             },
             {
                 "command": "jupyter.restartkernel",
@@ -559,7 +559,7 @@
                     "light": "resources/light/restart-kernel.svg",
                     "dark": "resources/dark/restart-kernel.svg"
                 },
-                "enablement": "isWorkspaceTrusted"
+                "enablement": "isWorkspaceTrusted && jupyter.interactive.canRestartNotebookKernel"
             },
             {
                 "command": "jupyter.notebookeditor.interruptkernel",

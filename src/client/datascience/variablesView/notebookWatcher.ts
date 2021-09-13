@@ -9,22 +9,16 @@ import {
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
     Uri,
-    window,
     workspace
 } from 'vscode';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
+import { getActiveInteractiveWindow } from '../interactive-window/helpers';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { isJupyterNotebook } from '../notebook/helpers/helpers';
 import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
-import {
-    IInteractiveWindow,
-    IInteractiveWindowProvider,
-    INotebook,
-    INotebookEditor,
-    INotebookEditorProvider
-} from '../types';
+import { IInteractiveWindowProvider, INotebook, INotebookEditor, INotebookEditorProvider } from '../types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 
 interface IExecutionCountEntry {
@@ -49,7 +43,7 @@ export class NotebookWatcher implements INotebookWatcher {
         return this.notebookEditorProvider.activeEditor?.notebook || this.getActiveInteractiveWindowNotebook();
     }
     public get activeNotebookExecutionCount(): number | undefined {
-        const activeInteractiveWindow = this.getActiveInteractiveWindow();
+        const activeInteractiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
         const activeNotebookOrInteractiveWindow =
             this.notebookEditorProvider.activeEditor?.file || activeInteractiveWindow?.notebookUri;
         if (activeNotebookOrInteractiveWindow) {
@@ -187,7 +181,7 @@ export class NotebookWatcher implements INotebookWatcher {
         ) {
             return true;
         }
-        const activeInteractiveWindow = this.getActiveInteractiveWindow();
+        const activeInteractiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
         if (
             activeInteractiveWindow?.notebookUri !== undefined &&
             this.fileSystem.arePathsSame(activeInteractiveWindow.notebookUri, kernelStateEvent.resource)
@@ -197,16 +191,8 @@ export class NotebookWatcher implements INotebookWatcher {
         return false;
     }
 
-    private getActiveInteractiveWindow(): IInteractiveWindow | undefined {
-        if (window.activeTextEditor === undefined) {
-            return;
-        }
-        const textDocumentUri = window.activeTextEditor.document.uri;
-        return this.interactiveWindowProvider.get(textDocumentUri);
-    }
-
     private getActiveInteractiveWindowNotebook(): INotebook | undefined {
-        const interactiveWindow = this.getActiveInteractiveWindow();
+        const interactiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
         const notebookDocument = workspace.notebookDocuments.find(
             (notebookDocument) => notebookDocument.uri.toString() === interactiveWindow?.notebookUri?.toString()
         );
