@@ -234,8 +234,8 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
         if (session && (session as RawSession).kernelProcess) {
             // Watch to see if our process exits
-            this.processExitHandler = (session as RawSession).kernelProcess.exited(({ exitCode, reason }) => {
-                sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, { exitCode, reason });
+            this.processExitHandler = (session as RawSession).kernelProcess.exited(({ exitCode }) => {
+                sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, { exitCode });
                 traceError(`Raw kernel process exited code: ${exitCode}`);
                 this.shutdown().catch((reason) => {
                     traceError(`Error shutting down jupyter session: ${reason}`);

@@ -1241,10 +1241,11 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.RawKernelSessionKernelProcessExited]: {
         /**
-         * The kernel process's exit reason, based on the error
-         * object's reason, message, or stacktrace.
+         * The reason property used to be sent, now deprecated.
+         * Kept here so we know to never use this same property name again.
+         * @deprecated
          */
-        reason: string | undefined;
+        reason?: undefined | never;
         /**
          * The kernel process's exit code.
          */

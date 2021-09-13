@@ -138,9 +138,8 @@ export class KernelLauncher implements IKernelLauncher {
         await kernelProcess.launch(workingDirectory, timeout, cancelToken);
 
         kernelProcess.exited(
-            ({ exitCode, reason }) => {
+            ({ exitCode }) => {
                 sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-                    reason,
                     exitCode
                 });
                 KernelLauncher._usedPorts.delete(connection.control_port);

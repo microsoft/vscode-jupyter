@@ -170,7 +170,6 @@ export class RawSession implements ISessionWithSocket {
         // Send telemetry so we know why the kernel process exited,
         // as this affects our kernel startup success
         sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-            reason: e.reason,
             exitCode: e.exitCode
         });
 
