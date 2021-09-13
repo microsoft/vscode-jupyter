@@ -26,8 +26,8 @@ import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
+import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
 import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
-import { getActiveInteractiveWindow } from '../../notebook/helpers/helpers';
 import { IInteractiveWindowProvider, IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
 /**
