@@ -257,7 +257,7 @@ function isEmptyVendoredMimeType(outputItem: NotebookCellOutputItem) {
     if (outputItem.mime.startsWith('application/vnd.')) {
         try {
             return Buffer.from(outputItem.data).toString().length === 0;
-        } catch { }
+        } catch {}
     }
     return false;
 }
@@ -302,7 +302,8 @@ export class NotebookCellStateTracker {
 export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfoIf(
         isCI,
-        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${cell.executionSummary?.executionOrder
+        `Cell Index:${cell.index}, state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
+            cell.executionSummary?.executionOrder
         }. ${message}`
     );
 }
