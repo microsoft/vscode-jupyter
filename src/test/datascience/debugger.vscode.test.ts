@@ -18,7 +18,9 @@ import {
     workAroundVSCodeNotebookStartPages,
     getCellOutputs,
     defaultNotebookTestTimeout,
-    waitForStoppedEvent
+    waitForStoppedEvent,
+    runCell,
+    getDebugSessionAndAdapter
 } from './notebook/helper';
 import { verifyViewVariables } from './variableView/variableViewHelpers';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
@@ -27,11 +29,12 @@ import { IDebuggingManager } from '../../client/debugger/types';
 import { assert } from 'chai';
 import { debug } from 'vscode';
 import { OnMessageListener } from './vscodeTestHelpers';
-import { KernelDebugAdapter } from '../../client/debugger/jupyter/kernelDebugAdapter';
 import { ITestWebviewHost } from './testInterfaces';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { sleep } from '../../client/common/utils/async';
 
-suite('VSCode Notebook - Debugging', function () {
+suite('VSCode Notebook - Run By Line', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
@@ -85,22 +88,14 @@ suite('VSCode Notebook - Debugging', function () {
     // Cleanup after suite is finished
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test('Run by Line - Full Workflow (webview-test)', async function () {
+    test('Stops at end of cell', async function () {
         await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
         const cell = doc.getCells()[0];
 
         void commandManager.executeCommand(Commands.RunByLine, cell);
 
-        await waitForCondition(
-            async () => !!debuggingManager.getDebugSession(doc),
-            defaultNotebookTestTimeout,
-            'DebugSession should start'
-        );
-        const session = debuggingManager.getDebugSession(doc);
-
-        const debugAdapter = debuggingManager.getDebugAdapter(doc);
-        assert.isOk<KernelDebugAdapter | undefined>(debugAdapter, 'DebugAdapter not started');
+        const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         const stoppedEvent = await waitForStoppedEvent(debugAdapter!);
         const stack = await session!.customRequest('stackTrace', {
@@ -135,21 +130,13 @@ suite('VSCode Notebook - Debugging', function () {
         assert.isTrue(getCellOutputs(cell).includes('1'));
     });
 
-    test('Run by Line - Interrupt', async function () {
+    test('Interrupt', async function () {
         await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
         const cell = doc.getCells()[0];
 
         void commandManager.executeCommand(Commands.RunByLine, cell);
-
-        await waitForCondition(
-            async () => !!debuggingManager.getDebugSession(doc),
-            defaultNotebookTestTimeout,
-            'DebugSession should start'
-        );
-
-        const debugAdapter = debuggingManager.getDebugAdapter(doc);
-        assert.isOk<KernelDebugAdapter | undefined>(debugAdapter, 'DebugAdapter not started');
+        const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter!);
 
@@ -165,5 +152,104 @@ suite('VSCode Notebook - Debugging', function () {
             defaultNotebookTestTimeout,
             'Cell should have KeyboardInterrupt output'
         );
+    });
+
+    test('Stops in same-cell function called from last line', async function () {
+        await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
+        const doc = vscodeNotebook.activeNotebookEditor?.document!;
+        const cell = doc.getCells()[0];
+
+        void commandManager.executeCommand(Commands.RunByLine, cell);
+        const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
+
+        await waitForStoppedEvent(debugAdapter!); // First line
+        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        await waitForStoppedEvent(debugAdapter!); // foo()
+        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        await waitForStoppedEvent(debugAdapter!); // def foo
+        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        const stoppedEvent = await waitForStoppedEvent(debugAdapter!); // print(1)
+        const stack: DebugProtocol.StackTraceResponse['body'] = await session!.customRequest('stackTrace', {
+            threadId: stoppedEvent.body.threadId
+        });
+        assert.isTrue(stack.stackFrames.length > 0, 'has frames');
+        assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
+        assert.equal(stack.stackFrames[0].line, 2, 'Stopped at the wrong line');
+
+        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        const stoppedEvent2 = await waitForStoppedEvent(debugAdapter!); // foo()
+        const stack2: DebugProtocol.StackTraceResponse['body'] = await session!.customRequest('stackTrace', {
+            threadId: stoppedEvent2.body.threadId
+        });
+        assert.isTrue(stack2.stackFrames.length > 0, 'has frames');
+        assert.equal(stack2.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
+        assert.equal(stack2.stackFrames[0].line, 4, 'Stopped at the wrong line');
+    });
+
+    test('Does not stop in other cell', async function () {
+        await insertCodeCell('def foo():\n    print(1)');
+        await insertCodeCell('foo()');
+        const doc = vscodeNotebook.activeNotebookEditor?.document!;
+        const cell0 = doc.getCells()[0];
+        const cell1 = doc.getCells()[1];
+
+        await runCell(cell0);
+        void commandManager.executeCommand(Commands.RunByLine, cell1);
+        const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
+
+        await waitForStoppedEvent(debugAdapter!); // First line
+        await commandManager.executeCommand(Commands.RunByLineContinue, cell1);
+
+        await waitForStoppedEvent(debugAdapter!); // Returns after call
+        await commandManager.executeCommand(Commands.RunByLineContinue, cell1);
+
+        await waitForCondition(
+            async () => !debug.activeDebugSession,
+            defaultNotebookTestTimeout,
+            'DebugSession should end'
+        );
+    });
+
+    test('Run a second time after interrupt', async function () {
+        await insertCodeCell('print(1)', { index: 0 });
+        const doc = vscodeNotebook.activeNotebookEditor?.document!;
+        const cell = doc.getCells()[0];
+
+        void commandManager.executeCommand(Commands.RunByLine, cell);
+        const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
+
+        await waitForStoppedEvent(debugAdapter!);
+
+        // Interrupt kernel and check that the cell didn't finish running
+        await commandManager.executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: doc.uri } });
+        await waitForCondition(
+            async () => !debug.activeDebugSession,
+            defaultNotebookTestTimeout,
+            'DebugSession should end1'
+        );
+        await waitForCondition(
+            async () => getCellOutputs(cell).includes('KeyboardInterrupt'),
+            defaultNotebookTestTimeout,
+            'Cell should have KeyboardInterrupt output'
+        );
+
+        await sleep(2000); // TODO fix after merging RBL cleanup PR
+        void commandManager.executeCommand(Commands.RunByLine, cell);
+        const { debugAdapter: debugAdapter2 } = await getDebugSessionAndAdapter(debuggingManager, doc);
+
+        await waitForStoppedEvent(debugAdapter2!);
+        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+
+        await waitForCondition(
+            async () => !debug.activeDebugSession,
+            defaultNotebookTestTimeout,
+            'DebugSession should end2'
+        );
+        await waitForCondition(
+            async () => !!cell.outputs.length,
+            defaultNotebookTestTimeout,
+            'Cell should have output'
+        );
+        assert.isTrue(getCellOutputs(cell).includes('1'));
     });
 });

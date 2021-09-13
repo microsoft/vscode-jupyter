@@ -25,7 +25,8 @@ import {
     notebooks,
     Event,
     env,
-    UIKind
+    UIKind,
+    DebugSession
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -54,6 +55,7 @@ import { NotebookEditorProvider } from '../../../client/datascience/notebook/not
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
 import { KernelDebugAdapter } from '../../../client/debugger/jupyter/kernelDebugAdapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { IDebuggingManager } from '../../../client/debugger/types';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -834,4 +836,18 @@ export async function waitForDebugEvent<T>(
 
 export async function waitForStoppedEvent(debugAdapter: KernelDebugAdapter): Promise<DebugProtocol.StoppedEvent> {
     return waitForDebugEvent('stopped', debugAdapter, 10_000);
+}
+
+export async function getDebugSessionAndAdapter(debuggingManager: IDebuggingManager, doc: NotebookDocument): Promise<{ session: DebugSession; debugAdapter: KernelDebugAdapter }> {
+    await waitForCondition(
+        async () => !!debuggingManager.getDebugSession(doc),
+        defaultNotebookTestTimeout,
+        'DebugSession should start'
+    );
+    const session = debuggingManager.getDebugSession(doc)!;
+
+    const debugAdapter = debuggingManager.getDebugAdapter(doc)!;
+    assert.isOk<KernelDebugAdapter | undefined>(debugAdapter, 'DebugAdapter not started');
+
+    return { session, debugAdapter };
 }
