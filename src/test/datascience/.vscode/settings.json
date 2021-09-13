@@ -27,6 +27,5 @@
     "jupyter.disableJupyterAutoStart": true,
     "jupyter.logging.level": "debug",
     "python.logging.level": "debug",
-    "webview.experimental.useIframes": true,
-    "jupyter.generateSVGPlots": "false"
+    "webview.experimental.useIframes": true
 }
