@@ -14,6 +14,7 @@ import {
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
+import { getActiveInteractiveWindow } from '../interactive-window/helpers';
 import { IKernelProvider } from '../jupyter/kernels/types';
 import { getActiveInteractiveWindow, isJupyterNotebook } from '../notebook/helpers/helpers';
 import { KernelState, KernelStateEventArgs } from '../notebookExtensibility';
