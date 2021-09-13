@@ -360,10 +360,10 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
         // This is a hack, we force VS Code to select a kernel (as though the user selected it).
         // Without the hack, when running cells we get a prompt to select a kernel.
         async () => VSCodeNotebookController.kernelAssociatedWithDocument === true,
-        5_000,
+        120_000,
         'Kernel not selected'
     );
-    await sleep(500);
+    await sleep(10_000);
     traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
 }
 

@@ -96,6 +96,7 @@ suite('DataScience - VariableView', function () {
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
+    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('IANHU Can show VariableView (webview-test)', async function () {
         assert.isFalse(true, 'Should Fail');
     });
