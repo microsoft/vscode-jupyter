@@ -124,8 +124,8 @@ async function main() {
         groupIndex >= 0 && process.argv.length > 3
             ? process.argv.slice(3)
             : process.argv.length > 2
-                ? process.argv.slice(2)
-                : [];
+            ? process.argv.slice(2)
+            : [];
 
     // Iterate over them, running mocha on each
     var returnCode = 0;
