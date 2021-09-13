@@ -8,7 +8,6 @@ import * as path from 'path';
 import {
     debug,
     DebugAdapter,
-    DebugConfiguration,
     DebugProtocolMessage,
     DebugSession,
     Event,
@@ -29,48 +28,15 @@ import { IKernel } from '../../datascience/jupyter/kernels/types';
 import { IJupyterSession } from '../../datascience/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../constants';
-import { DebuggingDelegate, IKernelDebugAdapter } from '../types';
-
-interface dumpCellResponse {
-    sourcePath: string; // filename for the dumped source
-}
-
-interface debugInfoResponse {
-    isStarted: boolean; // whether the debugger is started,
-    hashMethod: string; // the hash method for code cell. Default is 'Murmur2',
-    hashSeed: string; // the seed for the hashing of code cells,
-    tmpFilePrefix: string; // prefix for temporary file names
-    tmpFileSuffix: string; // suffix for temporary file names
-    breakpoints: debugInfoResponseBreakpoint[]; // breakpoints currently registered in the debugger.
-    stoppedThreads: number[]; // threads in which the debugger is currently in a stopped state
-}
-
-interface debugInfoResponseBreakpoint {
-    source: string; // source file
-    breakpoints: DebugProtocol.SourceBreakpoint[]; // list of breakpoints for that source file
-}
-
-export enum KernelDebugMode {
-    RunByLine,
-    Cell,
-    Everything
-}
-
-export interface IKernelDebugAdapterConfig extends DebugConfiguration {
-    __mode: KernelDebugMode;
-    __cellIndex?: number;
-}
-
-export function assertIsDebugConfig(thing: unknown): asserts thing is IKernelDebugAdapterConfig {
-    const config = thing as IKernelDebugAdapterConfig;
-    if (
-        typeof config.__mode === 'undefined' ||
-        ((config.__mode === KernelDebugMode.Cell || config.__mode === KernelDebugMode.RunByLine) &&
-            typeof config.__cellIndex === 'undefined')
-    ) {
-        throw new Error('Invalid launch configuration');
-    }
-}
+import {
+    DebuggingDelegate,
+    debugInfoResponse,
+    dumpCellResponse,
+    IKernelDebugAdapter,
+    IKernelDebugAdapterConfig,
+    KernelDebugMode
+} from '../types';
+import { assertIsDebugConfig, getMessageSourceAndHookIt } from './helper';
 
 // For info on the custom requests implemented by jupyter see:
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
@@ -199,6 +165,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         return this.session;
     }
 
+    public getConfiguration(): IKernelDebugAdapterConfig {
+        return this.configuration;
+    }
+
     public stepIn(threadId: number): Thenable<DebugProtocol.StepInResponse['body']> {
         return this.session.customRequest('stepIn', { threadId });
     }
@@ -229,14 +199,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         args: DebugProtocol.SetBreakpointsArguments
     ): Thenable<DebugProtocol.SetBreakpointsResponse['body']> {
         return this.session.customRequest('setBreakpoints', args);
-    }
-
-    private scopes(frameId: number): void {
-        void this.session.customRequest('scopes', { frameId });
-    }
-
-    private variables(variablesReference: number): void {
-        void this.session.customRequest('variables', { variablesReference });
     }
 
     private dumpAllCells() {
@@ -280,7 +242,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
     private sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
         // map Source paths from VS Code to Ipykernel temp files
-        this.getMessageSourceAndHookIt(message, (source) => {
+        getMessageSourceAndHookIt(message, (source) => {
             if (source && source.path) {
                 const path = this.cellToFile.get(source.path);
                 if (path) {
@@ -317,7 +279,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     private controlCallback(message: DebugProtocol.ProtocolMessage): void {
-        this.getMessageSourceAndHookIt(message as DebugProtocol.ProtocolMessage, (source) => {
+        getMessageSourceAndHookIt(message as DebugProtocol.ProtocolMessage, (source) => {
             if (source && source.path) {
                 const cell = this.fileToCell.get(source.path);
                 if (cell) {
@@ -330,112 +292,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
             }
         });
 
-        // To get the variables for the Variables view:
-        // We have to send the variables message. For that, we need a variablesReference from scopes,
-        // and for that, we need an id from the stackTrace message.
-        // Here we catch the stackTrace response and we use its id to send a scope message
-        if ((message as DebugProtocol.StackTraceResponse).command === 'stackTrace') {
-            (message as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((sf) => {
-                if (this.configuration.__mode === KernelDebugMode.RunByLine) {
-                    // Only call scopes (and variables) if we are stopped on the cell we are executing
-                    if (sf.source && this.debugCellUri && sf.source.path === this.debugCellUri.toString()) {
-                        this.scopes(sf.id);
-                    }
-                } else {
-                    // Only call scopes (and variables) if we are stopped on the notebook we are executing
-                    const docURI = path.basename(this.notebookDocument.uri.toString());
-                    if (sf.source && sf.source.path && sf.source.path.includes(docURI)) {
-                        this.scopes(sf.id);
-                    }
-                }
-            });
-        }
-
-        // Catch the scopes response and use its variablesReference to send a variables message
-        if ((message as DebugProtocol.ScopesResponse).command === 'scopes') {
-            (message as DebugProtocol.ScopesResponse).body.scopes.forEach((s) => {
-                this.variables(s.variablesReference);
-            });
-        }
-
         this.trace('response', JSON.stringify(message));
         this.sendMessage.fire(message);
-    }
-
-    private getMessageSourceAndHookIt(
-        msg: DebugProtocol.ProtocolMessage,
-        sourceHook: (source: DebugProtocol.Source | undefined) => void
-    ): void {
-        switch (msg.type) {
-            case 'event':
-                const event = msg as DebugProtocol.Event;
-                switch (event.event) {
-                    case 'output':
-                        sourceHook((event as DebugProtocol.OutputEvent).body.source);
-                        break;
-                    case 'loadedSource':
-                        sourceHook((event as DebugProtocol.LoadedSourceEvent).body.source);
-                        break;
-                    case 'breakpoint':
-                        sourceHook((event as DebugProtocol.BreakpointEvent).body.breakpoint.source);
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            case 'request':
-                const request = msg as DebugProtocol.Request;
-                switch (request.command) {
-                    case 'setBreakpoints':
-                        sourceHook((request.arguments as DebugProtocol.SetBreakpointsArguments).source);
-                        break;
-                    case 'breakpointLocations':
-                        sourceHook((request.arguments as DebugProtocol.BreakpointLocationsArguments).source);
-                        break;
-                    case 'source':
-                        sourceHook((request.arguments as DebugProtocol.SourceArguments).source);
-                        break;
-                    case 'gotoTargets':
-                        sourceHook((request.arguments as DebugProtocol.GotoTargetsArguments).source);
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            case 'response':
-                const response = msg as DebugProtocol.Response;
-                if (response.success && response.body) {
-                    switch (response.command) {
-                        case 'stackTrace':
-                            (response as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((frame) =>
-                                sourceHook(frame.source)
-                            );
-                            break;
-                        case 'loadedSources':
-                            (response as DebugProtocol.LoadedSourcesResponse).body.sources.forEach((source) =>
-                                sourceHook(source)
-                            );
-                            break;
-                        case 'scopes':
-                            (response as DebugProtocol.ScopesResponse).body.scopes.forEach((scope) =>
-                                sourceHook(scope.source)
-                            );
-                            break;
-                        case 'setFunctionBreakpoints':
-                            (response as DebugProtocol.SetFunctionBreakpointsResponse).body.breakpoints.forEach((bp) =>
-                                sourceHook(bp.source)
-                            );
-                            break;
-                        case 'setBreakpoints':
-                            (response as DebugProtocol.SetBreakpointsResponse).body.breakpoints.forEach((bp) =>
-                                sourceHook(bp.source)
-                            );
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                break;
-        }
     }
 }

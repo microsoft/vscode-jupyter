@@ -10,24 +10,16 @@ import {
     workspace,
     DebugAdapterInlineImplementation,
     DebugSession,
-    Event,
     NotebookCell,
     DebugSessionOptions,
     DebugConfiguration,
-    EventEmitter,
-    DebugProtocolMessage,
     ProgressLocation,
     DebugAdapterDescriptor
 } from 'vscode';
 import * as path from 'path';
 import { IKernel, IKernelProvider } from '../../datascience/jupyter/kernels/types';
 import { IConfigurationService, IDisposable, Product, ProductInstallStatus } from '../../common/types';
-import {
-    assertIsDebugConfig,
-    IKernelDebugAdapterConfig,
-    KernelDebugAdapter,
-    KernelDebugMode
-} from './kernelDebugAdapter';
+import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { INotebookProvider } from '../../datascience/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -39,13 +31,13 @@ import { traceError } from '../../common/logger';
 import { DataScience } from '../../common/utils/localize';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { IFileSystem } from '../../common/platform/types';
-import { IDebuggingManager } from '../types';
-import { DebugProtocol } from 'vscode-debugprotocol';
+import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
 import { IPythonInstaller } from '../../api/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { DebugCellController, RunByLineController } from './debugControllers';
+import { assertIsDebugConfig } from './helper';
 
 class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -94,7 +86,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private notebookToRunByLineController = new Map<NotebookDocument, RunByLineController>();
     private cache = new Map<PythonEnvironment, boolean>();
     private readonly disposables: IDisposable[] = [];
-    private readonly _onDidFireVariablesEvent = new EventEmitter<void>();
 
     public constructor(
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
@@ -111,10 +102,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
         this.updateToolbar(false);
         this.updateCellToolbar(false);
-    }
-
-    public get onDidFireVariablesEvent(): Event<void> {
-        return this._onDidFireVariablesEvent.event;
     }
 
     public async activate() {
@@ -244,6 +231,23 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         return this.notebookToDebugger.has(notebook);
     }
 
+    public getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined {
+        const dbg = this.notebookToDebugger.get(notebook);
+        if (dbg) {
+            return dbg.session;
+        }
+    }
+
+    public getDebugMode(notebook: NotebookDocument): KernelDebugMode | undefined {
+        const controller = this.notebookToRunByLineController.get(notebook);
+        return controller?.getMode();
+    }
+
+    public getDebugCell(notebook: NotebookDocument): NotebookCell | undefined {
+        const controller = this.notebookToRunByLineController.get(notebook);
+        return controller?.debugCell;
+    }
+
     private updateToolbar(debugging: boolean) {
         this.debuggingInProgress.set(debugging).ignoreErrors();
     }
@@ -354,14 +358,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         adapter.setDebuggingDelegate(controller);
                     }
 
-                    this.disposables.push(
-                        adapter.onDidSendMessage((msg: DebugProtocolMessage) => {
-                            if ((msg as DebugProtocol.VariablesResponse).command === 'variables') {
-                                this._onDidFireVariablesEvent.fire();
-                            }
-                        }),
-                        adapter.onDidEndSession(this.endSession.bind(this))
-                    );
+                    this.disposables.push(adapter.onDidEndSession(this.endSession.bind(this)));
                     return new DebugAdapterInlineImplementation(adapter);
                 } else {
                     void this.appShell.showInformationMessage(DataScience.kernelWasNotStarted());
