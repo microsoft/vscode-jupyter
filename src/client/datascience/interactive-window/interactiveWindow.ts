@@ -59,10 +59,11 @@ import {
     WebViewViewChangeEventArgs
 } from '../types';
 import { createInteractiveIdentity, getInteractiveWindowTitle } from './identity';
-import { generateMarkdownFromCodeLines, removeLinesFromFrontAndBack } from '../../../datascience-ui/common';
+import { generateMarkdownFromCodeLines } from '../../../datascience-ui/common';
 import { chainWithPendingUpdates } from '../notebook/helpers/notebookUpdater';
 import { LineQueryRegex, linkCommandAllowList } from '../interactive-common/linkProvider';
 import { INativeInteractiveWindow } from './types';
+import { generateInteractiveCode } from '../../../datascience-ui/common/cellFactory';
 
 type InteractiveCellMetadata = {
     inputCollapsed: boolean;
@@ -111,6 +112,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private mode: InteractiveWindowMode = 'multiple';
     private _kernelConnection?: KernelConnectionMetadata;
     protected fileInKernel: string | undefined;
+    private cellMatcher;
 
     private isDisposed = false;
     private internalDisposables: Disposable[] = [];
@@ -158,6 +160,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this.closedEvent.fire(this);
             }
         });
+
+        this.cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
     }
 
     private async createKernelReadyPromise(): Promise<IKernel> {
@@ -378,8 +382,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         // Do not execute or render empty cells
-        const cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
-        if (cellMatcher.stripFirstMarker(code).length === 0) {
+        if (this.cellMatcher.stripFirstMarker(code).length === 0) {
             return true;
         }
         // Chain execution promises so that cells are executed in the right order
@@ -405,7 +408,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             return r.end === notebookEditor.document.cellCount - 1;
         });
         const notebookCell = await this.addNotebookCell(notebookEditor.document, code, fileUri, line, id);
-        const settings = this.configuration.getSettings();
+        const settings = this.configuration.getSettings(this.owningResource);
         // The default behavior is to scroll to the last cell if the user is already at the bottom
         // of the history, but not to scroll if the user has scrolled somewhere in the middle
         // of the history. The jupyter.alwaysScrollOnNewCell setting overrides this to always scroll
@@ -622,13 +625,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         );
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
-        const settings = this.configuration.getSettings();
-        const cellMatcher = new CellMatcher(settings);
-        const isMarkdown = cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
+        const settings = this.configuration.getSettings(this.owningResource);
+        const isMarkdown = this.cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
         const strippedCode = isMarkdown
             ? generateMarkdownFromCodeLines(code.splitLines()).join('')
-            : removeLinesFromFrontAndBack(cellMatcher.stripFirstMarker(code));
-        const interactiveWindowCellMarker = cellMatcher.getFirstMarker(code);
+            : generateInteractiveCode(code, settings, this.cellMatcher);
+        const interactiveWindowCellMarker = this.cellMatcher.getFirstMarker(code);
 
         // Insert cell into NotebookDocument
         const language =
@@ -667,7 +669,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
-        const { magicCommandsAsComments } = this.configuration.getSettings();
+        const { magicCommandsAsComments } = this.configuration.getSettings(this.owningResource);
         const cells = generateCellsFromNotebookDocument(notebookEditor.document, magicCommandsAsComments);
 
         // Should be an array of cells
@@ -688,7 +690,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         }
 
-        const { magicCommandsAsComments } = this.configuration.getSettings();
+        const { magicCommandsAsComments } = this.configuration.getSettings(this.owningResource);
         const cells = generateCellsFromNotebookDocument(notebookEditor.document, magicCommandsAsComments);
 
         // Pull out the metadata from our active notebook

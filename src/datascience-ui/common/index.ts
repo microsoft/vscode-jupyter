@@ -47,8 +47,7 @@ export function splitMultilineString(source: nbformat.MultilineString): string[]
     return [];
 }
 
-export function removeLinesFromFrontAndBack(code: string): string {
-    const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
+export function removeLinesFromFrontAndBackNoConcat(lines: string[]): string[] {
     let foundNonEmptyLine = false;
     let lastNonEmptyLine = -1;
     let result: string[] = [];
@@ -74,8 +73,12 @@ export function removeLinesFromFrontAndBack(code: string): string {
     if (lastNonEmptyLine < lines.length - 1) {
         result = result.slice(0, result.length - (lines.length - 1 - lastNonEmptyLine));
     }
+    return result;
+}
 
-    return result.join('\n');
+export function removeLinesFromFrontAndBack(code: string | string[]): string {
+    const lines = Array.isArray(code) ? code : code.splitLines({ trim: false, removeEmptyEntries: false });
+    return removeLinesFromFrontAndBackNoConcat(lines).join('\n');
 }
 
 // Strip out comment lines from code
