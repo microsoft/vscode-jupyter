@@ -4,7 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 
-import { DebugAdapterTracker, DebugSession, Disposable, Event, EventEmitter } from 'vscode';
+import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
@@ -62,7 +62,7 @@ export class DebuggerVariables extends DebugLocationTracker
 
     public get active(): boolean {
         return (
-            (this.debugService.activeDebugSession !== undefined || this.getDebuggingManagerSession() !== undefined) &&
+            (this.debugService.activeDebugSession !== undefined || this.activeNotebookIsDebugging()) &&
             this.debuggingStarted
         );
     }
@@ -408,11 +408,9 @@ export class DebuggerVariables extends DebugLocationTracker
         this.refreshEventEmitter.fire();
     }
 
-    private getDebuggingManagerSession(): DebugSession | undefined {
+    private activeNotebookIsDebugging(): boolean {
         const activeNotebook = this.vscNotebook.activeNotebookEditor;
-        if (activeNotebook) {
-            return this.debuggingManager.getDebugSession(activeNotebook.document);
-        }
+        return !!activeNotebook && this.debuggingManager.isDebugging(activeNotebook.document);
     }
 }
 
