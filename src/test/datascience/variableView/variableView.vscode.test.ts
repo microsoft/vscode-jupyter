@@ -68,15 +68,15 @@ suite('DataScience - VariableView', function () {
             return this.skip();
         }
         await workAroundVSCodeNotebookStartPages();
-        await hijackPrompt(
-            'showErrorMessage',
-            { endsWith: expectedPromptMessageSuffix },
-            { text: Common.install(), clickImmediately: true },
-            disposables
-        );
+        // await hijackPrompt(
+        // 'showErrorMessage',
+        // { endsWith: expectedPromptMessageSuffix },
+        // { text: Common.install(), clickImmediately: true },
+        // disposables
+        // );
 
-        await startJupyterServer();
-        await prewarmNotebooks();
+        // await startJupyterServer();
+        // await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         traceInfo('Suite Setup (completed)');
