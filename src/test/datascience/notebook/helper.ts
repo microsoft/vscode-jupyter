@@ -359,10 +359,10 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
         // This is a hack, we force VS Code to select a kernel (as though the user selected it).
         // Without the hack, when running cells we get a prompt to select a kernel.
         async () => VSCodeNotebookController.kernelAssociatedWithDocument === true,
-        120_000,
+        5_000,
         'Kernel not selected'
     );
-    await sleep(10_000);
+    await sleep(500);
     traceInfo(`Preferred kernel auto selected for Native Notebook for ${kernelInfo}.`);
 }
 
@@ -445,7 +445,7 @@ export async function prewarmNotebooks() {
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
-        await Promise.all([waitForExecutionCompletedSuccessfully(cell, 240_000), runAllCellsInActiveNotebook()]);
+        await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
         // Wait for Jupyter to start.
         await closeActiveWindows();
     } finally {

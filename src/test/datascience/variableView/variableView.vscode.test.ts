@@ -1,21 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-// import { assert } from 'chai';
-// import * as sinon from 'sinon';
-// import { IVSCodeNotebook } from '../../../client/common/application/types';
-// import { IDisposable } from '../../../client/common/types';
-// import { IExtensionTestApi } from '../../common';
-// import { initialize } from '../../initialize';
-// import {
-// canRunNotebookTests,
-// closeNotebooksAndCleanUpAfterTests,
-// createEmptyPythonNotebook,
-// workAroundVSCodeNotebookStartPages,
-// startJupyterServer
-// } from '../notebook/helper';
-// import { traceInfo } from '../../../client/common/logger';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 'use strict';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
@@ -66,15 +50,6 @@ suite('DataScience - VariableView', function () {
         }
 
         await workAroundVSCodeNotebookStartPages();
-        // await hijackPrompt(
-        // 'showErrorMessage',
-        // { endsWith: expectedPromptMessageSuffix },
-        // { text: Common.install(), clickImmediately: true },
-        // disposables
-        // );
-
-        // await startJupyterServer();
-        // await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -93,12 +68,12 @@ suite('DataScience - VariableView', function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        // Added temporarily to identify why tests are failing.
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+
+    // Test for basic variable view functionality with one document
     test('Can show VariableView (webview-test)', async function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
@@ -140,6 +115,7 @@ suite('DataScience - VariableView', function () {
         verifyViewVariables(expectedVariables, htmlResult);
     });
 
+    // Test variables switching between documents
     test('VariableView document switching (webview-test)', async function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
