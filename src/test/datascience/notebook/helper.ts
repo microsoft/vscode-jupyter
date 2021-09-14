@@ -42,7 +42,7 @@ import { LastSavedNotebookCellLanguage } from '../../../client/datascience/noteb
 import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
 import { CellOutputMimeTypes, INotebookControllerManager } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
-import { captureScreenShot, IExtensionTestApi, sleep, waitForCondition } from '../../common';
+import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
@@ -308,7 +308,6 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
                 .registeredNotebookControllers()
                 .find((item) => item.isAssociatedWithDocument(doc));
             if (controller) {
-                console.log(`IANHU ${controller.id}`);
                 selectedController = controller;
             }
             return controller !== undefined;
@@ -432,7 +431,7 @@ export async function workAroundVSCodeNotebookStartPages() {
 }
 
 export async function prewarmNotebooks() {
-    const { editorProvider, vscodeNotebook, serviceContainer, notebookControllerManager } = await getServices();
+    const { editorProvider, vscodeNotebook, serviceContainer } = await getServices();
     await closeActiveWindows();
 
     const disposables: IDisposable[] = [];
@@ -442,25 +441,13 @@ export async function prewarmNotebooks() {
         if (memento.get(LastSavedNotebookCellLanguage) !== PYTHON_LANGUAGE) {
             await memento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE);
         }
-        console.log('IANHU aa');
         await editorProvider.createNew();
         await insertCodeCell('print("Hello World1")', { index: 0 });
-        console.log('IANHU ab');
         await waitForKernelToGetAutoSelected();
-        console.log(
-            `IANHU selected controller: ${notebookControllerManager.getSelectedNotebookController(
-                vscodeNotebook.activeNotebookEditor!.document
-            )} Registered Count: ${notebookControllerManager.registeredNotebookControllers().length}`
-        );
-        console.log('IANHU ac');
-        await captureScreenShot('before execute');
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
-        await captureScreenShot('after execute');
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 240_000), runAllCellsInActiveNotebook()]);
-        console.log('IANHU ad');
         // Wait for Jupyter to start.
         await closeActiveWindows();
-        console.log('IANHU ae');
     } finally {
         disposables.forEach((d) => d.dispose());
     }
@@ -546,9 +533,9 @@ export async function waitForExecutionCompletedSuccessfully(
             async () => assertHasExecutionCompletedSuccessfully(cell),
             timeout,
             () =>
-                `IANHU Cell ${cell.index + 1} did not complete successfully ${JSON.stringify(
+                `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(
                     cell
-                )}, State = ${NotebookCellStateTracker.getCellState(cell)}`
+                )}`
         ),
         waitForCellExecutionToComplete(cell)
     ]);
@@ -746,9 +733,7 @@ export async function runCell(cell: NotebookCell) {
 export async function runAllCellsInActiveNotebook() {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    console.log('IANHU aaa');
     await waitForKernelToGetAutoSelected(undefined, 60_000);
-    console.log('IANHU aab');
 
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
         throw new Error('No editor or document');
