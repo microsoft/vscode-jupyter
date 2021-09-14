@@ -3,6 +3,7 @@ description: Bug report for the Jupyter Extension for VS Code
 title: "[Bug]: "
 labels: [bug, needs-triage]
 assignees:
+  - octocat
 body:
   - type: markdown
     attributes:
