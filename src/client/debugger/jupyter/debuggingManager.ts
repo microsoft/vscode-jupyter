@@ -13,7 +13,9 @@ import {
     NotebookCell,
     DebugSessionOptions,
     ProgressLocation,
-    DebugAdapterDescriptor
+    DebugAdapterDescriptor,
+    Event,
+    EventEmitter
 } from 'vscode';
 import * as path from 'path';
 import { IKernel, IKernelProvider } from '../../datascience/jupyter/kernels/types';
@@ -50,6 +52,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private notebookToRunByLineController = new Map<NotebookDocument, RunByLineController>();
     private cache = new Map<PythonEnvironment, boolean>();
     private readonly disposables: IDisposable[] = [];
+    private _doneDebugging = new EventEmitter<void>();
 
     public constructor(
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
@@ -187,6 +190,10 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         );
     }
 
+    public get doneDebugging(): Event<void> {
+        return this._doneDebugging.event;
+    }
+
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
@@ -276,6 +283,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private async endSession(session: DebugSession) {
         void this.updateToolbar(false);
         void this.updateCellToolbar(false);
+        this._doneDebugging.fire();
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (dbg && session.id === (await dbg.session).id) {
                 this.notebookToDebugger.delete(doc);
