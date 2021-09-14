@@ -54,8 +54,7 @@ body:
   attributes:
     value: |
       ---
-      # The following fields are optional but can help us make a better determination of what may have gone wrong.
-      ---
+      ## The following fields are optional but can help us make a better determination of what may have gone wrong.
 - type: dropdown
   id: coding-language
   attributes:
