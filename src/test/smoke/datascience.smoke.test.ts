@@ -67,7 +67,6 @@ suite('Smoke Tests', () => {
     // }).timeout(timeoutForCellToRun);
 
     test('Run Cell in native editor', async () => {
-        return;
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
@@ -84,13 +83,13 @@ suite('Smoke Tests', () => {
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }
-        await vscode.commands.executeCommand('jupyter.opennotebook', vscode.Uri.file(file));
+        await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(file), 'jupyter-notebook');
 
         // Wait for 15 seconds for notebook to launch.
         // Unfortunately there's no way to know for sure it has completely loaded.
         await sleep(15_000);
 
-        await vscode.commands.executeCommand<void>('jupyter.notebookeditor.runallcells');
+        await vscode.commands.executeCommand<void>('jupyter.runallcells');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
 
