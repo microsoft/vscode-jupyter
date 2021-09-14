@@ -17,8 +17,6 @@ body:
       - label: Notebooks (.ipynb)
       - label: Interactive Window and or Cell Scripts (ex. .py files with \#%%)
       - label: Both
-    validations:
-      required: true
 - type: textarea
   id: what-happened
   attributes:
