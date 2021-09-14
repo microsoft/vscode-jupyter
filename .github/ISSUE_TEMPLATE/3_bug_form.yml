@@ -1,6 +1,5 @@
 name: Bug Report Form  
 description: Bug report for the Jupyter Extension for VS Code
-title: "[Title]: "
 labels: [bug, needs-triage]
 assignees:
   - octocat
