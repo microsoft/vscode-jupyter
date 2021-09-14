@@ -12,7 +12,6 @@ import {
     DebugSession,
     NotebookCell,
     DebugSessionOptions,
-    DebugConfiguration,
     ProgressLocation,
     DebugAdapterDescriptor
 } from 'vscode';
@@ -38,42 +37,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { DebugCellController, RunByLineController } from './debugControllers';
 import { assertIsDebugConfig } from './helper';
-
-class Debugger {
-    private resolveFunc?: (value: DebugSession) => void;
-    private rejectFunc?: (reason?: Error) => void;
-
-    readonly session: Promise<DebugSession>;
-
-    constructor(
-        public readonly document: NotebookDocument,
-        public readonly config: DebugConfiguration,
-        options?: DebugSessionOptions
-    ) {
-        this.session = new Promise<DebugSession>((resolve, reject) => {
-            this.resolveFunc = resolve;
-            this.rejectFunc = reject;
-
-            debug.startDebugging(undefined, config, options).then(undefined, reject);
-        });
-    }
-
-    resolve(session: DebugSession) {
-        if (this.resolveFunc) {
-            this.resolveFunc(session);
-        }
-    }
-
-    reject(reason: Error) {
-        if (this.rejectFunc) {
-            this.rejectFunc(reason);
-        }
-    }
-
-    async stop() {
-        void debug.stopDebugging(await this.session);
-    }
-}
+import { Debugger } from './debugger';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
