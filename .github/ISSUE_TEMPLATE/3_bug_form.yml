@@ -1,4 +1,4 @@
-name: Bug Report Form  
+name: Bug Report Form (Beta)
 description: Bug report for the Jupyter Extension for VS Code
 labels: [bug, needs-triage]
 assignees:
