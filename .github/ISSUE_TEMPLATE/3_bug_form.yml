@@ -20,7 +20,6 @@ body:
   id: what-happened
   attributes:
     label: What happened?
-    description: What did you expect to happen?
     placeholder: Tell us what happened or didn't happen!
   validations:
     required: true
@@ -38,7 +37,6 @@ body:
   id: jupyter-version
   attributes:
     label: Jupyter Extension Version
-    description: What version of the Jupyter extension are you using?
     placeholder: The version can be found at the top of the extension's description in the extensions sidebar.
   validations:
     required: true
