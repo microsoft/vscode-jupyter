@@ -811,6 +811,7 @@ export interface IEventNamePropertyMapping {
             | 'failed' // Installation disabled (this is what python extension returns).
             | 'install' // User chose install from prompt.
             | 'donotinstall' // User chose not to install from prompt.
+            | 'differentKernel' // User chose not to select a different interpreter/kernel.
             | 'dismissed'; // User chose to dismiss the prompt.
     };
     /**
