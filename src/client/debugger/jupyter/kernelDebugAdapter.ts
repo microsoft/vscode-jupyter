@@ -29,9 +29,9 @@ import { IJupyterSession } from '../../datascience/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../constants';
 import {
-    DebuggingDelegate,
-    debugInfoResponse,
-    dumpCellResponse,
+    IDebuggingDelegate,
+    IDebugInfoResponse,
+    IDumpCellResponse,
     IKernelDebugAdapter,
     IKernelDebugAdapterConfig,
     KernelDebugMode
@@ -48,7 +48,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     private readonly endSession = new EventEmitter<DebugSession>();
     private readonly configuration: IKernelDebugAdapterConfig;
     private readonly disposables: IDisposable[] = [];
-    private delegate: DebuggingDelegate | undefined;
+    private delegate: IDebuggingDelegate | undefined;
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCellUri: Uri | undefined;
@@ -77,7 +77,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
                 if (anyMsg.header.msg_type === 'debug_event') {
                     this.trace('event', JSON.stringify(msg));
-                    if (!(await this.delegate?.willSendEvent(anyMsg))) {
+                    if (!(await this.delegate?.onWillSendEvent(anyMsg))) {
                         this.sendMessage.fire(msg.content);
                     }
                 }
@@ -124,7 +124,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         );
     }
 
-    public setDebuggingDelegate(delegate: DebuggingDelegate) {
+    public setDebuggingDelegate(delegate: IDebuggingDelegate) {
         this.delegate = delegate;
     }
 
@@ -155,7 +155,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         }
 
         if (message.type === 'request') {
-            await this.delegate?.willSendRequest(message as DebugProtocol.Request);
+            await this.delegate?.onWillSendRequest(message as DebugProtocol.Request);
         }
 
         this.sendRequestToJupyterSession(message);
@@ -211,7 +211,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         if (cell) {
             try {
                 const response = await this.session.customRequest('dumpCell', { code: cell.document.getText() });
-                const norm = path.normalize((response as dumpCellResponse).sourcePath);
+                const norm = path.normalize((response as IDumpCellResponse).sourcePath);
                 this.fileToCell.set(norm, cell);
                 this.cellToFile.set(cell.document.uri.toString(), norm);
             } catch (err) {
@@ -224,7 +224,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         const response = await this.session.customRequest('debugInfo');
 
         // If there's stopped threads at this point, continue them all
-        (response as debugInfoResponse).stoppedThreads.forEach((thread: number) => {
+        (response as IDebugInfoResponse).stoppedThreads.forEach((thread: number) => {
             this.jupyterSession.requestDebug({
                 seq: 0,
                 type: 'request',

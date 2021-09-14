@@ -13,9 +13,9 @@ import { Commands } from '../../datascience/constants';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../constants';
-import { DebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../types';
+import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../types';
 
-export class DebugCellController implements DebuggingDelegate {
+export class DebugCellController implements IDebuggingDelegate {
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,
         public readonly debugCell: NotebookCell,
@@ -25,11 +25,11 @@ export class DebugCellController implements DebuggingDelegate {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
     }
 
-    public async willSendEvent(_msg: DebugProtocolMessage): Promise<boolean> {
+    public async onWillSendEvent(_msg: DebugProtocolMessage): Promise<boolean> {
         return false;
     }
 
-    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
+    public async onWillSendRequest(request: DebugProtocol.Request): Promise<void> {
         if (request.command === 'configurationDone') {
             await cellDebugSetup(this.kernel, this.debugAdapter, this.debugCell);
 
@@ -41,7 +41,7 @@ export class DebugCellController implements DebuggingDelegate {
     }
 }
 
-export class RunByLineController implements DebuggingDelegate {
+export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;
 
     constructor(
@@ -72,7 +72,7 @@ export class RunByLineController implements DebuggingDelegate {
         return config.__mode;
     }
 
-    public async willSendEvent(msg: DebugProtocolMessage): Promise<boolean> {
+    public async onWillSendEvent(msg: DebugProtocolMessage): Promise<boolean> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const anyMsg = msg as any;
 
@@ -87,7 +87,7 @@ export class RunByLineController implements DebuggingDelegate {
         return false;
     }
 
-    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
+    public async onWillSendRequest(request: DebugProtocol.Request): Promise<void> {
         if (request.command === 'configurationDone') {
             await this.initializeExecute();
         }
