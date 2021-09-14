@@ -37,15 +37,14 @@ body:
   id: jupyter-version
   attributes:
     label: Jupyter Extension Version
-    placeholder: The version can be found at the top of the extension's description in the extensions sidebar.
+    description: The version can be found at the top of the extension's description in the extensions sidebar.
   validations:
     required: true
 - type: textarea
   id: logs
   attributes:
     label: Jupyter logs
-    description: Please copy and paste all of the text in the Jupyter Output panel. 
-    placeholder: This can really help us a lot to understand what may have gone wrong!
+    description: Please copy and paste all of the text in the Jupyter Output panel. This can really help us a lot to understand what may have gone wrong!
     render: shell
 - type: markdown
   attributes:
@@ -67,26 +66,26 @@ body:
   id: vscode-version
   attributes:
     label: VS Code Version?
-    placeholder: What version of VS Code are you using? You can copy the contents of Help > About and paste here.
+    description: What version of VS Code are you using? You can copy the contents of Help > About and paste here.
 - type: input
   id: python-extension-version
   attributes:
     label: Python Extension Version
-    placeholder: If using Python, what version of the extension are you using? The version can be found at the top of the extension's description in the extensions sidebar.
+    description: If using Python, what version of the extension are you using? The version can be found at the top of the extension's description in the extensions sidebar.
   validations:
     required: false
 - type: input
   id: python-version
   attributes:
     label: Python Version
-    placeholder: If using Python, what version are you using?
+    description: If using Python, what version are you using?
   validations:
     required: false
 - type: input
   id: anaconda-version
   attributes:
     label: Anaconda Version
-    placeholder: If applicable, what version of the Anaconda are you using?
+    description: If applicable, what version of the Anaconda are you using?
   validations:
     required: false
 - type: dropdown
