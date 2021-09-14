@@ -33,7 +33,7 @@ body:
       - Insiders
   validations:
     required: true
-- type: textarea
+- type: input
   id: jupyter-version
   attributes:
     label: Jupyter Extension Version
@@ -63,26 +63,26 @@ body:
       - R
       - Julia
       - C#
-- type: textarea
+- type: input
   id: vscode-version
   attributes:
     label: VS Code Version?
     placeholder: What version of VS Code are you using? You can copy the contents of Help > About and paste here.
-- type: textarea
+- type: input
   id: python-extension-version
   attributes:
     label: Python Extension Version
     placeholder: If using Python, what version of the extension are you using? The version can be found at the top of the extension's description in the extensions sidebar.
   validations:
     required: false
-- type: textarea
+- type: input
   id: python-version
   attributes:
     label: Python Version
     placeholder: If using Python, what version are you using?
   validations:
     required: false
-- type: textarea
+- type: input
   id: anaconda-version
   attributes:
     label: Anaconda Version
