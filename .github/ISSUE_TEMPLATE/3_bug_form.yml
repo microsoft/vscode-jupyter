@@ -1,6 +1,6 @@
-name: TEST Bug Report Form TEST  
+name: Bug Report Form  
 description: Bug report for the Jupyter Extension for VS Code
-title: "[Bug]: "
+title: "[Title]: "
 labels: [bug, needs-triage]
 assignees:
   - octocat
