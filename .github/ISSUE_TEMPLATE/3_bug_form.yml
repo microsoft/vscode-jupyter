@@ -13,17 +13,15 @@ body:
   id: feature-focus
   attributes:
     label: How are you mainly using the Jupyter extension?
-    description: You man select more than one.
     options:
       - label: Notebooks (.ipynb)
-      - label: Interactive Window and or Cell Scripts (ex. .py files with #%%)
+      - label: Interactive Window and or Cell Scripts (ex. .py files with \#%%)
 - type: textarea
   id: what-happened
   attributes:
     label: What happened?
     description: What did you expect to happen?
-    placeholder: Tell us what you see!
-    value: "A bug happened!"
+    placeholder: Tell us what happened or didn't happen!
   validations:
     required: true
 - type: dropdown
@@ -37,27 +35,13 @@ body:
   validations:
     required: true
 - type: textarea
-  id: vscode-version
-  attributes:
-    label: VS Code Version?
-    description: What version of VS Code are you using?
-    placeholder: You can copy the contents of Help > About and paste here.
-- type: textarea
   id: jupyter-version
   attributes:
-    label: Version
+    label: Jupyter Extension Version
     description: What version of the Jupyter extension are you using?
     placeholder: The version can be found at the top of the extension's description in the extensions sidebar.
   validations:
     required: true
-- type: textarea
-  id: python-extension-version
-  attributes:
-    label: Python Extension Version
-    description: What version of the Python extension are you using?
-    placeholder: The version can be found at the top of the extension's description in the extensions sidebar.
-  validations:
-    required: false
 - type: dropdown
   id: coding-language
   attributes:
@@ -69,6 +53,20 @@ body:
       - R
       - Julia
       - C#
+- type: textarea
+  id: python-extension-version
+  attributes:
+    label: Python Extension Version
+    description: If using Python, what version of the extension are you using?
+    placeholder: The version can be found at the top of the extension's description in the extensions sidebar.
+  validations:
+    required: false
+- type: textarea
+  id: vscode-version
+  attributes:
+    label: VS Code Version?
+    description: What version of VS Code are you using?
+    placeholder: You can copy the contents of Help > About and paste here.
 - type: textarea
   id: python-version
   attributes:
@@ -94,7 +92,7 @@ body:
       - Windows
       - Browser
   validations:
-    required: true
+    required: false
 - type: dropdown
   id: local-remote
   attributes:
@@ -109,6 +107,7 @@ body:
   attributes:
     label: Jupyter logs
     description: Please copy and paste all of the text in the Jupyter Output panel. 
+    placeholder: This can really help us a lot to understand what may have gone wrong!
     render: shell
 - type: checkboxes
   id: terms
