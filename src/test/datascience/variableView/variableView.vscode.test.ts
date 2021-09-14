@@ -3,24 +3,19 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { IDisposable, Product } from '../../../client/common/types';
+import { IDisposable } from '../../../client/common/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
-    prewarmNotebooks,
     workAroundVSCodeNotebookStartPages,
-    hijackPrompt,
     startJupyterServer
 } from '../notebook/helper';
 import { traceInfo } from '../../../client/common/logger';
-import { ProductNames } from '../../../client/common/installer/productNames';
-import { Common } from '../../../client/common/utils/localize';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 'use strict';
 // import { assert } from 'chai';
 // import * as sinon from 'sinon';
