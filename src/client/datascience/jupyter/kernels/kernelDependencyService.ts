@@ -44,7 +44,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
-    ) { }
+    ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
@@ -144,9 +144,9 @@ export class KernelDependencyService implements IKernelDependencyService {
         const selection = this.isCodeSpace
             ? installPrompt
             : await Promise.race([
-                this.appShell.showErrorMessage(message, { modal: true }, ...options),
-                promptCancellationPromise
-            ]);
+                  this.appShell.showErrorMessage(message, { modal: true }, ...options),
+                  promptCancellationPromise
+              ]);
         if (installerToken.isCancellationRequested) {
             sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
                 action: 'dismissed',
