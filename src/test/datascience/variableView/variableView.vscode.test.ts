@@ -99,9 +99,6 @@ suite('DataScience - VariableView', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('VV Testing (webview-test)', async function () {
-        assert.isFalse(true, 'Should Fail');
-    });
     test('Can show VariableView (webview-test)', async function () {
         console.log('IANHU g');
         // Send the command to open the view
@@ -142,6 +139,78 @@ suite('DataScience - VariableView', function () {
             { name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }
         ];
         verifyViewVariables(expectedVariables, htmlResult);
+    });
+
+    test('VariableView document switching (webview-test)', async function () {
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        // Aquire the variable view from the provider
+        const coreVariableView = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView = (coreVariableView as any) as ITestWebviewHost;
+
+        // Add our message listener
+        const onMessageListener = new OnMessageListener(variableView);
+
+        // One intitial refresh, and one cell executed
+        let variablesPromise = onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+            numberOfTimes: 2
+        });
+
+        // Add one simple cell and execute it
+        await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
+        await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
+
+        await variablesPromise;
+
+        const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
+
+        // Parse the HTML for our expected variables
+        const expectedVariables = [{ name: 'test', type: 'str', length: '11', value: ' MYTESTVALUE' }];
+        verifyViewVariables(expectedVariables, htmlResult);
+
+        // Expect just a refresh on the next transition
+        variablesPromise = onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+            numberOfTimes: 1
+        });
+
+        // Now create a second document
+        await createEmptyPythonNotebook(disposables);
+
+        await variablesPromise;
+
+        // Verify that the view is empty
+        const emptyHtmlResult = await variableView?.getHTMLById('variable-view-main-panel');
+        verifyViewVariables([], emptyHtmlResult);
+
+        // We expect two cells to update
+        variablesPromise = onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+            numberOfTimes: 2
+        });
+
+        // Execute a cell on the second document
+        await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 0 });
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
+        await Promise.all([runCell(cell2), waitForExecutionCompletedSuccessfully(cell2)]);
+
+        // Execute a second cell on the second document
+        await insertCodeCell('test3 = "MYTESTVALUE3"', { index: 1 });
+        const cell3 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        await Promise.all([runCell(cell3), waitForExecutionCompletedSuccessfully(cell3)]);
+
+        // Wait until our VariablesComplete message to see that we have the new variables and have rendered them
+        await variablesPromise;
+
+        const htmlResult2 = await variableView?.getHTMLById('variable-view-main-panel');
+
+        // Parse the HTML for our expected variables
+        const expectedVariables2 = [
+            { name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' },
+            { name: 'test3', type: 'str', length: '12', value: ' MYTESTVALUE3' }
+        ];
+        verifyViewVariables(expectedVariables2, htmlResult2);
     });
 });
 
