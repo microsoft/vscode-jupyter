@@ -236,6 +236,16 @@ export class DebuggerVariables extends DebugLocationTracker
         // When the initialize response comes back, indicate we have started.
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
+        } else if (message.type === 'event' && message.event === 'stopped' && this.activeNotebookIsDebugging()) {
+            const doc = this.vscNotebook.activeNotebookEditor?.document;
+            const threadId = (message as DebugProtocol.StoppedEvent).body.threadId;
+            if (doc) {
+                const callStackTrace = async () => {
+                    const session = await this.debuggingManager.getDebugSession(doc);
+                    void session?.customRequest('stackTrace', { threadId, startFrame: 0, levels: 1 });
+                };
+                void callStackTrace();
+            }
         } else if (
             (message as DebugProtocol.StackTraceResponse).command === 'stackTrace' &&
             this.activeNotebookIsDebugging()
