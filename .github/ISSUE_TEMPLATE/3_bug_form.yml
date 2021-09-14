@@ -1,4 +1,4 @@
-name: TEST TEST Bug Report Form TEST TEST  
+name: TEST Bug Report Form TEST  
 description: Bug report for the Jupyter Extension for VS Code
 title: "[Bug]: "
 labels: [bug, needs-triage]
@@ -16,6 +16,9 @@ body:
     options:
       - label: Notebooks (.ipynb)
       - label: Interactive Window and or Cell Scripts (ex. .py files with \#%%)
+      - label: Both
+    validations:
+      required: true
 - type: textarea
   id: what-happened
   attributes:
@@ -42,6 +45,18 @@ body:
     placeholder: The version can be found at the top of the extension's description in the extensions sidebar.
   validations:
     required: true
+- type: textarea
+  id: logs
+  attributes:
+    label: Jupyter logs
+    description: Please copy and paste all of the text in the Jupyter Output panel. 
+    placeholder: This can really help us a lot to understand what may have gone wrong!
+    render: shell
+- type: markdown
+  attributes:
+    value: |
+      ---
+      The following fields are optional but can help us make a better determination of what may have gone wrong.
 - type: dropdown
   id: coding-language
   attributes:
@@ -102,13 +117,6 @@ body:
       - Local
       - Remote
       - N/A or Not sure
-- type: textarea
-  id: logs
-  attributes:
-    label: Jupyter logs
-    description: Please copy and paste all of the text in the Jupyter Output panel. 
-    placeholder: This can really help us a lot to understand what may have gone wrong!
-    render: shell
 - type: checkboxes
   id: terms
   attributes:
