@@ -67,8 +67,7 @@ body:
   id: vscode-version
   attributes:
     label: VS Code Version?
-    description: What version of VS Code are you using?
-    placeholder: You can copy the contents of Help > About and paste here.
+    placeholder: What version of VS Code are you using? You can copy the contents of Help > About and paste here.
 - type: textarea
   id: python-extension-version
   attributes:
