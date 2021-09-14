@@ -54,9 +54,7 @@ export class DebuggerVariables extends DebugLocationTracker
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
     ) {
         super(undefined);
-        this.debuggingManager.doneDebugging(() => {
-            this.refreshEventEmitter.fire();
-        }, this);
+        this.debuggingManager.doneDebugging(() => this.refreshEventEmitter.fire(), this);
     }
 
     public get refreshRequired(): Event<void> {
