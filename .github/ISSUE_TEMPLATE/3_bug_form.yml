@@ -5,10 +5,10 @@ labels: [bug, needs-triage]
 assignees:
   - octocat
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for taking the time to fill out this bug report!
+- type: markdown
+  attributes:
+    value: |
+      Thanks for taking the time to fill out this bug report!
 - type: checkboxes
   id: feature-focus
   attributes:
