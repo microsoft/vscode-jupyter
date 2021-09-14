@@ -40,6 +40,10 @@ function getEntry(bundle) {
             return {
                 errorRenderer: [`./src/datascience-ui/error-renderer/index.ts`]
             };
+        case 'imageRenderer':
+            return {
+                imageRenderer: ['./src/datascience-ui/image-renderer/index.ts']
+            };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
     }
@@ -62,32 +66,32 @@ function getPlugins(bundle) {
     if (isProdBuild) {
         plugins.push(...common.getDefaultPlugins(bundle));
     }
+    const definePlugin = new webpack.DefinePlugin({
+        'process.env': {
+            NODE_ENV: JSON.stringify('production')
+        }
+    });
     switch (bundle) {
         case 'viewers': {
-            const definePlugin = new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
-            });
 
             plugins.push(
                 ...(isProdBuild ? [definePlugin] : []),
                 ...[
                     new HtmlWebpackPlugin({
                         template: 'src/datascience-ui/plot/index.html',
-                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                        indexUrl: `${constants.ExtensionRootDir} / out / 1`,
                         chunks: ['commons', 'plotViewer'],
                         filename: 'index.plotViewer.html'
                     }),
                     new HtmlWebpackPlugin({
                         template: 'src/datascience-ui/data-explorer/index.html',
-                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                        indexUrl: `${constants.ExtensionRootDir} / out / 1`,
                         chunks: ['commons', 'dataExplorer'],
                         filename: 'index.dataExplorer.html'
                     }),
                     new HtmlWebpackPlugin({
                         template: 'src/datascience-ui/variable-view/index.html',
-                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                        indexUrl: `${constants.ExtensionRootDir} / out / 1`,
                         chunks: ['commons', 'variableView'],
                         filename: 'index.variableView.html'
                     })
@@ -95,34 +99,13 @@ function getPlugins(bundle) {
             );
             break;
         }
-        case 'ipywidgetsRenderer': {
-            const definePlugin = new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
-            });
-
-            plugins.push(...(isProdBuild ? [definePlugin] : []));
-            plugins.push(new EsmWebpackPlugin());
-            break;
-        }
         case 'ipywidgetsKernel': {
-            const definePlugin = new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
-            });
-
             plugins.push(...(isProdBuild ? [definePlugin] : []));
             break;
         }
+        case 'ipywidgetsRenderer':
+        case 'imageRenderer':
         case 'errorRenderer': {
-            const definePlugin = new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
-            });
-
             plugins.push(...(isProdBuild ? [definePlugin] : []));
             plugins.push(new EsmWebpackPlugin());
             break;
@@ -135,8 +118,8 @@ function getPlugins(bundle) {
 }
 
 function buildConfiguration(bundle) {
-    // console.error(`Bundle = ${bundle}`);
-    // Folder inside `datascience-ui` that will be created and where the files will be dumped.
+    // console.error(`Bundle = ${ bundle }`);
+    // Folder inside `datascience - ui` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
     const filesToCopy = [];
     if (bundle === 'ipywidgetsRenderer') {
@@ -163,12 +146,12 @@ function buildConfiguration(bundle) {
         );
     }
     let outputProps =
-        bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer'
+        bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer' && bundle !== 'imageRenderer'
             ? {}
             : {
-                  library: 'LIB',
-                  libraryTarget: 'var'
-              };
+                library: 'LIB',
+                libraryTarget: 'var'
+            };
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'src/datascience-ui/ipywidgets/kernel/require.js'),
@@ -300,3 +283,4 @@ exports.viewers = buildConfiguration('viewers');
 exports.ipywidgetsKernel = buildConfiguration('ipywidgetsKernel');
 exports.ipywidgetsRenderer = buildConfiguration('ipywidgetsRenderer');
 exports.errorRenderer = buildConfiguration('errorRenderer');
+exports.imageRenderer = buildConfiguration('imageRenderer');

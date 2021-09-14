@@ -7,7 +7,7 @@ import { IExtensionSyncActivationService } from '../../../activation/types';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { IDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { JupyterNotebookRenderer } from '../constants';
+import { JupyterNotebookImageRenderer } from '../constants';
 import { PlotSaveHandler } from './plotSaveHandler';
 import { PlotViewHandler } from './plotViewHandler';
 
@@ -23,7 +23,7 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
         disposeAllDisposables(this.disposables);
     }
     public activate() {
-        const api = notebooks.createRendererMessaging(JupyterNotebookRenderer);
+        const api = notebooks.createRendererMessaging(JupyterNotebookImageRenderer);
         api.onDidReceiveMessage(
             ({ editor, message }) => {
                 if (message.type === 'saveAs') {
