@@ -126,9 +126,10 @@ export class KernelDependencyService implements IKernelDependencyService {
             interpreter.displayName || interpreter.path,
             ProductNames.get(Product.ipykernel)!
         );
+        const ipykernelProductName = ProductNames.get(Product.ipykernel)!;
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action: 'displayed',
-            moduleName: ProductNames.get(Product.ipykernel)!
+            moduleName: ipykernelProductName
         });
         const promptCancellationPromise = createPromiseFromCancellation({
             cancelAction: 'resolve',
@@ -147,12 +148,24 @@ export class KernelDependencyService implements IKernelDependencyService {
                   promptCancellationPromise
               ]);
         if (installerToken.isCancellationRequested) {
+            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                action: 'dismissed',
+                moduleName: ipykernelProductName
+            });
             return KernelInterpreterDependencyResponse.cancel;
         }
 
         if (selection === selectKernel) {
+            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                action: 'differentKernel',
+                moduleName: ipykernelProductName
+            });
             return KernelInterpreterDependencyResponse.selectDifferentKernel;
         } else if (selection === installPrompt) {
+            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                action: 'install',
+                moduleName: ipykernelProductName
+            });
             const cancellationPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,
@@ -164,11 +177,29 @@ export class KernelDependencyService implements IKernelDependencyService {
                 cancellationPromise
             ]);
             if (response === InstallerResponse.Installed) {
+                sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                    action: 'installed',
+                    moduleName: ipykernelProductName
+                });
                 return KernelInterpreterDependencyResponse.ok;
             } else if (response === InstallerResponse.Ignore) {
+                sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                    action: 'ignored',
+                    moduleName: ipykernelProductName
+                });
                 return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
             }
+            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                action: 'disabled',
+                moduleName: ipykernelProductName
+            });
+        } else {
+            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                action: 'dismissed',
+                moduleName: ipykernelProductName
+            });
         }
+
         return KernelInterpreterDependencyResponse.cancel;
     }
 }
