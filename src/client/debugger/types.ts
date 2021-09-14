@@ -16,7 +16,7 @@ export interface IKernelDebugAdapter {
 
 export const IDebuggingManager = Symbol('IDebuggingManager');
 export interface IDebuggingManager {
-    readonly doneDebugging: Event<void>;
+    readonly onDoneDebugging: Event<void>;
     isDebugging(notebook: NotebookDocument): boolean;
     getDebugMode(notebook: NotebookDocument): KernelDebugMode | undefined;
     getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined;

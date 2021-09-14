@@ -190,7 +190,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         );
     }
 
-    public get doneDebugging(): Event<void> {
+    public get onDoneDebugging(): Event<void> {
         return this._doneDebugging.event;
     }
 
