@@ -31,7 +31,7 @@
     "DataScience.exportAsQuickPickPlaceholder": "匯出為...",
     "DataScience.runByLine": "逐行執行 (F10)",
     "DataScience.debugCellCommandTitle": "偵錯儲存格",
-    "DataScience.exportPythonQuickPickLabel": "Python 指令碼,
+    "DataScience.exportPythonQuickPickLabel": "Python 指令碼",
     "DataScience.variableExplorerNameColumn": "名稱",
     "DataScience.variableExplorerTypeColumn": "類型",
     "DataScience.variableExplorerCountColumn": "大小",
