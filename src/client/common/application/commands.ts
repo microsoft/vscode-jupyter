@@ -168,6 +168,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.DebugNotebook]: [];
     [DSCommands.RunByLine]: [NotebookCell];
     [DSCommands.RunAndDebugCell]: [NotebookCell];
-    [DSCommands.RunByLineContinue]: [NotebookCell];
+    [DSCommands.RunByLineNext]: [NotebookCell];
     [DSCommands.RunByLineStop]: [];
 }

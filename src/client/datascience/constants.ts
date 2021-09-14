@@ -161,7 +161,7 @@ export namespace Commands {
     export const DebugNotebook = 'jupyter.debugNotebook';
     export const RunByLine = 'jupyter.runByLine';
     export const RunAndDebugCell = 'jupyter.runAndDebugCell';
-    export const RunByLineContinue = 'jupyter.runByLineContinue';
+    export const RunByLineNext = 'jupyter.runByLineNext';
     export const RunByLineStop = 'jupyter.runByLineStop';
 }
 
