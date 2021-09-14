@@ -64,31 +64,30 @@ body:
       - Julia
       - C#
 - type: textarea
-  id: python-extension-version
-  attributes:
-    label: Python Extension Version
-    description: If using Python, what version of the extension are you using?
-    placeholder: The version can be found at the top of the extension's description in the extensions sidebar.
-  validations:
-    required: false
-- type: textarea
   id: vscode-version
   attributes:
     label: VS Code Version?
     description: What version of VS Code are you using?
     placeholder: You can copy the contents of Help > About and paste here.
 - type: textarea
+  id: python-extension-version
+  attributes:
+    label: Python Extension Version
+    placeholder: If using Python, what version of the extension are you using? The version can be found at the top of the extension's description in the extensions sidebar.
+  validations:
+    required: false
+- type: textarea
   id: python-version
   attributes:
     label: Python Version
-    description: What version of Python are you using?
+    placeholder: If using Python, what version are you using?
   validations:
     required: false
 - type: textarea
   id: anaconda-version
   attributes:
     label: Anaconda Version
-    description: If applicable, what version of the Anaconda are you using?
+    placeholder: If applicable, what version of the Anaconda are you using?
   validations:
     required: false
 - type: dropdown
