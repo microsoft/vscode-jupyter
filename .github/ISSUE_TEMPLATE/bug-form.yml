@@ -1,0 +1,118 @@
+name: TEST TEST Bug Report Form TEST TEST  
+description: Bug report for the Jupyter Extension for VS Code
+title: "[Bug]: "
+labels: [bug, needs-triage]
+assignees:
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: checkboxes
+    id: feature-focus
+    attributes:
+      label: How are you mainly using the Jupyter extension?
+      options:
+        - Notebooks (.ipynb)
+        - Interactive Window and or Cell Scripts (ex. .py files with #%%)
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect to happen?
+      placeholder: Tell us what you see!
+      value: "A bug happened!"
+    validations:
+      required: true
+  - type: dropdown
+    id: vscode-flavor
+    attributes:
+      label: What flavor of VS Code are you using?
+      multiple: true
+      options:
+        - Stable
+        - Insiders
+    validations:
+      required: true
+  - type: textarea
+    id: vscode-version
+    attributes:
+      label: VS Code Version?
+      description: What version of VS Code are you using?
+      placeholder: You can copy the contents of Help > About and paste here.
+  - type: textarea
+    id: jupyter-version
+    attributes:
+      label: Version
+      description: What version of the Jupyter extension are you using?
+      placeholder: The version can be found at the top of the extension's description in the extensions sidebar.
+    validations:
+      required: true
+  - type: textarea
+    id: python-extension-version
+    attributes:
+      label: Python Extension Version
+      description: What version of the Python extension are you using?
+      placeholder: The version can be found at the top of the extension's description in the extensions sidebar.
+    validations:
+      required: false
+  - type: dropdown
+    id: coding-language
+    attributes:
+      label: What coding language are you working with?
+      multiple: true
+      options:
+        - Python
+        - SQL
+        - R
+        - Julia
+        - C#
+  - type: textarea
+    id: python-version
+    attributes:
+      label: Python Version
+      description: What version of Python are you using?
+    validations:
+      required: false
+  - type: textarea
+    id: anaconda-version
+    attributes:
+      label: Anaconda Version
+      description: If applicable, what version of the Anaconda are you using?
+    validations:
+      required: false
+  - type: dropdown
+    id: os
+    attributes:
+      label: What OS are you running on?
+      multiple: true
+      options:
+        - Linux distro
+        - Mac
+        - Windows
+        - Browser
+    validations:
+      required: true
+  - type: dropdown
+    id: local-remote
+    attributes:
+      label: Running Jupyter locally or remotely?
+      multiple:
+      options:
+        - Local
+        - Remote
+        - N/A or Not sure
+  - type: textarea
+    id: logs
+    attributes:
+      label: Jupyter logs
+      description: Please copy and paste all of the text in the Jupyter Output panel. 
+      render: shell
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/microsoft/vscode-jupyter/blob/main/CODE_OF_CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
