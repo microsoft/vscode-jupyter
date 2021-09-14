@@ -1,67 +1,70 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+// import { assert } from 'chai';
+// import * as sinon from 'sinon';
+// import { IVSCodeNotebook } from '../../../client/common/application/types';
+// import { IDisposable } from '../../../client/common/types';
+// import { IExtensionTestApi } from '../../common';
+// import { initialize } from '../../initialize';
+// import {
+// canRunNotebookTests,
+// closeNotebooksAndCleanUpAfterTests,
+// createEmptyPythonNotebook,
+// workAroundVSCodeNotebookStartPages,
+// startJupyterServer
+// } from '../notebook/helper';
+// import { traceInfo } from '../../../client/common/logger';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+'use strict';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
+import { Commands } from '../../../client/datascience/constants';
+import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
 import { IExtensionTestApi } from '../../common';
-import { initialize } from '../../initialize';
+import { initialize, IS_REMOTE_NATIVE_TEST, IS_WEBVIEW_BUILD_SKIPPED } from '../../initialize';
 import {
     canRunNotebookTests,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
+    runCell,
+    insertCodeCell,
+    waitForExecutionCompletedSuccessfully,
     workAroundVSCodeNotebookStartPages,
     startJupyterServer
 } from '../notebook/helper';
+import { OnMessageListener } from '../vscodeTestHelpers';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { verifyViewVariables } from './variableViewHelpers';
+import { ITestVariableViewProvider } from './variableViewTestInterfaces';
+import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../client/common/logger';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-'use strict';
-// import { assert } from 'chai';
-// import * as sinon from 'sinon';
-// import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
-// import { IDisposable, Product } from '../../../client/common/types';
-// import { Commands } from '../../../client/datascience/constants';
-// import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
-// import { IExtensionTestApi } from '../../common';
-// import { initialize, IS_REMOTE_NATIVE_TEST, IS_WEBVIEW_BUILD_SKIPPED } from '../../initialize';
-// import {
-// canRunNotebookTests,
-// closeNotebooks,
-// closeNotebooksAndCleanUpAfterTests,
-// createEmptyPythonNotebook,
-// runCell,
-// insertCodeCell,
-// prewarmNotebooks,
-// waitForExecutionCompletedSuccessfully,
-// workAroundVSCodeNotebookStartPages,
-// hijackPrompt,
-// startJupyterServer
-// } from '../notebook/helper';
-// import { OnMessageListener } from '../vscodeTestHelpers';
-// import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-// import { verifyViewVariables } from './variableViewHelpers';
-// import { ITestVariableViewProvider } from './variableViewTestInterfaces';
-// import { ITestWebviewHost } from '../testInterfaces';
-// import { traceInfo } from '../../../client/common/logger';
-// import { ProductNames } from '../../../client/common/installer/productNames';
-// import { Common } from '../../../client/common/utils/localize';
-
-// // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-// const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 suite('DataScience - VariableView', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
+    let commandManager: ICommandManager;
+    let variableViewProvider: ITestVariableViewProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo('Suite Setup');
         this.timeout(120_000);
         api = await initialize();
-        if (!(await canRunNotebookTests())) {
+
+        // We need to have webviews built to run this, so skip if we don't have them
+        if (IS_WEBVIEW_BUILD_SKIPPED) {
+            console.log('Variable view tests require webview build to be enabled');
             return this.skip();
         }
+
+        // Don't run if we can't use the native notebook interface
+        if (IS_REMOTE_NATIVE_TEST || !(await canRunNotebookTests())) {
+            return this.skip();
+        }
+
         await workAroundVSCodeNotebookStartPages();
         // await hijackPrompt(
         // 'showErrorMessage',
@@ -74,6 +77,10 @@ suite('DataScience - VariableView', function () {
         // await prewarmNotebooks();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+        const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
         traceInfo('Suite Setup (completed)');
     });
     setup(async function () {
@@ -92,8 +99,49 @@ suite('DataScience - VariableView', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('IANHU Can show VariableView (webview-test)', async function () {
+    test('VV Testing (webview-test)', async function () {
         assert.isFalse(true, 'Should Fail');
+    });
+    test('Can show VariableView (webview-test)', async function () {
+        console.log('IANHU g');
+        // Send the command to open the view
+        await commandManager.executeCommand(Commands.OpenVariableView);
+
+        // Aquire the variable view from the provider
+        const coreVariableView = await variableViewProvider.activeVariableView;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const variableView = (coreVariableView as any) as ITestWebviewHost;
+
+        // Add our message listener
+        const onMessageListener = new OnMessageListener(variableView);
+
+        // We get one initial refresh of the variables, then a refresh for each cell executed
+        const variablesPromise = onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+            numberOfTimes: 3
+        });
+
+        // Add one simple cell and execute it
+        await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        await runCell(cell);
+        await waitForExecutionCompletedSuccessfully(cell);
+
+        // Send a second cell
+        await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
+        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        await runCell(cell2);
+
+        // Wait for the expected variable updates
+        await variablesPromise;
+
+        const htmlResult = await variableView?.getHTMLById('variable-view-main-panel');
+
+        // Parse the HTML for our expected variables
+        const expectedVariables = [
+            { name: 'test', type: 'str', length: '11', value: ' MYTESTVALUE' },
+            { name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }
+        ];
+        verifyViewVariables(expectedVariables, htmlResult);
     });
 });
 
