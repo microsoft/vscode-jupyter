@@ -13,9 +13,10 @@ body:
   id: feature-focus
   attributes:
     label: How are you mainly using the Jupyter extension?
+    description: You man select more than one.
     options:
-      - Notebooks (.ipynb)
-      - Interactive Window and or Cell Scripts (ex. .py files with #%%)
+      - label: Notebooks (.ipynb)
+      - label: Interactive Window and or Cell Scripts (ex. .py files with #%%)
 - type: textarea
   id: what-happened
   attributes:
