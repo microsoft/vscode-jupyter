@@ -24,7 +24,7 @@ import { INotebookCompletion, INotebookProvider } from '../../types';
 import { findAssociatedNotebookDocument } from '../helpers/helpers';
 
 @injectable()
-export class NotebookCompletionProvider implements CompletionItemProvider {
+export class JupyterCompletionProvider implements CompletionItemProvider {
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
