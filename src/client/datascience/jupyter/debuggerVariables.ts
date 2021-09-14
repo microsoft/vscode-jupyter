@@ -237,41 +237,7 @@ export class DebuggerVariables extends DebugLocationTracker
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
         } else if (message.type === 'event' && message.event === 'stopped' && this.activeNotebookIsDebugging()) {
-            const doc = this.vscNotebook.activeNotebookEditor?.document;
-            const threadId = (message as DebugProtocol.StoppedEvent).body.threadId;
-            if (doc) {
-                const callStackTrace = async () => {
-                    const session = await this.debuggingManager.getDebugSession(doc);
-                    void session?.customRequest('stackTrace', { threadId, startFrame: 0, levels: 1 });
-                };
-                void callStackTrace();
-            }
-        } else if (
-            (message as DebugProtocol.StackTraceResponse).command === 'stackTrace' &&
-            this.activeNotebookIsDebugging()
-        ) {
-            const sf = (message as DebugProtocol.StackTraceResponse).body.stackFrames[0];
-            const callScopes = async () => {
-                const doc = this.vscNotebook.activeNotebookEditor?.document;
-                if (doc) {
-                    const session = await this.debuggingManager.getDebugSession(doc);
-                    const mode = this.debuggingManager.getDebugMode(doc);
-                    if (mode === KernelDebugMode.RunByLine) {
-                        const cell = this.debuggingManager.getDebugCell(doc);
-                        // Only call scopes (and variables) if we are stopped on the cell we are executing
-                        if (sf.source && cell && sf.source.path === cell.document.uri.toString()) {
-                            void session?.customRequest('scopes', { frameId: sf.id });
-                        }
-                    } else {
-                        // Only call scopes (and variables) if we are stopped on the notebook we are executing
-                        const docURI = path.basename(doc.uri.toString());
-                        if (sf.source && sf.source.path && sf.source.path.includes(docURI)) {
-                            void session?.customRequest('scopes', { frameId: sf.id });
-                        }
-                    }
-                }
-            };
-            void callScopes();
+            void this.handleNotebookVariables(message as DebugProtocol.StoppedEvent);
         } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
             const response = message as DebugProtocol.ScopesResponse;
 
@@ -280,16 +246,6 @@ export class DebuggerVariables extends DebugLocationTracker
             if (newVariablesReference !== this.currentVariablesReference) {
                 this.currentVariablesReference = newVariablesReference;
                 this.currentSeqNumsForVariables.clear();
-            }
-
-            // Catch the scopes response and use its variablesReference to send a variables message
-            const doc = this.vscNotebook.activeNotebookEditor?.document;
-            if (this.activeNotebookIsDebugging() && doc) {
-                const callVariables = async () => {
-                    const session = await this.debuggingManager.getDebugSession(doc);
-                    void session?.customRequest('variables', { variablesReference: newVariablesReference });
-                };
-                void callVariables();
             }
         } else if (
             message.type === 'response' &&
@@ -310,10 +266,6 @@ export class DebuggerVariables extends DebugLocationTracker
 
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);
             this.monkeyPatchDataViewableVariables(message);
-
-            if (this.activeNotebookIsDebugging()) {
-                this.refreshEventEmitter.fire();
-            }
         } else if (message.type === 'event' && message.event === 'terminated') {
             // When the debugger exits, make sure the variables are cleared
             this.lastKnownVariables = [];
@@ -461,6 +413,65 @@ export class DebuggerVariables extends DebugLocationTracker
     private activeNotebookIsDebugging(): boolean {
         const activeNotebook = this.vscNotebook.activeNotebookEditor;
         return !!activeNotebook && this.debuggingManager.isDebugging(activeNotebook.document);
+    }
+
+    // This handles all the debug session calls, variable handling, and refresh calls needed for notebook debugging
+    private async handleNotebookVariables(stoppedMessage: DebugProtocol.StoppedEvent): Promise<void> {
+        const doc = this.vscNotebook.activeNotebookEditor?.document;
+        const threadId = stoppedMessage.body.threadId;
+
+        if (doc) {
+            const session = await this.debuggingManager.getDebugSession(doc);
+            if (session) {
+                // Call stack trace
+                const stResponse = await session.customRequest('stackTrace', {
+                    threadId,
+                    startFrame: 0,
+                    levels: 1
+                });
+
+                //  Call scopes
+                const sf = stResponse.stackFrames[0];
+                const mode = this.debuggingManager.getDebugMode(doc);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                let scopesResponse: any | undefined;
+
+                if (mode === KernelDebugMode.RunByLine) {
+                    // Only call scopes (and variables) if we are stopped on the cell we are executing
+                    const cell = this.debuggingManager.getDebugCell(doc);
+                    if (sf.source && cell && sf.source.path === cell.document.uri.toString()) {
+                        scopesResponse = await session.customRequest('scopes', { frameId: sf.id });
+                    }
+                } else {
+                    // Only call scopes (and variables) if we are stopped on the notebook we are executing
+                    const docURI = path.basename(doc.uri.toString());
+                    if (sf.source && sf.source.path && sf.source.path.includes(docURI)) {
+                        scopesResponse = await session.customRequest('scopes', { frameId: sf.id });
+                    }
+                }
+
+                // Call variables
+                if (scopesResponse) {
+                    // Keep track of variablesReference because "hover" requests also try to update variables
+                    const newVariablesReference = scopesResponse.scopes[0].variablesReference;
+                    if (newVariablesReference !== this.currentVariablesReference) {
+                        this.currentVariablesReference = newVariablesReference;
+                        this.currentSeqNumsForVariables.clear();
+                    }
+
+                    // Catch the scopes response and use its variablesReference to send a variables message
+                    const varResponse: DebugProtocol.VariablesResponse = await session.customRequest('variables', {
+                        variablesReference: newVariablesReference
+                    });
+
+                    // Refresh variable view
+                    this.updateVariables(undefined, varResponse as DebugProtocol.VariablesResponse);
+                    this.monkeyPatchDataViewableVariables(varResponse);
+
+                    this.refreshEventEmitter.fire();
+                }
+            }
+        }
     }
 }
 
