@@ -417,9 +417,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     this.pythonInstaller.isProductVersionCompatible(Product.ipykernel, '>=6.0.0', interpreter);
                 const status = waitingMessage
                     ? await this.appShell.withProgress(
-                        { location: ProgressLocation.Notification, title: waitingMessage },
-                        checkCompatible
-                    )
+                          { location: ProgressLocation.Notification, title: waitingMessage },
+                          checkCompatible
+                      )
                     : await checkCompatible();
                 const result = status === ProductInstallStatus.Installed;
 

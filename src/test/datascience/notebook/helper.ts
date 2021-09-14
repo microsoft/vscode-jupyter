@@ -53,9 +53,8 @@ import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
-import { KernelDebugAdapter } from '../../../client/debugger/jupyter/kernelDebugAdapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IDebuggingManager } from '../../../client/debugger/types';
+import { IDebuggingManager, IKernelDebugAdapter } from '../../../client/debugger/types';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -824,7 +823,7 @@ export async function asPromise<T>(
 
 export async function waitForDebugEvent<T>(
     eventType: string,
-    debugAdapter: KernelDebugAdapter,
+    debugAdapter: IKernelDebugAdapter,
     timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
 ): Promise<T> {
     return asPromise(
@@ -834,20 +833,23 @@ export async function waitForDebugEvent<T>(
     ) as Promise<T>;
 }
 
-export async function waitForStoppedEvent(debugAdapter: KernelDebugAdapter): Promise<DebugProtocol.StoppedEvent> {
+export async function waitForStoppedEvent(debugAdapter: IKernelDebugAdapter): Promise<DebugProtocol.StoppedEvent> {
     return waitForDebugEvent('stopped', debugAdapter, 10_000);
 }
 
-export async function getDebugSessionAndAdapter(debuggingManager: IDebuggingManager, doc: NotebookDocument): Promise<{ session: DebugSession; debugAdapter: KernelDebugAdapter }> {
+export async function getDebugSessionAndAdapter(
+    debuggingManager: IDebuggingManager,
+    doc: NotebookDocument
+): Promise<{ session: DebugSession; debugAdapter: IKernelDebugAdapter }> {
     await waitForCondition(
         async () => !!debuggingManager.getDebugSession(doc),
         defaultNotebookTestTimeout,
         'DebugSession should start'
     );
-    const session = debuggingManager.getDebugSession(doc)!;
+    const session = await debuggingManager.getDebugSession(doc)!;
 
     const debugAdapter = debuggingManager.getDebugAdapter(doc)!;
-    assert.isOk<KernelDebugAdapter | undefined>(debugAdapter, 'DebugAdapter not started');
+    assert.isOk<IKernelDebugAdapter | undefined>(debugAdapter, 'DebugAdapter not started');
 
     return { session, debugAdapter };
 }
