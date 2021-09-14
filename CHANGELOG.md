@@ -1,5 +1,12 @@
 # Changelog
 
+## 2021.8.205 (15 September 2021)
+
+### Fixes
+
+1. Better handling of IPyKernel install prompts
+   ([#7514](https://github.com/microsoft/vscode-jupyter/issues/7517))
+
 ## 2021.8.204 (8 September 2021)
 
 ### Fixes
