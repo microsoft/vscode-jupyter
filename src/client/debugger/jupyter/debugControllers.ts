@@ -13,9 +13,9 @@ import { Commands } from '../../datascience/constants';
 import { IKernel } from '../../datascience/jupyter/kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../constants';
-import { DebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../types';
+import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../types';
 
-export class DebugCellController implements DebuggingDelegate {
+export class DebugCellController implements IDebuggingDelegate {
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,
         public readonly debugCell: NotebookCell,
@@ -41,7 +41,7 @@ export class DebugCellController implements DebuggingDelegate {
     }
 }
 
-export class RunByLineController implements DebuggingDelegate {
+export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;
 
     constructor(

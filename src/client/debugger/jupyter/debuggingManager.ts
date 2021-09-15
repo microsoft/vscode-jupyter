@@ -12,9 +12,10 @@ import {
     DebugSession,
     NotebookCell,
     DebugSessionOptions,
-    DebugConfiguration,
     ProgressLocation,
-    DebugAdapterDescriptor
+    DebugAdapterDescriptor,
+    Event,
+    EventEmitter
 } from 'vscode';
 import * as path from 'path';
 import { IKernel, IKernelProvider } from '../../datascience/jupyter/kernels/types';
@@ -38,42 +39,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { DebugCellController, RunByLineController } from './debugControllers';
 import { assertIsDebugConfig } from './helper';
-
-class Debugger {
-    private resolveFunc?: (value: DebugSession) => void;
-    private rejectFunc?: (reason?: Error) => void;
-
-    readonly session: Promise<DebugSession>;
-
-    constructor(
-        public readonly document: NotebookDocument,
-        public readonly config: DebugConfiguration,
-        options?: DebugSessionOptions
-    ) {
-        this.session = new Promise<DebugSession>((resolve, reject) => {
-            this.resolveFunc = resolve;
-            this.rejectFunc = reject;
-
-            debug.startDebugging(undefined, config, options).then(undefined, reject);
-        });
-    }
-
-    resolve(session: DebugSession) {
-        if (this.resolveFunc) {
-            this.resolveFunc(session);
-        }
-    }
-
-    reject(reason: Error) {
-        if (this.rejectFunc) {
-            this.rejectFunc(reason);
-        }
-    }
-
-    async stop() {
-        void debug.stopDebugging(await this.session);
-    }
-}
+import { Debugger } from './debugger';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -87,6 +53,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private notebookToRunByLineController = new Map<NotebookDocument, RunByLineController>();
     private cache = new Map<PythonEnvironment, boolean>();
     private readonly disposables: IDisposable[] = [];
+    private _doneDebugging = new EventEmitter<void>();
 
     public constructor(
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
@@ -224,6 +191,10 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         );
     }
 
+    public get onDoneDebugging(): Event<void> {
+        return this._doneDebugging.event;
+    }
+
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
@@ -317,6 +288,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
     private async endSession(session: DebugSession) {
         void this.updateToolbar(false);
         void this.updateCellToolbar(false);
+        this._doneDebugging.fire();
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
             if (dbg && session.id === (await dbg.session).id) {
                 this.notebookToDebugger.delete(doc);

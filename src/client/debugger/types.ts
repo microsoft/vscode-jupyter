@@ -24,6 +24,7 @@ export interface IKernelDebugAdapter extends DebugAdapter {
 
 export const IDebuggingManager = Symbol('IDebuggingManager');
 export interface IDebuggingManager {
+    readonly onDoneDebugging: Event<void>;
     isDebugging(notebook: NotebookDocument): boolean;
     getDebugMode(notebook: NotebookDocument): KernelDebugMode | undefined;
     getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined;
@@ -31,7 +32,7 @@ export interface IDebuggingManager {
     getDebugAdapter(notebook: NotebookDocument): IKernelDebugAdapter | undefined;
 }
 
-export interface DebuggingDelegate {
+export interface IDebuggingDelegate {
     /**
      * Called for every event sent from the debug adapter to the client. Returns true to signal that sending the message is vetoed.
      */
@@ -43,21 +44,21 @@ export interface DebuggingDelegate {
     willSendRequest(request: DebugProtocol.Request): Promise<void>;
 }
 
-export interface dumpCellResponse {
+export interface IDumpCellResponse {
     sourcePath: string; // filename for the dumped source
 }
 
-export interface debugInfoResponse {
+export interface IDebugInfoResponse {
     isStarted: boolean; // whether the debugger is started,
     hashMethod: string; // the hash method for code cell. Default is 'Murmur2',
     hashSeed: string; // the seed for the hashing of code cells,
     tmpFilePrefix: string; // prefix for temporary file names
     tmpFileSuffix: string; // suffix for temporary file names
-    breakpoints: debugInfoResponseBreakpoint[]; // breakpoints currently registered in the debugger.
+    breakpoints: IDebugInfoResponseBreakpoint[]; // breakpoints currently registered in the debugger.
     stoppedThreads: number[]; // threads in which the debugger is currently in a stopped state
 }
 
-export interface debugInfoResponseBreakpoint {
+export interface IDebugInfoResponseBreakpoint {
     source: string; // source file
     breakpoints: DebugProtocol.SourceBreakpoint[]; // list of breakpoints for that source file
 }
