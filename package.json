@@ -10,7 +10,7 @@
     },
     "extensionPack": [
         "ms-toolsai.jupyter-keymap",
-        "ms-toolsai.notebook-renderers"
+        "ms-toolsai.jupyter-renderers"
     ],
     "license": "MIT",
     "homepage": "https://github.com/Microsoft/vscode-jupyter",
