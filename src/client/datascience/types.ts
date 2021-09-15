@@ -976,7 +976,7 @@ export type GetNotebookOptions = {
     resource: Resource;
     identity: Uri;
     getOnly?: boolean;
-    disableUI: boolean;
+    disableUI?: boolean;
     metadata?: nbformat.INotebookMetadata;
     kernelConnection?: KernelConnectionMetadata;
     token?: CancellationToken;

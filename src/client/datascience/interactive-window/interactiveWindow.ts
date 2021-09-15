@@ -178,7 +178,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             controller: controller!.controller,
             resourceUri: this.owner
         });
-        await kernel.start({ disableUI: false });
+        await kernel.start();
         this.internalDisposables.push(kernel);
         return kernel;
     }

@@ -67,8 +67,7 @@ suite('DataScience - NotebookProvider', () => {
 
         const notebook = await notebookProvider.getOrCreateNotebook({
             identity: Uri('C:\\\\foo.py'),
-            resource: Uri('C:\\\\foo.py'),
-            disableUI: false
+            resource: Uri('C:\\\\foo.py')
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
@@ -81,8 +80,7 @@ suite('DataScience - NotebookProvider', () => {
 
         const notebook = await notebookProvider.getOrCreateNotebook({
             identity: Uri('C:\\\\foo.py'),
-            resource: Uri('C:\\\\foo.py'),
-            disableUI: false
+            resource: Uri('C:\\\\foo.py')
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
@@ -95,15 +93,13 @@ suite('DataScience - NotebookProvider', () => {
 
         const notebook = await notebookProvider.getOrCreateNotebook({
             identity: Uri('C:\\\\foo.py'),
-            resource: Uri('C:\\\\foo.py'),
-            disableUI: false
+            resource: Uri('C:\\\\foo.py')
         });
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
         const notebook2 = await notebookProvider.getOrCreateNotebook({
             identity: Uri('C:\\\\foo.py'),
-            resource: Uri('C:\\\\foo.py'),
-            disableUI: false
+            resource: Uri('C:\\\\foo.py')
         });
         expect(notebook2).to.equal(notebook);
     });

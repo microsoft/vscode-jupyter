@@ -145,7 +145,7 @@ export class Kernel implements IKernel {
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
         sendKernelTelemetryEvent(cell.notebook.uri, Telemetry.ExecuteCell);
         const stopWatch = new StopWatch();
-        const notebookPromise = this.startNotebook({ disableUI: false });
+        const notebookPromise = this.startNotebook();
         if (cell.notebook.notebookType === InteractiveWindowView) {
             await this.cellHashProviderFactory.getOrCreate(this).addCellHash(cell);
         }
@@ -156,12 +156,12 @@ export class Kernel implements IKernel {
     }
     public async executeHidden(code: string) {
         const stopWatch = new StopWatch();
-        const notebookPromise = this.startNotebook({ disableUI: false });
+        const notebookPromise = this.startNotebook();
         const promise = notebookPromise.then((nb) => executeSilently(nb.session, code));
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         await promise;
     }
-    public async start(options: { disableUI: boolean }): Promise<void> {
+    public async start(options: { disableUI?: boolean } = {}): Promise<void> {
         await this.startNotebook(options);
     }
     public async interrupt(): Promise<InterruptResult> {
@@ -230,8 +230,8 @@ export class Kernel implements IKernel {
             );
         }
     }
-    private async startNotebook(options: { disableUI: boolean }): Promise<INotebook> {
-        if (!options.disableUI) {
+    private async startNotebook(options?: { disableUI?: boolean }): Promise<INotebook> {
+        if (!options?.disableUI) {
             // This means the user is actually running something against the kernel (deliberately).
             initializeNotebookTelemetryBasedOnUserAction(this.notebookDocument.uri, this.kernelConnectionMetadata);
         }
@@ -265,7 +265,7 @@ export class Kernel implements IKernel {
                         }
                         await this.initializeAfterStart(SysInfoReason.Start, this.notebookDocument, placeholderCell);
                     } catch (ex) {
-                        traceError(`failed to create INotebook in kernel, UI Disabled = ${options.disableUI}`, ex);
+                        traceError(`failed to create INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
                         throw ex;
                     }
                     sendKernelTelemetryEvent(
@@ -285,12 +285,12 @@ export class Kernel implements IKernel {
                         undefined,
                         ex
                     );
-                    if (options.disableUI) {
+                    if (options?.disableUI) {
                         sendTelemetryEvent(Telemetry.KernelStartFailedAndUIDisabled);
                     } else {
                         this.errorHandler.handleError(ex).ignoreErrors(); // Just a notification, so don't await this
                     }
-                    traceError(`failed to start INotebook in kernel, UI Disabled = ${options.disableUI}`, ex);
+                    traceError(`failed to start INotebook in kernel, UI Disabled = ${options?.disableUI}`, ex);
                     this.startCancellation.cancel();
                     this._notebookPromise = undefined;
                     reject(ex);

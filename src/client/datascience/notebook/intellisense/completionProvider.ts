@@ -51,7 +51,6 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
         const notebook = await this.notebookProvider.getOrCreateNotebook({
             resource: notebookDocument.uri,
             identity: notebookDocument.uri,
-            disableUI: true,
             getOnly: true
         });
         if (token.isCancellationRequested) {

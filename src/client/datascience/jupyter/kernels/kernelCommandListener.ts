@@ -197,7 +197,6 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     resource: kernel.notebookDocument.uri,
                     // TODO: This would be wrong for interactive window;
                     identity: kernel.notebookDocument.uri,
-                    disableUI: true,
                     getOnly: true
                 });
                 if (notebook) {

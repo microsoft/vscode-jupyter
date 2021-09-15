@@ -341,7 +341,6 @@ export class NativeInteractiveWindowCommandListener implements IDataScienceComma
             // Create a new notebook
             notebook = await this.notebookProvider.getOrCreateNotebook({
                 identity: createExportInteractiveIdentity(),
-                disableUI: false,
                 resource: file
             });
             // If that works, then execute all of the cells.
