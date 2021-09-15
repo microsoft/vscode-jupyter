@@ -425,7 +425,7 @@ export class DebuggerVariables extends DebugLocationTracker
             const session = await this.debuggingManager.getDebugSession(doc);
             if (session) {
                 // Call stack trace
-                const stResponse = await session.customRequest('stackTrace', {
+                const stResponse: DebugProtocol.StackTraceResponse['body'] = await session.customRequest('stackTrace', {
                     threadId,
                     startFrame: 0,
                     levels: 1
@@ -434,8 +434,7 @@ export class DebuggerVariables extends DebugLocationTracker
                 //  Call scopes
                 const sf = stResponse.stackFrames[0];
                 const mode = this.debuggingManager.getDebugMode(doc);
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                let scopesResponse: any | undefined;
+                let scopesResponse: DebugProtocol.ScopesResponse['body'] | undefined;
 
                 if (mode === KernelDebugMode.RunByLine) {
                     // Only call scopes (and variables) if we are stopped on the cell we are executing
