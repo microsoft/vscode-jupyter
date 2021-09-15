@@ -7,10 +7,10 @@ body:
 - type: checkboxes
   id: feature-focus
   attributes:
-    label: Applies to...
+    label: Applies To
     options:
-      - label: Notebooks (.ipynb)
-      - label: Interactive Window and or Cell Scripts (ex. .py files with \#%%)
+      - label: Notebooks (.ipynb files)
+      - label: Interactive Window and\/or Cell Scripts ex. .py files with \#%%)
 - type: textarea
   id: what-happened
   attributes:
@@ -21,7 +21,7 @@ body:
 - type: input
   id: vscode-version
   attributes:
-    label: VS Code Version?
+    label: VS Code Version
     description: You can copy the contents of Help > About and paste here.
   validations:
     required: true
