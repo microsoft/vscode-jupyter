@@ -80,5 +80,5 @@ body:
       - Remote
       - N/A or Not sure
 - type: markdown
-  attrbitues:
-    value: "By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/microsoft/vscode-jupyter/blob/main/CODE_OF_CONDUCT.md)"
+  attributes:
+    value: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/microsoft/vscode-jupyter/blob/main/CODE_OF_CONDUCT.md)
