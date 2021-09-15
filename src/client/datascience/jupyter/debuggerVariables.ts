@@ -453,21 +453,9 @@ export class DebuggerVariables extends DebugLocationTracker
 
                 // Call variables
                 if (scopesResponse) {
-                    // Keep track of variablesReference because "hover" requests also try to update variables
-                    const newVariablesReference = scopesResponse.scopes[0].variablesReference;
-                    if (newVariablesReference !== this.currentVariablesReference) {
-                        this.currentVariablesReference = newVariablesReference;
-                        this.currentSeqNumsForVariables.clear();
-                    }
-
-                    // Catch the scopes response and use its variablesReference to send a variables message
-                    const varResponse: DebugProtocol.VariablesResponse = await session.customRequest('variables', {
-                        variablesReference: newVariablesReference
+                    scopesResponse.scopes.forEach((scope: DebugProtocol.Scope) => {
+                        void session.customRequest('variables', { variablesReference: scope.variablesReference });
                     });
-
-                    // Refresh variable view
-                    this.updateVariables(undefined, varResponse as DebugProtocol.VariablesResponse);
-                    this.monkeyPatchDataViewableVariables(varResponse);
 
                     this.refreshEventEmitter.fire();
                 }
