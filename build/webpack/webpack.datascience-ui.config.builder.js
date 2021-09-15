@@ -73,7 +73,6 @@ function getPlugins(bundle) {
     });
     switch (bundle) {
         case 'viewers': {
-
             plugins.push(
                 ...(isProdBuild ? [definePlugin] : []),
                 ...[
@@ -149,9 +148,9 @@ function buildConfiguration(bundle) {
         bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer' && bundle !== 'imageRenderer'
             ? {}
             : {
-                library: 'LIB',
-                libraryTarget: 'var'
-            };
+                  library: 'LIB',
+                  libraryTarget: 'var'
+              };
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'src/datascience-ui/ipywidgets/kernel/require.js'),
