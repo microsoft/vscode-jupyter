@@ -6,6 +6,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import type { JSONObject } from '@phosphor/coreutils';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
 import { concatMultilineString } from '../common';
+import { OpenImageInPlotViewer, SaveImageAs } from '../../client/datascience/notebook/constants';
 
 export const activate: ActivationFunction = (ctx: RendererContext<unknown>) => {
     console.log('Jupyter Notebook Image Renderer activated');
@@ -116,8 +117,8 @@ function createSaveAsButton(outputItem: OutputItem, ctx: RendererContext<unknown
     btn.ariaLabel = 'Expand image';
     btn.onclick = () => {
         if (ctx.postMessage) {
-            ctx.postMessage({
-                type: 'saveAs',
+            ctx.postMessage(<SaveImageAs>{
+                type: 'saveImageAs',
                 outputId: outputItem.id,
                 mimeType: outputItem.mime
             });
@@ -154,8 +155,8 @@ function createPlotViewerButton(outputItem: OutputItem, ctx: RendererContext<unk
     btn.ariaLabel = 'Save As';
     btn.onclick = () => {
         if (ctx.postMessage) {
-            ctx.postMessage({
-                type: 'openPlot',
+            ctx.postMessage(<OpenImageInPlotViewer>{
+                type: 'openImageInPlotViewer',
                 outputId: outputItem.id,
                 mimeType: outputItem.mime
             });

@@ -7,7 +7,7 @@ import { IExtensionSyncActivationService } from '../../../activation/types';
 import { disposeAllDisposables } from '../../../common/helpers';
 import { IDisposable } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { JupyterNotebookImageRenderer } from '../constants';
+import { JupyterNotebookImageRenderer, OpenImageInPlotViewer, SaveImageAs } from '../constants';
 import { PlotSaveHandler } from './plotSaveHandler';
 import { PlotViewHandler } from './plotViewHandler';
 
@@ -17,7 +17,7 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
     constructor(
         @inject(PlotSaveHandler) private readonly plotSaveHandler: PlotSaveHandler,
         @inject(PlotViewHandler) private readonly plotViewHandler: PlotViewHandler
-    ) {}
+    ) { }
 
     public dispose() {
         disposeAllDisposables(this.disposables);
@@ -26,10 +26,11 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
         const api = notebooks.createRendererMessaging(JupyterNotebookImageRenderer);
         api.onDidReceiveMessage(
             ({ editor, message }) => {
-                if (message.type === 'saveAs') {
-                    this.plotSaveHandler.savePlot(editor, message.outputId, message.mimeType).catch(noop);
-                } else if (message.type === 'openPlot') {
-                    this.plotViewHandler.openPlot(editor, message.outputId).catch(noop);
+                const msg = message as (OpenImageInPlotViewer | SaveImageAs);
+                if (msg.type === 'saveImageAs') {
+                    this.plotSaveHandler.savePlot(editor, msg.outputId, msg.mimeType).catch(noop);
+                } else if (msg.type === 'openImageInPlotViewer') {
+                    this.plotViewHandler.openPlot(editor, msg.outputId).catch(noop);
                 }
             },
             this,
