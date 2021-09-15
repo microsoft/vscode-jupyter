@@ -27,13 +27,6 @@ import { createDeferred } from '../../common/utils/async';
  */
 type ContextualTelemetryProps = {
     kernelConnection: KernelConnectionMetadata;
-    /**
-     * Used by WebViews & Interactive window.
-     * In those cases we know for a fact that the user changes the kernel.
-     * In Native Notebooks, we don't know whether the user changed the kernel or VS Code is just asking for default kernel.
-     * In Native Notebooks we track changes to selection by checking if previously selected kernel is the same as the new one.
-     */
-    kernelConnectionChanged: boolean;
     startFailed: boolean;
     kernelDied: boolean;
     interruptKernel: boolean;
@@ -55,6 +48,16 @@ const currentOSType = getOSType();
 const pythonEnvironmentsByHash = new Map<string, PythonEnvironment>();
 
 /**
+ * Initializes the Notebook telemetry as a result of user action.
+ */
+export function initializeNotebookTelemetryBasedOnUserAction(
+    notebookUri: Uri,
+    kernelConnection: KernelConnectionMetadata
+) {
+    setSharedProperty('userExecutedCell', 'true');
+    trackKernelResourceInformation(notebookUri, { kernelConnection });
+}
+/**
  * @param {(P[E] & { waitBeforeSending: Promise<void> })} [properties]
  * Can optionally contain a property `waitBeforeSending` referencing a promise.
  * Which must be awaited before sending the telemetry.
@@ -66,7 +69,7 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
     properties?: P[E] & { waitBeforeSending?: Promise<void> },
     ex?: Error
 ) {
-    if (eventName === Telemetry.ExecuteCell || eventName === Telemetry.ExecuteNativeCell) {
+    if (eventName === Telemetry.ExecuteCell) {
         setSharedProperty('userExecutedCell', 'true');
     }
 
@@ -103,7 +106,7 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
     stopWatch?: StopWatch,
     properties?: P[E] & { [waitBeforeSending]?: Promise<void> }
 ) {
-    if (eventName === Telemetry.ExecuteCell || eventName === Telemetry.ExecuteNativeCell) {
+    if (eventName === Telemetry.ExecuteCell) {
         setSharedProperty('userExecutedCell', 'true');
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -193,9 +196,6 @@ export function trackKernelResourceInformation(resource: Resource, information: 
             context.previouslySelectedKernelConnectionId &&
             context.previouslySelectedKernelConnectionId !== newKernelConnectionId
         ) {
-            currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
-        }
-        if (information.kernelConnectionChanged) {
             currentData.switchKernelCount = (currentData.switchKernelCount || 0) + 1;
         }
         let language: string | undefined;

@@ -784,7 +784,7 @@ export async function sendTelemetryForPythonKernelExecutable(
         });
         const execOutput = await execService.exec(['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: false });
         if (execOutput.stdout.trim().length > 0) {
-            const match = execOutput.stdout.trim().toLowerCase() === sysExecutable;
+            const match = areInterpreterPathsSame(execOutput.stdout.trim().toLowerCase(), sysExecutable);
             sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
                 match: match ? 'true' : 'false',
                 kernelConnectionType: kernelConnection.kind

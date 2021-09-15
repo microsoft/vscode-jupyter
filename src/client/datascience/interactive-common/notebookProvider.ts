@@ -28,7 +28,7 @@ export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
     private readonly _onSessionStatusChanged = new EventEmitter<{ status: ServerStatus; notebook: INotebook }>();
-    private _type: 'jupyter' | 'raw' = 'jupyter';
+    private readonly _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
         return [...this.notebooks.values()];
     }
@@ -43,10 +43,7 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {
-        this.rawNotebookProvider
-            .supported()
-            .then((b) => (this._type = b ? 'raw' : 'jupyter'))
-            .ignoreErrors();
+        this._type = this.rawNotebookProvider.isSupported ? 'raw' : 'jupyter';
     }
     public get onNotebookCreated() {
         return this._notebookCreated.event;
@@ -62,7 +59,7 @@ export class NotebookProvider implements INotebookProvider {
         const serverType: string | undefined = settings.jupyterServerType;
 
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
-        if (await this.rawNotebookProvider.supported()) {
+        if (this.rawNotebookProvider.isSupported) {
             return this.rawNotebookProvider.connect({
                 ...options
             });
@@ -88,7 +85,7 @@ export class NotebookProvider implements INotebookProvider {
             .catch((ex) => traceWarning('Failed to dispose notebook in disposeAssociatedNotebook', ex));
     }
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
-        const rawKernel = await this.rawNotebookProvider.supported();
+        const rawKernel = this.rawNotebookProvider.isSupported;
 
         // Check our own promise cache
         if (this.notebooks.get(options.identity.toString())) {

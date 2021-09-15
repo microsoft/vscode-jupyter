@@ -141,13 +141,13 @@ export interface INotebookServer extends IAsyncDisposable {
 // Provides a service to determine if raw notebook is supported or not
 export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
 export interface IRawNotebookSupportedService {
-    supported(): boolean;
+    isSupported: boolean;
 }
 
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
-    supported(): Promise<boolean>;
+    isSupported: boolean;
     connect(connect: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined>;
     createNotebook(
         identity: Uri,

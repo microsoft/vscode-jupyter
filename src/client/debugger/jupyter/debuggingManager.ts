@@ -369,7 +369,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             });
         }
         if (kernel && kernel.status === ServerStatus.NotStarted) {
-            await kernel.start({ document: doc });
+            await kernel.start();
         }
 
         return kernel;

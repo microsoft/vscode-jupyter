@@ -37,7 +37,7 @@ export class KernelDaemonPreWarmer {
         // If not, don't bother with prewarming
         // Also respect the disable autostart setting to not do any prewarming for the user
         if (
-            !this.rawNotebookSupported.supported() ||
+            !this.rawNotebookSupported.isSupported ||
             this.configService.getSettings().disableJupyterAutoStart ||
             !this.extensionChecker.isPythonExtensionInstalled
         ) {

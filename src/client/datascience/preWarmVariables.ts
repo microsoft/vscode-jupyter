@@ -25,7 +25,7 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
     ) {}
     public async activate(): Promise<void> {
         // Don't prewarm global interpreter if running with ZMQ
-        if (!this.rawNotebookSupported.supported()) {
+        if (!this.rawNotebookSupported.isSupported) {
             this.disposables.push(
                 this.jupyterInterpreterService.onDidChangeInterpreter(() =>
                     this.preWarmInterpreterVariables().catch(noop)
