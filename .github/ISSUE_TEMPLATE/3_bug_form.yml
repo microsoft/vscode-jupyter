@@ -45,7 +45,7 @@ body:
 - type: input
   id: coding-language
   attributes:
-    placeholder: What coding language are you working with (Python, Julia, R, etc)
+    label: What coding language are you working with (Python, Julia, R, etc)
 - type: input
   id: python-extension-version
   attributes:
