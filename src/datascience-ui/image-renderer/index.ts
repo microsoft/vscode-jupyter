@@ -44,8 +44,9 @@ function renderOutput(outputItem: OutputItem, element: HTMLElement, ctx: Rendere
         container.className = 'display';
         container.style.overflow = 'scroll'; // `overflow:scroll` is the default style used by Jupyter lab.
 
-        const savePlotButton = createSaveAsButton(outputItem, ctx)
-        const plotViewerButton = output.metadata.__displayOpenPlotIcon === true ? createPlotViewerButton(outputItem, ctx) : undefined;
+        const savePlotButton = createSaveAsButton(outputItem, ctx);
+        const plotViewerButton =
+            output.metadata.__displayOpenPlotIcon === true ? createPlotViewerButton(outputItem, ctx) : undefined;
         const onMouseOver = () => {
             if (plotViewerButton) {
                 plotViewerButton.className = 'plotIcon';
@@ -63,11 +64,14 @@ function renderOutput(outputItem: OutputItem, element: HTMLElement, ctx: Rendere
             plotViewerButton.onmouseover = onMouseOver;
         }
         element.appendChild(container);
-        container.appendChild(savePlotButton)
+        container.appendChild(savePlotButton);
         if (plotViewerButton) {
-            container.appendChild(plotViewerButton)
+            container.appendChild(plotViewerButton);
         }
-        const imgSrc = outputItem.mime.toLowerCase().includes('svg') && typeof data === 'string' ? undefined : URL.createObjectURL(data);
+        const imgSrc =
+            outputItem.mime.toLowerCase().includes('svg') && typeof data === 'string'
+                ? undefined
+                : URL.createObjectURL(data);
         if (imgSrc) {
             const img = document.createElement('img');
             img.onmouseover = onMouseOver;
@@ -86,8 +90,7 @@ function renderOutput(outputItem: OutputItem, element: HTMLElement, ctx: Rendere
             if (imageMetadata?.unconfined === true) {
                 img.style.maxWidth = 'none';
             }
-        }
-        else {
+        } else {
             const div = document.createElement('div');
             div.onmouseover = onMouseOver;
             div.onmouseout = onMouseOut;
@@ -108,9 +111,9 @@ function createSaveAsButton(outputItem: OutputItem, ctx: RendererContext<unknown
     btn.style.top = '5px';
     btn.style.left = '5px';
     btn.className = 'plotIcon hidden';
-    btn.ariaPressed = "false";
-    btn.title = "Expand image";
-    btn.ariaLabel = "Expand image";
+    btn.ariaPressed = 'false';
+    btn.title = 'Expand image';
+    btn.ariaLabel = 'Expand image';
     btn.onclick = () => {
         if (ctx.postMessage) {
             ctx.postMessage({
@@ -146,9 +149,9 @@ function createPlotViewerButton(outputItem: OutputItem, ctx: RendererContext<unk
     btn.style.top = '5px';
     btn.style.left = '45px';
     btn.className = 'plotIcon hidden';
-    btn.ariaPressed = "false";
-    btn.title = "Save As";
-    btn.ariaLabel = "Save As";
+    btn.ariaPressed = 'false';
+    btn.title = 'Save As';
+    btn.ariaLabel = 'Save As';
     btn.onclick = () => {
         if (ctx.postMessage) {
             ctx.postMessage({
