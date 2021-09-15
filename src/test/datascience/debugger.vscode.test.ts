@@ -233,11 +233,11 @@ suite('VSCode Notebook - Run By Line', function () {
             'Cell should have KeyboardInterrupt output'
         );
 
-        await sleep(2000); // TODO fix after merging RBL cleanup PR
         void commandManager.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter: debugAdapter2 } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter2!);
+        await sleep(500); //
         await commandManager.executeCommand(Commands.RunByLineContinue, cell);
 
         await waitForCondition(
