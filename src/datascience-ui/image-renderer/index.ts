@@ -8,7 +8,7 @@ import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook
 import { concatMultilineString } from '../common';
 
 export const activate: ActivationFunction = (ctx: RendererContext<unknown>) => {
-    console.log('Jupyter Notebook Renderer activated');
+    console.log('Jupyter Notebook Image Renderer activated');
     return {
         renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
             renderOutput(outputItem, element, ctx);
