@@ -43,33 +43,20 @@ body:
     value: |
       ## The following fields are optional but can help us make a better determination of what may have gone wrong.
 - type: input
-  id: coding-language
+  id: code-and-runtime
   attributes:
-    label: Coding language? (Python, Julia, R, etc)
+    label: Coding Language and Runtime Version
+    placeholder: Python v3.8.2, vJulia 1.6, R, etc.
 - type: input
-  id: python-extension-version
+  id: lang-extension-version
   attributes:
     label: Language Extension Version (if applicable)
     description: Ex. Python Extension. The extension version can be found at the top of the extension's description in the extensions sidebar.
-- type: input
-  id: python-version
-  attributes:
-    label: Runtime Version
-    description: Ex. Python, R, Julia, C#, etc
 - type: input
   id: anaconda-version
   attributes:
     label: Anaconda Version (if applicable)
     description: If applicable, what version of the Anaconda are you using?
-- type: dropdown
-  id: os
-  attributes:
-    label: Operating System
-    options:
-      - Linux distro
-      - Mac
-      - Windows
-      - Browser
 - type: dropdown
   id: local-remote
   attributes:
