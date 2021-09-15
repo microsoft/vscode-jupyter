@@ -30,7 +30,11 @@ import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { CodeSnippets, Identifiers, Telemetry } from '../../constants';
-import { initializeNotebookTelemetryBasedOnUserAction, sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
+import {
+    initializeNotebookTelemetryBasedOnUserAction,
+    sendKernelTelemetryEvent,
+    trackKernelResourceInformation
+} from '../../telemetry/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
@@ -138,7 +142,7 @@ export class Kernel implements IKernel {
             cellHashProviderFactory
         );
         trackKernelResourceInformation(notebookDocument.uri, {
-            kernelConnection: kernelConnectionMetadata,
+            kernelConnection: kernelConnectionMetadata
         });
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;

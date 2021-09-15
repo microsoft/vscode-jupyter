@@ -34,7 +34,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private configurationService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider
-    ) { }
+    ) {}
 
     public register(commandManager: ICommandManager): void {
         this.disposableRegistry.push(

@@ -22,7 +22,7 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
         // Don't prewarm global interpreter if running with ZMQ
         if (!this.rawNotebookSupported.isSupported) {

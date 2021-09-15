@@ -99,7 +99,11 @@ export class KernelExecution implements IDisposable {
         // Interrupt the active execution
         const result = this._interruptPromise
             ? await this._interruptPromise
-            : await (this._interruptPromise = this.interruptExecution(this.kernel.notebookDocument, notebook.session, pendingCells));
+            : await (this._interruptPromise = this.interruptExecution(
+                  this.kernel.notebookDocument,
+                  notebook.session,
+                  pendingCells
+              ));
 
         // Done interrupting, clear interrupt promise
         this._interruptPromise = undefined;
@@ -148,11 +152,7 @@ export class KernelExecution implements IDisposable {
             return existingExecutionQueue;
         }
 
-        const newCellExecutionQueue = new CellExecutionQueue(
-            notebookPromise,
-            this.executionFactory,
-            this.metadata
-        );
+        const newCellExecutionQueue = new CellExecutionQueue(notebookPromise, this.executionFactory, this.metadata);
 
         // If the document is closed (user or on CI), then just stop handling the UI updates & cancel cell execution queue.
         workspace.onDidCloseNotebookDocument(

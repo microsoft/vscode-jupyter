@@ -35,7 +35,7 @@ export class CellExecutionQueue {
         private readonly notebookPromise: Promise<INotebook>,
         private readonly executionFactory: CellExecutionFactory,
         readonly metadata: Readonly<KernelConnectionMetadata>
-    ) { }
+    ) {}
     /**
      * Queue the cell for execution & start processing it immediately.
      */

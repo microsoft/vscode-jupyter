@@ -29,7 +29,7 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IFileSystem) private readonly fs: IFileSystem
-    ) { }
+    ) {}
     public async provideCompletionItems(
         document: TextDocument,
         position: Position,
