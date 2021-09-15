@@ -19,7 +19,6 @@ const flat = require('flat');
 const { argv } = require('yargs');
 const os = require('os');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
-const { downloadRendererExtension } = require('./build/ci/downloadRenderer');
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
 gulp.task('compile', async (done) => {
@@ -304,20 +303,16 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 
-gulp.task('downloadRendererExtension', async () => {
-    await downloadRendererExtension();
-});
-
-gulp.task('prePublishBundle', gulp.series('downloadRendererExtension', 'webpack'));
+gulp.task('prePublishBundle', gulp.series('webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 // On CI, when running Notebook tests, we don't need old webviews.
 // Simple & temporary optimization for the Notebook Test Job.
 if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
-    gulp.task('prePublishNonBundle', gulp.parallel('compile', 'downloadRendererExtension'));
+    gulp.task('prePublishNonBundle', gulp.parallel('compile'));
 } else {
     gulp.task(
         'prePublishNonBundle',
-        gulp.parallel('compile', 'downloadRendererExtension', gulp.series('compile-webviews'))
+        gulp.parallel('compile', gulp.series('compile-webviews'))
     );
 }
 
