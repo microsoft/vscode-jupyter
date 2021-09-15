@@ -252,7 +252,7 @@ export class Kernel implements IKernel {
                         this.notebook = await this.notebookProvider.getOrCreateNotebook({
                             identity: this.notebookUri,
                             resource: this.resourceUri,
-                            disableUI: options?.disableUI === true,
+                            disableUI: options?.disableUI,
                             getOnly: false,
                             metadata: getNotebookMetadata(this.notebookDocument), // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
                             kernelConnection: this.kernelConnectionMetadata,
