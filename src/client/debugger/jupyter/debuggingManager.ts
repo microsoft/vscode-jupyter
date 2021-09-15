@@ -133,7 +133,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 }
             }),
 
-            this.commandManager.registerCommand(DSCommands.RunByLineContinue, (cell: NotebookCell | undefined) => {
+            this.commandManager.registerCommand(DSCommands.RunByLineNext, (cell: NotebookCell | undefined) => {
                 if (!cell) {
                     const editor = this.vscNotebook.activeNotebookEditor;
                     const range = editor?.selections[0];

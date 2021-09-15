@@ -198,7 +198,7 @@
                 "when": "!jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
             },
             {
-                "command": "jupyter.runByLineContinue",
+                "command": "jupyter.runByLineNext",
                 "key": "f10",
                 "when": "jupyter.notebookeditor.runByLineInProgress"
             },
@@ -211,30 +211,37 @@
         "commands": [
             {
                 "command": "jupyter.debugNotebook",
-                "title": "Debug",
+                "title": "%jupyter.command.jupyter.debug.title%",
                 "icon": "$(bug)",
                 "category": "Jupyter",
                 "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.runByLine",
-                "title": "Run by Line",
+                "title": "%jupyter.command.jupyter.runByLine.title%",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
                 "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.runAndDebugCell",
-                "title": "Debug Cell",
+                "title": "%jupyter.command.jupyter.debugCell.title%",
                 "icon": "$(debug-alt-small)",
                 "category": "Jupyter"
             },
             {
-                "command": "jupyter.runByLineContinue",
-                "title": "Continue",
+                "command": "jupyter.runByLineNext",
+                "title": "%jupyter.command.jupyter.runByLineNext.title%",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
                 "enablement": "jupyter.notebookeditor.runByLineInProgress"
+            },
+            {
+                "command": "jupyter.runByLineStop",
+                "title": "%jupyter.command.jupyter.runByLineStop.title%",
+                "icon": "$(debug-continue)",
+                "category": "Jupyter",
+                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -844,9 +851,14 @@
                     "group": "inline/cell@0"
                 },
                 {
-                    "command": "jupyter.runByLineContinue",
+                    "command": "jupyter.runByLineNext",
                     "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress",
                     "group": "inline/cell@0"
+                },
+                {
+                    "command": "jupyter.runByLineStop",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress",
+                    "group": "inline/cell@1"
                 }
             ],
             "notebook/cell/execute": [
@@ -939,17 +951,22 @@
             "commandPalette": [
                 {
                     "command": "jupyter.debugNotebook",
-                    "title": "Debug",
+                    "title": "%jupyter.command.jupyter.debug.title%",
                     "when": "false"
                 },
                 {
                     "command": "jupyter.runByLine",
-                    "title": "Run by Line",
+                    "title": "%jupyter.command.jupyter.runByLine.title%",
                     "when": "false"
                 },
                 {
-                    "command": "jupyter.runByLineContinue",
-                    "title": "Continue",
+                    "command": "jupyter.runByLineNext",
+                    "title": "%jupyter.command.jupyter.runByLineNext.title%",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.runByLineStop",
+                    "title": "%jupyter.command.jupyter.runByLineStop.title%",
                     "when": "false"
                 },
                 {
