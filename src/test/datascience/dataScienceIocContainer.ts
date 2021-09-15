@@ -157,7 +157,6 @@ import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyter
 import { JupyterSessionManagerFactory } from '../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
 import { KernelDependencyService } from '../../client/datascience/jupyter/kernels/kernelDependencyService';
-import { KernelSelectionProvider } from '../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { JupyterKernelService } from '../../client/datascience/jupyter/kernels/jupyterKernelService';
 import { KernelVariables } from '../../client/datascience/jupyter/kernelVariables';
@@ -609,7 +608,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
         this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
-        this.serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
         this.serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
         this.serviceManager.addSingleton<INotebookCreationTracker>(INotebookCreationTracker, NotebookCreationTracker);
         this.serviceManager.addSingleton<KernelDaemonPool>(KernelDaemonPool, KernelDaemonPool);
