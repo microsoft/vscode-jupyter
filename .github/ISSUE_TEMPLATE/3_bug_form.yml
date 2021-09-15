@@ -4,33 +4,24 @@ labels: [bug, needs-triage]
 assignees:
   - octocat
 body:
-- type: markdown
-  attributes:
-    value: |
-      Thanks for taking the time to fill out this bug report!
 - type: checkboxes
   id: feature-focus
   attributes:
-    label: How are you mainly using the Jupyter extension?
     options:
       - label: Notebooks (.ipynb)
       - label: Interactive Window and or Cell Scripts (ex. .py files with \#%%)
-      - label: Both
 - type: textarea
   id: what-happened
   attributes:
     label: What happened?
-    placeholder: Tell us what happened or didn't happen!
+    placeholder: Tell us what you expected to happen when you performed some set of steps and what actually happened. 
   validations:
     required: true
-- type: dropdown
-  id: vscode-flavor
+- type: input
+  id: vscode-version
   attributes:
-    label: What flavor of VS Code are you using?
-    multiple: true
-    options:
-      - Stable
-      - Insiders
+    label: VS Code Version?
+    description: What version of VS Code are you using? You can copy the contents of Help > About and paste here.
   validations:
     required: true
 - type: input
@@ -51,22 +42,10 @@ body:
     value: |
       ---
       ## The following fields are optional but can help us make a better determination of what may have gone wrong.
-- type: dropdown
+- type: input
   id: coding-language
   attributes:
-    label: What coding language are you working with?
-    multiple: true
-    options:
-      - Python
-      - SQL
-      - R
-      - Julia
-      - C#
-- type: input
-  id: vscode-version
-  attributes:
-    label: VS Code Version?
-    description: What version of VS Code are you using? You can copy the contents of Help > About and paste here.
+    placeholder: What coding language are you working with (Python, Julia, R, etc)
 - type: input
   id: python-extension-version
   attributes:
