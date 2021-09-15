@@ -1773,6 +1773,18 @@
                     "default": true,
                     "description": "When debugging, debug just my code.",
                     "scope": "resource"
+                },
+                "jupyter.currentPythonEnvironmentKernel": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Add a notebook kernel to launch Python in the current active environment of VS Code.",
+                    "scope": "resource"
+                },
+                "jupyter.currentPythonEnvironmentKernelPath": {
+                    "type": "string",
+                    "default": "python",
+                    "description": "Set the python path to use when launching the current Python environment kernel.",
+                    "scope": "resource"
                 }
             }
         },

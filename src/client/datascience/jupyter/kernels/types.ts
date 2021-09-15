@@ -62,6 +62,7 @@ export type KernelSpecConnectionMetadata = Readonly<{
     interpreter?: PythonEnvironment;
     kind: 'startUsingKernelSpec';
     id: string;
+    useProcessEnv?: boolean;
 }>;
 /**
  * Connection metadata for Kernels started using default kernel.

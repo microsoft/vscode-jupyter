@@ -175,6 +175,8 @@ export interface IJupyterSettings {
     readonly disableZMQSupport: boolean;
     readonly variableTooltipFields: IVariableTooltipFields;
     readonly showVariableViewWhenDebugging: boolean;
+    readonly currentPythonEnvironmentKernel: boolean;
+    readonly currentPythonEnvironmentKernelPath: string;
 }
 
 export interface IVariableTooltipFields {

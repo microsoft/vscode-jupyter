@@ -29,10 +29,15 @@ import {
     isLocalLaunch,
     isPythonKernelConnection
 } from '../jupyter/kernels/helpers';
-import { IKernelProvider, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../jupyter/kernels/types';
+import {
+    IKernelProvider,
+    KernelConnectionMetadata,
+    KernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../jupyter/kernels/types';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../kernel-launcher/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
-import { INotebookProvider } from '../types';
+import { IJupyterKernelSpec, INotebookProvider } from '../types';
 import { getNotebookMetadata, isPythonNotebook } from './helpers/helpers';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { INotebookControllerManager } from './types';
@@ -130,6 +135,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     public async loadNotebookControllers(): Promise<void> {
         if (!this.controllersPromise) {
             const stopWatch = new StopWatch();
+
+            // First thing see if we should load up our current environment as an available kernel
+            this.loadCurrentPythonEnvironmentKernel();
 
             // Fetch the list of kernels ignoring the cache.
             Promise.all([
@@ -548,5 +556,33 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceInfoIf(isCI, `Disposing controller ${controller.id}`);
             controller.dispose();
         });
+    }
+
+    // Load up a python kernel to just launch in the current vscode environment
+    private loadCurrentPythonEnvironmentKernel() {
+        const config = this.configuration.getSettings();
+
+        if (config.currentPythonEnvironmentKernel) {
+            traceInfo('Load current environment kernel');
+
+            const pythonPath = config.currentPythonEnvironmentKernelPath;
+
+            // Create our KernelSpec and connection metadata that we will use to launch with
+            const currentEnvKernelSpec: IJupyterKernelSpec = {
+                name: 'vscodeCurrentPythonEnvironmentKernel',
+                path: '/vscodeCurrentPythonEnvironmentKernel',
+                display_name: 'Current Python Environment',
+                argv: [pythonPath || 'python', '-m', 'ipykernel_launcher', '-f', '{connection_file}']
+            };
+
+            const connectionMetadata: KernelSpecConnectionMetadata = {
+                kernelSpec: currentEnvKernelSpec,
+                kind: 'startUsingKernelSpec',
+                id: getKernelId(currentEnvKernelSpec, undefined),
+                useProcessEnv: true
+            };
+
+            this.createNotebookController(connectionMetadata, 'Current Python Environment');
+        }
     }
 }
