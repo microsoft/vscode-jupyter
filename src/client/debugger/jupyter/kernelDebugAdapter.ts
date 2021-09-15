@@ -77,7 +77,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
                 if (anyMsg.header.msg_type === 'debug_event') {
                     this.trace('event', JSON.stringify(msg));
-                    if (!(await this.delegate?.onWillSendEvent(anyMsg))) {
+                    if (!(await this.delegate?.willSendEvent(anyMsg))) {
                         this.sendMessage.fire(msg.content);
                     }
                 }
@@ -155,7 +155,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         }
 
         if (message.type === 'request') {
-            await this.delegate?.onWillSendRequest(message as DebugProtocol.Request);
+            await this.delegate?.willSendRequest(message as DebugProtocol.Request);
         }
 
         this.sendRequestToJupyterSession(message);

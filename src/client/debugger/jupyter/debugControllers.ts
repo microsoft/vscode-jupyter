@@ -25,11 +25,11 @@ export class DebugCellController implements IDebuggingDelegate {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
     }
 
-    public async onWillSendEvent(_msg: DebugProtocolMessage): Promise<boolean> {
+    public async willSendEvent(_msg: DebugProtocolMessage): Promise<boolean> {
         return false;
     }
 
-    public async onWillSendRequest(request: DebugProtocol.Request): Promise<void> {
+    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
         if (request.command === 'configurationDone') {
             await cellDebugSetup(this.kernel, this.debugAdapter, this.debugCell);
 
@@ -72,7 +72,7 @@ export class RunByLineController implements IDebuggingDelegate {
         return config.__mode;
     }
 
-    public async onWillSendEvent(msg: DebugProtocolMessage): Promise<boolean> {
+    public async willSendEvent(msg: DebugProtocolMessage): Promise<boolean> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const anyMsg = msg as any;
 
@@ -87,7 +87,7 @@ export class RunByLineController implements IDebuggingDelegate {
         return false;
     }
 
-    public async onWillSendRequest(request: DebugProtocol.Request): Promise<void> {
+    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
         if (request.command === 'configurationDone') {
             await this.initializeExecute();
         }

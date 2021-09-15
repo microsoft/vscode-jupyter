@@ -27,12 +27,12 @@ export interface IDebuggingDelegate {
     /**
      * Called for every event sent from the debug adapter to the client. Returns true to signal that sending the message is vetoed.
      */
-    onWillSendEvent(msg: DebugProtocolMessage): Promise<boolean>;
+    willSendEvent(msg: DebugProtocolMessage): Promise<boolean>;
 
     /**
      * Called for every request sent from the client to the debug adapter.
      */
-    onWillSendRequest(request: DebugProtocol.Request): Promise<void>;
+    willSendRequest(request: DebugProtocol.Request): Promise<void>;
 }
 
 export interface IDumpCellResponse {
