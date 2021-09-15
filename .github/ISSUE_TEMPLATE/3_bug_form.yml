@@ -10,7 +10,7 @@ body:
     label: Applies To
     options:
       - label: Notebooks (.ipynb files)
-      - label: Interactive Window and\/or Cell Scripts (Example\: .py files with \#%% markers)
+      - label: Interactive Window and\/or Cell Scripts (.py files with \#%% markers)
 - type: textarea
   id: what-happened
   attributes:
