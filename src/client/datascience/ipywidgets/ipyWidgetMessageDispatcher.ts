@@ -395,6 +395,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.notebook = await this.notebookProvider.getOrCreateNotebook({
                 identity: this.notebookIdentity,
                 resource: this.notebookIdentity,
+                disableUI: true,
                 getOnly: true
             });
             this.notebook?.onDisposed(() => (this.notebook = undefined));

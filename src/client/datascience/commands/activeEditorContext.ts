@@ -141,6 +141,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
                 .getOrCreateNotebook({
                     identity: activeEditor.document.uri,
                     resource: activeEditor.document.uri,
+                    disableUI: true,
                     getOnly: true
                 })
                 .then(async (nb) => {
@@ -166,6 +167,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
                 .getOrCreateNotebook({
                     identity: interactiveWindow.notebookUri,
                     resource: interactiveWindow.owner,
+                    disableUI: true,
                     getOnly: true
                 })
                 .then(async (nb) => {

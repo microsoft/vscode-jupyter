@@ -42,7 +42,11 @@ import {
 import { IKernel, IKernelProvider, KernelConnectionMetadata } from '../jupyter/kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../notebookStorage/preferredRemoteKernelIdProvider';
 import { InterpreterPackages } from '../telemetry/interpreterPackages';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../telemetry/telemetry';
+import {
+    initializeNotebookTelemetryBasedOnUserAction,
+    sendKernelTelemetryEvent,
+    trackKernelResourceInformation
+} from '../telemetry/telemetry';
 import { KernelSocketInformation } from '../types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
@@ -167,6 +171,8 @@ export class VSCodeNotebookController implements Disposable {
         if (!this.workspace.isTrusted) {
             return;
         }
+        initializeNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
+        sendKernelTelemetryEvent(notebook.uri, Telemetry.ExecuteCell);
         // Notebook is trusted. Continue to execute cells
         traceInfo(`Execute Cells request ${cells.length} ${cells.map((cell) => cell.index).join(', ')}`);
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
@@ -258,10 +264,8 @@ export class VSCodeNotebookController implements Disposable {
             controller: this.controller,
             resourceUri: doc.uri
         });
-        if (kernel) {
-            this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
-            return kernel.executeCell(cell);
-        }
+        this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
+        return kernel.executeCell(cell);
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
@@ -394,15 +398,14 @@ export class VSCodeNotebookController implements Disposable {
             controller: this.controller,
             resourceUri: document.uri // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
         });
-        traceInfo(`KernelProvider switched kernel to id = ${newKernel?.kernelConnectionMetadata.id}`);
+        traceInfo(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
 
         // Auto start the local kernels.
         if (
-            newKernel &&
             !this.configuration.getSettings(undefined).disableJupyterAutoStart &&
             this.localOrRemoteKernel === 'local'
         ) {
-            await newKernel.start({ disableUI: true, document }).catch(noop);
+            await newKernel.start({ disableUI: true }).catch(noop);
         }
     }
     /**

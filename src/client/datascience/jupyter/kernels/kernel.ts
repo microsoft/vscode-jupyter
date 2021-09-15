@@ -17,7 +17,6 @@ import {
     NotebookController,
     NotebookDocument,
     NotebookRange,
-    Uri,
     Range,
     ColorThemeKind
 } from 'vscode';
@@ -31,7 +30,7 @@ import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { CodeSnippets, Identifiers, Telemetry } from '../../constants';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
+import { initializeNotebookTelemetryBasedOnUserAction, sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { getNotebookMetadata } from '../../notebook/helpers/helpers';
 import {
     IDataScienceErrorHandler,
@@ -105,8 +104,11 @@ export class Kernel implements IKernel {
     private readonly kernelExecution: KernelExecution;
     private startCancellation = new CancellationTokenSource();
     private _workingDirectory?: string;
+    public get notebookUri() {
+        return this.notebookDocument.uri;
+    }
     constructor(
-        public readonly notebookUri: Uri,
+        public readonly notebookDocument: NotebookDocument,
         public readonly resourceUri: Resource,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
@@ -135,11 +137,15 @@ export class Kernel implements IKernel {
             outputTracker,
             cellHashProviderFactory
         );
+        trackKernelResourceInformation(notebookDocument.uri, {
+            kernelConnection: kernelConnectionMetadata,
+        });
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
+        sendKernelTelemetryEvent(cell.notebook.uri, Telemetry.ExecuteCell);
         const stopWatch = new StopWatch();
-        const notebookPromise = this.startNotebook({ disableUI: false, document: cell.notebook });
+        const notebookPromise = this.startNotebook({ disableUI: false });
         if (cell.notebook.notebookType === InteractiveWindowView) {
             await this.cellHashProviderFactory.getOrCreate(this).addCellHash(cell);
         }
@@ -148,26 +154,26 @@ export class Kernel implements IKernel {
         await promise;
         return promise;
     }
-    public async executeHidden(code: string, document: NotebookDocument) {
+    public async executeHidden(code: string) {
         const stopWatch = new StopWatch();
-        const notebookPromise = this.startNotebook({ disableUI: false, document });
+        const notebookPromise = this.startNotebook({ disableUI: false });
         const promise = notebookPromise.then((nb) => executeSilently(nb.session, code));
         this.trackNotebookCellPerceivedColdTime(stopWatch, notebookPromise, promise).catch(noop);
         await promise;
     }
-    public async start(options: { disableUI?: boolean; document: NotebookDocument }): Promise<void> {
+    public async start(options: { disableUI: boolean }): Promise<void> {
         await this.startNotebook(options);
     }
-    public async interrupt(document: NotebookDocument): Promise<InterruptResult> {
+    public async interrupt(): Promise<InterruptResult> {
         this._onWillInterrupt.fire();
         if (this.restarting) {
-            traceInfo(`Interrupt requested & currently restarting ${document.uri}`);
-            trackKernelResourceInformation(document.uri, { interruptKernel: true });
+            traceInfo(`Interrupt requested & currently restarting ${this.notebookDocument.uri}`);
+            trackKernelResourceInformation(this.notebookDocument.uri, { interruptKernel: true });
             await this.restarting.promise;
         }
-        traceInfo(`Interrupt requested ${document.uri}`);
+        traceInfo(`Interrupt requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
-        const interruptResultPromise = this.kernelExecution.interrupt(document, this._notebookPromise);
+        const interruptResultPromise = this.kernelExecution.interrupt(this._notebookPromise);
         await interruptResultPromise;
         return interruptResultPromise;
     }
@@ -184,24 +190,24 @@ export class Kernel implements IKernel {
         }
         this.kernelExecution.dispose();
     }
-    public async restart(notebookDocument: NotebookDocument): Promise<void> {
+    public async restart(): Promise<void> {
         this._onWillRestart.fire();
         if (this.restarting) {
             return this.restarting.promise;
         }
-        traceInfo(`Restart requested ${notebookDocument.uri}`);
+        traceInfo(`Restart requested ${this.notebookDocument.uri}`);
         this.startCancellation.cancel();
-        const restartPromise = this.kernelExecution.restart(notebookDocument, this._notebookPromise);
+        const restartPromise = this.kernelExecution.restart(this._notebookPromise);
         await restartPromise;
-        traceInfoIf(isCI, `Restarted ${notebookDocument.uri}`);
+        traceInfoIf(isCI, `Restarted ${this.notebookDocument.uri}`);
 
         // Interactive window needs a restart sys info
-        await this.initializeAfterStart(SysInfoReason.Restart, notebookDocument);
-        traceInfoIf(isCI, `Initialized after restart ${notebookDocument.uri}`);
+        await this.initializeAfterStart(SysInfoReason.Restart, this.notebookDocument);
+        traceInfoIf(isCI, `Initialized after restart ${this.notebookDocument.uri}`);
 
         // Indicate a restart occurred if it succeeds
         this._onRestarted.fire();
-        traceInfoIf(isCI, `Event fired after restart ${notebookDocument.uri}`);
+        traceInfoIf(isCI, `Event fired after restart ${this.notebookDocument.uri}`);
     }
     private async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
@@ -224,7 +230,11 @@ export class Kernel implements IKernel {
             );
         }
     }
-    private async startNotebook(options: { disableUI?: boolean; document: NotebookDocument }): Promise<INotebook> {
+    private async startNotebook(options: { disableUI: boolean }): Promise<INotebook> {
+        if (!options.disableUI) {
+            // This means the user is actually running something against the kernel (deliberately).
+            initializeNotebookTelemetryBasedOnUserAction(this.notebookDocument.uri, this.kernelConnectionMetadata);
+        }
         if (this.restarting) {
             await this.restarting.promise;
         }
@@ -235,16 +245,16 @@ export class Kernel implements IKernel {
                 try {
                     try {
                         const placeholderCell = await this.populateStartKernelInfoForInteractive(
-                            options.document,
+                            this.notebookDocument,
                             this.kernelConnectionMetadata
                         );
                         traceInfo(`Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id}`);
                         this.notebook = await this.notebookProvider.getOrCreateNotebook({
                             identity: this.notebookUri,
                             resource: this.resourceUri,
-                            disableUI: options?.disableUI,
+                            disableUI: options?.disableUI === true,
                             getOnly: false,
-                            metadata: getNotebookMetadata(options.document), // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
+                            metadata: getNotebookMetadata(this.notebookDocument), // No need to pass this, as we have a kernel connection (metadata is required in lower layers to determine the kernel connection).
                             kernelConnection: this.kernelConnectionMetadata,
                             token: this.startCancellation.token
                         });
@@ -253,7 +263,7 @@ export class Kernel implements IKernel {
                             // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
                             throw new Error('Kernel has not been started');
                         }
-                        await this.initializeAfterStart(SysInfoReason.Start, options.document, placeholderCell);
+                        await this.initializeAfterStart(SysInfoReason.Start, this.notebookDocument, placeholderCell);
                     } catch (ex) {
                         traceError(`failed to create INotebook in kernel, UI Disabled = ${options.disableUI}`, ex);
                         throw ex;
@@ -269,7 +279,7 @@ export class Kernel implements IKernel {
                     resolve(this.notebook);
                 } catch (ex) {
                     sendKernelTelemetryEvent(
-                        options.document.uri,
+                        this.notebookDocument.uri,
                         Telemetry.NotebookStart,
                         stopWatch.elapsedTime,
                         undefined,

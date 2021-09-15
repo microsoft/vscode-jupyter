@@ -171,7 +171,7 @@ async function cellDebugSetup(
     // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
     if (kernel) {
         const code = 'import debugpy\ndebugpy.debug_this_thread()';
-        await kernel.executeHidden(code, debugCell.notebook);
+        await kernel.executeHidden(code);
     }
 
     await debugAdapter.dumpCell(debugCell.index);

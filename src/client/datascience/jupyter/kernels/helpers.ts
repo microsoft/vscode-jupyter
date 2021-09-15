@@ -95,9 +95,8 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
         // Lets not assume that non-python kernrels cannot have such issues
         argsForGenerationOfId = spec.argv.join('#').toLowerCase();
     }
-    return `${spec.id || ''}.${specName}.${getNormalizedInterpreterPath(spec.interpreterPath || spec.path)}.${
-        getNormalizedInterpreterPath(interpreter?.path) || ''
-    }.${argsForGenerationOfId}`;
+    return `${spec.id || ''}.${specName}.${getNormalizedInterpreterPath(spec.interpreterPath || spec.path)}.${getNormalizedInterpreterPath(interpreter?.path) || ''
+        }.${argsForGenerationOfId}`;
 }
 
 export function getSysInfoReasonHeader(
@@ -431,24 +430,24 @@ export function findPreferredKernel(
                 !notebookMetadata || isPythonNotebook(notebookMetadata) || !hasLanguageInfo
                     ? PYTHON_LANGUAGE
                     : (
-                          (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
-                      )?.toLowerCase();
+                        (notebookMetadata?.kernelspec?.language as string) || notebookMetadata?.language_info?.name
+                    )?.toLowerCase();
         }
         let bestScore = -1;
 
         // Find index of the kernelspec that matches the preferred interpreter.
         const preferredInterpreterKernelSpecIndex = preferredInterpreter
             ? kernels.findIndex((spec) => {
-                  if (
-                      spec.kind === 'startUsingPythonInterpreter' &&
-                      spec.kernelSpec &&
-                      spec.kernelSpec.language === PYTHON_LANGUAGE &&
-                      areInterpreterPathsSame(spec.interpreter.path, preferredInterpreter.path)
-                  ) {
-                      return true;
-                  }
-                  return false;
-              })
+                if (
+                    spec.kind === 'startUsingPythonInterpreter' &&
+                    spec.kernelSpec &&
+                    spec.kernelSpec.language === PYTHON_LANGUAGE &&
+                    areInterpreterPathsSame(spec.interpreter.path, preferredInterpreter.path)
+                ) {
+                    return true;
+                }
+                return false;
+            })
             : -1;
 
         traceInfoIf(isCI, `preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpecIndex}`);
@@ -784,7 +783,7 @@ export async function sendTelemetryForPythonKernelExecutable(
         });
         const execOutput = await execService.exec(['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: false });
         if (execOutput.stdout.trim().length > 0) {
-            const match = execOutput.stdout.trim().toLowerCase() === sysExecutable;
+            const match = areInterpreterPathsSame(execOutput.stdout.trim().toLowerCase(), sysExecutable);
             sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
                 match: match ? 'true' : 'false',
                 kernelConnectionType: kernelConnection.kind

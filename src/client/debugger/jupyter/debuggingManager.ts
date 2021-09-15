@@ -335,6 +335,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 const notebook = await this.notebookProvider.getOrCreateNotebook({
                     resource: debug.document.uri,
                     identity: debug.document.uri,
+                    disableUI: true,
                     getOnly: true
                 });
                 if (notebook && notebook.session) {
@@ -390,7 +391,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             });
         }
         if (kernel && kernel.status === ServerStatus.NotStarted) {
-            await kernel.start({ document: doc });
+            await kernel.start({ disableUI: false });
         }
 
         return kernel;
@@ -410,9 +411,9 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     this.pythonInstaller.isProductVersionCompatible(Product.ipykernel, '>=6.0.0', interpreter);
                 const status = waitingMessage
                     ? await this.appShell.withProgress(
-                          { location: ProgressLocation.Notification, title: waitingMessage },
-                          checkCompatible
-                      )
+                        { location: ProgressLocation.Notification, title: waitingMessage },
+                        checkCompatible
+                    )
                     : await checkCompatible();
                 const result = status === ProductInstallStatus.Installed;
 

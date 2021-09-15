@@ -45,7 +45,7 @@ suite('DataScience - NotebookProvider', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(dataScienceSettings.jupyterServerType).thenReturn('local');
         when(dataScienceSettings.useDefaultConfigForJupyter).thenReturn(true);
-        when(rawNotebookProvider.supported).thenReturn(() => Promise.resolve(false));
+        when(rawNotebookProvider.isSupported).thenReturn(false);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         when(configService.getSettings(anything())).thenReturn(instance(dataScienceSettings) as any);
@@ -67,7 +67,8 @@ suite('DataScience - NotebookProvider', () => {
 
         const notebook = await notebookProvider.getOrCreateNotebook({
             identity: Uri('C:\\\\foo.py'),
-            resource: Uri('C:\\\\foo.py')
+            resource: Uri('C:\\\\foo.py'),
+            disableUI: false
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
@@ -80,7 +81,8 @@ suite('DataScience - NotebookProvider', () => {
 
         const notebook = await notebookProvider.getOrCreateNotebook({
             identity: Uri('C:\\\\foo.py'),
-            resource: Uri('C:\\\\foo.py')
+            resource: Uri('C:\\\\foo.py'),
+            disableUI: false
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
@@ -93,13 +95,15 @@ suite('DataScience - NotebookProvider', () => {
 
         const notebook = await notebookProvider.getOrCreateNotebook({
             identity: Uri('C:\\\\foo.py'),
-            resource: Uri('C:\\\\foo.py')
+            resource: Uri('C:\\\\foo.py'),
+            disableUI: false
         });
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
         const notebook2 = await notebookProvider.getOrCreateNotebook({
             identity: Uri('C:\\\\foo.py'),
-            resource: Uri('C:\\\\foo.py')
+            resource: Uri('C:\\\\foo.py'),
+            disableUI: false
         });
         expect(notebook2).to.equal(notebook);
     });
