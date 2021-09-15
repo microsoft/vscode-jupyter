@@ -17,7 +17,7 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
     constructor(
         @inject(PlotSaveHandler) private readonly plotSaveHandler: PlotSaveHandler,
         @inject(PlotViewHandler) private readonly plotViewHandler: PlotViewHandler
-    ) { }
+    ) {}
 
     public dispose() {
         disposeAllDisposables(this.disposables);
@@ -26,7 +26,7 @@ export class RendererCommunication implements IExtensionSyncActivationService, I
         const api = notebooks.createRendererMessaging(JupyterNotebookImageRenderer);
         api.onDidReceiveMessage(
             ({ editor, message }) => {
-                const msg = message as (OpenImageInPlotViewer | SaveImageAs);
+                const msg = message as OpenImageInPlotViewer | SaveImageAs;
                 if (msg.type === 'saveImageAs') {
                     this.plotSaveHandler.savePlot(editor, msg.outputId, msg.mimeType).catch(noop);
                 } else if (msg.type === 'openImageInPlotViewer') {
