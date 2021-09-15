@@ -22,7 +22,11 @@ import {
     NotebookRange,
     NotebookCellExecutionState,
     NotebookCellData,
-    notebooks
+    notebooks,
+    Event,
+    env,
+    UIKind,
+    DebugSession
 } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
@@ -49,6 +53,8 @@ import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 import { NotebookEditorProvider } from '../../../client/datascience/notebook/notebookEditorProvider';
 import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { IDebuggingManager, IKernelDebugAdapter } from '../../../client/debugger/types';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -622,7 +628,7 @@ function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
         hasErrorOutput(cell.outputs)
     );
 }
-function getCellOutputs(cell: NotebookCell) {
+export function getCellOutputs(cell: NotebookCell) {
     return cell.outputs.length
         ? cell.outputs.map((output) => output.items.map(getOutputText).join('\n')).join('\n')
         : '<No cell outputs>';
@@ -792,4 +798,58 @@ export async function hijackPrompt(
         displayed: displayed.promise,
         clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.text)
     };
+}
+
+export async function asPromise<T>(
+    event: Event<T>,
+    predicate?: (value: T) => boolean,
+    timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
+): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        const handle = setTimeout(() => {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            sub.dispose();
+            reject(new Error('asPromise TIMEOUT reached'));
+        }, timeout);
+        const sub = event((e) => {
+            if (!predicate || predicate(e)) {
+                clearTimeout(handle);
+                sub.dispose();
+                resolve(e);
+            }
+        });
+    });
+}
+
+export async function waitForDebugEvent<T>(
+    eventType: string,
+    debugAdapter: IKernelDebugAdapter,
+    timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
+): Promise<T> {
+    return asPromise(
+        debugAdapter.onDidSendMessage,
+        (message) => (message as DebugProtocol.Event).event === eventType,
+        timeout
+    ) as Promise<T>;
+}
+
+export async function waitForStoppedEvent(debugAdapter: IKernelDebugAdapter): Promise<DebugProtocol.StoppedEvent> {
+    return waitForDebugEvent('stopped', debugAdapter, 10_000);
+}
+
+export async function getDebugSessionAndAdapter(
+    debuggingManager: IDebuggingManager,
+    doc: NotebookDocument
+): Promise<{ session: DebugSession; debugAdapter: IKernelDebugAdapter }> {
+    await waitForCondition(
+        async () => !!debuggingManager.getDebugSession(doc),
+        defaultNotebookTestTimeout,
+        'DebugSession should start'
+    );
+    const session = await debuggingManager.getDebugSession(doc)!;
+
+    const debugAdapter = debuggingManager.getDebugAdapter(doc)!;
+    assert.isOk<IKernelDebugAdapter | undefined>(debugAdapter, 'DebugAdapter not started');
+
+    return { session, debugAdapter };
 }
