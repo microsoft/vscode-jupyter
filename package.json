@@ -1926,7 +1926,7 @@
         "@nteract/messaging": "^7.0.0",
         "@octokit/rest": "^18.0.6",
         "@phosphor/widgets": "^1.9.3",
-        "@vscode/jupyter-lsp-middleware": "^0.2.10",
+        "@vscode/jupyter-lsp-middleware": "^0.2.11",
         "ansi-to-html": "^0.6.7",
         "arch": "^2.1.0",
         "bootstrap": "^4.3.1",

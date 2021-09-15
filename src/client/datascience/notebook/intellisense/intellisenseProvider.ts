@@ -20,7 +20,7 @@ import { LanguageServer } from './languageServer';
 @injectable()
 export class IntellisenseProvider implements IExtensionSingleActivationService {
     private servers: Map<string, LanguageServer> = new Map<string, LanguageServer>();
-    private activeIntepreter: PythonEnvironment | undefined;
+    private activeInterpreter: PythonEnvironment | undefined;
 
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -41,11 +41,11 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
         // can compare during intellisense operations.
         this.interpreterService
             .getActiveInterpreter()
-            .then((r) => (this.activeIntepreter = r))
+            .then((r) => (this.activeInterpreter = r))
             .ignoreErrors();
         this.interpreterService.onDidChangeInterpreter(
             async () => {
-                this.activeIntepreter = await this.interpreterService.getActiveInterpreter();
+                this.activeInterpreter = await this.interpreterService.getActiveInterpreter();
             },
             this,
             this.disposables
@@ -73,11 +73,8 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
             ? this.notebookControllerManager.getSelectedNotebookController(notebook)
             : undefined;
         const id = getInterpreterId(interpreter);
-        const notebookId = controller?.connection.interpreter
-            ? getInterpreterId(interpreter)
-            : this.activeIntepreter
-            ? getInterpreterId(this.activeIntepreter)
-            : undefined;
+        const notebookInterpreter = controller ? controller.connection.interpreter : this.activeInterpreter;
+        const notebookId = notebookInterpreter ? getInterpreterId(notebookInterpreter) : undefined;
 
         return id == notebookId;
     }

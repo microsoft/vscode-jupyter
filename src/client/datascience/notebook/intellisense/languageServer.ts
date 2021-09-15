@@ -37,6 +37,7 @@ import { traceInfo } from '../../../common/logger';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sleep } from '../../../common/utils/async';
 import * as uuid from 'uuid/v4';
+import { noop } from '../../../common/utils/misc';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ensure(target: any, key: string) {
@@ -138,7 +139,7 @@ export class LanguageServer implements Disposable {
                 middleware: createNotebookMiddleware(
                     notebookApi,
                     () => languageClient,
-                    traceInfo,
+                    () => noop, // Don't trace output. Slows things down too much
                     NOTEBOOK_SELECTOR,
                     /.*\.(ipynb|interactive)/m,
                     interpreter.path,
