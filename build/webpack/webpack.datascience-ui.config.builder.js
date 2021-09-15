@@ -79,19 +79,19 @@ function getPlugins(bundle) {
                 ...[
                     new HtmlWebpackPlugin({
                         template: 'src/datascience-ui/plot/index.html',
-                        indexUrl: `${constants.ExtensionRootDir} / out / 1`,
+                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'plotViewer'],
                         filename: 'index.plotViewer.html'
                     }),
                     new HtmlWebpackPlugin({
                         template: 'src/datascience-ui/data-explorer/index.html',
-                        indexUrl: `${constants.ExtensionRootDir} / out / 1`,
+                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'dataExplorer'],
                         filename: 'index.dataExplorer.html'
                     }),
                     new HtmlWebpackPlugin({
                         template: 'src/datascience-ui/variable-view/index.html',
-                        indexUrl: `${constants.ExtensionRootDir} / out / 1`,
+                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'variableView'],
                         filename: 'index.variableView.html'
                     })
@@ -119,7 +119,7 @@ function getPlugins(bundle) {
 
 function buildConfiguration(bundle) {
     // console.error(`Bundle = ${ bundle }`);
-    // Folder inside `datascience - ui` that will be created and where the files will be dumped.
+    // Folder inside `datascience-ui` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
     const filesToCopy = [];
     if (bundle === 'ipywidgetsRenderer') {
