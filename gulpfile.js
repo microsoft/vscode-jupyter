@@ -125,10 +125,6 @@ async function buildIPyWidgets() {
     }
     await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
 }
-gulp.task('compile-notebooks', async () => {
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js');
-});
-
 gulp.task('compile-renderers', async () => {
     console.log('Building renderers');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js');
@@ -147,7 +143,7 @@ if (isCI && process.env.VSC_JUPYTER_SKIP_WEBVIEW_BUILD === 'true') {
 } else {
     gulp.task(
         'compile-webviews',
-        gulp.series('compile-ipywidgets', gulp.parallel('compile-notebooks', 'compile-viewers', 'compile-renderers'))
+        gulp.series('compile-ipywidgets', gulp.parallel('compile-viewers', 'compile-renderers'))
     );
 }
 
@@ -165,7 +161,6 @@ gulp.task('webpack', async () => {
     // Build DS stuff (separately as it uses far too much memory and slows down CI).
     // Individually is faster on CI.
     await buildIPyWidgets();
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
