@@ -195,19 +195,16 @@
             {
                 "command": "jupyter.runByLine",
                 "key": "f10",
-                "mac": "f10",
                 "when": "!jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.runByLineContinue",
                 "key": "f10",
-                "mac": "f10",
                 "when": "jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.runByLineStop",
                 "key": "ctrl+enter",
-                "mac": "ctrl+enter",
                 "when": "jupyter.notebookeditor.runByLineInProgress"
             }
         ],
@@ -217,7 +214,7 @@
                 "title": "Debug",
                 "icon": "$(bug)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.runByLine",
@@ -237,7 +234,7 @@
                 "title": "Continue",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress"
+                "enablement": "jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -855,7 +852,7 @@
             "notebook/cell/execute": [
                 {
                     "command": "jupyter.runAndDebugCell",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress && config.jupyter.experimental.debugging"
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress"
                 }
             ],
             "interactive/toolbar": [
@@ -1385,12 +1382,6 @@
                     "default": true,
                     "description": "Enables/disables A/B tests.",
                     "scope": "machine"
-                },
-                "jupyter.experimental.debugging": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enables the preview debugging experience. Set to true to enable the debugging mode button on native notebooks. Your selected kernel should also have ipykernel 6 installed in order to support debugging. Clicking the button will start a debugging session and will allow you to set and hit breakpoints.",
-                    "scope": "application"
                 },
                 "jupyter.showVariableViewWhenDebugging": {
                     "type": "boolean",
