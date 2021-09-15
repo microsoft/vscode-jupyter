@@ -121,3 +121,12 @@ export function areInterpreterPathsSame(path1: string = '', path2:string = '', o
     }
     return path;
 }
+
+/**
+ * Generates a unique id for an intepreter
+ * @param interpreter 
+ * @returns 
+ */
+export function getInterpreterId(interpreter: PythonEnvironment) {
+    return getInterpreterHash(interpreter);
+}

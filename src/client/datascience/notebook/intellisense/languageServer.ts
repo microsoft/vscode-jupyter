@@ -14,7 +14,6 @@ import {
 } from 'vscode';
 import {
     ClientCapabilities,
-    DocumentFilter,
     DocumentSelector,
     DynamicFeature,
     ExecuteCommandRegistrationOptions,
@@ -32,8 +31,8 @@ import {
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy';
-import { PYTHON_LANGUAGE } from '../../../common/constants';
-import { createMiddlewareAddon } from '@vscode/jupyter-lsp-middleware';
+import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../../common/constants';
+import { createNotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import { traceInfo } from '../../../common/logger';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sleep } from '../../../common/utils/async';
@@ -118,37 +117,32 @@ export class LanguageServer implements Disposable {
     }
 
     public static async createLanguageServer(
-        notebookUri: Uri,
-        interpreter: PythonEnvironment
+        interpreter: PythonEnvironment,
+        shouldAllowIntellisense: (uri: Uri, interpreter: PythonEnvironment) => boolean
     ): Promise<LanguageServer | undefined> {
-        // Create a document selector based on the notebook
-        const filter: DocumentFilter = {
-            pattern: notebookUri.fsPath // Has to match fspath
-        };
-        const selector: DocumentSelector = [filter];
-
         const cancellationStrategy = new FileBasedCancellationStrategy();
         const serverOptions = await LanguageServer.createServerOptions(interpreter, cancellationStrategy);
         if (serverOptions) {
             let languageClient: LanguageClient | undefined;
-            const outputChannel = window.createOutputChannel(`${path.basename(notebookUri.fsPath)}-languageserver`);
+            const outputChannel = window.createOutputChannel(`${interpreter.displayName || 'notebook'}-languageserver`);
 
             // Client options should be the same for all servers we support.
             const clientOptions: LanguageClientOptions = {
-                documentSelector: selector,
+                documentSelector: NOTEBOOK_SELECTOR,
                 workspaceFolder: undefined,
                 synchronize: {
                     configurationSection: PYTHON_LANGUAGE
                 },
                 outputChannel,
                 revealOutputChannelOn: RevealOutputChannelOn.Never,
-                middleware: createMiddlewareAddon(
+                middleware: createNotebookMiddleware(
                     notebookApi,
                     () => languageClient,
                     traceInfo,
-                    filter,
+                    NOTEBOOK_SELECTOR,
                     /.*\.(ipynb|interactive)/m,
-                    interpreter.path
+                    interpreter.path,
+                    (uri) => shouldAllowIntellisense(uri, interpreter)
                 ),
                 connectionOptions: {
                     cancellationStrategy

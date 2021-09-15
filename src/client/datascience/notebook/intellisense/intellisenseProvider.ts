@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { NotebookDocument } from 'vscode';
+import { NotebookDocument, Uri } from 'vscode';
+import { arePathsSame } from '../../../../datascience-ui/react-common/arePathsSame';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { IVSCodeNotebook } from '../../../common/application/types';
 import { IDisposableRegistry } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { areInterpretersSame } from '../../../pythonEnvironments/info/interpreter';
+import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
 import { INotebookControllerManager } from '../types';
 import { VSCodeNotebookController } from '../vscodeNotebookController';
 import { LanguageServer } from './languageServer';
@@ -19,6 +20,7 @@ import { LanguageServer } from './languageServer';
 @injectable()
 export class IntellisenseProvider implements IExtensionSingleActivationService {
     private servers: Map<string, LanguageServer> = new Map<string, LanguageServer>();
+    private activeIntepreter: PythonEnvironment | undefined;
 
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -34,10 +36,24 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
 
         // For all currently open notebooks, launch their language server
         this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).ignoreErrors());
+
+        // Track active interpreter, but synchronously. We need synchronously so we
+        // can compare during intellisense operations.
+        this.interpreterService
+            .getActiveInterpreter()
+            .then((r) => (this.activeIntepreter = r))
+            .ignoreErrors();
+        this.interpreterService.onDidChangeInterpreter(
+            async () => {
+                this.activeIntepreter = await this.interpreterService.getActiveInterpreter();
+            },
+            this,
+            this.disposables
+        );
     }
 
     private controllerChanged(e: { notebook: NotebookDocument; controller: VSCodeNotebookController }) {
-        return this.createLanguageServer(e.notebook, e.controller.connection.interpreter);
+        return this.ensureLanguageServer(e.controller.connection.interpreter);
     }
 
     private async openedNotebook(n: NotebookDocument) {
@@ -46,25 +62,41 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
         // If the controller is empty, default to the active interpreter
         const interpreter =
             controller?.connection.interpreter || (await this.interpreterService.getActiveInterpreter(n.uri));
-        return this.createLanguageServer(n, interpreter);
+        return this.ensureLanguageServer(interpreter);
     }
 
-    private async createLanguageServer(notebook: NotebookDocument, interpreter: PythonEnvironment | undefined) {
-        // Delete the old language server if we have one and it is using a different controller
-        let oldServer = this.servers.get(notebook.uri.toString());
-        const oldServerIsMatch = oldServer ? areInterpretersSame(oldServer.interpreter, interpreter) : false;
-        if (oldServer && !oldServerIsMatch) {
-            await oldServer.dispose();
-        }
+    private shouldAllowIntellisense(uri: Uri, interpreter: PythonEnvironment) {
+        // We should allow intellisense for a URI when the interpreter matches
+        // the controller for the uri
+        const notebook = this.notebooks.notebookDocuments.find((n) => arePathsSame(n.uri.fsPath, uri.fsPath));
+        const controller = notebook
+            ? this.notebookControllerManager.getSelectedNotebookController(notebook)
+            : undefined;
+        const id = getInterpreterId(interpreter);
+        const notebookId = controller?.connection.interpreter
+            ? getInterpreterId(interpreter)
+            : this.activeIntepreter
+            ? getInterpreterId(this.activeIntepreter)
+            : undefined;
 
-        // Create a new one if we can (and need to) based on this controller
-        const newServer =
-            !oldServerIsMatch && interpreter
-                ? await LanguageServer.createLanguageServer(notebook.uri, interpreter)
-                : undefined;
-        if (newServer) {
-            this.servers.set(notebook.uri.toString(), newServer);
-            this.disposables.push(newServer);
+        return id == notebookId;
+    }
+
+    private async ensureLanguageServer(interpreter: PythonEnvironment | undefined) {
+        // We should have one language server per active interpreter.
+
+        // See if we already have one for this interpreter or not
+        const id = interpreter ? getInterpreterId(interpreter) : undefined;
+        if (id && !this.servers.has(id) && interpreter) {
+            // We don't already have one. Create a new one for this interpreter.
+            // The logic for whether or not
+            const languageServer = await LanguageServer.createLanguageServer(
+                interpreter,
+                this.shouldAllowIntellisense.bind(this)
+            );
+            if (languageServer) {
+                this.servers.set(id, languageServer);
+            }
         }
     }
 }
