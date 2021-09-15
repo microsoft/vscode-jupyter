@@ -108,7 +108,7 @@ suite('VSCode Notebook - Run By Line', function () {
         const variableView = (coreVariableView as unknown) as ITestWebviewHost;
         const onMessageListener = new OnMessageListener(variableView);
 
-        void commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        void commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!);
         await onMessageListener.waitForMessage(InteractiveWindowMessages.VariablesComplete);
 
@@ -116,7 +116,7 @@ suite('VSCode Notebook - Run By Line', function () {
         const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
         verifyViewVariables(expectedVariables, htmlResult);
 
-        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,
@@ -163,11 +163,11 @@ suite('VSCode Notebook - Run By Line', function () {
         const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter!); // First line
-        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!); // foo()
-        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!); // def foo
-        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        await commandManager.executeCommand(Commands.RunByLineNext, cell);
         const stoppedEvent = await waitForStoppedEvent(debugAdapter!); // print(1)
         const stack: DebugProtocol.StackTraceResponse['body'] = await session!.customRequest('stackTrace', {
             threadId: stoppedEvent.body.threadId
@@ -176,7 +176,7 @@ suite('VSCode Notebook - Run By Line', function () {
         assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
         assert.equal(stack.stackFrames[0].line, 2, 'Stopped at the wrong line');
 
-        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        await commandManager.executeCommand(Commands.RunByLineNext, cell);
         const stoppedEvent2 = await waitForStoppedEvent(debugAdapter!); // foo()
         const stack2: DebugProtocol.StackTraceResponse['body'] = await session!.customRequest('stackTrace', {
             threadId: stoppedEvent2.body.threadId
@@ -198,10 +198,10 @@ suite('VSCode Notebook - Run By Line', function () {
         const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter!); // First line
-        await commandManager.executeCommand(Commands.RunByLineContinue, cell1);
+        await commandManager.executeCommand(Commands.RunByLineNext, cell1);
 
         await waitForStoppedEvent(debugAdapter!); // Returns after call
-        await commandManager.executeCommand(Commands.RunByLineContinue, cell1);
+        await commandManager.executeCommand(Commands.RunByLineNext, cell1);
 
         await waitForCondition(
             async () => !debug.activeDebugSession,
@@ -238,7 +238,7 @@ suite('VSCode Notebook - Run By Line', function () {
 
         await waitForStoppedEvent(debugAdapter2!);
         await sleep(500); //
-        await commandManager.executeCommand(Commands.RunByLineContinue, cell);
+        await commandManager.executeCommand(Commands.RunByLineNext, cell);
 
         await waitForCondition(
             async () => !debug.activeDebugSession,
