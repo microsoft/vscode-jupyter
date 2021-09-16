@@ -2,7 +2,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$TODAYS_DATE=2021-09-09"
+    "value": "$TODAYS_DATE=2021-09-15"
   },
   {
     "kind": 1,
@@ -102,7 +102,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_EXLUSION sort:created-asc "
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_EXLUSION -label:$ADMIN_AREAS sort:created-asc "
   },
   {
     "kind": 1,
@@ -112,7 +112,7 @@
   {
     "kind": 2,
     "language": "github-issues",
-    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_INCLUSION sort:created-asc"
+    "value": "$JUPYTER_ALL_REPOS is:issue is:open label:needs-triage $TEAM_AUTHOR_INCLUSION -label:$ADMIN_AREAS sort:created-asc"
   },
   {
     "kind": 1,
