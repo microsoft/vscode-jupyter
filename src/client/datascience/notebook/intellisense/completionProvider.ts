@@ -76,7 +76,10 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
             })
         ]);
         if (!result) {
+            traceInfoIf(isCI, `Notebook completions not found.`);
             return [];
+        } else {
+            traceInfoIf(isCI, `Completions found, filtering the list: ${result}.`);
         }
         const experimentMatches = result.metadata ? result.metadata._jupyter_types_experimental : [];
         // Check if we have more information about the complication items & whether its valid.
