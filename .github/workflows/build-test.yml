@@ -400,12 +400,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Azure Login
-        uses: azure/login@v1.1.1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-        if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
-
       - name: Download Python VSIX
         run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
         if: matrix.test-suite == 'integration' || matrix.test-suite == 'notebook'
