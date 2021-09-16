@@ -857,8 +857,13 @@
                 },
                 {
                     "command": "jupyter.runByLineStop",
-                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && notebookCellToolbarLocation == left",
                     "group": "inline/cell@1"
+                },
+                {
+                    "command": "jupyter.runByLineStop",
+                    "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && jupyter.notebookeditor.runByLineInProgress && notebookCellToolbarLocation == right",
+                    "group": "inline/cell@0"
                 }
             ],
             "notebook/cell/execute": [
