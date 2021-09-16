@@ -3,13 +3,14 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
+import { SSL_OP_EPHEMERAL_RSA } from 'constants';
 import * as sinon from 'sinon';
 import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position } from 'vscode';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
 import { traceInfo } from '../../../../client/common/logger';
 import { IDisposable } from '../../../../client/common/types';
 import { NotebookCompletionProvider } from '../../../../client/datascience/notebook/intellisense/completionProvider';
-import { IExtensionTestApi } from '../../../common';
+import { IExtensionTestApi, sleep } from '../../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import { initialize } from '../../../initialize';
 import {
@@ -93,7 +94,11 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
             triggerCharacter: '.'
         };
         traceInfo('Get completions in test');
-        const completions = await completionProvider.provideCompletionItems(cell3.document, position, token, context);
+        let completions = await completionProvider.provideCompletionItems(cell3.document, position, token, context);
+        await sleep(500);
+        // Ask a second time as Jupyter can sometimes not be ready
+        traceInfo('Get completions second time in test');
+        completions = await completionProvider.provideCompletionItems(cell3.document, position, token, context);
         const items = completions.map((item) => item.label);
         assert.isOk(items.length);
         assert.ok(
