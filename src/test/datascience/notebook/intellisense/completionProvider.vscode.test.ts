@@ -3,7 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
-import { SSL_OP_EPHEMERAL_RSA } from 'constants';
 import * as sinon from 'sinon';
 import { CancellationTokenSource, CompletionContext, CompletionTriggerKind, Position } from 'vscode';
 import { IVSCodeNotebook } from '../../../../client/common/application/types';
