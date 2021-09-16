@@ -21,6 +21,7 @@ import { LanguageServer } from './languageServer';
 export class IntellisenseProvider implements IExtensionSingleActivationService {
     private servers: Map<string, LanguageServer> = new Map<string, LanguageServer>();
     private activeInterpreter: PythonEnvironment | undefined;
+    private interpreterIdCache: Map<PythonEnvironment, string> = new Map<PythonEnvironment, string>();
 
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -65,18 +66,27 @@ export class IntellisenseProvider implements IExtensionSingleActivationService {
         return this.ensureLanguageServer(interpreter);
     }
 
-    private shouldAllowIntellisense(uri: Uri, interpreter: PythonEnvironment) {
+    private getInterpreterIdFromCache(interpreter: PythonEnvironment) {
+        let id = this.interpreterIdCache.get(interpreter);
+        if (!id) {
+            // Making an assumption that the id for an interpreter never changes.
+            id = getInterpreterId(interpreter);
+            this.interpreterIdCache.set(interpreter, id);
+        }
+        return id;
+    }
+
+    private shouldAllowIntellisense(uri: Uri, interpreterId: string) {
         // We should allow intellisense for a URI when the interpreter matches
         // the controller for the uri
         const notebook = this.notebooks.notebookDocuments.find((n) => arePathsSame(n.uri.fsPath, uri.fsPath));
         const controller = notebook
             ? this.notebookControllerManager.getSelectedNotebookController(notebook)
             : undefined;
-        const id = getInterpreterId(interpreter);
         const notebookInterpreter = controller ? controller.connection.interpreter : this.activeInterpreter;
-        const notebookId = notebookInterpreter ? getInterpreterId(notebookInterpreter) : undefined;
+        const notebookId = notebookInterpreter ? this.getInterpreterIdFromCache(notebookInterpreter) : undefined;
 
-        return id == notebookId;
+        return interpreterId == notebookId;
     }
 
     private async ensureLanguageServer(interpreter: PythonEnvironment | undefined) {

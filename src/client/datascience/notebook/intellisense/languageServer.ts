@@ -38,6 +38,7 @@ import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sleep } from '../../../common/utils/async';
 import * as uuid from 'uuid/v4';
 import { noop } from '../../../common/utils/misc';
+import { getInterpreterId } from '../../../pythonEnvironments/info/interpreter';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ensure(target: any, key: string) {
@@ -106,26 +107,34 @@ const notebookApi = new (class {
 })();
 
 export class LanguageServer implements Disposable {
+    private _interpreterId: String;
     private constructor(
         public client: LanguageClient,
         public interpreter: PythonEnvironment,
         private disposables: Disposable[]
-    ) {}
+    ) {
+        this._interpreterId = getInterpreterId(interpreter);
+    }
 
     public async dispose() {
         this.disposables.forEach((d) => d.dispose());
         await this.client.stop();
     }
 
+    public get interpreterId() {
+        return this._interpreterId;
+    }
+
     public static async createLanguageServer(
         interpreter: PythonEnvironment,
-        shouldAllowIntellisense: (uri: Uri, interpreter: PythonEnvironment) => boolean
+        shouldAllowIntellisense: (uri: Uri, interpreterId: string) => boolean
     ): Promise<LanguageServer | undefined> {
         const cancellationStrategy = new FileBasedCancellationStrategy();
         const serverOptions = await LanguageServer.createServerOptions(interpreter, cancellationStrategy);
         if (serverOptions) {
             let languageClient: LanguageClient | undefined;
             const outputChannel = window.createOutputChannel(`${interpreter.displayName || 'notebook'}-languageserver`);
+            const interpreterId = getInterpreterId(interpreter);
 
             // Client options should be the same for all servers we support.
             const clientOptions: LanguageClientOptions = {
@@ -143,7 +152,7 @@ export class LanguageServer implements Disposable {
                     NOTEBOOK_SELECTOR,
                     /.*\.(ipynb|interactive)/m,
                     interpreter.path,
-                    (uri) => shouldAllowIntellisense(uri, interpreter)
+                    (uri) => shouldAllowIntellisense(uri, interpreterId)
                 ),
                 connectionOptions: {
                     cancellationStrategy
