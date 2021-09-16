@@ -9,7 +9,7 @@ const pngMimeType = 'image/png';
 
 @injectable()
 export class PlotViewHandler {
-    constructor(@inject(IPlotViewerProvider) private readonly plotViewProvider: IPlotViewerProvider) { }
+    constructor(@inject(IPlotViewerProvider) private readonly plotViewProvider: IPlotViewerProvider) {}
 
     public async openPlot(notebook: NotebookDocument, outputId: string) {
         if (notebook.isClosed) {
@@ -36,7 +36,11 @@ export class PlotViewHandler {
     }
 }
 
-function getOutputItem(notebook: NotebookDocument, outputId: string, mimeType: string): NotebookCellOutputItem | undefined {
+function getOutputItem(
+    notebook: NotebookDocument,
+    outputId: string,
+    mimeType: string
+): NotebookCellOutputItem | undefined {
     for (const cell of notebook.getCells()) {
         for (const output of cell.outputs) {
             if (output.id !== outputId) {

@@ -21,7 +21,7 @@ export class PlotSaveHandler {
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) { }
+    ) {}
 
     public async savePlot(notebook: NotebookDocument, outputId: string, mimeType: string) {
         if (notebook.isClosed) {
@@ -32,9 +32,7 @@ export class PlotSaveHandler {
             return traceError(`Nolot to save ${notebook.uri.toString()}, id: ${outputId} for ${mimeType}`);
         }
         if (!(mimeType.toLowerCase() in imageExtensionForMimeType)) {
-            return traceError(
-                `Unsupported MimeType ${notebook.uri.toString()}, id: ${outputId} for ${mimeType}`
-            );
+            return traceError(`Unsupported MimeType ${notebook.uri.toString()}, id: ${outputId} for ${mimeType}`);
         }
 
         const saveLocation = await this.getSaveTarget(output, mimeType);

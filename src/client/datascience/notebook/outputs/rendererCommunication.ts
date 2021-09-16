@@ -27,7 +27,7 @@ export class RendererCommunication implements IExtensionSingleActivationService,
     constructor(
         @inject(PlotSaveHandler) private readonly plotSaveHandler: PlotSaveHandler,
         @inject(PlotViewHandler) private readonly plotViewHandler: PlotViewHandler
-    ) { }
+    ) {}
 
     public dispose() {
         disposeAllDisposables(this.disposables);
@@ -38,9 +38,11 @@ export class RendererCommunication implements IExtensionSingleActivationService,
             return;
         }
         if (!ext.isActive) {
-            await ext.activate()
+            await ext.activate();
         }
-        const api = ext.exports as { onDidReceiveMessage: Event<{ editor: NotebookEditor; message: OpenImageInPlotViewer | SaveImageAs }> };
+        const api = ext.exports as {
+            onDidReceiveMessage: Event<{ editor: NotebookEditor; message: OpenImageInPlotViewer | SaveImageAs }>;
+        };
         api.onDidReceiveMessage(
             ({ editor, message }) => {
                 if (message.type === 'saveImageAs') {
