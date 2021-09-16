@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { NotebookCellOutput, NotebookDocument, NotebookEditor, Uri } from 'vscode';
+import { NotebookCellOutput, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { DataScience } from '../../../common/utils/localize';
