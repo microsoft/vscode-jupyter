@@ -83,12 +83,12 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell2);
-        const cell3 = await insertCodeCell('df.head()');
+        const cell3 = await insertCodeCell('import os\nprint(os.getcwd())\n');
         await runCell(cell3);
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell3);
-        traceInfo(`df.head output: ${JSON.stringify(cell3.outputs)}`);
+        traceInfo(`last cell output: ${JSON.stringify(cell3.outputs)}`);
 
         // Now add the cell to check intellisense.
         await insertCodeCell('df.');
