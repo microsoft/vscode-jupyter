@@ -52,6 +52,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCellUri: Uri | undefined;
+    private disconected: boolean = false;
 
     constructor(
         private session: DebugSession,
@@ -170,8 +171,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     public disconnect() {
-        void this.session.customRequest('disconnect', { restart: false });
-        this.endSession.fire(this.session);
+        if (!this.disconected) {
+            void this.session.customRequest('disconnect', { restart: false });
+            this.endSession.fire(this.session);
+            this.disconected = true;
+        }
     }
 
     dispose() {
@@ -199,7 +203,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
     private dumpAllCells() {
         this.notebookDocument.getCells().forEach((cell) => {
-            if (cell.kind === NotebookCellKind.Code) {
+            if (cell.kind === NotebookCellKind.Code && cell.executionSummary?.success) {
                 void this.dumpCell(cell.index);
             }
         });
