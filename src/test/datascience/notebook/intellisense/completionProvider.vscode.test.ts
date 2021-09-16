@@ -20,7 +20,8 @@ import {
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
-    createEmptyPythonNotebook
+    createEmptyPythonNotebook,
+    getCellOutputs
 } from '../helper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -88,7 +89,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
 
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell3);
-        traceInfo(`last cell output: ${JSON.stringify(cell3.outputs)}`);
+        traceInfo(`last cell output: ${getCellOutputs(cell3)}`);
 
         // Now add the cell to check intellisense.
         await insertCodeCell('df.');
