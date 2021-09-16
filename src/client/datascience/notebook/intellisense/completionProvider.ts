@@ -80,7 +80,7 @@ export class NotebookCompletionProvider implements CompletionItemProvider {
             traceInfoIf(isCI, `Notebook completions not found.`);
             return [];
         } else {
-            traceInfoIf(isCI, `Completions found, filtering the list: ${result}.`);
+            traceInfoIf(isCI, `Completions found, filtering the list: ${JSON.stringify(result)}.`);
         }
         const experimentMatches = result.metadata ? result.metadata._jupyter_types_experimental : [];
         // Check if we have more information about the complication items & whether its valid.
