@@ -40,11 +40,6 @@ function getEntry(bundle) {
             return {
                 errorRenderer: [`./src/datascience-ui/error-renderer/index.ts`]
             };
-        case 'imageRenderer':
-            return {
-                imageRenderer: ['./src/datascience-ui/image-renderer/index.ts']
-            };
-        default:
             throw new Error(`Bundle not supported ${bundle}`);
     }
 }
@@ -103,7 +98,6 @@ function getPlugins(bundle) {
             break;
         }
         case 'ipywidgetsRenderer':
-        case 'imageRenderer':
         case 'errorRenderer': {
             plugins.push(...(isProdBuild ? [definePlugin] : []));
             plugins.push(new EsmWebpackPlugin());
@@ -145,7 +139,7 @@ function buildConfiguration(bundle) {
         );
     }
     let outputProps =
-        bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer' && bundle !== 'imageRenderer'
+        bundle !== 'ipywidgetsRenderer' && bundle !== 'errorRenderer'
             ? {}
             : {
                   library: 'LIB',
@@ -282,4 +276,3 @@ exports.viewers = buildConfiguration('viewers');
 exports.ipywidgetsKernel = buildConfiguration('ipywidgetsKernel');
 exports.ipywidgetsRenderer = buildConfiguration('ipywidgetsRenderer');
 exports.errorRenderer = buildConfiguration('errorRenderer');
-exports.imageRenderer = buildConfiguration('imageRenderer');

@@ -8,6 +8,5 @@ module.exports = [
     builder.viewers,
     builder.ipywidgetsKernel,
     builder.ipywidgetsRenderer,
-    builder.errorRenderer,
-    builder.imageRenderer
+    builder.errorRenderer
 ];

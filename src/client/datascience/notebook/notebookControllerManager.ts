@@ -372,8 +372,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 }
 
                 traceInfo(
-                    `PreferredConnection: ${
-                        preferredConnection.id
+                    `PreferredConnection: ${preferredConnection.id
                     } found for NotebookDocument: ${document.uri.toString()}`
                 );
             }
@@ -454,7 +453,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this,
                         this.disposables
                     );
-
                     // We are disposing as documents are closed, but do this as well
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);

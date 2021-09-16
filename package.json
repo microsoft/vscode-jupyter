@@ -1827,18 +1827,6 @@
                 "mimeTypes": [
                     "application/vnd.code.notebook.error"
                 ]
-            },
-            {
-                "id": "jupyter-notebook-image-renderer",
-                "entrypoint": "./out/datascience-ui/imageRenderer/imageRenderer.js",
-                "displayName": "Jupyter Image Renderer",
-                "requiresMessaging": "always",
-                "mimeTypes": [
-                    "image/gif",
-                    "image/png",
-                    "image/jpeg",
-                    "image/svg+xml"
-                ]
             }
         ],
         "viewsContainers": {

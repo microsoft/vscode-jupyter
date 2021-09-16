@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { NotebookCellOutput, NotebookEditor, Uri } from 'vscode';
+import { NotebookCellOutput, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { DataScience } from '../../../common/utils/localize';
@@ -21,19 +21,19 @@ export class PlotSaveHandler {
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
+    ) { }
 
-    public async savePlot(editor: NotebookEditor, outputId: string, mimeType: string) {
-        if (editor.document.isClosed) {
+    public async savePlot(notebook: NotebookDocument, outputId: string, mimeType: string) {
+        if (notebook.isClosed) {
             return;
         }
-        const output = getOutputItem(editor, outputId, mimeType);
+        const output = getOutputItem(notebook, outputId, mimeType);
         if (!output) {
-            return traceError(`Nolot to save ${editor.document.uri.toString()}, id: ${outputId} for ${mimeType}`);
+            return traceError(`Nolot to save ${notebook.uri.toString()}, id: ${outputId} for ${mimeType}`);
         }
         if (!(mimeType.toLowerCase() in imageExtensionForMimeType)) {
             return traceError(
-                `Unsupported MimeType ${editor.document.uri.toString()}, id: ${outputId} for ${mimeType}`
+                `Unsupported MimeType ${notebook.uri.toString()}, id: ${outputId} for ${mimeType}`
             );
         }
 
@@ -94,8 +94,8 @@ export class PlotSaveHandler {
     }
 }
 
-function getOutputItem(editor: NotebookEditor, outputId: string, mimeType: string): NotebookCellOutput | undefined {
-    for (const cell of editor.document.getCells()) {
+function getOutputItem(notebook: NotebookDocument, outputId: string, mimeType: string): NotebookCellOutput | undefined {
+    for (const cell of notebook.getCells()) {
         for (const output of cell.outputs) {
             if (output.id !== outputId) {
                 continue;
