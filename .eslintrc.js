@@ -21,7 +21,6 @@ module.exports = {
     ignorePatterns: [
         'build/constants.js',
         'build/util.js',
-        'build/ci/scripts/runFunctionalTests.js',
         'build/ci/performance/checkPerformanceResults.js',
         'build/ci/performance/createNewPerformanceBenchmark.js',
         'build/ci/performance/savePerformanceResults.js',
@@ -273,7 +272,6 @@ module.exports = {
         'src/datascience-ui/react-common/codicon/codicon.ts',
         'src/datascience-ui/react-common/errorBoundary.tsx',
         'src/datascience-ui/common/main.ts',
-        'src/datascience-ui/common/index.ts',
         'src/datascience-ui/startPage/index.tsx',
         'src/datascience-ui/startPage/startPage.tsx',
         'src/datascience-ui/data-explorer/globalJQueryImports.ts',

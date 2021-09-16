@@ -141,13 +141,13 @@ export interface INotebookServer extends IAsyncDisposable {
 // Provides a service to determine if raw notebook is supported or not
 export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
 export interface IRawNotebookSupportedService {
-    supported(): boolean;
+    isSupported: boolean;
 }
 
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
-    supported(): Promise<boolean>;
+    isSupported: boolean;
     connect(connect: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined>;
     createNotebook(
         identity: Uri,
@@ -470,12 +470,12 @@ export interface IInteractiveBase extends Disposable {
 
 export interface IInteractiveWindow extends IInteractiveBase {
     readonly onDidChangeViewState: Event<void>;
+    readonly notebookEditor: NotebookEditor | undefined;
     readonly owner: Resource;
     readonly submitters: Uri[];
     readonly identity: Uri;
-    readonly title: string;
     readonly notebookUri?: Uri;
-    readonly readyPromise?: Promise<NotebookEditor>;
+    readonly readyPromise: Promise<void>;
     closed: Event<IInteractiveWindow>;
     addCode(code: string, file: Uri, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;

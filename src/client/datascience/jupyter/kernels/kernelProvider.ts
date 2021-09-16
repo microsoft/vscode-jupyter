@@ -77,7 +77,7 @@ export class KernelProvider implements IKernelProvider {
         this.pendingDisposables.clear();
         await Promise.all(items);
     }
-    public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel | undefined {
+    public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel {
         const existingKernelInfo = this.kernelsByNotebook.get(notebook);
         if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
             return existingKernelInfo.kernel;
@@ -88,7 +88,7 @@ export class KernelProvider implements IKernelProvider {
         const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
         const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
         const kernel = new Kernel(
-            notebook.uri,
+            notebook,
             resourceUri,
             options.metadata,
             this.notebookProvider,
@@ -124,7 +124,7 @@ export class KernelProvider implements IKernelProvider {
                     this.kernelsByNotebook.delete(notebook);
                     traceInfo(
                         `Kernel got disposed, hence there is no longer a kernel associated with ${notebook.uri.toString()}`,
-                        kernel.notebookUri.toString()
+                        kernel.notebookDocument.uri.toString()
                     );
                 }
             },

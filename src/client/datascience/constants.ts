@@ -161,7 +161,7 @@ export namespace Commands {
     export const DebugNotebook = 'jupyter.debugNotebook';
     export const RunByLine = 'jupyter.runByLine';
     export const RunAndDebugCell = 'jupyter.runAndDebugCell';
-    export const RunByLineContinue = 'jupyter.runByLineContinue';
+    export const RunByLineNext = 'jupyter.runByLineNext';
     export const RunByLineStop = 'jupyter.runByLineStop';
 }
 
@@ -192,6 +192,8 @@ export namespace EditorContexts {
     export const HaveCellSelected = 'jupyter.havecellselected';
     export const CanRestartNotebookKernel = 'jupyter.notebookeditor.canrestartNotebookkernel';
     export const CanInterruptNotebookKernel = 'jupyter.notebookeditor.canInterruptNotebookKernel';
+    export const CanRestartInteractiveWindowKernel = 'jupyter.interactive.canRestartNotebookKernel';
+    export const CanInterruptInteractiveWindowKernel = 'jupyter.interactive.canInterruptNotebookKernel';
     export const DebuggingInProgress = 'jupyter.notebookeditor.debuggingInProgress';
     export const RunByLineInProgress = 'jupyter.notebookeditor.runByLineInProgress';
     export const IsPythonNotebook = 'jupyter.ispythonnotebook';
@@ -377,7 +379,6 @@ export enum Telemetry {
     DebugpyInstallFailed = 'DATASCIENCE.DEBUGPY_INSTALL_FAILED',
     DebugpyInstallCancelled = 'DATASCIENCE.DEBUGPY_INSTALL_CANCELLED',
     ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
-    ExecuteNativeCell = 'DATASCIENCE.NATIVE.EXECUTE_NATIVE_CELL',
     CreateNewNotebook = 'DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK',
     DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',

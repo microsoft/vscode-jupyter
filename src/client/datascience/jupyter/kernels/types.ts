@@ -11,8 +11,7 @@ import type {
     NotebookCell,
     NotebookController,
     NotebookDocument,
-    QuickPickItem,
-    Uri
+    QuickPickItem
 } from 'vscode';
 import type { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import type { IAsyncDisposable, Resource } from '../../../common/types';
@@ -121,7 +120,7 @@ export interface IKernelSelectionListProvider<T extends KernelConnectionMetadata
 }
 
 export interface IKernel extends IAsyncDisposable {
-    readonly notebookUri: Uri;
+    readonly notebookDocument: NotebookDocument;
     /**
      * In the case of Notebooks, this is the same as the Notebook Uri.
      * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).
@@ -143,11 +142,11 @@ export interface IKernel extends IAsyncDisposable {
     readonly info?: KernelMessage.IInfoReplyMsg['content'];
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     readonly notebook?: INotebook;
-    start(options?: { disableUI?: boolean; document: NotebookDocument }): Promise<void>;
-    interrupt(document: NotebookDocument): Promise<InterruptResult>;
-    restart(document: NotebookDocument): Promise<void>;
+    start(options?: { disableUI?: boolean }): Promise<void>;
+    interrupt(): Promise<InterruptResult>;
+    restart(): Promise<void>;
     executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
-    executeHidden(code: string, document: NotebookDocument): Promise<void>;
+    executeHidden(code: string): Promise<void>;
 }
 
 export type KernelOptions = {
@@ -172,5 +171,5 @@ export interface IKernelProvider extends IAsyncDisposable {
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
-    getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel | undefined;
+    getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
 }

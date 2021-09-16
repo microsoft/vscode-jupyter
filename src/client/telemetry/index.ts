@@ -672,7 +672,6 @@ export interface IEventNamePropertyMapping {
      * Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
      */
     [Telemetry.StartExecuteNotebookCellPerceivedCold]: never | undefined;
-    [Telemetry.ExecuteNativeCell]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebookInteractive]: never | undefined;
     [Telemetry.ExportPythonFileInteractive]: never | undefined;
@@ -811,6 +810,7 @@ export interface IEventNamePropertyMapping {
             | 'failed' // Installation disabled (this is what python extension returns).
             | 'install' // User chose install from prompt.
             | 'donotinstall' // User chose not to install from prompt.
+            | 'differentKernel' // User chose to select a different kernel.
             | 'dismissed'; // User chose to dismiss the prompt.
     };
     /**
@@ -1242,9 +1242,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionKernelProcessExited]: {
         /**
          * The kernel process's exit reason, based on the error
-         * object's reason, message, or stacktrace.
+         * object's reason
          */
-        reason: string | undefined;
+        exitReason: string | undefined;
         /**
          * The kernel process's exit code.
          */

@@ -49,7 +49,8 @@ export class CellHashProviderFactory {
             this.configService,
             this.debugService,
             this.fs,
-            this.listeners
+            this.listeners,
+            kernel
         );
         this.cellHashProvidersIndexedByKernels.set(kernel, cellHashProvider);
         return cellHashProvider;

@@ -87,9 +87,9 @@ async function runIndividualTest(extraArgs, file, index) {
 
     // If failed keep track
     if (exitCode !== 0) {
-        console.log(`Functional tests for ${file} failed.`);
+        console.log(`Functional tests for ${file} failed with exit code ${exitCode}.`);
     } else {
-        console.log(`Functional test for ${file} succeeded`);
+        console.log(`Functional test for ${file} succeeded with exit code ${exitCode}`);
     }
 
     return exitCode;
@@ -142,10 +142,11 @@ async function main() {
             }
         } else {
             // Parallel, all at once
+            console.log(`Start functional test run for ${JSON.stringify(files)}`);
             const returnCodes = await Promise.all(files.map(runIndividualTest.bind(undefined, extraArgs)));
-
-            // Or all of the codes together
-            returnCode = returnCodes.reduce((p, c) => p | c);
+            console.log(`Functional test run exit codes: ${JSON.stringify(returnCodes)}`);
+            // if there any exit code > 0, get that one.
+            returnCode = Math.max(...returnCodes);
         }
     } catch (ex) {
         console.log(`Functional tests run failure: ${ex}.`);

@@ -189,7 +189,7 @@ export function registerTypes(serviceManager: IServiceManager, inNotebookApiExpe
     setSharedProperty('isPythonExtensionInstalled', isPythonExtensionInstalled.isPythonExtensionInstalled ? 'true' : 'false');
     if (isLocalConnection) {
         const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
-        setSharedProperty('rawKernelSupported', rawService.supported() ? 'true' : 'false');
+        setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
     }
 
     // This condition is temporary.

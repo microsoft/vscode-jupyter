@@ -51,7 +51,7 @@ export class Activation implements IExtensionSingleActivationService {
         this.PreWarmDaemonPool().ignoreErrors();
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
 
-        if (!this.rawSupported.supported() && this.extensionChecker.isPythonExtensionInstalled) {
+        if (!this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension
             this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
         }

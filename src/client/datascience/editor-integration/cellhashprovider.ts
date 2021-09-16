@@ -5,6 +5,7 @@ import * as hashjs from 'hash.js';
 import { inject, injectable, multiInject, optional } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import {
+    Disposable,
     Event,
     EventEmitter,
     NotebookCell,
@@ -24,6 +25,7 @@ import { getCellResource } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Identifiers } from '../constants';
 import { getInteractiveCellMetadata } from '../interactive-window/interactiveWindow';
+import { IKernel } from '../jupyter/kernels/types';
 import { ICellHash, ICellHashListener, ICellHashProvider, IFileHashes } from '../types';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
@@ -55,21 +57,25 @@ export class CellHashProvider implements ICellHashProvider {
     private hashes: Map<string, IRangedCellHash[]> = new Map<string, IRangedCellHash[]>();
     private updateEventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private traceBackRegexes = new Map<string, RegExp[]>();
+    private disposables: Disposable[] = [];
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IFileSystem) private fs: IFileSystem,
-        @multiInject(ICellHashListener) @optional() private listeners: ICellHashListener[] | undefined
+        @multiInject(ICellHashListener) @optional() private listeners: ICellHashListener[] | undefined,
+        kernel: IKernel
     ) {
         // Watch document changes so we can update our hashes
         this.documentManager.onDidChangeTextDocument(this.onChangedDocument.bind(this));
+        this.disposables.push(kernel.onRestarted(() => this.onKernelRestarted()));
     }
 
     public dispose() {
         this.hashes.clear();
         this.traceBackRegexes.clear();
+        this.disposables.forEach((d) => d.dispose());
     }
 
     public get updated(): Event<void> {

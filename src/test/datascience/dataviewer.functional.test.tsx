@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 'use strict';
-suite('Dummy1', () => {
-    test('dummy1', () => {
+suite('Dummy1a', () => {
+    test('dummy1a', () => {
         //
     });
 });

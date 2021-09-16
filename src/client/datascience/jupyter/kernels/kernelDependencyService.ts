@@ -21,13 +21,14 @@ import {
 } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
+import { IServiceContainer } from '../../../ioc/types';
 import { TraceOptions } from '../../../logging/trace';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { getResourceType } from '../../common';
 import { Telemetry } from '../../constants';
+import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
 import { IpyKernelNotInstalledError } from '../../kernel-launcher/types';
-import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
+import { IInteractiveWindowProvider, IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -41,7 +42,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IsCodeSpace) private readonly isCodeSpace: boolean,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IServiceContainer) protected serviceContainer: IServiceContainer // @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
@@ -87,7 +89,16 @@ export class KernelDependencyService implements IKernelDependencyService {
             return;
         }
         if (response === KernelInterpreterDependencyResponse.selectDifferentKernel) {
-            this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
+            const targetNotebookEditor = getActiveInteractiveWindow(
+                this.serviceContainer.get(IInteractiveWindowProvider)
+            )?.notebookEditor;
+            if (targetNotebookEditor) {
+                this.commandManager
+                    .executeCommand('notebook.selectKernel', { notebookEditor: targetNotebookEditor })
+                    .then(noop, noop);
+            } else {
+                this.commandManager.executeCommand('notebook.selectKernel').then(noop, noop);
+            }
         }
         throw new IpyKernelNotInstalledError(
             DataScience.ipykernelNotInstalled().format(
@@ -115,9 +126,10 @@ export class KernelDependencyService implements IKernelDependencyService {
             interpreter.displayName || interpreter.path,
             ProductNames.get(Product.ipykernel)!
         );
+        const ipykernelProductName = ProductNames.get(Product.ipykernel)!;
         sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
             action: 'displayed',
-            moduleName: ProductNames.get(Product.ipykernel)!
+            moduleName: ipykernelProductName
         });
         const promptCancellationPromise = createPromiseFromCancellation({
             cancelAction: 'resolve',
@@ -129,25 +141,31 @@ export class KernelDependencyService implements IKernelDependencyService {
         // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
         // https://github.com/microsoft/vscode-jupyter/issues/6135
         const options = resource ? [installPrompt, selectKernel] : [installPrompt];
-        // In the case of interactive window, due to the current code flow we get this code executed twice,
-        // hence we get two messages about ipykernel not being installed.
-        // THat's a very poor ux, one could end up with two modal dialog boxes (one after the other for interactive).
-        // hence disabling modal dialog for interactive window for now.
-        // Again to be resolved in https://github.com/microsoft/vscode-jupyter/issues/6135
-        const modal = getResourceType(resource) === 'notebook';
         const selection = this.isCodeSpace
             ? installPrompt
             : await Promise.race([
-                  this.appShell.showErrorMessage(message, { modal }, ...options),
+                  this.appShell.showErrorMessage(message, { modal: true }, ...options),
                   promptCancellationPromise
               ]);
         if (installerToken.isCancellationRequested) {
+            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                action: 'dismissed',
+                moduleName: ipykernelProductName
+            });
             return KernelInterpreterDependencyResponse.cancel;
         }
 
         if (selection === selectKernel) {
+            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                action: 'differentKernel',
+                moduleName: ipykernelProductName
+            });
             return KernelInterpreterDependencyResponse.selectDifferentKernel;
         } else if (selection === installPrompt) {
+            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                action: 'install',
+                moduleName: ipykernelProductName
+            });
             const cancellationPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,
@@ -159,11 +177,29 @@ export class KernelDependencyService implements IKernelDependencyService {
                 cancellationPromise
             ]);
             if (response === InstallerResponse.Installed) {
+                sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                    action: 'installed',
+                    moduleName: ipykernelProductName
+                });
                 return KernelInterpreterDependencyResponse.ok;
             } else if (response === InstallerResponse.Ignore) {
+                sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                    action: 'ignored',
+                    moduleName: ipykernelProductName
+                });
                 return KernelInterpreterDependencyResponse.failed; // Happens when errors in pip or conda.
             }
+            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                action: 'disabled',
+                moduleName: ipykernelProductName
+            });
+        } else {
+            sendTelemetryEvent(Telemetry.PythonModuleInstal, undefined, {
+                action: 'dismissed',
+                moduleName: ipykernelProductName
+            });
         }
+
         return KernelInterpreterDependencyResponse.cancel;
     }
 }

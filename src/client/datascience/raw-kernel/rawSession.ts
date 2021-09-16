@@ -3,6 +3,7 @@
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import type { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../common/errors/errorUtils';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
@@ -170,8 +171,8 @@ export class RawSession implements ISessionWithSocket {
         // Send telemetry so we know why the kernel process exited,
         // as this affects our kernel startup success
         sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-            reason: e.reason,
-            exitCode: e.exitCode
+            exitCode: e.exitCode,
+            exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(e.reason)
         });
 
         // Just kill the session.

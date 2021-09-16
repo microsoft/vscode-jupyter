@@ -7,7 +7,9 @@ import { nbformat } from '@jupyterlab/coreutils';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
 import '../../client/common/extensions';
-import { appendLineFeed, generateMarkdownFromCodeLines } from './index';
+import { IJupyterSettings } from '../../client/common/types';
+import { CellMatcher } from '../../client/datascience/cellMatcher';
+import { appendLineFeed, generateMarkdownFromCodeLines, removeLinesFromFrontAndBackNoConcat } from './index';
 
 export function uncommentMagicCommands(line: string): string {
     // Uncomment lines that are shell assignments (starting with #!),
@@ -66,6 +68,26 @@ export function createCodeCell(code?: string | string[], options?: boolean | nbf
         outputs,
         source
     };
+}
+/**
+ * Given a string representing Python code, return a processed
+ * code string suitable for adding to a NotebookCell and executing.
+ * @param code The code string text from a #%% code cell to be executed.
+ */
+export function generateInteractiveCode(code: string, settings: IJupyterSettings, cellMatcher: CellMatcher): string {
+    const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
+
+    // Remove the first marker
+    const withoutFirstMarker = cellMatcher.stripFirstMarkerNoConcat(lines);
+    // Skip leading and trailing lines
+    const noLeadingOrTrailing = removeLinesFromFrontAndBackNoConcat(withoutFirstMarker);
+    // Uncomment magics while adding linefeeds
+    const withMagicsAndLinefeeds = appendLineFeed(
+        noLeadingOrTrailing,
+        settings.magicCommandsAsComments ? uncommentMagicCommands : undefined
+    );
+
+    return withMagicsAndLinefeeds.join('');
 }
 /**
  * Clones a cell.

@@ -118,7 +118,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     /* eslint-disable complexity,  */
     public connectToNotebookServer(
-        options?: INotebookServerOptions,
+        options: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
@@ -126,7 +126,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
-            let kernelConnectionMetadata = options?.kernelConnection;
+            let kernelConnectionMetadata = options.kernelConnection;
             let kernelConnectionMetadataPromise: Promise<KernelConnectionMetadata | undefined> = Promise.resolve<
                 KernelConnectionMetadata | undefined
             >(kernelConnectionMetadata);
@@ -140,14 +140,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
             const isLocalConnection = !options || !options.uri;
 
-            if (isLocalConnection && !options?.kernelConnection) {
+            if (isLocalConnection && !options.kernelConnection) {
                 const kernelFinder = this.serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder);
                 // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
                 // We can do this in parallel, while starting the server (faster).
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
                 kernelConnectionMetadataPromise = kernelFinder.findKernel(
                     undefined,
-                    options?.metadata,
+                    options.metadata,
                     kernelSpecCancelSource.token
                 );
             }
@@ -175,13 +175,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         (!kernelConnectionMetadata ||
                             !kernelConnectionMetadataHasKernelSpec(kernelConnectionMetadata)) &&
                         connection &&
-                        !options?.skipSearchingForKernel
+                        !options.skipSearchingForKernel
                     ) {
                         const kernelFinder = this.serviceContainer.get<IRemoteKernelFinder>(IRemoteKernelFinder);
                         kernelConnectionMetadata = await kernelFinder.findKernel(
-                            options?.resource,
+                            options.resource,
                             connection,
-                            options?.metadata,
+                            options.metadata,
                             cancelToken
                         );
                     }
@@ -196,8 +196,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         disableUI: !allowUI
                     };
                     // If we were not provided a kernel connection, this means we changed the connection here.
-                    if (!options?.kernelConnection) {
-                        trackKernelResourceInformation(options?.resource, {
+                    if (!options.kernelConnection) {
+                        trackKernelResourceInformation(options.resource, {
                             kernelConnection: launchInfo.kernelConnectionMetadata
                         });
                     }
@@ -219,13 +219,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                                 // Keep retrying, until it works or user cancels.
                                 const kernelInterpreter = await this.kernelSelector.askForLocalKernel(
-                                    options?.resource,
+                                    options.resource,
                                     connection,
                                     launchInfo.kernelConnectionMetadata
                                 );
                                 if (kernelInterpreter) {
                                     launchInfo.kernelConnectionMetadata = kernelInterpreter;
-                                    trackKernelResourceInformation(options?.resource, {
+                                    trackKernelResourceInformation(options.resource, {
                                         kernelConnection: launchInfo.kernelConnectionMetadata
                                     });
                                     continue;
@@ -311,24 +311,24 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }, cancelToken);
     }
 
-    public getServer(_options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
+    public getServer(_options: INotebookServerOptions): Promise<INotebookServer | undefined> {
         // This is cached at the host or guest level
         return Promise.resolve(undefined);
     }
 
     private async startOrConnect(
-        options?: INotebookServerOptions,
+        options: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!options || !options.uri) {
             // If that works, then attempt to start the server
-            traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
+            traceInfo(`Launching ${options.purpose} server`);
             const useDefaultConfig = !options || options.skipUsingDefaultConfig ? false : true;
 
             // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
             const workingDirectory = expandWorkingDir(
-                options?.workingDir,
+                options.workingDir,
                 this.workspace.rootPath ? path.join(this.workspace.rootPath, `${uuid()}.txt`) : undefined,
                 this.workspace
             );
