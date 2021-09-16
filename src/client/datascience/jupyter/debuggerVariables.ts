@@ -432,31 +432,33 @@ export class DebuggerVariables extends DebugLocationTracker
                 });
 
                 //  Call scopes
-                const sf = stResponse.stackFrames[0];
-                const mode = this.debuggingManager.getDebugMode(doc);
-                let scopesResponse: DebugProtocol.ScopesResponse['body'] | undefined;
+                if (stResponse && stResponse.stackFrames[0]) {
+                    const sf = stResponse.stackFrames[0];
+                    const mode = this.debuggingManager.getDebugMode(doc);
+                    let scopesResponse: DebugProtocol.ScopesResponse['body'] | undefined;
 
-                if (mode === KernelDebugMode.RunByLine) {
-                    // Only call scopes (and variables) if we are stopped on the cell we are executing
-                    const cell = this.debuggingManager.getDebugCell(doc);
-                    if (sf.source && cell && sf.source.path === cell.document.uri.toString()) {
-                        scopesResponse = await session.customRequest('scopes', { frameId: sf.id });
+                    if (mode === KernelDebugMode.RunByLine) {
+                        // Only call scopes (and variables) if we are stopped on the cell we are executing
+                        const cell = this.debuggingManager.getDebugCell(doc);
+                        if (sf.source && cell && sf.source.path === cell.document.uri.toString()) {
+                            scopesResponse = await session.customRequest('scopes', { frameId: sf.id });
+                        }
+                    } else {
+                        // Only call scopes (and variables) if we are stopped on the notebook we are executing
+                        const docURI = path.basename(doc.uri.toString());
+                        if (sf.source && sf.source.path && sf.source.path.includes(docURI)) {
+                            scopesResponse = await session.customRequest('scopes', { frameId: sf.id });
+                        }
                     }
-                } else {
-                    // Only call scopes (and variables) if we are stopped on the notebook we are executing
-                    const docURI = path.basename(doc.uri.toString());
-                    if (sf.source && sf.source.path && sf.source.path.includes(docURI)) {
-                        scopesResponse = await session.customRequest('scopes', { frameId: sf.id });
+
+                    // Call variables
+                    if (scopesResponse) {
+                        scopesResponse.scopes.forEach((scope: DebugProtocol.Scope) => {
+                            void session.customRequest('variables', { variablesReference: scope.variablesReference });
+                        });
+
+                        this.refreshEventEmitter.fire();
                     }
-                }
-
-                // Call variables
-                if (scopesResponse) {
-                    scopesResponse.scopes.forEach((scope: DebugProtocol.Scope) => {
-                        void session.customRequest('variables', { variablesReference: scope.variablesReference });
-                    });
-
-                    this.refreshEventEmitter.fire();
                 }
             }
         }
